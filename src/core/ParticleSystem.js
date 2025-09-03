@@ -1,6 +1,68 @@
 /**
- * ParticleSystem - Manages particle lifecycle and behavior based on emotional context
- * Implements object pooling for performance and enforces particle limits
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE
+ *  └─○═╝                                                                             
+ *                     ◐ ◑ ◒ ◓  PARTICLE SYSTEM  ◓ ◒ ◑ ◐                     
+ *                                                                                    
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Particle System - Orchestrator of Emotional Atmosphere
+ * @author Emotive Engine Team
+ * @version 2.0.0
+ * @module ParticleSystem
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ The CONDUCTOR of particle chaos. Manages the lifecycle, behavior, and             
+ * ║ performance of all particles. Uses object pooling to prevent memory leaks         
+ * ║ and coordinates particles to create emotional atmospheres around the orb.         
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 🎭 SYSTEM FEATURES                                                                
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • Object pooling for performance (reuse dead particles)                           
+ * │ • Time-based spawning with accumulator                                            
+ * │ • Automatic cleanup every 5 seconds                                               
+ * │ • Memory leak detection and prevention                                            
+ * │ • Dynamic particle limits based on emotion                                        
+ * │ • 13 different particle behaviors                                                 
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 🔄 OBJECT POOL STRATEGY                                                           
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • Lazy initialization (create as needed)                                          
+ * │ • Max pool size: 50 particles                                                     
+ * │ • Reuse dead particles before creating new                                        
+ * │ • Track pool hits/misses for optimization                                         
+ * │ • Absolute max: 2x configured limit (prevents runaway)                            
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 📊 PERFORMANCE LIMITS                                                             
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • Default max particles  : 50                                                     
+ * │ • Absolute max particles : 100 (2x default)                                       
+ * │ • Pool size             : Min(maxParticles, 50)                                  
+ * │ • Cleanup interval      : 5000ms                                                 
+ * │ • Spawn rate            : Based on emotion config                                
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                              MEMORY MANAGEMENT                                    
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Critical for preventing memory leaks:                                             
+ * ║ 1. Reuse particles from pool when available                                       
+ * ║ 2. Clear references when returning to pool                                        
+ * ║ 3. Periodic cleanup of excess particles                                           
+ * ║ 4. Track creation/destruction for leak detection                                  
+ * ║ 5. Hard limits prevent runaway particle creation                                  
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════
  */
 
 import Particle from './Particle.js';
@@ -130,6 +192,7 @@ class ParticleSystem {
     _spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles = 0, maxParticles = 10) {
         // Store emotion for particle initialization
         this.currentEmotion = emotion;
+        
         
         // If specific count is provided, spawn that many
         if (count !== null) {
@@ -275,9 +338,23 @@ class ParticleSystem {
                 };
                 
             case 'scattering':
-            case 'burst':
-                // Spawn at center for outward movement
+                // Spawn at center for outward movement (scattering needs this)
                 return { x: centerX, y: centerY };
+                
+            case 'burst':
+                // For suspicion, spawn at edge of orb so particles are visible
+                // For surprise, spawn at center for explosive effect
+                if (this.currentEmotion === 'suspicion') {
+                    const burstAngle = Math.random() * Math.PI * 2;
+                    const burstRadius = orbRadius * 1.5; // Further outside the core for visibility
+                    return {
+                        x: centerX + Math.cos(burstAngle) * burstRadius,
+                        y: centerY + Math.sin(burstAngle) * burstRadius
+                    };
+                } else {
+                    // Normal burst (surprise) spawns at center
+                    return { x: centerX, y: centerY };
+                }
                 
             case 'repelling':
                 // Spawn at edge of glow so particles are visible

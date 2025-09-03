@@ -1,6 +1,95 @@
 /**
- * AudioLevelProcessor - Dedicated audio analysis and speech reactivity management
- * Handles volume spike detection, gesture triggering, audio level history, and RMS calculation
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE
+ *  └─○═╝                                                                             
+ *                   ◐ ◑ ◒ ◓  AUDIO LEVEL PROCESSOR  ◓ ◒ ◑ ◐                   
+ *                                                                                    
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Audio Level Processor - Real-time Audio Analysis & Reactivity
+ * @author Emotive Engine Team
+ * @version 2.0.0
+ * @module AudioLevelProcessor
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Analyzes real-time audio input to make the mascot react to speech and sound.      
+ * ║ Detects volume spikes, tracks audio history, and triggers emotional responses      
+ * ║ based on audio levels. Makes the orb "listen" and respond to your voice!          
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 🎤 AUDIO ANALYSIS FEATURES                                                        
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • Real-time RMS level calculation                                                 
+ * │ • Volume spike detection with cooldown                                            
+ * │ • Audio level history tracking                                                    
+ * │ • Frequency analysis via FFT                                                      
+ * │ • Smooth level transitions                                                        
+ * │ • Microphone permission handling                                                  
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 📊 PROCESSING PIPELINE                                                            
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ 1. Microphone → getUserMedia()                                                    
+ * │ 2. MediaStream → AudioContext                                                     
+ * │ 3. AudioContext → AnalyserNode                                                    
+ * │ 4. AnalyserNode → Frequency Data (FFT)                                            
+ * │ 5. Frequency Data → RMS Calculation                                               
+ * │ 6. RMS → Spike Detection & Level Events                                           
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ ⚡ SPIKE DETECTION                                                                
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • Threshold: Current level > average * spikeThreshold                            
+ * │ • Cooldown: Minimum interval between spikes (default: 1000ms)                    
+ * │ • Triggers: "nod" gesture for speech acknowledgment                              
+ * │ • Sensitivity: Configurable via spikeThreshold (1.5 = 50% above average)         
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 🔧 CONFIGURATION                                                                   
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ PARAMETER              DEFAULT    DESCRIPTION                                     
+ * │ spikeThreshold         1.5        Multiplier for spike detection                  
+ * │ minimumSpikeLevel      0.1        Minimum level to trigger spike                  
+ * │ spikeMinInterval       1000       Cooldown between spikes (ms)                   
+ * │ historySize            10         Audio level history buffer size                 
+ * │ smoothingTimeConstant  0.8        FFT smoothing (0=none, 1=max)                  
+ * │ fftSize                256        FFT bin size for frequency analysis             
+ * │ levelUpdateThrottle    100        Throttle for level update events (ms)          
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 📡 EVENTS                                                                          
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • levelUpdate  : Emitted when audio level changes (throttled)                     
+ * │ • volumeSpike  : Emitted when spike detected (with cooldown)                      
+ * │ • error        : Emitted on processing errors                                     
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                USAGE EXAMPLE                                      
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ const processor = new AudioLevelProcessor({                                       
+ * ║     spikeThreshold: 1.5,                                                          
+ * ║     spikeMinInterval: 500                                                         
+ * ║ });                                                                                
+ * ║                                                                                    
+ * ║ processor.on('volumeSpike', (level) => {                                          
+ * ║     mascot.triggerGesture('nod');  // React to speech                            
+ * ║ });                                                                                
+ * ║                                                                                    
+ * ║ processor.on('levelUpdate', (level) => {                                          
+ * ║     mascot.setAudioLevel(level);   // Smooth breathing with speech               
+ * ║ });                                                                                
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════
  */
 export class AudioLevelProcessor {
     constructor(config = {}) {
