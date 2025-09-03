@@ -218,6 +218,8 @@ class AnimationController {
             
             // Cap deltaTime to prevent physics instability
             // Use a consistent cap of 50ms (20 FPS minimum)
+            const skipParticleSpawn = this.deltaTime > 33; // Skip spawning if under 30fps
+            
             if (this.deltaTime > 50) {
                 // Large gap detected - cap and reset accumulator
                 this.deltaTime = 50;
@@ -225,6 +227,11 @@ class AnimationController {
                 if (this.subsystems?.particleSystem) {
                     this.subsystems.particleSystem.resetAccumulator();
                 }
+            }
+            
+            // Store skip flag for particle system
+            if (this.subsystems?.particleSystem) {
+                this.subsystems.particleSystem.skipSpawnThisFrame = skipParticleSpawn;
             }
             
             this.lastFrameTime = currentTime;

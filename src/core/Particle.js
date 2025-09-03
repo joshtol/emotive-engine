@@ -3,6 +3,33 @@
  * Supports 8 different behaviors for emotional expression
  */
 
+// Cached trigonometric values for performance - using arrays instead of Maps
+const CACHE_PRECISION = 100; // Cache values at 0.01 radian intervals
+const CACHE_SIZE = 629; // Covers 0 to 2π
+const SIN_CACHE = new Float32Array(CACHE_SIZE);
+const COS_CACHE = new Float32Array(CACHE_SIZE);
+
+// Pre-populate all angles
+for (let i = 0; i < CACHE_SIZE; i++) {
+    const angle = i / CACHE_PRECISION;
+    SIN_CACHE[i] = Math.sin(angle);
+    COS_CACHE[i] = Math.cos(angle);
+}
+
+function cachedSin(angle) {
+    // Normalize angle to 0-2π range
+    const normalized = ((angle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+    const index = Math.min(Math.round(normalized * CACHE_PRECISION), CACHE_SIZE - 1);
+    return SIN_CACHE[index];
+}
+
+function cachedCos(angle) {
+    // Normalize angle to 0-2π range
+    const normalized = ((angle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+    const index = Math.min(Math.round(normalized * CACHE_PRECISION), CACHE_SIZE - 1);
+    return COS_CACHE[index];
+}
+
 class Particle {
     constructor(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1) {
         // Position and movement
@@ -90,6 +117,9 @@ class Particle {
             case 'erratic':
                 this.initializeErratic();
                 break;
+            case 'cautious':
+                this.initializeCautious();
+                break;
             default:
                 this.initializeAmbient();
         }
@@ -173,15 +203,30 @@ class Particle {
      * Burst behavior - sudden expansion from center (surprise)
      */
     initializeBurst() {
+        // For suspicion, make burst slower and more controlled
+        const isSuspicion = this.emotion === 'suspicion';
         const angle = Math.random() * Math.PI * 2;
-        const speed = 2 + Math.random() * 3;
+        const speed = isSuspicion ? 
+            (0.3 + Math.random() * 0.5) :  // Very slow burst for suspicion
+            (2 + Math.random() * 3);       // Normal burst for surprise
+        
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
-        this.lifeDecay = 0.02;
+        this.lifeDecay = isSuspicion ? 0.01 : 0.02;  // Moderate life for continuous spawning
+        
+        // Make suspicion particles more visible
+        if (isSuspicion) {
+            this.size = (4 + Math.random() * 3) * (this.scaleFactor || 1) * (this.particleSizeMultiplier || 1);
+            this.baseSize = this.size;
+            this.opacity = 0.8 + Math.random() * 0.2;
+            this.baseOpacity = this.opacity;
+        }
+        
         this.behaviorData = {
             initialSpeed: speed,
-            expansion: 1.05,
-            fadeStart: 0.7
+            expansion: isSuspicion ? 1.02 : 1.05,  // Less expansion for suspicion
+            fadeStart: 0.7,
+            isSuspicion: isSuspicion
         };
     }
 
@@ -294,6 +339,35 @@ class Particle {
             directionChangeRate: 0.1,    // How often to change direction
             speedVariation: 0.3,         // Speed changes randomly
             spinRate: 0.05 + Math.random() * 0.1  // Particles spin
+        };
+    }
+    
+    /**
+     * Cautious behavior - slow, careful movement for suspicion
+     */
+    initializeCautious() {
+        // Particles move very slowly and deliberately
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.02 + Math.random() * 0.03; // Very slow: 0.02-0.05 units/frame
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.lifeDecay = 0.001;  // Very long-lived for visibility
+        this.life = 1.0;  // Ensure full life
+        
+        this.size = (4 + Math.random() * 4) * (this.scaleFactor || 1) * (this.particleSizeMultiplier || 1);
+        this.baseSize = this.size;
+        this.baseOpacity = 0.8 + Math.random() * 0.2;  // Very visible
+        this.opacity = this.baseOpacity;
+        
+        this.behaviorData = {
+            pauseTimer: Math.random() * 2,      // Start with random pause offset
+            pauseDuration: 0.5 + Math.random() * 0.5,  // Pause for 0.5-1s
+            moveDuration: 1 + Math.random() * 0.5,     // Move for 1-1.5s
+            isMoving: Math.random() > 0.5,             // Randomly start moving or paused
+            moveTimer: 0,
+            originalVx: this.vx,
+            originalVy: this.vy,
+            watchRadius: 50 + Math.random() * 30       // Stay within 50-80 units of core
         };
     }
 
@@ -436,6 +510,9 @@ class Particle {
             case 'erratic':
                 this.updateErratic(dt);
                 break;
+            case 'cautious':
+                this.updateCautious(dt, centerX, centerY);
+                break;
         }
     }
 
@@ -562,8 +639,17 @@ class Particle {
         const data = this.behaviorData;
         
         // Expand outward with decreasing speed (frame-independent)
-        this.vx *= Math.pow(0.95, dt);
-        this.vy *= Math.pow(0.95, dt);
+        // Suspicion particles slow down quickly to hover nearby
+        const friction = data.isSuspicion ? 0.99 : 0.95;
+        this.vx *= Math.pow(friction, dt);
+        this.vy *= Math.pow(friction, dt);
+        
+        // For suspicion, add a subtle scanning motion
+        if (data.isSuspicion) {
+            // Add a very subtle side-to-side drift
+            const time = Date.now() * 0.001;
+            this.vx += Math.sin(time * 2 + this.id) * 0.01 * dt;
+        }
         
         // Scale up size initially
         if (this.life > data.fadeStart) {
@@ -1102,6 +1188,65 @@ class Particle {
                     this.vx += dx * returnProgress * 0.02 * dt;
                     this.vy += dy * returnProgress * 0.02 * dt;
                 }
+                break;
+            }
+            
+            case 'breathe': {
+                // Synchronized breathing motion with the orb
+                const motion = gestureMotion;
+                const breathPhase = gesture.breathPhase || 0; // Get breath phase from gesture
+                
+                // Initialize breathe data
+                if (!this.gestureData.breatheInitialized) {
+                    this.gestureData.breatheInitialized = true;
+                    this.gestureData.breatheStartX = this.x;
+                    this.gestureData.breatheStartY = this.y;
+                    
+                    // Store initial distance and angle from center
+                    const dx = this.x - centerX;
+                    const dy = this.y - centerY;
+                    this.gestureData.breatheAngle = Math.atan2(dy, dx);
+                    this.gestureData.breatheBaseRadius = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Add slight phase offset for organic motion
+                    this.gestureData.breathePhaseOffset = Math.random() * 0.2 - 0.1;
+                }
+                
+                // Calculate target radius based on breath phase
+                const inhaleRadius = (motion.inhaleRadius || 1.5) * this.orbRadius;
+                const exhaleRadius = (motion.exhaleRadius || 0.3) * this.orbRadius;
+                const targetRadius = exhaleRadius + (inhaleRadius - exhaleRadius) * breathPhase;
+                
+                // Current position relative to center
+                const currentDx = this.x - centerX;
+                const currentDy = this.y - centerY;
+                const currentRadius = Math.sqrt(currentDx * currentDx + currentDy * currentDy);
+                
+                // Smoothly move towards target radius
+                const radiusDiff = targetRadius - currentRadius;
+                const moveStrength = (motion.strength || 0.8) * 0.05 * dt;
+                
+                // Apply radial motion
+                if (currentRadius > 0) {
+                    const moveX = (currentDx / currentRadius) * radiusDiff * moveStrength;
+                    const moveY = (currentDy / currentRadius) * radiusDiff * moveStrength;
+                    
+                    this.vx += moveX;
+                    this.vy += moveY;
+                    
+                    // Add gentle spiral motion for more organic feel
+                    const spiralStrength = 0.002 * dt * motion.strength;
+                    const tangentX = -currentDy / currentRadius;
+                    const tangentY = currentDx / currentRadius;
+                    
+                    this.vx += tangentX * spiralStrength * breathPhase;
+                    this.vy += tangentY * spiralStrength * breathPhase;
+                }
+                
+                // Apply gentle damping for smooth motion
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                
                 break;
             }
             
@@ -1647,8 +1792,24 @@ class Particle {
         this.cachedGradient = null;
         this.cachedGradientKey = null;
         this.opacity = 0.0;  // Start invisible
+        
+        // Clear behavior data to prevent memory leaks
+        this.rotation = 0;
+        this.phaseOffset = Math.random() * Math.PI * 2;
         this.behavior = behavior;
-        this.behaviorData = {};
+        
+        // Clear gesture data if it exists
+        this.gestureData = null;
+        
+        // Reuse existing behaviorData object if it exists, otherwise create new
+        if (!this.behaviorData) {
+            this.behaviorData = {};
+        } else {
+            // Clear existing properties
+            for (let key in this.behaviorData) {
+                delete this.behaviorData[key];
+            }
+        }
         
         // Re-roll glow properties on reset
         this.hasGlow = Math.random() < 0.333;  // 1/3 chance of glow
@@ -1700,6 +1861,62 @@ class Particle {
         
         // Size variation
         this.size = this.baseSize * (0.8 + Math.random() * 0.4);
+    }
+    
+    /**
+     * Update cautious behavior - slow, deliberate movement with pauses
+     */
+    updateCautious(dt, centerX, centerY) {
+        const data = this.behaviorData;
+        
+        // Update timers
+        data.moveTimer += dt;
+        
+        // Switch between moving and pausing
+        if (data.isMoving) {
+            if (data.moveTimer > data.moveDuration) {
+                data.isMoving = false;
+                data.moveTimer = 0;
+                // Stop movement during pause
+                this.vx = 0;
+                this.vy = 0;
+            } else {
+                // Restore movement velocity
+                this.vx = data.originalVx;
+                this.vy = data.originalVy;
+            }
+        } else {
+            if (data.moveTimer > data.pauseDuration) {
+                data.isMoving = true;
+                data.moveTimer = 0;
+                // Pick a new careful direction
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.02 + Math.random() * 0.03;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                data.originalVx = this.vx;
+                data.originalVy = this.vy;
+            }
+        }
+        
+        // Keep particles within watch radius of core
+        const dx = this.x - centerX;
+        const dy = this.y - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > data.watchRadius) {
+            // Pull back towards core slowly
+            const pullStrength = 0.02;
+            this.vx -= (dx / dist) * pullStrength;
+            this.vy -= (dy / dist) * pullStrength;
+        }
+        
+        // Cautious particles stay more visible (watching)
+        this.opacity = this.baseOpacity;
+        
+        // Subtle size pulsing (like breathing while watching)
+        const breathe = Math.sin(Date.now() / 1000 + this.phaseOffset) * 0.1 + 1;
+        this.size = this.baseSize * breathe;
     }
 }
 

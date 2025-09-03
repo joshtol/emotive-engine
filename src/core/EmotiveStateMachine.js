@@ -32,6 +32,14 @@ class EmotiveStateMachine {
             }
         };
         
+        // Cache for interpolation results
+        this.interpolationCache = {
+            lastUpdate: 0,
+            cacheInterval: 100, // Cache for 100ms
+            cachedProperties: null,
+            cachedRenderState: null
+        };
+        
         // Initialize emotional state definitions
         this.initializeEmotionalStates();
         this.initializeUndertoneModifiers();
@@ -166,6 +174,19 @@ class EmotiveStateMachine {
                 breathDepth: 0.08,
                 eyeOpenness: 0.7,  // Narrowed for concentration
                 microAdjustments: true  // Enable tiny shifts
+            },
+            suspicion: {
+                primaryColor: '#708090',  // Slate gray
+                glowIntensity: 0.9,
+                particleRate: 15,  // Higher rate for continuous particles
+                minParticles: 4,
+                maxParticles: 8,  // Lower max to allow continuous spawning
+                particleBehavior: 'burst',  // Use burst like surprise but we'll modify it
+                coreSize: 1.0,
+                breathRate: 0.8,  // Controlled breathing
+                breathDepth: 0.05,  // Shallow, alert breathing
+                eyeOpenness: 0.5,  // Narrowed, skeptical eyes
+                eyeArc: -0.2  // Slight frown
             }
         };
     }
@@ -211,6 +232,10 @@ class EmotiveStateMachine {
      */
     setEmotion(emotion, undertone = null, duration = 500) {
         return this.errorBoundary.wrap(() => {
+            // Clear interpolation cache when emotion changes
+            this.interpolationCache.cachedProperties = null;
+            this.interpolationCache.cachedRenderState = null;
+            
             // Validate emotion
             if (!this.emotionalStates.hasOwnProperty(emotion)) {
                 throw new Error(`Invalid emotion: ${emotion}. Valid emotions: ${Object.keys(this.emotionalStates).join(', ')}`);
@@ -362,6 +387,14 @@ class EmotiveStateMachine {
      */
     getCurrentEmotionalProperties() {
         return this.errorBoundary.wrap(() => {
+            const now = performance.now();
+            
+            // Use cached result if still valid
+            if (this.interpolationCache.cachedProperties && 
+                (now - this.interpolationCache.lastUpdate) < this.interpolationCache.cacheInterval) {
+                return this.interpolationCache.cachedProperties;
+            }
+            
             const transition = this.transitions.emotional;
             let properties;
 
@@ -379,6 +412,10 @@ class EmotiveStateMachine {
 
             // Apply undertone modifiers
             properties = this.applyUndertone(properties, this.state.undertone);
+            
+            // Cache the result
+            this.interpolationCache.cachedProperties = properties;
+            this.interpolationCache.lastUpdate = now;
 
             return properties;
         }, 'emotional-properties', this.emotionalStates.neutral)();

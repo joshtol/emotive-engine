@@ -109,6 +109,24 @@ export const emotionMap = {
         particleColors: ['#FF69B4', '#FF1493']
     },
     
+    suspicion: {
+        glowColor: '#8B7355',       // Amber-brown, watchful color
+        glowIntensity: 0.85,        // Slightly dimmed, cautious
+        particleRate: 15,           // Higher rate for continuous particles
+        minParticles: 4,
+        maxParticles: 8,            // Lower max to allow continuous spawning
+        particleBehavior: 'burst',  // Use burst but modify for suspicion
+        breathRate: 0.8,            // Suspicion: 10-15 breaths/min (controlled, watching)
+        breathDepth: 0.05,          // 5% size variation - shallow, controlled breathing
+        coreJitter: false,
+        particleColors: ['#8B7355', '#A0826D', '#704214'], // Amber to dark brown
+        // Special properties for suspicion
+        coreSquint: 0.4,            // Narrows the orb by 40%
+        scanInterval: 3000,         // Peer around every 3 seconds
+        scanDuration: 800,          // Quick scanning motion
+        scanAngle: 45               // Degrees to look left/right
+    },
+    
     resting: {
         glowColor: '#7C3AED',       // Soft purple
         glowIntensity: 0.8,

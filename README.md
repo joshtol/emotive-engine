@@ -1,11 +1,15 @@
-# Emotive Engine 🎭
+<div align="center">
+  <img src="assets/emotive-engine-full-BW.svg" alt="Emotive Engine" width="600" />
+  
+  [![npm version](https://img.shields.io/npm/v/emotive-engine.svg)](https://www.npmjs.com/package/emotive-engine)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Performance](https://img.shields.io/badge/Performance-60fps-green.svg)](https://github.com/joshtol/emotive-engine)
+  [![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Optimized-blue.svg)](https://github.com/joshtol/emotive-engine)
 
-[![npm version](https://img.shields.io/npm/v/emotive-engine.svg)](https://www.npmjs.com/package/emotive-engine)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Performance](https://img.shields.io/badge/Performance-60fps-green.svg)](https://github.com/joshtol/emotive-engine)
-[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Optimized-blue.svg)](https://github.com/joshtol/emotive-engine)
-
-A high-performance, emotionally-aware particle mascot system for next-generation conversational UIs. Built with pure Canvas 2D API, achieving smooth 60fps animations with thousands of particles - no WebGL, no heavy frameworks required.
+  **A high-performance, emotionally-aware particle mascot system for next-generation conversational UIs**
+  
+  Built with pure Canvas 2D API, achieving smooth 60fps animations with thousands of particles - no WebGL, no heavy frameworks required.
+</div>
 
 ## 🌟 Features
 

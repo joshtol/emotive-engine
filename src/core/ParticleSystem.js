@@ -9,13 +9,20 @@ class ParticleSystem {
     constructor(maxParticles = 50, errorBoundary = null) {
         this.errorBoundary = errorBoundary;
         this.maxParticles = maxParticles;
+        this.absoluteMaxParticles = maxParticles * 2; // Hard limit to prevent leaks
         
         // Active particles
         this.particles = [];
         
-        // Object pool for performance
+        // Object pool for performance - reduced to prevent memory buildup
         this.pool = [];
-        this.poolSize = Math.min(maxParticles * 2, 100);
+        this.poolSize = Math.min(maxParticles, 50); // Limit pool to max 50 particles
+        
+        // Memory leak detection
+        this.totalParticlesCreated = 0;
+        this.totalParticlesDestroyed = 0;
+        this.stateChangeCount = 0;
+        this.lastMemoryCheck = Date.now();
         
         // TIME-BASED spawning using accumulation for smooth, consistent particle creation
         this.spawnAccumulator = 0; // Accumulates time to spawn particles
@@ -24,6 +31,10 @@ class ParticleSystem {
         this.particleCount = 0;
         this.poolHits = 0;
         this.poolMisses = 0;
+        
+        // Cleanup timer to prevent memory buildup
+        this.cleanupTimer = 0;
+        this.cleanupInterval = 5000; // Clean up every 5 seconds
         
         // Initialize object pool
         this.initializePool();
@@ -35,9 +46,9 @@ class ParticleSystem {
      * Initialize the object pool with pre-created particles
      */
     initializePool() {
-        for (let i = 0; i < this.poolSize; i++) {
-            this.pool.push(new Particle(0, 0, 'ambient'));
-        }
+        // Don't pre-create particles - create them lazily as needed
+        // This prevents memory buildup on initialization
+        this.pool = [];
     }
 
     /**
@@ -59,7 +70,11 @@ class ParticleSystem {
             // Create new particle
             particle = new Particle(x, y, behavior, this.scaleFactor || 1, this.particleSizeMultiplier || 1);
             this.poolMisses++;
+            this.totalParticlesCreated++;
         }
+        
+        // Set the emotion for behavior customization
+        particle.emotion = this.currentEmotion;
         
         return particle;
     }
@@ -70,9 +85,20 @@ class ParticleSystem {
      */
     returnParticleToPool(particle) {
         if (this.pool.length < this.poolSize) {
+            // Clear references before pooling
+            particle.cachedGradient = null;
+            particle.cachedGradientKey = null;
+            // Clear behaviorData properties but keep the object
+            if (particle.behaviorData) {
+                for (let key in particle.behaviorData) {
+                    delete particle.behaviorData[key];
+                }
+            }
             this.pool.push(particle);
+        } else {
+            // If pool is full, count as destroyed since it will be GC'd
+            this.totalParticlesDestroyed++;
         }
-        // If pool is full, let the particle be garbage collected
     }
 
     /**
@@ -102,11 +128,19 @@ class ParticleSystem {
      * Internal spawn implementation - TIME-BASED accumulation for smooth spawning
      */
     _spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles = 0, maxParticles = 10) {
+        // Store emotion for particle initialization
+        this.currentEmotion = emotion;
+        
         // If specific count is provided, spawn that many
         if (count !== null) {
             for (let i = 0; i < count && this.particles.length < this.maxParticles; i++) {
                 this.spawnSingleParticle(behavior, centerX, centerY);
             }
+            return;
+        }
+        
+        // Skip spawning if frame rate is too low (performance optimization)
+        if (this.skipSpawnThisFrame) {
             return;
         }
         
@@ -116,7 +150,9 @@ class ParticleSystem {
         }
         
         // If we're at or above max for this emotion, don't spawn more
-        if (this.particles.length >= maxParticles) return;
+        if (this.particles.length >= maxParticles) {
+            return;
+        }
         
         // Don't spawn if rate is 0
         if (particleRate <= 0) return;
@@ -149,6 +185,12 @@ class ParticleSystem {
      * @param {number} centerY - Center Y coordinate
      */
     spawnSingleParticle(behavior, centerX, centerY) {
+        // Hard limit check to prevent memory leaks
+        if (this.particles.length >= this.absoluteMaxParticles) {
+            console.warn(`Particle limit reached: ${this.particles.length}`);
+            return;
+        }
+        
         // Calculate spawn position based on behavior
         let spawnPos = this.getSpawnPosition(behavior, centerX, centerY);
         
@@ -296,6 +338,25 @@ class ParticleSystem {
      * Internal update implementation
      */
     _update(deltaTime, centerX, centerY, gestureMotion = null, gestureProgress = 0, undertoneModifier = null) {
+        // Update cleanup timer
+        this.cleanupTimer += deltaTime;
+        
+        // Periodic cleanup to prevent memory buildup - reduced frequency
+        if (this.cleanupTimer >= this.cleanupInterval * 2) { // Less frequent cleanup
+            this.performCleanup();
+            this.cleanupTimer = 0;
+        }
+        
+        // Memory leak detection - log every 10 seconds
+        if (Date.now() - this.lastMemoryCheck > 10000) {
+            const leaked = this.totalParticlesCreated - this.totalParticlesDestroyed;
+            if (leaked > 100) {
+                console.error(`MEMORY LEAK: ${leaked} particles leaked! Created: ${this.totalParticlesCreated}, Destroyed: ${this.totalParticlesDestroyed}`);
+                console.error(`Active: ${this.particles.length}, Pool: ${this.pool.length}, Max: ${this.maxParticles}`);
+            }
+            this.lastMemoryCheck = Date.now();
+        }
+        
         // Update all particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const particle = this.particles[i];
@@ -322,6 +383,10 @@ class ParticleSystem {
     removeParticle(index) {
         if (index >= 0 && index < this.particles.length) {
             const particle = this.particles.splice(index, 1)[0];
+            // Clear any cached data before returning to pool
+            particle.cachedGradient = null;
+            particle.cachedGradientKey = null;
+            // Don't set behaviorData to null - let reset handle it properly
             this.returnParticleToPool(particle);
             this.particleCount = Math.max(0, this.particleCount - 1);
         }
@@ -343,11 +408,19 @@ class ParticleSystem {
     }
 
     /**
-     * Internal render implementation - simple and direct
+     * Internal render implementation - optimized but preserving particle appearance
      */
     _render(ctx, emotionColor) {
-        // Simple direct rendering without batching to avoid artifacts
+        // Render particles with culling optimization
         for (const particle of this.particles) {
+            // Skip off-screen particles (culling)
+            const margin = 50;
+            if (particle.x < -margin || particle.x > ctx.canvas.width + margin ||
+                particle.y < -margin || particle.y > ctx.canvas.height + margin) {
+                continue;
+            }
+            
+            // Use original particle render method to preserve appearance
             particle.render(ctx, emotionColor);
         }
     }
@@ -356,14 +429,39 @@ class ParticleSystem {
      * Clears all particles and returns them to the pool
      */
     clear() {
-        // Return all particles to pool
-        for (const particle of this.particles) {
-            this.returnParticleToPool(particle);
+        console.log(`[ParticleSystem.clear] Clearing ${this.particles.length} particles. Pool: ${this.pool.length}`);
+        this.stateChangeCount++;
+        
+        // Return all particles to pool but avoid duplicates
+        while (this.particles.length > 0) {
+            const particle = this.particles.pop();
+            // Clear cached data before returning
+            particle.cachedGradient = null;
+            particle.cachedGradientKey = null;
+            // Clear behaviorData properties but keep the object
+            if (particle.behaviorData) {
+                for (let key in particle.behaviorData) {
+                    delete particle.behaviorData[key];
+                }
+            }
+            // Only add to pool if it's not already there and pool has space
+            if (this.pool.length < this.poolSize && !this.pool.includes(particle)) {
+                this.pool.push(particle);
+            }
         }
         
         this.particles.length = 0;
         this.particleCount = 0;
         this.spawnAccumulator = 0; // Reset accumulator when clearing
+        
+        // Trim pool if it's grown too large
+        if (this.pool.length > this.poolSize) {
+            // Actually remove excess particles from pool
+            const excess = this.pool.length - this.poolSize;
+            this.pool.splice(this.poolSize, excess);
+        }
+        
+        console.log(`[ParticleSystem.clear] After clear - Particles: ${this.particles.length}, Pool: ${this.pool.length}, Created total: ${this.totalParticlesCreated}`);
     }
 
     /**
@@ -394,6 +492,35 @@ class ParticleSystem {
         }
     }
 
+    /**
+     * Performs periodic cleanup to prevent memory buildup
+     */
+    performCleanup() {
+        // Trim pool if it's grown too large
+        if (this.pool.length > this.poolSize) {
+            // Clear excess particles from pool
+            const excess = this.pool.length - this.poolSize;
+            for (let i = 0; i < excess; i++) {
+                const particle = this.pool.pop();
+                // Ensure all references are cleared
+                if (particle) {
+                    particle.cachedGradient = null;
+                    particle.cachedGradientKey = null;
+                    particle.behaviorData = null;
+                }
+            }
+        }
+        
+        // Clear any cached data from active particles
+        for (const particle of this.particles) {
+            if (particle.cachedGradient && particle.life < 0.5) {
+                // Clear gradient cache for fading particles
+                particle.cachedGradient = null;
+                particle.cachedGradientKey = null;
+            }
+        }
+    }
+    
     /**
      * Gets current particle system statistics
      * @returns {Object} Performance and state information

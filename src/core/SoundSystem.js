@@ -516,6 +516,119 @@ export class SoundSystem {
           { time: 0.8, volume: 0.8 },
           { time: 1, volume: 0.0 }
         ]
+      }],
+      ['wave', {
+        duration: 400,
+        waveform: 'sine',
+        volume: 0.25,
+        frequencyEnvelope: [
+          { time: 0, frequency: 200 },
+          { time: 0.25, frequency: 300 },
+          { time: 0.5, frequency: 250 },
+          { time: 0.75, frequency: 280 },
+          { time: 1, frequency: 200 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 0.0 },
+          { time: 0.2, volume: 0.8 },
+          { time: 0.8, volume: 0.8 },
+          { time: 1, volume: 0.0 }
+        ]
+      }],
+      ['breathe', {
+        duration: 3500,  // Match gesture duration
+        waveform: 'sine',
+        volume: 0.2,
+        // Deep, calming breath sound - low frequencies
+        frequencyEnvelope: [
+          { time: 0, frequency: 80 },    // Start low (exhale)
+          { time: 0.4, frequency: 150 },  // Rise during inhale
+          { time: 0.5, frequency: 160 },  // Peak at full inhale
+          { time: 0.9, frequency: 100 },  // Fall during exhale
+          { time: 1, frequency: 80 }      // Back to low
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 0.3 },     // Quiet start
+          { time: 0.4, volume: 0.8 },   // Louder inhale
+          { time: 0.5, volume: 0.7 },   // Hold
+          { time: 0.9, volume: 0.6 },   // Quieter exhale
+          { time: 1, volume: 0.2 }      // Fade out
+        ]
+      }],
+      ['flicker', {
+        duration: 300,
+        waveform: 'square',
+        volume: 0.2,
+        frequencyEnvelope: [
+          { time: 0, frequency: 600 },
+          { time: 0.1, frequency: 400 },
+          { time: 0.2, frequency: 800 },
+          { time: 0.3, frequency: 300 },
+          { time: 0.5, frequency: 700 },
+          { time: 1, frequency: 500 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 1.0 },
+          { time: 0.1, volume: 0.2 },
+          { time: 0.2, volume: 0.9 },
+          { time: 0.3, volume: 0.3 },
+          { time: 0.5, volume: 0.8 },
+          { time: 1, volume: 0.0 }
+        ]
+      }],
+      ['vibrate', {
+        duration: 250,
+        waveform: 'sawtooth',
+        volume: 0.3,
+        frequencyEnvelope: [
+          { time: 0, frequency: 100 },
+          { time: 0.1, frequency: 150 },
+          { time: 0.2, frequency: 100 },
+          { time: 0.3, frequency: 150 },
+          { time: 0.4, frequency: 100 },
+          { time: 0.5, frequency: 150 },
+          { time: 0.6, frequency: 100 },
+          { time: 0.7, frequency: 150 },
+          { time: 1, frequency: 80 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 1.0 },
+          { time: 0.8, volume: 1.0 },
+          { time: 1, volume: 0.0 }
+        ]
+      }],
+      ['glow', {
+        duration: 600,
+        waveform: 'sine',
+        volume: 0.15,
+        frequencyEnvelope: [
+          { time: 0, frequency: 300 },
+          { time: 0.5, frequency: 500 },
+          { time: 1, frequency: 400 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 0.0 },
+          { time: 0.3, volume: 1.0 },
+          { time: 0.7, volume: 1.0 },
+          { time: 1, volume: 0.0 }
+        ]
+      }],
+      ['stretch', {
+        duration: 450,
+        waveform: 'triangle',
+        volume: 0.2,
+        frequencyEnvelope: [
+          { time: 0, frequency: 250 },
+          { time: 0.3, frequency: 180 },
+          { time: 0.7, frequency: 320 },
+          { time: 1, frequency: 250 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 0.6 },
+          { time: 0.2, volume: 1.0 },
+          { time: 0.8, volume: 0.9 },
+          { time: 1, volume: 0.0 }
+        ]
       }]
     ]);
 

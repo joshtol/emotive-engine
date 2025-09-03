@@ -9,7 +9,11 @@
   "files": [
     "dist",
     "src",
-    "types"
+    "types",
+    "assets/emotive-engine-icon.svg",
+    "assets/emotive-engine-full-BW.svg",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "rollup -c --environment NODE_ENV:production",
@@ -27,7 +31,15 @@
     "canvas",
     "ui",
     "component",
-    "interactive"
+    "interactive",
+    "emotion",
+    "particle",
+    "visualization",
+    "conversational-ui",
+    "ai-assistant",
+    "llm",
+    "chatbot",
+    "emotive"
   ],
   "author": "Joshua Tollette",
   "license": "MIT",
@@ -35,6 +47,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/joshtol/emotive-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joshtol/emotive-engine/issues"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.6",

@@ -238,6 +238,21 @@ export const GESTURE_BASE_CONFIG = {
         }
     },
     
+    breathe: {
+        duration: 3500,    // Slow, deliberate breathing cycle
+        scaleAmount: 0.25, // 25% expansion/contraction
+        glowAmount: 0.4,   // Glow brightens on inhale
+        frequency: 1,      // One full breath cycle
+        easing: 'sine',    // Smooth, natural breathing curve
+        particleMotion: {
+            type: 'breathe',
+            strength: 0.8,     // Strong but gentle particle drift
+            inhaleRadius: 1.5, // Particles drift out to 1.5x orb radius
+            exhaleRadius: 0.3, // Particles pull in close on exhale
+            holdPercent: 0.1   // 10% breath hold at peaks
+        }
+    },
+    
     morph: {
         duration: 1000,
         morphType: 'fluid', // Type of morph animation
@@ -349,6 +364,31 @@ export const GESTURE_BASE_CONFIG = {
             jumpHeight: 60,
             squash: 0.8,
             stretch: 1.2
+        }
+    },
+    
+    narrowEye: {
+        duration: 500,
+        squintAmount: 0.4,  // Narrow to 60% of original height
+        easing: 'cubicOut',
+        holdDuration: 2000, // Hold the squint for 2 seconds
+        particleMotion: {
+            type: 'converge',
+            axis: 'vertical',
+            strength: 0.5,
+            targetY: 0.5      // Move particles toward center
+        }
+    },
+    
+    peerAround: {
+        duration: 800,
+        scanAngle: 45,      // Degrees to look left/right
+        pauseDuration: 300, // Pause at each extreme
+        easing: 'cubicInOut',
+        particleMotion: {
+            type: 'follow',
+            strength: 0.3,
+            lag: 100          // Particles lag behind core movement
         }
     }
 };

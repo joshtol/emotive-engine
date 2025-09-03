@@ -1,0 +1,62 @@
+# Development files
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js
+coverage/
+.nyc_output/
+
+# Demo files
+emotive-scifi-demo.html
+test-*.html
+DELETEME/
+
+# Build tools and config
+rollup.config.js
+.babelrc
+.eslintrc
+.prettierrc
+tsconfig.json
+vitest.config.js
+
+# Documentation source
+docs/
+
+# Git
+.git/
+.gitignore
+.github/
+
+# NPM
+.npmrc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Other
+.env
+.env.local
+.env.*.local
+*.map
+.cache/
+tmp/
+temp/
+
+# Keep these
+!dist/
+!src/
+!types/
+!assets/emotive-engine-icon.svg
+!assets/emotive-engine-full-BW.svg
+!README.md
+!LICENSE
+!package.json

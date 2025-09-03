@@ -13,7 +13,12 @@
       "Bash(ren:*)",
       "Bash(git remote set-url:*)",
       "Bash(git push:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(start http://localhost:8080/emotive-scifi-demo.html)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

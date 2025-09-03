@@ -545,6 +545,7 @@ class EmotiveMascot {
                 'flicker': 'startFlicker',
                 'vibrate': 'startVibrate',
                 'wave': 'startWave',
+                'breathe': 'startBreathe',
                 'morph': 'startMorph',
                 'slowBlink': 'startSlowBlink',
                 'look': 'startLook',
@@ -1070,6 +1071,217 @@ class EmotiveMascot {
 
 
     /**
+     * Sets a breathing pattern for the orb
+     * @param {number} inhale - Inhale duration in seconds
+     * @param {number} hold1 - Hold after inhale in seconds
+     * @param {number} exhale - Exhale duration in seconds
+     * @param {number} hold2 - Hold after exhale in seconds
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setBreathePattern(inhale, hold1, exhale, hold2) {
+        return this.errorBoundary.wrap(() => {
+            // Calculate total cycle time
+            const totalCycle = inhale + hold1 + exhale + hold2;
+            
+            // Store pattern for custom animation
+            this.breathePattern = {
+                inhale,
+                hold1,
+                exhale,
+                hold2,
+                totalCycle,
+                currentPhase: 'inhale',
+                phaseStartTime: Date.now(),
+                phaseProgress: 0
+            };
+            
+            // Start custom breathing animation
+            this.startBreathingAnimation();
+            
+            return this;
+        }, 'setBreathePattern', this)();
+    }
+    
+    /**
+     * Directly sets the orb scale with animation
+     * @param {number} scale - Target scale (1.0 = normal)
+     * @param {number} duration - Animation duration in milliseconds
+     * @param {string} easing - Easing function ('linear', 'ease', 'easeIn', 'easeOut', 'easeInOut')
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setOrbScale(scale, duration = 1000, easing = 'easeInOut') {
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer) {
+                // Create scale animation
+                const startScale = this.currentOrbScale || 1.0;
+                const startTime = Date.now();
+                
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Apply easing
+                    let easedProgress = progress;
+                    if (easing === 'easeIn') {
+                        easedProgress = progress * progress;
+                    } else if (easing === 'easeOut') {
+                        easedProgress = progress * (2 - progress);
+                    } else if (easing === 'easeInOut') {
+                        easedProgress = progress < 0.5
+                            ? 2 * progress * progress
+                            : -1 + (4 - 2 * progress) * progress;
+                    }
+                    
+                    // Calculate current scale
+                    this.currentOrbScale = startScale + (scale - startScale) * easedProgress;
+                    
+                    // Apply to renderer
+                    if (this.renderer.setCustomScale) {
+                        this.renderer.setCustomScale(this.currentOrbScale);
+                    }
+                    
+                    // Continue animation
+                    if (progress < 1 && this.isRunning) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+            }
+            
+            return this;
+        }, 'setOrbScale', this)();
+    }
+    
+    /**
+     * Applies a preset breathing pattern
+     * @param {string} type - Preset type: 'calm', 'anxious', 'meditative', 'deep'
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    breathe(type = 'calm') {
+        return this.errorBoundary.wrap(() => {
+            const presets = {
+                calm: { inhale: 4, hold1: 0, exhale: 4, hold2: 0 },        // 4-4 breathing
+                anxious: { inhale: 2, hold1: 0, exhale: 2, hold2: 0 },    // Quick shallow
+                meditative: { inhale: 4, hold1: 7, exhale: 8, hold2: 0 }, // 4-7-8 breathing
+                deep: { inhale: 5, hold1: 5, exhale: 5, hold2: 5 },       // Box breathing
+                sleep: { inhale: 6, hold1: 0, exhale: 8, hold2: 2 }       // Sleep breathing
+            };
+            
+            const pattern = presets[type] || presets.calm;
+            return this.setBreathePattern(pattern.inhale, pattern.hold1, pattern.exhale, pattern.hold2);
+        }, 'breathe', this)();
+    }
+    
+    /**
+     * Starts the custom breathing animation
+     * @private
+     */
+    startBreathingAnimation() {
+        // Cancel any existing breathing animation
+        if (this.breathingAnimationId) {
+            cancelAnimationFrame(this.breathingAnimationId);
+        }
+        
+        const animate = () => {
+            if (!this.breathePattern || !this.isRunning) return;
+            
+            const pattern = this.breathePattern;
+            const now = Date.now();
+            const phaseElapsed = (now - pattern.phaseStartTime) / 1000; // Convert to seconds
+            
+            let scale = 1.0;
+            let nextPhase = pattern.currentPhase;
+            
+            // Determine current phase and scale
+            switch (pattern.currentPhase) {
+                case 'inhale':
+                    if (phaseElapsed >= pattern.inhale) {
+                        nextPhase = 'hold1';
+                        pattern.phaseStartTime = now;
+                        this.emit('hold-start', { type: 'post-inhale' });
+                    } else {
+                        // Scale up during inhale
+                        const progress = phaseElapsed / pattern.inhale;
+                        scale = 1.0 + (0.3 * progress); // Expand to 1.3x
+                    }
+                    break;
+                    
+                case 'hold1':
+                    if (phaseElapsed >= pattern.hold1) {
+                        nextPhase = 'exhale';
+                        pattern.phaseStartTime = now;
+                        this.emit('exhale-start');
+                    }
+                    scale = 1.3; // Stay expanded
+                    break;
+                    
+                case 'exhale':
+                    if (phaseElapsed >= pattern.exhale) {
+                        nextPhase = 'hold2';
+                        pattern.phaseStartTime = now;
+                        this.emit('hold-start', { type: 'post-exhale' });
+                    } else {
+                        // Scale down during exhale
+                        const progress = phaseElapsed / pattern.exhale;
+                        scale = 1.3 - (0.4 * progress); // Contract to 0.9x
+                    }
+                    break;
+                    
+                case 'hold2':
+                    if (phaseElapsed >= pattern.hold2) {
+                        nextPhase = 'inhale';
+                        pattern.phaseStartTime = now;
+                        this.emit('inhale-start');
+                    }
+                    scale = 0.9; // Stay contracted
+                    break;
+            }
+            
+            // Update phase
+            if (nextPhase !== pattern.currentPhase) {
+                pattern.currentPhase = nextPhase;
+            }
+            
+            // Apply scale to renderer
+            if (this.renderer && this.renderer.setCustomScale) {
+                this.renderer.setCustomScale(scale);
+            }
+            
+            // Continue animation
+            this.breathingAnimationId = requestAnimationFrame(animate);
+        };
+        
+        // Start with inhale
+        this.breathePattern.currentPhase = 'inhale';
+        this.breathePattern.phaseStartTime = Date.now();
+        this.emit('inhale-start');
+        animate();
+    }
+    
+    /**
+     * Stops any active breathing animation
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    stopBreathing() {
+        return this.errorBoundary.wrap(() => {
+            if (this.breathingAnimationId) {
+                cancelAnimationFrame(this.breathingAnimationId);
+                this.breathingAnimationId = null;
+            }
+            
+            this.breathePattern = null;
+            
+            // Reset scale
+            if (this.renderer && this.renderer.setCustomScale) {
+                this.renderer.setCustomScale(1.0);
+            }
+            
+            return this;
+        }, 'stopBreathing', this)();
+    }
+    
+    /**
      * Adds an event listener for external integration hooks
      * @param {string} event - Event name
      * @param {Function} callback - Event callback function
@@ -1473,11 +1685,14 @@ class EmotiveMascot {
      * Renders the current frame (called by AnimationController)
      */
     render() {
-        this.errorBoundary.wrap(() => {
-            const renderStart = this.debugMode ? performance.now() : 0;
+        let deltaTime = 16.67; // Default fallback value
+        let renderStart = 0;
+        
+        try {
+            renderStart = this.debugMode ? performance.now() : 0;
             
             // Get deltaTime from animation controller
-            const deltaTime = this.animationController ? this.animationController.deltaTime : 16.67;
+            deltaTime = this.animationController ? this.animationController.deltaTime : 16.67;
             
             // Prepare render state
             const renderState = {
@@ -1516,6 +1731,7 @@ class EmotiveMascot {
             // Use emotionParams min/max if available, otherwise fall back to stateProps
             let minParticles = emotionParams.minParticles !== undefined ? emotionParams.minParticles : (stateProps.minParticles || 0);
             let maxParticles = emotionParams.maxParticles !== undefined ? emotionParams.maxParticles : (stateProps.maxParticles || 10);
+            
             
             // Special case for zen: mix falling and orbiting behaviors
             if (renderState.emotion === 'zen') {
@@ -1613,7 +1829,9 @@ class EmotiveMascot {
                     });
                 }
             }
-        }, 'main-render')();
+        } catch (error) {
+            this.errorBoundary.logError(error, 'main-render');
+        }
     }
 
     /**

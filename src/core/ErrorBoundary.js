@@ -31,7 +31,7 @@ class ErrorBoundary {
     wrap(fn, context, fallbackValue = null) {
         return (...args) => {
             try {
-                return fn.apply(this, args);
+                return fn(...args);
             } catch (error) {
                 this.logError(error, context);
                 return fallbackValue !== null ? fallbackValue : this.getDefault(context);

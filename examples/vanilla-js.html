@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Vanilla JS Example</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #mascot-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Emotive Engine - Vanilla JavaScript Example</h1>
+    
+    <div id="mascot-container">
+        <canvas id="emotive-canvas" width="400" height="400"></canvas>
+    </div>
+    
+    <div id="controls">
+        <button onclick="setEmotion('joy')">Joy</button>
+        <button onclick="setEmotion('curiosity')">Curiosity</button>
+        <button onclick="setEmotion('contemplation')">Contemplation</button>
+        <button onclick="setEmotion('excitement')">Excitement</button>
+        <button onclick="setEmotion('love')">Love</button>
+        <button onclick="setEmotion('suspicion')">Suspicion</button>
+        <button onclick="addGesture('wave')">Wave</button>
+        <button onclick="addGesture('pulse')">Pulse</button>
+        <button onclick="startBreathing()">Start Breathing</button>
+        <button onclick="stopBreathing()">Stop Breathing</button>
+    </div>
+
+    <!-- Include the Emotive Engine library -->
+    <script src="../dist/emotive-engine.umd.js"></script>
+    
+    <script>
+        // Initialize the Emotive Engine
+        const mascot = new EmotiveEngine({
+            canvasId: 'emotive-canvas',
+            emotion: 'neutral',
+            particleCount: 100,
+            glowIntensity: 1.2,
+            enableGestures: true
+        });
+        
+        // Start the animation
+        mascot.start();
+        
+        // Helper functions for controls
+        function setEmotion(emotion) {
+            mascot.setEmotion(emotion);
+            console.log(`Emotion changed to: ${emotion}`);
+        }
+        
+        function addGesture(gesture) {
+            mascot.addGesture(gesture);
+            console.log(`Gesture triggered: ${gesture}`);
+        }
+        
+        function startBreathing() {
+            mascot.breathe('calm');
+            console.log('Started calm breathing pattern');
+        }
+        
+        function stopBreathing() {
+            mascot.stopBreathing();
+            console.log('Stopped breathing pattern');
+        }
+        
+        // Listen to events
+        mascot.on('stateChange', (state) => {
+            console.log('State changed:', state);
+        });
+        
+        mascot.on('gestureComplete', (gestureName) => {
+            console.log(`Gesture completed: ${gestureName}`);
+        });
+        
+        // Example of emotion blending
+        setTimeout(() => {
+            mascot.blendEmotions(
+                ['joy', 'excitement'],
+                [0.7, 0.3]
+            );
+            console.log('Blended joy and excitement');
+        }, 5000);
+    </script>
+</body>
+</html>

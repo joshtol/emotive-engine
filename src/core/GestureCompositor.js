@@ -11,6 +11,59 @@ class GestureCompositor {
     constructor() {
         // Cache for computed parameters
         this.cache = new Map();
+        
+        // Pre-calculate common easing curves for performance
+        this.easingCache = new Map();
+        this.preCalculateEasingCurves();
+    }
+    
+    /**
+     * Pre-calculate common easing curves to avoid repeated calculations
+     */
+    preCalculateEasingCurves() {
+        const steps = 100;
+        const easingTypes = ['linear', 'ease-in', 'ease-out', 'ease-in-out', 'bounce'];
+        
+        for (const type of easingTypes) {
+            const curve = new Float32Array(steps + 1);
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                curve[i] = this.calculateEasing(t, type);
+            }
+            this.easingCache.set(type, curve);
+        }
+    }
+    
+    /**
+     * Calculate easing value
+     */
+    calculateEasing(t, type) {
+        switch(type) {
+            case 'ease-in':
+                return t * t;
+            case 'ease-out':
+                return t * (2 - t);
+            case 'ease-in-out':
+                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            case 'bounce':
+                if (t < 0.363636) return 7.5625 * t * t;
+                if (t < 0.727272) return 7.5625 * (t -= 0.545454) * t + 0.75;
+                if (t < 0.909090) return 7.5625 * (t -= 0.818181) * t + 0.9375;
+                return 7.5625 * (t -= 0.954545) * t + 0.984375;
+            default:
+                return t; // linear
+        }
+    }
+    
+    /**
+     * Get easing value from cache
+     */
+    getEasingValue(progress, type) {
+        const curve = this.easingCache.get(type);
+        if (!curve) return progress; // Fallback to linear
+        
+        const index = Math.min(Math.floor(progress * 100), 100);
+        return curve[index];
     }
     
     /**
@@ -35,7 +88,11 @@ class GestureCompositor {
         // Compose the final parameters
         const composed = this.applyModifiers(base, emotionMod, undertoneMod, gesture);
         
-        // Cache the result
+        // Cache the result with size limit
+        if (this.cache.size > 100) {
+            // Clear cache if it gets too large
+            this.cache.clear();
+        }
         this.cache.set(cacheKey, composed);
         
         return composed;

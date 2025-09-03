@@ -42,12 +42,29 @@ class EmotiveRenderer {
             gazeOffset: { x: 0, y: 0 },
             gazeIntensity: 0,
             gazeLocked: false,
-            zenVortexIntensity: 1.0  // Adjustable whirlpool intensity for zen
+            zenVortexIntensity: 1.0,  // Adjustable whirlpool intensity for zen
+            // Suspicion state
+            squintAmount: 0,         // 0-1, how much the eye is narrowed
+            targetSquintAmount: 0,   // Target squint amount to animate to
+            scanPhase: 0,            // Current phase of scanning animation
+            lastScanTime: 0,         // Last time we did a scan
+            isSuspicious: false,     // Track if we're in suspicion mode
+            // Custom scale for breathing
+            customScale: null        // When set, overrides normal breathing scale
         };
         
         // Animation state
         this.breathingPhase = 0;
         this.blinkTimer = 0;
+        
+        // Track animation frame IDs to prevent memory leaks
+        this.animationFrameIds = {
+            colorTransition: null,
+            eyeClose: null,
+            eyeOpen: null,
+            zenEnter: null,
+            zenExit: null
+        };
         
         // Offscreen canvas for double buffering
         this.offscreenCanvas = null;
@@ -144,6 +161,12 @@ class EmotiveRenderer {
                 params: null
             },
             wave: {
+                active: false,
+                startTime: 0,
+                progress: 0,
+                params: null
+            },
+            breathe: {
                 active: false,
                 startTime: 0,
                 progress: 0,
@@ -511,11 +534,21 @@ class EmotiveRenderer {
         }
         
         // Calculate breathing factors - INVERSE for core and glow
-        // Zen uses full breath depth regardless of breathRate
-        const effectiveBreathDepth = this.state.emotion === 'zen' ? this.state.breathDepth : 
-                                     this.state.breathDepth * this.state.breathRate;
-        const coreBreathFactor = 1 + Math.sin(this.breathingPhase) * effectiveBreathDepth;
-        let glowBreathFactor = 1 - Math.sin(this.breathingPhase) * effectiveBreathDepth * 0.5; // Glow breathes opposite, less pronounced
+        // Use custom scale if set (for breathing exercises), otherwise use normal breathing
+        let coreBreathFactor, glowBreathFactor;
+        
+        if (this.state.customScale !== null) {
+            // Use custom scale directly for breathing exercises
+            coreBreathFactor = this.state.customScale;
+            glowBreathFactor = 1 + (this.state.customScale - 1) * 0.5; // Glow follows at half intensity
+        } else {
+            // Normal breathing behavior
+            // Zen uses full breath depth regardless of breathRate
+            const effectiveBreathDepth = this.state.emotion === 'zen' ? this.state.breathDepth : 
+                                         this.state.breathDepth * this.state.breathRate;
+            coreBreathFactor = 1 + Math.sin(this.breathingPhase) * effectiveBreathDepth;
+            glowBreathFactor = 1 - Math.sin(this.breathingPhase) * effectiveBreathDepth * 0.5; // Glow breathes opposite, less pronounced
+        }
         
         // Add nervous glow pulse if needed
         if (this.state.undertone === 'nervous' && this.undertoneModifiers.nervous.glowPulse) {
@@ -683,7 +716,7 @@ class EmotiveRenderer {
         }
         
         // Render core
-        this.renderCore(coreX, coreY, coreRadius);
+        this.renderCore(coreX, coreY, coreRadius, deltaTime);
         
         // Reset alpha
         if (this.state.sleeping) {
@@ -787,7 +820,7 @@ class EmotiveRenderer {
     /**
      * Render the white core with eye narrowing effect
      */
-    renderCore(x, y, radius) {
+    renderCore(x, y, radius, deltaTime = 16.67) {
         // Check if we're in zen transition
         if (this.zenTransition.active) {
             this.renderZenCore(x, y, radius);
@@ -816,6 +849,54 @@ class EmotiveRenderer {
         // Apply eye animation from gestures (like slow blink)
         if (this.gestureTransform && this.gestureTransform.eyeOpenness !== undefined) {
             scaleY *= this.gestureTransform.eyeOpenness;
+        }
+        
+        // Animate squint amount smoothly
+        if (this.state.targetSquintAmount !== undefined) {
+            const squintSpeed = 0.02; // Speed of squint animation
+            if (Math.abs(this.state.squintAmount - this.state.targetSquintAmount) > 0.01) {
+                this.state.squintAmount += (this.state.targetSquintAmount - this.state.squintAmount) * squintSpeed * (deltaTime / 16.67);
+            } else {
+                this.state.squintAmount = this.state.targetSquintAmount;
+            }
+        }
+        
+        // Apply suspicion squinting
+        if (this.state.isSuspicious) {
+            // Narrow the eye for suspicion (gradual animation)
+            scaleY *= (1 - this.state.squintAmount); // 0.4 squint = 60% of normal height
+            
+            // Add slow periodic scanning motion
+            const now = Date.now();
+            const scanInterval = 5000; // Scan every 5 seconds (slower)
+            const scanDuration = 2000;  // Each scan takes 2s (slower)
+            const timeSinceScan = now - this.state.lastScanTime;
+            
+            if (timeSinceScan > scanInterval) {
+                this.state.lastScanTime = now;
+                this.state.scanPhase = 0;
+            }
+            
+            if (this.state.scanPhase < scanDuration) {
+                this.state.scanPhase += deltaTime;
+                const scanProgress = this.state.scanPhase / scanDuration;
+                // Smooth scanning motion - look left, then right, then center
+                let scanOffset = 0;
+                if (scanProgress < 0.4) {
+                    // Slowly look left
+                    const leftProgress = scanProgress / 0.4;
+                    scanOffset = -Math.sin(leftProgress * Math.PI / 2) * 20; // Max 20 pixels left
+                } else if (scanProgress < 0.8) {
+                    // Slowly look right  
+                    const rightProgress = (scanProgress - 0.4) / 0.4;
+                    scanOffset = -20 + Math.sin(rightProgress * Math.PI) * 40; // From -20 to +20
+                } else {
+                    // Return to center
+                    const centerProgress = (scanProgress - 0.8) / 0.2;
+                    scanOffset = 20 * (1 - centerProgress); // From +20 back to 0
+                }
+                x += scanOffset * this.scaleFactor;
+            }
         }
         
         // Apply eye arc for Buddha eyes (zen state)
@@ -1503,9 +1584,16 @@ class EmotiveRenderer {
             (this.colorTransition.toIntensity - this.colorTransition.fromIntensity) * eased;
         
         if (progress < 1) {
-            requestAnimationFrame(() => this.animateColorTransition());
+            // Cancel any existing color transition animation
+            if (this.animationFrameIds.colorTransition) {
+                cancelAnimationFrame(this.animationFrameIds.colorTransition);
+                this.animationFrameIds.colorTransition = null;
+            }
+            this.animationFrameIds.colorTransition = requestAnimationFrame(() => this.animateColorTransition());
         } else {
             this.colorTransition.active = false;
+            // Clean up animation frame ID
+            this.animationFrameIds.colorTransition = null;
         }
     }
     
@@ -1541,6 +1629,24 @@ class EmotiveRenderer {
         // Update emotion state BEFORE handling transitions to avoid timing issues
         const previousEmotion = this.state.emotion;
         this.state.emotion = emotion;
+        
+        // Handle suspicion state
+        if (emotion === 'suspicion') {
+            this.state.isSuspicious = true;
+            // Store target squint amount, we'll animate to it
+            this.state.targetSquintAmount = properties && properties.coreSquint ? properties.coreSquint : 0.4;
+            if (this.state.squintAmount === undefined) {
+                this.state.squintAmount = 0; // Start from no squint
+            }
+            this.state.lastScanTime = Date.now();
+            this.state.scanPhase = 0;
+        } else {
+            this.state.isSuspicious = false;
+            this.state.targetSquintAmount = 0;
+            if (this.state.squintAmount === undefined) {
+                this.state.squintAmount = 0;
+            }
+        }
         
         // Handle zen state transitions specially
         if (emotion === 'zen' && previousEmotion !== 'zen') {
@@ -1607,6 +1713,14 @@ class EmotiveRenderer {
     }
     
     /**
+     * Sets a custom scale for the orb (used for breathing exercises)
+     * @param {number} scale - Scale factor (1.0 = normal)
+     */
+    setCustomScale(scale) {
+        this.state.customScale = scale;
+    }
+    
+    /**
      * Start speaking animation
      */
     startSpeaking() {
@@ -1648,12 +1762,26 @@ class EmotiveRenderer {
      * Animate eye closing for sleep, then dim
      */
     animateEyeClose() {
+        // Cancel any existing eye animations
+        if (this.animationFrameIds.eyeClose) {
+            cancelAnimationFrame(this.animationFrameIds.eyeClose);
+            this.animationFrameIds.eyeClose = null;
+        }
+        if (this.animationFrameIds.eyeOpen) {
+            cancelAnimationFrame(this.animationFrameIds.eyeOpen);
+            this.animationFrameIds.eyeOpen = null;
+        }
+        
         const startTime = performance.now();
         const eyeCloseDuration = 2000; // 2 seconds to close eyes
         const dimDuration = 1000; // 1 second to dim after eyes close
         
         const animate = () => {
-            if (!this.state.sleeping) return; // Stop if woken up
+            if (!this.state.sleeping) {
+                // Clean up animation frame ID
+                this.animationFrameIds.eyeClose = null;
+                return; // Stop if woken up
+            }
             
             const elapsed = performance.now() - startTime;
             
@@ -1667,7 +1795,7 @@ class EmotiveRenderer {
                 this.state.sleepDimness = 1.0;
                 this.state.sleepScale = 1.0;
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.eyeClose = requestAnimationFrame(animate);
             } else if (elapsed < eyeCloseDuration + dimDuration) {
                 // Phase 2: Dim the orb
                 const dimProgress = (elapsed - eyeCloseDuration) / dimDuration;
@@ -1680,16 +1808,18 @@ class EmotiveRenderer {
                 this.state.sleepDimness = 1.0 - (dimEased * 0.4); // Dim to 0.6
                 this.state.sleepScale = 1.0 - (dimEased * 0.1); // Scale to 0.9
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.eyeClose = requestAnimationFrame(animate);
             } else {
                 // Final state
                 this.state.eyeOpenness = 0.1;
                 this.state.sleepDimness = 0.6;
                 this.state.sleepScale = 0.9;
+                // Clean up animation frame ID
+                this.animationFrameIds.eyeClose = null;
             }
         };
         
-        requestAnimationFrame(animate);
+        this.animationFrameIds.eyeClose = requestAnimationFrame(animate);
     }
     
     /**
@@ -1724,6 +1854,16 @@ class EmotiveRenderer {
      * Animate eye opening after wake - brighten first, then open eyes
      */
     animateEyeOpen() {
+        // Cancel any existing eye animations
+        if (this.animationFrameIds.eyeOpen) {
+            cancelAnimationFrame(this.animationFrameIds.eyeOpen);
+            this.animationFrameIds.eyeOpen = null;
+        }
+        if (this.animationFrameIds.eyeClose) {
+            cancelAnimationFrame(this.animationFrameIds.eyeClose);
+            this.animationFrameIds.eyeClose = null;
+        }
+        
         const startTime = performance.now();
         const brightenDuration = 500; // 0.5 seconds to brighten
         const eyeOpenDuration = 1000; // 1 second to open eyes
@@ -1743,7 +1883,7 @@ class EmotiveRenderer {
                 // Keep eyes closed during brightening
                 this.state.eyeOpenness = 0.1;
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.eyeOpen = requestAnimationFrame(animate);
             } else if (elapsed < brightenDuration + eyeOpenDuration) {
                 // Phase 2: Open eyes
                 const eyeProgress = (elapsed - brightenDuration) / eyeOpenDuration;
@@ -1756,22 +1896,34 @@ class EmotiveRenderer {
                 // Animate eye opening
                 this.state.eyeOpenness = 0.1 + eyeEased * 0.9; // Open from 0.1 to 1.0
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.eyeOpen = requestAnimationFrame(animate);
             } else {
                 // Final state
                 this.state.eyeOpenness = 1.0;
                 this.state.sleepDimness = 1.0;
                 this.state.sleepScale = 1.0;
+                // Clean up animation frame ID
+                this.animationFrameIds.eyeOpen = null;
             }
         };
         
-        requestAnimationFrame(animate);
+        this.animationFrameIds.eyeOpen = requestAnimationFrame(animate);
     }
     
     /**
      * Enter zen meditation mode with animation
      */
     enterZenMode(targetColor, targetIntensity) {
+        // Cancel any existing zen animations
+        if (this.animationFrameIds.zenEnter) {
+            cancelAnimationFrame(this.animationFrameIds.zenEnter);
+            this.animationFrameIds.zenEnter = null;
+        }
+        if (this.animationFrameIds.zenExit) {
+            cancelAnimationFrame(this.animationFrameIds.zenExit);
+            this.animationFrameIds.zenExit = null;
+        }
+        
         // Immediately set to zen color and ZERO intensity to avoid any flash
         this.state.glowColor = targetColor;
         this.state.glowIntensity = 0; // Start with no glow at all
@@ -1794,7 +1946,11 @@ class EmotiveRenderer {
         };
         
         const animate = () => {
-            if (!this.zenTransition.active || this.zenTransition.phase !== 'entering') return;
+            if (!this.zenTransition.active || this.zenTransition.phase !== 'entering') {
+                // Clean up animation frame ID
+                this.animationFrameIds.zenEnter = null;
+                return;
+            }
             
             const elapsed = performance.now() - this.zenTransition.startTime;
             const horizontalNarrowDuration = 200; // 0.2s for sunset effect - FAST
@@ -1813,7 +1969,7 @@ class EmotiveRenderer {
                 this.zenTransition.petalSpread = 0;
                 this.zenTransition.smileCurve = 0;
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
             } else if (elapsed < horizontalNarrowDuration + arcFormDuration) {
                 // Phase 2: Arc formation
                 const arcProgress = (elapsed - horizontalNarrowDuration) / arcFormDuration;
@@ -1829,7 +1985,7 @@ class EmotiveRenderer {
                     this.zenTransition.lotusMorph = lotusProgress * 0.3; // Reach 30% by end of this phase
                 }
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
             } else if (elapsed < horizontalNarrowDuration + arcFormDuration + lotusMorphDuration) {
                 // Phase 3: Lotus blooming - gradually bring up intensity
                 const lotusProgress = (elapsed - horizontalNarrowDuration - arcFormDuration) / lotusMorphDuration;
@@ -1857,7 +2013,7 @@ class EmotiveRenderer {
                     this.zenTransition.smileCurve = Math.sin(smileProgress * Math.PI / 2); // Smooth ease
                 }
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
             } else {
                 // Final state - in meditation with full lotus
                 this.zenTransition.phase = 'in';
@@ -1870,10 +2026,12 @@ class EmotiveRenderer {
                 
                 // Set gentle vortex for zen state
                 this.state.zenVortexIntensity = 1.0;  // Can be adjusted: 0.5 = very gentle, 2.0 = strong
+                // Clean up animation frame ID
+                this.animationFrameIds.zenEnter = null;
             }
         };
         
-        requestAnimationFrame(animate);
+        this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
     }
     
     /**
@@ -1882,12 +2040,26 @@ class EmotiveRenderer {
     exitZenMode(targetEmotion, targetColor, targetIntensity) {
         if (!this.zenTransition.active || this.zenTransition.phase !== 'in') return;
         
+        // Cancel any existing zen animations
+        if (this.animationFrameIds.zenEnter) {
+            cancelAnimationFrame(this.animationFrameIds.zenEnter);
+            this.animationFrameIds.zenEnter = null;
+        }
+        if (this.animationFrameIds.zenExit) {
+            cancelAnimationFrame(this.animationFrameIds.zenExit);
+            this.animationFrameIds.zenExit = null;
+        }
+        
         this.zenTransition.phase = 'exiting';
         this.zenTransition.startTime = performance.now();
         this.zenTransition.targetEmotion = targetEmotion;
         
         const animate = () => {
-            if (!this.zenTransition.active || this.zenTransition.phase !== 'exiting') return;
+            if (!this.zenTransition.active || this.zenTransition.phase !== 'exiting') {
+                // Clean up animation frame ID
+                this.animationFrameIds.zenExit = null;
+                return;
+            }
             
             const elapsed = performance.now() - this.zenTransition.startTime;
             const straightenDuration = 150; // 0.15s to straighten arc - FAST
@@ -1918,7 +2090,7 @@ class EmotiveRenderer {
                     this.zenTransition.lotusMorph = 1.0 * (1 - morphProgress); // Lotus disappears
                 }
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.zenExit = requestAnimationFrame(animate);
             } else if (elapsed < straightenDuration + awakeDuration) {
                 // Phase 2: Awakening gestures
                 const awakeProgress = (elapsed - straightenDuration) / awakeDuration;
@@ -1947,7 +2119,7 @@ class EmotiveRenderer {
                     this.state.glowIntensity = 1.0 + (0.5 * driftProg); // Brighten
                 }
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.zenExit = requestAnimationFrame(animate);
             } else if (elapsed < straightenDuration + awakeDuration + expandDuration) {
                 // Phase 3: Horizontal expansion (sunrise)
                 const expandProgress = (elapsed - straightenDuration - awakeDuration) / expandDuration;
@@ -1958,7 +2130,7 @@ class EmotiveRenderer {
                 this.state.driftY = -10 * (1 - expandProgress); // Return to center
                 this.state.glowIntensity = 1.5 - (0.5 * expandProgress); // Normal glow
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.zenExit = requestAnimationFrame(animate);
             } else if (elapsed < straightenDuration + awakeDuration + expandDuration + settleDuration) {
                 // Phase 4: Final settle pulse
                 const settleProgress = (elapsed - straightenDuration - awakeDuration - expandDuration) / settleDuration;
@@ -1967,7 +2139,7 @@ class EmotiveRenderer {
                 this.zenTransition.scaleX = 1.0 + (pulse * 0.05);
                 this.zenTransition.scaleY = 1.0 + (pulse * 0.05);
                 
-                requestAnimationFrame(animate);
+                this.animationFrameIds.zenExit = requestAnimationFrame(animate);
             } else {
                 // Complete - reset to normal
                 this.zenTransition.active = false;
@@ -1980,10 +2152,12 @@ class EmotiveRenderer {
                 this.zenTransition.smileCurve = 0;
                 this.state.shakeOffset = 0;
                 this.state.driftY = 0;
+                // Clean up animation frame ID
+                this.animationFrameIds.zenExit = null;
             }
         };
         
-        requestAnimationFrame(animate);
+        this.animationFrameIds.zenExit = requestAnimationFrame(animate);
     }
     
     /**
@@ -2146,6 +2320,9 @@ class EmotiveRenderer {
                     break;
                 case 'wave':
                     gestureTransform = this.applyWave(anim, easedProgress);
+                    break;
+                case 'breathe':
+                    gestureTransform = this.applyBreathe(anim, easedProgress);
                     break;
                 case 'morph':
                     gestureTransform = this.applyMorph(anim, easedProgress);
@@ -2409,6 +2586,46 @@ class EmotiveRenderer {
         };
     }
     
+    applyBreathe(anim, progress) {
+        // Deliberate, mindful breathing animation
+        const params = anim.params;
+        const holdPercent = params.particleMotion?.holdPercent || 0.1;
+        
+        // Create a breathing curve with holds at peaks
+        let breathPhase;
+        if (progress < 0.4) {
+            // Inhale phase (0-40%)
+            breathPhase = Math.sin((progress / 0.4) * Math.PI / 2);
+        } else if (progress < 0.4 + holdPercent) {
+            // Hold at full inhale
+            breathPhase = 1.0;
+        } else if (progress < 0.9) {
+            // Exhale phase  
+            const exhaleProgress = (progress - 0.4 - holdPercent) / (0.5 - holdPercent);
+            breathPhase = Math.cos(exhaleProgress * Math.PI / 2);
+        } else {
+            // Hold at full exhale
+            breathPhase = 0;
+        }
+        
+        // Apply scale changes - expand on inhale
+        const scaleAmount = params.scaleAmount || 0.25;
+        const scale = 1 + breathPhase * scaleAmount;
+        
+        // Apply glow changes - brighten on inhale
+        const glowAmount = params.glowAmount || 0.4;
+        const glow = 1 + breathPhase * glowAmount;
+        
+        // Store breath phase for particle system
+        anim.breathPhase = breathPhase;
+        
+        return {
+            scale: scale,
+            glow: glow,
+            breathPhase: breathPhase // Pass to particles for synchronized motion
+        };
+    }
+    
     applyMorph(anim, progress) {
         // Fluid morphing effect
         const morph = Math.sin(progress * Math.PI * 2);
@@ -2602,12 +2819,19 @@ class EmotiveRenderer {
         // Find the first active gesture with particle motion
         for (const [gestureName, anim] of Object.entries(this.gestureAnimations)) {
             if (anim.active && anim.params && anim.params.particleMotion) {
-                return {
+                const gestureInfo = {
                     name: gestureName,
                     particleMotion: anim.params.particleMotion,
                     progress: anim.progress || 0,
                     params: anim.params
                 };
+                
+                // Include breathPhase for breathe gesture
+                if (gestureName === 'breathe' && anim.breathPhase !== undefined) {
+                    gestureInfo.breathPhase = anim.breathPhase;
+                }
+                
+                return gestureInfo;
             }
         }
         return null;
@@ -2629,6 +2853,7 @@ class EmotiveRenderer {
     startFlicker() { this.startGesture('flicker'); }
     startVibrate() { this.startGesture('vibrate'); }
     startWave() { this.startGesture('wave'); }
+    startBreathe() { this.startGesture('breathe'); }
     startMorph() { this.startGesture('morph'); }
     startSlowBlink() { this.startGesture('slowBlink'); }
     startLook() { this.startGesture('look'); }
@@ -2664,7 +2889,27 @@ class EmotiveRenderer {
      * Clean up resources
      */
     destroy() {
+        // Cancel all animation frames to prevent memory leaks
+        for (const key in this.animationFrameIds) {
+            if (this.animationFrameIds[key]) {
+                cancelAnimationFrame(this.animationFrameIds[key]);
+                this.animationFrameIds[key] = null;
+            }
+        }
+        
+        // Clear animation states
+        this.colorTransition.active = false;
+        if (this.zenTransition) {
+            this.zenTransition.active = false;
+        }
+        
+        // Clear other resources
         this.speakingRings = [];
+        
+        // Clear gesture compositor cache
+        if (this.gestureCompositor) {
+            this.gestureCompositor.clearCache();
+        }
     }
 }
 
