@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMOTIVE A.I. Core - Neural Interface</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0a0e1a; 
+            background-image:
+                linear-gradient(rgba(0, 229, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(rgba(200, 200, 200, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200, 200, 200, 0.05) 1px, transparent 1px);
+            background-size:
+                25px 25px, 25px 25px, 100px 100px, 100px 100px;
+        }
+
+        /* Keyframe animations for effects */
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); box-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5); }
+            50% { opacity: 1; transform: scale(1.02); box-shadow: 0 0 15px rgba(0, 229, 255, 0.9), 0 0 30px rgba(0, 229, 255, 0.7); }
+        }
+        @keyframes scanline {
+            0% { transform: translateY(-10%); opacity: 0; }
+            10%, 90% { opacity: 0.4; }
+            100% { transform: translateY(110%); opacity: 0; }
+        }
+        @keyframes subtle-glow {
+            0%, 100% { background-color: rgba(0, 229, 255, 0.7); box-shadow: 0 0 8px rgba(0, 229, 255, 0.5); }
+            50% { background-color: rgba(0, 229, 255, 1); box-shadow: 0 0 12px rgba(0, 229, 255, 0.8); }
+        }
+        @keyframes subtle-glow-cyan {
+            0%, 100% { color: rgba(0, 229, 255, 0.8); text-shadow: 0 0 5px rgba(0, 229, 255, 0.6); }
+            50% { color: rgba(0, 229, 255, 1); text-shadow: 0 0 8px rgba(0, 229, 255, 0.8); }
+        }
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes data-flow {
+            0% { transform: translateY(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+
+        /* Main display container */
+        .display-container {
+            width: 90vw;
+            height: 90vw;
+            max-width: 600px;
+            max-height: 600px;
+            aspect-ratio: 1 / 1;
+            position: relative;
+            
+            /* Glass Effect */
+            background: rgba(10, 14, 26, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+
+            /* Frame Effect */
+            border: 2px solid #2c303a;
+            padding: 20px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.6);
+            border-radius: 0.5rem;
+        }
+
+        /* Inner container for content */
+        .display-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            border-radius: 0.375rem;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Hexagonal grid overlay */
+        .display-content::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(150deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(30deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px);
+            background-size: 94px 54px;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Canvas for Emotive mascot */
+        #emotive-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: relative;
+            z-index: 10;
+        }
+
+        .holo-element {
+            position: absolute;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Corner brackets */
+        .corner-bracket { width: 50px; height: 50px; }
+        .corner-bracket::before, .corner-bracket::after { content: ''; position: absolute; background-color: rgba(0, 229, 255, 0.8); animation: subtle-glow 4s infinite ease-in-out; }
+        .top-left { top: 0; left: 0; }
+        .top-left::before { height: 4px; width: 100%; top: 0; left: 0; }
+        .top-left::after { width: 4px; height: 100%; top: 0; left: 0; }
+        .top-right { top: 0; right: 0; }
+        .top-right::before { height: 4px; width: 100%; top: 0; right: 0; }
+        .top-right::after { width: 4px; height: 100%; top: 0; right: 0; }
+        .bottom-left { bottom: 0; left: 0; }
+        .bottom-left::before { height: 4px; width: 100%; bottom: 0; left: 0; }
+        .bottom-left::after { width: 4px; height: 100%; bottom: 0; left: 0; }
+        .bottom-right { bottom: 0; right: 0; }
+        .bottom-right::before { height: 4px; width: 100%; bottom: 0; right: 0; }
+        .bottom-right::after { width: 4px; height: 100%; bottom: 0; right: 0; }
+        
+        .scan-line { 
+            width: 100%; 
+            height: 2px; 
+            background: linear-gradient(to right, transparent, rgba(0, 229, 255, 0.8), transparent); 
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.7); 
+            top: 0; 
+            left: 0; 
+            animation: scanline 8s infinite cubic-bezier(0.455, 0.030, 0.515, 0.955); 
+        }
+        
+        .holo-circle { 
+            border: 2px solid; 
+            border-radius: 50%; 
+            animation: rotate 80s infinite linear;
+            aspect-ratio: 1 / 1;  /* Force perfect circle */
+        }
+        .circle-1 { 
+            width: 90%; 
+            height: auto;  /* Let aspect-ratio handle height */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-color: rgba(0, 229, 255, 0.3); 
+            border-style: dotted; 
+        }
+        .circle-2 { 
+            width: 80%; 
+            height: auto;  /* Let aspect-ratio handle height */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-color: rgba(0, 229, 255, 0.4); 
+            animation-direction: reverse; 
+            animation-duration: 15s; 
+        }
+        
+        .light-pulse { 
+            width: 20px; 
+            height: 20px; 
+            background: rgba(0, 229, 255, 0.9); 
+            border-radius: 50%; 
+            bottom: 25px; 
+            right: 25px; 
+            animation: pulse 3s infinite ease-in-out; 
+        }
+        
+        /* Info display */
+        .info-display { 
+            bottom: 25px; 
+            left: 25px; 
+            font-family: 'Chakra Petch', sans-serif; 
+            font-size: 0.9rem;
+            width: calc(100% - 50px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 200;
+        }
+        .info-display > .status-text { 
+            animation: subtle-glow-cyan 4s infinite ease-in-out; 
+            text-transform: uppercase;
+        }
+        .info-display > .undertone-text {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #2c303a;
+            padding: 4px 12px;
+            border-radius: 4px;
+            color: #ccc;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        /* FPS Display */
+        .fps-display {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.75rem;
+            color: rgba(0, 229, 255, 0.9);
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            padding: 8px 12px;
+            border-radius: 4px;
+            z-index: 200;
+            display: none;
+            text-align: right;
+            line-height: 1.4;
+        }
+        .fps-display.active { display: block; }
+        .fps-display .fps-value { 
+            font-size: 1.2rem; 
+            font-weight: bold;
+            display: block;
+        }
+        .fps-display .fps-label { 
+            font-size: 0.65rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            background: rgba(10, 14, 26, 0.9);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.85rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+        }
+
+        .control-section h3 {
+            color: rgba(0, 229, 255, 0.9);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+        }
+
+        .sci-fi-btn {
+            width: 100%;
+            padding: 8px;
+            margin: 4px 0;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sci-fi-btn:hover {
+            background: rgba(0, 229, 255, 0.1);
+            border-color: rgba(0, 229, 255, 0.6);
+            color: rgba(0, 229, 255, 1);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+        }
+
+        .sci-fi-btn.active {
+            background: rgba(0, 229, 255, 0.2);
+            border-color: rgba(0, 229, 255, 0.8);
+            color: rgba(0, 229, 255, 1);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+
+        .btn-group.single {
+            grid-template-columns: 1fr;
+        }
+        
+        /* Collapsible sections */
+        .collapsible .section-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            margin: -5px;
+            transition: background 0.3s;
+        }
+        
+        .collapsible .section-header:hover {
+            background: rgba(0, 229, 255, 0.05);
+        }
+        
+        .collapse-indicator {
+            transition: transform 0.3s;
+            font-size: 0.8rem;
+        }
+        
+        .collapsible.collapsed .collapse-indicator {
+            transform: rotate(-90deg);
+        }
+        
+        .collapsible .section-content {
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s;
+            opacity: 1;
+        }
+        
+        .collapsible.collapsed .section-content {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.75rem;
+            color: rgba(0, 229, 255, 0.9);
+            z-index: 200;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Data flow effect */
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                padding: 0;
+                margin: 0;
+                overflow-x: hidden;
+                overflow-y: scroll;
+                -webkit-overflow-scrolling: touch;
+                height: 100%;
+                position: relative;
+                /* Force scrollbar to always show */
+                scrollbar-gutter: stable;
+            }
+            
+            /* Ensure scrollbar is always visible on webkit browsers */
+            body::-webkit-scrollbar {
+                width: 12px;
+            }
+            
+            body::-webkit-scrollbar-track {
+                background: rgba(0, 229, 255, 0.1);
+            }
+            
+            body::-webkit-scrollbar-thumb {
+                background: rgba(0, 229, 255, 0.5);
+                border-radius: 6px;
+            }
+            
+            body::-webkit-scrollbar-thumb:hover {
+                background: rgba(0, 229, 255, 0.7);
+            }
+            
+            html {
+                height: 100%;
+                overflow: hidden;
+            }
+            
+            .display-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                width: calc(100vw - 15px);  /* Account for scrollbar */
+                height: calc(100vw - 15px); /* Keep it square minus scrollbar */
+                max-height: 60vh; /* Don't take more than 60% of viewport height */
+                margin: 0;
+                z-index: 9999;
+                /* Proper glassmorphism 2025 */
+                background: rgba(10, 25, 35, 0.4);
+                backdrop-filter: blur(15px) saturate(180%);
+                -webkit-backdrop-filter: blur(15px) saturate(180%);
+                border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+                box-shadow: 0 8px 32px 0 rgba(0, 229, 255, 0.1);
+            }
+            
+            .control-panel {
+                width: 100%;
+                margin: 0;
+                padding: 15px;
+                padding-top: min(calc(100vw - 15px), 60vh); /* Match the display container height minus scrollbar */
+                padding-bottom: 100px;
+                min-height: 100vh;
+                position: relative;
+                z-index: 1;
+                background: #0a1923;
+            }
+            
+            .control-section {
+                margin-bottom: 20px;
+            }
+            
+            .control-section h3 {
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+            }
+            
+            .btn-group {
+                gap: 8px;
+            }
+            
+            .sci-fi-btn {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+            }
+            
+            /* Hide some decorative elements on mobile for performance */
+            .scan-line {
+                display: none;
+            }
+            
+            .corner-bracket {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .info-display {
+                font-size: 0.75rem;
+            }
+            
+            .status-indicator {
+                font-size: 0.65rem;
+                top: 10px;
+            }
+        }
+        
+        @media (max-width: 420px) {
+            /* On very small screens, container already fills width */
+            /* Just ensure controls have proper padding */
+            .control-panel {
+                padding-top: min(100vw, 60vh); /* Match display container */
+            }
+            
+            .sci-fi-btn {
+                padding: 6px 10px;
+                font-size: 0.7rem;
+            }
+            
+            .btn-group {
+                gap: 5px;
+            }
+            
+            /* Stack gesture buttons in smaller groups on very small screens */
+            .btn-group {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+        }
+        
+        .data-particle {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, transparent, rgba(0, 229, 255, 0.8), transparent);
+            animation: data-flow 3s infinite linear;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .control-panel {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top: auto;
+                transform: none;
+                width: 100%;
+                max-height: 40vh;
+                border-radius: 20px 20px 0 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
+
+    <div id="display-container" class="display-container">
+        <div class="display-content">
+            <!-- Emotive Canvas -->
+            <canvas id="emotive-canvas" width="600" height="600"></canvas>
+            
+            <!-- Holographic UI Elements -->
+            <div class="holo-element scan-line"></div>
+            <div class="holo-element corner-bracket top-left"></div>
+            <div class="holo-element corner-bracket top-right"></div>
+            <div class="holo-element corner-bracket bottom-left"></div>
+            <div class="holo-element corner-bracket bottom-right"></div>
+
+            <div id="holo-group">
+                <div class="holo-element holo-circle circle-1"></div>
+                <div class="holo-element holo-circle circle-2"></div>
+            </div>
+            
+            <!-- Info display -->
+            <div class="holo-element info-display">
+                <div class="status-text" id="emotion-display">EMOTION: NEUTRAL</div>
+                <div class="undertone-text" id="undertone-display">STABLE</div>
+            </div>
+
+            <!-- FPS Display -->
+            <div class="fps-display" id="fps-display">
+                <span class="fps-value" id="fps-value">0</span>
+                <span class="fps-label">FPS</span>
+                <div style="font-size: 0.7rem; opacity: 0.6;" id="frame-time">0ms</div>
+            </div>
+
+            <!-- Status Indicator -->
+            <div class="status-indicator" id="status-indicator">
+                NEURAL CORE: ONLINE
+            </div>
+
+            <!-- Removed data particles -->
+        </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <div class="control-section collapsible" data-section="emotion">
+            <h3 class="section-header">Emotion Matrix <span class="collapse-indicator">▼</span></h3>
+            <div class="btn-group section-content">
+                <button class="sci-fi-btn emotion-btn active" data-emotion="neutral">Neutral</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="joy">Joy</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="sadness">Sadness</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="anger">Anger</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="fear">Fear</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="surprise">Surprise</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="disgust">Disgust</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="love">Love</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="resting">Resting</button>
+                <button class="sci-fi-btn emotion-btn" data-emotion="zen">Zen</button>
+            </div>
+        </div>
+
+        <div class="control-section collapsible" data-section="undertone">
+            <h3 class="section-header">Undertone Modifier <span class="collapse-indicator">▼</span></h3>
+            <div class="btn-group single section-content">
+                <button class="sci-fi-btn undertone-btn" data-undertone="intense">Intense</button>
+                <button class="sci-fi-btn undertone-btn" data-undertone="nervous">Nervous</button>
+                <button class="sci-fi-btn undertone-btn" data-undertone="tired">Tired</button>
+                <button class="sci-fi-btn undertone-btn" data-undertone="confident">Confident</button>
+                <button class="sci-fi-btn undertone-btn" data-undertone="subdued">Subdued</button>
+                <button class="sci-fi-btn undertone-btn active" data-undertone="">Clear</button>
+            </div>
+        </div>
+
+        <div class="control-section collapsible" data-section="gesture">
+            <h3 class="section-header">Gesture Protocol <span class="collapse-indicator">▼</span></h3>
+            <div class="btn-group section-content">
+                <button class="sci-fi-btn gesture-btn" data-gesture="bounce">Bounce</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="pulse">Pulse</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="shake">Shake</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="spin">Spin</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="nod">Nod</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="wave">Wave</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="tilt">Tilt</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="expand">Expand</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="contract">Contract</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="flash">Flash</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="drift">Drift</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="stretch">Stretch</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="glow">Glow</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="flicker">Flicker</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="vibrate">Vibrate</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="morph">Morph</button>
+                <button class="sci-fi-btn gesture-btn" data-gesture="jump">Jump</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>System Control</h3>
+            <div class="btn-group single">
+                <button class="sci-fi-btn" id="fps-toggle">Show FPS</button>
+                <button class="sci-fi-btn" id="record-toggle">Start Recording</button>
+                <button class="sci-fi-btn" id="sleep-btn">Sleep Mode</button>
+                <button class="sci-fi-btn" id="wake-btn">Wake Up</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Emotive Engine -->
+    <script type="module">
+        import EmotiveEngine from './src/EmotiveMascot.js';
+
+        let mascot;
+        let currentEmotion = 'neutral';
+        let currentUndertone = '';
+        let showingFPS = false;
+        let isRecording = false;
+
+        // Initialize mascot
+        async function init() {
+            mascot = new EmotiveEngine({
+                canvasId: 'emotive-canvas',  // Pass the canvas ID string
+                startingEmotion: 'neutral',
+                emotionalResponsiveness: 0.8,
+                particleIntensity: 1.0,
+                glowIntensity: 0.8,
+                audioEnabled: false,
+                showFPS: false,
+                debugMode: false,
+                renderMode: 'default',
+                maxParticles: 100,
+                classicConfig: {
+                    particleSizeMultiplier: 0.8,
+                    glowColor: '#00e5ff'
+                }
+            });
+
+            // No need to call initialize() - constructor already does it
+            
+            // Start the animation
+            mascot.start();
+            
+            setupEventHandlers();
+            // Removed createDataParticles();
+            updateDisplay();
+        }
+
+        function setupEventHandlers() {
+            // Setup collapsible sections
+            document.querySelectorAll('.collapsible .section-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const section = header.parentElement;
+                    section.classList.toggle('collapsed');
+                });
+            });
+            
+            // Emotion buttons
+            document.querySelectorAll('.emotion-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentEmotion = btn.dataset.emotion;
+                    // Only pass undertone if it's not empty
+                    if (currentUndertone) {
+                        mascot.setEmotion(currentEmotion, currentUndertone);
+                    } else {
+                        mascot.setEmotion(currentEmotion);
+                    }
+                    
+                    // Update active state
+                    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Auto-collapse emotion section
+                    const emotionSection = document.querySelector('[data-section="emotion"]');
+                    if (emotionSection && !emotionSection.classList.contains('collapsed')) {
+                        emotionSection.classList.add('collapsed');
+                    }
+                    
+                    updateDisplay();
+                    showStatus(`Emotion: ${currentEmotion.toUpperCase()}`);
+                });
+            });
+
+            // Gesture buttons
+            document.querySelectorAll('.gesture-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const gesture = btn.dataset.gesture;
+                    mascot.express(gesture);  // Use express() method
+                    
+                    // Don't auto-collapse gesture section - allow rapid testing
+                    
+                    showStatus(`Gesture: ${gesture.toUpperCase()}`);
+                });
+            });
+
+            // Undertone buttons
+            document.querySelectorAll('.undertone-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentUndertone = btn.dataset.undertone;
+                    // Only pass undertone if it's not empty
+                    if (currentUndertone) {
+                        mascot.setEmotion(currentEmotion, currentUndertone);
+                    } else {
+                        mascot.setEmotion(currentEmotion);
+                    }
+                    
+                    // Update active state
+                    document.querySelectorAll('.undertone-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Auto-collapse undertone section
+                    const undertoneSection = document.querySelector('[data-section="undertone"]');
+                    if (undertoneSection && !undertoneSection.classList.contains('collapsed')) {
+                        undertoneSection.classList.add('collapsed');
+                    }
+                    
+                    updateDisplay();
+                    showStatus(`Undertone: ${currentUndertone.toUpperCase() || 'CLEARED'}`);
+                });
+            });
+
+            // FPS Toggle
+            document.getElementById('fps-toggle').addEventListener('click', function() {
+                showingFPS = !showingFPS;
+                mascot.config.showFPS = false; // We'll use our own FPS display
+                document.getElementById('fps-display').classList.toggle('active', showingFPS);
+                this.textContent = showingFPS ? 'Hide FPS' : 'Show FPS';
+                this.classList.toggle('active', showingFPS);
+                
+                if (showingFPS) {
+                    updateFPS();
+                }
+            });
+            
+            // Recording Toggle
+            document.getElementById('record-toggle').addEventListener('click', function() {
+                isRecording = !isRecording;
+                
+                if (isRecording) {
+                    mascot.startRecording();
+                    this.textContent = 'Stop Recording';
+                    this.classList.add('active');
+                    this.style.background = 'rgba(255, 0, 0, 0.2)';
+                    this.style.borderColor = 'rgba(255, 0, 0, 0.8)';
+                    showStatus('RECORDING ACTIVE');
+                } else {
+                    mascot.stopRecording();
+                    this.textContent = 'Start Recording';
+                    this.classList.remove('active');
+                    this.style.background = '';
+                    this.style.borderColor = '';
+                    showStatus('RECORDING STOPPED');
+                }
+            });
+
+            // Sleep/Wake
+            document.getElementById('sleep-btn').addEventListener('click', () => {
+                mascot.sleep();
+                showStatus('SLEEP MODE ACTIVATED');
+                document.getElementById('status-indicator').textContent = 'NEURAL CORE: STANDBY';
+            });
+
+            document.getElementById('wake-btn').addEventListener('click', () => {
+                mascot.wake();
+                showStatus('SYSTEM ONLINE');
+                document.getElementById('status-indicator').textContent = 'NEURAL CORE: ONLINE';
+            });
+
+            // Removed mouse interaction that was causing issues with circles
+            // The perspective transform was interfering with the rotating circles
+        }
+
+        function updateDisplay() {
+            document.getElementById('emotion-display').textContent = `EMOTION: ${currentEmotion.toUpperCase()}`;
+            document.getElementById('undertone-display').textContent = currentUndertone.toUpperCase() || 'STABLE';
+        }
+
+        function updateFPS() {
+            if (!showingFPS || !mascot) return;
+            
+            const metrics = mascot.animationController?.getPerformanceMetrics();
+            if (metrics) {
+                document.getElementById('fps-value').textContent = metrics.fps || 0;
+                document.getElementById('frame-time').textContent = `${(metrics.averageFrameTime || 0).toFixed(1)}ms`;
+            }
+            
+            requestAnimationFrame(updateFPS);
+        }
+
+        function showStatus(message) {
+            const indicator = document.getElementById('status-indicator');
+            indicator.textContent = message;
+            // Removed annoying pulse animation
+            setTimeout(() => {
+                indicator.textContent = 'NEURAL CORE: ONLINE';
+            }, 2000);
+        }
+
+        // Removed createDataParticles function
+
+        // Initialize
+        init().catch(console.error);
+    </script>
+
+</body>
+</html>

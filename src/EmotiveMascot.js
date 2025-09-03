@@ -1,0 +1,2327 @@
+/**
+ * EmotiveMascot - Main API class for the Emotive Communication Engine
+ * Orchestrates all subsystems and provides the fluent API interface
+ */
+
+import CanvasManager from './core/CanvasManager.js';
+import ErrorBoundary from './core/ErrorBoundary.js';
+import EmotiveStateMachine from './core/EmotiveStateMachine.js';
+import ParticleSystem from './core/ParticleSystem.js';
+import EmotiveRenderer from './core/EmotiveRenderer.js';
+import GazeTracker from './core/GazeTracker.js';
+import IdleBehavior from './core/IdleBehavior.js';
+import { getEmotionParams } from './config/emotionMap.js';
+import { SoundSystem } from './core/SoundSystem.js';
+import AnimationController from './core/AnimationController.js';
+import AudioLevelProcessor from './core/AudioLevelProcessor.js';
+import EventManager from './core/EventManager.js';
+import DegradationManager from './core/DegradationManager.js';
+import AccessibilityManager from './core/AccessibilityManager.js';
+import MobileOptimization from './core/MobileOptimization.js';
+import PluginSystem from './core/PluginSystem.js';
+import { browserCompatibility, CanvasContextRecovery } from './utils/browserCompatibility.js';
+import { emotiveDebugger, runtimeCapabilities } from './utils/debugger.js';
+
+class EmotiveMascot {
+    constructor(config = {}) {
+        // Initialize error boundary first
+        this.errorBoundary = new ErrorBoundary();
+        
+        // Initialize EventManager early to avoid undefined errors
+        this.eventManager = new EventManager({
+            maxListeners: config.maxEventListeners || 100,
+            enableDebugging: config.enableEventDebugging || false,
+            enableMonitoring: config.enableEventMonitoring || true,
+            memoryWarningThreshold: config.eventMemoryWarningThreshold || 50
+        });
+        
+        // Wrap initialization in error boundary
+        this.errorBoundary.wrap(() => {
+            this.initialize(config);
+        }, 'initialization')();
+    }
+
+    /**
+     * Initialize the mascot system
+     * @param {Object} config - Configuration options
+     */
+    initialize(config) {
+        // Get browser-specific optimizations
+        const browserOpts = browserCompatibility.browserOptimizations.getOptimizations();
+        const capabilities = browserCompatibility.capabilities;
+        
+        // Default configuration with browser-specific optimizations
+        const defaults = {
+            canvasId: 'emotive-mascot',
+            targetFPS: 60,
+            enableAudio: browserCompatibility.featureDetection.features.webAudio,
+            masterVolume: 0.5,
+            maxParticles: browserOpts.particleLimit,
+            defaultEmotion: 'neutral',
+            enableAutoOptimization: true,
+            enableGracefulDegradation: true,
+            renderingStyle: 'classic',  // 'classic' (Emotive) or 'advanced' (3-layer)
+            enableGazeTracking: true,
+            enableIdleBehaviors: true,
+            classicConfig: {
+                coreColor: '#FFFFFF',
+                coreSizeDivisor: 12,      // Core radius = canvas_size / 12 (original Emotive)
+                glowMultiplier: 2.5,      // Glow radius = core * 2.5 (original Emotive)
+                defaultGlowColor: '#14B8A6'
+            }
+        };
+        
+        this.config = { ...defaults, ...config };
+        
+        // Get canvas element
+        this.canvas = typeof this.config.canvasId === 'string' 
+            ? document.getElementById(this.config.canvasId)
+            : this.config.canvasId;
+            
+        if (!this.canvas) {
+            throw new Error(`Canvas with ID '${this.config.canvasId}' not found`);
+        }
+
+        // Initialize core systems with browser compatibility
+        this.canvasManager = new CanvasManager(this.canvas);
+        
+        // Set up canvas context recovery
+        this.contextRecovery = new CanvasContextRecovery(this.canvas);
+        this.contextRecovery.onRecovery((context) => {
+            console.log('Canvas context recovered, reinitializing renderer');
+            if (this.renderer) {
+                this.renderer.handleContextRecovery(context);
+            }
+        });
+        
+        // Apply browser-specific canvas optimizations
+        browserCompatibility.browserOptimizations.applyCanvasOptimizations(
+            this.canvas, 
+            this.canvasManager.getContext()
+        );
+        
+        this.stateMachine = new EmotiveStateMachine(this.errorBoundary);
+        this.particleSystem = new ParticleSystem(this.config.maxParticles, this.errorBoundary);
+        
+        // Always use EmotiveRenderer
+        this.renderer = new EmotiveRenderer(this.canvasManager, this.config.classicConfig || {});
+        
+        // Initialize gaze tracking
+        if (this.config.enableGazeTracking) {
+            this.gazeTracker = new GazeTracker(this.canvas, {
+                smoothing: 0.1,
+                maxOffset: 0.15,
+                enabled: true
+            });
+            
+            // Reset idle timer on interaction and wake if sleeping
+            this.gazeTracker.setInteractionCallback(() => {
+                if (this.sleeping) {
+                    // Wake with full animation sequence
+                    this.wake();
+                } else if (this.idleBehavior) {
+                    // Just reset idle timer if not sleeping
+                    this.idleBehavior.resetIdleTimer();
+                }
+            });
+        }
+        
+        // Initialize idle behaviors
+        if (this.config.enableIdleBehaviors) {
+            this.idleBehavior = new IdleBehavior({
+                enabled: true,
+                sleepTimeout: Infinity  // Disable automatic sleep
+            });
+            
+            // Connect idle behavior callbacks to renderer
+            this.idleBehavior.setCallback('onBlink', (data) => {
+                if (this.renderer && this.renderer.state) {
+                    this.renderer.state.blinking = data.phase === 'start';
+                }
+            });
+            
+            this.idleBehavior.setCallback('onSleep', () => {
+                if (this.renderer && this.renderer.enterSleepMode) {
+                    this.renderer.enterSleepMode();
+                }
+            });
+            
+            this.idleBehavior.setCallback('onWake', () => {
+                if (this.renderer && this.renderer.wakeUp) {
+                    this.renderer.wakeUp();
+                }
+            });
+        }
+        
+        this.soundSystem = new SoundSystem();
+        
+        // Initialize degradation manager
+        if (this.config.enableGracefulDegradation) {
+            this.degradationManager = new DegradationManager({
+                enableAutoOptimization: this.config.enableAutoOptimization,
+                performanceThreshold: this.config.performanceThreshold || 30,
+                memoryThreshold: this.config.memoryThreshold || 50
+            });
+            
+            // Set up degradation event handling
+            this.degradationManager.setEventCallback((event, data) => {
+                this.handleDegradationEvent(event, data);
+            });
+        }
+        
+        // Initialize accessibility manager
+        this.accessibilityManager = new AccessibilityManager({
+            enableReducedMotion: this.config.enableReducedMotion !== false,
+            enableHighContrast: this.config.enableHighContrast !== false,
+            enableScreenReaderSupport: this.config.enableScreenReaderSupport !== false,
+            enableKeyboardNavigation: this.config.enableKeyboardNavigation !== false,
+            colorBlindMode: this.config.colorBlindMode || 'none'
+        });
+        
+        // Initialize mobile optimization
+        this.mobileOptimization = new MobileOptimization({
+            enableTouchOptimization: this.config.enableTouchOptimization !== false,
+            enableViewportHandling: this.config.enableViewportHandling !== false,
+            enableBatteryOptimization: this.config.enableBatteryOptimization !== false
+        });
+        
+        // Set canvas for mobile optimization
+        this.mobileOptimization.setCanvas(this.canvas);
+        
+        // Initialize plugin system
+        this.pluginSystem = new PluginSystem({
+            enablePlugins: this.config.enablePlugins !== false,
+            validatePlugins: this.config.validatePlugins !== false,
+            sandboxPlugins: this.config.sandboxPlugins !== false
+        });
+        
+        // Initialize audio level processor for speech reactivity
+        this.audioLevelProcessor = new AudioLevelProcessor({
+            spikeThreshold: this.config.spikeThreshold || 1.5,
+            minimumSpikeLevel: this.config.minimumSpikeLevel || 0.1,
+            spikeMinInterval: this.config.spikeMinInterval || 1000
+        });
+        
+        // Initialize animation controller
+        try {
+            this.animationController = new AnimationController(this.errorBoundary, {
+                targetFPS: this.config.targetFPS
+            });
+        } catch (error) {
+            console.error('Failed to initialize AnimationController:', error);
+            // Fallback: create a minimal animation controller interface
+            this.animationController = {
+                isAnimating: () => this.isRunning,
+                start: () => { this.isRunning = true; return true; },
+                stop: () => { this.isRunning = false; return true; },
+                setTargetFPS: () => {},
+                targetFPS: this.config.targetFPS,
+                getPerformanceMetrics: () => ({ fps: 0, isRunning: this.isRunning, performanceDegradation: false, deltaTime: 16, frameCount: 0, targetFPS: this.config.targetFPS }),
+                setSubsystems: () => {},
+                setEventCallback: () => {},
+                setParentMascot: () => {},
+                destroy: () => {},
+                deltaTime: 16
+            };
+        }
+        
+        // Configure animation controller with subsystems
+        this.animationController.setSubsystems({
+            stateMachine: this.stateMachine,
+            particleSystem: this.particleSystem,
+            renderer: this.renderer,
+            soundSystem: this.soundSystem,
+            canvasManager: this.canvasManager
+        });
+        
+        // Set up event forwarding from animation controller
+        this.animationController.setEventCallback((event, data) => {
+            this.emit(event, data);
+        });
+        
+        // Set parent mascot reference for audio level updates
+        this.animationController.setParentMascot(this);
+        
+        // Backward compatibility properties
+        this.isRunning = false;
+        
+        // Initialize sound system if enabled
+        if (this.config.enableAudio) {
+            this.soundSystem.initialize().then(success => {
+                if (success) {
+                    this.soundSystem.setMasterVolume(this.config.masterVolume);
+                    console.log('Sound system initialized successfully');
+                } else {
+                    console.log('Sound system initialization failed, continuing without audio');
+                }
+            });
+        }
+        
+        // Speech reactivity state
+        this.speaking = false;
+        
+        // Track warning frequency to reduce spam
+        this.warningTimestamps = {};
+        this.warningThrottle = 5000; // Only show same warning every 5 seconds
+        
+        // Recording state (listening/capturing)
+        this.recording = false;
+        
+        // Sleeping state
+        this.sleeping = false;
+        
+        // TTS (Text-to-Speech) state
+        this.tts = {
+            available: typeof window !== 'undefined' && 'speechSynthesis' in window,
+            speaking: false,
+            currentUtterance: null
+        };
+        
+        // EventManager already initialized in constructor
+        
+        // Initialize debugging if enabled
+        this.debugMode = this.config.enableDebug || false;
+        if (this.debugMode) {
+            emotiveDebugger.log('INFO', 'Debug mode enabled for EmotiveMascot', {
+                config: this.config,
+                runtimeCapabilities: runtimeCapabilities.generateReport()
+            });
+            
+            // Start profiling initialization
+            emotiveDebugger.startProfile('mascot-initialization', {
+                canvasId: this.config.canvasId,
+                maxParticles: this.config.maxParticles
+            });
+        }
+        
+        // Set up audio level processor callbacks
+        this.setupAudioLevelProcessorCallbacks();
+        
+        // Set initial emotional state
+        this.stateMachine.setEmotion(this.config.defaultEmotion);
+        
+        // Log browser compatibility information
+        console.log('EmotiveMascot initialized successfully', {
+            browser: browserCompatibility.browser,
+            capabilities: capabilities,
+            appliedPolyfills: browserCompatibility.appliedPolyfills,
+            degradationEnabled: !!this.degradationManager
+        });
+        
+        // Complete initialization profiling
+        if (this.debugMode) {
+            emotiveDebugger.endProfile('mascot-initialization');
+            emotiveDebugger.takeMemorySnapshot('post-initialization');
+        }
+    }
+
+    /**
+     * Handle degradation manager events
+     * @param {string} event - Event type
+     * @param {Object} data - Event data
+     */
+    handleDegradationEvent(event, data) {
+        switch (event) {
+            case 'degradationApplied':
+                // Silently handle performance degradation
+                this.applyDegradationSettings(data.settings);
+                this.emit('performanceDegradation', data);
+                break;
+                
+            case 'recoveryApplied':
+                // Silently handle performance recovery
+                this.applyDegradationSettings(data.settings);
+                this.emit('performanceRecovery', data);
+                break;
+                
+            case 'levelChanged':
+                // Silently handle degradation level change
+                this.applyDegradationSettings(data.settings);
+                this.emit('degradationLevelChanged', data);
+                break;
+        }
+    }
+
+    /**
+     * Apply degradation settings to all systems
+     * @param {Object} settings - Degradation settings
+     */
+    applyDegradationSettings(settings) {
+        // Update particle system limits
+        if (this.particleSystem && settings.particleLimit !== undefined) {
+            this.particleSystem.setMaxParticles(settings.particleLimit);
+        }
+        
+        // Update audio system
+        if (this.soundSystem && settings.audioEnabled !== undefined) {
+            if (!settings.audioEnabled && this.soundSystem.isAvailable()) {
+                this.soundSystem.stopAmbientTone(200);
+            }
+        }
+        
+        // Update animation controller target FPS
+        if (this.animationController && settings.targetFPS !== undefined) {
+            this.animationController.setTargetFPS(settings.targetFPS);
+        }
+        
+        // Update renderer quality
+        if (this.renderer && settings.qualityLevel !== undefined) {
+            this.renderer.setQualityLevel(settings.qualityLevel);
+        }
+    }
+
+    /**
+     * Set up callbacks for the audio level processor
+     */
+    setupAudioLevelProcessorCallbacks() {
+        // Handle audio level updates
+        this.audioLevelProcessor.onLevelUpdate((data) => {
+            // Update renderer with current audio level
+            this.renderer.updateAudioLevel(data.level);
+            
+            // Emit audio level update event
+            this.emit('audioLevelUpdate', {
+                level: data.level,
+                rawData: Array.from(data.rawData),
+                timestamp: data.timestamp
+            });
+        });
+        
+        // Handle volume spikes for gesture triggering
+        this.audioLevelProcessor.onVolumeSpike((spikeData) => {
+            // Trigger pulse gesture if not already active
+            if (!this.gestureSystem.isActive()) {
+                const emotionalContext = {
+                    emotion: this.stateMachine.getCurrentState().emotion,
+                    properties: this.stateMachine.getCurrentEmotionalProperties()
+                };
+                
+                const success = this.gestureSystem.execute('pulse', emotionalContext);
+                
+                if (success) {
+                    // Emit volume spike event with gesture trigger info
+                    this.emit('volumeSpike', {
+                        ...spikeData,
+                        gestureTriggered: true
+                    });
+                    
+                    console.log(`Volume spike detected: ${(spikeData.level * 100).toFixed(1)}% (${spikeData.spikeRatio.toFixed(1)}x increase) - triggered pulse gesture`);
+                } else {
+                    // Emit volume spike event without gesture trigger
+                    this.emit('volumeSpike', {
+                        ...spikeData,
+                        gestureTriggered: false
+                    });
+                }
+            }
+        });
+        
+        // Handle audio processing errors
+        this.audioLevelProcessor.onError((errorData) => {
+            console.warn('AudioLevelProcessor error:', errorData.message);
+            this.emit('audioProcessingError', errorData);
+        });
+    }
+
+    /**
+     * Sets the emotional state with optional undertone
+     * @param {string} emotion - The emotion to set
+     * @param {Object|string|null} options - Options object or undertone string for backward compatibility
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setEmotion(emotion, options = null) {
+        return this.errorBoundary.wrap(() => {
+            // Map common aliases to actual emotion states
+            const emotionMapping = {
+                'happy': 'joy',
+                'excited': 'surprise',
+                'calm': 'neutral',
+                'curious': 'surprise',
+                'frustrated': 'anger',
+                'sad': 'sadness'
+            };
+            
+            // Use mapped emotion or original if not an alias
+            const mappedEmotion = emotionMapping[emotion] || emotion;
+            
+            // Handle backward compatibility - if options is a string, treat as undertone
+            let undertone = null;
+            let duration = 500;
+            
+            if (typeof options === 'string') {
+                undertone = options;
+            } else if (options && typeof options === 'object') {
+                undertone = options.undertone || null;
+                duration = options.duration || 500;
+            }
+            
+            // Set emotional state in state machine
+            const success = this.stateMachine.setEmotion(mappedEmotion, undertone, duration);
+            
+            if (success) {
+                // Clear and reset particles when changing emotional states
+                if (this.particleSystem) {
+                    // Clear all existing particles
+                    this.particleSystem.clear();
+                    
+                    // Get the new emotional properties
+                    const emotionalProps = this.stateMachine.getCurrentEmotionalProperties();
+                    
+                    // Spawn initial particles for the new state
+                    // Use burst to immediately populate with a few particles
+                    // DECIMATED neutral
+                    let initialCount;
+                    if (mappedEmotion === 'neutral') {
+                        initialCount = 1;  // DECIMATED to 1 particle
+                    } else if (mappedEmotion === 'resting') {
+                        initialCount = 4;  // Keep resting at 4
+                    } else {
+                        initialCount = Math.min(3, Math.floor(emotionalProps.particleRate / 4));
+                    }
+                    
+                    if (initialCount > 0) {
+                        // Always spawn from canvas center, not gaze-adjusted position
+                        const centerX = this.canvasManager.width / 2;
+                        const centerY = this.canvasManager.height / 2;
+                        
+                        this.particleSystem.burst(
+                            initialCount, 
+                            emotionalProps.particleBehavior,
+                            centerX,
+                            centerY
+                        );
+                    }
+                }
+                
+                // Update sound system ambient tone - DISABLED (annoying)
+                // if (this.soundSystem.isAvailable()) {
+                //     this.soundSystem.setAmbientTone(mappedEmotion, duration);
+                // }
+                
+                // Update Emotive renderer if in classic mode
+                if (this.config.renderingStyle === 'classic' && this.renderer.setEmotionalState) {
+                    const emotionParams = getEmotionParams(mappedEmotion);
+                    this.renderer.setEmotionalState(mappedEmotion, emotionParams, undertone);
+                }
+                
+                // Emit emotion change event
+                this.emit('emotionChanged', { emotion: mappedEmotion, undertone, duration });
+                
+                console.log(`Emotion set to: ${mappedEmotion}${undertone ? ` (${undertone})` : ''}`);
+            }
+            
+            return this;
+        }, 'emotion-setting', this)();
+    }
+
+    /**
+     * Executes a single gesture
+     * @param {string} gesture - The gesture to execute
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    express(gesture) {
+        return this.errorBoundary.wrap(() => {
+            if (!gesture) {
+                console.warn('No gesture provided to express()');
+                return this;
+            }
+            
+            console.log('Express called with gesture:', gesture);
+            
+            // Direct mapping to renderer methods for all gestures
+            const rendererMethods = {
+                'bounce': 'startBounce',
+                'pulse': 'startPulse',
+                'shake': 'startShake',
+                'spin': 'startSpin',
+                'nod': 'startNod',
+                'tilt': 'startTilt',
+                'expand': 'startExpand',
+                'contract': 'startContract',
+                'flash': 'startFlash',
+                'drift': 'startDrift',
+                'stretch': 'startStretch',
+                'glow': 'startGlow',
+                'flicker': 'startFlicker',
+                'vibrate': 'startVibrate',
+                'wave': 'startWave',
+                'morph': 'startMorph',
+                'slowBlink': 'startSlowBlink',
+                'look': 'startLook',
+                'settle': 'startSettle',
+                'breathIn': 'startBreathIn',
+                'breathOut': 'startBreathOut',
+                'breathHold': 'startBreathHold',
+                'breathHoldEmpty': 'startBreathHoldEmpty',
+                'jump': 'startJump'
+            };
+            
+            // Check if this gesture has a direct renderer method
+            const methodName = rendererMethods[gesture];
+            if (methodName && this.renderer && this.renderer[methodName]) {
+                this.renderer[methodName]();
+                console.log(`Triggered ${gesture} directly in renderer`);
+                
+                // Play gesture sound effect if available
+                if (this.soundSystem.isAvailable()) {
+                    this.soundSystem.playGestureSound(gesture);
+                }
+                
+                return this;
+            }
+            
+            // Unknown gesture - throttled warning
+            this.throttledWarn(`Unknown gesture: ${gesture}`, `gesture_${gesture}`);
+            
+            return this;
+        }, 'gesture-expression', this)();
+    }
+
+    /**
+     * Chains multiple gestures for sequential execution
+     * @param {...string} gestures - Gestures to chain
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    chain(...gestures) {
+        // Gesture chaining not implemented in new system yet
+        console.warn('Gesture chaining not available in current version');
+        // Execute first gesture if provided
+        if (gestures.length > 0) {
+            this.express(gestures[0]);
+        }
+        return this;
+    }
+
+    /**
+     * Starts speech reactivity mode with audio level monitoring
+     * @param {AudioContext} audioContext - Web Audio API context
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    startSpeaking(audioContext) {
+        return this.errorBoundary.wrap(() => {
+            if (!audioContext) {
+                throw new Error('AudioContext is required for speech reactivity');
+            }
+            
+            if (!this.config.enableAudio) {
+                console.warn('Audio is disabled, cannot start speech reactivity');
+                return this;
+            }
+            
+            if (this.speaking) {
+                console.warn('Speech reactivity is already active');
+                return this;
+            }
+            
+            // Initialize audio level processor
+            const success = this.audioLevelProcessor.initialize(audioContext);
+            
+            if (!success) {
+                console.warn('Failed to initialize audio level processor');
+                return this;
+            }
+            
+            // Update speech state
+            this.speaking = true;
+            
+            // Notify renderer about speech start
+            this.renderer.onSpeechStart(audioContext);
+            
+            // Emit speech start event with analyser for external connection
+            this.emit('speechStarted', { 
+                audioContext, 
+                analyser: this.audioLevelProcessor.getAnalyser(),
+                mascot: this
+            });
+            
+            console.log('Speech reactivity started - connect audio source to analyser');
+            return this;
+        }, 'speech-start', this)();
+    }
+
+    /**
+     * Stops speech reactivity mode and returns to base emotional state
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    stopSpeaking() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.speaking) {
+                console.warn('Speech reactivity is not active');
+                return this;
+            }
+            
+            // Store previous state for event
+            const previousAudioLevel = this.audioLevelProcessor.getCurrentLevel();
+            
+            // Clean up audio level processor
+            this.audioLevelProcessor.cleanup();
+            
+            // Reset speech state
+            this.speaking = false;
+            
+            // Notify renderer about speech stop (triggers 500ms return-to-base transition)
+            this.renderer.onSpeechStop();
+            
+            // Emit speech stop event
+            this.emit('speechStopped', { 
+                previousAudioLevel,
+                returnToBaseTime: 500
+            });
+            
+            console.log('Speech reactivity stopped - returning to base emotional state');
+            return this;
+        }, 'speech-stop', this)();
+    }
+
+    /**
+     * Speaks text using the Web Speech API with visual feedback
+     * @param {string} text - Text to speak
+     * @param {Object} options - Speech options (rate, pitch, volume, voice)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    speak(text, options = {}) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.tts.available) {
+                console.warn('Text-to-Speech is not available in this browser');
+                return this;
+            }
+            
+            if (!text || typeof text !== 'string') {
+                console.warn('Invalid text provided to speak()');
+                return this;
+            }
+            
+            // Cancel any ongoing speech
+            if (this.tts.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            
+            // Create utterance
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Apply options
+            utterance.rate = options.rate || 1.0;
+            utterance.pitch = options.pitch || 1.0;
+            utterance.volume = options.volume || 1.0;
+            
+            // Select voice if specified
+            if (options.voice) {
+                const voices = window.speechSynthesis.getVoices();
+                const selectedVoice = voices.find(v => v.name === options.voice);
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+            }
+            
+            // Store current utterance
+            this.tts.currentUtterance = utterance;
+            
+            // Handle speech events
+            utterance.onstart = () => {
+                this.tts.speaking = true;
+                
+                // Trigger speaking gesture
+                this.express('pulse');
+                
+                // Emit TTS start event
+                this.emit('ttsStarted', { text, options });
+                
+                console.log('TTS started:', text);
+            };
+            
+            utterance.onend = () => {
+                this.tts.speaking = false;
+                this.tts.currentUtterance = null;
+                
+                // Return to neutral
+                this.express('nod');
+                
+                // Emit TTS end event
+                this.emit('ttsEnded', { text });
+                
+                console.log('TTS ended');
+            };
+            
+            utterance.onerror = (error) => {
+                this.tts.speaking = false;
+                this.tts.currentUtterance = null;
+                
+                console.error('TTS error:', error);
+                this.emit('ttsError', { error, text });
+            };
+            
+            // Add word boundary events for more dynamic animation
+            utterance.onboundary = (event) => {
+                if (event.name === 'word') {
+                    // Subtle pulse on each word
+                    if (Math.random() < 0.3) { // 30% chance per word
+                        this.gestureSystem.execute('microPulse', {
+                            emotion: this.stateMachine.getCurrentState().emotion,
+                            properties: this.stateMachine.getCurrentEmotionalProperties()
+                        });
+                    }
+                }
+            };
+            
+            // Start speaking
+            window.speechSynthesis.speak(utterance);
+            
+            return this;
+        }, 'tts-speak', this)();
+    }
+    
+    /**
+     * Stops any ongoing text-to-speech
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    stopTTS() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.tts.available) {
+                return this;
+            }
+            
+            if (this.tts.speaking) {
+                window.speechSynthesis.cancel();
+                this.tts.speaking = false;
+                this.tts.currentUtterance = null;
+                
+                // Return to neutral
+                this.express('nod');
+                
+                // Emit TTS stopped event
+                this.emit('ttsStopped');
+                
+                console.log('TTS stopped by user');
+            }
+            
+            return this;
+        }, 'tts-stop', this)();
+    }
+    
+    /**
+     * Start recording state (listening/capturing mode)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    startRecording() {
+        return this.errorBoundary.wrap(() => {
+            if (this.recording) {
+                console.log('Already recording');
+                return this;
+            }
+            
+            this.recording = true;
+            
+            // Update renderer if using Emotive style
+            if (this.renderer && this.renderer.startRecording) {
+                this.renderer.startRecording();
+            }
+            
+            // Emit recording started event
+            this.emit('recordingStarted');
+            
+            console.log('Recording started');
+            return this;
+        }, 'recording-start', this)();
+    }
+    
+    /**
+     * Stop recording state
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    stopRecording() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.recording) {
+                console.log('Not currently recording');
+                return this;
+            }
+            
+            this.recording = false;
+            
+            // Update renderer if using Emotive style
+            if (this.renderer && this.renderer.stopRecording) {
+                this.renderer.stopRecording();
+            }
+            
+            // Emit recording stopped event
+            this.emit('recordingStopped');
+            
+            console.log('Recording stopped');
+            return this;
+        }, 'recording-stop', this)();
+    }
+    
+    /**
+     * Enter sleep state with animation sequence
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    sleep() {
+        return this.errorBoundary.wrap(async () => {
+            if (this.sleeping) {
+                console.log('Already sleeping');
+                return this;
+            }
+            
+            // Sleep entry animation sequence
+            console.log('Starting sleep sequence...');
+            
+            // First: Yawn
+            if (this.gestureSystem && this.gestureSystem.physics) {
+                await this.gestureSystem.physics.startYawn();
+            }
+            
+            // Second: Drowsy sway
+            if (this.gestureSystem && this.gestureSystem.physics) {
+                await this.gestureSystem.physics.startDrowsySway();
+            }
+            
+            // Now enter sleep state
+            this.sleeping = true;
+            
+            // Update renderer if using Emotive style (handles eye closing)
+            if (this.renderer && this.renderer.enterSleepMode) {
+                this.renderer.enterSleepMode();
+            }
+            
+            // Update idle behavior if available
+            if (this.idleBehavior && this.idleBehavior.enterSleep) {
+                this.idleBehavior.enterSleep();
+            }
+            
+            // Emit sleep event
+            this.emit('sleep');
+            
+            console.log('Mascot entered sleep state');
+            return this;
+        }, 'sleep', this)();
+    }
+    
+    /**
+     * Wake up from sleep state with animation sequence
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    wake() {
+        return this.errorBoundary.wrap(async () => {
+            if (!this.sleeping) {
+                console.log('Not currently sleeping');
+                return this;
+            }
+            
+            // Exit sleep state first
+            this.sleeping = false;
+            
+            // Update renderer if using Emotive style (handles eye opening)
+            if (this.renderer && this.renderer.wakeUp) {
+                this.renderer.wakeUp();
+            }
+            
+            // Update idle behavior if available
+            if (this.idleBehavior && this.idleBehavior.wakeUp) {
+                this.idleBehavior.wakeUp();
+            }
+            
+            // Wake animation sequence
+            console.log('Starting wake sequence...');
+            
+            // First: Stretch
+            if (this.gestureSystem && this.gestureSystem.physics) {
+                await this.gestureSystem.physics.startStretch();
+            }
+            
+            // Second: Slow blink
+            if (this.gestureSystem && this.gestureSystem.physics) {
+                await this.gestureSystem.physics.startSlowBlink();
+            }
+            
+            // Third: Small shake to fully wake
+            if (this.gestureSystem && this.gestureSystem.physics) {
+                await this.gestureSystem.physics.startShake();
+            }
+            
+            // Emit wake event
+            this.emit('wake');
+            
+            console.log('Mascot fully awake');
+            return this;
+        }, 'wake', this)();
+    }
+    
+    /**
+     * Gets available TTS voices
+     * @returns {Array} Array of available voice objects
+     */
+    getTTSVoices() {
+        if (!this.tts.available) {
+            return [];
+        }
+        
+        return window.speechSynthesis.getVoices();
+    }
+    
+    /**
+     * Checks if TTS is currently speaking
+     * @returns {boolean} True if currently speaking
+     */
+    isTTSSpeaking() {
+        return this.tts.speaking;
+    }
+
+    /**
+     * Starts the animation loop at target 60 FPS
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    start() {
+        return this.errorBoundary.wrap(() => {
+            if (this.animationController.isAnimating()) {
+                console.warn('EmotiveMascot is already running');
+                return this;
+            }
+            
+            // Start the animation controller
+            const success = this.animationController.start();
+            
+            if (success) {
+                this.isRunning = true;
+                
+                // Spawn initial particles for classic mode
+                if (this.config.renderingStyle === 'classic' && this.particleSystem) {
+                    const emotion = this.stateMachine.getCurrentState().emotion;
+                    const emotionParams = getEmotionParams(emotion);
+                    
+                    // Get the actual orb position from the renderer (includes gaze offset)
+                    let orbX, orbY;
+                    if (this.renderer && this.renderer.getCurrentOrbPosition) {
+                        const orbPos = this.renderer.getCurrentOrbPosition();
+                        orbX = orbPos.x;
+                        orbY = orbPos.y;
+                    } else {
+                        // Fallback to center if method doesn't exist
+                        orbX = this.canvasManager.width / 2;
+                        orbY = this.canvasManager.height / 2;
+                    }
+                    
+                    // Spawn initial batch of particles
+                    const initialParticleCount = emotion === 'neutral' ? 8 : 10; // Neutral gets 8 particles
+                    console.log(`Starting with emotion: ${emotion}, spawning ${initialParticleCount} particles`);
+                    this.particleSystem.spawn(
+                        emotionParams.particleBehavior || 'ambient',
+                        emotion,
+                        emotionParams.particleRate || 15,
+                        orbX,
+                        orbY,
+                        16, // Assume 60fps frame time
+                        initialParticleCount,  // Force spawn this many
+                        0,  // minParticles
+                        50,  // maxParticles
+                        this.renderer.scaleFactor || 1,  // Pass scale factor
+                        this.config.classicConfig?.particleSizeMultiplier || 1  // Pass particle size multiplier
+                    );
+                }
+                
+                // Start degradation monitoring if enabled
+                if (this.degradationManager && this.config.enableAutoOptimization) {
+                    this.degradationManager.startMonitoring();
+                }
+                
+                // Emit start event
+                this.emit('started');
+                console.log(`EmotiveMascot started (target: ${this.animationController.targetFPS} FPS)`);
+            }
+            
+            return this;
+        }, 'start', this)();
+    }
+
+    /**
+     * Stops the animation loop and cleans up resources
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    stop() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.animationController.isAnimating()) {
+                console.warn('EmotiveMascot is not running');
+                return this;
+            }
+            
+            // Stop speech reactivity if active
+            if (this.speaking) {
+                this.stopSpeaking();
+            }
+            
+            // Stop the animation controller
+            const success = this.animationController.stop();
+            
+            if (success) {
+                this.isRunning = false;
+                
+                // Stop degradation monitoring
+                if (this.degradationManager) {
+                    this.degradationManager.stopMonitoring();
+                }
+                
+                // Emit stop event
+                this.emit('stopped');
+                console.log('EmotiveMascot stopped');
+            }
+            
+            return this;
+        }, 'stop', this)();
+    }
+
+
+
+    /**
+     * Adds an event listener for external integration hooks
+     * @param {string} event - Event name
+     * @param {Function} callback - Event callback function
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    on(event, callback) {
+        return this.errorBoundary.wrap(() => {
+            const success = this.eventManager.on(event, callback);
+            if (!success) {
+                console.warn(`Failed to add event listener for '${event}'`);
+            }
+            return this;
+        }, 'event-listener-add', this)();
+    }
+
+    /**
+     * Removes an event listener
+     * @param {string} event - Event name
+     * @param {Function} callback - Event callback function to remove
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    off(event, callback) {
+        return this.errorBoundary.wrap(() => {
+            this.eventManager.off(event, callback);
+            return this;
+        }, 'event-listener-remove', this)();
+    }
+
+    /**
+     * Adds a one-time event listener that removes itself after first execution
+     * @param {string} event - Event name
+     * @param {Function} callback - Event callback function
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    once(event, callback) {
+        return this.errorBoundary.wrap(() => {
+            const success = this.eventManager.once(event, callback);
+            if (!success) {
+                console.warn(`Failed to add once event listener for '${event}'`);
+            }
+            return this;
+        }, 'event-listener-once', this)();
+    }
+
+    /**
+     * Removes all listeners for a specific event or all events
+     * @param {string|null} event - Event name to clear, or null to clear all
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    removeAllListeners(event = null) {
+        return this.errorBoundary.wrap(() => {
+            const removedCount = this.eventManager.removeAllListeners(event);
+            if (removedCount > 0) {
+                console.log(`Cleared ${removedCount} event listeners${event ? ` for '${event}'` : ''}`);
+            }
+            return this;
+        }, 'event-listeners-clear', this)();
+    }
+
+    /**
+     * Gets the number of listeners for an event
+     * @param {string} event - Event name
+     * @returns {number} Number of listeners
+     */
+    listenerCount(event) {
+        return this.eventManager.listenerCount(event);
+    }
+
+    /**
+     * Gets all registered event names
+     * @returns {Array<string>} Array of event names
+     */
+    getEventNames() {
+        return this.eventManager.getEventNames();
+    }
+
+    /**
+     * Gets comprehensive event system statistics
+     * @returns {Object} Event system statistics and monitoring data
+     */
+    getEventStats() {
+        return this.eventManager.getEventStats();
+    }
+
+    /**
+     * Gets EventManager debugging information
+     * @returns {Object} Debug information about the event system
+     */
+    getEventDebugInfo() {
+        return this.eventManager.getDebugInfo();
+    }
+
+    /**
+     * Gets browser compatibility information
+     * @returns {Object} Browser compatibility details
+     */
+    getBrowserCompatibility() {
+        return {
+            browser: browserCompatibility.browser,
+            features: browserCompatibility.featureDetection.getFeatures(),
+            capabilities: browserCompatibility.capabilities,
+            appliedPolyfills: browserCompatibility.appliedPolyfills,
+            optimizations: browserCompatibility.browserOptimizations.getOptimizations()
+        };
+    }
+
+    /**
+     * Gets degradation manager status and settings
+     * @returns {Object|null} Degradation manager information or null if disabled
+     */
+    getDegradationStatus() {
+        if (!this.degradationManager) {
+            return null;
+        }
+        
+        return {
+            currentLevel: this.degradationManager.getCurrentLevel(),
+            availableFeatures: this.degradationManager.getAvailableFeatures(),
+            recommendedSettings: this.degradationManager.getRecommendedSettings(),
+            performanceStats: this.degradationManager.getPerformanceStats(),
+            allLevels: this.degradationManager.getAllLevels()
+        };
+    }
+
+    /**
+     * Manually set degradation level
+     * @param {number|string} level - Degradation level index or name
+     * @returns {boolean} True if level was set successfully
+     */
+    setDegradationLevel(level) {
+        if (!this.degradationManager) {
+            console.warn('Degradation manager is not enabled');
+            return false;
+        }
+        
+        return this.degradationManager.setLevel(level);
+    }
+
+    /**
+     * Check if a specific feature is available in current degradation level
+     * @param {string} feature - Feature name (audio, particles, fullEffects, etc.)
+     * @returns {boolean} True if feature is available
+     */
+    isFeatureAvailable(feature) {
+        if (!this.degradationManager) {
+            // Fallback to basic feature detection
+            const features = browserCompatibility.featureDetection.getFeatures();
+            return features[feature] || false;
+        }
+        
+        return this.degradationManager.isFeatureAvailable(feature);
+    }
+
+    /**
+     * Force canvas context recovery
+     * @returns {boolean} True if recovery was successful
+     */
+    recoverCanvasContext() {
+        if (!this.contextRecovery) {
+            return false;
+        }
+        
+        return this.contextRecovery.recover();
+    }
+
+    /**
+     * Check if canvas context is currently lost
+     * @returns {boolean} True if context is lost
+     */
+    isCanvasContextLost() {
+        if (!this.contextRecovery) {
+            return false;
+        }
+        
+        return this.contextRecovery.isLost();
+    }
+
+    /**
+     * Enable or disable debug mode
+     * @param {boolean} enabled - Whether to enable debug mode
+     */
+    setDebugMode(enabled) {
+        this.debugMode = enabled;
+        
+        if (enabled) {
+            emotiveDebugger.log('INFO', 'Debug mode enabled');
+            emotiveDebugger.takeMemorySnapshot('debug-mode-enabled');
+        } else {
+            emotiveDebugger.log('INFO', 'Debug mode disabled');
+        }
+    }
+
+    /**
+     * Get comprehensive debug report
+     * @returns {Object} Debug report including all system states
+     */
+    getDebugReport() {
+        const report = {
+            timestamp: Date.now(),
+            mascot: {
+                isRunning: this.isRunning,
+                speaking: this.speaking,
+                debugMode: this.debugMode,
+                config: this.config
+            },
+            
+            // System states
+            currentState: this.getCurrentState(),
+            performanceMetrics: this.getPerformanceMetrics(),
+            audioStats: this.getAudioStats(),
+            eventStats: this.getEventStats(),
+            
+            // Browser compatibility
+            browserCompatibility: this.getBrowserCompatibility(),
+            degradationStatus: this.getDegradationStatus(),
+            
+            // Runtime capabilities
+            runtimeCapabilities: runtimeCapabilities.generateReport(),
+            
+            // Debugger data
+            debuggerReport: emotiveDebugger.getDebugReport()
+        };
+
+        if (this.debugMode) {
+            emotiveDebugger.log('DEBUG', 'Generated debug report', {
+                reportSize: JSON.stringify(report).length,
+                sections: Object.keys(report)
+            });
+        }
+
+        return report;
+    }
+
+    /**
+     * Export debug data for external analysis
+     * @returns {Object} Exportable debug data
+     */
+    exportDebugData() {
+        const data = {
+            metadata: {
+                exportTime: Date.now(),
+                version: '1.0.0', // Should be dynamically set
+                userAgent: navigator.userAgent,
+                url: window.location?.href
+            },
+            
+            mascotState: {
+                config: this.config,
+                currentState: this.getCurrentState(),
+                isRunning: this.isRunning,
+                speaking: this.speaking
+            },
+            
+            performance: {
+                metrics: this.getPerformanceMetrics(),
+                degradationStatus: this.getDegradationStatus(),
+                frameTimings: emotiveDebugger.frameTimings
+            },
+            
+            compatibility: {
+                browser: this.getBrowserCompatibility(),
+                runtimeCapabilities: runtimeCapabilities.generateReport()
+            },
+            
+            debuggerData: emotiveDebugger.exportDebugData()
+        };
+
+        if (this.debugMode) {
+            emotiveDebugger.log('INFO', 'Exported debug data', {
+                dataSize: JSON.stringify(data).length
+            });
+        }
+
+        return data;
+    }
+
+    /**
+     * Start profiling a named operation
+     * @param {string} name - Profile name
+     * @param {Object} metadata - Additional metadata
+     */
+    startProfiling(name, metadata = {}) {
+        if (this.debugMode) {
+            emotiveDebugger.startProfile(name, metadata);
+        }
+    }
+
+    /**
+     * End profiling and get results
+     * @param {string} name - Profile name
+     * @returns {Object|null} Profile results
+     */
+    endProfiling(name) {
+        if (this.debugMode) {
+            return emotiveDebugger.endProfile(name);
+        }
+        return null;
+    }
+
+    /**
+     * Take a memory snapshot
+     * @param {string} label - Snapshot label
+     */
+    takeMemorySnapshot(label) {
+        if (this.debugMode) {
+            emotiveDebugger.takeMemorySnapshot(label);
+        }
+    }
+
+    /**
+     * Clear all debug data
+     */
+    clearDebugData() {
+        emotiveDebugger.clear();
+        
+        if (this.debugMode) {
+            emotiveDebugger.log('INFO', 'Debug data cleared');
+        }
+    }
+
+    /**
+     * Get runtime performance capabilities
+     * @returns {Object} Runtime capabilities report
+     */
+    getRuntimeCapabilities() {
+        return runtimeCapabilities.generateReport();
+    }
+
+    /**
+     * Emits an event to all registered listeners with error boundary protection
+     * @param {string} event - Event name
+     * @param {*} data - Event data
+     */
+    emit(event, data = null) {
+        this.eventManager.emit(event, data);
+    }
+
+    /**
+     * Updates audio level monitoring (called by AnimationController)
+     * @param {number} deltaTime - Time since last frame in milliseconds
+     */
+    update(deltaTime) {
+        this.errorBoundary.wrap(() => {
+            // Update audio level monitoring if speaking
+            if (this.speaking && this.audioLevelProcessor.isProcessingActive()) {
+                this.audioLevelProcessor.updateAudioLevel(deltaTime);
+            }
+            
+            // Update classic mode components
+            if (this.config.renderingStyle === 'classic') {
+                // Update gaze tracker
+                if (this.gazeTracker) {
+                    this.gazeTracker.update(deltaTime);
+                }
+                
+                // Update idle behaviors
+                if (this.idleBehavior) {
+                    this.idleBehavior.update(deltaTime);
+                }
+                
+                // Update gesture system (including physics)
+                if (this.gestureSystem) {
+                    this.gestureSystem.update(deltaTime, performance.now());
+                }
+                
+                // Combine gaze and sway offsets
+                if (this.gazeTracker && this.idleBehavior) {
+                    const gazeOffset = this.gazeTracker.getGazeOffset();
+                    const swayOffset = this.idleBehavior.getSwayOffset();
+                    
+                    // Get full gaze state including proximity for eye narrowing
+                    const gazeState = this.gazeTracker.getState();
+                    
+                    // Combine the offsets and include proximity data
+                    const gazeData = {
+                        offset: {
+                            x: gazeOffset.x + swayOffset.x,
+                            y: gazeOffset.y + swayOffset.y
+                        },
+                        proximity: gazeState.proximity || 0,
+                        isLocked: gazeState.isLocked || false
+                    };
+                    
+                    this.renderer.setGazeOffset(gazeData);
+                }
+            }
+            
+            // Update degradation manager with performance data
+            if (this.degradationManager && this.animationController) {
+                const metrics = this.animationController.getPerformanceMetrics();
+                this.degradationManager.checkPerformance(metrics);
+            }
+        }, 'audio-update')();
+    }
+
+
+
+
+
+    /**
+     * Renders the current frame (called by AnimationController)
+     */
+    render() {
+        this.errorBoundary.wrap(() => {
+            const renderStart = this.debugMode ? performance.now() : 0;
+            
+            // Get deltaTime from animation controller
+            const deltaTime = this.animationController ? this.animationController.deltaTime : 16.67;
+            
+            // Prepare render state
+            const renderState = {
+                properties: this.stateMachine.getCurrentEmotionalProperties(),
+                emotion: this.stateMachine.getCurrentState().emotion,
+                undertone: this.stateMachine.getCurrentState().undertone,
+                particleSystem: this.particleSystem,
+                speaking: this.speaking,
+                audioLevel: this.audioLevelProcessor.getCurrentLevel()
+            };
+            
+            // Track frame timing for debugging
+            if (this.debugMode) {
+                emotiveDebugger.trackFrameTiming(deltaTime);
+            }
+            
+            // Always use EmotiveRenderer
+            // Clear canvas ONCE at the beginning
+            this.canvasManager.clear();
+            
+            // For Emotive style, convert emotion to visual params
+            const emotionParams = getEmotionParams(renderState.emotion);
+            this.renderer.setEmotionalState(renderState.emotion, emotionParams, renderState.undertone);
+            
+            // Always use center for particle spawning (not gaze-adjusted position)
+            const orbX = this.canvasManager.width / 2;
+            const orbY = this.canvasManager.height / 2;
+            
+            // Spawn new particles based on emotion at ORB position
+            // Get min/max from state machine
+            const stateProps = this.stateMachine.getCurrentEmotionalProperties();
+            
+            // Apply undertone modifiers to particle behavior
+            let particleBehavior = emotionParams.particleBehavior || 'ambient';
+            let particleRate = emotionParams.particleRate || 15;
+            // Use emotionParams min/max if available, otherwise fall back to stateProps
+            let minParticles = emotionParams.minParticles !== undefined ? emotionParams.minParticles : (stateProps.minParticles || 0);
+            let maxParticles = emotionParams.maxParticles !== undefined ? emotionParams.maxParticles : (stateProps.maxParticles || 10);
+            
+            // Special case for zen: mix falling and orbiting behaviors
+            if (renderState.emotion === 'zen') {
+                // Randomly choose between falling (sad) and orbiting (love) for each spawn
+                particleBehavior = Math.random() < 0.6 ? 'falling' : 'orbiting';
+            }
+            
+            // Check if renderer has undertone overrides
+            if (this.renderer.state && this.renderer.state.particleBehaviorOverride) {
+                particleBehavior = this.renderer.state.particleBehaviorOverride;
+            }
+            if (this.renderer.state && this.renderer.state.particleRateMult) {
+                particleRate = Math.floor(particleRate * this.renderer.state.particleRateMult);
+                maxParticles = Math.floor(maxParticles * this.renderer.state.particleRateMult);
+            }
+            
+            this.particleSystem.spawn(
+                particleBehavior,
+                renderState.emotion,
+                particleRate,
+                orbX,
+                orbY,
+                deltaTime,
+                null,  // no forced count
+                minParticles,
+                maxParticles,
+                this.renderer.scaleFactor || 1,  // Pass scale factor
+                this.config.classicConfig?.particleSizeMultiplier || 1  // Pass particle size multiplier
+            );
+            
+            // Debug logging disabled to prevent console spam
+            // Uncomment only for debugging particle issues
+            // if (!this._particleDebugCounter) this._particleDebugCounter = 0;
+            // this._particleDebugCounter++;
+            // if (this._particleDebugCounter % 120 === 0) {  // Log every 2 seconds at 60fps
+            //     console.log('Particle status:', {
+            //         behavior: particleBehavior,
+            //         rate: particleRate,
+            //         emotion: renderState.emotion,
+            //         minParticles,
+            //         maxParticles,
+            //         currentCount: this.particleSystem.particles.length,
+            //         stats: this.particleSystem.getStats(),
+            //         position: { x: orbX, y: orbY }
+            //     });
+            // }
+            
+            // Get undertone modifier from renderer if present
+            const undertoneModifier = this.renderer.getUndertoneModifier ? 
+                this.renderer.getUndertoneModifier() : null;
+            
+            // Add zen vortex intensity to undertone modifier if in zen state
+            let particleModifier = undertoneModifier;
+            if (renderState.emotion === 'zen' && this.renderer.state.zenVortexIntensity) {
+                particleModifier = { ...(undertoneModifier || {}), zenVortexIntensity: this.renderer.state.zenVortexIntensity };
+            }
+            
+            // Get current gesture info from renderer for particle motion
+            let gestureMotion = null;
+            let gestureProgress = 0;
+            
+            if (this.renderer && this.renderer.getCurrentGesture) {
+                const currentGesture = this.renderer.getCurrentGesture();
+                if (currentGesture && currentGesture.particleMotion) {
+                    gestureMotion = currentGesture.particleMotion;
+                    gestureProgress = currentGesture.progress || 0;
+                }
+            }
+            
+            // Update particles with orb position, gesture motion, and modifier
+            this.particleSystem.update(deltaTime, orbX, orbY, gestureMotion, gestureProgress, particleModifier);
+            
+            // Gesture transforms now handled internally by renderer
+            const gestureTransform = null;
+            
+            // Render particles FIRST (behind everything)
+            this.particleSystem.render(this.canvasManager.getContext(), emotionParams.glowColor);
+            
+            // Render the Emotive orb ON TOP of particles (without clearing)
+            this.renderer.render(renderState, deltaTime, gestureTransform);
+            
+            // Draw debug information if enabled
+            if (this.config.showFPS || this.config.showDebug) {
+                this.renderDebugInfo(deltaTime);
+            }
+            
+            // Log render performance if debugging
+            if (this.debugMode) {
+                const renderTime = performance.now() - renderStart;
+                if (renderTime > 16.67) { // Longer than 60fps frame
+                    emotiveDebugger.log('WARN', 'Slow render frame detected', {
+                        renderTime,
+                        deltaTime,
+                        particleCount: this.particleSystem.getStats().activeParticles
+                    });
+                }
+            }
+        }, 'main-render')();
+    }
+
+    /**
+     * Renders debug information overlay
+     * @param {number} deltaTime - Time since last frame in milliseconds
+     */
+    renderDebugInfo(deltaTime) {
+        const ctx = this.canvasManager.getContext();
+        ctx.save();
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px monospace';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        
+        let y = 20;
+        const lineHeight = 16;
+        
+        if (this.config.showFPS) {
+            const metrics = this.animationController.getPerformanceMetrics();
+            // Use smoothed FPS for stable display
+            const fps = metrics.instantFps || metrics.fps || 0;
+            const frameTime = metrics.averageFrameTime ? metrics.averageFrameTime.toFixed(1) : '0.0';
+            const particleStats = this.particleSystem.getStats();
+            
+            // Build simple display
+            const lines = [
+                `FPS: ${fps}`,
+                `Frame: ${frameTime}ms`,
+                `Particles: ${particleStats.activeParticles}`
+            ];
+            
+            // Draw each line
+            const padding = 8;
+            let maxWidth = 0;
+            lines.forEach(line => {
+                const width = ctx.measureText(line).width;
+                if (width > maxWidth) maxWidth = width;
+            });
+            
+            const x = this.canvasManager.width - maxWidth - padding - 10;
+            
+            // Background box with semi-transparent dark background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(x - padding, y - 14, maxWidth + padding * 2, 18 * lines.length + 4);
+            
+            // Border color based on FPS
+            let borderColor;
+            if (fps >= 55) {
+                borderColor = '#00ff00';  // Green for good FPS
+            } else if (fps >= 30) {
+                borderColor = '#ffff00';  // Yellow for okay FPS
+            } else {
+                borderColor = '#ff0000';  // Red for poor FPS
+            }
+            
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - padding, y - 14, maxWidth + padding * 2, 18 * lines.length + 4);
+            
+            // Draw each line of text
+            lines.forEach((line, i) => {
+                const lineY = y + (i * lineHeight);
+                // No stroke for cleaner look
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(line, x, lineY);
+            });
+            
+            y += lineHeight * lines.length;
+        }
+        
+        if (this.config.showDebug) {
+            const state = this.stateMachine.getCurrentState();
+            const particleStats = this.particleSystem.getStats();
+            
+            const debugInfo = [
+                `Emotion: ${state.emotion}${state.undertone ? ` (${state.undertone})` : ''}`,
+                `Particles: ${particleStats.activeParticles}/${particleStats.maxParticles}`,
+                `Gesture: ${this.gestureSystem.getCurrentGestureId() || 'none'}`,
+                `Queue: ${this.gestureSystem.getQueueLength()}`,
+                `Speaking: ${this.speaking ? 'yes' : 'no'}`,
+                `Audio Level: ${(this.audioLevel * 100).toFixed(1)}%`
+            ];
+            
+            // Draw debug info with background for readability
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            const debugWidth = Math.max(...debugInfo.map(line => ctx.measureText(line).width));
+            ctx.fillRect(8, y - 14, debugWidth + 16, debugInfo.length * lineHeight + 4);
+            
+            ctx.fillStyle = '#ffffff';
+            for (const info of debugInfo) {
+                ctx.fillText(info, 10, y);
+                y += lineHeight;
+            }
+        }
+        
+        ctx.restore();
+    }
+
+    /**
+     * Gets the current emotional color
+     * @returns {string} Hex color for current emotion
+     */
+    getEmotionalColor() {
+        const properties = this.stateMachine.getCurrentEmotionalProperties();
+        return properties.primaryColor;
+    }
+
+    /**
+     * Gets the current emotional state information
+     * @returns {Object} Current state with properties
+     */
+    getCurrentState() {
+        return this.stateMachine.getCurrentState();
+    }
+
+    /**
+     * Gets all available emotions
+     * @returns {Array<string>} Array of emotion names
+     */
+    getAvailableEmotions() {
+        return this.stateMachine.getAvailableEmotions();
+    }
+
+    /**
+     * Gets all available undertones
+     * @returns {Array<string>} Array of undertone names
+     */
+    getAvailableUndertones() {
+        return this.stateMachine.getAvailableUndertones();
+    }
+
+    /**
+     * Gets the current audio level (0-1 range)
+     * @returns {number} Current audio level
+     */
+    getAudioLevel() {
+        return this.audioLevelProcessor.getCurrentLevel();
+    }
+
+    /**
+     * Gets audio level processing statistics
+     * @returns {Object} Audio processing statistics
+     */
+    getAudioStats() {
+        return this.audioLevelProcessor.getStats();
+    }
+
+    /**
+     * Updates audio level processor configuration
+     * @param {Object} config - New configuration options
+     */
+    updateAudioConfig(config) {
+        this.audioLevelProcessor.updateConfig(config);
+    }
+
+    /**
+     * Gets all available gestures
+     * @returns {Array<string>} Array of gesture names
+     */
+    getAvailableGestures() {
+        return [
+            'bounce', 'pulse', 'shake', 'spin', 'drift', 
+            'nod', 'tilt', 'expand', 'contract', 'flash',
+            'stretch', 'glow', 'flicker', 'vibrate', 'wave',
+            'morph', 'slowBlink', 'look', 'settle',
+            'breathIn', 'breathOut', 'breathHold', 'breathHoldEmpty', 'jump'
+        ];
+    }
+
+    /**
+     * Connects an audio source to the speech analyser
+     * @param {AudioNode} audioSource - Web Audio API source node
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    connectAudioSource(audioSource) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.audioAnalyser) {
+                console.warn('Speech reactivity not started. Call startSpeaking() first.');
+                return this;
+            }
+            
+            if (!audioSource || typeof audioSource.connect !== 'function') {
+                console.warn('Invalid audio source provided to connectAudioSource()');
+                return this;
+            }
+            
+            // Connect the audio source to our analyser
+            audioSource.connect(this.audioAnalyser);
+            
+            console.log('Audio source connected to speech analyser');
+            this.emit('audioSourceConnected', { audioSource });
+            
+            return this;
+        }, 'audio-source-connection', this)();
+    }
+
+    /**
+     * Sets master volume for all audio output
+     * @param {number} volume - Volume level (0.0 to 1.0)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setVolume(volume) {
+        return this.errorBoundary.wrap(() => {
+            const clampedVolume = Math.max(0, Math.min(1, volume));
+            this.config.masterVolume = clampedVolume;
+            
+            if (this.soundSystem.isAvailable()) {
+                const currentEmotion = this.stateMachine.getCurrentState().emotion;
+                this.soundSystem.setMasterVolume(clampedVolume, currentEmotion);
+            }
+            
+            this.emit('volumeChanged', { volume: clampedVolume });
+            
+            return this;
+        }, 'volume-setting', this)();
+    }
+
+    /**
+     * Gets current master volume
+     * @returns {number} Current volume level (0.0 to 1.0)
+     */
+    getVolume() {
+        return this.config.masterVolume;
+    }
+
+    /**
+     * Pauses the animation loop (can be resumed with start())
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    pause() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.animationController.isAnimating()) {
+                console.warn('EmotiveMascot is not running');
+                return this;
+            }
+            
+            // Stop animation controller
+            this.animationController.stop();
+            this.isRunning = false;
+            
+            // Pause ambient audio
+            if (this.soundSystem.isAvailable()) {
+                this.soundSystem.stopAmbientTone(200); // Quick fade out
+            }
+            
+            this.emit('paused');
+            console.log('EmotiveMascot paused');
+            return this;
+        }, 'pause', this)();
+    }
+
+    /**
+     * Resumes the animation loop from paused state
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    resume() {
+        return this.errorBoundary.wrap(() => {
+            if (this.animationController.isAnimating()) {
+                console.warn('EmotiveMascot is already running');
+                return this;
+            }
+            
+            // Start animation controller
+            this.animationController.start();
+            this.isRunning = true;
+            
+            // Resume ambient audio
+            // Update ambient tone based on emotional state - DISABLED (annoying)
+            // if (this.soundSystem.isAvailable()) {
+            //     const currentEmotion = this.stateMachine.getCurrentState().emotion;
+            //     this.soundSystem.setAmbientTone(currentEmotion, 200);
+            // }
+            
+            this.emit('resumed');
+            console.log('EmotiveMascot resumed');
+            return this;
+        }, 'resume', this)();
+    }
+
+    /**
+     * Checks if the mascot is currently running
+     * @returns {boolean} True if animation loop is active
+     */
+    isActive() {
+        return this.animationController.isAnimating();
+    }
+
+    /**
+     * Sets the target FPS for performance monitoring
+     * @param {number} targetFPS - Target frames per second (default: 60)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setTargetFPS(targetFPS) {
+        const clampedFPS = Math.max(15, Math.min(120, targetFPS)); // Clamp between 15-120 FPS
+        this.config.targetFPS = clampedFPS;
+        this.animationController.setTargetFPS(clampedFPS);
+        
+        console.log(`Target FPS set to ${clampedFPS}`);
+        this.emit('targetFPSChanged', { targetFPS: clampedFPS });
+        
+        return this;
+    }
+
+    /**
+     * Gets the current target FPS
+     * @returns {number} Target frames per second
+     */
+    getTargetFPS() {
+        return this.animationController.targetFPS;
+    }
+
+    /**
+     * Forces performance degradation mode (for testing)
+     * @param {boolean} enabled - Whether to enable degradation mode
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setPerformanceDegradation(enabled) {
+        const metrics = this.animationController.getPerformanceMetrics();
+        
+        if (enabled && !metrics.performanceDegradation) {
+            const currentMax = this.particleSystem.maxParticles;
+            const newMax = Math.max(5, Math.floor(currentMax * 0.5));
+            this.particleSystem.setMaxParticles(newMax);
+            
+            console.log(`Forced performance degradation: ${currentMax} -> ${newMax} particles`);
+        } else if (!enabled && metrics.performanceDegradation) {
+            this.particleSystem.setMaxParticles(this.config.maxParticles);
+            
+            console.log(`Disabled performance degradation: restored to ${this.config.maxParticles} particles`);
+        }
+        
+        return this;
+    }
+
+    /**
+     * Gets the current audio level (0-1) if speech reactivity is active
+     * @returns {number} Current audio level or 0 if not speaking
+     */
+    getAudioLevel() {
+        return this.speaking ? this.audioLevel : 0;
+    }
+
+    /**
+     * Checks if speech reactivity is currently active
+     * @returns {boolean} True if speech monitoring is active
+     */
+    isSpeaking() {
+        return this.speaking;
+    }
+
+    /**
+     * Sets the audio analyser smoothing time constant
+     * @param {number} smoothing - Smoothing value (0-1, default: 0.8)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setAudioSmoothing(smoothing) {
+        return this.errorBoundary.wrap(() => {
+            const clampedSmoothing = Math.max(0, Math.min(1, smoothing));
+            
+            if (this.audioAnalyser) {
+                this.audioAnalyser.smoothingTimeConstant = clampedSmoothing;
+                console.log(`Audio smoothing set to ${clampedSmoothing}`);
+            } else {
+                console.warn('No audio analyser available. Start speech reactivity first.');
+            }
+            
+            return this;
+        }, 'audio-smoothing', this)();
+    }
+
+    /**
+     * Gets comprehensive system status for debugging and monitoring
+     * @returns {Object} Complete system status
+     */
+    getSystemStatus() {
+        return this.errorBoundary.wrap(() => {
+            const state = this.stateMachine.getCurrentState();
+            const particleStats = this.particleSystem.getStats();
+            const rendererStats = this.renderer.getStats();
+            
+            const animationMetrics = this.animationController.getPerformanceMetrics();
+            
+            return {
+                // Core status
+                isRunning: animationMetrics.isRunning,
+                fps: animationMetrics.fps,
+                targetFPS: animationMetrics.targetFPS,
+                performanceDegradation: animationMetrics.performanceDegradation,
+                
+                // Emotional state
+                emotion: state.emotion,
+                undertone: state.undertone,
+                isTransitioning: state.isTransitioning,
+                transitionProgress: state.transitionProgress,
+                
+                // Gesture system
+                currentGesture: this.renderer?.currentGesture || null,
+                gestureActive: this.renderer?.isGestureActive() || false,
+                
+                // Particle system
+                particles: {
+                    active: particleStats.activeParticles,
+                    max: particleStats.maxParticles,
+                    poolEfficiency: particleStats.poolEfficiency
+                },
+                
+                // Audio system
+                audioEnabled: this.config.enableAudio,
+                soundSystemAvailable: this.soundSystem.isAvailable(),
+                speaking: this.speaking,
+                audioLevel: this.audioLevel,
+                masterVolume: this.config.masterVolume,
+                
+                // Renderer
+                renderer: {
+                    gradientCacheSize: rendererStats.gradientCacheSize,
+                    breathingPhase: rendererStats.breathingPhase,
+                    layers: rendererStats.layers
+                },
+                
+                // Event system
+                eventListeners: this.getEventNames().length,
+                
+                // Error boundary
+                errorStats: this.errorBoundary.getErrorStats()
+            };
+        }, 'system-status', {})();
+    }
+
+    /**
+     * Enables or disables debug mode
+     * @param {boolean} enabled - Whether to enable debug mode
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setDebugMode(enabled) {
+        this.config.showDebug = !!enabled;
+        this.config.showFPS = !!enabled;
+        
+        if (enabled) {
+            console.log('Debug mode enabled - performance and state info will be displayed');
+        } else {
+            console.log('Debug mode disabled');
+        }
+        
+        return this;
+    }
+
+    /**
+     * Triggers a manual error for testing error boundary
+     * @param {string} context - Error context for testing
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    triggerTestError(context = 'manual-test') {
+        return this.errorBoundary.wrap(() => {
+            throw new Error(`Test error triggered in context: ${context}`);
+        }, context, this)();
+    }
+
+    /**
+     * Gets current performance metrics
+     * @returns {Object} Performance data
+     */
+    getPerformanceMetrics() {
+        const animationMetrics = this.animationController.getPerformanceMetrics();
+        const state = this.stateMachine.getCurrentState();
+        
+        return {
+            ...animationMetrics,
+            currentEmotion: state.emotion,
+            currentUndertone: state.undertone,
+            isTransitioning: state.isTransitioning,
+            errorStats: this.errorBoundary.getErrorStats()
+        };
+    }
+
+    /**
+     * Register a plugin
+     * @param {Object} plugin - Plugin to register
+     * @returns {Promise<boolean>} Success status
+     */
+    async registerPlugin(plugin) {
+        return this.pluginSystem.registerPlugin(plugin);
+    }
+    
+    /**
+     * Set accessibility options
+     * @param {Object} options - Accessibility options
+     */
+    setAccessibility(options) {
+        if (options.colorBlindMode) {
+            this.accessibilityManager.setColorBlindMode(options.colorBlindMode);
+        }
+        if (options.reducedMotion !== undefined) {
+            this.accessibilityManager.reducedMotionPreferred = options.reducedMotion;
+        }
+        if (options.highContrast !== undefined) {
+            this.accessibilityManager.highContrastEnabled = options.highContrast;
+        }
+    }
+    
+    /**
+     * Get mobile optimization status
+     * @returns {Object} Mobile optimization status
+     */
+    getMobileStatus() {
+        return this.mobileOptimization.getStatus();
+    }
+    
+    /**
+     * Get accessibility status
+     * @returns {Object} Accessibility status
+     */
+    getAccessibilityStatus() {
+        return this.accessibilityManager.getStatus();
+    }
+    
+    /**
+     * Set the emotional state (alias for setEmotion for compatibility)
+     * @param {string} newState - The emotion/state to set
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setState(newState) {
+        return this.setEmotion(newState);
+    }
+    
+    /**
+     * Speak text using TTS with synchronized animation
+     * @param {string} text - The text to speak
+     * @param {Object} options - TTS options
+     * @returns {SpeechSynthesisUtterance} The utterance object for additional control
+     */
+    speak(text, options = {}) {
+        // Check if speech synthesis is available
+        if (!window.speechSynthesis) {
+            console.warn('Speech synthesis not available in this browser');
+            return null;
+        }
+        
+        // Create utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Apply options
+        if (options.voice) utterance.voice = options.voice;
+        if (options.rate) utterance.rate = options.rate;
+        if (options.pitch) utterance.pitch = options.pitch;
+        if (options.volume) utterance.volume = options.volume;
+        if (options.lang) utterance.lang = options.lang;
+        
+        // Set up event handlers for animation sync
+        utterance.onstart = () => {
+            console.log('TTS: Starting speech');
+            this.setTTSSpeaking(true);
+            this.emit('tts:start', { text });
+        };
+        
+        utterance.onend = () => {
+            console.log('TTS: Speech ended');
+            this.setTTSSpeaking(false);
+            this.emit('tts:end');
+        };
+        
+        utterance.onerror = (event) => {
+            console.error('TTS: Speech error', event);
+            this.setTTSSpeaking(false);
+            this.emit('tts:error', { error: event });
+        };
+        
+        utterance.onboundary = (event) => {
+            // Word/sentence boundaries for potential lip-sync
+            this.emit('tts:boundary', { 
+                name: event.name,
+                charIndex: event.charIndex,
+                charLength: event.charLength
+            });
+        };
+        
+        // Speak the text
+        window.speechSynthesis.speak(utterance);
+        
+        return utterance;
+    }
+    
+    /**
+     * Set TTS speaking state (triggers visual animation)
+     * @param {boolean} speaking - Whether TTS is speaking
+     */
+    setTTSSpeaking(speaking) {
+        this.ttsSpeaking = speaking;
+        
+        // Update renderer if using Emotive style
+        if (this.renderer && this.renderer.startSpeaking) {
+            if (speaking) {
+                this.renderer.startSpeaking();
+            } else {
+                this.renderer.stopSpeaking();
+            }
+        }
+        
+        // Also update the speaking flag for compatibility
+        this.speaking = speaking;
+    }
+    
+    /**
+     * Get available TTS voices
+     * @returns {Array} Array of available voices
+     */
+    getVoices() {
+        if (!window.speechSynthesis) {
+            return [];
+        }
+        return window.speechSynthesis.getVoices();
+    }
+    
+    /**
+     * Stop any ongoing TTS speech
+     */
+    stopTTS() {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            this.setTTSSpeaking(false);
+        }
+    }
+    
+    /**
+     * Destroys the mascot instance and cleans up resources
+     */
+    destroy() {
+        this.errorBoundary.wrap(() => {
+            // Stop animation
+            this.stop();
+            
+            // Stop speech reactivity
+            if (this.speaking) {
+                this.stopSpeaking();
+            }
+            
+            // Destroy animation controller
+            if (this.animationController) {
+                this.animationController.destroy();
+            }
+            
+            // Clean up all subsystems
+            if (this.soundSystem) {
+                this.soundSystem.cleanup();
+            }
+            
+            if (this.audioLevelProcessor) {
+                this.audioLevelProcessor.cleanup();
+            }
+            
+            if (this.particleSystem) {
+                this.particleSystem.destroy();
+            }
+            
+            if (this.renderer) {
+                // Stop all active gestures
+                this.renderer.stopAllGestures();
+                this.renderer.destroy();
+            }
+            
+            if (this.canvasManager) {
+                this.canvasManager.destroy();
+            }
+            
+            // Clear event listeners
+            if (this.eventManager) {
+                this.eventManager.destroy();
+            }
+            
+            // Destroy new systems
+            if (this.accessibilityManager) {
+                this.accessibilityManager.destroy();
+            }
+            
+            if (this.mobileOptimization) {
+                this.mobileOptimization.destroy();
+            }
+            
+            if (this.pluginSystem) {
+                this.pluginSystem.destroy();
+            }
+            
+            if (this.degradationManager) {
+                this.degradationManager.destroy();
+            }
+            
+            // Clear error boundary
+            this.errorBoundary.clearErrors();
+            
+            console.log('EmotiveMascot destroyed');
+        }, 'destruction')();
+    }
+    
+    /**
+     * Throttled warning to reduce console spam
+     * @param {string} message - Warning message
+     * @param {string} key - Unique key for this warning type
+     */
+    throttledWarn(message, key) {
+        const now = Date.now();
+        const lastWarning = this.warningTimestamps[key] || 0;
+        
+        if (now - lastWarning > this.warningThrottle) {
+            console.warn(message);
+            this.warningTimestamps[key] = now;
+        }
+    }
+}
+
+export default EmotiveMascot;

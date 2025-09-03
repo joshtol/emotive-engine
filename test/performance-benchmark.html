@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Performance Benchmark</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        #benchmark-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .canvas-wrapper {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            margin: 0 auto 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .metrics {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric-label {
+            font-weight: bold;
+        }
+        
+        .metric-value {
+            color: #4ade80;
+        }
+        
+        .metric-value.warning {
+            color: #fbbf24;
+        }
+        
+        .metric-value.danger {
+            color: #f87171;
+        }
+        
+        #test-status {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .test-progress {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .test-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22d3ee);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎭 Emotive Engine Performance Benchmark</h1>
+    
+    <div id="benchmark-container">
+        <div class="controls">
+            <button id="startBtn">Start Benchmark</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="stressBtn">Stress Test (200 particles)</button>
+            <button id="optimToggle">Toggle Optimizations</button>
+            <button id="emotionCycle">Cycle Emotions</button>
+            <button id="exportBtn">Export Results</button>
+        </div>
+        
+        <div class="canvas-wrapper">
+            <canvas id="mascotCanvas" width="600" height="600"></canvas>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric-row">
+                <span class="metric-label">Current FPS:</span>
+                <span class="metric-value" id="currentFPS">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Average FPS:</span>
+                <span class="metric-value" id="avgFPS">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Min FPS:</span>
+                <span class="metric-value" id="minFPS">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Max FPS:</span>
+                <span class="metric-value" id="maxFPS">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Frame Time (ms):</span>
+                <span class="metric-value" id="frameTime">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Particle Count:</span>
+                <span class="metric-value" id="particleCount">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Pool Hit Rate:</span>
+                <span class="metric-value" id="poolHitRate">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Memory (MB):</span>
+                <span class="metric-value" id="memoryUsage">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Optimizations:</span>
+                <span class="metric-value" id="optimStatus">ENABLED</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Current Emotion:</span>
+                <span class="metric-value" id="currentEmotion">neutral</span>
+            </div>
+        </div>
+        
+        <div id="test-status">
+            <div>Test Status: <span id="statusText">Ready</span></div>
+            <div class="test-progress">
+                <div class="test-progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div id="testResults"></div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import EmotiveEngine from '../src/EmotiveMascot.js';
+        
+        let mascot;
+        let benchmarkRunning = false;
+        let optimizationsEnabled = true;
+        let metricsHistory = [];
+        let startTime;
+        let frameCount = 0;
+        let lastFrameTime = performance.now();
+        let minFPS = Infinity;
+        let maxFPS = 0;
+        let totalFPS = 0;
+        let fpsCount = 0;
+        
+        const emotions = ['neutral', 'joy', 'sad', 'anger', 'fear', 'zen', 'focused', 'energetic'];
+        let currentEmotionIndex = 0;
+        
+        // Initialize engine
+        async function initEngine() {
+            const canvas = document.getElementById('mascotCanvas');
+            
+            mascot = new EmotiveEngine(canvas, {
+                particleLimit: 50,
+                showFPS: false,
+                degradationEnabled: false,
+                renderingStyle: 'classic',
+                baseScale: 1.0
+            });
+            
+            await mascot.init();
+            mascot.setEmotion('neutral');
+            
+            // Start metrics collection
+            requestAnimationFrame(collectMetrics);
+        }
+        
+        // Collect performance metrics
+        function collectMetrics() {
+            if (!mascot) {
+                requestAnimationFrame(collectMetrics);
+                return;
+            }
+            
+            const now = performance.now();
+            const delta = now - lastFrameTime;
+            const fps = 1000 / delta;
+            
+            frameCount++;
+            
+            // Update FPS metrics
+            if (fps < minFPS) minFPS = fps;
+            if (fps > maxFPS) maxFPS = fps;
+            totalFPS += fps;
+            fpsCount++;
+            
+            // Update UI
+            const currentFPSEl = document.getElementById('currentFPS');
+            currentFPSEl.textContent = fps.toFixed(1);
+            currentFPSEl.className = 'metric-value' + (fps < 30 ? ' danger' : fps < 50 ? ' warning' : '');
+            
+            document.getElementById('avgFPS').textContent = (totalFPS / fpsCount).toFixed(1);
+            document.getElementById('minFPS').textContent = minFPS.toFixed(1);
+            document.getElementById('maxFPS').textContent = maxFPS.toFixed(1);
+            document.getElementById('frameTime').textContent = delta.toFixed(2);
+            
+            // Get particle system stats
+            if (mascot.particleSystem) {
+                const stats = mascot.particleSystem.getStats();
+                document.getElementById('particleCount').textContent = stats.activeParticles;
+                
+                const hitRate = stats.poolHits / (stats.poolHits + stats.poolMisses) * 100 || 0;
+                document.getElementById('poolHitRate').textContent = hitRate.toFixed(1) + '%';
+            }
+            
+            // Memory usage (if available)
+            if (performance.memory) {
+                const memMB = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+                document.getElementById('memoryUsage').textContent = memMB;
+            }
+            
+            // Store metrics for export
+            if (benchmarkRunning) {
+                metricsHistory.push({
+                    timestamp: now - startTime,
+                    fps: fps,
+                    frameTime: delta,
+                    particleCount: mascot.particleSystem?.particles?.length || 0
+                });
+            }
+            
+            lastFrameTime = now;
+            requestAnimationFrame(collectMetrics);
+        }
+        
+        // Benchmark test sequence
+        async function runBenchmark() {
+            benchmarkRunning = true;
+            startTime = performance.now();
+            metricsHistory = [];
+            
+            document.getElementById('statusText').textContent = 'Running benchmark...';
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            const tests = [
+                { emotion: 'neutral', duration: 5000, description: 'Baseline (neutral)' },
+                { emotion: 'joy', duration: 5000, description: 'Joy emotion' },
+                { emotion: 'energetic', duration: 5000, description: 'High particle rate' },
+                { emotion: 'zen', duration: 5000, description: 'Zen meditation' },
+                { emotion: 'anger', duration: 5000, description: 'Aggressive particles' },
+                { emotion: 'fear', duration: 5000, description: 'Scattering effect' }
+            ];
+            
+            let testIndex = 0;
+            for (const test of tests) {
+                if (!benchmarkRunning) break;
+                
+                document.getElementById('statusText').textContent = `Testing: ${test.description}`;
+                document.getElementById('currentEmotion').textContent = test.emotion;
+                document.getElementById('progressBar').style.width = `${(testIndex / tests.length) * 100}%`;
+                
+                mascot.setEmotion(test.emotion);
+                await new Promise(resolve => setTimeout(resolve, test.duration));
+                
+                testIndex++;
+            }
+            
+            if (benchmarkRunning) {
+                finishBenchmark();
+            }
+        }
+        
+        function finishBenchmark() {
+            benchmarkRunning = false;
+            document.getElementById('statusText').textContent = 'Benchmark complete!';
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            
+            // Calculate results
+            const avgFPS = totalFPS / fpsCount;
+            const result = avgFPS >= 60 ? '✅ EXCELLENT' : avgFPS >= 30 ? '⚠️ ACCEPTABLE' : '❌ POOR';
+            
+            document.getElementById('testResults').innerHTML = `
+                <strong>Results:</strong> ${result}<br>
+                Average FPS: ${avgFPS.toFixed(1)}<br>
+                Min FPS: ${minFPS.toFixed(1)}<br>
+                Max FPS: ${maxFPS.toFixed(1)}<br>
+                Total Frames: ${frameCount}
+            `;
+        }
+        
+        // Stress test
+        function runStressTest() {
+            mascot.config.particleLimit = 200;
+            mascot.particleSystem.maxParticles = 200;
+            mascot.setEmotion('energetic');
+            document.getElementById('statusText').textContent = 'Running stress test (200 particles)...';
+        }
+        
+        // Toggle optimizations
+        function toggleOptimizations() {
+            optimizationsEnabled = !optimizationsEnabled;
+            document.getElementById('optimStatus').textContent = optimizationsEnabled ? 'ENABLED' : 'DISABLED';
+            
+            // Toggle specific optimizations
+            if (mascot.renderer) {
+                mascot.renderer.useDirtyRects = optimizationsEnabled;
+            }
+            
+            // Reset metrics
+            minFPS = Infinity;
+            maxFPS = 0;
+            totalFPS = 0;
+            fpsCount = 0;
+        }
+        
+        // Cycle emotions
+        function cycleEmotions() {
+            currentEmotionIndex = (currentEmotionIndex + 1) % emotions.length;
+            const emotion = emotions[currentEmotionIndex];
+            mascot.setEmotion(emotion);
+            document.getElementById('currentEmotion').textContent = emotion;
+        }
+        
+        // Export results
+        function exportResults() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                optimizationsEnabled,
+                averageFPS: totalFPS / fpsCount,
+                minFPS,
+                maxFPS,
+                frameCount,
+                metricsHistory
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `emotive-benchmark-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', runBenchmark);
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            benchmarkRunning = false;
+            document.getElementById('statusText').textContent = 'Benchmark stopped';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        });
+        document.getElementById('stressBtn').addEventListener('click', runStressTest);
+        document.getElementById('optimToggle').addEventListener('click', toggleOptimizations);
+        document.getElementById('emotionCycle').addEventListener('click', cycleEmotions);
+        document.getElementById('exportBtn').addEventListener('click', exportResults);
+        
+        // Initialize on load
+        initEngine();
+    </script>
+</body>
+</html>

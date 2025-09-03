@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Emotive Communication Engine</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,">
+    <style>
+        :root {
+            --color-primary: #6366f1;
+            --color-secondary: #8b5cf6;
+            --color-accent: #ec4899;
+            --color-background: #1e1b4b;
+            --color-surface: #312e81;
+            --color-text: #e0e7ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--color-background) 0%, var(--color-surface) 100%);
+            color: var(--color-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        #mascot-canvas {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            margin: 2rem auto;
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .emotion-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        
+        .emotion-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .emotion-btn:hover {
+            background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+        }
+        
+        .status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .features {
+            margin-top: 3rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .feature {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .feature h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-primary);
+        }
+        
+        .feature p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Emotive Engine</h1>
+        <p class="description">Emotive Communication Engine with Advanced Accessibility & Performance Features</p>
+        
+        <canvas id="mascot-canvas" width="400" height="400"></canvas>
+        
+        <div class="controls">
+            <button id="start-btn">Start</button>
+            <button id="stop-btn">Stop</button>
+            <button id="gesture-btn">Random Gesture</button>
+            <button id="plugin-btn">Test Plugin</button>
+            <button id="mobile-btn">Mobile Status</button>
+            <button id="a11y-btn">Accessibility</button>
+        </div>
+        
+        <div class="emotion-buttons">
+            <button class="emotion-btn" data-emotion="neutral">Neutral</button>
+            <button class="emotion-btn" data-emotion="happy">Happy</button>
+            <button class="emotion-btn" data-emotion="excited">Excited</button>
+            <button class="emotion-btn" data-emotion="calm">Calm</button>
+            <button class="emotion-btn" data-emotion="curious">Curious</button>
+            <button class="emotion-btn" data-emotion="frustrated">Frustrated</button>
+            <button class="emotion-btn" data-emotion="sad">Sad</button>
+        </div>
+        
+        <div id="status" class="status">
+            Status: Ready
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🎨 Accessibility</h3>
+                <p>Reduced motion, screen reader support, color blind modes</p>
+            </div>
+            <div class="feature">
+                <h3>📱 Mobile Optimized</h3>
+                <p>Touch gestures, viewport handling, battery optimization</p>
+            </div>
+            <div class="feature">
+                <h3>🔌 Plugin System</h3>
+                <p>Extensible architecture for custom behaviors</p>
+            </div>
+            <div class="feature">
+                <h3>⚡ Performance</h3>
+                <p>Adaptive rendering, frame skipping, auto-optimization</p>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import EmotiveEngine from './src/EmotiveMascot.js';
+        
+        // Initialize engine
+        const mascot = new EmotiveEngine({
+            canvasId: 'mascot-canvas',
+            targetFPS: 60,
+            enableAudio: true,
+            enableAutoOptimization: true,
+            enableGracefulDegradation: true,
+            enablePlugins: true,
+            enableTouchOptimization: true,
+            enableAccessibility: true
+        });
+        
+        // Update status
+        const statusEl = document.getElementById('status');
+        const updateStatus = (message) => {
+            statusEl.textContent = `Status: ${message}`;
+        };
+        
+        // Control buttons
+        document.getElementById('start-btn').addEventListener('click', () => {
+            mascot.start();
+            updateStatus('Running');
+        });
+        
+        document.getElementById('stop-btn').addEventListener('click', () => {
+            mascot.stop();
+            updateStatus('Stopped');
+        });
+        
+        document.getElementById('gesture-btn').addEventListener('click', () => {
+            const gestures = ['wobble', 'shake', 'sparkle', 'thinking'];
+            const gesture = gestures[Math.floor(Math.random() * gestures.length)];
+            mascot.runAnimation(gesture);
+            updateStatus(`Gesture: ${gesture}`);
+        });
+        
+        document.getElementById('plugin-btn').addEventListener('click', async () => {
+            // Test plugin registration
+            const testPlugin = {
+                name: 'test-plugin',
+                version: '1.0.0',
+                type: 'emotion',
+                init: () => {
+                    console.log('Test plugin initialized');
+                    return true;
+                },
+                destroy: () => {
+                    console.log('Test plugin destroyed');
+                }
+            };
+            
+            const success = await mascot.registerPlugin(testPlugin);
+            updateStatus(`Plugin test: ${success ? 'Success' : 'Failed'}`);
+        });
+        
+        document.getElementById('mobile-btn').addEventListener('click', () => {
+            const status = mascot.getMobileStatus();
+            updateStatus(`Mobile: ${status.device.isMobile ? 'Yes' : 'No'}, Touch: ${status.device.isTouchDevice ? 'Yes' : 'No'}`);
+        });
+        
+        document.getElementById('a11y-btn').addEventListener('click', () => {
+            const status = mascot.getAccessibilityStatus();
+            updateStatus(`A11y - Reduced Motion: ${status.reducedMotion}, High Contrast: ${status.highContrast}`);
+        });
+        
+        // Emotion buttons
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const emotion = btn.dataset.emotion;
+                mascot.setState(emotion);
+                updateStatus(`Emotion: ${emotion}`);
+            });
+        });
+        
+        // Listen for mascot events
+        mascot.on('state:change', ({ oldState, newState }) => {
+            console.log('State changed:', oldState, '->', newState);
+        });
+        
+        mascot.on('animation:start', ({ type }) => {
+            console.log('Animation started:', type);
+        });
+        
+        mascot.on('animation:end', ({ type }) => {
+            console.log('Animation ended:', type);
+        });
+        
+        // Start automatically
+        mascot.start();
+        updateStatus('Running - All systems operational');
+        
+        // Make mascot available globally for debugging
+        window.mascot = mascot;
+    </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run nightly builds
+    - cron: '0 2 * * *'
+
+jobs:
+  # Code quality and linting
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint --if-present
+        
+      - name: Check code formatting
+        run: npm run format:check --if-present
+      
+      - name: Type checking
+        run: npm run typecheck --if-present
+
+  # Test suite
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [16, 18, 20]
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run unit tests
+        run: npm test
+      
+      - name: Run stress tests
+        run: npm run test:stress --if-present
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '18'
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '18'
+        with:
+          file: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+
+  # Browser compatibility testing
+  browser-test:
+    name: Browser Compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      
+      - name: Run browser tests
+        run: npm run test:browser --if-present
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: browser-test-results
+          path: test-results/
+
+  # Performance testing
+  performance:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run performance tests
+        run: npm run test:performance --if-present
+      
+      - name: Check performance benchmarks
+        run: |
+          npm run benchmark --if-present
+          # Store benchmarks for comparison
+          mkdir -p benchmarks
+          cp benchmark-results.json benchmarks/benchmark-$(date +%s).json || true
+      
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: benchmarks/
+
+  # Build and bundle size check
+  build:
+    name: Build & Bundle Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build production bundle
+        run: npm run build
+      
+      - name: Check bundle size
+        run: npm run size-check
+      
+      - name: Analyze bundle
+        run: npm run build:analyze --if-present
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: dist/
+      
+      - name: Bundle size report
+        uses: andresz1/size-limit-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          skip_step: build
+        if: github.event_name == 'pull_request'
+
+  # Visual regression testing
+  visual-regression:
+    name: Visual Regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run visual regression tests
+        run: npm run test:visual --if-present
+      
+      - name: Upload visual diff artifacts
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: visual-regression-diffs
+          path: test/__image_snapshots__/__diff_output__/
+
+  # Accessibility testing
+  accessibility:
+    name: Accessibility Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run accessibility tests
+        run: npm run test:a11y --if-present
+      
+      - name: Check WCAG compliance
+        run: |
+          npx pa11y-ci --threshold 0 || true
+          npx axe-core demo/*.html --exit || true
+
+  # Security scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run security audit
+        run: npm audit --audit-level=moderate
+      
+      - name: Check for vulnerable dependencies
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+      
+      - name: Upload security results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+        continue-on-error: true
+
+  # Documentation validation
+  documentation:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Generate documentation
+        run: npm run docs:generate --if-present
+      
+      - name: Check documentation links
+        run: |
+          npx markdown-link-check README.md || true
+          npx markdown-link-check docs/*.md || true
+      
+      - name: Validate JSDoc comments
+        run: npm run docs:validate --if-present
+
+  # Memory leak detection
+  memory-leak:
+    name: Memory Leak Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run memory leak tests
+        run: |
+          npm run test:memory --if-present
+          node --expose-gc test/memory-leak-detection.js || true
+      
+      - name: Analyze heap snapshots
+        run: npm run analyze:heap --if-present
+
+  # Release preparation (only on main branch)
+  release:
+    name: Release Preparation
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [quality, test, build, browser-test, security]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build for release
+        run: npm run build
+      
+      - name: Generate changelog
+        run: npx conventional-changelog-cli -p angular -i CHANGELOG.md -s || true
+      
+      - name: Check if version changed
+        id: version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          git fetch --tags
+          if git rev-parse "v$CURRENT_VERSION" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create release tag
+        if: steps.version.outputs.exists == 'false'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+      
+      - name: Publish to NPM (dry run)
+        run: npm publish --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # Notify on completion
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [quality, test, build, browser-test, performance, visual-regression, accessibility, security, documentation, memory-leak]
+    steps:
+      - name: Notify success
+        if: success()
+        run: echo "All checks passed successfully!"
+      
+      - name: Notify failure
+        if: failure()
+        run: echo "Some checks failed. Please review the logs."
+      
+      # Add Slack/Discord/Email notifications here if needed

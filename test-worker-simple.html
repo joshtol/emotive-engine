@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Worker Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-family: monospace;
+        }
+        canvas {
+            border: 1px solid #0099ff;
+            display: block;
+            margin: 20px 0;
+        }
+        #log {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: #00ff88; }
+        .error { color: #ff4444; }
+        .info { color: #0099ff; }
+    </style>
+</head>
+<body>
+    <h1>Web Worker Test</h1>
+    <canvas id="test-canvas" width="600" height="400"></canvas>
+    <div id="log"></div>
+    
+    <script type="module">
+        const log = document.getElementById('log');
+        
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // Override console methods to capture logs
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        console.log = (...args) => {
+            originalLog(...args);
+            addLog(args.join(' '), 'info');
+        };
+        
+        console.warn = (...args) => {
+            originalWarn(...args);
+            addLog(args.join(' '), 'error');
+        };
+        
+        console.error = (...args) => {
+            originalError(...args);
+            addLog(args.join(' '), 'error');
+        };
+        
+        addLog('Starting Worker test...', 'info');
+        
+        // Test Worker directly
+        try {
+            addLog('Creating Worker...', 'info');
+            const worker = new Worker(new URL('./src/workers/particle.worker.js', import.meta.url), { type: 'module' });
+            
+            worker.onmessage = (e) => {
+                addLog(`Worker message: ${e.data.type}`, 'success');
+            };
+            
+            worker.onerror = (e) => {
+                addLog(`Worker error: ${e.message}`, 'error');
+            };
+            
+            addLog('Sending init message to Worker...', 'info');
+            worker.postMessage({ type: 'init', data: { maxParticles: 100 } });
+            
+            addLog('Worker created successfully!', 'success');
+        } catch (error) {
+            addLog(`Failed to create Worker: ${error.message}`, 'error');
+        }
+        
+        // Now test with EmotiveEngine
+        addLog('Loading EmotiveEngine...', 'info');
+        
+        import('./src/EmotiveMascot.js').then(module => {
+            const EmotiveEngine = module.default;
+            
+            addLog('Creating EmotiveEngine instance...', 'info');
+            const mascot = new EmotiveEngine({
+                canvasId: 'test-canvas',
+                style: 'emotive',
+                startAnimation: true
+            });
+            
+            addLog('EmotiveEngine created!', 'success');
+            
+            // Check particle system type
+            setTimeout(() => {
+                if (mascot.particleSystem.workerSupported) {
+                    addLog('Using Web Worker for particles!', 'success');
+                } else {
+                    addLog('Using fallback ParticleSystem', 'info');
+                }
+            }, 1000);
+            
+        }).catch(error => {
+            addLog(`Failed to load EmotiveEngine: ${error.message}`, 'error');
+        });
+    </script>
+</body>
+</html>

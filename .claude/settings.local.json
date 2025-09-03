@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start http://localhost:8080/osmos-demo.html)",
+      "Bash(dir:*)",
+      "Bash(cmd /c del:*)",
+      "Bash(cmd /c rmdir:*)",
+      "Bash(git restore:*)",
+      "WebSearch",
+      "Bash(start http://localhost:8080/osmos-scifi-demo.html)",
+      "Bash(git add:*)",
+      "Bash(npm install)",
+      "Bash(ren:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git push:*)",
+      "Bash(git init:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Interactive Demo Dashboard</title>
+    <!-- Poppins and Inter Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,500;0,700;0,900;1,300;1,500;1,700;1,900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-background: #0a0e27;
+            --color-surface: #151937;
+            --color-surface-light: #1e2343;
+            --color-primary: #14B8A6;
+            --color-text: #e0e7ff;
+            --color-text-dim: #94a3b8;
+            --sidebar-width: 320px;
+            --header-height: 60px;
+            --spacing: 1rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-background);
+            color: var(--color-text);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Dashboard Layout */
+        .dashboard {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Fixed Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--color-surface);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--color-surface), var(--color-surface-light));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        
+        .sidebar-header h1 {
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, var(--color-primary), #818CF8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.3rem;
+        }
+        
+        .sidebar-header p {
+            font-size: 0.85rem;
+            color: var(--color-text-dim);
+        }
+        
+        /* Control Sections */
+        .control-section {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .control-section h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-primary);
+            margin-bottom: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .button-group {
+            display: grid;
+            gap: 0.5rem;
+        }
+        
+        .button-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+        }
+        
+        button {
+            padding: 0.6rem 0.8rem;
+            border: none;
+            border-radius: 0.4rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--color-text);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        button:hover {
+            background: rgba(20, 184, 166, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        /* Special button styles */
+        .primary-btn {
+            background: linear-gradient(135deg, var(--color-primary), #10b981);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .emotion-btn {
+            font-size: 0.8rem;
+        }
+        
+        .combo-btn {
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.15), rgba(20, 184, 166, 0.15));
+            border: 1px solid rgba(129, 140, 248, 0.2);
+        }
+        
+        .story-btn {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(239, 68, 68, 0.15));
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+        
+        /* Active combo animation */
+        .combo-active {
+            animation: combo-pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes combo-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px var(--color-primary); }
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, var(--color-background) 0%, var(--color-surface) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* HUD Status Indicators */
+        .hud-indicators {
+            position: absolute;
+            width: min(600px, 90vw);
+            height: min(600px, 90vw);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 3;
+        }
+        
+        /* Container for HUD panels - matches frame layout */
+        .hud-panel {
+            position: absolute;
+            bottom: 11.8%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(600px, 90vw);
+            height: 40px;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
+        }
+        
+        /* Left panel for emotion - centered in left rectangle area */
+        .hud-emotion-panel {
+            position: absolute;
+            left: 30%;
+            transform: translateX(-50%);
+            background: rgba(10, 14, 39, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            border-radius: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.4rem 1rem;
+            height: 35px;
+        }
+        
+        /* Right panel for undertone - positioned in right darker rectangle */
+        .hud-undertone-panel {
+            position: absolute;
+            right: 25%;
+            left: auto;
+            transform: translateX(50%);
+            background: rgba(5, 7, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            border-radius: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0.4rem 1rem 0.4rem 0.5rem;
+            height: 35px;
+            min-width: 100px;
+        }
+        
+        .hud-indicator {
+            background: transparent;
+            padding: 0.2rem 0.5rem;
+            font-family: 'Poppins', 'Inter', sans-serif;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.4rem;
+            min-width: auto;
+            white-space: nowrap;
+        }
+        
+        .hud-label {
+            font-size: 0.7rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            color: rgba(20, 184, 166, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+        
+        .hud-value {
+            font-size: 0.85rem;
+            font-family: 'Poppins', sans-serif;
+            color: #FFFFFF;
+            font-weight: 500;
+            text-transform: capitalize;
+            text-shadow: 0 0 8px rgba(20, 184, 166, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        /* Undertone value in right panel */
+        .undertone-value {
+            font-size: 0.75rem;
+            font-family: 'Poppins', sans-serif;
+            color: rgba(129, 140, 248, 0.95);
+            font-weight: 500;
+            text-transform: capitalize;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(129, 140, 248, 0.4);
+            text-align: left;
+            width: 100%;
+        }
+        
+        /* Canvas Container - Containment Chamber */
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 2rem;
+            background: transparent; /* Remove background */
+        }
+        
+        /* Removed specimen-viewport - no longer needed */
+        
+        /* Containment overlay frame */
+        .containment-frame {
+            position: absolute;
+            width: min(600px, 90vw);
+            height: min(600px, 90vw);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-image: url('assets/containment-overlay.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.5;
+        }
+        
+        /* Scanline effect for containment field */
+        .containment-frame::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                0deg,
+                transparent 0%,
+                rgba(20, 184, 166, 0.03) 50%,
+                transparent 100%
+            );
+            background-size: 100% 4px;
+            animation: scanlines 8s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(20px); }
+        }
+        
+        /* Energy field distortion */
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 380px;
+            height: 380px;
+            border-radius: 20%;
+            background: radial-gradient(circle at center,
+                transparent 30%,
+                rgba(20, 184, 166, 0.05) 50%,
+                transparent 70%);
+            animation: energyField 3s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        @keyframes energyField {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.8;
+            }
+        }
+        
+        #mascot-canvas {
+            position: relative;
+            z-index: 1;
+            background: transparent;
+            cursor: pointer;
+            /* Much smaller canvas to ensure particles stay within frame */
+            width: min(360px, 65vw);
+            height: min(360px, 65vw);
+        }
+        
+        /* Status Message */
+        .status-message {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(21, 25, 55, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Inter', 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            color: var(--color-text);
+            min-width: 300px;
+            text-align: center;
+            z-index: 3;
+            transition: opacity 1.5s ease, visibility 0.3s ease;
+            visibility: visible;
+        }
+        
+        /* Speech Input */
+        .speech-input {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.4rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--color-text);
+            font-size: 0.85rem;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        /* Scrollbar Styling */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+                padding: 0;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 2; /* Controls at bottom */
+                border-right: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                overflow-y: auto;
+                height: 50vh;
+                flex-shrink: 0;
+            }
+            
+            .main-content {
+                order: 1; /* Canvas at top */
+                height: 50vh;
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: 0;
+                position: relative;
+            }
+            
+            .hud-indicators {
+                width: min(100vw, calc(50vh - 1rem)) !important;
+                height: calc(50vh - 1rem) !important;
+            }
+            
+            .hud-panel {
+                bottom: 10.5%;
+                width: min(100vw, calc(50vh - 1rem));
+            }
+            
+            .hud-emotion-panel {
+                left: 32%;
+                padding: 0.3rem 0.8rem;
+                height: 30px;
+            }
+            
+            .hud-undertone-panel {
+                right: 25%;
+                padding: 0.3rem 0.8rem 0.3rem 0.4rem;
+                height: 30px;
+                min-width: 80px;
+            }
+            
+            .hud-indicator {
+                padding: 0.2rem 0.4rem;
+                gap: 0.3rem;
+            }
+            
+            .hud-label {
+                font-size: 0.5rem;
+                letter-spacing: 1px;
+            }
+            
+            .hud-value {
+                font-size: 0.65rem;
+            }
+            
+            .undertone-value {
+                font-size: 0.6rem;
+            }
+            
+            .canvas-container {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                background: transparent;
+                box-sizing: border-box;
+            }
+            
+            #mascot-canvas {
+                position: absolute;
+                width: min(60%, 240px) !important;
+                height: min(60%, 240px) !important;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 1;
+            }
+            
+            .containment-frame {
+                position: absolute;
+                width: min(100vw, calc(50vh - 1rem)) !important;
+                height: calc(50vh - 1rem) !important;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 2;
+                pointer-events: none;
+                background-image: url('assets/containment-overlay.png') !important;
+                background-size: contain !important;
+                background-position: center !important;
+                background-repeat: no-repeat !important;
+                opacity: 0.5;
+            }
+            
+            /* Removed specimen-viewport - no longer needed */
+            
+            .sidebar-toggle {
+                display: none; /* Hide toggle on mobile */
+            }
+            
+            .sidebar-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .control-section {
+                padding: 0.75rem;
+            }
+            
+            .button-group button {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Collapsible sidebar toggle for desktop */
+        .sidebar-toggle {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 60px;
+            background: var(--color-surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: none;
+            border-radius: 0 0.5rem 0.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 11;
+        }
+        
+        .sidebar-toggle:hover {
+            background: var(--color-surface-light);
+        }
+        
+        .sidebar-toggle::before {
+            content: '◀';
+            color: var(--color-text-dim);
+            font-size: 0.8rem;
+        }
+        
+        .sidebar.collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+        
+        .sidebar.collapsed .sidebar-toggle {
+            right: -20px;
+        }
+        
+        .sidebar.collapsed .sidebar-toggle::before {
+            content: '▶';
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Controls -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-toggle" onclick="toggleSidebar()"></div>
+            
+            <div class="sidebar-header">
+                <h1>Emotive Engine</h1>
+                <p>Sentient Starlight Interface</p>
+            </div>
+            
+            <div class="control-section">
+                <h3>Core Controls</h3>
+                <div class="button-row">
+                    <button id="start-btn" class="primary-btn">Start</button>
+                    <button id="stop-btn">Stop</button>
+                    <button id="wake-btn">Wake</button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Emotional States</h3>
+                <div class="button-group">
+                    <div class="button-row">
+                        <button class="emotion-btn" data-emotion="resting">😴 Rest</button>
+                        <button class="emotion-btn" data-emotion="neutral">😐 Neutral</button>
+                        <button class="emotion-btn" data-emotion="joy">😊 Joy</button>
+                    </div>
+                    <div class="button-row">
+                        <button class="emotion-btn" data-emotion="sadness">😢 Sad</button>
+                        <button class="emotion-btn" data-emotion="anger">😠 Anger</button>
+                        <button class="emotion-btn" data-emotion="fear">😨 Fear</button>
+                    </div>
+                    <div class="button-row">
+                        <button class="emotion-btn" data-emotion="surprise">😲 Surprise</button>
+                        <button class="emotion-btn" data-emotion="disgust">🤢 Disgust</button>
+                        <button class="emotion-btn" data-emotion="love">😍 Love</button>
+                    </div>
+                    <div class="button-row">
+                        <button class="emotion-btn" data-emotion="zen">🧘 Zen</button>
+                        <button class="emotion-btn" data-emotion="focused">🎯 Focused</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Undertones</h3>
+                <div class="button-group">
+                    <select id="undertone-selector" style="width: 100%; padding: 0.5rem; background: var(--color-surface); color: var(--color-text); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;">
+                        <option value="">No undertone</option>
+                        <option value="nervous">Nervous (butterflies)</option>
+                        <option value="confident">Confident (power poses)</option>
+                        <option value="tired">Tired (micro-sleeps)</option>
+                        <option value="intense">Intense (laser focus)</option>
+                        <option value="subdued">Subdued (introspection)</option>
+                    </select>
+                    <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-text-dim);">
+                        Undertones add episodic moments to emotions
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>State Controls</h3>
+                <div class="button-group">
+                    <div class="button-row">
+                        <button id="sleep-btn">💤 Sleep</button>
+                        <button id="wake-state-btn">☀️ Wake</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="start-recording-btn">🔴 Start Recording</button>
+                        <button id="stop-recording-btn">⏹️ Stop Recording</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Core Gestures</h3>
+                <div class="button-group">
+                    <div class="button-row">
+                        <button id="bounce-btn">Bounce</button>
+                        <button id="pulse-btn">Pulse</button>
+                        <button id="shake-btn">Shake</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="spin-btn">Spin</button>
+                        <button id="nod-btn">Nod</button>
+                        <button id="tilt-btn">Tilt</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="expand-btn">Expand</button>
+                        <button id="contract-btn">Contract</button>
+                        <button id="flash-btn">Flash</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="drift-btn">Drift</button>
+                        <button id="stretch-btn">Stretch</button>
+                        <button id="yawn-btn">Yawn</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="slowBlink-btn">Slow Blink</button>
+                        <button id="drowsySway-btn">Drowsy Sway</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="jump-btn">Jump</button>
+                        <button id="look-btn">Look</button>
+                        <button id="settle-btn">Settle</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Breathing</h3>
+                <div class="button-group">
+                    <div class="button-row">
+                        <button id="breathIn-btn">Inhale</button>
+                        <button id="breathHold-btn">Hold</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="breathOut-btn">Exhale</button>
+                        <button id="breathHoldEmpty-btn">Empty</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Expression Combos</h3>
+                <div class="button-group">
+                    <div class="button-row">
+                        <button id="combo-greeting" class="combo-btn">👋 Greet</button>
+                        <button id="combo-thinking" class="combo-btn">🤔 Think</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="combo-excited" class="combo-btn">🎉 Excited</button>
+                        <button id="combo-shy" class="combo-btn">😊 Shy</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="combo-curious" class="combo-btn">🔍 Curious</button>
+                        <button id="combo-dancing" class="combo-btn">💃 Dance</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Story Sequences</h3>
+                <div class="button-group">
+                    <div class="button-row">
+                        <button id="combo-wakeup" class="story-btn">🌅 Wake</button>
+                        <button id="combo-stargazing" class="story-btn">✨ Gaze</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="combo-meditation" class="story-btn">🧘 Meditate</button>
+                        <button id="combo-celebration" class="story-btn">🏆 Celebrate</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="combo-sleepy" class="story-btn">😴 Sleep</button>
+                        <button id="combo-alert" class="story-btn">⚠️ Alert</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="combo-boxbreathing" class="story-btn">🫁 Box Breathing</button>
+                        <button id="combo-deepfocus" class="story-btn">🔍 Deep Focus</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="combo-buddhamode" class="story-btn">☮️ Buddha Mode</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Text-to-Speech</h3>
+                <div class="speech-input">
+                    <input type="text" id="speech-text" placeholder="Enter text..." value="Hello! I am Emotive.">
+                    <button id="speak-btn">Speak</button>
+                </div>
+                <button id="stop-speech-btn" style="width: 100%; margin-top: 0.5rem;">Stop Speech</button>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- HUD indicators removed from here, moved to canvas container -->
+            
+            <!-- Canvas Container -->
+            <div class="canvas-container">
+                <canvas id="mascot-canvas" width="360" height="360"></canvas>
+                <div class="containment-frame"></div>
+                
+                <!-- HUD Status Indicators -->
+                <div class="hud-indicators">
+                    <div class="hud-panel">
+                        <div class="hud-emotion-panel">
+                            <div class="hud-indicator">
+                                <span class="hud-label">Emotion:</span>
+                                <span class="hud-value" id="emotion-text">neutral</span>
+                            </div>
+                        </div>
+                        <div class="hud-undertone-panel" id="undertone-panel" style="display: none;">
+                            <span class="undertone-value" id="undertone-display"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="status-message" id="status-text">CONTAINMENT FIELD: ACTIVE</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Sidebar toggle function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+    </script>
+    
+    <script type="module">
+        import EmotiveEngine from './src/EmotiveMascot.js';
+        
+        // Initialize mascot with classic Emotive style
+        const mascot = new EmotiveEngine({
+            canvasId: 'mascot-canvas',
+            enableGazeTracking: true,
+            enableIdleBehaviors: true,
+            targetFPS: 60,
+            enableAudio: true,
+            maxParticles: 50,
+            particleBoundaryPadding: 40,  // Keep particles away from edges
+            classicConfig: {
+                coreColor: '#FFFFFF',
+                coreSizeDivisor: 12,  // Original size
+                baseScale: 1.5,  // Scale entire Emotive by 1.5x
+                particleSizeMultiplier: 1.333,  // Make particles 1/3 larger
+                referenceSize: 360,  // Smaller canvas to keep particles contained
+                glowMultiplier: 2.5,
+                defaultGlowColor: '#14B8A6'
+            }
+        });
+        
+        // Status elements
+        const statusText = document.getElementById('status-text');
+        const emotionText = document.getElementById('emotion-text');
+        const undertoneDisplay = document.getElementById('undertone-display');
+        const undertonePanel = document.getElementById('undertone-panel');
+        
+        // Update status display
+        const updateStatus = (message) => {
+            statusText.textContent = message;
+            statusText.style.opacity = '1';
+            statusText.style.visibility = 'visible';
+            
+            // Clear any existing timeouts
+            clearTimeout(window.statusTimeout);
+            clearTimeout(window.statusFadeTimeout);
+            
+            // Dim after 3 seconds
+            window.statusTimeout = setTimeout(() => {
+                statusText.style.opacity = '0.5';
+                
+                // Completely fade out after 2 more seconds
+                window.statusFadeTimeout = setTimeout(() => {
+                    statusText.style.opacity = '0';
+                    setTimeout(() => {
+                        statusText.style.visibility = 'hidden';
+                    }, 300); // Wait for fade transition to complete
+                }, 2000);
+            }, 3000);
+        };
+        
+        // Control buttons
+        document.getElementById('start-btn').addEventListener('click', () => {
+            mascot.start();
+            updateStatus('Emotive is running - Move your mouse over the canvas');
+        });
+        
+        document.getElementById('stop-btn').addEventListener('click', () => {
+            mascot.stop();
+            updateStatus('Emotive stopped');
+        });
+        
+        document.getElementById('wake-btn').addEventListener('click', () => {
+            mascot.wake();
+            updateStatus('Waking up Emotive!');
+        });
+        
+        // Track current undertone
+        let currentUndertone = null;
+        
+        // Emotion buttons
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const emotion = btn.dataset.emotion;
+                // Apply current undertone when setting emotion
+                mascot.setEmotion(emotion, currentUndertone);
+                emotionText.textContent = emotion;
+                if (currentUndertone) {
+                    undertoneDisplay.textContent = currentUndertone;
+                    undertonePanel.style.display = 'flex';
+                    emotionText.title = `${emotion} with ${currentUndertone} undertone`;
+                } else {
+                    undertonePanel.style.display = 'none';
+                    emotionText.title = emotion;
+                }
+                updateStatus(`Emotion set to ${emotion}${currentUndertone ? ` with ${currentUndertone} undertone` : ''}`);
+            });
+        });
+        
+        // Undertone selector
+        document.getElementById('undertone-selector')?.addEventListener('change', (e) => {
+            currentUndertone = e.target.value || null;
+            globalUndertone = currentUndertone;
+            // Re-apply current emotion with new undertone (including neutral)
+            const currentEmotion = emotionText.textContent;
+            if (currentEmotion) {
+                mascot.setEmotion(currentEmotion, currentUndertone);
+                if (currentUndertone) {
+                    undertoneDisplay.textContent = currentUndertone;
+                    undertonePanel.style.display = 'flex';
+                    emotionText.title = `${currentEmotion} with ${currentUndertone} undertone`;
+                } else {
+                    undertonePanel.style.display = 'none';
+                    emotionText.title = currentEmotion;
+                }
+                updateStatus(`Undertone ${currentUndertone ? `set to ${currentUndertone}` : 'removed'}`);
+            }
+        });
+        
+        // Helper function for visual feedback
+        const playCombo = (buttonId, emotion, gestures, statusMsg) => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.classList.add('combo-active');
+                setTimeout(() => button.classList.remove('combo-active'), 500);
+            }
+            mascot.setEmotion(emotion);
+            mascot.chain(...gestures);
+            updateStatus(statusMsg);
+        };
+        
+        // Gesture buttons
+        const gestures = [
+            { id: 'bounce-btn', gesture: 'bounce', desc: 'Bouncing' },
+            { id: 'pulse-btn', gesture: 'pulse', desc: 'Pulsing' },
+            { id: 'shake-btn', gesture: 'shake', desc: 'Shaking' },
+            { id: 'spin-btn', gesture: 'spin', desc: 'Spinning' },
+            { id: 'nod-btn', gesture: 'nod', desc: 'Nodding' },
+            { id: 'tilt-btn', gesture: 'tilt', desc: 'Tilting' },
+            { id: 'expand-btn', gesture: 'expand', desc: 'Expanding' },
+            { id: 'contract-btn', gesture: 'contract', desc: 'Contracting' },
+            { id: 'flash-btn', gesture: 'flash', desc: 'Flashing' },
+            { id: 'drift-btn', gesture: 'drift', desc: 'Drifting' },
+            { id: 'stretch-btn', gesture: 'stretch', desc: 'Stretching' },
+            { id: 'yawn-btn', gesture: 'yawn', desc: 'Yawning' },
+            { id: 'slowBlink-btn', gesture: 'slowBlink', desc: 'Slow blinking' },
+            { id: 'drowsySway-btn', gesture: 'drowsySway', desc: 'Swaying drowsily' },
+            { id: 'jump-btn', gesture: 'jump', desc: 'Jumping' },
+            { id: 'look-btn', gesture: 'look', desc: 'Looking around' },
+            { id: 'settle-btn', gesture: 'settle', desc: 'Settling' },
+            { id: 'breathIn-btn', gesture: 'breathIn', desc: 'Breathing in' },
+            { id: 'breathHold-btn', gesture: 'breathHold', desc: 'Holding breath' },
+            { id: 'breathOut-btn', gesture: 'breathOut', desc: 'Breathing out' },
+            { id: 'breathHoldEmpty-btn', gesture: 'breathHoldEmpty', desc: 'Holding empty' }
+        ];
+        
+        gestures.forEach(({ id, gesture, desc }) => {
+            document.getElementById(id)?.addEventListener('click', () => {
+                mascot.express(gesture);
+                updateStatus(desc);
+            });
+        });
+        
+        // Expression Combo buttons
+        document.getElementById('combo-greeting')?.addEventListener('click', () => {
+            playCombo('combo-greeting', 'joy', ['stretch', 'expand', 'pulse', 'nod'], 
+                     'Greeting warmly with a stretch');
+        });
+        
+        document.getElementById('combo-thinking')?.addEventListener('click', () => {
+            playCombo('combo-thinking', 'neutral', ['tilt', 'slowBlink', 'pulse', 'nod', 'tilt'],
+                     'Deep in contemplation');
+        });
+        
+        document.getElementById('combo-excited')?.addEventListener('click', () => {
+            // Using legacy mappings for now - they're optimized internally
+            playCombo('combo-excited', 'surprise', ['bounce', 'spin', 'expand', 'flash', 'bounce'],
+                     'Bursting with excitement!');
+        });
+        
+        document.getElementById('combo-shy')?.addEventListener('click', () => {
+            // Contract, slow blink, tilt, pulse, drift all mapped to parameterized versions
+            playCombo('combo-shy', 'love', ['contract', 'slowBlink', 'tilt', 'pulse', 'drift'],
+                     'Feeling bashfully cute');
+        });
+        
+        document.getElementById('combo-curious')?.addEventListener('click', () => {
+            // Tilt, expand, drift, slow blink, nod all use parameterized system
+            playCombo('combo-curious', 'neutral', ['tilt', 'expand', 'drift', 'slowBlink', 'tilt', 'nod'],
+                     'Investigating with curiosity');
+        });
+        
+        document.getElementById('combo-dancing')?.addEventListener('click', () => {
+            // Bounce, spin, shake, flash all mapped to parameterized gestures
+            playCombo('combo-dancing', 'joy', ['bounce', 'spin', 'shake', 'flash', 'spin', 'bounce'],
+                     'Dancing with rhythm!');
+        });
+        
+        // Story Sequence buttons - now with new gestures!
+        document.getElementById('combo-wakeup')?.addEventListener('click', async function() {
+            this.classList.add('combo-active');
+            setTimeout(() => this.classList.remove('combo-active'), 500);
+            
+            // Wake from sleep with new wake gestures
+            updateStatus('Waking up...');
+            if (mascot.sleeping) {
+                await mascot.wake(); // This triggers stretch, slowBlink, shake
+            } else {
+                // Manual wake sequence if already awake
+                mascot.setEmotion('resting');
+                mascot.express('stretch');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                mascot.express('shake');
+                mascot.chain('shake', 'bounce');
+            }
+            // End in neutral state
+            setTimeout(() => {
+                mascot.setEmotion('neutral');
+                updateStatus('Good morning, starlight!');
+            }, 3000);
+        });
+        
+        document.getElementById('combo-stargazing')?.addEventListener('click', () => {
+            // Subtle, contemplative stargazing
+            mascot.setEmotion('love');
+            mascot.chain('drift', 'slowBlink', 'look', 'pulse', 'slowBlink', 'drift', 'settle');
+            updateStatus('Lost in the cosmos...');
+        });
+        
+        document.getElementById('combo-meditation')?.addEventListener('click', async () => {
+            // Box breathing meditation
+            mascot.setEmotion('neutral');
+            updateStatus('Releasing negativity...');
+            mascot.express('pulse'); // Empty first
+            mascot.setEmotion('zen');
+            updateStatus('Box breathing: In... Hold... Out... Empty...');
+            // Two complete box breathing cycles
+            mascot.chain('breathIn', 'breathHold', 'breathOut', 'breathHoldEmpty', 
+                        'breathIn', 'breathHold', 'breathOut', 'breathHoldEmpty');
+            setTimeout(() => {
+                mascot.setEmotion('resting');
+                updateStatus('Inner peace achieved');
+            }, 32000); // 2 full cycles = 32s
+        });
+        
+        document.getElementById('combo-celebration')?.addEventListener('click', () => {
+            // Smooth, fluid, punchy celebration
+            mascot.setEmotion('joy');
+            mascot.chain('expand', 'jump', 'spin', 'pulse', 'flash', 'stretch', 'jump', 'settle');
+            updateStatus('Victory celebration! 🎉');
+        });
+        
+        document.getElementById('combo-sleepy')?.addEventListener('click', async function() {
+            this.classList.add('combo-active');
+            setTimeout(() => this.classList.remove('combo-active'), 500);
+            
+            // Start with resting emotion for proper sleep entry
+            mascot.setEmotion('resting');
+            updateStatus('Getting sleepy...');
+            
+            // Do a slow blink to show drowsiness
+            mascot.express('pulse');
+            
+            // Now enter sleep - this will automatically do yawn, drowsySway, and eye closing animation
+            updateStatus('Falling asleep...');
+            mascot.sleep(); // This handles the full sleep animation sequence
+            
+            // Update status after animation completes
+            setTimeout(() => {
+                updateStatus('Sweet dreams... 💤');
+            }, 4000); // Give time for the full sleep animation
+        });
+        
+        document.getElementById('combo-alert')?.addEventListener('click', async () => {
+            // Alert in surprise state
+            if (mascot.sleeping) {
+                await mascot.wake();
+            }
+            mascot.setEmotion('surprise');
+            mascot.chain('expand', 'shake', 'flash', 'look', 'pulse', 'contract');
+            updateStatus('What was that?! ⚠️');
+        });
+        
+        // New story sequences
+        document.getElementById('combo-boxbreathing')?.addEventListener('click', () => {
+            // Simple box breathing sequence
+            mascot.setEmotion('zen');
+            updateStatus('Box breathing: 4-4-4-4...');
+            mascot.chain('breathIn', 'breathHold', 'breathOut', 'breathHoldEmpty');
+            setTimeout(() => {
+                updateStatus('One cycle complete. Feel the calm.');
+            }, 16000);
+        });
+        
+        document.getElementById('combo-deepfocus')?.addEventListener('click', () => {
+            // Deep focus mode with micro-adjustments
+            mascot.setEmotion('focused');
+            updateStatus('Entering deep focus mode...');
+            mascot.chain('look', 'pulse', 'settle', 'look', 'pulse');
+            setTimeout(() => {
+                updateStatus('Focused and ready!');
+            }, 5000);
+        });
+        
+        document.getElementById('combo-buddhamode')?.addEventListener('click', async () => {
+            // Buddha mode - ultimate zen
+            mascot.setEmotion('zen');
+            updateStatus('Entering Buddha consciousness...');
+            mascot.express('pulse');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            mascot.express('drift');
+            mascot.chain('slowBlink', 'breathIn', 'breathHold', 'breathOut', 'breathHoldEmpty', 'slowBlink');
+            setTimeout(() => {
+                updateStatus('Om... 🕉️');
+            }, 10000);
+        });
+        
+        // TTS controls
+        document.getElementById('speak-btn').addEventListener('click', () => {
+            const text = document.getElementById('speech-text').value;
+            if (text) {
+                mascot.speak(text);
+                updateStatus('Speaking...');
+            }
+        });
+        
+        document.getElementById('stop-speech-btn').addEventListener('click', () => {
+            mascot.stopTTS();
+            updateStatus('Speech stopped');
+        });
+        
+        // Enter key to speak
+        document.getElementById('speech-text').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('speak-btn').click();
+            }
+        });
+        
+        // Example of using parameterized gestures directly
+        // You can now pass custom parameters to gestures!
+        async function demonstrateParameterizedGestures() {
+            // Ultra-slow blink for zen state (10 seconds!)
+            await mascot.gestureSystem.execute('blink', { duration: 10000, style: 'slow' });
+            
+            // Custom oscillation - figure-8 pattern
+            await mascot.gestureSystem.execute('oscillate', { 
+                axis: 'x', 
+                amplitude: 40, 
+                frequency: 2, 
+                pattern: 'sine',
+                duration: 1000 
+            });
+            
+            // Deep breathing with custom depth
+            await mascot.gestureSystem.execute('breathe', {
+                phase: 'in',
+                depth: 0.5,  // 50% scale increase
+                duration: 6000  // 6 second inhale
+            });
+            
+            // Custom glow patterns
+            mascot.express('glow');
+        }
+        
+        // Sleep/Wake controls
+        document.getElementById('sleep-btn').addEventListener('click', () => {
+            mascot.sleep();
+            updateStatus('Entering sleep mode...');
+        });
+        
+        document.getElementById('wake-state-btn').addEventListener('click', () => {
+            mascot.wake();
+            updateStatus('Waking up...');
+        });
+        
+        // Recording controls
+        document.getElementById('start-recording-btn').addEventListener('click', () => {
+            mascot.startRecording();
+            updateStatus('Recording started...');
+        });
+        
+        document.getElementById('stop-recording-btn').addEventListener('click', () => {
+            mascot.stopRecording();
+            updateStatus('Recording stopped');
+        });
+        
+        // Listen for mascot events
+        mascot.on('state:change', ({ oldState, newState }) => {
+            console.log('State changed:', oldState, '->', newState);
+        });
+        
+        // Keep reference to currentUndertone at broader scope
+        let globalUndertone = null;
+        
+        mascot.on('emotionChanged', ({ emotion }) => {
+            emotionText.textContent = emotion;
+            emotionText.title = emotion;
+            // Clear undertone on direct emotion change from mascot
+            if (!globalUndertone) {
+                undertonePanel.style.display = 'none';
+            }
+        });
+        
+        mascot.on('tts:start', ({ text }) => {
+            updateStatus('Speaking...');
+        });
+        
+        mascot.on('tts:end', () => {
+            updateStatus('Ready');
+        });
+        
+        // Removed sleep status update - visual state is clear
+        
+        // Start automatically
+        mascot.start();
+        updateStatus('Emotive initialized - Move your mouse over the canvas');
+        
+        // Make mascot available globally for debugging
+        window.mascot = mascot;
+        
+        console.log('Emotive Engine Dashboard Ready');
+        console.log('Features: Eye narrowing on approach, 10 gestures, 6 combos, 6 story sequences');
+    </script>
+</body>
+</html>

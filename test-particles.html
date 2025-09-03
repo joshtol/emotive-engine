@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Particle System</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: monospace; background: #1a1a1a; color: #fff; }
+        canvas { border: 1px solid #444; display: block; margin: 20px 0; }
+        #log { background: #222; padding: 10px; height: 300px; overflow-y: auto; white-space: pre; }
+        button { padding: 10px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Particle System Test</h2>
+    <button onclick="testWorker()">Test Worker Mode</button>
+    <button onclick="testNonWorker()">Test Non-Worker Mode</button>
+    <button onclick="spawnParticles()">Spawn Particles</button>
+    <button onclick="clearLog()">Clear Log</button>
+    <canvas id="canvas" width="800" height="400"></canvas>
+    <div id="log"></div>
+
+    <script type="module">
+        import UnifiedParticleSystem from './src/core/UnifiedParticleSystem.js';
+        
+        let particleSystem = null;
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const log = document.getElementById('log');
+        
+        function addLog(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff6666' : type === 'success' ? '#66ff66' : '#ffffff';
+            log.innerHTML += `<span style="color:${color}">[${time}] ${msg}</span>\n`;
+            log.scrollTop = log.scrollHeight;
+            console.log(msg);
+        }
+        
+        window.testWorker = async function() {
+            try {
+                addLog('Testing Worker Mode...');
+                if (particleSystem) {
+                    particleSystem.destroy();
+                }
+                
+                particleSystem = new UnifiedParticleSystem(100, { 
+                    useWorker: true,
+                    errorBoundary: {
+                        logError: (e) => addLog('Error: ' + e, 'error')
+                    }
+                });
+                
+                // Wait for initialization
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                addLog('Worker mode initialized: ' + particleSystem.useWorker, 'success');
+                addLog('Active particles: ' + particleSystem.activeCount);
+                
+                // Test spawn
+                particleSystem.spawn(400, 200, 'FLOAT', 'happy', 1);
+                addLog('Spawned test particle');
+                
+            } catch (e) {
+                addLog('Error: ' + e.message, 'error');
+                console.error(e);
+            }
+        };
+        
+        window.testNonWorker = function() {
+            try {
+                addLog('Testing Non-Worker Mode...');
+                if (particleSystem) {
+                    particleSystem.destroy();
+                }
+                
+                particleSystem = new UnifiedParticleSystem(100, { 
+                    useWorker: false,
+                    errorBoundary: {
+                        logError: (e) => addLog('Error: ' + e, 'error')
+                    }
+                });
+                
+                addLog('Non-worker mode initialized: ' + !particleSystem.useWorker, 'success');
+                addLog('Active particles: ' + particleSystem.activeCount);
+                
+                // Test spawn
+                particleSystem.spawn(400, 200, 'FLOAT', 'happy', 1);
+                addLog('Spawned test particle');
+                
+            } catch (e) {
+                addLog('Error: ' + e.message, 'error');
+                console.error(e);
+            }
+        };
+        
+        window.spawnParticles = function() {
+            if (!particleSystem) {
+                addLog('Initialize a mode first!', 'error');
+                return;
+            }
+            
+            // Spawn 10 particles
+            for (let i = 0; i < 10; i++) {
+                const x = 400 + (Math.random() - 0.5) * 100;
+                const y = 200 + (Math.random() - 0.5) * 100;
+                particleSystem.spawn(x, y, 'EXPLODE', 'excited', 1);
+            }
+            addLog('Spawned 10 particles');
+        };
+        
+        window.clearLog = function() {
+            log.innerHTML = '';
+        };
+        
+        // Animation loop
+        let lastTime = 0;
+        function animate(time) {
+            const deltaTime = time - lastTime;
+            lastTime = time;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (particleSystem) {
+                particleSystem.update(deltaTime, 400, 200, canvas.width, canvas.height);
+                
+                const particles = particleSystem.particles;
+                if (particles && particles.length > 0) {
+                    // Draw particles
+                    ctx.fillStyle = '#66ff66';
+                    for (const p of particles) {
+                        if (p && p.opacity > 0) {
+                            ctx.globalAlpha = p.opacity;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        requestAnimationFrame(animate);
+        
+        addLog('Test page loaded. Click buttons to test.');
+    </script>
+</body>
+</html>

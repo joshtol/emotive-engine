@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <title>Emotive Engine - Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            flex-direction: column;
+        }
+        #mascot-container {
+            width: 300px;
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        #emotive-engine-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+        }
+        .control-group {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #fff;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        button.primary {
+            background-color: #14B8A6;
+            color: white;
+            border-color: #14B8A6;
+        }
+        button:hover {
+            background-color: #f5f5f5;
+        }
+        button.primary:hover {
+            background-color: #0F766E;
+            border-color: #0F766E;
+        }
+        #event-log {
+            grid-column: span 2;
+            height: 150px;
+            background: #2d3748;
+            color: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        #event-log p {
+            margin: 0 0 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Emotive Engine Demo</h1>
+    <div id="mascot-container">
+        <canvas id="emotive-engine-canvas"></canvas>
+    </div>
+
+    <div class="control-grid">
+        <div class="control-group">
+            <h3>Lifecycle</h3>
+            <div class="button-group">
+                <button id="start-btn" class="primary">Start</button>
+                <button id="stop-btn">Stop</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <h3>Animations</h3>
+            <div class="button-group">
+                <button id="sparkle-btn">Sparkle</button>
+                <button id="wobble-btn">Wobble</button>
+                <button id="thinking-btn">Thinking</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <h3>States</h3>
+            <div class="button-group">
+                <button id="idle-state-btn">Idle</button>
+                <button id="connecting-state-btn">Connecting</button>
+                <button id="speech-state-btn">Speech</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <h3>Event Log</h3>
+            <div id="event-log"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/emotive-engine@latest/dist/emotive-engine.umd.js"></script>
+    <script>
+        const mascot = new window.EmotiveEngine({
+            canvasId: 'emotive-engine-canvas'
+        });
+
+        // Lifecycle controls
+        document.getElementById('start-btn').addEventListener('click', () => mascot.start());
+        document.getElementById('stop-btn').addEventListener('click', () => mascot.stop());
+
+        // Animation controls
+        document.getElementById('sparkle-btn').addEventListener('click', () => mascot.runAnimation('sparkle'));
+        document.getElementById('wobble-btn').addEventListener('click', () => mascot.runAnimation('wobble'));
+        document.getElementById('thinking-btn').addEventListener('click', () => mascot.runAnimation('thinking'));
+
+        // State controls
+        document.getElementById('idle-state-btn').addEventListener('click', () => mascot.setState('idle'));
+        document.getElementById('connecting-state-btn').addEventListener('click', () => mascot.setState('connecting'));
+        document.getElementById('speech-state-btn').addEventListener('click', () => mascot.setState('emulatingSpeech'));
+
+        // Event logging
+        const eventLog = document.getElementById('event-log');
+        const logEvent = (eventName, data) => {
+            const p = document.createElement('p');
+            const timestamp = new Date().toLocaleTimeString();
+            let dataString = data ? JSON.stringify(data) : '';
+            if (dataString.length > 50) dataString = dataString.substring(0, 50) + '...';
+            p.textContent = `[${timestamp}] ${eventName} ${dataString}`;
+            eventLog.appendChild(p);
+            eventLog.scrollTop = eventLog.scrollHeight;
+        };
+
+        const eventsToLog = ['init', 'start', 'stop', 'destroy', 'state:change', 'animation:start', 'animation:end'];
+        eventsToLog.forEach(eventName => {
+            mascot.on(eventName, (data) => logEvent(eventName, data));
+        });
+
+        // Automatically start the mascot on load
+        mascot.start();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Sleep and Recording States</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        #mascot-canvas {
+            border: 2px solid white;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 600px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .status {
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            min-height: 30px;
+        }
+        
+        h1 {
+            color: white;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Sleep and Recording States</h1>
+    
+    <canvas id="mascot-canvas" width="400" height="400"></canvas>
+    
+    <div class="status" id="status">Ready</div>
+    
+    <div class="controls">
+        <button id="start">Start Mascot</button>
+        <button id="sleep">Sleep</button>
+        <button id="wake">Wake</button>
+        <button id="start-rec">Start Recording</button>
+        <button id="stop-rec">Stop Recording</button>
+        <button id="test-combo">Test Sleep + Recording</button>
+    </div>
+    
+    <script type="module">
+        import EmotiveMascot from './dist/mascot.dev.js';
+        
+        let mascot = null;
+        const status = document.getElementById('status');
+        
+        function updateStatus(msg) {
+            status.textContent = msg;
+            console.log(msg);
+        }
+        
+        document.getElementById('start').addEventListener('click', () => {
+            if (mascot) {
+                updateStatus('Mascot already started');
+                return;
+            }
+            
+            mascot = new EmotiveMascot({
+                canvasId: 'mascot-canvas',
+                debug: true,
+                particleConfig: {
+                    maxParticles: 5
+                }
+            });
+            
+            mascot.start();
+            updateStatus('Mascot started');
+            
+            // Listen for events
+            mascot.on('sleep', () => {
+                updateStatus('Mascot is sleeping 💤');
+            });
+            
+            mascot.on('wake', () => {
+                updateStatus('Mascot woke up ☀️');
+            });
+            
+            mascot.on('recordingStarted', () => {
+                updateStatus('Recording started 🔴');
+            });
+            
+            mascot.on('recordingStopped', () => {
+                updateStatus('Recording stopped ⏹️');
+            });
+        });
+        
+        document.getElementById('sleep').addEventListener('click', () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            mascot.sleep();
+        });
+        
+        document.getElementById('wake').addEventListener('click', () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            mascot.wake();
+        });
+        
+        document.getElementById('start-rec').addEventListener('click', () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            mascot.startRecording();
+        });
+        
+        document.getElementById('stop-rec').addEventListener('click', () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            mascot.stopRecording();
+        });
+        
+        document.getElementById('test-combo').addEventListener('click', async () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            
+            updateStatus('Testing combination: Sleep → Recording → Wake');
+            
+            // First put to sleep
+            mascot.sleep();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Start recording while sleeping
+            mascot.startRecording();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Wake up while recording
+            mascot.wake();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Stop recording
+            mascot.stopRecording();
+            updateStatus('Combo test complete');
+        });
+    </script>
+</body>
+</html>

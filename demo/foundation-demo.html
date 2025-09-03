@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Mascot - Foundation Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .demo-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        
+        canvas {
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: #000;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .emotion-btn {
+            background: #2196F3;
+        }
+        
+        .emotion-btn:hover {
+            background: #1976D2;
+        }
+        
+        .gesture-btn {
+            background: #FF9800;
+        }
+        
+        .gesture-btn:hover {
+            background: #F57C00;
+        }
+        
+        .metrics {
+            background: #333;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 20px 0;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.running {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status.stopped {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Emotive Communication Engine - Foundation Demo</h1>
+        <p>This demo tests the foundation components: CanvasManager, ErrorBoundary, easing functions, and color utilities.</p>
+        
+        <div class="demo-section">
+            <h2>Basic Mascot</h2>
+            <canvas id="mascot-canvas" width="400" height="400"></canvas>
+            
+            <div class="controls">
+                <button id="start-btn">Start</button>
+                <button id="stop-btn" disabled>Stop</button>
+            </div>
+            
+            <div class="controls">
+                <button class="emotion-btn" data-emotion="neutral">Neutral</button>
+                <button class="emotion-btn" data-emotion="joy">Joy</button>
+                <button class="emotion-btn" data-emotion="sadness">Sadness</button>
+                <button class="emotion-btn" data-emotion="anger">Anger</button>
+                <button class="emotion-btn" data-emotion="fear">Fear</button>
+                <button class="emotion-btn" data-emotion="surprise">Surprise</button>
+                <button class="emotion-btn" data-emotion="disgust">Disgust</button>
+                <button class="emotion-btn" data-emotion="love">Love</button>
+            </div>
+            
+            <div class="controls">
+                <button class="gesture-btn" data-gesture="bounce">Bounce</button>
+                <button class="gesture-btn" data-gesture="pulse">Pulse</button>
+                <button class="gesture-btn" data-gesture="shake">Shake</button>
+                <button class="gesture-btn" data-gesture="spin">Spin</button>
+            </div>
+            
+            <div class="metrics" id="metrics">
+                <div>Status: <span class="status stopped" id="status">Stopped</span></div>
+                <div>FPS: <span id="fps">0</span></div>
+                <div>Emotion: <span id="emotion">neutral</span></div>
+                <div>Errors: <span id="errors">0</span></div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Foundation Tests</h2>
+            <div id="test-results">
+                <p>Click "Run Tests" to verify foundation components are working correctly.</p>
+                <button id="run-tests-btn">Run Tests</button>
+                <div id="test-output" style="margin-top: 20px; font-family: monospace; font-size: 12px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot from '../src/EmotiveMascot.js';
+        import { easeOutQuad, easeInOutCubic } from '../src/utils/easing.js';
+        import { hexToRgb, interpolateHsl } from '../src/utils/colorUtils.js';
+
+        // Initialize mascot
+        const canvas = document.getElementById('mascot-canvas');
+        const mascot = new EmotiveMascot({ 
+            canvasId: canvas,
+            showFPS: true
+        });
+
+        // UI elements
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const statusEl = document.getElementById('status');
+        const fpsEl = document.getElementById('fps');
+        const emotionEl = document.getElementById('emotion');
+        const errorsEl = document.getElementById('errors');
+
+        // Control handlers
+        startBtn.addEventListener('click', () => {
+            mascot.start();
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusEl.textContent = 'Running';
+            statusEl.className = 'status running';
+        });
+
+        stopBtn.addEventListener('click', () => {
+            mascot.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            statusEl.textContent = 'Stopped';
+            statusEl.className = 'status stopped';
+        });
+
+        // Emotion buttons
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const emotion = btn.dataset.emotion;
+                mascot.setEmotion(emotion);
+                emotionEl.textContent = emotion;
+            });
+        });
+
+        // Gesture buttons
+        document.querySelectorAll('.gesture-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const gesture = btn.dataset.gesture;
+                mascot.express(gesture);
+            });
+        });
+
+        // Update metrics
+        setInterval(() => {
+            const metrics = mascot.getPerformanceMetrics();
+            fpsEl.textContent = metrics.fps;
+            errorsEl.textContent = metrics.errorStats.totalErrors;
+        }, 1000);
+
+        // Foundation tests
+        document.getElementById('run-tests-btn').addEventListener('click', () => {
+            const output = document.getElementById('test-output');
+            output.innerHTML = '<div style="color: #FFD700;">Running foundation tests...</div>';
+            
+            const tests = [];
+            
+            // Test easing functions
+            try {
+                const ease1 = easeOutQuad(0.5);
+                const ease2 = easeInOutCubic(0.5);
+                tests.push(`✓ Easing functions: easeOutQuad(0.5) = ${ease1.toFixed(3)}, easeInOutCubic(0.5) = ${ease2.toFixed(3)}`);
+            } catch (e) {
+                tests.push(`✗ Easing functions failed: ${e.message}`);
+            }
+            
+            // Test color utilities
+            try {
+                const rgb = hexToRgb('#FF0000');
+                const interpolated = interpolateHsl('#FF0000', '#0000FF', 0.5);
+                tests.push(`✓ Color utilities: hexToRgb('#FF0000') = {r:${rgb.r}, g:${rgb.g}, b:${rgb.b}}`);
+                tests.push(`✓ Color interpolation: ${interpolated}`);
+            } catch (e) {
+                tests.push(`✗ Color utilities failed: ${e.message}`);
+            }
+            
+            // Test mascot API
+            try {
+                const testMascot = new EmotiveMascot({ canvasId: canvas });
+                const result = testMascot.setEmotion('joy').express('bounce').chain('pulse', 'spin');
+                tests.push(`✓ Mascot API: Method chaining works`);
+                testMascot.destroy();
+            } catch (e) {
+                tests.push(`✗ Mascot API failed: ${e.message}`);
+            }
+            
+            // Test error handling
+            try {
+                const testMascot = new EmotiveMascot({ canvasId: canvas });
+                testMascot.setEmotion('invalid-emotion').express('invalid-gesture');
+                const errorStats = testMascot.getPerformanceMetrics().errorStats;
+                tests.push(`✓ Error handling: Gracefully handled invalid inputs (${errorStats.totalErrors} errors logged)`);
+                testMascot.destroy();
+            } catch (e) {
+                tests.push(`✗ Error handling failed: ${e.message}`);
+            }
+            
+            output.innerHTML = tests.map(test => `<div style="color: ${test.startsWith('✓') ? '#4CAF50' : '#f44336'};">${test}</div>`).join('');
+        });
+
+        console.log('Foundation demo loaded successfully');
+    </script>
+</body>
+</html>

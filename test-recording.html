@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recording State Test</title>
+    <!-- Poppins Font for animated text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,500;0,700;0,900;1,300;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        #mascot-canvas {
+            border: 2px solid white;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 600px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .status {
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            min-height: 30px;
+        }
+        
+        h1 {
+            color: white;
+            margin: 0;
+            text-align: center;
+        }
+        
+        .info {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .recording {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Recording State Test</h1>
+    
+    <div class="info">
+        The recording state now features a subtle pulsating red glow<br>
+        and a stylized REC indicator in the top right corner.
+    </div>
+    
+    <canvas id="mascot-canvas" width="400" height="400"></canvas>
+    
+    <div class="status" id="status">Ready</div>
+    
+    <div class="controls">
+        <button id="start">Start Mascot</button>
+        <button id="start-recording">🔴 Start Recording</button>
+        <button id="stop-recording">⏹️ Stop Recording</button>
+        <button id="toggle-sleep">💤 Toggle Sleep</button>
+        <button id="test-combo">Test States Combo</button>
+    </div>
+    
+    <script type="module">
+        import EmotiveMascot from './src/EmotiveMascot.js';
+        
+        let mascot = null;
+        const status = document.getElementById('status');
+        const canvas = document.getElementById('mascot-canvas');
+        
+        function updateStatus(msg) {
+            status.textContent = msg;
+            console.log(msg);
+        }
+        
+        document.getElementById('start').addEventListener('click', () => {
+            if (mascot) {
+                updateStatus('Mascot already started');
+                return;
+            }
+            
+            mascot = new EmotiveMascot({
+                canvasId: 'mascot-canvas',
+                debug: true,
+                particleConfig: {
+                    maxParticles: 5
+                },
+                enableIdleBehaviors: true
+            });
+            
+            mascot.start();
+            updateStatus('Mascot started');
+            
+            // Listen for events
+            mascot.on('recordingStarted', () => {
+                updateStatus('Recording started - Notice the pulsating red glow');
+                canvas.classList.add('recording');
+            });
+            
+            mascot.on('recordingStopped', () => {
+                updateStatus('Recording stopped');
+                canvas.classList.remove('recording');
+            });
+            
+            mascot.on('sleep', () => {
+                updateStatus('Mascot sleeping 💤');
+            });
+            
+            mascot.on('wake', () => {
+                updateStatus('Mascot awake ☀️');
+            });
+        });
+        
+        document.getElementById('start-recording').addEventListener('click', () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            mascot.startRecording();
+        });
+        
+        document.getElementById('stop-recording').addEventListener('click', () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            mascot.stopRecording();
+        });
+        
+        document.getElementById('toggle-sleep').addEventListener('click', () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            
+            if (mascot.sleeping) {
+                mascot.wake();
+            } else {
+                mascot.sleep();
+            }
+        });
+        
+        document.getElementById('test-combo').addEventListener('click', async () => {
+            if (!mascot) {
+                updateStatus('Start mascot first');
+                return;
+            }
+            
+            updateStatus('Testing state combinations...');
+            
+            // Start recording
+            mascot.startRecording();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Add sleep while recording
+            updateStatus('Going to sleep while recording...');
+            mascot.sleep();
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // Wake up while recording
+            updateStatus('Waking up while still recording...');
+            mascot.wake();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Stop recording
+            mascot.stopRecording();
+            updateStatus('Test complete!');
+        });
+    </script>
+</body>
+</html>

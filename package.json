@@ -1,0 +1,50 @@
+{
+  "type": "module",
+  "name": "emotive-engine",
+  "version": "1.0.0",
+  "description": "A high-performance, emotionally-aware particle mascot system for next-generation conversational UIs.",
+  "main": "dist/emotive-engine.umd.js",
+  "module": "dist/emotive-engine.js",
+  "types": "types/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "types"
+  ],
+  "scripts": {
+    "build": "rollup -c --environment NODE_ENV:production",
+    "build:dev": "rollup -c --environment NODE_ENV:development",
+    "build:watch": "rollup -c -w --environment NODE_ENV:development",
+    "build:analyze": "rollup -c --environment NODE_ENV:production,ANALYZE:true",
+    "build:all": "npm run build && npm run build:dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mascot",
+    "animation",
+    "canvas",
+    "ui",
+    "component",
+    "interactive"
+  ],
+  "author": "Joshua Tollette",
+  "license": "MIT",
+  "homepage": "https://github.com/joshtol/emotive-engine",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joshtol/emotive-engine.git"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-terser": "^0.4.4",
+    "jsdom": "^23.0.0",
+    "rollup": "^4.9.5",
+    "rollup-plugin-analyzer": "^4.0.0",
+    "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-visualizer": "^6.0.3",
+    "vitest": "^1.0.0"
+  }
+}

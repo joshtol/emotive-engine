@@ -1,0 +1,566 @@
+/**
+ * EmotiveStateMachine - Manages emotional states, transitions, and undertones
+ * Handles smooth state transitions, gesture queues, and emotional property blending
+ */
+
+import { interpolateHsl } from '../utils/colorUtils.js';
+import { applyEasing } from '../utils/easing.js';
+
+class EmotiveStateMachine {
+    constructor(errorBoundary) {
+        this.errorBoundary = errorBoundary;
+        
+        // Current state
+        this.state = {
+            emotion: 'neutral',
+            undertone: null,
+            gesture: null,
+            gestureQueue: [],
+            speaking: false,
+            audioLevel: 0
+        };
+        
+        // Transition management
+        this.transitions = {
+            emotional: {
+                current: 'neutral',
+                target: null,
+                progress: 0,
+                duration: 500,
+                startTime: 0,
+                isActive: false
+            }
+        };
+        
+        // Initialize emotional state definitions
+        this.initializeEmotionalStates();
+        this.initializeUndertoneModifiers();
+    }
+
+    /**
+     * Initialize all 8 emotional states with their visual properties
+     */
+    initializeEmotionalStates() {
+        this.emotionalStates = {
+            neutral: {
+                primaryColor: '#B0B0B0',
+                glowIntensity: 0.7,
+                particleRate: 1,  // DECIMATED - minimal particles
+                minParticles: 3,  // Always have at least 3 particles for gestures to affect
+                maxParticles: 4,  // Max 4 particles
+                particleBehavior: 'ambient',
+                coreSize: 1.0,
+                breathRate: 1.0,
+                breathDepth: 0.1
+            },
+            joy: {
+                primaryColor: '#FFD700',
+                glowIntensity: 1.2,
+                particleRate: 1,
+                minParticles: 2,  // Always at least 2
+                maxParticles: 4,  // Max 4 particles
+                particleBehavior: 'rising',
+                coreSize: 1.1,
+                breathRate: 1.3,
+                breathDepth: 0.15
+            },
+            sadness: {
+                primaryColor: '#4169E1',
+                glowIntensity: 0.6,
+                particleRate: 2,  // Halved from 3
+                minParticles: 1,  // At least 1
+                maxParticles: 3,  // Max 3 particles
+                particleBehavior: 'falling',
+                coreSize: 0.9,
+                breathRate: 0.7,
+                breathDepth: 0.08
+            },
+            anger: {
+                primaryColor: '#DC143C',
+                glowIntensity: 1.3,
+                particleRate: 1,  // ~30% chance per frame
+                minParticles: 3,  // Always show anger
+                maxParticles: 8,  // Can get intense
+                particleBehavior: 'aggressive',
+                coreSize: 1.2,
+                breathRate: 1.5,
+                breathDepth: 0.2
+            },
+            fear: {
+                primaryColor: '#8B008B',
+                glowIntensity: 0.8,
+                particleRate: 1,  // chance per frame
+                minParticles: 2,  // Always visible
+                maxParticles: 6,  // Moderate max
+                particleBehavior: 'scattering',
+                coreSize: 0.8,
+                breathRate: 1.8,
+                breathDepth: 0.12
+            },
+            surprise: {
+                primaryColor: '#FF8C00',
+                glowIntensity: 1.4,
+                particleRate: 1,
+                minParticles: 3,  // Burst effect
+                maxParticles: 10,  // Can burst big
+                particleBehavior: 'burst',
+                coreSize: 1.3,
+                breathRate: 2.0,
+                breathDepth: 0.25
+            },
+            disgust: {
+                primaryColor: '#9ACD32',
+                glowIntensity: 0.9,
+                particleRate: 2,
+                minParticles: 2,  // Always show disgust
+                maxParticles: 4,  // Limited particles
+                particleBehavior: 'repelling',
+                coreSize: 0.95,
+                breathRate: 0.8,
+                breathDepth: 0.06
+            },
+            love: {
+                primaryColor: '#FF69B4',
+                glowIntensity: 1.1,
+                particleRate: 1,  // Halved from 9
+                minParticles: 2,  // Always orbiting
+                maxParticles: 5,  // Gentle max
+                particleBehavior: 'orbiting',
+                coreSize: 1.05,
+                breathRate: 0.9,
+                breathDepth: 0.18
+            },
+            resting: {
+                primaryColor: '#7C3AED',   // Soft purple for resting
+                glowIntensity: 0.8,
+                particleRate: 2,          // Moderate particles for visible effect
+                minParticles: 3,  // Always 3-5 visible
+                maxParticles: 5,  // Calm max
+                particleBehavior: 'resting',
+                coreSize: 1.0,
+                breathRate: 0.8,           // 12-16 breaths per minute (resting human)
+                breathDepth: 0.12          // Gentle, relaxed breathing
+            },
+            zen: {
+                primaryColor: '#4B0082',  // Deep purple-blue
+                glowIntensity: 0.6,
+                particleRate: 20,  // Very rare, like incense
+                minParticles: 0,
+                maxParticles: 2,  // Minimal particles
+                particleBehavior: 'ascending',  // Float upward slowly
+                coreSize: 1.0,
+                breathRate: 0.1,  // Ultra-slow breathing
+                breathDepth: 0.03,  // Very subtle
+                eyeOpenness: 0.3,  // Narrowed happy eyes
+                eyeArc: -0.2  // Downward arc for Buddha eyes
+            },
+            focused: {
+                primaryColor: '#00CED1',  // Bright cyan
+                glowIntensity: 1.2,
+                particleRate: 0.5,  // Frequent, like synapses
+                minParticles: 2,
+                maxParticles: 5,
+                particleBehavior: 'directed',  // Fast, straight paths
+                coreSize: 1.05,
+                breathRate: 1.2,  // Alert breathing
+                breathDepth: 0.08,
+                eyeOpenness: 0.7,  // Narrowed for concentration
+                microAdjustments: true  // Enable tiny shifts
+            }
+        };
+    }
+
+    /**
+     * Initialize undertone modifiers that affect base emotional properties
+     */
+    initializeUndertoneModifiers() {
+        this.undertoneModifiers = {
+            nervous: {
+                jitterAmount: 0.3,
+                breathRateMultiplier: 1.2,
+                glowIntensityMultiplier: 0.9,
+                particleRateMultiplier: 1.1
+            },
+            confident: {
+                coreSizeMultiplier: 1.1,
+                glowIntensityMultiplier: 1.2,
+                breathRateMultiplier: 0.9,
+                particleRateMultiplier: 1.0
+            },
+            tired: {
+                breathRateMultiplier: 0.7,
+                particleRateMultiplier: 0.5,
+                glowIntensityMultiplier: 0.8,
+                coreSizeMultiplier: 0.95
+            },
+            intense: {
+                amplificationFactor: 1.3
+            },
+            subdued: {
+                dampeningFactor: 0.7
+            }
+        };
+    }
+
+    /**
+     * Sets the emotional state with optional undertone
+     * @param {string} emotion - The emotion to set
+     * @param {string|null} undertone - Optional undertone modifier
+     * @param {number} duration - Transition duration in milliseconds
+     * @returns {boolean} Success status
+     */
+    setEmotion(emotion, undertone = null, duration = 500) {
+        return this.errorBoundary.wrap(() => {
+            // Validate emotion
+            if (!this.emotionalStates.hasOwnProperty(emotion)) {
+                throw new Error(`Invalid emotion: ${emotion}. Valid emotions: ${Object.keys(this.emotionalStates).join(', ')}`);
+            }
+
+            // Validate undertone
+            if (undertone !== null && !this.undertoneModifiers.hasOwnProperty(undertone)) {
+                throw new Error(`Invalid undertone: ${undertone}. Valid undertones: ${Object.keys(this.undertoneModifiers).join(', ')}`);
+            }
+
+            // If already in this state, just update undertone
+            if (this.state.emotion === emotion && this.state.undertone === undertone) {
+                return true;
+            }
+
+            // Set up transition (skip if duration is 0)
+            if (duration > 0) {
+                this.transitions.emotional = {
+                    current: this.state.emotion,
+                    target: emotion,
+                    progress: 0,
+                    duration: Math.max(100, duration),
+                    startTime: performance.now(),
+                    isActive: true
+                };
+                
+                // Reset simulated time for testing
+                if (this._simulatedTime !== undefined) {
+                    this._simulatedTime = 0;
+                }
+            } else {
+                // Immediate transition
+                this.transitions.emotional = {
+                    current: emotion,
+                    target: null,
+                    progress: 1,
+                    duration: 0,
+                    startTime: performance.now(),
+                    isActive: false
+                };
+            }
+
+            // Update state
+            this.state.emotion = emotion;
+            this.state.undertone = undertone;
+
+            return true;
+        }, 'emotion-setting', false)();
+    }
+
+    /**
+     * Applies undertone modifiers to base emotional properties
+     * @param {Object} baseProperties - Base emotional properties
+     * @param {string|null} undertone - Undertone to apply
+     * @returns {Object} Modified properties
+     */
+    applyUndertone(baseProperties, undertone) {
+        if (!undertone || !this.undertoneModifiers.hasOwnProperty(undertone)) {
+            return { ...baseProperties };
+        }
+
+        const modifier = this.undertoneModifiers[undertone];
+        const modified = { ...baseProperties };
+
+        // Apply specific modifiers
+        if (modifier.glowIntensityMultiplier !== undefined) {
+            modified.glowIntensity *= modifier.glowIntensityMultiplier;
+        }
+        if (modifier.breathRateMultiplier !== undefined) {
+            modified.breathRate *= modifier.breathRateMultiplier;
+        }
+        if (modifier.particleRateMultiplier !== undefined) {
+            modified.particleRate = Math.round(modified.particleRate * modifier.particleRateMultiplier);
+        }
+        if (modifier.coreSizeMultiplier !== undefined) {
+            modified.coreSize *= modifier.coreSizeMultiplier;
+        }
+
+        // Apply amplification/dampening factors
+        if (modifier.amplificationFactor !== undefined) {
+            const factor = modifier.amplificationFactor;
+            modified.glowIntensity *= factor;
+            modified.breathRate *= factor;
+            modified.particleRate = Math.round(modified.particleRate * factor);
+            modified.coreSize *= factor;
+        }
+        if (modifier.dampeningFactor !== undefined) {
+            const factor = modifier.dampeningFactor;
+            modified.glowIntensity *= factor;
+            modified.breathRate *= factor;
+            modified.particleRate = Math.round(modified.particleRate * factor);
+            modified.coreSize *= factor;
+        }
+
+        // Add special properties
+        if (modifier.jitterAmount !== undefined) {
+            modified.jitterAmount = modifier.jitterAmount;
+        }
+
+        return modified;
+    }
+
+    /**
+     * Updates the state machine with delta time
+     * @param {number} deltaTime - Time since last update in milliseconds
+     */
+    update(deltaTime) {
+        this.errorBoundary.wrap(() => {
+            // Update emotional transition
+            if (this.transitions.emotional.isActive) {
+                this.updateEmotionalTransition(deltaTime);
+            }
+        }, 'state-machine-update')();
+    }
+
+    /**
+     * Updates emotional state transition progress
+     * @param {number} deltaTime - Time since last update in milliseconds
+     */
+    updateEmotionalTransition(deltaTime) {
+        const transition = this.transitions.emotional;
+        
+        // Use either real elapsed time or simulated deltaTime for testing
+        let elapsed;
+        if (this._simulatedTime !== undefined) {
+            // For testing - use accumulated simulated time
+            this._simulatedTime += deltaTime;
+            elapsed = this._simulatedTime;
+        } else {
+            // For real usage - use actual elapsed time
+            elapsed = performance.now() - transition.startTime;
+        }
+        
+        // Calculate progress (0 to 1)
+        transition.progress = Math.min(1, elapsed / transition.duration);
+        
+        // Check if transition is complete
+        if (transition.progress >= 1) {
+            transition.isActive = false;
+            transition.current = transition.target;
+            transition.target = null;
+            transition.progress = 1;
+        }
+    }
+
+    /**
+     * Gets the current interpolated emotional properties
+     * @returns {Object} Current emotional properties with smooth transitions
+     */
+    getCurrentEmotionalProperties() {
+        return this.errorBoundary.wrap(() => {
+            const transition = this.transitions.emotional;
+            let properties;
+
+            if (transition.isActive && transition.target) {
+                // Interpolate between current and target states
+                properties = this.interpolateEmotionalProperties(
+                    transition.current,
+                    transition.target,
+                    transition.progress
+                );
+            } else {
+                // Use current state properties
+                properties = { ...this.emotionalStates[this.state.emotion] };
+            }
+
+            // Apply undertone modifiers
+            properties = this.applyUndertone(properties, this.state.undertone);
+
+            return properties;
+        }, 'emotional-properties', this.emotionalStates.neutral)();
+    }
+
+    /**
+     * Interpolates between two emotional states
+     * @param {string} fromEmotion - Source emotion
+     * @param {string} toEmotion - Target emotion
+     * @param {number} progress - Interpolation progress (0-1)
+     * @returns {Object} Interpolated properties
+     */
+    interpolateEmotionalProperties(fromEmotion, toEmotion, progress) {
+        const fromProps = this.emotionalStates[fromEmotion];
+        const toProps = this.emotionalStates[toEmotion];
+        
+        // Apply easing to progress
+        const easedProgress = applyEasing(progress, 0, 1, 'easeOutCubic');
+
+        return {
+            // Interpolate color in HSL space for better transitions
+            primaryColor: interpolateHsl(fromProps.primaryColor, toProps.primaryColor, easedProgress),
+            
+            // Interpolate numeric properties
+            glowIntensity: fromProps.glowIntensity + (toProps.glowIntensity - fromProps.glowIntensity) * easedProgress,
+            particleRate: Math.round(fromProps.particleRate + (toProps.particleRate - fromProps.particleRate) * easedProgress),
+            coreSize: fromProps.coreSize + (toProps.coreSize - fromProps.coreSize) * easedProgress,
+            breathRate: fromProps.breathRate + (toProps.breathRate - fromProps.breathRate) * easedProgress,
+            breathDepth: fromProps.breathDepth + (toProps.breathDepth - fromProps.breathDepth) * easedProgress,
+            
+            // Use target behavior when transition is more than 50% complete
+            particleBehavior: easedProgress > 0.5 ? toProps.particleBehavior : fromProps.particleBehavior
+        };
+    }
+
+    /**
+     * Gets the current state for external inspection
+     * @returns {Object} Current state information
+     */
+    getCurrentState() {
+        return {
+            emotion: this.state.emotion,
+            undertone: this.state.undertone,
+            isTransitioning: this.transitions.emotional.isActive,
+            transitionProgress: this.transitions.emotional.progress,
+            properties: this.getCurrentEmotionalProperties()
+        };
+    }
+
+    /**
+     * Applies an undertone to the current emotional state
+     * @param {string|null} undertone - Undertone to apply
+     * @returns {boolean} Success status
+     */
+    applyUndertoneModifier(undertone) {
+        return this.errorBoundary.wrap(() => {
+            // Validate undertone
+            if (undertone !== null && !this.undertoneModifiers.hasOwnProperty(undertone)) {
+                throw new Error(`Invalid undertone: ${undertone}. Valid undertones: ${Object.keys(this.undertoneModifiers).join(', ')}`);
+            }
+
+            // Apply the undertone
+            this.state.undertone = undertone;
+            
+            return true;
+        }, 'undertone-application', false)();
+    }
+
+    /**
+     * Clears the current undertone and resets to base emotional state
+     */
+    clearUndertone() {
+        this.state.undertone = null;
+    }
+
+    /**
+     * Gets the raw undertone modifier data for a specific undertone
+     * @param {string} undertone - Undertone name
+     * @returns {Object|null} Undertone modifier data or null if invalid
+     */
+    getUndertoneModifier(undertone) {
+        return this.errorBoundary.wrap(() => {
+            if (!undertone || !this.undertoneModifiers.hasOwnProperty(undertone)) {
+                return null;
+            }
+            return { ...this.undertoneModifiers[undertone] };
+        }, 'undertone-retrieval', null)();
+    }
+
+    /**
+     * Resets the state machine to neutral emotion
+     * @param {number} duration - Transition duration in milliseconds
+     */
+    reset(duration = 500) {
+        this.setEmotion('neutral', null, duration);
+    }
+
+    /**
+     * Validates if an emotion is valid
+     * @param {string} emotion - Emotion to validate
+     * @returns {boolean} True if valid
+     */
+    isValidEmotion(emotion) {
+        return this.emotionalStates.hasOwnProperty(emotion);
+    }
+
+    /**
+     * Validates if an undertone is valid
+     * @param {string} undertone - Undertone to validate
+     * @returns {boolean} True if valid
+     */
+    isValidUndertone(undertone) {
+        return undertone === null || this.undertoneModifiers.hasOwnProperty(undertone);
+    }
+
+    /**
+     * Gets all available emotions
+     * @returns {Array} Array of emotion names
+     */
+    getAvailableEmotions() {
+        return Object.keys(this.emotionalStates);
+    }
+
+    /**
+     * Gets all available undertones
+     * @returns {Array} Array of undertone names
+     */
+    getAvailableUndertones() {
+        return Object.keys(this.undertoneModifiers);
+    }
+
+    /**
+     * Checks if a transition is currently active
+     * @returns {boolean} True if transitioning
+     */
+    isTransitioning() {
+        return this.transitions.emotional.isActive;
+    }
+
+    /**
+     * Gets the current transition progress
+     * @returns {number} Progress from 0 to 1, or 1 if not transitioning
+     */
+    getTransitionProgress() {
+        return this.transitions.emotional.isActive ? this.transitions.emotional.progress : 1;
+    }
+
+    /**
+     * Forces completion of current transition
+     */
+    completeTransition() {
+        if (this.transitions.emotional.isActive) {
+            this.transitions.emotional.progress = 1;
+            this.transitions.emotional.isActive = false;
+            this.transitions.emotional.current = this.transitions.emotional.target;
+            this.transitions.emotional.target = null;
+        }
+    }
+
+    /**
+     * Gets interpolated property value with easing
+     * @param {number} from - Start value
+     * @param {number} to - End value  
+     * @param {number} progress - Progress (0-1)
+     * @param {string} easingType - Easing function name
+     * @returns {number} Interpolated value
+     */
+    interpolateProperty(from, to, progress, easingType = 'easeOutCubic') {
+        return from + (to - from) * applyEasing(progress, 0, 1, easingType);
+    }
+
+    /**
+     * Enables simulated time for testing purposes
+     * @param {boolean} enabled - Whether to use simulated time
+     */
+    enableSimulatedTime(enabled = true) {
+        if (enabled) {
+            this._simulatedTime = 0;
+        } else {
+            delete this._simulatedTime;
+        }
+    }
+}
+
+export default EmotiveStateMachine;

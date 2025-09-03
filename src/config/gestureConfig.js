@@ -1,0 +1,367 @@
+/**
+ * Base gesture configurations
+ * Defines the default parameters for each gesture
+ */
+
+export const GESTURE_BASE_CONFIG = {
+    bounce: {
+        duration: 800,
+        amplitude: 30,
+        frequency: 2, // Number of bounces
+        easing: 'sine', // sine, elastic, spring
+        particleMotion: {
+            type: 'oscillate',
+            axis: 'vertical',
+            strength: 0.6,  // Reduced for gentler bounce
+            frequency: 2
+        }
+    },
+    
+    pulse: {
+        duration: 600,
+        scaleAmount: 0.2, // 20% scale change
+        glowAmount: 0.3,  // 30% glow change
+        frequency: 1,      // Number of pulses
+        easing: 'sine',
+        particleMotion: {
+            type: 'radial',
+            strength: 0.15,  // Reduced from 0.5 - much gentler particle effect
+            direction: 'outward', // outward pulse
+            frequency: 1
+        }
+    },
+    
+    shake: {
+        duration: 400,
+        amplitude: 8,
+        frequency: 10,    // Vibration frequency
+        decay: true,      // Whether amplitude decreases
+        easing: 'linear',
+        particleMotion: {
+            type: 'jitter',
+            strength: 0.4,  // Reduced for less violent shake
+            frequency: 10,
+            decay: true
+        }
+    },
+    
+    spin: {
+        duration: 600,
+        rotations: 1,     // Full rotations
+        scaleAmount: 0.1, // Scale change during spin
+        easing: 'linear', // Linear for complete full rotation
+        particleMotion: {
+            type: 'orbital',
+            strength: 0.7,  // Reduced for smoother spin
+            rotations: 1,
+            radius: 1.0 // Orbital radius exactly on orb perimeter
+        }
+    },
+    
+    nod: {
+        duration: 500,
+        amplitude: 15,    // Vertical movement
+        frequency: 2,     // Number of nods
+        easing: 'sine',
+        particleMotion: {
+            type: 'oscillate',
+            axis: 'vertical',
+            strength: 0.4,
+            frequency: 2,
+            phase: 0 // In sync with orb
+        }
+    },
+    
+    tilt: {
+        duration: 500,
+        angle: 15,        // Degrees of tilt
+        frequency: 2,     // Number of tilts
+        easing: 'sine',
+        particleMotion: {
+            type: 'tilt',
+            strength: 0.8,    // Reduced but still noticeable
+            frequency: 2,
+            swayAmount: 25,   // Less dramatic sway
+            liftAmount: 15    // Gentler lift
+        }
+    },
+    
+    expand: {
+        duration: 500,
+        scaleTarget: 1.5, // Target scale
+        glowAmount: 0.2,  // Glow increase
+        easing: 'back',    // Overshoot effect
+        particleMotion: {
+            type: 'radial',
+            strength: 0.7,
+            direction: 'outward',
+            persist: true // Keep expanded position
+        }
+    },
+    
+    contract: {
+        duration: 400,
+        scaleTarget: 0.7, // Target scale
+        glowAmount: -0.2, // Glow decrease
+        easing: 'cubic',
+        particleMotion: {
+            type: 'radial',
+            strength: 0.7,
+            direction: 'inward',
+            persist: true
+        }
+    },
+    
+    flash: {
+        duration: 200,
+        glowPeak: 2.0,    // Peak glow intensity
+        scalePeak: 1.1,   // Slight scale at peak
+        easing: 'quad',
+        particleMotion: {
+            type: 'burst',
+            strength: 0.8,
+            decay: 0.5 // Quick decay after burst
+        }
+    },
+    
+    drift: {
+        duration: 800,
+        distance: 50,     // Pixels to drift
+        angle: 45,        // Direction in degrees
+        returnToCenter: true,
+        easing: 'sine',
+        particleMotion: {
+            type: 'drift',     // Changed to new drift type for override behavior
+            strength: 0.8,
+            distance: 60,      // Particle drift distance
+            returnToOrigin: true
+        }
+    },
+    
+    stretch: {
+        duration: 2000,
+        scaleX: 1.3,      // Horizontal stretch
+        scaleY: 0.9,      // Vertical compression
+        frequency: 1,
+        easing: 'sine',
+        particleMotion: {
+            type: 'stretch',
+            scaleX: 1.8,      // Exaggerated horizontal stretch for particles
+            scaleY: 0.6,      // More compression vertically
+            strength: 1.0     // Strong effect since orb stays round
+        }
+    },
+    
+    expand: {
+        duration: 600,
+        scaleAmount: 1.3,  // Scale up to 130%
+        easing: 'quad',
+        particleMotion: {
+            type: 'radial',
+            strength: 0.6,
+            direction: 'outward'
+        }
+    },
+    
+    contract: {
+        duration: 600,
+        scaleAmount: 0.7,  // Scale down to 70%
+        easing: 'quad',
+        particleMotion: {
+            type: 'radial',
+            strength: 0.6,
+            direction: 'inward'
+        }
+    },
+    
+    flash: {
+        duration: 400,
+        glowAmount: 2.5,   // Bright flash
+        glowPeak: 3.0,     // Peak intensity
+        easing: 'cubic',
+        particleMotion: {
+            type: 'burst',
+            strength: 1.0,
+            decay: 0.3
+        }
+    },
+    
+    glow: {
+        duration: 1500,
+        glowAmount: 1.5,   // Sustained glow
+        glowPeak: 2.0,
+        easing: 'sine',
+        particleMotion: {
+            type: 'radial',
+            strength: 0.3,
+            direction: 'outward',
+            gentle: true
+        }
+    },
+    
+    flicker: {
+        duration: 800,
+        frequency: 6,      // Number of flickers
+        minOpacity: 0.3,
+        maxOpacity: 1.0,
+        easing: 'linear',
+        particleMotion: {
+            type: 'flicker',
+            strength: 0.7,
+            frequency: 6
+        }
+    },
+    
+    vibrate: {
+        duration: 500,
+        frequency: 12,     // High frequency shake
+        amplitude: 3,      // Small amplitude
+        easing: 'linear',
+        particleMotion: {
+            type: 'jitter',
+            strength: 0.4,
+            frequency: 12,
+            amplitude: 3
+        }
+    },
+    
+    wave: {
+        duration: 2500,    // Graceful, deliberate wave
+        amplitude: 40,     // Infinity symbol size
+        frequency: 1,      // One complete infinity loop
+        horizontal: true,  // Horizontal infinity pattern
+        easing: 'sine',
+        particleMotion: {
+            type: 'wave',
+            strength: 1.0,     // Full strength for magical effect
+            amplitude: 50      // Larger particle motion for visibility
+        }
+    },
+    
+    morph: {
+        duration: 1000,
+        morphType: 'fluid', // Type of morph animation
+        amplitude: 20,
+        easing: 'sine',
+        particleMotion: {
+            type: 'morph',
+            pattern: 'star',   // Form a star pattern (more dramatic than circle)
+            strength: 1.2,     // Strong formation
+            smooth: true,
+            points: 5          // 5-pointed star
+        }
+    },
+    
+    slowBlink: {
+        duration: 1200,
+        blinkSpeed: 0.3,   // Slow closing/opening
+        holdClosed: 200,   // Hold eyes closed for 200ms
+        easing: 'quad',
+        particleMotion: {
+            type: 'fade',
+            strength: 0.8,
+            holdDuration: 200
+        }
+    },
+    
+    look: {
+        duration: 1500,
+        lookDirection: 'random', // or 'left', 'right', 'up', 'down'
+        lookDistance: 0.3,        // How far to look (0-1)
+        holdDuration: 500,        // Hold the look
+        easing: 'cubic',
+        particleMotion: {
+            type: 'directional',
+            strength: 0.3,
+            followGaze: true,
+            holdDuration: 500
+        }
+    },
+    
+    settle: {
+        duration: 1000,
+        wobbleDecay: 0.9,  // Decay rate of wobble
+        wobbleFreq: 3,     // Initial wobble frequency
+        easing: 'quad',
+        particleMotion: {
+            type: 'settle',
+            strength: 0.5,
+            decay: 0.9,
+            wobbleFreq: 3
+        }
+    },
+    
+    breathIn: {
+        duration: 2000,
+        scaleAmount: 1.15, // Expand slightly
+        easing: 'sine',
+        particleMotion: {
+            type: 'radial',
+            strength: 0.2,
+            direction: 'outward',
+            smooth: true
+        }
+    },
+    
+    breathOut: {
+        duration: 2000,
+        scaleAmount: 0.9,  // Contract slightly
+        easing: 'sine',
+        particleMotion: {
+            type: 'radial',
+            strength: 0.2,
+            direction: 'inward',
+            smooth: true
+        }
+    },
+    
+    breathHold: {
+        duration: 1500,
+        scaleAmount: 1.1,  // Hold expanded
+        easing: 'linear',
+        particleMotion: {
+            type: 'hold',
+            strength: 0.1,
+            slight: true // Slight movement while holding
+        }
+    },
+    
+    breathHoldEmpty: {
+        duration: 1500,
+        scaleAmount: 0.95, // Hold contracted
+        easing: 'linear',
+        particleMotion: {
+            type: 'hold',
+            strength: 0.05,
+            tight: true // Very minimal movement
+        }
+    },
+    
+    jump: {
+        duration: 800,
+        jumpHeight: 60,    // Pixels to jump
+        squashAmount: 0.8, // Squash before jump
+        stretchAmount: 1.2, // Stretch during jump
+        easing: 'quad',
+        particleMotion: {
+            type: 'jump',
+            strength: 0.9,
+            jumpHeight: 60,
+            squash: 0.8,
+            stretch: 1.2
+        }
+    }
+};
+
+/**
+ * Get base configuration for a gesture
+ * @param {string} gestureName - Name of the gesture
+ * @returns {Object} Base configuration object
+ */
+export function getGestureBaseConfig(gestureName) {
+    return GESTURE_BASE_CONFIG[gestureName] || {
+        duration: 500,
+        amplitude: 20,
+        easing: 'sine'
+    };
+}
