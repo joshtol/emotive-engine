@@ -75,7 +75,7 @@
  */
 
 import { interpolateHsl } from '../utils/colorUtils.js';
-import { applyEasing } from '../utils/easing.js';
+import { applyEasing, easeInOutCubic } from '../utils/easing.js';
 
 class EmotiveStateMachine {
     constructor(errorBoundary) {
@@ -100,6 +100,16 @@ class EmotiveStateMachine {
                 duration: 500,
                 startTime: 0,
                 isActive: false
+            },
+            undertone: {
+                current: null,
+                target: null,
+                progress: 0,
+                duration: 300,  // Faster than emotion transitions
+                startTime: 0,
+                isActive: false,
+                currentWeight: 0,  // 0-1 weight of current undertone
+                targetWeight: 0    // 0-1 weight of target undertone
             }
         };
         
@@ -135,10 +145,10 @@ class EmotiveStateMachine {
             joy: {
                 primaryColor: '#FFD700',
                 glowIntensity: 1.2,
-                particleRate: 1,
-                minParticles: 2,  // Always at least 2
-                maxParticles: 4,  // Max 4 particles
-                particleBehavior: 'rising',
+                particleRate: 2,           // More frequent popping
+                minParticles: 3,           // Always popping
+                maxParticles: 8,           // Can have many kernels popping
+                particleBehavior: 'popcorn', // Spontaneous popping effect
                 coreSize: 1.1,
                 breathRate: 1.3,
                 breathDepth: 0.15
@@ -233,18 +243,16 @@ class EmotiveStateMachine {
                 breathRate: 0.8,           // 12-16 breaths per minute (resting human)
                 breathDepth: 0.12          // Gentle, relaxed breathing
             },
-            zen: {
-                primaryColor: '#4B0082',  // Deep purple-blue
-                glowIntensity: 0.6,
-                particleRate: 20,  // Very rare, like incense
-                minParticles: 0,
-                maxParticles: 2,  // Minimal particles
-                particleBehavior: 'ascending',  // Float upward slowly
-                coreSize: 1.0,
-                breathRate: 0.1,  // Ultra-slow breathing
-                breathDepth: 0.03,  // Very subtle
-                eyeOpenness: 0.3,  // Narrowed happy eyes
-                eyeArc: -0.2  // Downward arc for Buddha eyes
+            euphoria: {
+                primaryColor: '#FFD700',   // Golden sunrise
+                glowIntensity: 1.8,        // Radiant warm glow
+                particleRate: 3,           // Abundant like sunbeams
+                minParticles: 15,          // Always sparkling
+                maxParticles: 30,          // Maximum celebration
+                particleBehavior: 'radiant', // Radiating outward
+                coreSize: 1.15,            // Expanded with joy
+                breathRate: 1.3,           // Energized breathing
+                breathDepth: 0.25,         // Deep refreshing breaths
             },
             focused: {
                 primaryColor: '#00CED1',  // Bright cyan
@@ -335,36 +343,50 @@ class EmotiveStateMachine {
                 return true;
             }
 
-            // Set up transition (skip if duration is 0)
-            if (duration > 0) {
-                this.transitions.emotional = {
-                    current: this.state.emotion,
-                    target: emotion,
-                    progress: 0,
-                    duration: Math.max(100, duration),
-                    startTime: performance.now(),
-                    isActive: true
-                };
-                
-                // Reset simulated time for testing
-                if (this._simulatedTime !== undefined) {
-                    this._simulatedTime = 0;
+            // Set up emotion transition if emotion is changing
+            if (this.state.emotion !== emotion) {
+                if (duration > 0) {
+                    this.transitions.emotional = {
+                        current: this.state.emotion,
+                        target: emotion,
+                        progress: 0,
+                        duration: Math.max(100, duration),
+                        startTime: performance.now(),
+                        isActive: true
+                    };
+                    
+                    // Reset simulated time for testing
+                    if (this._simulatedTime !== undefined) {
+                        this._simulatedTime = 0;
+                    }
+                } else {
+                    // Immediate transition
+                    this.transitions.emotional = {
+                        current: emotion,
+                        target: null,
+                        progress: 1,
+                        duration: 0,
+                        startTime: performance.now(),
+                        isActive: false
+                    };
                 }
-            } else {
-                // Immediate transition
-                this.transitions.emotional = {
-                    current: emotion,
-                    target: null,
-                    progress: 1,
-                    duration: 0,
-                    startTime: performance.now(),
-                    isActive: false
-                };
+                this.state.emotion = emotion;
             }
-
-            // Update state
-            this.state.emotion = emotion;
-            this.state.undertone = undertone;
+            
+            // Set up undertone transition if undertone is changing
+            if (this.state.undertone !== undertone) {
+                this.transitions.undertone = {
+                    current: this.state.undertone,
+                    target: undertone,
+                    progress: 0,
+                    duration: 300,  // Always smooth undertone transitions
+                    startTime: performance.now(),
+                    isActive: true,
+                    currentWeight: this.state.undertone ? 1 : 0,
+                    targetWeight: undertone ? 1 : 0
+                };
+                this.state.undertone = undertone;
+            }
 
             return true;
         }, 'emotion-setting', false)();
@@ -432,9 +454,54 @@ class EmotiveStateMachine {
             if (this.transitions.emotional.isActive) {
                 this.updateEmotionalTransition(deltaTime);
             }
+            
+            // Update undertone transition
+            if (this.transitions.undertone.isActive) {
+                this.updateUndertoneTransition(deltaTime);
+            }
         }, 'state-machine-update')();
     }
 
+    /**
+     * Updates undertone transition progress
+     * @param {number} deltaTime - Time since last update in milliseconds
+     */
+    updateUndertoneTransition(deltaTime) {
+        const transition = this.transitions.undertone;
+        
+        // Calculate elapsed time
+        const elapsed = performance.now() - transition.startTime;
+        const progress = Math.min(elapsed / transition.duration, 1);
+        
+        // Apply easing
+        const easedProgress = easeInOutCubic(progress);
+        
+        // Update weights for smooth transition
+        if (transition.current && transition.target) {
+            // Transitioning between two undertones
+            transition.currentWeight = 1 - easedProgress;
+            transition.targetWeight = easedProgress;
+        } else if (transition.current && !transition.target) {
+            // Fading out current undertone
+            transition.currentWeight = 1 - easedProgress;
+            transition.targetWeight = 0;
+        } else if (!transition.current && transition.target) {
+            // Fading in new undertone
+            transition.currentWeight = 0;
+            transition.targetWeight = easedProgress;
+        }
+        
+        transition.progress = progress;
+        
+        // Complete transition
+        if (progress >= 1) {
+            transition.isActive = false;
+            transition.current = transition.target;
+            transition.currentWeight = transition.target ? 1 : 0;
+            transition.targetWeight = 0;
+        }
+    }
+    
     /**
      * Updates emotional state transition progress
      * @param {number} deltaTime - Time since last update in milliseconds
@@ -582,11 +649,63 @@ class EmotiveStateMachine {
      */
     getUndertoneModifier(undertone) {
         return this.errorBoundary.wrap(() => {
+            // Try to get from renderer first (comprehensive modifiers)
+            if (this.renderer && this.renderer.undertoneModifiers && 
+                this.renderer.undertoneModifiers[undertone]) {
+                // Return the full modifier from renderer
+                return { ...this.renderer.undertoneModifiers[undertone] };
+            }
+            
+            // Fallback to local modifiers
             if (!undertone || !this.undertoneModifiers.hasOwnProperty(undertone)) {
                 return null;
             }
-            return { ...this.undertoneModifiers[undertone] };
+            // Ensure essential properties exist in fallback
+            const localMod = { ...this.undertoneModifiers[undertone] };
+            if (!localMod.glowRadiusMult) {
+                localMod.glowRadiusMult = 1.0; // Default value
+            }
+            return localMod;
         }, 'undertone-retrieval', null)();
+    }
+    
+    /**
+     * Gets weighted undertone modifiers based on current transition state
+     * @returns {Object|null} Combined undertone modifiers with transition weights applied
+     */
+    getWeightedUndertoneModifiers() {
+        const transition = this.transitions.undertone;
+        
+        // If no transition is active, return current undertone modifiers directly
+        if (!transition.isActive) {
+            if (this.state.undertone) {
+                const mod = this.getUndertoneModifier(this.state.undertone);
+                if (mod) {
+                    // Return full modifier with weight of 1.0 (fully applied)
+                    return { ...mod, weight: 1.0 };
+                }
+            }
+            return null;
+        }
+        
+        // During transition, return the target modifier with interpolated weight
+        if (transition.target) {
+            const targetMod = this.getUndertoneModifier(transition.target);
+            if (targetMod) {
+                // Return target modifier with transition weight
+                return { ...targetMod, weight: transition.targetWeight };
+            }
+        }
+        
+        // Fading out - return current modifier with decreasing weight  
+        if (transition.current && transition.currentWeight > 0) {
+            const currentMod = this.getUndertoneModifier(transition.current);
+            if (currentMod) {
+                return { ...currentMod, weight: transition.currentWeight };
+            }
+        }
+        
+        return null;
     }
 
     /**

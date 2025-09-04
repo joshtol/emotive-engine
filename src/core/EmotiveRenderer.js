@@ -9,8 +9,9 @@
  *
  * @fileoverview Emotive Renderer - Visual Rendering Engine
  * @author Emotive Engine Team
- * @version 2.0.0
+ * @version 2.1.0
  * @module EmotiveRenderer
+ * @changelog 2.1.0 - Implemented undertone saturation system for glow colors
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -18,6 +19,9 @@
  * ║ The VISUAL ARTIST of the Emotive Engine. Renders the iconic orb with its          
  * ║ glowing core, breathing animation, eye expressions, and gesture animations.       
  * ║ Creates the minimalist yet expressive visual that defines Emotive.                
+ * ║                                                                                    
+ * ║ NEW: Undertone saturation creates visual depth by adjusting glow color            
+ * ║ saturation based on emotional intensity (intense→electric, subdued→ghostly)       
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -74,13 +78,17 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import { interpolateHsl } from '../utils/colorUtils.js';
+import { interpolateHsl, applyUndertoneSaturation, rgbToHex, hexToRgb } from '../utils/colorUtils.js';
 import GestureCompositor from './GestureCompositor.js';
 
 class EmotiveRenderer {
     constructor(canvasManager, options = {}) {
         this.canvasManager = canvasManager;
         this.ctx = canvasManager.getContext();
+        
+        if (!this.ctx) {
+            console.error('EmotiveRenderer: No context from canvasManager!');
+        }
         
         // Gesture compositor for emotion/undertone modulation
         this.gestureCompositor = new GestureCompositor();
@@ -121,7 +129,18 @@ class EmotiveRenderer {
             lastScanTime: 0,         // Last time we did a scan
             isSuspicious: false,     // Track if we're in suspicion mode
             // Custom scale for breathing
-            customScale: null        // When set, overrides normal breathing scale
+            customScale: null,       // When set, overrides normal breathing scale
+            // Undertone modifiers - initialize with defaults
+            sizeMultiplier: 1.0,
+            jitterAmount: 0,
+            episodicFlutter: false,
+            glowRadiusMult: 1.0,
+            breathRateMult: 1.0,
+            breathDepthMult: 1.0,
+            breathIrregular: false,
+            particleRateMult: 1.0,
+            particleBehaviorOverride: null,
+            particleSpeedMult: 1.0
         };
         
         // Animation state
@@ -504,6 +523,10 @@ class EmotiveRenderer {
             willReadFrequently: false
         });
         
+        if (!this.offscreenCtx) {
+            console.error('Failed to create offscreen context!');
+        }
+        
         // Match dimensions
         this.updateOffscreenSize();
     }
@@ -543,6 +566,17 @@ class EmotiveRenderer {
         
         // Clear offscreen canvas for fresh render
         this.ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+        
+        // Update undertone modifiers every frame during transitions
+        if (this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers) {
+            const weightedModifier = this.stateMachine.getWeightedUndertoneModifiers();
+            if (weightedModifier) {
+                this.applyUndertoneModifiers(weightedModifier);
+            } else {
+                // Reset to defaults when no undertone
+                this.applyUndertoneModifiers(null);
+            }
+        }
         
         // Update animation timers
         this.updateTimers(deltaTime);
@@ -642,7 +676,8 @@ class EmotiveRenderer {
         const undertoneSizeMult = this.state.sizeMultiplier || 1.0;
         
         let coreRadius = baseRadius * emotionSizeMult * coreBreathFactor * scaleMultiplier * sleepScaleMod * undertoneSizeMult;
-        const glowRadius = baseRadius * this.config.glowMultiplier * glowBreathFactor * this.state.glowIntensity * glowMultiplier * scaleMultiplier * sleepScaleMod * undertoneSizeMult;  // Breathes inversely
+        let glowRadius = baseRadius * this.config.glowMultiplier * glowBreathFactor * this.state.glowIntensity * glowMultiplier * scaleMultiplier * sleepScaleMod * undertoneSizeMult;  // Breathes inversely
+        
         
         // Apply blinking (only when not sleeping or zen)
         if (this.state.blinking && !this.state.sleeping && this.state.emotion !== 'zen') {
@@ -824,13 +859,23 @@ class EmotiveRenderer {
         this.ctx = originalCtx;
         
         // Blit offscreen canvas to main canvas (single draw operation)
-        originalCtx.drawImage(this.offscreenCanvas, 0, 0);
+originalCtx.drawImage(this.offscreenCanvas, 0, 0);
     }
     
     /**
      * Render the glowing aura
      */
     renderGlow(x, y, radius) {
+        // Safety check for invalid values
+        if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
+            // Only log once per session to avoid spam
+            if (!this._loggedGlowError) {
+                console.error('renderGlow called with invalid values:', { x, y, radius });
+                this._loggedGlowError = true;
+            }
+            return;
+        }
+        
         // Get canvas dimensions with fallbacks
         const canvasWidth = this.canvas?.width || 600;
         const canvasHeight = this.canvas?.height || 600;
@@ -847,13 +892,14 @@ class EmotiveRenderer {
         // Create radial gradient for the glow
         const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, safeRadius);
         
-        // Create gradient with emotion color - fade out before edge
+        // Create smooth gradient with reasonable stops
         const color = this.state.glowColor;
-        gradient.addColorStop(0, this.hexToRgba(color, 0.6));
-        gradient.addColorStop(0.3, this.hexToRgba(color, 0.4));
-        gradient.addColorStop(0.6, this.hexToRgba(color, 0.2));
-        gradient.addColorStop(0.85, this.hexToRgba(color, 0.05)); // Fade earlier to prevent hard edge
-        gradient.addColorStop(1, this.hexToRgba(color, 0));
+        const stops = 20;
+        for (let i = 0; i <= stops; i++) {
+            const position = i / stops;
+            const opacity = 0.6 * Math.pow(1 - position, 2.2);
+            gradient.addColorStop(position, this.hexToRgba(color, opacity));
+        }
         
         // Draw the glow as a circle, not filling the entire canvas
         this.ctx.fillStyle = gradient;
@@ -900,6 +946,16 @@ class EmotiveRenderer {
      * Render the white core with eye narrowing effect
      */
     renderCore(x, y, radius, deltaTime = 16.67) {
+        // Safety check for invalid values
+        if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
+            // Only log once per session to avoid spam
+            if (!this._loggedCoreError) {
+                console.error('renderCore called with invalid values:', { x, y, radius });
+                this._loggedCoreError = true;
+            }
+            return;
+        }
+        
         // Check if we're in zen transition
         if (this.zenTransition.active) {
             this.renderZenCore(x, y, radius);
@@ -993,7 +1049,7 @@ class EmotiveRenderer {
         }
         
         // Apply transformations
-        this.ctx.translate(x, y);
+this.ctx.translate(x, y);
         if (rotation !== 0) {
             this.ctx.rotate(rotation);
         }
@@ -1005,7 +1061,7 @@ class EmotiveRenderer {
         this.ctx.shadowOffsetY = 2;
         
         // Draw white core with eye arc effect
-        this.ctx.fillStyle = this.config.coreColor;
+this.ctx.fillStyle = this.config.coreColor;
         this.ctx.beginPath();
         
         if (eyeArc !== 0 && scaleY < 0.5) {
@@ -1018,7 +1074,7 @@ class EmotiveRenderer {
             // Normal circular eye
             this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
         }
-        this.ctx.fill();
+this.ctx.fill();
         
         // Add inner glow for luminosity with nervous shimmer
         let shimmerAlpha = 1.0;
@@ -1084,27 +1140,9 @@ class EmotiveRenderer {
         
         // Apply glow when lotus is morphing or fully formed
         if (this.zenTransition.lotusMorph > 0) {
-            // GAUSSIAN GLOW LAYERS - Smooth exponential falloff
-            // Pre-glow layers with decreasing intensity for Gaussian effect
-            const glowLayers = 8; // More layers for smoother transition
-            for (let i = 0; i < glowLayers; i++) {
-                // Gaussian falloff: intensity = e^(-(distance^2))
-                const layerIntensity = Math.exp(-(i * i) / 8) * zenPulse;
-                const layerRadius = 60 + i * 25;
-                
-                this.ctx.shadowBlur = layerRadius * zenPulse;
-                this.ctx.shadowColor = `rgba(255, 215, 0, ${0.2 * layerIntensity})`; // Reduced opacity
-                
-                // Invisible shape just for the glow
-                this.ctx.fillStyle = 'rgba(255, 215, 0, 0.01)';
-                this.ctx.beginPath();
-                this.ctx.arc(0, 0, radius * (1.5 + i * 0.3), 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-            
-            // Main shadow - golden light (dimmer during transitions)
-            this.ctx.shadowBlur = 80 * zenPulse;
-            this.ctx.shadowColor = `rgba(255, 223, 0, ${0.6 * zenPulse})`; // Reduced from 1.2
+            // Single smooth shadow glow 
+            this.ctx.shadowBlur = 100 * zenPulse;
+            this.ctx.shadowColor = `rgba(255, 223, 0, ${0.5 * zenPulse})`;
             
             // INNER RADIANCE GRADIENT - Much darker during transitions
             const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 4);
@@ -1478,9 +1516,29 @@ class EmotiveRenderer {
     
     /**
      * Apply all undertone modifiers to current state
-     * @param {string|null} undertone - Undertone to apply
+     * @param {string|null|Object} undertone - Undertone name or weighted modifier object
      */
     applyUndertoneModifiers(undertone) {
+        // Handle weighted modifier from state machine
+        if (undertone && typeof undertone === 'object' && undertone.weight !== undefined) {
+            const weight = undertone.weight;
+            
+            // Apply weighted modifiers for smooth transitions
+            // Use default value of 1.0 if property is undefined
+            this.state.sizeMultiplier = 1.0 + ((undertone.sizeMultiplier || 1.0) - 1.0) * weight;
+            this.state.jitterAmount = (undertone.jitterAmount || 0) * weight;
+            this.state.episodicFlutter = weight > 0.5 ? (undertone.episodicFlutter || false) : false;
+            this.state.glowRadiusMult = 1.0 + ((undertone.glowRadiusMult || 1.0) - 1.0) * weight;
+            this.state.breathRateMult = 1.0 + ((undertone.breathRateMult || 1.0) - 1.0) * weight;
+            this.state.breathDepthMult = 1.0 + ((undertone.breathDepthMult || 1.0) - 1.0) * weight;
+            this.state.breathIrregular = weight > 0.5 ? (undertone.breathIrregular || false) : false;
+            this.state.particleRateMult = 1.0 + ((undertone.particleRateMult || 1.0) - 1.0) * weight;
+            this.state.particleBehaviorOverride = weight > 0.5 ? undertone.particleBehavior : null;
+            this.state.particleSpeedMult = 1.0 + ((undertone.particleSpeedMult || 1.0) - 1.0) * weight;
+            return;
+        }
+        
+        // Legacy string-based undertone handling
         if (!undertone || !this.undertoneModifiers[undertone]) {
             // Reset to defaults if no undertone
             this.state.sizeMultiplier = 1.0;
@@ -1498,7 +1556,7 @@ class EmotiveRenderer {
         
         const modifier = this.undertoneModifiers[undertone];
         
-        // Apply all modifiers with smooth transitions
+        // Apply all modifiers directly (legacy mode)
         this.state.sizeMultiplier = modifier.sizeMultiplier;
         this.state.jitterAmount = modifier.jitterAmount || 0;
         this.state.episodicFlutter = modifier.episodicFlutter || false;
@@ -1512,27 +1570,51 @@ class EmotiveRenderer {
     }
     
     /**
-     * Apply undertone shifts to a color
+     * Apply undertone shifts to a color using saturation-based depth
      * @param {string} baseColor - Base hex color
-     * @param {string|null} undertone - Undertone to apply
+     * @param {string|null|Object} undertone - Undertone name or weighted modifier object
      * @returns {string} Modified hex color
+     * 
+     * Undertone saturation creates visual depth:
+     * - INTENSE   : +60% saturation (electric, overwhelming)
+     * - CONFIDENT : +30% saturation (bold, present) 
+     * - NERVOUS   : +15% saturation (slightly heightened)
+     * - CLEAR     :   0% saturation (normal midtone)
+     * - TIRED     : -20% saturation (washed out, fading)
+     * - SUBDUED   : -50% saturation (ghostly, withdrawn)
      */
     applyUndertoneToColor(baseColor, undertone) {
-        if (!undertone || !this.undertoneModifiers[undertone]) return baseColor;
+        // Handle weighted modifier for smooth transitions
+        if (undertone && typeof undertone === 'object' && undertone.weight !== undefined) {
+            // For weighted transitions, interpolate between clear and target undertone
+            // This maintains the new saturation-only system during transitions
+            const weight = undertone.weight;
+            const undertoneType = undertone.type || 'clear';
+            
+            // Apply weighted saturation adjustment
+            if (undertoneType === 'clear' || weight === 0) {
+                return baseColor;
+            }
+            
+            // Get full saturation adjustment for this undertone
+            const fullySaturated = applyUndertoneSaturation(baseColor, undertoneType);
+            
+            // Interpolate between base and fully saturated based on weight
+            const rgb1 = hexToRgb(baseColor);
+            const rgb2 = hexToRgb(fullySaturated);
+            
+            const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * weight);
+            const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * weight);
+            const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * weight);
+            
+            return rgbToHex(r, g, b);
+        }
         
-        const modifier = this.undertoneModifiers[undertone];
+        // Direct string-based undertone - use new saturation system
+        if (!undertone || undertone === 'clear') return baseColor;
         
-        // Convert hex to HSL
-        const rgb = this.hexToRgb(baseColor);
-        const hsl = this.rgbToHsl(rgb.r, rgb.g, rgb.b);
-        
-        // Apply much stronger undertone shifts
-        hsl.h = (hsl.h + modifier.hueShift + 360) % 360;
-        hsl.s = Math.max(0, Math.min(1, hsl.s * modifier.saturationMult));
-        hsl.l = Math.max(0, Math.min(1, hsl.l * modifier.brightnessMult));
-        
-        // Convert back to hex
-        return this.hslToHex(hsl.h, hsl.s, hsl.l);
+        // Apply saturation-based undertone adjustment
+        return applyUndertoneSaturation(baseColor, undertone);
     }
     
     /**
@@ -1658,9 +1740,22 @@ class EmotiveRenderer {
             eased
         );
         
-        // Interpolate intensity
-        this.state.glowIntensity = this.colorTransition.fromIntensity + 
+        // Interpolate intensity - with NaN safety check
+        const interpolatedIntensity = this.colorTransition.fromIntensity + 
             (this.colorTransition.toIntensity - this.colorTransition.fromIntensity) * eased;
+        
+        if (!isFinite(interpolatedIntensity)) {
+            console.error('NaN detected in intensity interpolation:', {
+                fromIntensity: this.colorTransition.fromIntensity,
+                toIntensity: this.colorTransition.toIntensity,
+                eased,
+                progress,
+                result: interpolatedIntensity
+            });
+            this.state.glowIntensity = 1.0; // Fallback
+        } else {
+            this.state.glowIntensity = interpolatedIntensity;
+        }
         
         if (progress < 1) {
             // Cancel any existing color transition animation
@@ -1682,18 +1777,47 @@ class EmotiveRenderer {
     setEmotionalState(emotion, properties, undertone = null) {
         // Store undertone for color processing
         this.state.undertone = undertone;
+        this.currentUndertone = undertone;  // Keep legacy reference
+        
+        // Get weighted undertone modifier from state machine if available
+        const weightedModifier = this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers ? 
+                                this.stateMachine.getWeightedUndertoneModifiers() : null;
         
         // Apply all undertone modifiers (visual, breathing, particles)
-        this.applyUndertoneModifiers(undertone);
+        this.applyUndertoneModifiers(weightedModifier || undertone);
         
         // Get base color and apply undertone shifts
         const baseColor = properties.glowColor || this.config.defaultGlowColor;
-        const targetColor = this.applyUndertoneToColor(baseColor, undertone);
+        const targetColor = this.applyUndertoneToColor(baseColor, weightedModifier || undertone);
         
         // Apply intensity modifier from undertone
-        const modifier = undertone ? this.undertoneModifiers[undertone] : null;
+        const modifier = weightedModifier || (undertone ? this.undertoneModifiers[undertone] : null);
         const baseIntensity = properties.glowIntensity || 1.0;
-        const targetIntensity = modifier ? baseIntensity * modifier.glowRadiusMult : baseIntensity;
+        
+        // Get the glow multiplier - check for glowRadiusMult or use default of 1.0
+        let glowMult = 1.0;
+        if (modifier) {
+            if (weightedModifier) {
+                // For weighted modifiers, check if glowRadiusMult exists
+                // Check for NaN in weight calculation
+                const weight = modifier.weight || 0;
+                if (modifier.glowRadiusMult !== undefined && isFinite(modifier.glowRadiusMult) && isFinite(weight)) {
+                    glowMult = 1.0 + (modifier.glowRadiusMult - 1.0) * weight;
+                } else {
+                    console.warn('Invalid weighted modifier values:', {
+                        glowRadiusMult: modifier.glowRadiusMult,
+                        weight: weight,
+                        undertone: undertone
+                    });
+                    glowMult = 1.0;
+                }
+            } else {
+                // For non-weighted modifiers, use glowRadiusMult if it exists
+                glowMult = modifier.glowRadiusMult !== undefined ? modifier.glowRadiusMult : 1.0;
+            }
+        }
+        
+        const targetIntensity = baseIntensity * glowMult;
         
         // Determine transition duration based on emotion
         let duration = 1500; // Default 1.5s
@@ -2281,6 +2405,12 @@ class EmotiveRenderer {
      * @returns {Object|null} Current undertone modifier or null
      */
     getUndertoneModifier() {
+        // Use the new weighted method from state machine if available
+        if (this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers) {
+            return this.stateMachine.getWeightedUndertoneModifiers();
+        }
+        
+        // Fallback to old method
         if (!this.currentUndertone || !this.undertoneModifiers[this.currentUndertone]) {
             return null;
         }

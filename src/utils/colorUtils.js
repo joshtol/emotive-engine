@@ -9,8 +9,9 @@
  *
  * @fileoverview Color Utils - Color Interpolation & Manipulation
  * @author Emotive Engine Team
- * @version 2.0.0
+ * @version 2.1.0
  * @module ColorUtils
+ * @changelog 2.1.0 - Added undertone saturation modifiers for dynamic depth
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -18,6 +19,9 @@
  * ║ The COLOR SCIENCE module of the engine. Provides smooth color transitions         
  * ║ between emotional states using HSL interpolation for perceptually uniform         
  * ║ transitions that feel natural and emotionally resonant.                           
+ * ║                                                                                    
+ * ║ NEW: Undertone saturation system creates dynamic depth by adjusting saturation    
+ * ║ based on emotional undertones (intense → oversaturated, subdued → desaturated)    
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -29,6 +33,24 @@
  * │ • Color mixing and blending                                                       
  * │ • Luminance calculations                                                          
  * │ • Perceptually uniform color shifts                                               
+ * │ • Undertone-based saturation adjustments                                          
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 🌈 UNDERTONE SATURATION SYSTEM                                                    
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ Undertones dynamically adjust color saturation to create emotional depth:         
+ * │                                                                                    
+ * │ • INTENSE   : +60% saturation - Electric, vibrant, overwhelming                   
+ * │ • CONFIDENT : +30% saturation - Bold, present, assertive                          
+ * │ • NERVOUS   : +15% saturation - Slightly heightened, anxious energy               
+ * │ • CLEAR     :   0% saturation - Normal midtone, balanced state                    
+ * │ • TIRED     : -20% saturation - Washed out, fading, depleted                      
+ * │ • SUBDUED   : -50% saturation - Ghostly, barely there, withdrawn                  
+ * │                                                                                    
+ * │ This creates a visual hierarchy where emotional intensity directly affects        
+ * │ the vibrancy and presence of colors, making the mascot's state immediately        
+ * │ readable through color alone.                                                     
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ════════════════════════════════════════════════════════════════════════════════════
@@ -275,6 +297,73 @@ export function getContrastRatio(color1, color2) {
     const darkest = Math.min(lum1, lum2);
     
     return (brightest + 0.05) / (darkest + 0.05);
+}
+
+/**
+ * Undertone saturation modifiers for dynamic emotional depth
+ * Maps undertone names to saturation adjustment factors
+ */
+export const UNDERTONE_SATURATION = {
+    intense: 1.6,    // +60% saturation - Electric, overwhelming
+    confident: 1.3,  // +30% saturation - Bold, present
+    nervous: 1.15,   // +15% saturation - Slightly heightened
+    clear: 1.0,      // No change - Normal midtone
+    tired: 0.8,      // -20% saturation - Washed out, fading
+    subdued: 0.5     // -50% saturation - Ghostly, barely there
+};
+
+/**
+ * Applies undertone saturation adjustment to a color
+ * @param {string} hex - Base color
+ * @param {string} undertone - Undertone name (intense, confident, nervous, clear, tired, subdued)
+ * @returns {string} Adjusted color with undertone saturation applied
+ */
+export function applyUndertoneSaturation(hex, undertone) {
+    if (!undertone || undertone === 'clear') {
+        return hex; // No adjustment for clear or missing undertone
+    }
+    
+    const factor = UNDERTONE_SATURATION[undertone.toLowerCase()];
+    if (!factor || factor === 1.0) {
+        return hex;
+    }
+    
+    return adjustSaturation(hex, factor);
+}
+
+/**
+ * Applies undertone saturation to an array of colors (for particle systems)
+ * @param {Array} colors - Array of colors (can be strings or objects with color property)
+ * @param {string} undertone - Undertone name
+ * @returns {Array} Adjusted color array with undertone saturation applied
+ */
+export function applyUndertoneSaturationToArray(colors, undertone) {
+    if (!colors || !Array.isArray(colors)) return colors;
+    if (!undertone || undertone === 'clear') return colors;
+    
+    return colors.map(colorItem => {
+        if (typeof colorItem === 'string') {
+            // Simple color string
+            return applyUndertoneSaturation(colorItem, undertone);
+        } else if (colorItem && typeof colorItem === 'object' && colorItem.color) {
+            // Weighted color object
+            return {
+                ...colorItem,
+                color: applyUndertoneSaturation(colorItem.color, undertone)
+            };
+        }
+        return colorItem;
+    });
+}
+
+/**
+ * Gets the saturation factor for an undertone
+ * @param {string} undertone - Undertone name
+ * @returns {number} Saturation multiplication factor
+ */
+export function getUndertoneSaturationFactor(undertone) {
+    if (!undertone) return 1.0;
+    return UNDERTONE_SATURATION[undertone.toLowerCase()] || 1.0;
 }
 
 /**

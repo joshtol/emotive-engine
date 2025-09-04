@@ -186,7 +186,7 @@ class ErrorBoundary {
         try {
             switch (type) {
                 case 'emotion':
-                    const validEmotions = ['neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'love'];
+                    const validEmotions = ['neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'love', 'euphoria'];
                     return validEmotions.includes(value) ? value : defaultValue;
                 
                 case 'undertone':

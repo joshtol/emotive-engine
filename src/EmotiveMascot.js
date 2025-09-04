@@ -139,6 +139,10 @@ class EmotiveMascot {
         // Always use EmotiveRenderer
         this.renderer = new EmotiveRenderer(this.canvasManager, this.config.classicConfig || {});
         
+        // Connect renderer and state machine for undertone modifiers
+        this.renderer.stateMachine = this.stateMachine;
+        this.stateMachine.renderer = this.renderer;
+        
         // Initialize gaze tracking
         if (this.config.enableGazeTracking) {
             this.gazeTracker = new GazeTracker(this.canvas, {
@@ -532,7 +536,7 @@ class EmotiveMascot {
                 // Emit emotion change event
                 this.emit('emotionChanged', { emotion: mappedEmotion, undertone, duration });
                 
-                console.log(`Emotion set to: ${mappedEmotion}${undertone ? ` (${undertone})` : ''}`);
+                // console.log(`Emotion set to: ${mappedEmotion}${undertone ? ` (${undertone})` : ''}`);
             }
             
             return this;
@@ -551,7 +555,7 @@ class EmotiveMascot {
                 return this;
             }
             
-            console.log('Express called with gesture:', gesture);
+            // console.log('Express called with gesture:', gesture);
             
             // Direct mapping to renderer methods for all gestures
             const rendererMethods = {
@@ -1010,7 +1014,9 @@ class EmotiveMascot {
                 
                 // Spawn initial particles for classic mode
                 if (this.config.renderingStyle === 'classic' && this.particleSystem) {
-                    const emotion = this.stateMachine.getCurrentState().emotion;
+                    const currentState = this.stateMachine.getCurrentState();
+                    const emotion = currentState.emotion;
+                    const undertone = currentState.undertone;
                     const emotionParams = getEmotionParams(emotion);
                     
                     // Get the actual orb position from the renderer (includes gaze offset)
@@ -1039,7 +1045,9 @@ class EmotiveMascot {
                         0,  // minParticles
                         50,  // maxParticles
                         this.renderer.scaleFactor || 1,  // Pass scale factor
-                        this.config.classicConfig?.particleSizeMultiplier || 1  // Pass particle size multiplier
+                        this.config.classicConfig?.particleSizeMultiplier || 1,  // Pass particle size multiplier
+                        emotionParams.particleColors || null,  // Pass emotion colors
+                        undertone  // Pass undertone for saturation adjustments
                     );
                 }
                 
@@ -1785,7 +1793,9 @@ class EmotiveMascot {
                 minParticles,
                 maxParticles,
                 this.renderer.scaleFactor || 1,  // Pass scale factor
-                this.config.classicConfig?.particleSizeMultiplier || 1  // Pass particle size multiplier
+                this.config.classicConfig?.particleSizeMultiplier || 1,  // Pass particle size multiplier
+                emotionParams.particleColors || null,  // Pass emotion colors
+                renderState.undertone  // Pass undertone for saturation adjustments
             );
             
             // Debug logging disabled to prevent console spam

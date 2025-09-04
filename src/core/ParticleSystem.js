@@ -9,8 +9,10 @@
  *
  * @fileoverview Particle System - Orchestrator of Emotional Atmosphere
  * @author Emotive Engine Team
- * @version 2.0.0
+ * @version 2.2.0
  * @module ParticleSystem
+ * @changelog 2.2.0 - Added undertone saturation system for dynamic particle depth
+ * @changelog 2.1.0 - Added support for passing emotion colors to individual particles
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -18,6 +20,9 @@
  * ║ The CONDUCTOR of particle chaos. Manages the lifecycle, behavior, and             
  * ║ performance of all particles. Uses object pooling to prevent memory leaks         
  * ║ and coordinates particles to create emotional atmospheres around the orb.         
+ * ║                                                                                    
+ * ║ NEW: Undertone saturation dynamically adjusts particle colors based on emotional  
+ * ║ intensity, creating visual depth through saturation levels.                       
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -29,6 +34,7 @@
  * │ • Memory leak detection and prevention                                            
  * │ • Dynamic particle limits based on emotion                                        
  * │ • 13 different particle behaviors                                                 
+ * │ • Undertone-based saturation adjustments for particle colors                      
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -66,6 +72,7 @@
  */
 
 import Particle from './Particle.js';
+import { applyUndertoneSaturationToArray } from '../utils/colorUtils.js';
 
 class ParticleSystem {
     constructor(maxParticles = 50, errorBoundary = null) {
@@ -127,11 +134,11 @@ class ParticleSystem {
         if (this.pool.length > 0) {
             // Reuse from pool
             particle = this.pool.pop();
-            particle.reset(x, y, behavior, this.scaleFactor || 1, this.particleSizeMultiplier || 1);
+            particle.reset(x, y, behavior, this.scaleFactor || 1, this.particleSizeMultiplier || 1, this.currentEmotionColors);
             this.poolHits++;
         } else {
             // Create new particle
-            particle = new Particle(x, y, behavior, this.scaleFactor || 1, this.particleSizeMultiplier || 1);
+            particle = new Particle(x, y, behavior, this.scaleFactor || 1, this.particleSizeMultiplier || 1, this.currentEmotionColors);
             this.poolMisses++;
             this.totalParticlesCreated++;
         }
@@ -167,16 +174,32 @@ class ParticleSystem {
     /**
      * Spawns particles based on emotional state and particle rate
      * NEW APPROACH: Fixed timestep - only spawn at specific intervals
+     * 
+     * @param {string} behavior - Particle behavior type (ambient, rising, falling, etc.)
+     * @param {string} emotion - Current emotional state
+     * @param {number} particleRate - Rate of particle spawning (particles per second at 60fps)
+     * @param {number} centerX - X coordinate of spawn center
+     * @param {number} centerY - Y coordinate of spawn center
+     * @param {number} deltaTime - Time since last frame in milliseconds
+     * @param {number|null} count - Force spawn this many particles (null for rate-based)
+     * @param {number} minParticles - Minimum particles to maintain
+     * @param {number} maxParticles - Maximum particles allowed
+     * @param {number} scaleFactor - Scale multiplier for particle sizes
+     * @param {number} particleSizeMultiplier - Additional size multiplier
+     * @param {Array|null} emotionColors - Array of color strings or weighted color objects
+     * @param {string|null} undertone - Emotional undertone for saturation adjustment
+     *                                   (intense, confident, nervous, clear, tired, subdued)
+     *                                   Affects particle color saturation to create depth
      */
-    spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count = null, minParticles = 0, maxParticles = 10, scaleFactor = 1, particleSizeMultiplier = 1) {
+    spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count = null, minParticles = 0, maxParticles = 10, scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null, undertone = null) {
         this.scaleFactor = scaleFactor; // Store for particle creation
         this.particleSizeMultiplier = particleSizeMultiplier; // Store for particle sizing
         if (this.errorBoundary) {
             return this.errorBoundary.wrap(() => {
-                this._spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles, maxParticles);
+                this._spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles, maxParticles, emotionColors, undertone);
             }, 'particle-spawn')();
         } else {
-            this._spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles, maxParticles);
+            this._spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles, maxParticles, emotionColors, undertone);
         }
     }
     
@@ -189,10 +212,31 @@ class ParticleSystem {
 
     /**
      * Internal spawn implementation - TIME-BASED accumulation for smooth spawning
+     * 
+     * Applies undertone saturation adjustments to particle colors before spawning.
+     * The saturation system creates visual depth:
+     * - Intense/Confident: Oversaturated colors appear to pop forward
+     * - Clear: Normal midtone colors sit in the middle ground  
+     * - Tired/Subdued: Desaturated colors recede into background
+     * 
+     * This creates a natural transition as particles cycle through their lifecycle,
+     * with new particles spawning with current undertone saturation while existing
+     * particles maintain their original colors until expiration.
      */
-    _spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles = 0, maxParticles = 10) {
+    _spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles = 0, maxParticles = 10, emotionColors = null, undertone = null) {
         // Store emotion for particle initialization
         this.currentEmotion = emotion;
+        
+        // Store base colors and undertone separately to ensure consistent application
+        this.baseEmotionColors = emotionColors;
+        this.currentUndertone = undertone;
+        
+        // Apply undertone saturation to emotion colors for all particles
+        // This adjustment persists for the lifetime of each particle, creating
+        // smooth visual transitions as particles naturally cycle
+        this.currentEmotionColors = emotionColors && undertone ? 
+            applyUndertoneSaturationToArray(emotionColors, undertone) : 
+            emotionColors;
         
         
         // If specific count is provided, spawn that many
@@ -373,24 +417,6 @@ class ParticleSystem {
                 return {
                     x: centerX + Math.cos(orbitAngle) * orbitRadius,
                     y: centerY + Math.sin(orbitAngle) * orbitRadius
-                };
-                
-            case 'fizzy':
-                // Spawn along a tapered column for exclamation mark (baseball bat shape)
-                // Narrower at bottom, thicker at top
-                const heightPercent = Math.random(); // 0 = bottom near orb, 1 = top
-                const maxSpread = 12.5 * (1 - heightPercent) + 50 * heightPercent; // Lerp from 12.5px to 50px (half as fat at top)
-                const fizzyX = centerX + (Math.random() - 0.5) * maxSpread * 2;
-                
-                // The orb center is at centerY (which includes verticalOffset already)
-                // Start from way above since the orb has moved down
-                const columnStart = centerY - 60; // Start position above the moved orb
-                const columnHeight = 150; // Fixed height for exclamation line
-                const fizzyY = columnStart - heightPercent * columnHeight;
-                
-                return {
-                    x: fizzyX,
-                    y: fizzyY
                 };
                 
             default:

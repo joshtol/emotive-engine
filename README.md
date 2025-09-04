@@ -54,9 +54,13 @@ mascot.start();
 mascot.setEmotion('joy');
 mascot.express('bounce');  // Direct gesture execution
 
+// Set emotions with undertones for depth
+mascot.setEmotion('anger', { undertone: 'intense' });  // Electric, overwhelming
+mascot.setEmotion('love', { undertone: 'subdued' });   // Ghostly, subtle
+
 // Respond to events
 mascot.on('stateChange', (state) => {
-  console.log(`Mascot is feeling ${state.emotion}`);
+  console.log(`Mascot is feeling ${state.emotion} (${state.undertone || 'clear'})`);
 });
 ```
 
@@ -70,21 +74,42 @@ The mascot responds to emotional states with sophisticated particle behaviors:
 
 | Emotion | Particle Behavior | Visual Characteristics |
 |---------|------------------|------------------------|
-| **Neutral** | Ambient drift | Soft blue, calm breathing |
-| **Joy** | Rising, celebratory | Golden amber particles, increased glow |
-| **Sadness** | Falling, heavy | Deep indigo tones, slow breathing |
-| **Anger** | Aggressive, chaotic | Crimson particles, rapid breathing, jitter |
-| **Fear** | Scattering, fleeing | Deep violet, trembling, hyperventilation |
-| **Surprise** | Explosive burst | Bright amber-orange, initial gasp |
-| **Disgust** | Repelling outward | Sickly green, shallow breathing |
-| **Love** | Orbiting harmony | Hot pink, deep satisfied breaths |
-| **Suspicion** | Scanning, cautious | Amber-brown, controlled breathing |
-| **Excited** | Fizzy carbonation | Hot magenta, vibrating with energy |
-| **Thinking** | Circular orbiting | Indigo, contemplative breathing |
-| **Speaking** | Rhythmic pulsing | Variable based on tone |
-| **Focused** | Convergent streams | Deep blue, steady concentration |
-| **Zen** | Perfect stillness | Pure white, minimal movement |
-| **Resting** | Languid drift | Soft purple, natural breathing |
+| **Neutral** | Ambient drift | Supple blue (#32ACE2), otherworldly depth |
+| **Joy** | Popcorn bursts | Golden sunshine (#FFD700), sunny layers |
+| **Sadness** | Falling, heavy | Melancholic indigo (#4B0082), oceanic tears |
+| **Anger** | Aggressive, chaotic | Crimson fury (#DC143C), burning rage |
+| **Fear** | Scattering, fleeing | Deep purple dread (#663399), nervous energy |
+| **Surprise** | Explosive burst | Electric violet (#9400D3), shock waves |
+| **Disgust** | Repelling outward | Eye tea green (#84CFC5), toxic fog |
+| **Love** | Orbiting harmony | Magenta majesty (#DD4A9A), passion layers |
+| **Euphoria** | Radiant rays | Radiant gold (#FFC107), sun on face |
+| **Suspicion** | Burst pattern | Shadow plum (#8B008B), guarded layers |
+| **Excited** | Popcorn fizzy | Vibrant orange (#FF8C00), electric energy |
+| **Resting** | Ultra-slow drift | Deep ocean teal (#008B8B), serene depths |
+| **Focused** | Directed streams | Dark turquoise (#00CED1), concentration |
+
+### 🎨 Color Depth System (v2.2.0)
+
+Each emotion uses a sophisticated **5-layer depth palette** creating 3D particle effects:
+
+- **MIDTONE (30%)**: Base color occupying middle space
+- **DESATURATED (20%)**: Background depth, misty and distant
+- **OVERSATURATED (20%)**: Foreground pop, electric and vibrant  
+- **HIGHLIGHT (15%)**: Light-catching particles
+- **SHADOW (15%)**: Grounding depth particles
+
+### 🌊 Undertone Modifiers
+
+Emotional undertones dynamically adjust saturation across all particles and glow:
+
+| Undertone | Saturation | Visual Effect |
+|-----------|------------|---------------|
+| **Intense** | +60% | Electric, overwhelming vibrancy |
+| **Confident** | +30% | Bold, present, assertive |
+| **Nervous** | +15% | Slightly heightened, anxious |
+| **Clear** | 0% | Normal midtone balance |
+| **Tired** | -20% | Washed out, fading energy |
+| **Subdued** | -50% | Ghostly, barely visible |
 
 ## 🔧 Advanced Configuration
 
@@ -116,28 +141,99 @@ const mascot = new EmotiveMascot({
 
 ## 🏗️ Architecture
 
-### Core Components
+### Core Engine Components
 
-- **EmotiveMascot**: Main orchestrator and public API
-- **AnimationController**: Main animation loop and performance management
-- **EmotiveRenderer**: Visual rendering of orb, glow, and eyes
-- **ParticleSystem**: Object-pooled particle lifecycle manager
-- **EmotiveStateMachine**: Emotional state transitions and undertones
-- **PerformanceMonitor**: FPS tracking and adaptive quality
-- **DegradationManager**: 4-tier quality levels (HIGH/MEDIUM/LOW/MINIMAL)
-- **GazeTracker**: Cursor-aware eye following
-- **IdleBehavior**: Organic blinking and swaying
-- **EventManager**: Centralized event system with cleanup
-- **PluginSystem**: Extensibility for custom behaviors
+#### 🎭 **EmotiveMascot** (Main Orchestrator)
+The primary API class that coordinates all subsystems. Features:
+- Emotional state management with smooth transitions
+- Gesture triggering and animation control
+- Particle system orchestration
+- Plugin system for extensibility
+- Event handling and listener management
+- Performance optimization and degradation
+- Accessibility features and mobile optimization
+
+#### 🎨 **EmotiveRenderer** (Visual Artist)
+Renders the iconic orb with its glowing core. Components:
+- White core with emotional glow aura
+- Arc-based eye expressions (happiness, sadness, focus)
+- Breathing animation with subtle size pulsation
+- Gesture motion (position, scale, rotation)
+- Undertone saturation adjustments for depth
+- 3-layer gradient glow rendering
+- Special effects (jitter, zen morph, etc.)
+
+#### 🌌 **ParticleSystem** (Chaos Conductor)
+Manages particle lifecycle with performance optimizations:
+- Object pooling for memory efficiency (50 particle pool)
+- Time-based spawning with accumulator
+- Automatic cleanup every 5 seconds
+- Memory leak detection and prevention
+- Dynamic particle limits based on emotion
+- 13+ different particle behaviors
+- Undertone-based saturation adjustments
+- Smooth transitions through particle lifecycle
+
+#### ⚛️ **Particle** (Atoms of Emotion)
+Individual entities with unique behaviors:
+- **13 Behavior Types**: ambient, rising, falling, aggressive, scattering, burst, repelling, orbiting, connecting, resting, radiant, popcorn, directed
+- **Weighted Color Selection**: Individual colors from emotion palettes
+- **Lifecycle Stages**: Birth (15% fade-in) → Prime → Decay (30% fade-out) → Death
+- **Visual Effects**: 33% glow chance, 33% cell shading chance
+- **Gesture Response**: Overriding, enhancing, or redirecting particle motion
+
+#### 🛡️ **ErrorBoundary** (Safety Net)
+Comprehensive error handling and recovery:
+- Try-catch wrapping for all critical functions
+- Safe default values for all emotional states
+- Error logging with context and timestamps
+- Automatic error suppression after threshold (3 per context)
+- Recovery attempts with exponential backoff
+- Validation for emotions, undertones, and gestures
+
+#### 🎵 **Configuration Systems**
+
+**EmotionMap** (v2.2.0)
+- Visual properties for each emotional state
+- 5-layer color depth palettes for 3D effects
+- Weighted particle color distribution
+- Undertone saturation interaction system
+- Performance-aware particle limits
+
+**Plugin Architecture**
+- Hot-swappable emotion states
+- Custom particle behaviors
+- Example: **FizzyParticlePlugin** - Carbonated bubble effect with continuous rising streams
+
+### 🎯 Particle Behaviors
+
+Each emotion employs specific particle behaviors creating unique atmospheres:
+
+| Behavior | Movement Pattern | Used By |
+|----------|-----------------|---------|
+| **ambient** | Gentle upward drift | Neutral |
+| **rising** | Buoyant upward movement | Joy |
+| **falling** | Heavy downward drift | Sadness |
+| **aggressive** | Sharp, chaotic movement | Anger |
+| **scattering** | Fleeing from center | Fear |
+| **burst** | Explosive expansion | Surprise, Suspicion |
+| **repelling** | Pushing away from core | Disgust |
+| **orbiting** | Circular motion around center | Love |
+| **connecting** | Chaotic with attraction | Connection states |
+| **resting** | Ultra-slow languid drift | Deep relaxation |
+| **radiant** | Radiating outward rays | Euphoria |
+| **popcorn** | Spontaneous popping | Joy, Excitement |
+| **directed** | Focused streams | Concentration |
 
 ### Performance Optimizations
 
 1. **Double Buffering**: Offscreen canvas for smooth rendering
 2. **Batch Rendering**: Minimized draw calls through path aggregation
 3. **Spatial Indexing**: Efficient particle neighbor queries
-4. **Object Pooling**: Reduced garbage collection overhead
-5. **Web Workers**: Parallel computation for physics calculations
-6. **Adaptive Quality**: Dynamic LOD based on performance metrics
+4. **Object Pooling**: Reduced garbage collection overhead (50 particle pool max)
+5. **Time-based Spawning**: Accumulator system for consistent particle creation
+6. **Adaptive Quality**: Dynamic adjustment based on performance metrics
+7. **Memory Leak Prevention**: Automatic cleanup and particle lifecycle management
 
 ## 🌐 Ecosystem Vision
 

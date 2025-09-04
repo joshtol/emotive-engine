@@ -157,13 +157,14 @@ export const EMOTION_MODIFIERS = {
         addWarmth: true    // Glowing effect
     },
     
-    zen: {
-        speed: 0.6,        // 40% slower
-        amplitude: 0.8,    // 20% smaller
-        intensity: 0.7,    // 30% less intense
-        smoothness: 1.5,   // 50% smoother
-        regularity: 1.3,   // Very regular
-        addFlow: true      // Flowing motion
+    euphoria: {
+        speed: 1.4,        // 40% faster - energetic like spring awakening
+        amplitude: 1.5,    // 50% bigger - expansive like sunshine
+        intensity: 1.6,    // 60% more intense - radiant energy
+        smoothness: 1.3,   // 30% smoother - flowing like warm breeze
+        regularity: 0.8,   // Slightly irregular - organic, natural
+        addWarmth: true,   // Warm glowing effect
+        addLift: true      // Upward, rising motion like the sun
     },
     
     confused: {

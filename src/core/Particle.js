@@ -9,8 +9,9 @@
  *
  * @fileoverview Particle - Individual Particle Entity with Behavioral Movement
  * @author Emotive Engine Team
- * @version 2.0.0
+ * @version 2.1.0
  * @module Particle
+ * @changelog 2.1.0 - Added weighted color selection system and individual particle colors
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -36,6 +37,8 @@
  * │ • ascending   : Slow rise like incense (zen)                                      
  * │ • erratic     : Nervous, jittery movement (anxiety)                               
  * │ • cautious    : Slow with pauses (suspicion - deprecated)                         
+ * │ • radiant     : Radiating outward like sun rays (euphoria)                        
+ * │ • popcorn     : Spontaneous popping with gravity bounces (joy)                    
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -46,7 +49,7 @@
  * │ • Life (0.0 - 1.0)    : Current lifecycle stage                                   
  * │ • Size                : Radius in pixels (4-10 typical)                           
  * │ • Opacity             : Transparency (0.0 - 1.0)                                  
- * │ • Color               : Inherited from emotion                                    
+ * │ • Color               : Individual color from emotion palette with weights        
  * │ • Glow                : 33% chance of glow effect                                  
  * │ • Cell Shading        : 33% chance of cartoon style                               
  * └───────────────────────────────────────────────────────────────────────────────────
@@ -114,8 +117,61 @@ function cachedCos(angle) {
     return COS_CACHE[index];
 }
 
+/**
+ * Select a color from an array with optional weights
+ * @param {Array} colors - Array of color strings or {color, weight} objects
+ * @returns {string} Selected color
+ */
+function selectWeightedColor(colors) {
+    if (!colors || colors.length === 0) return '#FFFFFF';
+    
+    // Parse colors and weights
+    let totalExplicitWeight = 0;
+    let unweightedCount = 0;
+    const parsedColors = [];
+    
+    for (const item of colors) {
+        if (typeof item === 'string') {
+            parsedColors.push({ color: item, weight: null });
+            unweightedCount++;
+        } else if (item && typeof item === 'object' && item.color) {
+            parsedColors.push({ color: item.color, weight: item.weight || null });
+            if (item.weight) {
+                totalExplicitWeight += item.weight;
+            } else {
+                unweightedCount++;
+            }
+        }
+    }
+    
+    // Calculate weight for unweighted colors
+    const remainingWeight = Math.max(0, 100 - totalExplicitWeight);
+    const defaultWeight = unweightedCount > 0 ? remainingWeight / unweightedCount : 0;
+    
+    // Build cumulative probability table
+    const probTable = [];
+    let cumulative = 0;
+    
+    for (const item of parsedColors) {
+        const weight = item.weight !== null ? item.weight : defaultWeight;
+        cumulative += weight;
+        probTable.push({ color: item.color, threshold: cumulative });
+    }
+    
+    // Select based on random value
+    const random = Math.random() * cumulative;
+    for (const entry of probTable) {
+        if (random <= entry.threshold) {
+            return entry.color;
+        }
+    }
+    
+    // Fallback to last color
+    return parsedColors[parsedColors.length - 1].color;
+}
+
 class Particle {
-    constructor(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1) {
+    constructor(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null) {
         // Position and movement
         this.x = x;
         this.y = y;
@@ -135,6 +191,7 @@ class Particle {
         this.particleSizeMultiplier = particleSizeMultiplier;
         this.size = (4 + Math.random() * 6) * scaleFactor * particleSizeMultiplier; // 4-10 pixels scaled
         this.baseSize = this.size;
+        this.emotionColors = emotionColors; // Store emotion colors for use in behaviors
         this.color = '#ffffff';
         this.opacity = 1.0;
         
@@ -195,6 +252,12 @@ class Particle {
             case 'resting':
                 this.initializeResting();
                 break;
+            case 'radiant':
+                this.initializeRadiant();
+                break;
+            case 'popcorn':
+                this.initializePopcorn();
+                break;
             case 'ascending':
                 this.initializeAscending();
                 break;
@@ -204,39 +267,11 @@ class Particle {
             case 'cautious':
                 this.initializeCautious();
                 break;
-            case 'fizzy':
-                this.initializeFizzy();
-                break;
             default:
                 this.initializeAmbient();
         }
     }
 
-    /**
-     * Fizzy behavior - carbonated soda effect
-     * Rapid spawning with short life, creating a bubbling effect
-     */
-    initializeFizzy() {
-        // Rapid upward movement like bubbles
-        this.vx = (Math.random() - 0.5) * 0.15;  // Slight horizontal wobble
-        this.vy = -0.15 - Math.random() * 0.1;   // Fast upward
-        
-        // For excited emotion, make particles live longer to have more visible at once
-        if (this.emotion === 'excited') {
-            this.lifeDecay = 0.01;  // Half the decay rate = double the lifetime
-            this.size = (3 + Math.random() * 4) * (this.scaleFactor || 1);  // Slightly bigger
-        } else {
-            this.lifeDecay = 0.02;  // Very short life (about 3 seconds)
-            this.size = (2 + Math.random() * 4) * (this.scaleFactor || 1);  // Smaller particles
-        }
-        
-        this.behaviorData = {
-            wobbleSpeed: 0.002 + Math.random() * 0.001,  // Rapid wobble
-            wobbleAmount: 0.1,                            // Small wobble
-            riseAcceleration: -0.0008,                    // Accelerate upward like bubbles
-            popChance: this.emotion === 'excited' ? 0.0005 : 0.001  // Less popping when excited
-        };
-    }
 
     /**
      * Ambient behavior - gentle outward movement (neutral)
@@ -247,6 +282,12 @@ class Particle {
         this.vx = 0;  // NO horizontal drift
         this.vy = -0.04 - Math.random() * 0.02;  // Slower upward movement
         this.lifeDecay = 0.002;  // Even slower fade - particles last ~8 seconds
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
+        
         this.behaviorData = {
             // Languid upward drift
             upwardSpeed: 0.0005,      // Very slow continuous upward drift
@@ -263,6 +304,12 @@ class Particle {
         this.vy = -0.05 - Math.random() * 0.03;   // Much slower upward movement
         this.lifeDecay = 0.002;                   // Very slow decay
         this.baseOpacity = 0.7 + Math.random() * 0.3;  // More opaque (70-100%)
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
+        
         this.behaviorData = {
             buoyancy: 0.001,      // Even gentler upward force
             driftAmount: 0.005    // Minimal drift
@@ -276,6 +323,12 @@ class Particle {
         this.vx = (Math.random() - 0.5) * 0.03;   // MUCH slower horizontal drift
         this.vy = 0.05 + Math.random() * 0.05;    // MUCH slower falling
         this.lifeDecay = 0.002;                   // Very slow decay
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
+        
         this.behaviorData = {
             gravity: 0.002,       // Very gentle gravity
             drag: 0.995           // High drag for slow fall
@@ -291,6 +344,12 @@ class Particle {
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
         this.lifeDecay = 0.015;
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
+        
         this.behaviorData = {
             acceleration: 0.05,
             jitter: 0.3,
@@ -306,6 +365,12 @@ class Particle {
         this.vx = 0;
         this.vy = 0;
         this.lifeDecay = 0.008;  // Live longer to spread further
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
+        
         this.behaviorData = {
             fleeSpeed: 2.0,  // Much faster fleeing
             panicFactor: 1.2,  // More panicked movement
@@ -327,6 +392,11 @@ class Particle {
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
         this.lifeDecay = isSuspicion ? 0.010 : 0.015;  // Live longer to spread further
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
         
         // Make suspicion particles more visible
         if (isSuspicion) {
@@ -368,6 +438,12 @@ class Particle {
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
         this.lifeDecay = 0.012;
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
+        
         this.behaviorData = {
             // Higher attraction and chaos for connecting state
             attractionForce: 0.008,  // Stronger pull (original)
@@ -384,6 +460,12 @@ class Particle {
         this.vx = 0;  // NO horizontal at all
         this.vy = -0.04 - Math.random() * 0.02;  // Slow upward movement only
         this.lifeDecay = 0.002;  // Very slow fade - particles last ~25 seconds
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
+        
         this.behaviorData = {
             // Ultra-languid upward drift
             upwardSpeed: 0.0005,      // Tiny continuous upward
@@ -393,10 +475,91 @@ class Particle {
     }
     
     /**
+     * Radiant behavior - particles radiate outward like sun rays
+     */
+    initializeRadiant() {
+        // Particles burst outward from center like sunbeams
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.8 + Math.random() * 0.4; // Moderate to fast speed
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.lifeDecay = 0.006; // Moderate life - last ~8-10 seconds
+        
+        // Use emotion colors if provided, otherwise default sunrise colors
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        } else {
+            // Default golden sunrise colors
+            const colors = ['#FFD700', '#FFB347', '#FFA500', '#FF69B4'];
+            this.color = selectWeightedColor(colors);
+        }
+        
+        // More particles have glow for radiant effect
+        this.hasGlow = Math.random() < 0.7; // 70% chance of glow
+        this.glowSizeMultiplier = this.hasGlow ? (1.5 + Math.random() * 0.5) : 0; // Bigger glow
+        
+        this.behaviorData = {
+            // Continuous outward radiation
+            radialSpeed: 0.02,        // Constant outward acceleration
+            shimmer: Math.random() * Math.PI * 2, // Initial shimmer phase
+            shimmerSpeed: 0.1,        // Shimmer oscillation speed
+            friction: 0.98            // Slight slowdown over time
+        };
+    }
+    
+    /**
+     * Popcorn behavior - spontaneous popping particles (joy)
+     */
+    initializePopcorn() {
+        // Start with little to no movement (kernel waiting to pop)
+        this.vx = (Math.random() - 0.5) * 0.1;
+        this.vy = (Math.random() - 0.5) * 0.1;
+        this.lifeDecay = 0.008; // Medium-short life - particles pop and fade
+        
+        // Use emotion colors if provided, otherwise default popcorn colors
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        } else {
+            // Default popcorn colors
+            const colors = ['#FFFFFF', '#FFFACD', '#FFF8DC', '#FFFFE0', '#FAFAD2'];
+            this.color = selectWeightedColor(colors);
+        }
+        
+        // Vary sizes more dramatically - some big fluffy pieces, some small
+        this.size = (Math.random() < 0.3) ? 
+            (8 + Math.random() * 4) * this.scaleFactor * this.particleSizeMultiplier : // 30% big pieces
+            (2 + Math.random() * 4) * this.scaleFactor * this.particleSizeMultiplier;  // 70% small pieces
+        this.baseSize = this.size;
+        
+        // Less glow, more solid popcorn look
+        this.hasGlow = Math.random() < 0.2; // Only 20% have glow
+        this.glowSizeMultiplier = this.hasGlow ? 1.2 : 0;
+        
+        this.behaviorData = {
+            // Popcorn popping mechanics
+            popDelay: Math.random() * 2000,     // Random delay before popping (0-2 seconds)
+            hasPopped: false,                    // Track if this kernel has popped
+            popStrength: 1.5 + Math.random() * 2, // How hard it pops (velocity multiplier)
+            bounceCount: 0,                      // Track bounces after popping
+            maxBounces: 2 + Math.floor(Math.random() * 3), // 2-4 bounces
+            gravity: 0.02,                       // Gravity acceleration
+            bounceDamping: 0.6,                  // Energy lost per bounce
+            spinRate: (Math.random() - 0.5) * 0.3, // Rotation while flying
+            lifetime: 0                          // Track particle age for pop timing
+        };
+    }
+    
+    /**
      * Orbiting behavior - gentle circular motion (love)
      */
     initializeOrbiting() {
         this.lifeDecay = 0.002;  // Very slow decay for love
+        
+        // Use emotion colors if provided
+        if (this.emotionColors && this.emotionColors.length > 0) {
+            this.color = selectWeightedColor(this.emotionColors);
+        }
+        
         this.behaviorData = {
             angle: Math.random() * Math.PI * 2,
             radius: 40 + Math.random() * 60,
@@ -620,6 +783,12 @@ class Particle {
             case 'resting':
                 this.updateResting(dt, centerX, centerY);
                 break;
+            case 'radiant':
+                this.updateRadiant(dt, centerX, centerY);
+                break;
+            case 'popcorn':
+                this.updatePopcorn(dt, centerX, centerY);
+                break;
             case 'ascending':
                 this.updateAscending(dt, centerX, centerY);
                 break;
@@ -629,32 +798,9 @@ class Particle {
             case 'cautious':
                 this.updateCautious(dt, centerX, centerY);
                 break;
-            case 'fizzy':
-                this.updateFizzy(dt);
-                break;
         }
     }
 
-    /**
-     * Update fizzy behavior - carbonated bubble effect
-     */
-    updateFizzy(dt) {
-        const data = this.behaviorData;
-        
-        // Add wobble for bubble-like movement
-        this.vx += Math.sin(this.age * data.wobbleSpeed * 100) * data.wobbleAmount * dt;
-        
-        // Accelerate upward like rising bubbles
-        this.vy += data.riseAcceleration * dt;
-        
-        // Apply slight friction to horizontal movement
-        this.vx *= Math.pow(0.98, dt / 16.67);
-        
-        // Random chance to "pop" early (sudden death)
-        if (Math.random() < data.popChance * dt) {
-            this.age = 1.0;  // Instant death
-        }
-    }
 
     /**
      * Update ambient behavior - gentle outward emanation
@@ -852,6 +998,83 @@ class Particle {
     }
     
     /**
+     * Update radiant behavior - particles radiate outward like sun rays
+     */
+    updateRadiant(dt, centerX, centerY) {
+        const data = this.behaviorData;
+        
+        // Calculate direction from center
+        const dx = this.x - centerX;
+        const dy = this.y - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 0) {
+            // Normalized direction away from center
+            const dirX = dx / dist;
+            const dirY = dy / dist;
+            
+            // Apply radial acceleration (sunburst effect)
+            this.vx += dirX * data.radialSpeed * dt;
+            this.vy += dirY * data.radialSpeed * dt;
+        }
+        
+        // Add shimmer effect (oscillating brightness/size)
+        data.shimmer += data.shimmerSpeed * dt;
+        const shimmerEffect = Math.sin(data.shimmer);
+        this.size = this.baseSize * (1 + shimmerEffect * 0.2); // Size oscillates ±20%
+        this.opacity = this.baseOpacity * (1 + shimmerEffect * 0.3); // Opacity oscillates ±30%
+        
+        // Apply friction
+        this.vx *= Math.pow(data.friction, dt);
+        this.vy *= Math.pow(data.friction, dt);
+    }
+    
+    /**
+     * Update popcorn behavior - spontaneous popping with bounces
+     */
+    updatePopcorn(dt, centerX, centerY) {
+        const data = this.behaviorData;
+        data.lifetime += dt * 16.67; // Convert to milliseconds
+        
+        // Check if it's time to pop
+        if (!data.hasPopped && data.lifetime > data.popDelay) {
+            // POP! Sudden burst of velocity
+            data.hasPopped = true;
+            const popAngle = Math.random() * Math.PI * 2;
+            this.vx = Math.cos(popAngle) * data.popStrength;
+            this.vy = Math.sin(popAngle) * data.popStrength - 1; // Slight upward bias
+            
+            // Expand size when popping
+            this.size = this.baseSize * 1.5;
+        }
+        
+        if (data.hasPopped) {
+            // Apply gravity
+            this.vy += data.gravity * dt;
+            
+            // Apply spin (visual effect would need rotation rendering)
+            // data.spinRate is stored for potential visual use
+            
+            // Check for ground bounce
+            const groundLevel = centerY + 100 * this.scaleFactor; // Below the orb
+            if (this.y > groundLevel && data.bounceCount < data.maxBounces) {
+                this.y = groundLevel;
+                this.vy = -Math.abs(this.vy) * data.bounceDamping; // Bounce up with damping
+                this.vx *= 0.9; // Reduce horizontal speed on bounce
+                data.bounceCount++;
+                
+                // Shrink slightly with each bounce
+                this.size = this.baseSize * (1.5 - data.bounceCount * 0.1);
+            }
+            
+            // Fade faster after final bounce
+            if (data.bounceCount >= data.maxBounces) {
+                this.lifeDecay = 0.02; // Fade quickly
+            }
+        }
+    }
+    
+    /**
      * Update orbiting behavior - circular motion
      */
     updateOrbiting(dt, centerX, centerY) {
@@ -948,13 +1171,16 @@ class Particle {
         // Ensure size is never negative
         const safeSize = Math.max(0.1, this.size);
         
+        // Use the particle's own color if set, otherwise fall back to emotion color
+        const particleColor = this.color || emotionColor;
+        
         ctx.save();
         
         if (this.isCellShaded) {
             // Cell shaded style - hard edges, no gradients
             
             // Draw outline (darker color)
-            ctx.strokeStyle = this.hexToRgba(emotionColor, this.opacity * 0.9);
+            ctx.strokeStyle = this.hexToRgba(particleColor, this.opacity * 0.9);
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(renderX, renderY, safeSize, 0, Math.PI * 2);
@@ -962,7 +1188,7 @@ class Particle {
             
             // Draw flat color fill with discrete opacity levels and ephemeral base
             const discreteOpacity = Math.floor(this.opacity * 3) / 3;  // 3 discrete levels: 0, 0.33, 0.66, 1
-            ctx.fillStyle = this.hexToRgba(emotionColor, discreteOpacity * (this.baseOpacity || 0.5) * 0.5);
+            ctx.fillStyle = this.hexToRgba(particleColor, discreteOpacity * (this.baseOpacity || 0.5) * 0.5);
             ctx.beginPath();
             ctx.arc(renderX, renderY, Math.max(0.1, safeSize - 1), 0, Math.PI * 2);
             ctx.fill();
@@ -978,7 +1204,7 @@ class Particle {
             // Regular smooth style (2/3 of particles)
             
             // Set the fill color once
-            ctx.fillStyle = emotionColor;
+            ctx.fillStyle = particleColor;
             
             // Draw glow first if this particle has one
             if (this.hasGlow) {
@@ -1352,8 +1578,10 @@ class Particle {
                 }
                 
                 // Calculate target radius based on breath phase
-                const inhaleRadius = (motion.inhaleRadius || 1.5) * this.orbRadius;
-                const exhaleRadius = (motion.exhaleRadius || 0.3) * this.orbRadius;
+                // Use a fixed reference radius since particles don't have orbRadius
+                const referenceRadius = 100 * (this.scaleFactor || 1);
+                const inhaleRadius = (motion.inhaleRadius || 1.5) * referenceRadius;
+                const exhaleRadius = (motion.exhaleRadius || 0.8) * referenceRadius;
                 const targetRadius = exhaleRadius + (inhaleRadius - exhaleRadius) * breathPhase;
                 
                 // Current position relative to center
@@ -1685,23 +1913,56 @@ class Particle {
     /**
      * Apply undertone modifications to particle behavior
      * @param {number} dt - Normalized delta time
-     * @param {Object} modifier - Undertone modifier settings
+     * @param {Object} modifier - Undertone modifier settings (can be weighted)
      */
     applyUndertoneModifier(dt, modifier) {
+        // Early exit if no modifier
+        if (!modifier) return;
         
-        // Speed modification
+        // Handle weighted modifiers (smooth transitions)
+        const weight = modifier.weight !== undefined ? modifier.weight : 1.0;
+        
+        // Speed modification (apply with weight for smooth transitions)
         if (modifier.particleSpeedMult && modifier.particleSpeedMult !== 1.0) {
-            this.vx *= modifier.particleSpeedMult;
-            this.vy *= modifier.particleSpeedMult;
+            // Store base velocities if not already stored
+            if (!this.undertoneData) {
+                this.undertoneData = {
+                    baseVx: this.vx,
+                    baseVy: this.vy,
+                    lastSpeedMult: 1.0
+                };
+            }
+            
+            // Apply multiplier to BASE velocity, not current velocity
+            const speedMult = 1.0 + (modifier.particleSpeedMult - 1.0) * weight;
+            
+            // Reset to base velocity then apply new multiplier
+            this.vx = this.undertoneData.baseVx * speedMult;
+            this.vy = this.undertoneData.baseVy * speedMult;
+            
+            // Update base velocities if behavior changes significantly
+            if (Math.abs(speedMult - this.undertoneData.lastSpeedMult) > 0.5) {
+                this.undertoneData.baseVx = this.vx / speedMult;
+                this.undertoneData.baseVy = this.vy / speedMult;
+            }
+            this.undertoneData.lastSpeedMult = speedMult;
+        } else if (this.undertoneData) {
+            // No speed modifier, reset to base velocities
+            this.vx = this.undertoneData.baseVx;
+            this.vy = this.undertoneData.baseVy;
+            this.undertoneData = null;
         }
         
-        // Particle burst for confident undertone
+        // Particle burst for confident undertone (apply with weight)
         if (modifier.particleBurst) {
             if (!this.burstData) {
                 this.burstData = {
                     timer: Math.random() * 200, // Random start
                     active: false,
-                    duration: 0
+                    duration: 0,
+                    baseVx: this.vx,
+                    baseVy: this.vy,
+                    boosted: false
                 };
             }
             
@@ -1711,15 +1972,27 @@ class Particle {
                 this.burstData.active = true;
                 this.burstData.duration = 30; // Half second burst
                 this.burstData.timer = 200 + Math.random() * 100; // Next in 3-5 seconds at 60fps
+                this.burstData.baseVx = this.vx;
+                this.burstData.baseVy = this.vy;
+                this.burstData.boosted = false;
             }
             
             if (this.burstData.active) {
-                // Speed boost during burst
-                this.vx *= 1.5;
-                this.vy *= 1.5;
+                // Apply speed boost ONCE at the start of burst
+                if (!this.burstData.boosted) {
+                    const boostFactor = 1.0 + (0.5 * weight);
+                    this.vx = this.burstData.baseVx * boostFactor;
+                    this.vy = this.burstData.baseVy * boostFactor;
+                    this.burstData.boosted = true;
+                }
+                
                 this.burstData.duration -= dt;
                 if (this.burstData.duration <= 0) {
+                    // Reset to base velocity after burst
+                    this.vx = this.burstData.baseVx;
+                    this.vy = this.burstData.baseVy;
                     this.burstData.active = false;
+                    this.burstData.boosted = false;
                 }
             }
         }
@@ -1747,8 +2020,8 @@ class Particle {
             }
             
             if (this.slowdownData.active) {
-                // Nearly stop
-                const slowFactor = 0.1;
+                // Nearly stop (weighted for smooth transition)
+                const slowFactor = 1.0 - (0.9 * weight); // Blend from 1.0 to 0.1
                 this.vx = this.slowdownData.originalVx * slowFactor;
                 this.vy = this.slowdownData.originalVy * slowFactor;
                 this.slowdownData.duration -= dt;
@@ -1781,9 +2054,9 @@ class Particle {
             }
             
             if (this.spiralData.active) {
-                // Tight spiral
+                // Tight spiral (weighted for smooth transition)
                 this.spiralData.angle += 0.5 * dt;
-                const spiralRadius = 0.05;
+                const spiralRadius = 0.05 * weight;
                 this.vx += Math.cos(this.spiralData.angle) * spiralRadius * dt;
                 this.vy += Math.sin(this.spiralData.angle) * spiralRadius * dt;
                 this.spiralData.duration -= dt;
@@ -1811,8 +2084,8 @@ class Particle {
             }
             
             if (this.pullData.active) {
-                // Gentle pull toward center (assuming center is at origin in particle space)
-                const pullStrength = 0.001;
+                // Gentle pull toward center (weighted for smooth transition)
+                const pullStrength = 0.001 * weight;
                 const dx = -this.x * pullStrength;
                 const dy = -this.y * pullStrength;
                 this.vx += dx * dt;
@@ -1848,8 +2121,8 @@ class Particle {
                 const perpX = -this.vy / speed;
                 const perpY = this.vx / speed;
                 
-                // Apply sine wave wobble
-                const wobbleStrength = Math.sin(this.wobbleData.phase) * this.wobbleData.amplitude;
+                // Apply sine wave wobble (weighted for smooth transition)
+                const wobbleStrength = Math.sin(this.wobbleData.phase) * this.wobbleData.amplitude * weight;
                 this.vx += perpX * wobbleStrength * dt;
                 this.vy += perpY * wobbleStrength * dt;
                 
@@ -1915,7 +2188,7 @@ class Particle {
      * @param {number} y - New Y position
      * @param {string} behavior - New behavior type
      */
-    reset(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1) {
+    reset(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null) {
         this.x = x;
         this.y = y;
         this.vx = 0;
@@ -1926,6 +2199,7 @@ class Particle {
         this.particleSizeMultiplier = particleSizeMultiplier;
         this.size = (4 + Math.random() * 6) * scaleFactor * particleSizeMultiplier;  // Scaled size
         this.baseSize = this.size;
+        this.emotionColors = emotionColors;  // Store emotion colors
         
         // Clear cached gradient for reuse
         this.cachedGradient = null;
@@ -1935,6 +2209,7 @@ class Particle {
         // Clear behavior data to prevent memory leaks
         this.rotation = 0;
         this.phaseOffset = Math.random() * Math.PI * 2;
+        this.color = '#ffffff';  // Reset color to white before reinitializing
         this.behavior = behavior;
         
         // Clear gesture data if it exists
