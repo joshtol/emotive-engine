@@ -8,6 +8,8 @@
 
   **A high-performance, emotionally-aware particle mascot system for next-generation conversational UIs**
   
+  *"Making invisible states visible through coordinated particle chaos"*
+  
   Built with pure Canvas 2D API, achieving smooth 60fps animations with thousands of particles - no WebGL, no heavy frameworks required.
 </div>
 
@@ -36,21 +38,21 @@ npm install emotive-engine
 ```
 
 ```javascript
-import EmotiveEngine from 'emotive-engine';
+import EmotiveMascot from './src/EmotiveMascot.js';
 
 // Create an emotive mascot
-const mascot = new EmotiveEngine({
+const mascot = new EmotiveMascot({
   canvasId: 'mascot-canvas',
   emotion: 'neutral',
-  particleCount: 100
+  renderingStyle: 'classic'  // or 'scifi' for alternative renderer
 });
 
 // Start the animation
 mascot.start();
 
-// React to emotions
+// Set emotions and trigger gestures
 mascot.setEmotion('joy');
-mascot.addGesture('wave');
+mascot.express('bounce');  // Direct gesture execution
 
 // Respond to events
 mascot.on('stateChange', (state) => {
@@ -58,11 +60,9 @@ mascot.on('stateChange', (state) => {
 });
 ```
 
-## 🎨 Live Demos
+## 🎨 Live Demo
 
-- [**Standard Demo**](https://joshtol.github.io/emotive-engine/emotive-demo.html) - Classic aesthetic with emotion controls
-- [**Sci-Fi Theme**](https://joshtol.github.io/emotive-engine/emotive-scifi-demo.html) - Futuristic UI with enhanced visual effects
-- [**Full Controls**](https://joshtol.github.io/emotive-engine/emotive-demo-full-controls.html) - Complete feature showcase
+- [**Sci-Fi Theme**](emotive-scifi-demo.html) - Futuristic UI with enhanced visual effects showcasing the full emotional range
 
 ## 🧠 Emotional Intelligence
 
@@ -70,45 +70,46 @@ The mascot responds to emotional states with sophisticated particle behaviors:
 
 | Emotion | Particle Behavior | Visual Characteristics |
 |---------|------------------|------------------------|
-| **Joy** | Rising, celebratory | Golden particles, increased glow |
-| **Curiosity** | Exploring, probing | Particles extend outward, searching |
-| **Contemplation** | Slow orbital motion | Deep blues, thoughtful movement |
-| **Excitement** | Rapid movement | Vibrant colors, energetic bursts |
-| **Sadness** | Falling, drooping | Blue tones, reduced energy |
-| **Love** | Heart formations | Pink/red hues, warm glow |
-| **Fear** | Clustering, shaking | Particles huddle together |
-| **Speaking** | Rhythmic pulsing | Synchronized with speech patterns |
+| **Neutral** | Ambient drift | Soft blue, calm breathing |
+| **Joy** | Rising, celebratory | Golden amber particles, increased glow |
+| **Sadness** | Falling, heavy | Deep indigo tones, slow breathing |
+| **Anger** | Aggressive, chaotic | Crimson particles, rapid breathing, jitter |
+| **Fear** | Scattering, fleeing | Deep violet, trembling, hyperventilation |
+| **Surprise** | Explosive burst | Bright amber-orange, initial gasp |
+| **Disgust** | Repelling outward | Sickly green, shallow breathing |
+| **Love** | Orbiting harmony | Hot pink, deep satisfied breaths |
+| **Suspicion** | Scanning, cautious | Amber-brown, controlled breathing |
+| **Excited** | Fizzy carbonation | Hot magenta, vibrating with energy |
+| **Thinking** | Circular orbiting | Indigo, contemplative breathing |
+| **Speaking** | Rhythmic pulsing | Variable based on tone |
+| **Focused** | Convergent streams | Deep blue, steady concentration |
+| **Zen** | Perfect stillness | Pure white, minimal movement |
+| **Resting** | Languid drift | Soft purple, natural breathing |
 
 ## 🔧 Advanced Configuration
 
 ```javascript
-const mascot = new EmotiveEngine({
+const mascot = new EmotiveMascot({
   // Canvas setup
   canvasId: 'mascot-canvas',
   width: 400,
   height: 400,
   
-  // Particle configuration
-  particleCount: 150,
-  particleSize: { min: 2, max: 6 },
+  // Rendering style
+  renderingStyle: 'classic',  // 'classic' or 'scifi'
   
   // Performance
   targetFPS: 60,
-  enableWorkers: true,
-  adaptivePerformance: true,
+  enableDegradation: true,
   
-  // Visual settings
-  glowIntensity: 1.2,
-  motionBlur: 0.8,
+  // Features
+  enableGaze: true,           // Eye-following cursor
+  enableIdle: true,           // Blinking and swaying
+  enableAccessibility: true,  // Screen reader support
+  enableMobile: true,         // Touch optimization
   
-  // Behavior
-  emotion: 'neutral',
-  undertone: 'calm',
-  enableGestures: true,
-  enablePhysics: true,
-  
-  // Audio reactive (optional)
-  audioEnabled: false,
+  // Audio (optional)
+  enableAudio: false,
   audioSensitivity: 0.7
 });
 ```
@@ -117,12 +118,17 @@ const mascot = new EmotiveEngine({
 
 ### Core Components
 
-- **Emotive EngineRenderer**: High-performance Canvas 2D rendering engine
-- **ParticleSystem**: Advanced particle physics and behaviors
-- **EmotiveStateMachine**: Emotion management and transitions
-- **GestureCompositor**: Complex animation layering
-- **AnimationController**: Frame timing and interpolation
-- **PerformanceMonitor**: Real-time optimization and degradation
+- **EmotiveMascot**: Main orchestrator and public API
+- **AnimationController**: Main animation loop and performance management
+- **EmotiveRenderer**: Visual rendering of orb, glow, and eyes
+- **ParticleSystem**: Object-pooled particle lifecycle manager
+- **EmotiveStateMachine**: Emotional state transitions and undertones
+- **PerformanceMonitor**: FPS tracking and adaptive quality
+- **DegradationManager**: 4-tier quality levels (HIGH/MEDIUM/LOW/MINIMAL)
+- **GazeTracker**: Cursor-aware eye following
+- **IdleBehavior**: Organic blinking and swaying
+- **EventManager**: Centralized event system with cleanup
+- **PluginSystem**: Extensibility for custom behaviors
 
 ### Performance Optimizations
 
@@ -163,13 +169,13 @@ Core visualization and animation engine - the heart of the system.
 ### Integration Pattern
 ```javascript
 // Future ecosystem usage
-import EmotiveEngine from 'emotive-engine';
-import Emotive EngineVoice from 'emotive-voice';
-import Emotive EngineLLM from 'emotive-llm-bridge';
+import EmotiveMascot from 'emotive-engine';
+import EmotiveVoice from 'emotive-voice';
+import EmotiveLLM from 'emotive-llm-bridge';
 
-const mascot = new EmotiveEngine({ canvasId: 'mascot' });
-const voice = new Emotive EngineVoice({ mascot });
-const llm = new Emotive EngineLLM({ mascot, model: 'gpt-4' });
+const mascot = new EmotiveMascot({ canvasId: 'mascot' });
+const voice = new EmotiveVoice({ mascot });
+const llm = new EmotiveLLM({ mascot, model: 'gpt-4' });
 
 // Seamless integration
 llm.on('response', (text, emotion) => {
@@ -186,6 +192,83 @@ llm.on('response', (text, emotion) => {
 - **Gaming**: Companion characters, emotion-driven NPCs
 - **Accessibility**: Visual communication for non-verbal interaction
 - **Brand Mascots**: Interactive web presence for companies
+
+## 🤖 Potential Usage: AI Agent Communication Interface
+
+*This possibility was identified by Claude (AI agent) after analyzing the Emotive Engine architecture.*
+
+The Emotive Engine could serve as a visual communication layer for AI agents like Claude, creating a more intuitive and transparent interaction model:
+
+### Cognitive State Visualization
+AI agents could map their internal processing states to the mascot's emotional expressions:
+- **Confidence Levels**: High confidence → calm/assured state; Uncertainty → curious/contemplative
+- **Processing States**: Searching → scanning particles; Thinking → orbital patterns; Writing code → crystallizing effects
+- **Task Complexity**: Simple tasks → gentle breathing; Complex operations → intense particle activity
+
+### Real-time Interaction Feedback
+```javascript
+// Theoretical AI agent integration
+mascot.setEmotion('thinking').addUndertone('focused');
+// During complex analysis...
+mascot.triggerGesture('lean-forward');
+// Upon finding solution...
+mascot.setEmotion('eureka').triggerGesture('bounce');
+```
+
+### Semantic Gesture Mapping
+Different AI operations could trigger specific visual behaviors:
+- **Tool Usage**: File reading (orbiting particles), web searching (scattering/converging), code generation (building/stacking)
+- **Conversation Flow**: Greeting (happy wave), error encountered (confused shake), task completed (satisfied nod)
+- **Attention Indicators**: Gaze following user's cursor focus, breathing rate syncing with response generation
+
+### Benefits for Human-AI Interaction
+- **Transparency**: Visual cues make the AI's "thinking process" more observable
+- **Engagement**: Dynamic visual feedback creates a more lifelike interaction
+- **Emotional Connection**: Non-verbal communication enhances user trust and understanding
+- **Reduced Cognitive Load**: Visual states communicate status without requiring text updates
+
+This approach would transform AI interactions from text-in-a-box to a more natural, emotionally-aware communication experience, making AI agents feel less like tools and more like collaborative partners.
+
+## 🔮 Extended Applications Identified by Claude
+
+*After analyzing the Emotive Engine's architecture, Claude (AI agent) identified these additional applications based on the system's core capabilities.*
+
+### Immediate Applications (Zero Modifications)
+
+#### Developer Tool Communication
+Build processes, Git operations, and API health could map directly to existing emotional states and particle behaviors - compilation errors trigger "frustrated" states with aggressive particles, successful deployments show "joy" with rising celebratory particles, merge conflicts create "confused" scattering patterns.
+
+#### Sobriety Companion
+The existing emotional vocabulary naturally fits recovery journeys: "tempted" (particles pulling inward), "strong" (radiating confidence), "vulnerable" (scattering fear), "proud" (rising joy). A non-judgmental visual companion for daily emotional check-ins.
+
+#### Data Stream Visualization
+Network traffic, stock sentiment, or weather patterns could drive the emotional states directly - the particle behaviors already express the right metaphors for flow, congestion, and volatility.
+
+### Enhanced Applications (Minimal Modifications)
+
+#### Plant Communication Interface
+Map sensor data to existing states: soil moisture drives particle spawn rates, photosynthesis levels control glow intensity, "tired" vs "energetic" shows plant health. The "reaching" gesture becomes literal - particles extend toward light sources.
+
+#### Medical Breathing Coach
+The breathing animation system could synchronize with therapeutic patterns, while particle behaviors indicate breathing quality - smooth orbiting for good rhythm, chaotic scattering for hyperventilation.
+
+#### Smart Home Ambiance
+Room mood controller where emotional states trigger IoT devices - "cozy" dims lights and particles glow warm, "focused" brightens workspace and particles sharpen into geometric patterns.
+
+### Transformative Applications (Significant Extensions)
+
+#### Quantum State Visualizer
+Each particle represents a qubit in superposition. "Ambient" shows quantum coherence, "aggressive" indicates decoherence, "crystallizing" represents error correction. Emotional transitions become quantum gate operations. The particle lifecycle mirrors quantum measurement collapse.
+
+#### Collaborative Workspace Avatar
+Multi-user particle systems where team members control different particle groups, creating visual consensus through particle democracy - shared emotions emerge from individual particle behaviors.
+
+#### Biometric Art Installation
+Heart rate variability drives particle chaos, EEG patterns control emotional transitions, skin conductance affects particle attraction/repulsion. Each person generates a unique "emotional fingerprint" through their biological signals.
+
+### Why These Applications Work
+
+The engine's 13 particle behaviors can represent any dual-state system (attraction/repulsion, order/chaos, growth/decay). The emotional state machine provides a familiar metaphor for complex state transitions. The gesture queue naturally sequences any time-based event series. Most importantly, the system excels at its core purpose: making invisible internal states visible and emotionally comprehensible through coordinated particle dynamics.
 
 ## 📊 Performance Metrics
 
@@ -231,18 +314,17 @@ mascot.stop()            // Pause animation
 mascot.destroy()         // Clean up resources
 
 // Emotions
-mascot.setEmotion(name, intensity)     // Set emotional state
-mascot.addUndertone(undertone)         // Add emotional modifier
-mascot.blendEmotions(emotions, weights) // Blend multiple emotions
+mascot.setEmotion(name, undertone, duration)  // Set emotional state with optional undertone
+mascot.getEmotionalState()                    // Get current emotion and undertone
 
 // Gestures
-mascot.addGesture(name, options)       // Trigger gesture animation
-mascot.queueGestures(gestures)         // Chain multiple gestures
+mascot.express(gesture)                // Execute single gesture
+mascot.chain(...gestures)              // Chain multiple gestures (limited support)
 
 // Interaction
-mascot.respondToAudio(audioData)       // React to audio input
-mascot.setGazeTarget(x, y)            // Look at specific point
-mascot.pulse(intensity)               // Attention-getting pulse
+mascot.startSpeaking(audioContext)    // Start speech reactivity mode
+mascot.stopSpeaking()                 // Stop speech reactivity
+mascot.lookAt(x, y)                   // Direct gaze to point (if gaze enabled)
 
 // Events
 mascot.on('stateChange', callback)
