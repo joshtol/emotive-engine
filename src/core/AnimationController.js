@@ -80,6 +80,8 @@ import SimpleFPSCounter from './SimpleFPSCounter.js';
 class AnimationController {
     constructor(errorBoundary, config = {}) {
         this.errorBoundary = errorBoundary;
+        this.config = config;
+        this.config.targetFPS = config.targetFPS || 60;
         
         // Animation state
         this.isRunning = false;
@@ -94,11 +96,14 @@ class AnimationController {
             document.addEventListener('visibilitychange', this.handleVisibilityChange);
         }
         
-        // Performance monitoring (delegated to PerformanceMonitor)
+        // PerformanceMonitor DISABLED - no FPS interference
+        this.performanceMonitor = null;
+        /* 
         this.performanceMonitor = new PerformanceMonitor(config);
         this.performanceMonitor.setEventCallback((event, data) => {
             this.emit(event, data);
         });
+        */
         
         // Simple FPS counter for accurate display
         this.fpsCounter = new SimpleFPSCounter();
@@ -136,8 +141,10 @@ class AnimationController {
             }
         }
         
-        // Configure performance monitor with subsystems
-        this.performanceMonitor.setSubsystems(this.subsystems);
+        // PerformanceMonitor disabled
+        if (this.performanceMonitor) {
+            this.performanceMonitor.setSubsystems(this.subsystems);
+        }
         
         console.log('AnimationController subsystems configured');
     }
@@ -307,8 +314,10 @@ class AnimationController {
             
             this.lastFrameTime = currentTime;
             
-            // Start performance monitoring for this frame
-            this.performanceMonitor.startFrame(currentTime);
+            // PerformanceMonitor disabled
+            if (this.performanceMonitor) {
+                this.performanceMonitor.startFrame(currentTime);
+            }
             
             // Update simple FPS counter
             this.fpsCounter.update(currentTime);
@@ -319,8 +328,10 @@ class AnimationController {
             // Render the current frame
             this.render();
             
-            // End performance monitoring for this frame
-            this.performanceMonitor.endFrame(performance.now());
+            // PerformanceMonitor disabled
+            if (this.performanceMonitor) {
+                this.performanceMonitor.endFrame(performance.now());
+            }
             
             // Schedule next frame using requestAnimationFrame for optimal timing
             this.animationFrameId = requestAnimationFrame(() => this.animate());
@@ -385,12 +396,14 @@ class AnimationController {
                 }
             }
             
-            // Update performance monitor with current system state
-            this.performanceMonitor.updateMetrics({
-                particleCount: this.subsystems.particleSystem?.getActiveParticleCount?.() || 0,
-                gestureQueueLength: 0,
-                audioLatency: this.subsystems.soundSystem?.getLatency?.() || 0
-            });
+            // PerformanceMonitor disabled
+            if (this.performanceMonitor) {
+                this.performanceMonitor.updateMetrics({
+                    particleCount: this.subsystems.particleSystem?.getActiveParticleCount?.() || 0,
+                    gestureQueueLength: 0,
+                    audioLatency: this.subsystems.soundSystem?.getLatency?.() || 0
+                });
+            }
             
         }, 'subsystem-update')();
     }
@@ -417,15 +430,13 @@ class AnimationController {
      * @returns {Object} Performance data
      */
     getPerformanceMetrics() {
-        const metrics = this.performanceMonitor.getMetrics();
+        // PerformanceMonitor disabled - use simple FPS counter only
         const fpsMetrics = this.fpsCounter ? this.fpsCounter.getMetrics() : {};
         return {
-            ...metrics,
-            // Override with simple FPS counter values if available
-            fps: fpsMetrics.fps || metrics.fps,
-            instantFps: fpsMetrics.smoothedFPS || metrics.instantFps,
-            frameTime: fpsMetrics.frameTime || metrics.frameTime,
-            averageFrameTime: fpsMetrics.averageFrameTime || metrics.averageFrameTime,
+            fps: fpsMetrics.fps || 60,
+            instantFps: fpsMetrics.smoothedFPS || 60,
+            frameTime: fpsMetrics.frameTime || 16.67,
+            averageFrameTime: fpsMetrics.averageFrameTime || 16.67,
             isRunning: this.isRunning,
             deltaTime: this.deltaTime
         };
@@ -436,11 +447,8 @@ class AnimationController {
      * @param {number} fps - Target FPS value
      */
     setTargetFPS(fps) {
-        if (typeof fps !== 'number' || fps <= 0) {
-            throw new Error('Target FPS must be a positive number');
-        }
-        this.performanceMonitor.setTargetFPS(fps);
-        console.log(`AnimationController target FPS set to ${fps}`);
+        // DISABLED - no FPS changes allowed
+        return;
     }
 
     /**
@@ -448,7 +456,7 @@ class AnimationController {
      * @returns {number} Target FPS value
      */
     get targetFPS() {
-        return this.performanceMonitor.config.targetFPS;
+        return this.config.targetFPS || 60;
     }
 
     /**

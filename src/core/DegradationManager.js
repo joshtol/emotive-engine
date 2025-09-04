@@ -49,11 +49,11 @@ import { getErrorLogger } from './ErrorLogger.js';
 export class DegradationManager {
     constructor(config = {}) {
         this.config = {
-            enableAutoOptimization: config.enableAutoOptimization !== false,
+            enableAutoOptimization: false, // TEMPORARILY DISABLED
             performanceThreshold: config.performanceThreshold || 30, // FPS
             memoryThreshold: config.memoryThreshold || 50, // MB
             degradationSteps: config.degradationSteps || 4,
-            recoveryDelay: config.recoveryDelay || 5000, // ms
+            recoveryDelay: config.recoveryDelay || 1000, // ms - faster recovery
             enableManualControls: config.enableManualControls !== false,
             enableProgressiveEnhancement: config.enableProgressiveEnhancement !== false,
             ...config
@@ -102,7 +102,7 @@ export class DegradationManager {
             },
             {
                 name: 'emergency',
-                particleLimit: 0,
+                particleLimit: 5,  // Keep minimum particles even in emergency mode
                 audioEnabled: false,
                 fullEffects: false,
                 targetFPS: 15,
@@ -110,11 +110,11 @@ export class DegradationManager {
                 canvasScale: 0.7,
                 animationComplexity: 0.4,
                 description: 'Emergency mode - basic animation only',
-                features: ['animations']
+                features: ['animations', 'particles']
             }
         ];
 
-        this.currentLevel = 0; // Start at optimal
+        this.currentLevel = 0; // Set to optimal since auto-optimization is disabled
         this.lastDegradationTime = 0;
         this.performanceHistory = [];
         this.maxHistorySize = 30; // 30 samples for averaging
@@ -129,7 +129,7 @@ export class DegradationManager {
         // Recovery management
         this.recoveryTimeout = null;
         this.consecutiveGoodFrames = 0;
-        this.requiredGoodFrames = 60; // 1 second at 60fps
+        this.requiredGoodFrames = 30; // 0.5 seconds at 60fps - faster recovery
         
         // Manual degradation controls
         this.manualOverride = null;
@@ -193,6 +193,9 @@ export class DegradationManager {
      * Start performance monitoring
      */
     startMonitoring() {
+        // TEMPORARILY DISABLED - DO NOT MONITOR
+        return;
+        
         if (this.isMonitoring) return;
         
         this.isMonitoring = true;
@@ -249,8 +252,8 @@ export class DegradationManager {
         
         if (needsDegradation && this.canDegrade()) {
             this.applyDegradation();
-        } else if (!needsDegradation && avgFPS > this.config.performanceThreshold * 1.2) {
-            // Good performance - track for potential recovery
+        } else if (!needsDegradation && avgFPS > this.config.performanceThreshold * 1.1) {
+            // Good performance - track for potential recovery (lower threshold for faster scaling up)
             this.consecutiveGoodFrames++;
             if (this.consecutiveGoodFrames >= this.requiredGoodFrames && this.canRecover()) {
                 this.scheduleRecovery();

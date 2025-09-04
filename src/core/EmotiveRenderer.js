@@ -552,6 +552,11 @@ class EmotiveRenderer {
         let centerX = logicalWidth / 2;
         let centerY = logicalHeight / 2;
         
+        // Apply vertical offset for certain emotions (like excited for exclamation mark)
+        if (state.properties && state.properties.verticalOffset) {
+            centerY = logicalHeight / 2 + (logicalHeight * state.properties.verticalOffset);
+        }
+        
         // Calculate global scale factor based on canvas size and baseScale config
         this.scaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale;
         
@@ -630,10 +635,13 @@ class EmotiveRenderer {
         // Calculate core dimensions - using unified scale factor
         const baseRadius = (this.config.referenceSize / this.config.coreSizeDivisor) * this.scaleFactor;
         
+        // Apply emotion core size from state properties
+        const emotionSizeMult = (state.properties && state.properties.coreSize) ? state.properties.coreSize : 1.0;
+        
         // Apply undertone size multiplier
         const undertoneSizeMult = this.state.sizeMultiplier || 1.0;
         
-        let coreRadius = baseRadius * coreBreathFactor * scaleMultiplier * sleepScaleMod * undertoneSizeMult;
+        let coreRadius = baseRadius * emotionSizeMult * coreBreathFactor * scaleMultiplier * sleepScaleMod * undertoneSizeMult;
         const glowRadius = baseRadius * this.config.glowMultiplier * glowBreathFactor * this.state.glowIntensity * glowMultiplier * scaleMultiplier * sleepScaleMod * undertoneSizeMult;  // Breathes inversely
         
         // Apply blinking (only when not sleeping or zen)
@@ -1074,8 +1082,8 @@ class EmotiveRenderer {
         }
         const zenPulse = basePulse * glowIntensity; // Apply intensity scaling
         
-        // Only apply glow when arc has formed
-        if (this.zenTransition.arcHeight > 0) {
+        // Apply glow when lotus is morphing or fully formed
+        if (this.zenTransition.lotusMorph > 0) {
             // GAUSSIAN GLOW LAYERS - Smooth exponential falloff
             // Pre-glow layers with decreasing intensity for Gaussian effect
             const glowLayers = 8; // More layers for smoother transition
@@ -1995,9 +2003,9 @@ class EmotiveRenderer {
             this.animationFrameIds.zenExit = null;
         }
         
-        // Immediately set to zen color and ZERO intensity to avoid any flash
+        // Set to zen color with target intensity
         this.state.glowColor = targetColor;
-        this.state.glowIntensity = 0; // Start with no glow at all
+        this.state.glowIntensity = targetIntensity; // Keep the glow
         
         // Cancel any active color transition
         this.colorTransition.active = false;
@@ -2024,73 +2032,32 @@ class EmotiveRenderer {
             }
             
             const elapsed = performance.now() - this.zenTransition.startTime;
-            const horizontalNarrowDuration = 200; // 0.2s for sunset effect - FAST
-            const arcFormDuration = 150; // 0.15s for arc formation - FAST
-            const lotusMorphDuration = 200; // 0.2s for lotus to bloom - FAST
+            const lotusMorphDuration = 400; // 0.4s for lotus to bloom - smooth transition
             
-            if (elapsed < horizontalNarrowDuration) {
-                // Phase 1: Horizontal narrowing (sunset)
-                const progress = elapsed / horizontalNarrowDuration;
-                const eased = 1 - Math.pow(1 - progress, 3); // Ease out cubic
-                
-                this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 1.0 - (eased * 0.8); // Narrow vertically to 0.2 (like sunset)
-                this.zenTransition.arcHeight = 0;
-                this.zenTransition.lotusMorph = 0;
-                this.zenTransition.petalSpread = 0;
-                this.zenTransition.smileCurve = 0;
-                
-                this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
-            } else if (elapsed < horizontalNarrowDuration + arcFormDuration) {
-                // Phase 2: Arc formation
-                const arcProgress = (elapsed - horizontalNarrowDuration) / arcFormDuration;
-                const arcEased = Math.sin(arcProgress * Math.PI / 2); // Smooth ease in
-                
-                this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 0.2; // Keep narrow like horizon line
-                this.zenTransition.arcHeight = arcEased * 1.5; // Arc to 150% height for pronounced curve
-                
-                // Start lotus morphing halfway through arc formation
-                if (arcProgress > 0.5) {
-                    const lotusProgress = (arcProgress - 0.5) * 2; // 0 to 1 in second half
-                    this.zenTransition.lotusMorph = lotusProgress * 0.3; // Reach 30% by end of this phase
-                }
-                
-                this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
-            } else if (elapsed < horizontalNarrowDuration + arcFormDuration + lotusMorphDuration) {
-                // Phase 3: Lotus blooming - gradually bring up intensity
-                const lotusProgress = (elapsed - horizontalNarrowDuration - arcFormDuration) / lotusMorphDuration;
+            if (elapsed < lotusMorphDuration) {
+                // Direct lotus blooming - no intro animation
+                const lotusProgress = elapsed / lotusMorphDuration;
                 const lotusEased = 1 - Math.pow(1 - lotusProgress, 2); // Ease out quad
                 
-                // Glow intensity is now controlled by lotus morph in renderZenCore
-                // this.state.glowIntensity = targetIntensity * lotusEased;
-                
+                // Direct lotus bloom without arc or narrowing
                 this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 0.2;
-                this.zenTransition.arcHeight = 1.5;
+                this.zenTransition.scaleY = 1.0;  // Full size
+                this.zenTransition.arcHeight = 0;  // No arc
                 
-                // Morph the lotus shape
-                this.zenTransition.lotusMorph = 0.3 + (lotusEased * 0.7); // From 30% to 100%
+                // Morph the lotus shape directly
+                this.zenTransition.lotusMorph = lotusEased; // 0 to 100%
+                this.zenTransition.petalSpread = lotusEased;
                 
-                // Petals spread out gradually
-                if (lotusProgress > 0.2) {
-                    const petalProgress = (lotusProgress - 0.2) / 0.8; // 0 to 1 after 20%
-                    this.zenTransition.petalSpread = Math.sin(petalProgress * Math.PI / 2); // Smooth ease
-                }
-                
-                // Smile appears at the end
-                if (lotusProgress > 0.6) {
-                    const smileProgress = (lotusProgress - 0.6) / 0.4; // 0 to 1 in last 40%
-                    this.zenTransition.smileCurve = Math.sin(smileProgress * Math.PI / 2); // Smooth ease
-                }
+                // Smile appears gradually
+                this.zenTransition.smileCurve = Math.sin(lotusProgress * Math.PI / 2); // Smooth ease
                 
                 this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
             } else {
-                // Final state - in meditation with full lotus
+                // Final state - in meditation with full lotus, then start floating
                 this.zenTransition.phase = 'in';
                 this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 0.2;  // Base narrow scale
-                this.zenTransition.arcHeight = 1.5;
+                this.zenTransition.scaleY = 1.0;  // Full size
+                this.zenTransition.arcHeight = 0;  // No arc
                 this.zenTransition.lotusMorph = 1.0;
                 this.zenTransition.petalSpread = 1.0;
                 this.zenTransition.smileCurve = 1.0;

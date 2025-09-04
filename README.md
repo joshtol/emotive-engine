@@ -62,7 +62,7 @@ mascot.on('stateChange', (state) => {
 
 ## 🎨 Live Demo
 
-- [**Sci-Fi Theme**](emotive-scifi-demo.html) - Futuristic UI with enhanced visual effects showcasing the full emotional range
+- [**Sci-Fi Theme**](https://joshtol.github.io/emotive-engine/emotive-scifi-demo.html) - Futuristic UI with enhanced visual effects showcasing the full emotional range
 
 ## 🧠 Emotional Intelligence
 

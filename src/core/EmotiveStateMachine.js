@@ -209,6 +209,19 @@ class EmotiveStateMachine {
                 breathRate: 0.9,
                 breathDepth: 0.18
             },
+            excited: {
+                primaryColor: '#FF00FF',  // Hot magenta
+                glowIntensity: 1.2,  // Bright glow for excitement
+                particleRate: 360,  // Double rate for more visible particles
+                minParticles: 480,  // Double particles for denser effect
+                maxParticles: 900,  // Double max particles
+                particleBehavior: 'fizzy',
+                coreSize: 0.85,  // Slightly smaller than neutral
+                breathRate: 1.5,  // Excited breathing
+                breathDepth: 0.08,  // Moderate breath
+                eyeOpenness: 1.0,  // Wide eyes
+                verticalOffset: 0.05  // Move orb down just a bit (5% of canvas height)
+            },
             resting: {
                 primaryColor: '#7C3AED',   // Soft purple for resting
                 glowIntensity: 0.8,

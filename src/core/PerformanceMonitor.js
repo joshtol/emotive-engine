@@ -51,7 +51,7 @@ class PerformanceMonitor {
             minFPS: config.minFPS || Math.max(30, (config.targetFPS || 60) * 0.5),
             goodFPS: config.goodFPS || Math.max(50, (config.targetFPS || 60) * 0.8),
             maxFrameTime: config.maxFrameTime || 33.33, // 30 FPS in ms
-            maxMemoryMB: config.maxMemoryMB || 50,
+            maxMemoryMB: config.maxMemoryMB || 200,
             maxParticles: config.maxParticles || 50,
             recoveryDelay: config.recoveryDelay || 2000,
             memoryCheckInterval: config.memoryCheckInterval || 5000
@@ -157,7 +157,9 @@ class PerformanceMonitor {
             },
             revert: () => {
                 if (this.subsystems.particleSystem) {
-                    const originalMax = this.subsystems.particleSystem.originalMaxParticles || this.config.maxParticles;
+                    const originalMax = this.subsystems.particleSystem.originalMaxParticles || 
+                                       this.originalMaxParticles || 
+                                       this.config.maxParticles;
                     this.subsystems.particleSystem.setMaxParticles(originalMax);
                     return { restoredMax: originalMax };
                 }
@@ -237,6 +239,11 @@ class PerformanceMonitor {
             soundSystem: subsystems.soundSystem,
             renderer: subsystems.renderer
         };
+        
+        // Store the original max particles value for proper restoration
+        if (subsystems.particleSystem && !this.originalMaxParticles) {
+            this.originalMaxParticles = subsystems.particleSystem.maxParticles;
+        }
     }
 
     /**
@@ -324,6 +331,8 @@ class PerformanceMonitor {
             this.metrics.frameCount = 0;
             this.metrics.lastFpsUpdate = currentTime;
             
+            // DISABLED - Don't enter dormant mode or change performance
+            /*
             // Check for stable performance (near target FPS for 5 seconds)
             if (this.metrics.fps >= this.config.targetFPS - 2) {
                 this.stableFrameCount++;
@@ -340,6 +349,7 @@ class PerformanceMonitor {
                     console.log('PerformanceMonitor: Exiting dormant mode');
                 }
             }
+            */
             
             // Update FPS history for trend analysis
             this.updateFPSHistory();
@@ -807,6 +817,16 @@ class PerformanceMonitor {
     checkThresholds() {
         // Only check if we have valid FPS data
         if (this.metrics.fps <= 0) return;
+        
+        // Add warmup period - don't apply optimizations in first 3 seconds
+        const now = performance.now();
+        if (!this.startTime) {
+            this.startTime = now;
+        }
+        const warmupPeriod = 3000; // 3 seconds warmup
+        if (now - this.startTime < warmupPeriod) {
+            return; // Skip threshold checks during warmup
+        }
 
         const { fps } = this.metrics;
         const { minFPS, goodFPS } = this.config;
@@ -1035,20 +1055,37 @@ class PerformanceMonitor {
      * Handles memory pressure by applying memory-focused optimizations
      */
     handleMemoryPressure() {
-        console.warn(`Memory pressure detected: ${this.metrics.memoryUsage.toFixed(1)}MB > ${this.config.maxMemoryMB}MB`);
-        
-        // Force garbage collection if available
-        this.forceGarbageCollection();
-        
-        // Apply memory-focused optimizations
-        if (this.subsystems.particleSystem) {
-            this.subsystems.particleSystem.clearInactive?.();
+        // Throttle memory pressure warnings to once every 5 seconds
+        const now = performance.now();
+        if (!this.lastMemoryWarning) {
+            this.lastMemoryWarning = 0;
         }
         
-        this.emit('memoryPressure', {
-            currentUsage: this.metrics.memoryUsage,
-            threshold: this.config.maxMemoryMB
-        });
+        if (now - this.lastMemoryWarning > 5000) {
+            console.warn(`Memory pressure detected: ${this.metrics.memoryUsage.toFixed(1)}MB > ${this.config.maxMemoryMB}MB`);
+            this.lastMemoryWarning = now;
+            
+            // Force garbage collection if available
+            this.forceGarbageCollection();
+            
+            // Apply memory-focused optimizations
+            if (this.subsystems.particleSystem) {
+                // Clear dead particles from the pool
+                if (this.subsystems.particleSystem.cleanupDeadParticles) {
+                    this.subsystems.particleSystem.cleanupDeadParticles();
+                }
+                // Reduce max particles to help with memory
+                const currentMax = this.subsystems.particleSystem.maxParticles || 50;
+                if (currentMax > 30) {
+                    this.subsystems.particleSystem.setMaxParticles?.(Math.floor(currentMax * 0.8));
+                }
+            }
+            
+            this.emit('memoryPressure', {
+                currentUsage: this.metrics.memoryUsage,
+                threshold: this.config.maxMemoryMB
+            });
+        }
     }
 
     /**

@@ -85,6 +85,7 @@ class ParticleSystem {
         this.totalParticlesDestroyed = 0;
         this.stateChangeCount = 0;
         this.lastMemoryCheck = Date.now();
+        this.lastLeakedCount = 0;
         
         // TIME-BASED spawning using accumulation for smooth, consistent particle creation
         this.spawnAccumulator = 0; // Accumulates time to spawn particles
@@ -374,6 +375,23 @@ class ParticleSystem {
                     y: centerY + Math.sin(orbitAngle) * orbitRadius
                 };
                 
+            case 'fizzy':
+                // Spawn along a tapered column for exclamation mark (baseball bat shape)
+                // Narrower at bottom, thicker at top
+                const heightPercent = Math.random(); // 0 = bottom near orb, 1 = top
+                const maxSpread = 12.5 * (1 - heightPercent) + 50 * heightPercent; // Lerp from 12.5px to 50px (half as fat at top)
+                const fizzyX = centerX + (Math.random() - 0.5) * maxSpread * 2;
+                
+                // The orb center is at centerY (which includes verticalOffset already)
+                // Start from way above since the orb has moved down
+                const columnStart = centerY - 60; // Start position above the moved orb
+                const columnHeight = 150; // Fixed height for exclamation line
+                const fizzyY = columnStart - heightPercent * columnHeight;
+                
+                return {
+                    x: fizzyX,
+                    y: fizzyY
+                };
                 
             default:
                 return { x: centerX, y: centerY };
@@ -403,9 +421,11 @@ class ParticleSystem {
      */
     update(deltaTime, centerX, centerY, gestureMotion = null, gestureProgress = 0, undertoneModifier = null) {
         if (this.errorBoundary) {
-            return this.errorBoundary.wrap(() => {
-                this._update(deltaTime, centerX, centerY, gestureMotion, gestureProgress, undertoneModifier);
-            }, 'particle-update')();
+            const wrappedUpdate = this.errorBoundary.wrap(
+                (dt, cx, cy, gm, gp, um) => this._update(dt, cx, cy, gm, gp, um), 
+                'particle-update'
+            );
+            return wrappedUpdate(deltaTime, centerX, centerY, gestureMotion, gestureProgress, undertoneModifier);
         } else {
             this._update(deltaTime, centerX, centerY, gestureMotion, gestureProgress, undertoneModifier);
         }
@@ -418,18 +438,19 @@ class ParticleSystem {
         // Update cleanup timer
         this.cleanupTimer += deltaTime;
         
-        // Periodic cleanup to prevent memory buildup - reduced frequency
-        if (this.cleanupTimer >= this.cleanupInterval * 2) { // Less frequent cleanup
+        // Periodic cleanup to prevent memory buildup
+        if (this.cleanupTimer >= this.cleanupInterval) { // Clean up every 5 seconds
             this.performCleanup();
             this.cleanupTimer = 0;
         }
         
-        // Memory leak detection - log every 10 seconds
-        if (Date.now() - this.lastMemoryCheck > 10000) {
+        // Memory leak detection - log every 30 seconds (reduced frequency)
+        if (Date.now() - this.lastMemoryCheck > 30000) {
             const leaked = this.totalParticlesCreated - this.totalParticlesDestroyed;
-            if (leaked > 100) {
-                console.error(`MEMORY LEAK: ${leaked} particles leaked! Created: ${this.totalParticlesCreated}, Destroyed: ${this.totalParticlesDestroyed}`);
-                console.error(`Active: ${this.particles.length}, Pool: ${this.pool.length}, Max: ${this.maxParticles}`);
+            // Only warn if leak is significant and growing
+            if (leaked > 200 && leaked > this.lastLeakedCount + 50) {
+                console.warn(`Potential memory leak: ${leaked} particles unaccounted. Active: ${this.particles.length}, Pool: ${this.pool.length}`);
+                this.lastLeakedCount = leaked;
             }
             this.lastMemoryCheck = Date.now();
         }
@@ -619,12 +640,30 @@ class ParticleSystem {
      * @param {number} maxParticles - New maximum particle count
      */
     setMaxParticles(maxParticles) {
+        this.originalMaxParticles = this.originalMaxParticles || this.maxParticles;
         this.maxParticles = Math.max(1, maxParticles);
         
         // Remove excess particles if new limit is lower
         while (this.particles.length > this.maxParticles) {
             this.removeParticle(0);
         }
+    }
+    
+    /**
+     * Cleans up dead particles and optimizes the pool
+     */
+    cleanupDeadParticles() {
+        // Remove any dead particles that shouldn't be there
+        const beforeCount = this.particles.length;
+        this.particles = this.particles.filter(particle => particle.isAlive());
+        const removed = beforeCount - this.particles.length;
+        
+        // Clear excess items from the pool to free memory
+        if (this.pool.length > 20) {
+            this.pool.length = 20;
+        }
+        
+        return removed;
     }
 
     /**

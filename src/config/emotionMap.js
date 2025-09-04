@@ -87,23 +87,23 @@ export const emotionMap = {
     // NEUTRAL - The default calm state, baseline for all other emotions
     // ════════════════════════════════════════════════════════════════════════════════
     neutral: {
-        glowColor: '#14B8A6',        // [VISUAL] Teal - calming, balanced color
+        glowColor: '#6B7FFF',        // [VISUAL] Soft periwinkle blue - calming but alive
         glowIntensity: 1.0,          // [VISUAL] Standard glow brightness (0.5-1.5)
-        particleRate: 10,             // [PERFORMANCE] Particles per second (careful: >20 may lag)
-        minParticles: 5,             // [PERFORMANCE] Minimum particles always present
+        particleRate: 2,              // [PERFORMANCE] Particles per second - lower for calmer effect
+        minParticles: 3,             // [PERFORMANCE] Minimum particles always present
         maxParticles: 8,             // [PERFORMANCE] Maximum particle cap
         particleBehavior: 'ambient', // [CRITICAL] Must exist in Particle.js behaviors
         breathRate: 1.0,             // [CRITICAL] Normal: 12-20 breaths/min (1.0 = 16 bpm)
         breathDepth: 0.08,           // [CRITICAL] 8% size variation during breathing
         coreJitter: false,           // [VISUAL] Whether core shakes/vibrates
-        particleColors: ['#14B8A6', '#818CF8'] // [VISUAL] Particle color palette
+        particleColors: ['#6B7FFF', '#8FA1FF', '#FFFFFF'] // [VISUAL] Blue to white gradient
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
     // JOY - Energetic happiness with upward, buoyant particles
     // ════════════════════════════════════════════════════════════════════════════════
     joy: {
-        glowColor: '#FFD700',       // Warm gold
+        glowColor: '#FFC107',       // Warm amber - richer golden happiness
         glowIntensity: 1.3,
         particleRate: 12,          // Moderate particles for joy
         minParticles: 4,
@@ -112,14 +112,14 @@ export const emotionMap = {
         breathRate: 1.5,           // Joy/Happiness: 20-30 breaths/min (excited)
         breathDepth: 0.10,         // 10% size variation - deeper excitement
         coreJitter: false,
-        particleColors: ['#FFD700', '#FFA500']
+        particleColors: ['#FFC107', '#FFB300', '#FF8F00', '#FFF8E1']
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
     // SADNESS - Slow, heavy state with downward drifting particles
     // ════════════════════════════════════════════════════════════════════════════════
     sadness: {
-        glowColor: '#4169E1',       // Deep blue
+        glowColor: '#5C7CFA',       // Deep indigo - more melancholic
         glowIntensity: 0.7,
         particleRate: 8,           // Moderate particles for sadness
         minParticles: 1,
@@ -128,14 +128,14 @@ export const emotionMap = {
         breathRate: 0.6,           // Sadness: 10-12 breaths/min (slow, sighing)
         breathDepth: 0.12,         // 12% size variation - deep sighs
         coreJitter: false,
-        particleColors: ['#4169E1', '#1E90FF']
+        particleColors: ['#5C7CFA', '#7C4DFF', '#9575CD', '#3949AB']
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
     // ANGER - Intense aggressive state with rapid, chaotic particles
     // ════════════════════════════════════════════════════════════════════════════════
     anger: {
-        glowColor: '#DC143C',       // Crimson
+        glowColor: '#FF5252',       // Bright crimson - more intense rage
         glowIntensity: 1.4,
         particleRate: 15,           // Reduced from 30 to prevent extreme behavior
         minParticles: 3,
@@ -144,14 +144,14 @@ export const emotionMap = {
         breathRate: 2.2,           // Anger: 30-40 breaths/min (rapid, intense)
         breathDepth: 0.15,         // 15% size variation - heavy, forceful breathing
         coreJitter: true,          // Shake with anger
-        particleColors: ['#DC143C', '#FF0000']
+        particleColors: ['#FF5252', '#FF6E40', '#FF3D00', '#FFAB91']
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
     // FEAR - Anxious state with particles fleeing from center
     // ════════════════════════════════════════════════════════════════════════════════
     fear: {
-        glowColor: '#8B008B',       // Dark magenta
+        glowColor: '#7C4DFF',       // Deep violet - more unsettling
         glowIntensity: 0.8,
         particleRate: 12,
         minParticles: 2,
@@ -160,14 +160,14 @@ export const emotionMap = {
         breathRate: 2.5,           // Fear/Anxiety: 25-45 breaths/min (hyperventilation)
         breathDepth: 0.06,         // 6% size variation - very shallow, rapid breaths
         coreJitter: true,          // Trembling
-        particleColors: ['#8B008B', '#9370DB']
+        particleColors: ['#7C4DFF', '#651FFF', '#4A148C', '#311B92']
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
     // SURPRISE - Sudden shock with explosive particle burst
     // ════════════════════════════════════════════════════════════════════════════════
     surprise: {
-        glowColor: '#FF8C00',       // Dark orange
+        glowColor: '#FFAB00',       // Bright amber-orange - more pop
         glowIntensity: 1.4,
         particleRate: 18,
         minParticles: 3,
@@ -176,14 +176,14 @@ export const emotionMap = {
         breathRate: 0.3,           // Surprise: Initial gasp then pause (6-8 breaths/min)
         breathDepth: 0.20,         // 20% size variation - huge initial gasp
         coreJitter: false,
-        particleColors: ['#FF8C00', '#FF6347']
+        particleColors: ['#FFAB00', '#FFC400', '#FFD54F', '#FFECB3']
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
     // DISGUST - Revulsion with particles pushing away from core
     // ════════════════════════════════════════════════════════════════════════════════
     disgust: {
-        glowColor: '#9ACD32',       // Yellow-green
+        glowColor: '#66BB6A',       // Sickly lime-green - more nauseating
         glowIntensity: 0.9,
         particleRate: 12,
         minParticles: 2,
@@ -192,14 +192,14 @@ export const emotionMap = {
         breathRate: 0.7,           // Disgust: 10-14 breaths/min (breath holding)
         breathDepth: 0.04,         // 4% size variation - restricted, shallow breathing
         coreJitter: false,
-        particleColors: ['#9ACD32', '#ADFF2F']
+        particleColors: ['#66BB6A', '#9CCC65', '#D4E157', '#AED581']
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
     // LOVE - Warm affection with particles orbiting harmoniously
     // ════════════════════════════════════════════════════════════════════════════════
     love: {
-        glowColor: '#FF69B4',       // Hot pink
+        glowColor: '#FF4081',       // Hot pink - more passionate
         glowIntensity: 1.1,
         particleRate: 10,          // Moderate particles for love
         minParticles: 2,
@@ -208,7 +208,7 @@ export const emotionMap = {
         breathRate: 0.85,          // Love/Contentment: 12-16 breaths/min (calm, deep)
         breathDepth: 0.11,         // 11% size variation - full, satisfied breaths
         coreJitter: false,
-        particleColors: ['#FF69B4', '#FF1493']
+        particleColors: ['#FF4081', '#FF80AB', '#FCE4EC', '#FFFFFF']
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
@@ -230,6 +230,22 @@ export const emotionMap = {
         scanInterval: 3000,         // Peer around every 3 seconds
         scanDuration: 800,          // Quick scanning motion
         scanAngle: 45               // Degrees to look left/right
+    },
+    
+    // ════════════════════════════════════════════════════════════════════════════════
+    // EXCITED - Fizzy, carbonated energy (using the cool fizzy effect!)
+    // ════════════════════════════════════════════════════════════════════════════════
+    excited: {
+        glowColor: '#FF00FF',        // Hot magenta - pure excitement
+        glowIntensity: 1.3,          // Bright, vibrant glow
+        particleRate: 25,            // Very high spawn rate for fizzy effect
+        minParticles: 30,            // Always bubbling
+        maxParticles: 40,            // Lots of particles for carbonated look
+        particleBehavior: 'fizzy',   // The new fizzy behavior!
+        breathRate: 1.5,             // Fast, excited breathing
+        breathDepth: 0.12,           // Deep, energetic breaths
+        coreJitter: true,            // Vibrating with excitement
+        particleColors: ['#FF00FF', '#FF1493', '#FF69B4', '#FFB6C1'] // Magenta to pink spectrum
     },
     
     // ════════════════════════════════════════════════════════════════════════════════
@@ -297,8 +313,8 @@ export const emotionMap = {
         glowColor: '#FFD700',       // Bright Gold
         glowIntensity: 1.2,         // Much brighter inner glow
         particleRate: 15,           // Mix of falling and orbiting
-        minParticles: 3,            // Some particles always present
-        maxParticles: 8,            // Not too many - peaceful
+        minParticles: 10,            // Some particles always present
+        maxParticles: 16,            // Not too many - peaceful
         particleBehavior: 'falling',  // Use falling like sadness (will mix with orbiting)
         breathRate: 0.1,            // Ultra-slow breathing
         breathDepth: 0.03,          // Very subtle
@@ -328,7 +344,7 @@ export const emotionMap = {
 // Emotion aliases for compatibility
 export const emotionAliases = {
     'happy': 'joy',
-    'excited': 'surprise',
+    // 'excited': 'surprise', // Removed - excited is now its own emotion with fizzy particles!
     'calm': 'neutral',
     'curious': 'surprise',
     'frustrated': 'anger',

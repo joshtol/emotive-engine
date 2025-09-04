@@ -48,7 +48,7 @@ import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
 import EventManager from './core/EventManager.js';
-import DegradationManager from './core/DegradationManager.js';
+// import DegradationManager from './core/DegradationManager.js'; // REMOVED
 import AccessibilityManager from './core/AccessibilityManager.js';
 import MobileOptimization from './core/MobileOptimization.js';
 import PluginSystem from './core/PluginSystem.js';
@@ -188,19 +188,8 @@ class EmotiveMascot {
         
         this.soundSystem = new SoundSystem();
         
-        // Initialize degradation manager
-        if (this.config.enableGracefulDegradation) {
-            this.degradationManager = new DegradationManager({
-                enableAutoOptimization: this.config.enableAutoOptimization,
-                performanceThreshold: this.config.performanceThreshold || 30,
-                memoryThreshold: this.config.memoryThreshold || 50
-            });
-            
-            // Set up degradation event handling
-            this.degradationManager.setEventCallback((event, data) => {
-                this.handleDegradationEvent(event, data);
-            });
-        }
+        // DegradationManager removed - no performance interference
+        this.degradationManager = null;
         
         // Initialize accessibility manager
         this.accessibilityManager = new AccessibilityManager({
@@ -392,10 +381,13 @@ class EmotiveMascot {
             }
         }
         
+        // DISABLED - Don't change FPS based on degradation
+        /*
         // Update animation controller target FPS
         if (this.animationController && settings.targetFPS !== undefined) {
             this.animationController.setTargetFPS(settings.targetFPS);
         }
+        */
         
         // Update renderer quality
         if (this.renderer && settings.qualityLevel !== undefined) {
@@ -467,7 +459,7 @@ class EmotiveMascot {
             // Map common aliases to actual emotion states
             const emotionMapping = {
                 'happy': 'joy',
-                'excited': 'surprise',
+                // 'excited': 'surprise', // Removed - excited is now its own emotion!
                 'calm': 'neutral',
                 'curious': 'surprise',
                 'frustrated': 'anger',
@@ -1033,8 +1025,8 @@ class EmotiveMascot {
                         orbY = this.canvasManager.height / 2;
                     }
                     
-                    // Spawn initial batch of particles
-                    const initialParticleCount = emotion === 'neutral' ? 8 : 10; // Neutral gets 8 particles
+                    // Spawn initial batch of particles - fewer for smoother start
+                    const initialParticleCount = emotion === 'neutral' ? 3 : 5; // Start with fewer particles
                     console.log(`Starting with emotion: ${emotion}, spawning ${initialParticleCount} particles`);
                     this.particleSystem.spawn(
                         emotionParams.particleBehavior || 'ambient',
@@ -1702,11 +1694,7 @@ class EmotiveMascot {
                 }
             }
             
-            // Update degradation manager with performance data
-            if (this.degradationManager && this.animationController) {
-                const metrics = this.animationController.getPerformanceMetrics();
-                this.degradationManager.checkPerformance(metrics);
-            }
+            // DegradationManager removed - no performance checks
         }, 'audio-update')();
     }
 
@@ -1752,11 +1740,16 @@ class EmotiveMascot {
             
             // Always use center for particle spawning (not gaze-adjusted position)
             const orbX = this.canvasManager.width / 2;
-            const orbY = this.canvasManager.height / 2;
+            let orbY = this.canvasManager.height / 2;
             
             // Spawn new particles based on emotion at ORB position
             // Get min/max from state machine
             const stateProps = this.stateMachine.getCurrentEmotionalProperties();
+            
+            // Apply vertical offset for certain emotions (like excited for exclamation mark)
+            if (stateProps.verticalOffset) {
+                orbY = this.canvasManager.height / 2 + (this.canvasManager.height * stateProps.verticalOffset);
+            }
             
             // Apply undertone modifiers to particle behavior
             let particleBehavior = emotionParams.particleBehavior || 'ambient';
@@ -2548,9 +2541,7 @@ class EmotiveMascot {
                 this.pluginSystem.destroy();
             }
             
-            if (this.degradationManager) {
-                this.degradationManager.destroy();
-            }
+            // DegradationManager removed
             
             // Clear error boundary
             this.errorBoundary.clearErrors();

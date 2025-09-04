@@ -204,9 +204,38 @@ class Particle {
             case 'cautious':
                 this.initializeCautious();
                 break;
+            case 'fizzy':
+                this.initializeFizzy();
+                break;
             default:
                 this.initializeAmbient();
         }
+    }
+
+    /**
+     * Fizzy behavior - carbonated soda effect
+     * Rapid spawning with short life, creating a bubbling effect
+     */
+    initializeFizzy() {
+        // Rapid upward movement like bubbles
+        this.vx = (Math.random() - 0.5) * 0.15;  // Slight horizontal wobble
+        this.vy = -0.15 - Math.random() * 0.1;   // Fast upward
+        
+        // For excited emotion, make particles live longer to have more visible at once
+        if (this.emotion === 'excited') {
+            this.lifeDecay = 0.01;  // Half the decay rate = double the lifetime
+            this.size = (3 + Math.random() * 4) * (this.scaleFactor || 1);  // Slightly bigger
+        } else {
+            this.lifeDecay = 0.02;  // Very short life (about 3 seconds)
+            this.size = (2 + Math.random() * 4) * (this.scaleFactor || 1);  // Smaller particles
+        }
+        
+        this.behaviorData = {
+            wobbleSpeed: 0.002 + Math.random() * 0.001,  // Rapid wobble
+            wobbleAmount: 0.1,                            // Small wobble
+            riseAcceleration: -0.0008,                    // Accelerate upward like bubbles
+            popChance: this.emotion === 'excited' ? 0.0005 : 0.001  // Less popping when excited
+        };
     }
 
     /**
@@ -214,15 +243,15 @@ class Particle {
      * Particles emanate from center and drift outward
      */
     initializeAmbient() {
-        // Start with ONLY upward movement
+        // Start with gentle upward movement
         this.vx = 0;  // NO horizontal drift
-        this.vy = -0.08 - Math.random() * 0.04;  // Upward movement only
-        this.lifeDecay = 0.003;  // Slower fade - particles last ~20 seconds
+        this.vy = -0.04 - Math.random() * 0.02;  // Slower upward movement
+        this.lifeDecay = 0.002;  // Even slower fade - particles last ~8 seconds
         this.behaviorData = {
             // Languid upward drift
-            upwardSpeed: 0.001,       // Continuous upward drift
+            upwardSpeed: 0.0005,      // Very slow continuous upward drift
             waviness: 0,              // NO side-to-side
-            friction: 0.997           // Very gradual slowdown
+            friction: 0.998           // Even more gradual slowdown
         };
     }
 
@@ -230,12 +259,13 @@ class Particle {
      * Rising behavior - upward float with slight drift (joy)
      */
     initializeRising() {
-        this.vx = (Math.random() - 0.5) * 0.05;  // MUCH slower horizontal drift
-        this.vy = -0.1 - Math.random() * 0.1;     // MUCH slower upward movement
+        this.vx = (Math.random() - 0.5) * 0.02;  // Even slower horizontal drift
+        this.vy = -0.05 - Math.random() * 0.03;   // Much slower upward movement
         this.lifeDecay = 0.002;                   // Very slow decay
+        this.baseOpacity = 0.7 + Math.random() * 0.3;  // More opaque (70-100%)
         this.behaviorData = {
-            buoyancy: 0.003,      // Very gentle upward force
-            driftAmount: 0.01     // Minimal drift
+            buoyancy: 0.001,      // Even gentler upward force
+            driftAmount: 0.005    // Minimal drift
         };
     }
 
@@ -275,10 +305,10 @@ class Particle {
         // Will be set relative to center in update
         this.vx = 0;
         this.vy = 0;
-        this.lifeDecay = 0.012;
+        this.lifeDecay = 0.008;  // Live longer to spread further
         this.behaviorData = {
-            fleeSpeed: 1.2,
-            panicFactor: 0.8,
+            fleeSpeed: 2.0,  // Much faster fleeing
+            panicFactor: 1.2,  // More panicked movement
             initialized: false
         };
     }
@@ -291,12 +321,12 @@ class Particle {
         const isSuspicion = this.emotion === 'suspicion';
         const angle = Math.random() * Math.PI * 2;
         const speed = isSuspicion ? 
-            (0.3 + Math.random() * 0.5) :  // Very slow burst for suspicion
-            (2 + Math.random() * 3);       // Normal burst for surprise
+            (1.0 + Math.random() * 0.8) :  // Faster burst for suspicion to spread out
+            (3.5 + Math.random() * 2.5);   // Much faster burst for surprise
         
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
-        this.lifeDecay = isSuspicion ? 0.015 : 0.02;  // Moderate decay for continuous respawning
+        this.lifeDecay = isSuspicion ? 0.010 : 0.015;  // Live longer to spread further
         
         // Make suspicion particles more visible
         if (isSuspicion) {
@@ -524,6 +554,8 @@ class Particle {
         }
         
         // Update age and life
+        // dt is already normalized to 60fps equivalent in the update method
+        // lifeDecay is per-frame at 60fps, so just use it directly with normalized dt
         this.age += this.lifeDecay * dt;
         
         // Smooth fade-in at birth
@@ -597,6 +629,30 @@ class Particle {
             case 'cautious':
                 this.updateCautious(dt, centerX, centerY);
                 break;
+            case 'fizzy':
+                this.updateFizzy(dt);
+                break;
+        }
+    }
+
+    /**
+     * Update fizzy behavior - carbonated bubble effect
+     */
+    updateFizzy(dt) {
+        const data = this.behaviorData;
+        
+        // Add wobble for bubble-like movement
+        this.vx += Math.sin(this.age * data.wobbleSpeed * 100) * data.wobbleAmount * dt;
+        
+        // Accelerate upward like rising bubbles
+        this.vy += data.riseAcceleration * dt;
+        
+        // Apply slight friction to horizontal movement
+        this.vx *= Math.pow(0.98, dt / 16.67);
+        
+        // Random chance to "pop" early (sudden death)
+        if (Math.random() < data.popChance * dt) {
+            this.age = 1.0;  // Instant death
         }
     }
 
@@ -1277,8 +1333,7 @@ class Particle {
             
             case 'breathe': {
                 // Synchronized breathing motion with the orb
-                const motion = gestureMotion;
-                const breathPhase = gesture.breathPhase || 0; // Get breath phase from gesture
+                const breathPhase = motion.breathPhase || 0; // Get breath phase from motion
                 
                 // Initialize breathe data
                 if (!this.gestureData.breatheInitialized) {
