@@ -543,6 +543,78 @@ export class SoundSystem {
           { time: 1, volume: 0.0 }
         ]
       }],
+      ['wave', {
+        duration: 400,
+        waveform: 'sine',
+        volume: 0.25,
+        frequencyEnvelope: [
+          { time: 0, frequency: 300 },
+          { time: 0.3, frequency: 500 },
+          { time: 0.6, frequency: 400 },
+          { time: 1, frequency: 350 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 0.0 },
+          { time: 0.2, volume: 0.8 },
+          { time: 0.7, volume: 0.6 },
+          { time: 1, volume: 0.0 }
+        ]
+      }],
+      ['breathe', {
+        duration: 800,  // Slightly shorter for more impact
+        waveform: 'triangle',  // Changed from sine for more harmonics
+        volume: 0.6,  // Much louder
+        frequencyEnvelope: [
+          { time: 0, frequency: 300 },
+          { time: 0.3, frequency: 500 },
+          { time: 0.5, frequency: 600 },
+          { time: 0.7, frequency: 400 },
+          { time: 1, frequency: 250 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 0.2 },  // Start with some volume
+          { time: 0.2, volume: 1.0 }, // Quick attack
+          { time: 0.5, volume: 0.9 }, // Strong sustain
+          { time: 0.8, volume: 0.7 },
+          { time: 1, volume: 0.0 }
+        ]
+      }],
+      ['morph', {
+        duration: 600,
+        waveform: 'triangle',
+        volume: 0.3,
+        frequencyEnvelope: [
+          { time: 0, frequency: 100 },
+          { time: 0.2, frequency: 300 },
+          { time: 0.5, frequency: 600 },
+          { time: 0.8, frequency: 400 },
+          { time: 1, frequency: 200 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 0.5 },
+          { time: 0.3, volume: 1.0 },
+          { time: 0.7, volume: 0.8 },
+          { time: 1, volume: 0.0 }
+        ]
+      }],
+      ['jump', {
+        duration: 250,
+        waveform: 'square',
+        volume: 0.35,
+        frequencyEnvelope: [
+          { time: 0, frequency: 200 },
+          { time: 0.2, frequency: 600 },
+          { time: 0.4, frequency: 800 },
+          { time: 0.8, frequency: 400 },
+          { time: 1, frequency: 100 }
+        ],
+        volumeEnvelope: [
+          { time: 0, volume: 0.8 },
+          { time: 0.1, volume: 1.0 },
+          { time: 0.3, volume: 0.6 },
+          { time: 1, volume: 0.0 }
+        ]
+      }],
       ['drift', {
         duration: 800,
         waveform: 'sine',

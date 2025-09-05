@@ -185,14 +185,12 @@
             -webkit-backdrop-filter: blur(var(--blur-strength));
             min-height: 0; /* Prevent flex from overriding aspect-ratio */
             contain: layout size paint; /* Isolate layout calculations and painting */
-            will-change: contents; /* Optimize for canvas updates */
         }
         
         #emotive-canvas {
-            will-change: transform;
-            transform: translateZ(0); /* Force GPU acceleration */
+            /* Removed will-change and image-rendering as they can hurt performance */
+            transform: translateZ(0); /* Keep GPU acceleration */
             -webkit-transform: translateZ(0);
-            image-rendering: optimizeSpeed; /* Optimize rendering */
         }
         /* Fallback for browsers without aspect-ratio support - only for mobile portrait */
         @media (orientation: portrait), (max-width: 1024px) {
@@ -227,19 +225,51 @@
 
         /* 4. Control Panels & Buttons */
         .control-section { padding: 15px; }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
         .control-section h3 {
             color: var(--accent-primary); 
             font-size: 0.8rem;
             text-transform: uppercase; 
             letter-spacing: 2px;
-            margin-bottom: 10px; 
-            padding-bottom: 5px;
-            border-bottom: 1px solid var(--border-color);
+            margin: 0;
         }
         /* Night theme headings use brighter orange */
         .night .control-section h3 {
             color: #FF8A65; /* brighter orange for headings */
+        }
+        .night .section-header {
             border-bottom-color: rgba(255, 138, 101, 0.2);
+        }
+        .sound-toggle {
+            background: transparent;
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .sound-toggle:hover {
+            background: var(--button-hover);
+            transform: scale(1.05);
+        }
+        .sound-toggle.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+        .sound-toggle svg {
+            width: 16px;
+            height: 16px;
         }
         .sci-fi-btn {
             width: 100%; 
@@ -686,7 +716,22 @@
 
         <aside class="controls-right" role="complementary" aria-label="Gesture controls">
             <div class="control-section">
-                <h3>Gesture Protocol</h3>
+                <div class="section-header">
+                    <h3>Gesture Protocol</h3>
+                    <button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound" title="Toggle sound" aria-pressed="false">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <g class="sound-on" style="display: none;">
+                                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                            </g>
+                            <g class="sound-off">
+                                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                                <line x1="23" y1="9" x2="17" y2="15"/>
+                                <line x1="17" y1="9" x2="23" y2="15"/>
+                            </g>
+                        </svg>
+                    </button>
+                </div>
                 <div class="btn-group" role="group" aria-label="Gesture animations">
                     <button class="sci-fi-btn gesture-btn" data-gesture="bounce" aria-label="Trigger bounce animation">Bounce</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="pulse" aria-label="Trigger pulse animation">Pulse</button>
@@ -721,6 +766,7 @@
         let showingFPS = false;
         let isRecording = false;
         let currentTheme = 'night';
+        let soundEnabled = false;
         
         // Load EmotiveEngine asynchronously
         const loadEngine = async () => {
@@ -825,12 +871,20 @@
                 emotionalResponsiveness: 0.8,
                 particleIntensity: 1.0,
                 glowIntensity: 0.8,
-                audioEnabled: false,
+                audioEnabled: true,  // Initialize audio system
                 showFPS: false,
                 debugMode: false,
                 renderMode: 'default',
                 maxParticles: 100
             });
+            
+            // After mascot is created, disable sound until user enables it
+            setTimeout(() => {
+                if (mascot.soundSystem) {
+                    mascot.soundSystem.isEnabled = false;
+                }
+            }, 100);
+            
             mascot.start();
             setupEventHandlers();
             updateDisplay();
@@ -954,20 +1008,24 @@
                 }
             };
             
-            // Immediate blur on resize start
+            // Single debounced resize handler
+            let resizeTimeout;
+            let blurApplied = false;
+            
             window.addEventListener('resize', () => {
                 const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-                if (currentOrientation !== previousOrientation && !isTransitioning) {
-                    // Apply heavy blur immediately
+                
+                // Only apply blur once when orientation actually changes
+                if (currentOrientation !== previousOrientation && !isTransitioning && !blurApplied) {
                     document.body.style.filter = 'blur(30px)';
+                    blurApplied = true;
                 }
-            });
-            
-            // Debounced handler for transition
-            let resizeTimeout;
-            window.addEventListener('resize', () => {
+                
                 clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(handleOrientationChange, 100);
+                resizeTimeout = setTimeout(() => {
+                    handleOrientationChange();
+                    blurApplied = false; // Reset for next orientation change
+                }, 100);
             });
             
             if ('orientation' in window) {
@@ -984,6 +1042,50 @@
         function setupEventHandlers() {
             // Theme switcher
             document.getElementById('theme-switcher').addEventListener('click', cycleTheme);
+            
+            // Sound toggle
+            const soundToggle = document.getElementById('sound-toggle');
+            const soundOn = soundToggle.querySelector('.sound-on');
+            const soundOff = soundToggle.querySelector('.sound-off');
+            
+            // Function to update button appearance based on state
+            const updateSoundButton = (enabled) => {
+                if (enabled) {
+                    soundToggle.classList.add('active');
+                    soundOn.style.display = 'block';
+                    soundOff.style.display = 'none';
+                    soundToggle.setAttribute('aria-pressed', 'true');
+                } else {
+                    soundToggle.classList.remove('active');
+                    soundOn.style.display = 'none';
+                    soundOff.style.display = 'block';
+                    soundToggle.setAttribute('aria-pressed', 'false');
+                }
+            };
+            
+            // Initialize button to show disabled state
+            updateSoundButton(false);
+            
+            soundToggle.addEventListener('click', () => {
+                if (!mascot || !mascot.soundSystem) return;
+                
+                // Toggle the sound state
+                soundEnabled = !soundEnabled;
+                
+                // Update mascot configuration and sound system
+                mascot.config.enableAudio = soundEnabled;
+                mascot.soundSystem.isEnabled = soundEnabled;
+                
+                // Update button appearance
+                updateSoundButton(soundEnabled);
+                
+                if (!soundEnabled && mascot.soundSystem.isAvailable()) {
+                    // Stop any playing ambient tones when disabling
+                    mascot.soundSystem.stopAmbientTone(200);
+                }
+                
+                console.log('Sound', soundEnabled ? 'enabled' : 'disabled');
+            });
 
             document.querySelectorAll('.emotion-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
