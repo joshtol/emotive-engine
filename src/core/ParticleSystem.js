@@ -553,7 +553,7 @@ class ParticleSystem {
      * Clears all particles and returns them to the pool
      */
     clear() {
-        console.log(`[ParticleSystem.clear] Clearing ${this.particles.length} particles. Pool: ${this.pool.length}`);
+        // console.log(`[ParticleSystem.clear] Clearing ${this.particles.length} particles. Pool: ${this.pool.length}`);
         this.stateChangeCount++;
         
         // Return all particles to pool but avoid duplicates
@@ -585,7 +585,7 @@ class ParticleSystem {
             this.pool.splice(this.poolSize, excess);
         }
         
-        console.log(`[ParticleSystem.clear] After clear - Particles: ${this.particles.length}, Pool: ${this.pool.length}, Created total: ${this.totalParticlesCreated}`);
+        // console.log(`[ParticleSystem.clear] After clear - Particles: ${this.particles.length}, Pool: ${this.pool.length}, Created total: ${this.totalParticlesCreated}`);
     }
 
     /**

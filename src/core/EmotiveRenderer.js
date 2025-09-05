@@ -9,8 +9,9 @@
  *
  * @fileoverview Emotive Renderer - Visual Rendering Engine
  * @author Emotive Engine Team
- * @version 2.2.0
+ * @version 2.3.0
  * @module EmotiveRenderer
+ * @changelog 2.3.0 - Optimized color transitions to use main render loop
  * @changelog 2.2.0 - Dynamic visual resampling on resize for consistent quality
  * @changelog 2.1.0 - Implemented undertone saturation system for glow colors
  * 
@@ -597,6 +598,11 @@ class EmotiveRenderer {
                 // Reset to defaults when no undertone
                 this.applyUndertoneModifiers(null);
             }
+        }
+        
+        // Update color transition (if active)
+        if (this.colorTransition && this.colorTransition.active) {
+            this.updateColorTransition(deltaTime);
         }
         
         // Update animation timers
@@ -1738,14 +1744,14 @@ this.ctx.fill();
             duration: duration
         };
         
-        // Start the animation loop
-        this.animateColorTransition();
+        // Color transition will be updated in main render loop
     }
     
     /**
-     * Animate the color transition
+     * Update the color transition (called from main render loop)
+     * @param {number} deltaTime - Time since last frame
      */
-    animateColorTransition() {
+    updateColorTransition(deltaTime) {
         if (!this.colorTransition.active) return;
         
         const elapsed = performance.now() - this.colorTransition.startTime;
@@ -1766,29 +1772,14 @@ this.ctx.fill();
             (this.colorTransition.toIntensity - this.colorTransition.fromIntensity) * eased;
         
         if (!isFinite(interpolatedIntensity)) {
-            console.error('NaN detected in intensity interpolation:', {
-                fromIntensity: this.colorTransition.fromIntensity,
-                toIntensity: this.colorTransition.toIntensity,
-                eased,
-                progress,
-                result: interpolatedIntensity
-            });
-            this.state.glowIntensity = 1.0; // Fallback
+            // Remove console.error for performance
+            this.state.glowIntensity = 1.0; // Fallback silently
         } else {
             this.state.glowIntensity = interpolatedIntensity;
         }
         
-        if (progress < 1) {
-            // Cancel any existing color transition animation
-            if (this.animationFrameIds.colorTransition) {
-                cancelAnimationFrame(this.animationFrameIds.colorTransition);
-                this.animationFrameIds.colorTransition = null;
-            }
-            this.animationFrameIds.colorTransition = requestAnimationFrame(() => this.animateColorTransition());
-        } else {
+        if (progress >= 1) {
             this.colorTransition.active = false;
-            // Clean up animation frame ID
-            this.animationFrameIds.colorTransition = null;
         }
     }
     

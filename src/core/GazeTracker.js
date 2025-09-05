@@ -9,8 +9,9 @@
  *
  * @fileoverview Gaze Tracker - Interactive Eye Following & Cursor Awareness
  * @author Emotive Engine Team
- * @version 2.0.0
+ * @version 2.1.0
  * @module GazeTracker
+ * @changelog 2.1.0 - Cached canvas rect to eliminate reflows on mouse/touch moves
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -63,6 +64,9 @@ class GazeTracker {
         this.isLocked = false;
         this.proximity = 0;  // 0-1 value for how close cursor is
         
+        // Cache canvas rect to avoid reflows
+        this.cachedRect = null;
+        
         // Touch state
         this.touches = new Map();
         this.primaryTouch = null;
@@ -92,10 +96,11 @@ class GazeTracker {
      * Update canvas center point
      */
     updateCanvasCenter() {
-        const rect = this.canvas.getBoundingClientRect();
+        // Cache the rect to avoid repeated reflows
+        this.cachedRect = this.canvas.getBoundingClientRect();
         this.canvasCenter = {
-            x: rect.width / 2,
-            y: rect.height / 2
+            x: this.cachedRect.width / 2,
+            y: this.cachedRect.height / 2
         };
     }
     
@@ -120,7 +125,8 @@ class GazeTracker {
      * Handle mouse movement
      */
     handleMouseMove(event) {
-        const rect = this.canvas.getBoundingClientRect();
+        // Use cached rect to avoid reflow on every mouse move
+        const rect = this.cachedRect || this.canvas.getBoundingClientRect();
         this.mousePos = {
             x: event.clientX - rect.left,
             y: event.clientY - rect.top
@@ -215,7 +221,8 @@ class GazeTracker {
     updateTouchPosition(touches) {
         for (const touch of touches) {
             if (touch.identifier === this.primaryTouch) {
-                const rect = this.canvas.getBoundingClientRect();
+                // Use cached rect to avoid reflow on every touch move
+                const rect = this.cachedRect || this.canvas.getBoundingClientRect();
                 this.mousePos = {
                     x: touch.clientX - rect.left,
                     y: touch.clientY - rect.top

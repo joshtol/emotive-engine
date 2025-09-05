@@ -10,7 +10,7 @@
   
   *"Making invisible states visible through coordinated particle chaos"*
   
-  Built with pure Canvas 2D API, achieving smooth 60fps animations with thousands of particles - no WebGL, no heavy frameworks required.
+  Built with pure Canvas 2D API, achieving rock-solid 60fps animations at 1080p and below with thousands of particles - no WebGL, no heavy frameworks required.
 </div>
 
 ## 🌟 Features
@@ -19,7 +19,7 @@
 - **20+ Emotional States**: From joy to contemplation, each with unique particle behaviors
 - **Advanced Particle Physics**: Flocking, morphing, gravitational effects, and fluid dynamics
 - **Gesture Composition System**: Layer multiple animations for complex expressions
-- **Performance Optimized**: 60fps with 1000+ particles using Canvas 2D optimizations
+- **Performance Optimized**: Rock-solid 60fps with 1000+ particles through advanced render loop optimization
 - **Adaptive Degradation**: Automatically adjusts quality for consistent performance
 - **Web Worker Support**: Offload heavy computations for smooth main thread
 

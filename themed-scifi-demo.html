@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EMOTIVE A.I. Core - Neural Interface</title>
     <link rel="icon" type="image/svg+xml" href="assets/emotive-engine-icon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- External dependencies removed for performance -->
+    <style>
+        /* Fallback fonts - use system fonts for better performance */
+        @font-face {
+            font-family: 'Chakra Petch';
+            src: local('system-ui'), local('-apple-system'), local('BlinkMacSystemFont');
+        }
+        @font-face {
+            font-family: 'Orbitron';  
+            src: local('system-ui'), local('-apple-system'), local('BlinkMacSystemFont');
+            font-weight: 700;
+        }
+    </style>
     <style>
         :root {
             --blur-strength: 16px;
@@ -738,12 +747,18 @@
             document.getElementById('undertone-display').textContent = currentUndertone.toUpperCase() || 'STABLE';
         }
         
+        let lastFPSValue = -1;
         function updateFPS() {
             if (!showingFPS || !mascot) return;
             
             const metrics = mascot.getPerformanceMetrics();
             const fps = Math.round(metrics.fps || 0);
-            document.getElementById('fps-value').textContent = fps;
+            
+            // Only update DOM if value changed
+            if (fps !== lastFPSValue) {
+                document.getElementById('fps-value').textContent = fps;
+                lastFPSValue = fps;
+            }
             
             // Continue updating while showing FPS
             requestAnimationFrame(updateFPS);
