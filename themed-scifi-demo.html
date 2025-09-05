@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMOTIVE A.I. Core - Neural Interface</title>
+    <link rel="icon" type="image/svg+xml" href="assets/emotive-engine-icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --blur-strength: 16px;
+            --control-width: clamp(240px, 30vw, 320px);
+            --gap: 20px;
+        }
+
+        /* Theme Variables - Light Theme (CAN have blue) */
+        .light {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-grid: rgba(0, 0, 0, 0.05);
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --accent-primary: #007acc;
+            --accent-glow: #0099ff;
+            --border-color: rgba(0, 122, 204, 0.3);
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --button-bg: rgba(255, 255, 255, 0.8);
+            --button-hover: rgba(0, 122, 204, 0.1);
+            --canvas-bg: #F2F1F1;
+        }
+
+        /* Dark Theme (CAN have blue) */
+        .dark {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-grid: rgba(255, 255, 255, 0.05);
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent-primary: #00e5ff;
+            --accent-glow: #00ccff;
+            --border-color: rgba(0, 229, 255, 0.3);
+            --panel-bg: rgba(42, 42, 42, 0.95);
+            --button-bg: rgba(0, 0, 0, 0.4);
+            --button-hover: rgba(0, 229, 255, 0.1);
+            --canvas-bg: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Night Theme (NO BLUES - Burnt orange/copper accents) */
+        .night {
+            --bg-primary: #0E0E0E;  /* flex tape dark */
+            --bg-secondary: #1A1A1A; /* slightly lighter dark */
+            --bg-grid: rgba(204, 102, 51, 0.08); /* burnt orange grid */
+            --text-primary: #FFF5F0; /* off-white with subtle orange tint */
+            --text-secondary: rgba(255, 245, 240, 0.8); /* orange-tinted white */
+            --accent-primary: #CC6633; /* burnt orange for frame borders - NO BLUES */
+            --accent-glow: #E67E50;    /* slightly brighter for glow */
+            --border-color: rgba(204, 102, 51, 0.3); /* burnt orange border for frame */
+            --panel-bg: rgba(14, 14, 14, 0.95); /* flex tape based */
+            --button-bg: rgba(0, 0, 0, 0.4);
+            --button-hover: rgba(255, 138, 101, 0.15); /* brighter orange hover */
+            --canvas-bg: #0E0E0E; /* flex tape dark */
+        }
+
+        /* 1. Base Reset & Typography */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; }
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: var(--bg-primary);
+            background-image:
+                linear-gradient(var(--bg-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+            background-size: 25px 25px;
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Theme Switcher */
+        .theme-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            width: 30px;
+            height: 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-switcher:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-icon {
+            width: 32px;
+            height: 32px;
+            transition: transform 0.3s ease;
+            opacity: 0.33;
+        }
+
+        .theme-switcher:hover .theme-icon {
+            transform: rotate(360deg);
+            opacity: 1;
+        }
+
+        /* 2. Main Layout Structure (Mobile First) */
+        body {
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-height: 100%;
+        }
+        .center-container {
+            order: 1;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .controls-left { order: 2; background-color: var(--bg-primary); }
+        .controls-right { order: 3; background-color: var(--bg-primary); }
+
+        /* 3. Central Display Unit */
+        .display-and-controls {
+            display: flex;
+            flex-direction: column;
+        }
+        .display-container {
+            width: 100%;
+            aspect-ratio: 1 / 1 !important; /* THE LAW: Always square */
+            position: relative;
+            background: rgba(10, 14, 26, 0.25);
+            backdrop-filter: blur(var(--blur-strength));
+            -webkit-backdrop-filter: blur(var(--blur-strength));
+            min-height: 0; /* Prevent flex from overriding aspect-ratio */
+            contain: layout size; /* Isolate layout calculations */
+        }
+        /* Fallback for browsers without aspect-ratio support */
+        .display-container::before {
+            content: "";
+            display: block;
+            padding-top: 100%; /* Forces 1:1 Aspect Ratio using the width */
+        }
+        .display-content {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--canvas-bg);
+        }
+        .system-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px;
+            height: 60px;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        /* 4. Control Panels & Buttons */
+        .control-section { padding: 15px; }
+        .control-section h3 {
+            color: var(--accent-primary); 
+            font-size: 0.8rem;
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            margin-bottom: 10px; 
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        /* Night theme headings use brighter orange */
+        .night .control-section h3 {
+            color: #FF8A65; /* brighter orange for headings */
+            border-bottom-color: rgba(255, 138, 101, 0.2);
+        }
+        .sci-fi-btn {
+            width: 100%; 
+            padding: 8px; 
+            margin: 4px 0;
+            background: var(--button-bg); 
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary); 
+            border-radius: 4px; 
+            cursor: pointer;
+            transition: all 0.2s; 
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        .sci-fi-btn:hover {
+            background: var(--button-hover); 
+            border-color: var(--accent-primary);
+            color: var(--accent-primary); 
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+        .sci-fi-btn.active {
+            background: var(--button-hover); 
+            border-color: var(--accent-primary);
+            color: var(--accent-primary); 
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+        .btn-group { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+            gap: 5px; 
+        }
+        
+        /* 5. Holo Effects & Decorations */
+        .holo-element { position: absolute; pointer-events: none; }
+        .corner-bracket { z-index: 50; width: 40px; height: 40px; }
+        .corner-bracket::before, .corner-bracket::after { 
+            content: ''; 
+            position: absolute; 
+            background-color: var(--accent-primary); 
+            animation: subtle-glow 4s infinite ease-in-out; 
+        }
+        .top-left { top: 0; left: 0; } 
+        .top-left::before { height: 4px; width: 100%; } 
+        .top-left::after { width: 4px; height: 100%; }
+        .top-right { top: 0; right: 0; } 
+        .top-right::before { height: 4px; width: 100%; } 
+        .top-right::after { width: 4px; height: 100%; right: 0; }
+        .bottom-left { bottom: 0; left: 0; } 
+        .bottom-left::before { height: 4px; width: 100%; bottom: 0; } 
+        .bottom-left::after { width: 4px; height: 100%; }
+        .bottom-right { bottom: 0; right: 0; } 
+        .bottom-right::before { height: 4px; width: 100%; bottom: 0; } 
+        .bottom-right::after { width: 4px; height: 100%; right: 0; }
+        .holo-circle { 
+            z-index: 5; 
+            border: 2px solid; 
+            border-radius: 50%; 
+            animation: rotate 80s infinite linear; 
+            aspect-ratio: 1 / 1; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+        }
+        .circle-1 { 
+            width: 90%; 
+            border-color: var(--border-color); 
+            border-style: dotted; 
+        }
+        .circle-2 { 
+            width: 80%; 
+            border-color: var(--border-color); 
+            animation-direction: reverse; 
+            animation-duration: 15s; 
+        }
+        .info-display { 
+            z-index: 200; 
+            bottom: 25px; 
+            left: 25px; 
+            font-family: 'Chakra Petch', sans-serif; 
+            font-size: 1rem; 
+            width: calc(100% - 50px); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .info-display > .status-text { 
+            animation: subtle-glow-cyan 4s infinite ease-in-out; 
+            text-transform: uppercase; 
+        }
+        .info-display > .undertone-text { 
+            background: rgba(0, 0, 0, 0.4); 
+            border: 1px solid var(--border-color); 
+            padding: 4px 12px; 
+            border-radius: 4px; 
+            color: var(--text-secondary); 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+        }
+        /* Light theme undertone tag styling */
+        .light .info-display > .undertone-text {
+            background: rgba(0, 122, 204, 0.15);
+            border: 1px solid rgba(0, 122, 204, 0.4);
+            color: #007acc;
+        }
+        /* Light theme FPS display styling */
+        .light .fps-display {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 122, 204, 0.4);
+            color: #007acc;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .fps-display { 
+            z-index: 200; 
+            position: absolute; 
+            bottom: 60px; 
+            right: 25px;
+            font-family: 'Chakra Petch', sans-serif; 
+            font-size: 0.75rem; 
+            color: var(--accent-primary); 
+            background: rgba(0, 0, 0, 0.6); 
+            border: 1px solid var(--border-color); 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            display: none; 
+            text-align: right; 
+            line-height: 1.4; 
+        }
+        .fps-display.active { display: block; } 
+        .fps-display .fps-value { font-size: 1.2rem; font-weight: bold; }
+
+        /* 6. Desktop Layout Overrides */
+        @media (min-width: 1025px) {
+            body { overflow: hidden; }
+            .main-layout {
+                flex-direction: row;
+                height: 100vh;
+                padding: var(--gap);
+                gap: var(--gap);
+            }
+            .center-container {
+                order: 0;
+                position: relative;
+                flex: 1;
+                min-width: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .controls-left, .controls-right {
+                order: 0;
+                width: var(--control-width);
+                flex-shrink: 0;
+                height: 100%;
+                overflow-y: auto;
+                background-color: var(--panel-bg);
+            }
+            .display-and-controls {
+                height: 100%;
+                width: 100%;
+                max-height: 800px;
+                max-width: 800px;
+            }
+            .display-container {
+                width: 100%;
+                aspect-ratio: 1 / 1 !important; /* Enforced even in desktop view */
+                flex: 0 0 auto; /* Never grow or shrink in flex context */
+            }
+            .btn-group { grid-template-columns: 1fr 1fr; }
+            .controls-left::-webkit-scrollbar, .controls-right::-webkit-scrollbar { width: 8px; }
+            .controls-left::-webkit-scrollbar-track, .controls-right::-webkit-scrollbar-track { 
+                background: var(--button-bg); 
+            }
+            .controls-left::-webkit-scrollbar-thumb, .controls-right::-webkit-scrollbar-thumb { 
+                background: var(--border-color); 
+                border-radius: 4px; 
+            }
+        }
+
+        /* 7. Animations */
+        #emotive-canvas { 
+            display: block; 
+            position: absolute; 
+            z-index: 10; 
+            width: 100%; 
+            height: 100%; 
+            top: 0;
+            left: 0;
+        }
+        @keyframes pulse { 
+            0%, 100% { 
+                opacity: 0.8; 
+                transform: scale(1); 
+                box-shadow: 0 0 10px var(--accent-glow); 
+            } 
+            50% { 
+                opacity: 1; 
+                transform: scale(1.02); 
+                box-shadow: 0 0 15px var(--accent-glow); 
+            } 
+        }
+        @keyframes subtle-glow { 
+            0%, 100% { 
+                background-color: var(--accent-primary); 
+            } 
+            50% { 
+                background-color: var(--accent-glow); 
+            } 
+        }
+        @keyframes subtle-glow-cyan { 
+            0%, 100% { 
+                color: var(--accent-primary); 
+                text-shadow: 0 0 5px var(--accent-glow); 
+            } 
+            50% { 
+                color: var(--accent-glow); 
+                text-shadow: 0 0 8px var(--accent-glow); 
+            } 
+        }
+        /* Night theme specific styles */
+        .night .sci-fi-btn.active {
+            color: #FFF5F0; /* orange-tinted white for active buttons */
+            border-color: #FF8A65; /* brighter orange border */
+            box-shadow: 0 0 15px rgba(255, 138, 101, 0.6);
+        }
+        .night .info-display .status-text {
+            color: #FEFEFE !important; /* force white core */
+            text-shadow: 0 0 15px #FF8A65; /* single orange glow */
+            animation: none !important; /* disable the animation */
+        }
+        .night .info-display > .undertone-text {
+            background: rgba(20, 14, 10, 0.8);
+            border: 1px solid #FF8A65;
+            color: #FFD4B8;
+        }
+        .night .fps-display {
+            background: rgba(20, 14, 10, 0.8);
+            border: 1px solid #FF8A65;
+            color: #FF8A65;
+        }
+        
+        /* Dark theme specific styles */
+        .dark .info-display .status-text {
+            color: #FEFEFE !important; /* force white core */
+            text-shadow: 0 0 15px #00e5ff; /* cyan blue glow */
+            animation: none !important; /* disable the animation */
+        }
+        
+        /* Light theme specific styles */
+        .light .info-display .status-text {
+            color: #0E0E0E !important; /* flex tape dark text */
+            text-shadow: 0 0 15px #007acc; /* blue glow */
+            animation: none !important; /* disable the animation */
+        }
+        @keyframes rotate { 
+            from { transform: translate(-50%, -50%) rotate(0deg); } 
+            to { transform: translate(-50%, -50%) rotate(360deg); } 
+        }
+    </style>
+</head>
+<body class="night">
+    <div class="main-layout">
+        
+        <div class="controls-left">
+            <div class="control-section">
+                <h3>Emotion Matrix</h3>
+                <div class="btn-group">
+                    <button class="sci-fi-btn emotion-btn active" data-emotion="neutral">Neutral</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="joy">Joy</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="sadness">Sadness</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="anger">Anger</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="fear">Fear</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="surprise">Surprise</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="disgust">Disgust</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="love">Love</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria">Euphoria</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="excited">Excited</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="suspicion">Suspicion</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="resting">Resting</button>
+                </div>
+            </div>
+            <div class="control-section">
+                <h3>Undertone Modifier</h3>
+                <div class="btn-group">
+                    <button class="sci-fi-btn undertone-btn" data-undertone="nervous">Nervous</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="intense">Intense</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="tired">Tired</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="confident">Confident</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="subdued">Subdued</button>
+                    <button class="sci-fi-btn undertone-btn active" data-undertone="">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="center-container">
+            <div class="display-and-controls">
+                <div id="display-container" class="display-container">
+                    <div class="display-content">
+                        <canvas id="emotive-canvas"></canvas>
+                        <div style="position: absolute; top: 20px; left: 20px; z-index: 100; opacity: 0.33;">
+                            <img id="logo-image" src="assets/emotive-engine-full-BW.svg" alt="Emotive Engine" style="height: 40px; filter: brightness(0) invert(1);">
+                        </div>
+                        <!-- Theme Switcher -->
+                        <div class="theme-switcher" id="theme-switcher">
+                            <svg class="theme-icon" id="theme-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <!-- Icon path will be replaced dynamically -->
+                                <path d="" fill-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="holo-element corner-bracket top-left"></div>
+                        <div class="holo-element corner-bracket top-right"></div>
+                        <div class="holo-element corner-bracket bottom-left"></div>
+                        <div class="holo-element corner-bracket bottom-right"></div>
+                        <div class="holo-element holo-circle circle-1"></div>
+                        <div class="holo-element holo-circle circle-2"></div>
+                        <div class="holo-element info-display">
+                            <div class="status-text" id="emotion-display">EMOTION: NEUTRAL</div>
+                            <div class="undertone-text" id="undertone-display">STABLE</div>
+                        </div>
+                        <div class="fps-display" id="fps-display">
+                            <span class="fps-value" id="fps-value">0</span>
+                            <span class="fps-label">FPS</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="system-controls">
+                    <button class="sci-fi-btn" id="fps-toggle">Show FPS</button>
+                    <button class="sci-fi-btn" id="record-btn">Record</button>
+                    <button class="sci-fi-btn" id="randomize-btn">Randomize</button>
+                    <button class="sci-fi-btn" id="reset-btn">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-right">
+            <div class="control-section">
+                <h3>Gesture Protocol</h3>
+                <div class="btn-group">
+                    <button class="sci-fi-btn gesture-btn" data-gesture="bounce">Bounce</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="pulse">Pulse</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="shake">Shake</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="spin">Spin</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="nod">Nod</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="wave">Wave</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="breathe">Breathe</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="tilt">Tilt</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="expand">Expand</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="contract">Contract</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="flash">Flash</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="drift">Drift</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="stretch">Stretch</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="glow">Glow</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="flicker">Flicker</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="vibrate">Vibrate</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="morph">Morph</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="jump">Jump</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // Import the real EmotiveEngine
+        import EmotiveEngine from './src/EmotiveMascot.js?v=2.0.1';
+
+        let mascot;
+        let currentEmotion = 'neutral';
+        let currentUndertone = '';
+        let showingFPS = false;
+        let isRecording = false;
+        let currentTheme = 'night';
+
+        // Theme management
+        const themes = ['light', 'dark', 'night'];
+        const themeIcons = {
+            // Sun icon for light theme - larger starburst with eclipse-matching center hole
+            'light': 'M 12 0 L 9.5 6.5 A 5.5 5.5 0 0 1 14.5 6.5 L 12 0 z M 2 2 L 6.5 9.5 A 5.5 5.5 0 0 1 9.5 6.5 L 2 2 z M 0 12 L 6.5 14.5 A 5.5 5.5 0 0 1 6.5 9.5 L 0 12 z M 2 22 L 9.5 17.5 A 5.5 5.5 0 0 1 6.5 14.5 L 2 22 z M 12 24 L 14.5 17.5 A 5.5 5.5 0 0 1 9.5 17.5 L 12 24 z M 22 22 L 17.5 14.5 A 5.5 5.5 0 0 1 14.5 17.5 L 22 22 z M 24 12 L 17.5 9.5 A 5.5 5.5 0 0 1 17.5 14.5 L 24 12 z M 22 2 L 14.5 6.5 A 5.5 5.5 0 0 1 17.5 9.5 L 22 2 z',
+            // Moon icon for dark theme - crescent using negative space
+            'dark': 'M 12 3 C 7.03 3 3 7.03 3 12 C 3 16.97 7.03 21 12 21 C 16.97 21 21 16.97 21 12 C 21 11.34 20.91 10.7 20.75 10.09 C 19.84 10.67 18.75 11 17.57 11 C 14.48 11 12 8.52 12 5.43 C 12 4.25 12.33 3.16 12.91 2.25 C 12.61 3.09 12 3 12 3 z',
+            // Eclipse icon for night theme - sun with moon overlay
+            'night': 'M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 z M 15 4.5 C 18.04 4.5 20.5 6.96 20.5 10 C 20.5 13.04 18.04 15.5 15 15.5 C 11.96 15.5 9.5 13.04 9.5 10 C 9.5 6.96 11.96 4.5 15 4.5 z'
+        };
+        const iconColors = {
+            'light': '#007acc',  /* blue - light theme CAN have blue */
+            'dark': '#00e5ff',   /* cyan - dark theme CAN have blue */
+            'night': '#CC6633'   /* burnt orange/copper - night theme NO blues */
+        };
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            const path = icon.querySelector('path');
+            path.setAttribute('d', themeIcons[theme]);
+            path.setAttribute('fill-rule', 'evenodd');
+            icon.style.color = iconColors[theme];
+        }
+
+        function cycleTheme() {
+            const currentIndex = themes.indexOf(currentTheme);
+            currentTheme = themes[(currentIndex + 1) % themes.length];
+            
+            // Remove all theme classes and apply new one
+            document.body.classList.remove(...themes);
+            document.body.classList.add(currentTheme);
+            
+            // Update icon
+            updateThemeIcon(currentTheme);
+            
+            // Update logo filter to match theme with subtle tint
+            const logo = document.getElementById('logo-image');
+            if (logo) {
+                switch(currentTheme) {
+                    case 'light':
+                        // Subtle blue tint for light theme
+                        logo.style.filter = 'brightness(0) sepia(1) saturate(5) hue-rotate(190deg) brightness(0.4)';
+                        break;
+                    case 'night':
+                        // Subtle orange tint for night theme  
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(15deg) brightness(0.9)';
+                        break;
+                    case 'dark':
+                    default:
+                        // Subtle cyan tint for dark theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(150deg) brightness(0.95)';
+                        break;
+                }
+            }
+            
+            // Save preference
+            localStorage.setItem('emotive-theme', currentTheme);
+        }
+
+        async function init() {
+            // Load saved theme
+            const savedTheme = localStorage.getItem('emotive-theme') || 'night';
+            currentTheme = savedTheme;
+            document.body.classList.remove(...themes);
+            document.body.classList.add(currentTheme);
+            updateThemeIcon(currentTheme);
+            
+            // Set initial logo filter based on theme with subtle tint
+            const logo = document.getElementById('logo-image');
+            if (logo) {
+                switch(currentTheme) {
+                    case 'light':
+                        // Subtle blue tint for light theme
+                        logo.style.filter = 'brightness(0) sepia(1) saturate(5) hue-rotate(190deg) brightness(0.4)';
+                        break;
+                    case 'night':
+                        // Subtle orange tint for night theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(15deg) brightness(0.9)';
+                        break;
+                    case 'dark':
+                    default:
+                        // Subtle cyan tint for dark theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(150deg) brightness(0.95)';
+                        break;
+                }
+            }
+
+            mascot = new EmotiveEngine({
+                canvasId: 'emotive-canvas',
+                startingEmotion: 'neutral',
+                emotionalResponsiveness: 0.8,
+                particleIntensity: 1.0,
+                glowIntensity: 0.8,
+                audioEnabled: false,
+                showFPS: false,
+                debugMode: false,
+                renderMode: 'default',
+                maxParticles: 100
+            });
+            mascot.start();
+            setupEventHandlers();
+            updateDisplay();
+        }
+
+        function setupEventHandlers() {
+            // Theme switcher
+            document.getElementById('theme-switcher').addEventListener('click', cycleTheme);
+
+            document.querySelectorAll('.emotion-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentEmotion = btn.dataset.emotion;
+                    mascot.setEmotion(currentEmotion, currentUndertone || undefined);
+                    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateDisplay();
+                });
+            });
+
+            document.querySelectorAll('.gesture-btn').forEach(btn => {
+                btn.addEventListener('click', () => mascot.express(btn.dataset.gesture));
+            });
+
+            document.querySelectorAll('.undertone-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentUndertone = btn.dataset.undertone;
+                    mascot.setEmotion(currentEmotion, currentUndertone || undefined);
+                    document.querySelectorAll('.undertone-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateDisplay();
+                });
+            });
+
+            document.getElementById('fps-toggle').addEventListener('click', function() {
+                showingFPS = !showingFPS;
+                document.getElementById('fps-display').classList.toggle('active', showingFPS);
+                this.textContent = showingFPS ? 'Hide FPS' : 'Show FPS';
+                
+                // Start or stop FPS updates
+                if (showingFPS) {
+                    updateFPS();
+                }
+            });
+            
+            document.getElementById('record-btn').addEventListener('click', function() {
+                isRecording = !isRecording;
+                this.textContent = isRecording ? 'Stop' : 'Record';
+                this.classList.toggle('active', isRecording);
+                if (isRecording) mascot.startRecording(); else mascot.stopRecording();
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                currentEmotion = 'neutral';
+                currentUndertone = '';
+                mascot.setEmotion('neutral');
+                document.querySelectorAll('.emotion-btn, .undertone-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.emotion-btn[data-emotion="neutral"]').classList.add('active');
+                document.querySelector('.undertone-btn[data-undertone=""]').classList.add('active');
+                updateDisplay();
+            });
+            
+            document.getElementById('randomize-btn').addEventListener('click', () => {
+                const emotions = Array.from(document.querySelectorAll('.emotion-btn')).map(b => b.dataset.emotion);
+                const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+                document.querySelector(`.emotion-btn[data-emotion="${randomEmotion}"]`).click();
+            });
+        }
+
+        function updateDisplay() {
+            document.getElementById('emotion-display').textContent = `EMOTION: ${currentEmotion.toUpperCase()}`;
+            document.getElementById('undertone-display').textContent = currentUndertone.toUpperCase() || 'STABLE';
+        }
+        
+        function updateFPS() {
+            if (!showingFPS || !mascot) return;
+            
+            const metrics = mascot.getPerformanceMetrics();
+            const fps = Math.round(metrics.fps || 0);
+            document.getElementById('fps-value').textContent = fps;
+            
+            // Continue updating while showing FPS
+            requestAnimationFrame(updateFPS);
+        }
+
+        init().catch(console.error);
+    </script>
+</body>
+</html>

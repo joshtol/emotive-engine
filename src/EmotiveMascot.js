@@ -9,8 +9,9 @@
  *
  * @fileoverview EmotiveMascot - Main API Class for the Emotive Engine
  * @author Emotive Engine Team
- * @version 2.0.0
+ * @version 2.1.0
  * @module EmotiveMascot
+ * @changelog 2.1.0 - Added resize handling with visual resampling for consistent quality
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -26,6 +27,7 @@
  * │ • Emotional state management with smooth transitions                              
  * │ • Gesture triggering and animation control                                        
  * │ • Particle system orchestration                                                   
+ * │ • Dynamic visual resampling on resize                                             
  * │ • Plugin system for extensibility                                                 
  * │ • Event handling and listener management                                          
  * │ • Performance optimization and degradation                                        
@@ -325,6 +327,11 @@ class EmotiveMascot {
         
         // Set initial emotional state
         this.stateMachine.setEmotion(this.config.defaultEmotion);
+        
+        // Register for canvas resize events to trigger visual resampling
+        this.canvasManager.onResize((width, height, dpr) => {
+            this.handleResize(width, height, dpr);
+        });
         
         // Log browser compatibility information
         console.log('EmotiveMascot initialized successfully', {
@@ -2490,6 +2497,41 @@ class EmotiveMascot {
             window.speechSynthesis.cancel();
             this.setTTSSpeaking(false);
         }
+    }
+    
+    /**
+     * Handle canvas resize events to trigger visual resampling
+     * This ensures visuals look crisp at any size
+     * @param {number} width - New canvas width
+     * @param {number} height - New canvas height
+     * @param {number} dpr - Device pixel ratio
+     */
+    handleResize(width, height, dpr) {
+        console.log('EmotiveMascot handleResize:', { width, height, dpr });
+        
+        // Force a re-initialization of the offscreen canvas in renderer
+        if (this.renderer && this.renderer.initOffscreenCanvas) {
+            this.renderer.initOffscreenCanvas();
+        }
+        
+        // Trigger a state update to recalculate all visual parameters
+        if (this.stateMachine) {
+            const currentEmotion = this.stateMachine.currentEmotion;
+            const currentUndertone = this.stateMachine.currentUndertone;
+            
+            // Re-apply current emotion to trigger fresh calculations
+            if (currentEmotion) {
+                this.stateMachine.setEmotion(currentEmotion);
+            }
+            
+            // Re-apply current undertone if any
+            if (currentUndertone && currentUndertone !== 'none') {
+                this.stateMachine.setUndertone(currentUndertone);
+            }
+        }
+        
+        // Emit resize event for any listeners
+        this.emit('resize', { width, height, dpr });
     }
     
     /**

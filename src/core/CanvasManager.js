@@ -9,8 +9,9 @@
  *
  * @fileoverview Canvas Manager - High-DPI Rendering & Canvas Lifecycle
  * @author Emotive Engine Team
- * @version 2.0.0
+ * @version 2.1.0
  * @module CanvasManager
+ * @changelog 2.1.0 - Added resize callback system for visual resampling
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -25,6 +26,7 @@
  * ├───────────────────────────────────────────────────────────────────────────────────
  * │ • Device Pixel Ratio (DPR) scaling for Retina displays                            
  * │ • Automatic resize handling with debouncing                                       
+ * │ • Resize callback system for component notification                               
  * │ • Optimized 2D context settings for animations                                    
  * │ • Center point calculation for orb positioning                                    
  * │ • Clean canvas clearing with proper scaling                                       
@@ -54,6 +56,9 @@ class CanvasManager {
         this.height = 0;
         this.centerX = 0;
         this.centerY = 0;
+        
+        // Resize callbacks
+        this.resizeCallbacks = [];
         
         // Bind resize handler
         this.handleResize = this.handleResize.bind(this);
@@ -115,6 +120,25 @@ class CanvasManager {
             dpr: this.dpr,
             center: { x: this.centerX, y: this.centerY }
         });
+        
+        // Trigger resize callbacks
+        this.resizeCallbacks.forEach(callback => {
+            try {
+                callback(this.width, this.height, this.dpr);
+            } catch (error) {
+                console.error('Error in resize callback:', error);
+            }
+        });
+    }
+    
+    /**
+     * Register a callback to be called on canvas resize
+     * @param {Function} callback - Function to call with (width, height, dpr) parameters
+     */
+    onResize(callback) {
+        if (typeof callback === 'function') {
+            this.resizeCallbacks.push(callback);
+        }
     }
 
     /**

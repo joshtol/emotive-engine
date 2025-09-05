@@ -9,8 +9,9 @@
  *
  * @fileoverview Emotive Renderer - Visual Rendering Engine
  * @author Emotive Engine Team
- * @version 2.1.0
+ * @version 2.2.0
  * @module EmotiveRenderer
+ * @changelog 2.2.0 - Dynamic visual resampling on resize for consistent quality
  * @changelog 2.1.0 - Implemented undertone saturation system for glow colors
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
@@ -22,6 +23,7 @@
  * ║                                                                                    
  * ║ NEW: Undertone saturation creates visual depth by adjusting glow color            
  * ║ saturation based on emotional intensity (intense→electric, subdued→ghostly)       
+ * ║ NEW: Dynamic visual resampling ensures consistent quality at any canvas size      
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -54,6 +56,8 @@
  * │ • breathingSpeed   : Breaths per minute (default: 16)                             
  * │ • breathingDepth   : Scale variation % (default: 8%)                              
  * │ • renderingStyle   : 'classic' | 'soft' | 'sharp'                                 
+ * │ • referenceSize    : Reference canvas size for scaling (default: 400)             
+ * │ • baseScale        : Global scale multiplier (default: 1.0)                       
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -105,6 +109,13 @@ class EmotiveRenderer {
             baseScale: options.baseScale || 1.0,  // Global scale multiplier for entire system
             referenceSize: 400  // Reference canvas size for scale calculations
         };
+        
+        // Initialize scaleFactor based on current canvas size
+        const canvasSize = Math.min(
+            this.canvasManager.width || 400, 
+            this.canvasManager.height || 400
+        );
+        this.scaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale;
         
         // State
         this.state = {
@@ -512,6 +523,16 @@ class EmotiveRenderer {
     }
     
     /**
+     * Scale a value based on current canvas size vs reference size
+     * Used to scale hard-coded values like shadowBlur, lineWidth, etc.
+     * @param {number} value - The base value to scale
+     * @returns {number} The scaled value
+     */
+    scaleValue(value) {
+        return value * this.scaleFactor;
+    }
+    
+    /**
      * Initialize offscreen canvas for double buffering
      */
     initOffscreenCanvas() {
@@ -785,7 +806,7 @@ class EmotiveRenderer {
             }
         } else if (this.state.coreJitter || jitterAmount > 0) {
             // Regular jitter for other emotions
-            const jitterStrength = Math.max(jitterAmount, this.state.coreJitter ? 2 : 0);
+            const jitterStrength = Math.max(jitterAmount, this.state.coreJitter ? this.scaleValue(2) : 0);
             jitterX = (Math.random() - 0.5) * jitterStrength;
             jitterY = (Math.random() - 0.5) * jitterStrength;
         }
@@ -845,14 +866,14 @@ class EmotiveRenderer {
         // Render recording indicator AFTER context restore so it's not affected by transforms
         if (this.state.recording) {
             // ABSOLUTELY FIXED position - no gesture or scale factors affect this
-            const fixedX = logicalWidth / 2 - 100;  // Fixed 100px left of center
-            const fixedY = logicalHeight / 2 - 100;  // Fixed 100px above center
+            const fixedX = logicalWidth / 2 - this.scaleValue(100);  // Fixed 100px left of center
+            const fixedY = logicalHeight / 2 - this.scaleValue(100);  // Fixed 100px above center
             this.renderRecordingIndicator(fixedX, fixedY);
         }
         
         // Add sleep indicator if sleeping
         if (this.state.sleeping) {
-            this.renderSleepIndicator(centerX, centerY - glowRadius - 20, deltaTime);
+            this.renderSleepIndicator(centerX, centerY - glowRadius - this.scaleValue(20), deltaTime);
         }
         
         // Restore original context
@@ -1020,17 +1041,17 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
                 if (scanProgress < 0.4) {
                     // Slowly look left
                     const leftProgress = scanProgress / 0.4;
-                    scanOffset = -Math.sin(leftProgress * Math.PI / 2) * 20; // Max 20 pixels left
+                    scanOffset = -Math.sin(leftProgress * Math.PI / 2) * this.scaleValue(20); // Max 20 pixels left
                 } else if (scanProgress < 0.8) {
                     // Slowly look right  
                     const rightProgress = (scanProgress - 0.4) / 0.4;
-                    scanOffset = -20 + Math.sin(rightProgress * Math.PI) * 40; // From -20 to +20
+                    scanOffset = -this.scaleValue(20) + Math.sin(rightProgress * Math.PI) * this.scaleValue(40); // From -20 to +20
                 } else {
                     // Return to center
                     const centerProgress = (scanProgress - 0.8) / 0.2;
-                    scanOffset = 20 * (1 - centerProgress); // From +20 back to 0
+                    scanOffset = this.scaleValue(20) * (1 - centerProgress); // From +20 back to 0
                 }
-                x += scanOffset * this.scaleFactor;
+                x += scanOffset;
             }
         }
         
@@ -1056,9 +1077,9 @@ this.ctx.translate(x, y);
         this.ctx.scale(scaleX, scaleY);
         
         // Add subtle shadow for depth
-        this.ctx.shadowBlur = 10;
+        this.ctx.shadowBlur = this.scaleValue(10);
         this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        this.ctx.shadowOffsetY = 2;
+        this.ctx.shadowOffsetY = this.scaleValue(2);
         
         // Draw white core with eye arc effect
 this.ctx.fillStyle = this.config.coreColor;
@@ -1141,7 +1162,7 @@ this.ctx.fill();
         // Apply glow when lotus is morphing or fully formed
         if (this.zenTransition.lotusMorph > 0) {
             // Single smooth shadow glow 
-            this.ctx.shadowBlur = 100 * zenPulse;
+            this.ctx.shadowBlur = this.scaleValue(100) * zenPulse;
             this.ctx.shadowColor = `rgba(255, 223, 0, ${0.5 * zenPulse})`;
             
             // INNER RADIANCE GRADIENT - Much darker during transitions
@@ -1170,7 +1191,7 @@ this.ctx.fill();
             
             this.ctx.fillStyle = gradient;
             this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.3})`; // Dimmer edge during transition
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = this.scaleValue(2);
             
             // STEP 1: Draw a circle with lotus cutout using evenodd fill rule
             this.ctx.beginPath();
@@ -1333,7 +1354,7 @@ this.ctx.fill();
             // Render ring if visible
             if (ring.opacity > 0.01) {
                 this.ctx.strokeStyle = this.hexToRgba(this.state.glowColor, ring.opacity);
-                this.ctx.lineWidth = 2;
+                this.ctx.lineWidth = this.scaleValue(2);
                 this.ctx.beginPath();
                 this.ctx.arc(centerX, centerY, ring.radius, 0, Math.PI * 2);
                 this.ctx.stroke();
@@ -1356,11 +1377,11 @@ this.ctx.fill();
         this.ctx.translate(x, y);
         
         // Outer glow for text
-        this.ctx.shadowBlur = 15;
+        this.ctx.shadowBlur = this.scaleValue(15);
         this.ctx.shadowColor = `rgba(255, 0, 0, ${pulse * 0.8})`;
         
         // Main REC text - solid red, matching sleep Z size
-        const recSize = 80; // Match sleep Z average size
+        const recSize = this.scaleValue(80); // Match sleep Z average size
         this.ctx.font = `italic 900 ${recSize}px "Poppins", sans-serif`;
         this.ctx.fillStyle = `rgba(255, 0, 0, ${pulse})`;
         this.ctx.textAlign = 'center';
@@ -1389,12 +1410,12 @@ this.ctx.fill();
             const randomCase = Math.random() > 0.5 ? 'Z' : 'z';
             
             this.sleepZ.push({
-                x: x + Math.random() * 30 - 15,
-                y: y + 80,  // Much lower origin point
-                size: (24 + Math.random() * 8) * 3,  // 3x larger
+                x: x + Math.random() * this.scaleValue(30) - this.scaleValue(15),
+                y: y + this.scaleValue(80),  // Much lower origin point
+                size: this.scaleValue((24 + Math.random() * 8) * 3),  // 3x larger
                 opacity: 1.0,
                 speed: -0.025,
-                drift: Math.random() * 20 - 10,
+                drift: Math.random() * this.scaleValue(20) - this.scaleValue(10),
                 lifetime: 0,
                 rotation: Math.random() * 30 - 15,
                 text: randomCase,  // Store the random case
@@ -1431,7 +1452,7 @@ this.ctx.fill();
                 const baseColor = this.state.glowColor || '#4a90e2';
                 
                 // Outer glow
-                this.ctx.shadowBlur = 15;
+                this.ctx.shadowBlur = this.scaleValue(15);
                 this.ctx.shadowColor = this.hexToRgba(baseColor, z.opacity * 0.5);
                 
                 // Main Z with gradient

@@ -25,6 +25,7 @@
 
 ### Technical Excellence
 - **Zero Heavy Dependencies**: Pure JavaScript, no Three.js or WebGL required
+- **Dynamic Visual Resampling**: Maintains quality on resize without re-initialization
 - **Double Buffering**: Smooth rendering with offscreen canvas techniques
 - **Batch Rendering**: Optimized draw calls for maximum performance
 - **Plugin Architecture**: Extensible system for custom emotions and behaviors
@@ -138,6 +139,43 @@ const mascot = new EmotiveMascot({
   audioSensitivity: 0.7
 });
 ```
+
+## 🔄 Dynamic Visual Resampling (v2.1.0+)
+
+The engine now features automatic visual resampling on canvas resize, ensuring consistent visual quality regardless of viewport changes:
+
+### Automatic Quality Preservation
+- **Smart Scaling**: All visual parameters (stroke widths, shadow blur, text sizes) scale proportionally with canvas size
+- **Dynamic Recalculation**: When the canvas resizes (e.g., browser inspector opens/closes, window resize), the engine:
+  - Recalculates the scale factor based on new dimensions
+  - Resamples all visual parameters for crisp rendering
+  - Re-applies current emotional states with fresh calculations
+  - Maintains visual fidelity without stretching or distortion
+
+### Implementation Details
+```javascript
+// The engine automatically handles resize events
+// No additional configuration needed - it just works!
+
+const mascot = new EmotiveMascot({
+  canvasId: 'mascot-canvas',
+  // Reference size for scaling calculations (default: 400)
+  referenceSize: 400,
+  // Global scale multiplier (default: 1.0)
+  baseScale: 1.0
+});
+
+// Listen for resize events if needed
+mascot.on('resize', ({ width, height, dpr }) => {
+  console.log(`Canvas resized to ${width}x${height} @ ${dpr}x DPR`);
+});
+```
+
+### Benefits
+- **Consistent Quality**: Visuals remain sharp and properly proportioned at any size
+- **DevTools Friendly**: Opening/closing browser inspector no longer degrades visual quality
+- **Responsive Design**: Seamlessly adapts to different screen sizes and orientations
+- **Performance Optimized**: Efficient resampling without full re-initialization
 
 ## 🏗️ Architecture
 
