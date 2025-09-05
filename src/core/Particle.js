@@ -9,8 +9,9 @@
  *
  * @fileoverview Particle - Individual Particle Entity with Behavioral Movement
  * @author Emotive Engine Team
- * @version 2.1.0
+ * @version 2.2.0
  * @module Particle
+ * @changelog 2.2.0 - Added color caching for RGBA conversions
  * @changelog 2.1.0 - Added weighted color selection system and individual particle colors
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
@@ -205,9 +206,10 @@ class Particle {
         // Make particles more ephemeral
         this.baseOpacity = 0.3 + Math.random() * 0.4;  // 30-70% max opacity for ethereal look
         
-        // Gradient caching for performance
-        this.cachedGradient = null;
-        this.cachedGradientKey = null; // Track gradient state
+        // Color caching for performance
+        this.cachedColors = new Map(); // Cache RGBA strings
+        this.lastColor = null;
+        this.lastOpacity = -1;
         
         // Behavior properties
         this.behavior = behavior;
@@ -1203,13 +1205,16 @@ class Particle {
         } else {
             // Regular smooth style (2/3 of particles)
             
-            // Set the fill color once
-            ctx.fillStyle = particleColor;
+            // Cache fill style to avoid redundant sets
+            if (ctx.fillStyle !== particleColor) {
+                ctx.fillStyle = particleColor;
+            }
             
             // Draw glow first if this particle has one
             if (this.hasGlow) {
                 const glowRadius = Math.max(0.1, safeSize * this.glowSizeMultiplier);
                 
+                // Batch glow layers with single path
                 // Outer glow layer
                 ctx.globalAlpha = this.opacity * 0.15;
                 ctx.beginPath();
@@ -1234,14 +1239,35 @@ class Particle {
     }
     
     /**
-     * Convert hex to rgba
+     * Convert hex to rgba with caching
      */
     hexToRgba(hex, alpha = 1) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        if (result) {
-            return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})`;
+        // Create cache key
+        const key = `${hex}_${alpha.toFixed(3)}`;
+        
+        // Check cache first
+        if (this.cachedColors.has(key)) {
+            return this.cachedColors.get(key);
         }
-        return `rgba(0, 0, 0, ${alpha})`;
+        
+        // Parse and cache
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        let rgba;
+        if (result) {
+            rgba = `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})`;
+        } else {
+            rgba = `rgba(0, 0, 0, ${alpha})`;
+        }
+        
+        // Cache for future use (limit cache size to prevent memory leak)
+        if (this.cachedColors.size > 20) {
+            // Clear oldest entries
+            const firstKey = this.cachedColors.keys().next().value;
+            this.cachedColors.delete(firstKey);
+        }
+        this.cachedColors.set(key, rgba);
+        
+        return rgba;
     }
 
     /**
@@ -2201,9 +2227,8 @@ class Particle {
         this.baseSize = this.size;
         this.emotionColors = emotionColors;  // Store emotion colors
         
-        // Clear cached gradient for reuse
-        this.cachedGradient = null;
-        this.cachedGradientKey = null;
+        // Clear cached colors for reuse
+        this.cachedColors.clear();
         this.opacity = 0.0;  // Start invisible
         
         // Clear behavior data to prevent memory leaks

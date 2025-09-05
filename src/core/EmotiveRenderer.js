@@ -9,8 +9,9 @@
  *
  * @fileoverview Emotive Renderer - Visual Rendering Engine
  * @author Emotive Engine Team
- * @version 2.3.0
+ * @version 2.4.0
  * @module EmotiveRenderer
+ * @changelog 2.4.0 - Added offscreen canvas caching for glow gradients
  * @changelog 2.3.0 - Optimized color transitions to use main render loop
  * @changelog 2.2.0 - Dynamic visual resampling on resize for consistent quality
  * @changelog 2.1.0 - Implemented undertone saturation system for glow colors
@@ -172,6 +173,10 @@ class EmotiveRenderer {
         this.offscreenCanvas = null;
         this.offscreenCtx = null;
         this.initOffscreenCanvas();
+        
+        // Cache for expensive gradients
+        this.glowCache = new Map();
+        this.maxCacheSize = 10;
         this.nextBlinkTime = this.getRandomBlinkTime();
         
         // Gesture animations
@@ -916,11 +921,61 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
         );
         const safeRadius = Math.max(50, maxRadius); // Ensure minimum radius
         
-        // Create radial gradient for the glow
-        const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, safeRadius);
+        // Try to get cached glow or create new one
+        const glowImage = this.getCachedGlow(safeRadius, this.state.glowColor);
         
-        // Create smooth gradient with reasonable stops
-        const color = this.state.glowColor;
+        // Draw the cached glow image
+        if (glowImage) {
+            this.ctx.drawImage(glowImage, 
+                x - safeRadius, y - safeRadius,
+                safeRadius * 2, safeRadius * 2);
+        } else {
+            // Fallback to direct rendering if cache fails
+            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, safeRadius);
+            
+            // Create smooth gradient with reasonable stops
+            const color = this.state.glowColor;
+            const stops = 20;
+            for (let i = 0; i <= stops; i++) {
+                const position = i / stops;
+                const opacity = 0.6 * Math.pow(1 - position, 2.2);
+                gradient.addColorStop(position, this.hexToRgba(color, opacity));
+            }
+            
+            // Draw the glow as a circle
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, safeRadius, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+    }
+    
+    /**
+     * Get or create cached glow gradient
+     */
+    getCachedGlow(radius, color) {
+        // Round radius to reduce cache variations
+        const roundedRadius = Math.round(radius / 10) * 10;
+        const cacheKey = `${roundedRadius}_${color}`;
+        
+        // Check cache
+        if (this.glowCache.has(cacheKey)) {
+            return this.glowCache.get(cacheKey);
+        }
+        
+        // Create new cached glow
+        const glowCanvas = document.createElement('canvas');
+        const size = roundedRadius * 2;
+        glowCanvas.width = size;
+        glowCanvas.height = size;
+        const glowCtx = glowCanvas.getContext('2d', { alpha: true });
+        
+        // Create gradient in center of canvas
+        const centerX = roundedRadius;
+        const centerY = roundedRadius;
+        const gradient = glowCtx.createRadialGradient(centerX, centerY, 0, centerX, centerY, roundedRadius);
+        
+        // Add gradient stops
         const stops = 20;
         for (let i = 0; i <= stops; i++) {
             const position = i / stops;
@@ -928,11 +983,22 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
             gradient.addColorStop(position, this.hexToRgba(color, opacity));
         }
         
-        // Draw the glow as a circle, not filling the entire canvas
-        this.ctx.fillStyle = gradient;
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, safeRadius, 0, Math.PI * 2);
-        this.ctx.fill();
+        // Draw to offscreen canvas
+        glowCtx.fillStyle = gradient;
+        glowCtx.beginPath();
+        glowCtx.arc(centerX, centerY, roundedRadius, 0, Math.PI * 2);
+        glowCtx.fill();
+        
+        // Manage cache size
+        if (this.glowCache.size >= this.maxCacheSize) {
+            // Remove oldest entry
+            const firstKey = this.glowCache.keys().next().value;
+            this.glowCache.delete(firstKey);
+        }
+        
+        // Cache and return
+        this.glowCache.set(cacheKey, glowCanvas);
+        return glowCanvas;
     }
     
     /**
@@ -1787,6 +1853,11 @@ this.ctx.fill();
      * Set emotional state
      */
     setEmotionalState(emotion, properties, undertone = null) {
+        // Clear glow cache when emotion changes (colors will change)
+        if (this.state.emotion !== emotion) {
+            this.glowCache.clear();
+        }
+        
         // Store undertone for color processing
         this.state.undertone = undertone;
         this.currentUndertone = undertone;  // Keep legacy reference

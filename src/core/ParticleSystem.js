@@ -9,8 +9,9 @@
  *
  * @fileoverview Particle System - Orchestrator of Emotional Atmosphere
  * @author Emotive Engine Team
- * @version 2.2.0
+ * @version 2.3.0
  * @module ParticleSystem
+ * @changelog 2.3.0 - Batch rendering optimization for reduced state changes
  * @changelog 2.2.0 - Added undertone saturation system for dynamic particle depth
  * @changelog 2.1.0 - Added support for passing emotion colors to individual particles
  * 
@@ -532,21 +533,103 @@ class ParticleSystem {
     }
 
     /**
-     * Internal render implementation - optimized but preserving particle appearance
+     * Internal render implementation - batch optimized rendering
      */
     _render(ctx, emotionColor) {
-        // Render particles with culling optimization
+        // Sort particles by rendering properties to minimize state changes
+        const visibleParticles = [];
+        
+        // First pass: cull off-screen and dead particles
+        const margin = 50;
+        const canvasWidth = ctx.canvas.width;
+        const canvasHeight = ctx.canvas.height;
+        
         for (const particle of this.particles) {
             // Skip off-screen particles (culling)
-            const margin = 50;
-            if (particle.x < -margin || particle.x > ctx.canvas.width + margin ||
-                particle.y < -margin || particle.y > ctx.canvas.height + margin) {
+            if (particle.x < -margin || particle.x > canvasWidth + margin ||
+                particle.y < -margin || particle.y > canvasHeight + margin) {
                 continue;
             }
             
-            // Use original particle render method to preserve appearance
-            particle.render(ctx, emotionColor);
+            // Skip dead particles
+            if (particle.life <= 0) continue;
+            
+            visibleParticles.push(particle);
         }
+        
+        // Sort by render type to minimize state changes
+        // Group: cellShaded first, then by hasGlow, then by color
+        visibleParticles.sort((a, b) => {
+            if (a.isCellShaded !== b.isCellShaded) {
+                return a.isCellShaded ? -1 : 1;
+            }
+            if (a.hasGlow !== b.hasGlow) {
+                return a.hasGlow ? -1 : 1;
+            }
+            // Group by color to reduce fillStyle changes
+            const colorA = a.color || emotionColor;
+            const colorB = b.color || emotionColor;
+            if (colorA !== colorB) {
+                return colorA < colorB ? -1 : 1;
+            }
+            return 0;
+        });
+        
+        // Batch render with minimized state changes
+        ctx.save();
+        let lastFillStyle = null;
+        let lastStrokeStyle = null;
+        let lastLineWidth = null;
+        
+        for (const particle of visibleParticles) {
+            // For cell-shaded, use original render (they need complex stroke/fill combos)
+            if (particle.isCellShaded) {
+                particle.render(ctx, emotionColor);
+                // Reset cached values since particle.render may have changed them
+                lastFillStyle = null;
+                lastStrokeStyle = null;
+                lastLineWidth = null;
+            } else {
+                // Batch-optimized rendering for regular particles
+                const particleColor = particle.color || emotionColor;
+                
+                // Only set fillStyle if it changed
+                if (particleColor !== lastFillStyle) {
+                    ctx.fillStyle = particleColor;
+                    lastFillStyle = particleColor;
+                }
+                
+                // Validate position once
+                if (!isFinite(particle.x) || !isFinite(particle.y)) continue;
+                
+                const safeSize = Math.max(0.1, particle.size);
+                
+                // Draw glow layers if needed
+                if (particle.hasGlow) {
+                    const glowRadius = Math.max(0.1, safeSize * particle.glowSizeMultiplier);
+                    
+                    // Outer glow
+                    ctx.globalAlpha = particle.opacity * 0.15;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, glowRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Inner glow
+                    ctx.globalAlpha = particle.opacity * 0.25;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, glowRadius * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Draw core
+                ctx.globalAlpha = particle.opacity * (particle.baseOpacity || 0.5) * 0.6;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, safeSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        ctx.restore();
     }
 
     /**
@@ -560,8 +643,9 @@ class ParticleSystem {
         while (this.particles.length > 0) {
             const particle = this.particles.pop();
             // Clear cached data before returning
-            particle.cachedGradient = null;
-            particle.cachedGradientKey = null;
+            if (particle.cachedColors) {
+                particle.cachedColors.clear();
+            }
             // Clear behaviorData properties but keep the object
             if (particle.behaviorData) {
                 for (let key in particle.behaviorData) {
