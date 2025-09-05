@@ -38,7 +38,8 @@
             --panel-bg: rgba(255, 255, 255, 0.95);
             --button-bg: rgba(255, 255, 255, 0.8);
             --button-hover: rgba(0, 122, 204, 0.1);
-            --canvas-bg: #F2F1F1;
+            --canvas-bg: rgba(242, 241, 241, 0.3);
+            --canvas-backdrop: rgba(255, 255, 255, 0.1);
         }
 
         /* Dark Theme (CAN have blue) */
@@ -70,7 +71,8 @@
             --panel-bg: rgba(14, 14, 14, 0.95); /* flex tape based */
             --button-bg: rgba(0, 0, 0, 0.4);
             --button-hover: rgba(255, 138, 101, 0.15); /* brighter orange hover */
-            --canvas-bg: #0E0E0E; /* flex tape dark */
+            --canvas-bg: rgba(14, 14, 14, 0.3);
+            --canvas-backdrop: rgba(0, 0, 0, 0.1);
         }
 
         /* 1. Base Reset & Typography */
@@ -84,7 +86,6 @@
                 linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
             background-size: 25px 25px;
             color: var(--text-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* Theme Switcher */
@@ -120,6 +121,25 @@
             opacity: 1;
         }
 
+        /* Skip Navigation Link - WCAG 2.1 AA */
+        .skip-nav {
+            position: absolute;
+            left: -9999px;
+            z-index: 999;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border: 2px solid var(--accent-primary);
+            border-radius: 4px;
+        }
+        
+        .skip-nav:focus {
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+        }
+
         /* 2. Main Layout Structure (Mobile First) */
         body {
             position: relative;
@@ -132,14 +152,24 @@
             width: 100%;
             min-height: 100%;
         }
+        
         .center-container {
             order: 1;
             position: sticky;
             top: 0;
             z-index: 100;
+            transform-origin: center center;
         }
-        .controls-left { order: 2; background-color: var(--bg-primary); }
-        .controls-right { order: 3; background-color: var(--bg-primary); }
+        .controls-left { 
+            order: 2; 
+            background-color: var(--bg-primary); 
+            transform-origin: left center;
+        }
+        .controls-right { 
+            order: 3; 
+            background-color: var(--bg-primary);
+            transform-origin: right center;
+        }
 
         /* 3. Central Display Unit */
         .display-and-controls {
@@ -154,13 +184,23 @@
             backdrop-filter: blur(var(--blur-strength));
             -webkit-backdrop-filter: blur(var(--blur-strength));
             min-height: 0; /* Prevent flex from overriding aspect-ratio */
-            contain: layout size; /* Isolate layout calculations */
+            contain: layout size paint; /* Isolate layout calculations and painting */
+            will-change: contents; /* Optimize for canvas updates */
         }
-        /* Fallback for browsers without aspect-ratio support */
-        .display-container::before {
-            content: "";
-            display: block;
-            padding-top: 100%; /* Forces 1:1 Aspect Ratio using the width */
+        
+        #emotive-canvas {
+            will-change: transform;
+            transform: translateZ(0); /* Force GPU acceleration */
+            -webkit-transform: translateZ(0);
+            image-rendering: optimizeSpeed; /* Optimize rendering */
+        }
+        /* Fallback for browsers without aspect-ratio support - only for mobile portrait */
+        @media (orientation: portrait), (max-width: 1024px) {
+            .display-container::before {
+                content: "";
+                display: block;
+                padding-top: 100%; /* Forces 1:1 Aspect Ratio using the width */
+            }
         }
         .display-content {
             position: absolute !important;
@@ -222,6 +262,25 @@
             color: var(--accent-primary); 
             box-shadow: 0 0 10px var(--accent-glow);
         }
+        
+        /* Keyboard focus indicators - WCAG 2.1 AA compliant */
+        .sci-fi-btn:focus {
+            outline: 3px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+        
+        /* Enhanced focus for keyboard navigation only */
+        .sci-fi-btn:focus-visible {
+            outline: 3px solid var(--accent-primary);
+            outline-offset: 3px;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        
+        /* Remove outline for mouse users */
+        .sci-fi-btn:focus:not(:focus-visible) {
+            outline: none;
+        }
+        
         .sci-fi-btn.active {
             background: var(--button-hover); 
             border-color: var(--accent-primary);
@@ -332,7 +391,81 @@
         .fps-display.active { display: block; } 
         .fps-display .fps-value { font-size: 1.2rem; font-weight: bold; }
 
-        /* 6. Desktop Layout Overrides */
+        /* 6. Landscape Mode for Mobile/Tablet Devices */
+        @media (orientation: landscape) and (max-height: 768px) {
+            body { overflow: hidden; }
+            .main-layout {
+                flex-direction: row;
+                height: 100vh;
+                padding: 5px;
+                gap: 5px;
+            }
+            .center-container {
+                order: 0;
+                position: relative;
+                flex: 1;
+                min-width: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .controls-left, .controls-right {
+                order: 0;
+                width: 180px;
+                flex-shrink: 0;
+                height: 100%;
+                overflow-y: auto;
+                overflow-x: hidden;
+                background-color: var(--panel-bg);
+            }
+            .display-and-controls {
+                height: 100%;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .display-container {
+                width: 100%;
+                max-width: calc(100vh - 70px); /* Account for system controls */
+                max-height: calc(100vh - 70px);
+                aspect-ratio: 1 / 1 !important;
+                margin: 0 auto;
+            }
+            /* Hide the ::before pseudo-element in landscape */
+            .display-container::before {
+                display: none;
+            }
+            .system-controls {
+                height: 45px;
+                font-size: 0.7rem;
+                padding: 0 5px;
+                flex-shrink: 0;
+            }
+            .system-controls .sci-fi-btn {
+                padding: 5px 8px;
+            }
+            .btn-group { 
+                grid-template-columns: 1fr 1fr;
+                gap: 2px;
+            }
+            .sci-fi-btn {
+                padding: 5px;
+                font-size: 0.65rem;
+                margin: 2px 0;
+            }
+            .control-section {
+                padding: 8px;
+            }
+            .control-section h3 {
+                font-size: 0.65rem;
+                margin-bottom: 6px;
+            }
+        }
+        
+
+        /* 7. Desktop Layout Overrides */
         @media (min-width: 1025px) {
             body { overflow: hidden; }
             .main-layout {
@@ -340,6 +473,7 @@
                 height: 100vh;
                 padding: var(--gap);
                 gap: var(--gap);
+                box-sizing: border-box;
             }
             .center-container {
                 order: 0;
@@ -357,18 +491,31 @@
                 flex-shrink: 0;
                 height: 100%;
                 overflow-y: auto;
+                overflow-x: hidden;
                 background-color: var(--panel-bg);
+                box-sizing: border-box;
             }
             .display-and-controls {
                 height: 100%;
                 width: 100%;
-                max-height: 800px;
+                max-height: calc(100vh - 40px); /* Account for padding */
                 max-width: 800px;
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
             }
             .display-container {
                 width: 100%;
-                aspect-ratio: 1 / 1 !important; /* Enforced even in desktop view */
-                flex: 0 0 auto; /* Never grow or shrink in flex context */
+                flex: 1 1 auto;
+                max-height: calc(100% - 60px); /* Account for system controls */
+                aspect-ratio: 1 / 1 !important;
+            }
+            /* Hide the ::before pseudo-element in desktop */
+            .display-container::before {
+                display: none;
+            }
+            .system-controls {
+                flex-shrink: 0;
             }
             .btn-group { grid-template-columns: 1fr 1fr; }
             .controls-left::-webkit-scrollbar, .controls-right::-webkit-scrollbar { width: 8px; }
@@ -381,7 +528,7 @@
             }
         }
 
-        /* 7. Animations */
+        /* 8. Animations */
         #emotive-canvas { 
             display: block; 
             position: absolute; 
@@ -463,38 +610,39 @@
     </style>
 </head>
 <body class="night">
-    <div class="main-layout">
+    <a href="#display-container" class="skip-nav">Skip to main content</a>
+    <main class="main-layout" role="main">
         
-        <div class="controls-left">
+        <nav class="controls-left" role="navigation" aria-label="Emotion controls">
             <div class="control-section">
                 <h3>Emotion Matrix</h3>
-                <div class="btn-group">
-                    <button class="sci-fi-btn emotion-btn active" data-emotion="neutral">Neutral</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="joy">Joy</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="sadness">Sadness</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="anger">Anger</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="fear">Fear</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="surprise">Surprise</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="disgust">Disgust</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="love">Love</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria">Euphoria</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="excited">Excited</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="suspicion">Suspicion</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="resting">Resting</button>
+                <div class="btn-group" role="group" aria-label="Emotion selection">
+                    <button class="sci-fi-btn emotion-btn active" data-emotion="neutral" aria-label="Set emotion to neutral" aria-pressed="true">Neutral</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="joy" aria-label="Set emotion to joy" aria-pressed="false">Joy</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="sadness" aria-label="Set emotion to sadness" aria-pressed="false">Sadness</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="anger" aria-label="Set emotion to anger" aria-pressed="false">Anger</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="fear" aria-label="Set emotion to fear" aria-pressed="false">Fear</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="surprise" aria-label="Set emotion to surprise" aria-pressed="false">Surprise</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="disgust" aria-label="Set emotion to disgust" aria-pressed="false">Disgust</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="love" aria-label="Set emotion to love" aria-pressed="false">Love</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Set emotion to euphoria" aria-pressed="false">Euphoria</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="excited" aria-label="Set emotion to excited" aria-pressed="false">Excited</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="suspicion" aria-label="Set emotion to suspicion" aria-pressed="false">Suspicion</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="resting" aria-label="Set emotion to resting" aria-pressed="false">Resting</button>
                 </div>
             </div>
             <div class="control-section">
                 <h3>Undertone Modifier</h3>
-                <div class="btn-group">
-                    <button class="sci-fi-btn undertone-btn" data-undertone="nervous">Nervous</button>
-                    <button class="sci-fi-btn undertone-btn" data-undertone="intense">Intense</button>
-                    <button class="sci-fi-btn undertone-btn" data-undertone="tired">Tired</button>
-                    <button class="sci-fi-btn undertone-btn" data-undertone="confident">Confident</button>
-                    <button class="sci-fi-btn undertone-btn" data-undertone="subdued">Subdued</button>
-                    <button class="sci-fi-btn undertone-btn active" data-undertone="">Clear</button>
+                <div class="btn-group" role="group" aria-label="Undertone modifier selection">
+                    <button class="sci-fi-btn undertone-btn" data-undertone="nervous" aria-label="Set undertone to nervous" aria-pressed="false">Nervous</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="intense" aria-label="Set undertone to intense" aria-pressed="false">Intense</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="tired" aria-label="Set undertone to tired" aria-pressed="false">Tired</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="confident" aria-label="Set undertone to confident" aria-pressed="false">Confident</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="subdued" aria-label="Set undertone to subdued" aria-pressed="false">Subdued</button>
+                    <button class="sci-fi-btn undertone-btn active" data-undertone="" aria-label="Clear undertone" aria-pressed="true">Clear</button>
                 </div>
             </div>
-        </div>
+        </nav>
 
         <div class="center-container">
             <div class="display-and-controls">
@@ -527,53 +675,59 @@
                         </div>
                     </div>
                 </div>
-                <div class="system-controls">
-                    <button class="sci-fi-btn" id="fps-toggle">Show FPS</button>
-                    <button class="sci-fi-btn" id="record-btn">Record</button>
-                    <button class="sci-fi-btn" id="randomize-btn">Randomize</button>
-                    <button class="sci-fi-btn" id="reset-btn">Reset</button>
+                <div class="system-controls" role="group" aria-label="System controls">
+                    <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">Show FPS</button>
+                    <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">Record</button>
+                    <button class="sci-fi-btn" id="randomize-btn" aria-label="Randomize emotion and undertone">Randomize</button>
+                    <button class="sci-fi-btn" id="reset-btn" aria-label="Reset to default state">Reset</button>
                 </div>
             </div>
         </div>
 
-        <div class="controls-right">
+        <aside class="controls-right" role="complementary" aria-label="Gesture controls">
             <div class="control-section">
                 <h3>Gesture Protocol</h3>
-                <div class="btn-group">
-                    <button class="sci-fi-btn gesture-btn" data-gesture="bounce">Bounce</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="pulse">Pulse</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="shake">Shake</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="spin">Spin</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="nod">Nod</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="wave">Wave</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="breathe">Breathe</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="tilt">Tilt</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="expand">Expand</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="contract">Contract</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="flash">Flash</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="drift">Drift</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="stretch">Stretch</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="glow">Glow</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="flicker">Flicker</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="vibrate">Vibrate</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="morph">Morph</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="jump">Jump</button>
+                <div class="btn-group" role="group" aria-label="Gesture animations">
+                    <button class="sci-fi-btn gesture-btn" data-gesture="bounce" aria-label="Trigger bounce animation">Bounce</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="pulse" aria-label="Trigger pulse animation">Pulse</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="shake" aria-label="Trigger shake animation">Shake</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="spin" aria-label="Trigger spin animation">Spin</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="nod" aria-label="Trigger nod animation">Nod</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="wave" aria-label="Trigger wave animation">Wave</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="breathe" aria-label="Trigger breathe animation">Breathe</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="tilt" aria-label="Trigger tilt animation">Tilt</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="expand" aria-label="Trigger expand animation">Expand</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="contract" aria-label="Trigger contract animation">Contract</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="flash" aria-label="Trigger flash animation">Flash</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="drift" aria-label="Trigger drift animation">Drift</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="stretch" aria-label="Trigger stretch animation">Stretch</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="glow" aria-label="Trigger glow animation">Glow</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="flicker" aria-label="Trigger flicker animation">Flicker</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="vibrate" aria-label="Trigger vibrate animation">Vibrate</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="morph" aria-label="Trigger morph animation">Morph</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="jump" aria-label="Trigger jump animation">Jump</button>
                 </div>
             </div>
-        </div>
+        </aside>
 
-    </div>
+    </main>
 
     <script type="module">
-        // Import the real EmotiveEngine
-        import EmotiveEngine from './src/EmotiveMascot.js?v=2.0.1';
-
+        // Performance optimization: Use dynamic import for faster initial load
+        let EmotiveEngine;
         let mascot;
         let currentEmotion = 'neutral';
         let currentUndertone = '';
         let showingFPS = false;
         let isRecording = false;
         let currentTheme = 'night';
+        
+        // Load EmotiveEngine asynchronously
+        const loadEngine = async () => {
+            const module = await import('./src/EmotiveMascot.js?v=2.0.1');
+            EmotiveEngine = module.default;
+            return EmotiveEngine;
+        };
 
         // Theme management
         const themes = ['light', 'dark', 'night'];
@@ -662,6 +816,9 @@
                 }
             }
 
+            // Load engine dynamically for better performance
+            await loadEngine();
+            
             mascot = new EmotiveEngine({
                 canvasId: 'emotive-canvas',
                 startingEmotion: 'neutral',
@@ -677,6 +834,151 @@
             mascot.start();
             setupEventHandlers();
             updateDisplay();
+            
+            // Handle orientation changes - blur both sides of transition
+            let previousOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            let isTransitioning = false;
+            
+            const handleOrientationChange = () => {
+                const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+                
+                if (currentOrientation !== previousOrientation && !isTransitioning) {
+                    isTransitioning = true;
+                    
+                    // Heavy blur on current frame
+                    document.body.style.filter = 'blur(30px)';
+                    
+                    // Wait for blur, then switch with new view pre-blurred
+                    setTimeout(() => {
+                        previousOrientation = currentOrientation;
+                        
+                        // Clear particles while blurred
+                        if (mascot && mascot.particleSystem) {
+                            mascot.particleSystem.particles = [];
+                        }
+                        
+                        // Force canvas resize to prevent orb squishing
+                        if (mascot && mascot.canvasManager) {
+                            // Wait a frame for layout to settle
+                            requestAnimationFrame(() => {
+                                // Force full canvas reset
+                                const canvas = mascot.canvasManager.canvas;
+                                
+                                // Clear any inline dimensions
+                                canvas.style.width = '';
+                                canvas.style.height = '';
+                                
+                                // Let CSS reflow
+                                const rect = canvas.getBoundingClientRect();
+                                
+                                // Reset the canvas internal dimensions
+                                mascot.canvasManager.dpr = window.devicePixelRatio || 1;
+                                mascot.canvasManager.width = rect.width;
+                                mascot.canvasManager.height = rect.height;
+                                mascot.canvasManager.canvas.width = rect.width * mascot.canvasManager.dpr;
+                                mascot.canvasManager.canvas.height = rect.height * mascot.canvasManager.dpr;
+                                mascot.canvasManager.centerX = rect.width / 2;
+                                mascot.canvasManager.centerY = rect.height / 2;
+                                
+                                // Reset context scaling
+                                mascot.canvasManager.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                                mascot.canvasManager.ctx.scale(mascot.canvasManager.dpr, mascot.canvasManager.dpr);
+                                
+                                // Update renderer's scale factor
+                                if (mascot.renderer) {
+                                    const canvasSize = Math.min(rect.width || 400, rect.height || 400);
+                                    mascot.renderer.scaleFactor = (canvasSize / 400) * (mascot.renderer.config.baseScale || 1.0);
+                                    
+                                    // Force offscreen canvas update
+                                    if (mascot.renderer.offscreenCanvas) {
+                                        mascot.renderer.offscreenCanvas.width = rect.width;
+                                        mascot.renderer.offscreenCanvas.height = rect.height;
+                                    }
+                                    
+                                    // Clear caches
+                                    if (mascot.renderer.glowCache) {
+                                        mascot.renderer.glowCache.clear();
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Keep blur for incoming view
+                        document.body.style.filter = 'blur(25px)';
+                        
+                        // Then quickly unblur to reveal new layout
+                        setTimeout(() => {
+                            document.body.style.filter = '';
+                            isTransitioning = false;
+                            
+                            // Double-check canvas dimensions after transition
+                            if (mascot && mascot.canvasManager) {
+                                // Wait two frames to ensure complete layout settlement
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        const canvas = mascot.canvasManager.canvas;
+                                        canvas.style.width = '';
+                                        canvas.style.height = '';
+                                        
+                                        const rect = canvas.getBoundingClientRect();
+                                        
+                                        mascot.canvasManager.dpr = window.devicePixelRatio || 1;
+                                        mascot.canvasManager.width = rect.width;
+                                        mascot.canvasManager.height = rect.height;
+                                        mascot.canvasManager.canvas.width = rect.width * mascot.canvasManager.dpr;
+                                        mascot.canvasManager.canvas.height = rect.height * mascot.canvasManager.dpr;
+                                        mascot.canvasManager.centerX = rect.width / 2;
+                                        mascot.canvasManager.centerY = rect.height / 2;
+                                        
+                                        mascot.canvasManager.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                                        mascot.canvasManager.ctx.scale(mascot.canvasManager.dpr, mascot.canvasManager.dpr);
+                                        
+                                        if (mascot.renderer) {
+                                            const canvasSize = Math.min(rect.width || 400, rect.height || 400);
+                                            mascot.renderer.scaleFactor = (canvasSize / 400) * (mascot.renderer.config.baseScale || 1.0);
+                                            
+                                            if (mascot.renderer.offscreenCanvas) {
+                                                mascot.renderer.offscreenCanvas.width = rect.width;
+                                                mascot.renderer.offscreenCanvas.height = rect.height;
+                                            }
+                                            
+                                            if (mascot.renderer.glowCache) {
+                                                mascot.renderer.glowCache.clear();
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+                        }, 50);
+                    }, 150);
+                }
+            };
+            
+            // Immediate blur on resize start
+            window.addEventListener('resize', () => {
+                const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+                if (currentOrientation !== previousOrientation && !isTransitioning) {
+                    // Apply heavy blur immediately
+                    document.body.style.filter = 'blur(30px)';
+                }
+            });
+            
+            // Debounced handler for transition
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(handleOrientationChange, 100);
+            });
+            
+            if ('orientation' in window) {
+                window.addEventListener('orientationchange', () => {
+                    if (!isTransitioning) {
+                        // Apply heavy blur immediately
+                        document.body.style.filter = 'blur(30px)';
+                        setTimeout(handleOrientationChange, 100);
+                    }
+                });
+            }
         }
 
         function setupEventHandlers() {
@@ -687,8 +989,12 @@
                 btn.addEventListener('click', () => {
                     currentEmotion = btn.dataset.emotion;
                     mascot.setEmotion(currentEmotion, currentUndertone || undefined);
-                    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.emotion-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
                     btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
                     updateDisplay();
                 });
             });
@@ -701,8 +1007,12 @@
                 btn.addEventListener('click', () => {
                     currentUndertone = btn.dataset.undertone;
                     mascot.setEmotion(currentEmotion, currentUndertone || undefined);
-                    document.querySelectorAll('.undertone-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.undertone-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
                     btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
                     updateDisplay();
                 });
             });
@@ -711,6 +1021,7 @@
                 showingFPS = !showingFPS;
                 document.getElementById('fps-display').classList.toggle('active', showingFPS);
                 this.textContent = showingFPS ? 'Hide FPS' : 'Show FPS';
+                this.setAttribute('aria-pressed', showingFPS ? 'true' : 'false');
                 
                 // Start or stop FPS updates
                 if (showingFPS) {
@@ -722,6 +1033,7 @@
                 isRecording = !isRecording;
                 this.textContent = isRecording ? 'Stop' : 'Record';
                 this.classList.toggle('active', isRecording);
+                this.setAttribute('aria-pressed', isRecording ? 'true' : 'false');
                 if (isRecording) mascot.startRecording(); else mascot.stopRecording();
             });
 
