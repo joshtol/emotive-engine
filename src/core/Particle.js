@@ -1155,10 +1155,8 @@ class Particle {
      * Renders the particle to the canvas context
      * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
      * @param {string} emotionColor - Color to use for rendering
-     * @param {number} cameraX - Camera/view center X for LOD calculation
-     * @param {number} cameraY - Camera/view center Y for LOD calculation
      */
-    render(ctx, emotionColor = '#ffffff', cameraX = null, cameraY = null) {
+    render(ctx, emotionColor = '#ffffff') {
         if (this.life <= 0) return;
         
         // Validate position values to prevent rendering errors
@@ -1170,24 +1168,6 @@ class Particle {
         const renderX = this.x;
         const renderY = this.y;
         
-        // Calculate distance from camera/center for LOD
-        let lodLevel = 0; // 0 = full detail, 1 = medium, 2 = low
-        if (cameraX !== null && cameraY !== null) {
-            const dx = renderX - cameraX;
-            const dy = renderY - cameraY;
-            const distSq = dx * dx + dy * dy;
-            
-            // LOD thresholds (squared for performance)
-            const LOD_MEDIUM = 40000; // 200px distance
-            const LOD_LOW = 90000;    // 300px distance
-            
-            if (distSq > LOD_LOW) {
-                lodLevel = 2;
-            } else if (distSq > LOD_MEDIUM) {
-                lodLevel = 1;
-            }
-        }
-        
         // Ensure size is never negative
         const safeSize = Math.max(0.1, this.size);
         
@@ -1196,25 +1176,6 @@ class Particle {
         
         ctx.save();
         
-        // LOD Level 2: Ultra low detail - just dots
-        if (lodLevel === 2) {
-            ctx.fillStyle = this.hexToRgba(particleColor, this.opacity * 0.6);
-            ctx.fillRect(renderX - 1, renderY - 1, 2, 2); // 2x2 square, much faster than arc
-            ctx.restore();
-            return;
-        }
-        
-        // LOD Level 1: Medium detail - simple circles, no effects
-        if (lodLevel === 1) {
-            ctx.fillStyle = this.hexToRgba(particleColor, this.opacity * 0.7);
-            ctx.beginPath();
-            ctx.arc(renderX, renderY, safeSize * 0.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            return;
-        }
-        
-        // LOD Level 0: Full detail rendering
         if (this.isCellShaded) {
             // Cell shaded style - hard edges, no gradients
             

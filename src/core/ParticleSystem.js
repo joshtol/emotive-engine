@@ -532,52 +532,21 @@ class ParticleSystem {
     }
 
     /**
-     * Internal render implementation - optimized with LOD and culling
+     * Internal render implementation - optimized but preserving particle appearance
      */
     _render(ctx, emotionColor) {
-        // Get camera center (typically the canvas center where the orb is)
-        const cameraX = ctx.canvas.width / 2;
-        const cameraY = ctx.canvas.height / 2;
-        
-        // Culling statistics (for debugging)
-        let culledCount = 0;
-        let renderedCount = 0;
-        
-        // Render particles with enhanced culling and LOD
+        // Render particles with culling optimization
         for (const particle of this.particles) {
-            // Enhanced culling with tighter bounds
-            // Only render particles that are actually visible
-            const margin = particle.size + 10; // Account for particle size and glow
-            
+            // Skip off-screen particles (culling)
+            const margin = 50;
             if (particle.x < -margin || particle.x > ctx.canvas.width + margin ||
                 particle.y < -margin || particle.y > ctx.canvas.height + margin) {
-                culledCount++;
                 continue;
             }
             
-            // Additional culling for particles behind the orb (if they're too small to be seen)
-            if (particle.size < 2 && particle.life < 0.3) {
-                // Small, dying particles near center can be skipped
-                const dx = particle.x - cameraX;
-                const dy = particle.y - cameraY;
-                if (dx * dx + dy * dy < 900) { // Within 30px of center
-                    culledCount++;
-                    continue;
-                }
-            }
-            
-            // Render with LOD support
-            particle.render(ctx, emotionColor, cameraX, cameraY);
-            renderedCount++;
+            // Use original particle render method to preserve appearance
+            particle.render(ctx, emotionColor);
         }
-        
-        // Store stats for performance monitoring (optional)
-        this.lastRenderStats = {
-            total: this.particles.length,
-            rendered: renderedCount,
-            culled: culledCount,
-            cullingRate: culledCount / this.particles.length
-        };
     }
 
     /**
@@ -674,19 +643,6 @@ class ParticleSystem {
                 particle.cachedGradientKey = null;
             }
         }
-    }
-    
-    /**
-     * Gets render statistics from last frame
-     * @returns {Object} Render performance information
-     */
-    getRenderStats() {
-        return this.lastRenderStats || {
-            total: this.particles.length,
-            rendered: this.particles.length,
-            culled: 0,
-            cullingRate: 0
-        };
     }
     
     /**
