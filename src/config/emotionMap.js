@@ -123,8 +123,8 @@ export const emotionMap = {
         glowColor: '#32ACE2',        // [VISUAL] Supple blue - otherworldly depth
         glowIntensity: 1.0,          // [VISUAL] Standard glow brightness (0.5-1.5)
         particleRate: 2,              // [PERFORMANCE] Particles per second - lower for calmer effect
-        minParticles: 3,             // [PERFORMANCE] Minimum particles always present
-        maxParticles: 8,             // [PERFORMANCE] Maximum particle cap
+        minParticles: 8,             // [PERFORMANCE] Minimum particles always present
+        maxParticles: 10,             // [PERFORMANCE] Maximum particle cap
         particleBehavior: 'ambient', // [CRITICAL] Must exist in Particle.js behaviors
         breathRate: 1.0,             // [CRITICAL] Normal: 12-20 breaths/min (1.0 = 16 bpm)
         breathDepth: 0.08,           // [CRITICAL] 8% size variation during breathing
@@ -143,10 +143,10 @@ export const emotionMap = {
     // ════════════════════════════════════════════════════════════════════════════════
     joy: {
         glowColor: '#FFD54F',       // Golden yellow - sunny happiness
-        glowIntensity: 1.3,
-        particleRate: 12,          // Frequent popping
-        minParticles: 4,
-        maxParticles: 8,
+        glowIntensity: 1.4,         // Brighter glow for more joy
+        particleRate: 40,          // Even more frequent for celebration
+        minParticles: 0,          // Lots of baseline particles
+        maxParticles: 40,          // Maximum joy expression
         particleBehavior: 'popcorn', // Spontaneous popping effect
         breathRate: 1.5,           // Joy/Happiness: 20-30 breaths/min (excited)
         breathDepth: 0.10,         // 10% size variation - deeper excitement
@@ -211,8 +211,8 @@ export const emotionMap = {
         glowColor: '#7B68EE',       // Medium slate blue - unsettling
         glowIntensity: 0.8,
         particleRate: 12,
-        minParticles: 2,
-        maxParticles: 6,
+        minParticles: 4,
+        maxParticles: 16,
         particleBehavior: 'scattering',
         breathRate: 2.5,           // Fear/Anxiety: 25-45 breaths/min (hyperventilation)
         breathDepth: 0.06,         // 6% size variation - very shallow, rapid breaths
@@ -231,14 +231,14 @@ export const emotionMap = {
     // ════════════════════════════════════════════════════════════════════════════════
     surprise: {
         glowColor: '#FFAB40',       // Bright orange - sudden pop
-        glowIntensity: 1.4,
-        particleRate: 18,
-        minParticles: 3,
-        maxParticles: 10,
+        glowIntensity: 1.5,         // Bright but not overdone
+        particleRate: 30,          // Quick burst
+        minParticles: 0,           // Start with none for sudden effect
+        maxParticles: 15,          // Controlled burst amount
         particleBehavior: 'burst',
         breathRate: 0.3,           // Surprise: Initial gasp then pause (6-8 breaths/min)
-        breathDepth: 0.20,         // 20% size variation - huge initial gasp
-        coreJitter: false,
+        breathDepth: 0.18,         // 18% size variation - noticeable gasp
+        coreJitter: false,         // No shake, just expand,
         particleColors: [
             { color: '#FFAB40', weight: 30 },  // 30% bright orange midtone
             { color: '#C4A373', weight: 20 },  // 20% desaturated (fading shock)
@@ -255,8 +255,8 @@ export const emotionMap = {
         glowColor: '#84CFC5',       // Eye tea green - unsettling mint
         glowIntensity: 0.9,
         particleRate: 12,
-        minParticles: 2,
-        maxParticles: 4,
+        minParticles: 5,
+        maxParticles: 12,
         particleBehavior: 'repelling',
         breathRate: 0.7,           // Disgust: 10-14 breaths/min (breath holding)
         breathDepth: 0.04,         // 4% size variation - restricted, shallow breathing
@@ -274,22 +274,24 @@ export const emotionMap = {
     // LOVE - Warm affection with particles orbiting harmoniously
     // ════════════════════════════════════════════════════════════════════════════════
     love: {
-        glowColor: '#DD4A9A',       // Magenta majesty - deep romantic
-        glowIntensity: 1.9,
-        particleRate: 10,          // Moderate particles for love
-        minParticles: 2,
-        maxParticles: 5,
+        glowColor: '#FF69B4',       // Hot pink - classic valentine glow
+        glowIntensity: 1.6,         // Warm romantic glow
+        particleRate: 25,          // More particles for glittery effect
+        minParticles: 10,          // Always have sparkles
+        maxParticles: 18,          // Lots of glitter fireflies
         particleBehavior: 'orbiting',
-        breathRate: 0.85,          // Love/Contentment: 12-16 breaths/min (calm, deep)
-        breathDepth: 0.11,         // 11% size variation - full, satisfied breaths
-        coreJitter: false,
+        breathRate: 0.75,          // Love/Contentment: slow, steady heartbeat
+        breathDepth: 0.15,         // 15% - deeper, nervous breaths
+        coreJitter: false,         // No jitter, but could pulse like a heart
         particleColors: [
-            { color: '#DD4A9A', weight: 30 },  // 30% magenta majesty midtone (base)
-            { color: '#B87298', weight: 20 },  // 20% desaturated (soft, distant romance)
-            { color: '#FF00AA', weight: 20 },  // 20% oversaturated (electric passion)
-            { color: '#F47BBD', weight: 15 },  // 15% highlight (glowing warmth)
-            { color: '#8D2F63', weight: 15 }   // 15% shadow (deep intimate)
-        ] // Romantic depth palette - passion layers from soft to intense
+            { color: '#FF69B4', weight: 25 },  // 25% hot pink - valentine cards
+            { color: '#FFB6C1', weight: 20 },  // 20% light pink - cotton candy
+            { color: '#FF1493', weight: 15 },  // 15% deep pink - love letters
+            { color: '#FFC0CB', weight: 15 },  // 15% soft pink - sweet blush
+            { color: '#FFE4E1', weight: 10 },  // 10% misty rose - soft glow
+            { color: '#FFCCCB', weight: 10 },  // 10% light coral - warm touch
+            { color: '#C71585', weight: 5 }    // 5% medium violet red - deep passion
+        ] // Classic valentine palette - romantic pinks and roses
     },
     
     // ════════════════════════════════════════════════════════════════════════════════

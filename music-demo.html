@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Musical Intelligence Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        header {
+            padding: 2rem;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            color: #e0e7ff;
+        }
+        
+        .main-layout {
+            display: flex;
+            flex: 1;
+            padding: 2rem;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .control-panel {
+            flex: 0 0 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .visualization-area {
+            flex: 1;
+            position: relative;
+            min-height: 500px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .controls-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button.active {
+            background: rgba(251, 191, 36, 0.3);
+            border-color: #fbbf24;
+        }
+        
+        .toggle-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .slider-control {
+            margin: 1rem 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #fbbf24;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #fbbf24;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .emotion-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .emotion-button {
+            padding: 0.6rem;
+            font-size: 0.9rem;
+        }
+        
+        .layer-toggles {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .info-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-label {
+            opacity: 0.7;
+        }
+        
+        .info-value {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        
+        .gesture-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .control-panel {
+                flex: none;
+                width: 100%;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+        
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div>🎵 Loading Musical Intelligence System...</div>
+        <div style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">Initializing audio context</div>
+    </div>
+    
+    <header>
+        <h1>🎼 Musical Intelligence Demo</h1>
+        <div class="subtitle">Experience the harmony between emotion and music</div>
+    </header>
+    
+    <div class="main-layout">
+        <div class="control-panel">
+            <!-- Music Mode Toggle -->
+            <div class="card">
+                <div class="card-title">
+                    <span>🎵</span> Music System
+                </div>
+                <div class="controls-grid">
+                    <div class="toggle-group">
+                        <button id="simpleMode" class="active">Simple Tones</button>
+                        <button id="harmonicMode">Harmonic Music</button>
+                    </div>
+                    <button id="toggleSound" style="margin-top: 0.5rem;">
+                        <span id="soundIcon">🔇</span> <span id="soundText">Enable Sound</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Emotion Selector -->
+            <div class="card">
+                <div class="card-title">
+                    <span>🎭</span> Emotional State
+                </div>
+                <div class="emotion-buttons">
+                    <button class="emotion-button" data-emotion="excited">⚡ Excited</button>
+                    <button class="emotion-button active" data-emotion="calm">😌 Calm</button>
+                    <button class="emotion-button" data-emotion="curious">🤔 Curious</button>
+                    <button class="emotion-button" data-emotion="sleepy">😴 Sleepy</button>
+                    <button class="emotion-button" data-emotion="alert">👀 Alert</button>
+                    <button class="emotion-button" data-emotion="pleased">😊 Pleased</button>
+                    <button class="emotion-button" data-emotion="confused">😕 Confused</button>
+                    <button class="emotion-button" data-emotion="energetic">🚀 Energetic</button>
+                    <button class="emotion-button" data-emotion="melancholy">😢 Melancholy</button>
+                </div>
+            </div>
+            
+            <!-- Harmonic Layers -->
+            <div class="card" id="harmonicControls" style="display: none;">
+                <div class="card-title">
+                    <span>🎹</span> Harmonic Layers
+                </div>
+                <div class="layer-toggles">
+                    <button class="layer-toggle" data-layer="bass">🎸 Bass</button>
+                    <button class="layer-toggle" data-layer="chord">🎹 Chords</button>
+                    <button class="layer-toggle" data-layer="melody">🎵 Melody</button>
+                    <button class="layer-toggle" data-layer="pad">☁️ Pad</button>
+                </div>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Effects Mix</span>
+                        <span id="effectsValue">30%</span>
+                    </div>
+                    <input type="range" id="effectsSlider" min="0" max="100" value="30">
+                </div>
+            </div>
+            
+            <!-- Gesture Triggers -->
+            <div class="card">
+                <div class="card-title">
+                    <span>👋</span> Gesture Sounds
+                </div>
+                <div class="gesture-grid">
+                    <button class="gesture-button" data-gesture="breathe">🌬️ Breathe</button>
+                    <button class="gesture-button" data-gesture="excited">⚡ Excited</button>
+                    <button class="gesture-button" data-gesture="wave">👋 Wave</button>
+                    <button class="gesture-button" data-gesture="morph">🔮 Morph</button>
+                    <button class="gesture-button" data-gesture="jump">🦘 Jump</button>
+                    <button class="gesture-button" data-gesture="curious">❓ Curious</button>
+                </div>
+            </div>
+            
+            <!-- Music Info -->
+            <div class="card">
+                <div class="card-title">
+                    <span>ℹ️</span> Music Info
+                </div>
+                <div class="info-display">
+                    <div class="info-row">
+                        <span class="info-label">Mode:</span>
+                        <span class="info-value" id="modeInfo">Simple</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Emotion:</span>
+                        <span class="info-value" id="emotionInfo">Calm</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Scale:</span>
+                        <span class="info-value" id="scaleInfo">Major</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Key:</span>
+                        <span class="info-value" id="keyInfo">C4</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Tempo:</span>
+                        <span class="info-value" id="tempoInfo">60 BPM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="visualization-area card">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+    
+    <!-- Load the Emotive Engine modules -->
+    <script type="module">
+        import EmotiveMascot from './src/EmotiveMascot.js';
+        
+        let mascot = null;
+        let currentEmotion = 'calm';
+        let soundEnabled = false;
+        let harmonicMode = false;
+        
+        // Initialize the mascot and music system
+        async function initialize() {
+            try {
+                const canvas = document.getElementById('canvas');
+                
+                // Initialize mascot with sound disabled initially
+                mascot = new EmotiveMascot(canvas, {
+                    enableAudio: false,
+                    initialEmotion: 'calm'
+                });
+                
+                await mascot.initialize();
+                
+                // Hide loading screen
+                document.getElementById('loading').style.display = 'none';
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Start animation loop
+                mascot.start();
+                
+                console.log('Musical Intelligence System initialized');
+                
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<div>❌ Failed to initialize</div><div style="margin-top: 1rem; font-size: 0.9rem;">' + 
+                    error.message + '</div>';
+            }
+        }
+        
+        function setupEventListeners() {
+            // Sound toggle
+            document.getElementById('toggleSound').addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                
+                if (mascot && mascot.soundSystem) {
+                    mascot.config.enableAudio = soundEnabled;
+                    mascot.soundSystem.isEnabled = soundEnabled;
+                    
+                    if (soundEnabled && mascot.soundSystem.context) {
+                        // Resume audio context
+                        mascot.soundSystem.resumeContext();
+                        
+                        // Set ambient tone for current emotion
+                        mascot.soundSystem.setAmbientTone(currentEmotion);
+                        
+                        // Start harmony if in harmonic mode
+                        if (harmonicMode) {
+                            mascot.soundSystem.startHarmony();
+                        }
+                    } else if (!soundEnabled) {
+                        mascot.soundSystem.stopAmbientTone();
+                        mascot.soundSystem.stopHarmony();
+                    }
+                    
+                    updateSoundButton();
+                }
+            });
+            
+            // Mode toggle
+            document.getElementById('simpleMode').addEventListener('click', () => {
+                setMusicMode(false);
+            });
+            
+            document.getElementById('harmonicMode').addEventListener('click', () => {
+                setMusicMode(true);
+            });
+            
+            // Emotion buttons
+            document.querySelectorAll('.emotion-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const emotion = button.dataset.emotion;
+                    setEmotion(emotion);
+                    
+                    // Update active state
+                    document.querySelectorAll('.emotion-button').forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                });
+            });
+            
+            // Gesture buttons
+            document.querySelectorAll('.gesture-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const gesture = button.dataset.gesture;
+                    
+                    if (mascot) {
+                        // Trigger visual gesture
+                        mascot.triggerGesture(gesture);
+                        
+                        // Play gesture sound if enabled
+                        if (soundEnabled && mascot.soundSystem) {
+                            mascot.soundSystem.playGestureSound(gesture, currentEmotion);
+                        }
+                    }
+                    
+                    // Visual feedback
+                    button.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        button.style.transform = '';
+                    }, 100);
+                });
+            });
+            
+            // Harmonic layer toggles
+            document.querySelectorAll('.layer-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const layer = button.dataset.layer;
+                    const isActive = button.classList.toggle('active');
+                    
+                    if (mascot && mascot.soundSystem) {
+                        mascot.soundSystem.setHarmonicLayer(layer, isActive);
+                    }
+                });
+            });
+            
+            // Effects slider
+            document.getElementById('effectsSlider').addEventListener('input', (e) => {
+                const value = e.target.value / 100;
+                document.getElementById('effectsValue').textContent = e.target.value + '%';
+                
+                if (mascot && mascot.soundSystem) {
+                    mascot.soundSystem.setHarmonicEffects(value);
+                }
+            });
+        }
+        
+        function setMusicMode(harmonic) {
+            harmonicMode = harmonic;
+            
+            // Update UI
+            document.getElementById('simpleMode').classList.toggle('active', !harmonic);
+            document.getElementById('harmonicMode').classList.toggle('active', harmonic);
+            document.getElementById('harmonicControls').style.display = harmonic ? 'block' : 'none';
+            
+            // Update sound system
+            if (mascot && mascot.soundSystem) {
+                mascot.soundSystem.setHarmonicMode(harmonic);
+                
+                if (soundEnabled) {
+                    if (harmonic) {
+                        // Enable default layers
+                        mascot.soundSystem.setHarmonicLayer('chord', true);
+                        mascot.soundSystem.setHarmonicLayer('bass', true);
+                        document.querySelector('[data-layer="chord"]').classList.add('active');
+                        document.querySelector('[data-layer="bass"]').classList.add('active');
+                        
+                        // Start harmony
+                        mascot.soundSystem.startHarmony();
+                    } else {
+                        // Reset to simple ambient tone
+                        mascot.soundSystem.setAmbientTone(currentEmotion);
+                    }
+                }
+            }
+            
+            // Update info display
+            updateMusicInfo();
+        }
+        
+        function setEmotion(emotion) {
+            currentEmotion = emotion;
+            
+            if (mascot) {
+                // Update mascot emotion
+                mascot.setEmotion(emotion);
+                
+                // Update sound if enabled
+                if (soundEnabled && mascot.soundSystem) {
+                    mascot.soundSystem.setAmbientTone(emotion);
+                }
+            }
+            
+            updateMusicInfo();
+        }
+        
+        function updateSoundButton() {
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundText');
+            
+            if (soundEnabled) {
+                icon.textContent = '🔊';
+                text.textContent = 'Disable Sound';
+            } else {
+                icon.textContent = '🔇';
+                text.textContent = 'Enable Sound';
+            }
+        }
+        
+        function updateMusicInfo() {
+            document.getElementById('modeInfo').textContent = harmonicMode ? 'Harmonic' : 'Simple';
+            document.getElementById('emotionInfo').textContent = 
+                currentEmotion.charAt(0).toUpperCase() + currentEmotion.slice(1);
+            
+            if (mascot && mascot.soundSystem && mascot.soundSystem.harmonicSystem) {
+                const musicTheory = mascot.soundSystem.harmonicSystem.musicTheory;
+                const emotionMode = musicTheory.getEmotionMusic(currentEmotion);
+                
+                document.getElementById('scaleInfo').textContent = 
+                    emotionMode.scale.charAt(0).toUpperCase() + emotionMode.scale.slice(1);
+                document.getElementById('tempoInfo').textContent = emotionMode.tempo + ' BPM';
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', initialize);
+        
+        // Handle visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (mascot) {
+                if (document.hidden) {
+                    mascot.pause();
+                } else {
+                    mascot.resume();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

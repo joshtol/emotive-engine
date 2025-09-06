@@ -388,17 +388,23 @@ class ParticleSystem {
                 return { x: centerX, y: centerY };
                 
             case 'burst':
-                // For suspicion, spawn at edge of orb so particles are visible
-                // For surprise, spawn at center for explosive effect
+                // Spawn at edge of orb so particles are visible
+                const burstAngle = Math.random() * Math.PI * 2;
                 if (this.currentEmotion === 'suspicion') {
-                    const burstAngle = Math.random() * Math.PI * 2;
-                    const burstRadius = orbRadius * 1.5; // Further outside the core for visibility
+                    const burstRadius = orbRadius * 1.5; // Further outside for suspicion
+                    return {
+                        x: centerX + Math.cos(burstAngle) * burstRadius,
+                        y: centerY + Math.sin(burstAngle) * burstRadius
+                    };
+                } else if (this.currentEmotion === 'surprise') {
+                    // Surprise spawns around the orb edge for visibility
+                    const burstRadius = orbRadius * 1.2; // Just outside the orb
                     return {
                         x: centerX + Math.cos(burstAngle) * burstRadius,
                         y: centerY + Math.sin(burstAngle) * burstRadius
                     };
                 } else {
-                    // Normal burst (surprise) spawns at center
+                    // Other emotions spawn at center
                     return { x: centerX, y: centerY };
                 }
                 

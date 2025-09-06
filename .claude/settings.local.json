@@ -108,7 +108,9 @@
       "Read(/C:\\zzz\\osmos\\osmos-mascot/**)",
       "Read(/C:\\zzz\\osmos\\osmos-mascot/**)",
       "Bash(start http://localhost:8080/themed-scifi-demo.html)",
-      "Read(/c:\\Users\\raven\\Downloads/**)"
+      "Read(/c:\\Users\\raven\\Downloads/**)",
+      "Bash(cmd /c dir:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": []

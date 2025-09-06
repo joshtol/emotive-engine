@@ -95,8 +95,8 @@ export const EMOTION_MODIFIERS = {
     },
     
     joy: {
-        speed: 1.2,        // 20% faster
-        amplitude: 1.2,    // 20% bigger movements
+        speed: 1.8,        // 40% faster
+        amplitude: 1.9,    // 20% bigger movements
         intensity: 1.1,    // 10% more intense
         smoothness: 1.0,   // Normal smoothness
         regularity: 0.9,   // Slightly bouncy/irregular
