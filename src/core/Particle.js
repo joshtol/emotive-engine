@@ -126,89 +126,136 @@ class Particle {
         // Normalize to 60 FPS equivalent for consistent physics
         const dt = cappedDeltaTime / 16.67; // 16.67ms = 60 FPS frame time
         
-        // Age the particle for smooth fading
-        this.age += deltaTime / 1000; // Convert to seconds
+        // Universal law: Gestures override state behavior based on their motion type
+        const blendingMotionTypes = ['radial', 'oscillate', 'jitter', 'directional', 'burst', 'flicker', 'fade', 'settle', 'hold'];
+        const isGestureOverriding = gestureMotion && gestureProgress > 0 && 
+            !blendingMotionTypes.includes(gestureMotion.type);
         
-        // Update lifecycle
-        this.updateLifecycle(dt);
-        
-        // Apply gesture motion if active
-        if (gestureMotion && gestureMotion.isActive) {
+        if (isGestureOverriding) {
+            // Gesture completely controls particle - skip normal behavior
             this.applyGestureMotion(gestureMotion, gestureProgress, dt, centerX, centerY);
-        }
-        
-        // Update behavior
-        updateBehavior(this, this.behavior, dt, centerX, centerY);
-        
-        // Apply undertone modifications if provided
-        if (undertoneModifier) {
-            this.applyUndertone(undertoneModifier, dt);
-        }
-        
-        // Update position based on velocity
-        this.x += this.vx * dt;
-        this.y += this.vy * dt;
-        
-        // Apply fade based on lifecycle
-        this.updateOpacity();
-    }
-
-    /**
-     * Update particle lifecycle (life, fade in/out)
-     * @param {number} dt - Normalized delta time
-     */
-    updateLifecycle(dt) {
-        // Fade in during first part of life
-        if (this.life < this.fadeInTime) {
-            this.life = Math.min(this.fadeInTime, this.life + 0.03 * dt);
         } else {
-            // Normal life decay
-            this.life = Math.max(0, this.life - this.lifeDecay * dt);
+            // Normal behavior update
+            updateBehavior(this, this.behavior, dt, centerX, centerY);
+            
+            // Apply undertone modifications if present
+            if (undertoneModifier) {
+                this.applyUndertoneModifier(dt, undertoneModifier);
+            }
+            
+            // Apply non-overriding gesture motion if present
+            if (gestureMotion && gestureProgress > 0) {
+                this.applyGestureMotion(gestureMotion, gestureProgress, dt, centerX, centerY);
+            }
         }
         
-        // Check if entering fade-out phase
-        if (this.life < this.fadeOutTime && !this.isFadingOut) {
+        // Apply velocity to position (unless gesture is directly controlling position)
+        if (!isGestureOverriding) {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+        }
+        
+        // HARD BOUNDARY CONSTRAINTS - particles NEVER leave canvas
+        const canvasWidth = centerX * 2;
+        const canvasHeight = centerY * 2;
+        const margin = 20;
+        
+        // Bounce off boundaries
+        if (this.x - this.size < margin) {
+            this.x = margin + this.size;
+            this.vx = Math.abs(this.vx) * 0.5;
+        } else if (this.x + this.size > canvasWidth - margin) {
+            this.x = canvasWidth - margin - this.size;
+            this.vx = -Math.abs(this.vx) * 0.5;
+        }
+        
+        if (this.y - this.size < margin) {
+            this.y = margin + this.size;
+            this.vy = Math.abs(this.vy) * 0.5;
+        } else if (this.y + this.size > canvasHeight - margin) {
+            this.y = canvasHeight - margin - this.size;
+            this.vy = -Math.abs(this.vy) * 0.5;
+        }
+        
+        // Update age and life (EXACT COPY FROM ORIGINAL)
+        this.age += this.lifeDecay * dt;
+        
+        // Smooth fade-in at birth
+        if (this.age < this.fadeInTime) {
+            this.life = this.age / this.fadeInTime;
+        }
+        // Full opacity in middle of life
+        else if (this.age < (1.0 - this.fadeOutTime)) {
+            this.life = 1.0;
+        }
+        // Smooth fade-out at death
+        else {
+            this.life = (1.0 - this.age) / this.fadeOutTime;
             this.isFadingOut = true;
+            
+            // Dynamic size reduction for popcorn during fade-out
+            if (this.behavior === 'popcorn') {
+                this.size = this.baseSize * (0.5 + 0.5 * this.life);
+            }
+        }
+        
+        this.life = Math.max(0, Math.min(1, this.life));
+        
+        // Update opacity with easing for extra smoothness
+        this.opacity = this.easeInOutCubic(this.life);
+        
+        // Update size based on life for some behaviors
+        if (this.behavior === 'burst' && this.behaviorData && this.life < this.behaviorData.fadeStart) {
+            this.size = this.baseSize * (this.life / this.behaviorData.fadeStart);
         }
     }
 
-    /**
-     * Update particle opacity based on lifecycle
-     */
-    updateOpacity() {
-        let lifeFactor = 1.0;
-        
-        if (this.life < this.fadeInTime) {
-            // Fade in
-            lifeFactor = this.life / this.fadeInTime;
-        } else if (this.isFadingOut) {
-            // Fade out
-            lifeFactor = this.life / this.fadeOutTime;
-        }
-        
-        this.opacity = this.baseOpacity * lifeFactor;
-    }
 
     /**
-     * Apply undertone modifications
-     * @param {Object} undertoneModifier - Undertone settings
+     * Apply undertone modifications to particle behavior
      * @param {number} dt - Normalized delta time
+     * @param {Object} modifier - Undertone modifier settings
      */
-    applyUndertone(undertoneModifier, dt) {
-        // Apply undertone velocity modifications
-        if (undertoneModifier.velocityMultiplier) {
-            this.vx *= undertoneModifier.velocityMultiplier;
-            this.vy *= undertoneModifier.velocityMultiplier;
+    applyUndertoneModifier(dt, modifier) {
+        if (!modifier) return;
+        
+        const weight = modifier.weight !== undefined ? modifier.weight : 1.0;
+        
+        // Speed modification
+        if (modifier.particleSpeedMult && modifier.particleSpeedMult !== 1.0) {
+            if (!this.undertoneData) {
+                this.undertoneData = {
+                    baseVx: this.vx,
+                    baseVy: this.vy,
+                    lastSpeedMult: 1.0
+                };
+            }
+            
+            const speedMult = 1.0 + (modifier.particleSpeedMult - 1.0) * weight;
+            this.vx = this.undertoneData.baseVx * speedMult;
+            this.vy = this.undertoneData.baseVy * speedMult;
+            
+            if (Math.abs(speedMult - this.undertoneData.lastSpeedMult) > 0.5) {
+                this.undertoneData.baseVx = this.vx / speedMult;
+                this.undertoneData.baseVy = this.vy / speedMult;
+            }
+            this.undertoneData.lastSpeedMult = speedMult;
+        } else if (this.undertoneData) {
+            this.vx = this.undertoneData.baseVx;
+            this.vy = this.undertoneData.baseVy;
+            this.undertoneData = null;
         }
         
-        // Apply undertone size modifications
-        if (undertoneModifier.sizeMultiplier) {
-            this.size = this.baseSize * undertoneModifier.sizeMultiplier;
+        // Size modification
+        if (modifier.particleSizeMult) {
+            const sizeMult = 1.0 + (modifier.particleSizeMult - 1.0) * weight;
+            this.size = this.baseSize * sizeMult;
         }
         
-        // Apply undertone opacity modifications
-        if (undertoneModifier.opacityMultiplier) {
-            this.opacity *= undertoneModifier.opacityMultiplier;
+        // Opacity modification
+        if (modifier.particleOpacityMult) {
+            const opacityMult = 1.0 + (modifier.particleOpacityMult - 1.0) * weight;
+            this.opacity *= opacityMult;
         }
     }
 
@@ -272,18 +319,6 @@ class Particle {
         };
     }
 
-    /**
-     * Apply undertone modifier
-     * @param {number} dt - Delta time
-     * @param {Object} modifier - Undertone modifier settings
-     */
-    applyUndertoneModifier(dt, modifier) {
-        if (!modifier) return;
-        
-        // This is already handled in applyUndertone method
-        // Just redirect to that
-        this.applyUndertone(modifier, dt);
-    }
 
     /**
      * Reset particle for reuse from pool
