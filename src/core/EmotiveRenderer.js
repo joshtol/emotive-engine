@@ -86,6 +86,8 @@
 
 import { interpolateHsl, applyUndertoneSaturation, rgbToHex, hexToRgb } from '../utils/colorUtils.js';
 import GestureCompositor from './GestureCompositor.js';
+import { getEmotion } from './emotions/index.js';
+import { getEffect, applyEffect, isEffectActive } from './effects/index.js';
 
 class EmotiveRenderer {
     constructor(canvasManager, options = {}) {
@@ -330,6 +332,18 @@ class EmotiveRenderer {
                 params: null
             },
             jump: {
+                active: false,
+                startTime: 0,
+                progress: 0,
+                params: null
+            },
+            orbital: {
+                active: false,
+                startTime: 0,
+                progress: 0,
+                params: null
+            },
+            hula: {
                 active: false,
                 startTime: 0,
                 progress: 0,
@@ -667,10 +681,21 @@ class EmotiveRenderer {
         // Apply sleep state modifications (with animated dimming)
         let sleepOpacityMod = 1;
         let sleepScaleMod = 1;
-        if (this.state.sleeping) {
-            // Use animated values if available, otherwise defaults
-            sleepOpacityMod = this.state.sleepDimness !== undefined ? this.state.sleepDimness : 0.6;
-            sleepScaleMod = this.state.sleepScale !== undefined ? this.state.sleepScale : 0.9;
+        let glowOpacityMod = 1;
+        if (this.state.sleeping || this.state.emotion === 'resting' || isEffectActive('sleeping', this.state)) {
+            const sleepEffect = getEffect('sleeping');
+            if (sleepEffect) {
+                const dimming = sleepEffect.getDimmingValues();
+                // Use effect's dimming values
+                sleepOpacityMod = this.state.sleepDimness !== undefined ? this.state.sleepDimness : dimming.orbDimming;
+                glowOpacityMod = dimming.glowDimming; // Dim glow even more
+                sleepScaleMod = this.state.sleepScale !== undefined ? this.state.sleepScale : 0.9;
+            } else {
+                // Fallback values
+                sleepOpacityMod = this.state.sleepDimness !== undefined ? this.state.sleepDimness : 0.3;
+                glowOpacityMod = 0.2;
+                sleepScaleMod = this.state.sleepScale !== undefined ? this.state.sleepScale : 0.9;
+            }
             this.state.breathRate = 0.5;  // Slower breathing
             this.state.breathDepth = 0.15; // Deeper breaths
         }
@@ -834,38 +859,76 @@ class EmotiveRenderer {
             this.ctx.translate(-coreX, -coreY);
         }
         
-        // Render glow (modified for recording state)
-        // Skip normal glow during zen transition to prevent flash
-        if (this.zenTransition.active) {
-            // Zen handles its own glow in renderZenCore
-            // Do nothing here to prevent flash
-        } else if (this.state.recording) {
-            // Pulsating red glow for recording
-            const time = Date.now() / 1000;
-            const recordPulse = 0.7 + Math.sin(time * 2) * 0.3; // Slower, gentle pulse
-            // Don't apply gesture glow multiplier to recording glow to keep it stable
-            const recordingGlowRadius = (this.config.referenceSize / this.config.coreSizeDivisor) * 2.5 * this.scaleFactor;
-            this.renderRecordingGlow(coreX, coreY, recordingGlowRadius * 1.1, recordPulse);
+        // Render glow with visual effects
+        if (isEffectActive('recording-glow', this.state)) {
+            // Recording takes precedence over normal glow
+            applyEffect('recording-glow', this.ctx, {
+                x: coreX,
+                y: coreY,
+                radius: glowRadius,
+                deltaTime
+            });
+        } else if (isEffectActive('zen-vortex', this.state)) {
+            // Zen vortex handles its own visuals
+            // Skip normal glow to prevent flash
         } else {
-            // Normal glow
-            this.renderGlow(coreX, coreY, glowRadius);
+            // Normal glow with sleep dimming
+            if (this.state.sleeping || this.state.emotion === 'resting' || isEffectActive('sleeping', this.state)) {
+                this.ctx.save();
+                this.ctx.globalAlpha = glowOpacityMod;
+                this.renderGlow(coreX, coreY, glowRadius);
+                this.ctx.restore();
+            } else {
+                this.renderGlow(coreX, coreY, glowRadius);
+            }
         }
         
-        // Render speaking rings if active
-        if (this.state.speaking) {
-            this.renderSpeakingRings(coreX, coreY, coreRadius, deltaTime);
+        // Apply speaking pulse effect
+        if (isEffectActive('speaking-pulse', this.state)) {
+            applyEffect('speaking-pulse', this.ctx, {
+                x: coreX,
+                y: coreY,
+                radius: coreRadius,
+                audioLevel: this.state.audioLevel || 0,
+                deltaTime
+            });
+        }
+        
+        // Draw recording indicator BEFORE core (so orb can cover it)
+        // But OUTSIDE rotation context so it doesn't spin
+        if (rotationAngle !== 0) {
+            this.ctx.save(); // Save before we restore rotation
+        }
+        
+        // Temporarily restore rotation context to draw indicator without spin
+        if (rotationAngle !== 0) {
+            this.ctx.restore(); // Restore to pre-rotation state
+        }
+        
+        // Draw recording indicator (can be covered by orb)
+        if (isEffectActive('recording-glow', this.state)) {
+            const recordingEffect = getEffect('recording-glow');
+            if (recordingEffect && recordingEffect.drawRecordingIndicator) {
+                // Pass canvas dimensions for fixed positioning
+                recordingEffect.drawRecordingIndicator(this.ctx, logicalWidth, logicalHeight);
+            }
+        }
+        
+        // Re-apply rotation if needed for core rendering
+        if (rotationAngle !== 0) {
+            this.ctx.restore(); // Go back to rotated state for core
         }
         
         // Apply sleep opacity to core
-        if (this.state.sleeping) {
+        if (this.state.sleeping || this.state.emotion === 'resting') {
             this.ctx.globalAlpha = sleepOpacityMod;
         }
         
-        // Render core
+        // Render core (will cover REC if they overlap)
         this.renderCore(coreX, coreY, coreRadius, deltaTime);
         
         // Reset alpha
-        if (this.state.sleeping) {
+        if (this.state.sleeping || this.state.emotion === 'resting') {
             this.ctx.globalAlpha = 1;
         }
         
@@ -874,13 +937,8 @@ class EmotiveRenderer {
             this.ctx.restore();
         }
         
-        // Render recording indicator AFTER context restore so it's not affected by transforms
-        if (this.state.recording) {
-            // ABSOLUTELY FIXED position - no gesture or scale factors affect this
-            const fixedX = logicalWidth / 2 - this.scaleValue(100);  // Fixed 100px left of center
-            const fixedY = logicalHeight / 2 - this.scaleValue(100);  // Fixed 100px above center
-            this.renderRecordingIndicator(fixedX, fixedY);
-        }
+        // Recording indicator is now handled by the recording-glow effect module
+        // which draws a small indicator in the corner
         
         // Add sleep indicator if sleeping
         if (this.state.sleeping) {
@@ -1049,29 +1107,54 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
             return;
         }
         
-        // Check if we're in zen transition
-        if (this.zenTransition.active) {
-            this.renderZenCore(x, y, radius);
+        // Get emotion module for custom rendering
+        const emotion = getEmotion(this.state.emotion);
+        
+        // Check if emotion has custom core rendering
+        if (emotion && emotion.renderCore && emotion.renderCore(this.ctx, x, y, radius)) {
+            return; // Custom rendering was done
+        }
+        
+        // Check for zen vortex effect
+        if (isEffectActive('zen-vortex', this.state)) {
+            applyEffect('zen-vortex', this.ctx, { x, y, radius, deltaTime, intensity: 1.0 });
             return;
         }
         
         this.ctx.save();
         
-        // Get gaze intensity for eye narrowing (from GazeTracker proximity)
-        const gazeIntensity = this.state.gazeIntensity || 0;
-        
-        // Calculate eye narrowing effect based on proximity
-        let scaleX = 1 + 0.3 * gazeIntensity;  // Widen horizontally up to 30%
-        let scaleY = 1 - 0.5 * gazeIntensity;  // Narrow vertically up to 50%
-        
-        // Apply emotion-specific eye settings (zen, focused)
-        if (this.state.emotionEyeOpenness !== undefined) {
-            scaleY = this.state.emotionEyeOpenness;
+        // Get core parameters from emotion module
+        let coreParams = { scaleX: 1, scaleY: 1, eyeOpenness: 1, eyeExpression: 'neutral' };
+        if (emotion && emotion.getCoreParams) {
+            coreParams = { ...coreParams, ...emotion.getCoreParams(this.state) };
         }
         
-        // Apply eye closing for sleep state
-        if (this.state.sleeping) {
-            scaleY *= this.state.eyeOpenness || 0.1;  // Close eye when sleeping
+        // Apply visual effects that modify eye appearance
+        if (isEffectActive('gaze-narrowing', this.state)) {
+            applyEffect('gaze-narrowing', this.ctx, {
+                gazeIntensity: this.state.gazeIntensity || 0,
+                deltaTime
+            });
+            // Get modified scales from effect
+            const gazeEffect = getEffect('gaze-narrowing');
+            if (gazeEffect) {
+                const gazeScales = gazeEffect.getEyeScales();
+                coreParams.scaleX *= gazeScales.scaleX;
+                coreParams.scaleY *= gazeScales.scaleY;
+            }
+        }
+        
+        let scaleX = coreParams.scaleX;
+        let scaleY = coreParams.scaleY * coreParams.eyeOpenness
+        
+        // Apply sleeping effect
+        if (isEffectActive('sleeping', this.state)) {
+            const sleepEffect = getEffect('sleeping');
+            if (sleepEffect) {
+                scaleY *= sleepEffect.getEyeOpenness();
+                // Draw Z particles
+                applyEffect('sleeping', this.ctx, { x, y, radius, deltaTime });
+            }
         }
         
         // Apply eye animation from gestures (like slow blink)
@@ -1089,10 +1172,15 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
             }
         }
         
-        // Apply suspicion squinting
-        if (this.state.isSuspicious) {
-            // Narrow the eye for suspicion (gradual animation)
-            scaleY *= (1 - this.state.squintAmount); // 0.4 squint = 60% of normal height
+        // Apply suspicion scanning effect
+        if (isEffectActive('suspicion-scan', this.state)) {
+            applyEffect('suspicion-scan', this.ctx, { x, y, radius, deltaTime });
+            const suspicionEffect = getEffect('suspicion-scan');
+            if (suspicionEffect) {
+                const eyeMods = suspicionEffect.getEyeModifiers();
+                scaleX *= eyeMods.scaleX;
+                scaleY *= eyeMods.scaleY;
+            }
             
             // Add slow periodic scanning motion
             const now = Date.now();
@@ -1135,6 +1223,7 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
         
         // Apply rotation to look at pointer when gaze is active
         let rotation = 0;
+        const gazeIntensity = this.state.gazeIntensity || 0;
         if (gazeIntensity > 0.05 && !this.state.gazeLocked) {
             // Calculate angle to pointer (gazeOffset indicates direction)
             const angle = Math.atan2(this.state.gazeOffset.y, this.state.gazeOffset.x);
@@ -3067,7 +3156,24 @@ this.ctx.fill();
      * @returns {Object|null} Current gesture with particleMotion and progress, or null
      */
     getCurrentGesture() {
-        // Find the first active gesture with particle motion
+        // Priority: Find override gestures first (like orbital, hula), then other gestures
+        const overrideGestures = ['orbital', 'hula', 'wave', 'spin', 'morph'];
+        
+        // Check override gestures first
+        for (const gestureName of overrideGestures) {
+            const anim = this.gestureAnimations[gestureName];
+            if (anim && anim.active && anim.params && anim.params.particleMotion) {
+                const gestureInfo = {
+                    name: gestureName,
+                    particleMotion: anim.params.particleMotion,
+                    progress: anim.progress || 0,
+                    params: anim.params
+                };
+                return gestureInfo;
+            }
+        }
+        
+        // Then check all other gestures
         for (const [gestureName, anim] of Object.entries(this.gestureAnimations)) {
             if (anim.active && anim.params && anim.params.particleMotion) {
                 const gestureInfo = {
@@ -3103,6 +3209,8 @@ this.ctx.fill();
     startGlow() { this.startGesture('glow'); }
     startFlicker() { this.startGesture('flicker'); }
     startVibrate() { this.startGesture('vibrate'); }
+    startOrbital() { this.startGesture('orbital'); }
+    startHula() { this.startGesture('hula'); }
     startWave() { this.startGesture('wave'); }
     startBreathe() { this.startGesture('breathe'); }
     startMorph() { this.startGesture('morph'); }

@@ -87,10 +87,13 @@ export default {
         // Calculate angle from center for position assignment
         const angle = Math.atan2(particle.y - centerY, particle.x - centerX);
         
+        // Random rotation direction for the pattern
+        const rotationDirection = Math.random() < 0.5 ? 1 : -1;
+        
         // Calculate target position based on pattern
         let targetX, targetY;
         const size = config.size * particle.scaleFactor;
-        const rotation = (config.rotation || 0) * Math.PI / 180;
+        const rotation = ((config.rotation || 0) * Math.PI / 180) * rotationDirection;
         
         switch (config.pattern) {
             case 'star':
@@ -127,6 +130,7 @@ export default {
             targetY: particle.gestureData.morphTargetY || targetY,
             originalVx: particle.vx,
             originalVy: particle.vy,
+            rotationDirection: rotationDirection, // Store random rotation direction
             initialized: true
         };
     },

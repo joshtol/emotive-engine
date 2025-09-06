@@ -586,6 +586,8 @@ class EmotiveMascot {
                 'slowBlink': 'startSlowBlink',
                 'look': 'startLook',
                 'settle': 'startSettle',
+                'orbital': 'startOrbital',
+                'hula': 'startHula',
                 'breathIn': 'startBreathIn',
                 'breathOut': 'startBreathOut',
                 'breathHold': 'startBreathHold',
@@ -1850,11 +1852,14 @@ class EmotiveMascot {
             // Gesture transforms now handled internally by renderer
             const gestureTransform = null;
             
-            // Render particles FIRST (behind everything)
-            this.particleSystem.render(this.canvasManager.getContext(), emotionParams.glowColor);
+            // Render BACKGROUND particles (behind orb)
+            this.particleSystem.renderBackground(this.canvasManager.getContext(), emotionParams.glowColor);
             
-            // Render the Emotive orb ON TOP of particles (without clearing)
+            // Render the Emotive orb in the MIDDLE layer
             this.renderer.render(renderState, deltaTime, gestureTransform);
+            
+            // Render FOREGROUND particles (in front of orb) 
+            this.particleSystem.renderForeground(this.canvasManager.getContext(), emotionParams.glowColor);
             
             // Draw debug information if enabled
             if (this.config.showFPS || this.config.showDebug) {

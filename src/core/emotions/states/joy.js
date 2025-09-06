@@ -90,5 +90,19 @@ export default {
         blinkRate: 'frequent',    // Happy blinking
         lookDirection: 'up',      // Looking up optimistically
         specialEffect: 'twinkle'  // Eye twinkle effect
+    },
+    
+    /**
+     * Get core rendering parameters for joy
+     */
+    getCoreParams: function(state) {
+        return {
+            scaleX: 1.0,
+            scaleY: 1.0,
+            eyeOpenness: 1.0,
+            eyeExpression: 'happy',  // ∪ shaped eyes
+            pupilOffset: { x: 0, y: -0.1 },  // Looking slightly up
+            sparkle: true  // Add sparkle effect
+        };
     }
 };

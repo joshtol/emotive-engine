@@ -55,5 +55,15 @@ export default {
         duration: 800,
         easing: 'easeInOut',
         priority: 3
+    },
+    
+    getCoreParams: function(state) {
+        return {
+            scaleX: 1.0,
+            scaleY: 0.8,  // Slightly drooped
+            eyeOpenness: 0.7,  // Partially closed
+            eyeExpression: 'sad',  // ∩ shaped eyes
+            pupilOffset: { x: 0, y: 0.1 }  // Looking down
+        };
     }
 };

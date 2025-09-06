@@ -44,6 +44,7 @@ import morph from './transforms/morph.js';
 import stretch from './transforms/stretch.js';
 import tilt from './transforms/tilt.js';
 import orbital from './transforms/orbital.js';
+import hula from './transforms/hula.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT EFFECT GESTURES (Visual effects)
@@ -88,7 +89,8 @@ const TRANSFORM_GESTURES = [
     morph,
     stretch,
     tilt,
-    orbital
+    orbital,
+    hula
 ];
 
 const EFFECT_GESTURES = [

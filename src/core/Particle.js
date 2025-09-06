@@ -1,11 +1,11 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Modular Particle System
+ *    ●●  ENGINE - Modular Particle System with 3D Depth
  *  └─○═╝                                                                             
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Orchestrator for the modular particle system
+ * @fileoverview Orchestrator for the modular particle system with z-coordinate depth
  * @author Emotive Engine Team
  * @module core/Particle-modular
  * 
@@ -20,7 +20,13 @@
  * ║ - particles/behaviors/* - behavior modules                                     
  * ║ - particles/config/* - configuration constants                                    
  * ║ - particles/utils/* - utility functions                                           
- * ║ - gestures/* - modular gesture system                             
+ * ║ - gestures/* - modular gesture system                                             
+ * ║                                                                                    
+ * ║ 3D DEPTH SYSTEM:                                                                   
+ * ║ - Z-coordinate ranges from -1 (behind orb) to +1 (in front)                       
+ * ║ - 1/13 particles spawn in foreground, 12/13 in background                         
+ * ║ - Depth affects visual size (20% scaling based on z)                              
+ * ║ - Foreground particles spawn with offset to prevent stacking                      
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -62,11 +68,20 @@ class Particle {
      * @param {Array} emotionColors - Array of color options with weights
      */
     constructor(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null) {
-        // Position and movement
-        this.x = x;
-        this.y = y;
+        // Position and movement (now with z-coordinate for depth)
+        // 1/13 chance of being in front (z > 0), 12/13 chance of being behind (z < 0)
+        const zRoll = Math.random();
+        this.z = zRoll < (1/13) ? 0.5 + Math.random() * 0.5 : -1 + Math.random() * 0.9;
+        
+        // Add spawn offset to prevent stacking
+        // Much larger offset for foreground particles to completely avoid visual stacking
+        const spawnRadius = this.z > 0 ? (20 + Math.random() * 20) * scaleFactor : 3 * scaleFactor;
+        const angle = Math.random() * Math.PI * 2;
+        this.x = x + Math.cos(angle) * spawnRadius;
+        this.y = y + Math.sin(angle) * spawnRadius;
         this.vx = 0;
         this.vy = 0;
+        this.vz = 0; // For future 3D motion effects
         
         // Lifecycle
         this.life = 0.0; // Start at 0 for fade-in
@@ -309,13 +324,31 @@ class Particle {
     }
 
     /**
+     * Get depth-adjusted size for 3D effect
+     * Particles farther away (negative z) appear smaller for depth perception
+     * 
+     * @returns {number} Adjusted size based on z-depth
+     * 
+     * DEPTH SCALING:
+     * - z = -1.0: 80% size (farthest back)
+     * - z =  0.0: 100% size (orb plane)
+     * - z = +1.0: 120% size (closest to viewer)
+     */
+    getDepthAdjustedSize() {
+        // Map z from [-1, 1] to scale [0.8, 1.2]
+        // Negative z (behind) = smaller, positive z (front) = larger
+        const depthScale = 1 + (this.z * 0.2);
+        return this.size * depthScale;
+    }
+    
+    /**
      * Get particle state for debugging
      * @returns {Object} Current particle state
      */
     getState() {
         return {
-            position: { x: this.x, y: this.y },
-            velocity: { x: this.vx, y: this.vy },
+            position: { x: this.x, y: this.y, z: this.z },
+            velocity: { x: this.vx, y: this.vy, z: this.vz },
             life: this.life,
             behavior: this.behavior,
             size: this.size,
@@ -334,10 +367,19 @@ class Particle {
      * @param {Array} emotionColors - Emotion colors
      */
     reset(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null) {
-        this.x = x;
-        this.y = y;
+        // 1/13 chance of being in front (z > 0), 12/13 chance of being behind (z < 0)
+        const zRoll = Math.random();
+        this.z = zRoll < (1/13) ? 0.5 + Math.random() * 0.5 : -1 + Math.random() * 0.9;
+        
+        // Add spawn offset to prevent stacking
+        // Much larger offset for foreground particles to completely avoid visual stacking
+        const spawnRadius = this.z > 0 ? (20 + Math.random() * 20) * scaleFactor : 3 * scaleFactor;
+        const angle = Math.random() * Math.PI * 2;
+        this.x = x + Math.cos(angle) * spawnRadius;
+        this.y = y + Math.sin(angle) * spawnRadius;
         this.vx = 0;
         this.vy = 0;
+        this.vz = 0;
         this.life = 0.0;  // Start at 0 for fade-in
         this.age = 0;  // Reset age
         this.scaleFactor = scaleFactor;

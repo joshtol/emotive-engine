@@ -42,5 +42,16 @@ export default {
     },
     
     typicalGestures: ['track', 'lock', 'scan', 'pulse', 'vibrate'],
-    transitions: { duration: 400, easing: 'easeIn', priority: 5 }
+    transitions: { duration: 400, easing: 'easeIn', priority: 5 },
+    
+    getCoreParams: function(state) {
+        return {
+            scaleX: 1.1,
+            scaleY: 0.7,  // Narrowed for concentration
+            eyeOpenness: 0.7,
+            eyeExpression: 'focused',
+            pupilOffset: { x: 0, y: 0 },
+            microAdjustments: true  // Small tracking movements
+        };
+    }
 };

@@ -44,7 +44,7 @@ export default {
     config: {
         duration: 600,          // Animation duration in ms
         rotations: 1,           // Number of full rotations (was 2, now from config)
-        direction: 'clockwise', // 'clockwise' or 'counter-clockwise'
+        direction: 'random',    // 'clockwise', 'counter-clockwise', or 'random'
         radiusMultiplier: 1.0,  // Orbital radius on orb perimeter (was 1.2)
         spiralOut: false,       // Spiral outward while spinning
         accelerate: true,       // Speed up then slow down
@@ -54,7 +54,7 @@ export default {
         strength: 0.7,          // Particle motion strength (from config)
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'orbital',
+            type: 'spin',
             strength: 0.7,
             rotations: 1,
             radius: 1.0
@@ -77,6 +77,12 @@ export default {
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         
+        // Determine spin direction
+        let direction = motion.direction || this.config.direction;
+        if (direction === 'random') {
+            direction = Math.random() < 0.5 ? 'clockwise' : 'counter-clockwise';
+        }
+        
         particle.gestureData.spin = {
             startAngle: Math.atan2(dy, dx),
             startRadius: Math.sqrt(dx * dx + dy * dy) || 30, // Min radius if at center
@@ -84,6 +90,7 @@ export default {
             originalY: particle.y,
             originalVx: particle.vx,
             originalVy: particle.vy,
+            direction: direction, // Store chosen direction
             initialized: true
         };
     },
@@ -118,9 +125,9 @@ export default {
             }
         }
         
-        // Calculate rotation angle
+        // Calculate rotation angle using stored direction
         const rotationAmount = config.rotations * Math.PI * 2 * strength;
-        const direction = config.direction === 'counter-clockwise' ? -1 : 1;
+        const direction = data.direction === 'counter-clockwise' ? -1 : 1;
         const currentAngle = data.startAngle + (rotationAmount * speedProgress * direction);
         
         // Calculate radius (with optional spiral)

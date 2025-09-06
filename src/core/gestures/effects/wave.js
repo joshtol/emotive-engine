@@ -77,6 +77,9 @@ export default {
         const angle = Math.atan2(dy, dx);
         const radius = Math.sqrt(dx * dx + dy * dy);
         
+        // Random direction for wave motion
+        const direction = Math.random() < 0.5 ? 1 : -1;
+        
         particle.gestureData.wave = {
             startX: particle.x,
             startY: particle.y,
@@ -87,6 +90,7 @@ export default {
             radius: radius,
             offset: Math.random() * Math.PI * 2, // Random phase offset
             role: Math.random(), // 0-1 for variation
+            direction: direction, // Random wave direction
             initialized: true
         };
     },
@@ -117,8 +121,8 @@ export default {
         const phaseShift = data.role * config.phaseShift;
         const adjustedPhase = Math.max(0, easeProgress - phaseShift);
         
-        // Calculate infinity pattern (lemniscate)
-        const t = adjustedPhase * Math.PI * 2 * config.frequency + data.offset;
+        // Calculate infinity pattern (lemniscate) with direction
+        const t = adjustedPhase * Math.PI * 2 * config.frequency * data.direction + data.offset;
         
         // Scale amplitude based on distance from center
         const radiusFactor = 0.5 + (data.radius / 100) * 0.5;

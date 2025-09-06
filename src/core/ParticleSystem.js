@@ -7,10 +7,11 @@
  *                                                                                    
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Particle System - Orchestrator of Emotional Atmosphere
+ * @fileoverview Particle System - Orchestrator of Emotional Atmosphere with 3D Depth
  * @author Emotive Engine Team
- * @version 2.3.0
+ * @version 2.4.0
  * @module ParticleSystem
+ * @changelog 2.4.0 - Added z-coordinate depth system with split rendering layers
  * @changelog 2.3.0 - Batch rendering optimization for reduced state changes
  * @changelog 2.2.0 - Added undertone saturation system for dynamic particle depth
  * @changelog 2.1.0 - Added support for passing emotion colors to individual particles
@@ -537,9 +538,101 @@ class ParticleSystem {
             this._render(ctx, emotionColor);
         }
     }
+    
+    /**
+     * Renders particles in the background layer (behind orb)
+     * Particles with z < 0 are rendered, appearing smaller based on depth
+     * 
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {string} emotionColor - Color to use for particle rendering
+     * 
+     * LAYER DISTRIBUTION:
+     * - ~92% of particles render in background (z < 0)
+     * - Particles scale from 80% to 100% size based on z-depth
+     */
+    renderBackground(ctx, emotionColor = '#ffffff') {
+        if (this.errorBoundary) {
+            return this.errorBoundary.wrap(() => {
+                this._renderLayer(ctx, emotionColor, false); // false = background (z < 0)
+            }, 'particle-render-bg')();
+        } else {
+            this._renderLayer(ctx, emotionColor, false);
+        }
+    }
+    
+    /**
+     * Renders particles in the foreground layer (in front of orb)
+     * Particles with z >= 0 are rendered, appearing larger based on depth
+     * 
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {string} emotionColor - Color to use for particle rendering
+     * 
+     * LAYER DISTRIBUTION:
+     * - ~8% of particles render in foreground (z >= 0) 
+     * - Particles scale from 100% to 120% size based on z-depth
+     * - Spawn with offset to prevent visual stacking
+     */
+    renderForeground(ctx, emotionColor = '#ffffff') {
+        if (this.errorBoundary) {
+            return this.errorBoundary.wrap(() => {
+                this._renderLayer(ctx, emotionColor, true); // true = foreground (z >= 0)
+            }, 'particle-render-fg')();
+        } else {
+            this._renderLayer(ctx, emotionColor, true);
+        }
+    }
 
     /**
-     * Internal render implementation - batch optimized rendering
+     * Internal render implementation for a specific layer
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {string} emotionColor - Color to use for particle rendering
+     * @param {boolean} isForeground - true for foreground (z >= 0), false for background (z < 0)
+     */
+    _renderLayer(ctx, emotionColor, isForeground) {
+        // Sort particles by rendering properties to minimize state changes
+        const visibleParticles = [];
+        
+        // First pass: cull off-screen, dead, and wrong-layer particles
+        const margin = 50;
+        const canvasWidth = ctx.canvas.width;
+        const canvasHeight = ctx.canvas.height;
+        
+        for (const particle of this.particles) {
+            // Filter by z-layer
+            const particleInForeground = particle.z >= 0;
+            if (particleInForeground !== isForeground) {
+                continue; // Skip particles in wrong layer
+            }
+            
+            // Skip off-screen particles (culling)
+            if (particle.x < -margin || particle.x > canvasWidth + margin ||
+                particle.y < -margin || particle.y > canvasHeight + margin) {
+                continue;
+            }
+            
+            // Skip dead particles
+            if (particle.life <= 0) continue;
+            
+            visibleParticles.push(particle);
+        }
+        
+        // Sort by render type to minimize state changes
+        visibleParticles.sort((a, b) => {
+            if (a.isCellShaded !== b.isCellShaded) {
+                return a.isCellShaded ? -1 : 1;
+            }
+            if (a.hasGlow !== b.hasGlow) {
+                return a.hasGlow ? -1 : 1;
+            }
+            return 0;
+        });
+        
+        // Actually render the particles
+        this._renderParticles(ctx, visibleParticles, emotionColor);
+    }
+    
+    /**
+     * Internal render implementation - batch optimized rendering (legacy, renders all)
      */
     _render(ctx, emotionColor) {
         // Sort particles by rendering properties to minimize state changes
@@ -581,6 +674,17 @@ class ParticleSystem {
             return 0;
         });
         
+        // Actually render the particles
+        this._renderParticles(ctx, visibleParticles, emotionColor);
+    }
+    
+    /**
+     * Render a list of particles with batch optimization
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {Array} visibleParticles - Array of particles to render
+     * @param {string} emotionColor - Color to use for particle rendering
+     */
+    _renderParticles(ctx, visibleParticles, emotionColor) {
         // Batch render with minimized state changes
         ctx.save();
         let lastFillStyle = null;
@@ -608,7 +712,9 @@ class ParticleSystem {
                 // Validate position once
                 if (!isFinite(particle.x) || !isFinite(particle.y)) continue;
                 
-                const safeSize = Math.max(0.1, particle.size);
+                // Use depth-adjusted size if particle has the method
+                const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
+                const safeSize = Math.max(0.1, depthSize);
                 
                 // Draw glow layers if needed
                 if (particle.hasGlow) {

@@ -25,6 +25,7 @@
 
 ### Technical Excellence
 - **Modular Architecture**: Clean separation of concerns with registry pattern
+- **3D Particle Depth**: Z-coordinate system with foreground/background layers
 - **Zero Heavy Dependencies**: Pure JavaScript, no Three.js or WebGL required
 - **Dynamic Visual Resampling**: Maintains quality on resize without re-initialization
 - **Particle Pooling**: Efficient memory management with object recycling
@@ -397,6 +398,31 @@ const mascot = new EmotiveMascot(config);
 4. **Frame Skipping**: Maintains 60fps by dropping frames intelligently
 5. **LOD System**: Reduces particle complexity at distance
 6. **Worker Offloading**: Heavy calculations in Web Workers
+
+### 3D Particle Depth System (v3.2.0)
+
+The particle system now features pseudo-3D depth rendering:
+
+#### Z-Coordinate System
+- **Z-axis range**: -1.0 (behind orb) to +1.0 (in front of orb)
+- **Layer distribution**: ~92% background, ~8% foreground (1/13 ratio)
+- **Depth scaling**: 20% size variation based on z-position
+- **Anti-stacking**: Foreground particles spawn with offset to prevent visual clustering
+
+#### Rendering Layers
+```javascript
+// Three-layer rendering order:
+1. Background particles (z < 0) - Rendered first
+2. Orb/Core - Rendered middle  
+3. Foreground particles (z >= 0) - Rendered last
+
+// Access split rendering:
+particleSystem.renderBackground(ctx, color); // Behind orb
+particleSystem.renderForeground(ctx, color); // In front
+```
+
+#### Future Orbital Support
+The z-coordinate system is designed for future orbital gestures where particles can dynamically transition between layers, creating true 3D motion effects like hula-hoop or orbit animations.
 
 ### Performance Targets
 

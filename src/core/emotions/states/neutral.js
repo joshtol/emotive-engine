@@ -84,5 +84,33 @@ export default {
         irisPattern: 'default', // Default iris pattern
         blinkRate: 'normal',    // Normal blink rate
         lookDirection: 'center' // Looking straight ahead
+    },
+    
+    /**
+     * Get core rendering parameters
+     * @param {Object} state - Current renderer state
+     * @returns {Object} Core rendering configuration
+     */
+    getCoreParams: function(state) {
+        return {
+            scaleX: 1.0,
+            scaleY: 1.0,
+            eyeOpenness: 1.0,
+            eyeExpression: 'neutral', // neutral, happy, sad, focused
+            pupilOffset: { x: 0, y: 0 }
+        };
+    },
+    
+    /**
+     * Optional: Custom core rendering
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {number} x - Center X
+     * @param {number} y - Center Y
+     * @param {number} radius - Core radius
+     * @returns {boolean} True if custom rendering was done
+     */
+    renderCore: function(ctx, x, y, radius) {
+        // Return false to use default rendering
+        return false;
     }
 };
