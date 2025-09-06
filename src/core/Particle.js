@@ -352,10 +352,7 @@ class Particle {
         this.behavior = behavior;
         
         // Clear gesture data if it exists
-        this.gestureData = {
-            initialX: x,
-            initialY: y
-        };
+        this.gestureData = null;
         
         // Reset behavior data
         if (!this.behaviorData) {
