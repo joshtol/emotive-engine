@@ -9,8 +9,10 @@
  *
  * @fileoverview Particle - Individual Particle Entity with Behavioral Movement
  * @author Emotive Engine Team
- * @version 2.2.0
+ * @version 3.0.0 - Open Source Refactor
  * @module Particle
+ * @changelog 3.0.0 - Major refactor for open source: added playground config, debug mode,
+ *                    comprehensive documentation, and behavior registry pattern
  * @changelog 2.2.0 - Added color caching for RGBA conversions
  * @changelog 2.1.0 - Added weighted color selection system and individual particle colors
  * 
@@ -22,73 +24,162 @@
  * ║ emotional atmosphere around the orb through coordinated chaos.                    
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                              TABLE OF CONTENTS                                    
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ 1. CONFIGURATION & CONSTANTS ................. Line 100                          
+ * ║ 2. PLAYGROUND VALUES ......................... Line 200                          
+ * ║ 3. PERFORMANCE CACHE ......................... Line 300                          
+ * ║ 4. UTILITY FUNCTIONS ......................... Line 400                          
+ * ║ 5. PARTICLE CLASS ............................ Line 500                          
+ * ║ 6. BEHAVIOR INITIALIZATION ................... Line 700                          
+ * ║ 7. BEHAVIOR UPDATES .......................... Line 1000                         
+ * ║ 8. GESTURE SYSTEM ............................ Line 1400                         
+ * ║ 9. RENDERING ................................. Line 1800                         
+ * ║ 10. DEBUG UTILITIES .......................... Line 2000                         
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎯 PARTICLE BEHAVIORS (13 Types)                                                  
+ * │ 🎯 PARTICLE BEHAVIORS (15 Types)                                                  
  * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ CORE BEHAVIORS (Basic movement patterns)
  * │ • ambient     : Gentle upward drift (neutral state)                               
  * │ • rising      : Buoyant upward movement (joy)                                     
  * │ • falling     : Heavy downward drift (sadness)                                    
+ * │ • resting     : Ultra-slow drift (deep relaxation)                                
+ * │
+ * │ EMOTIONAL BEHAVIORS (Emotion-specific patterns)
  * │ • aggressive  : Sharp, chaotic movement (anger)                                   
  * │ • scattering  : Fleeing from center (fear)                                        
- * │ • burst       : Explosive expansion (surprise, suspicion)                         
  * │ • repelling   : Pushing away from core (disgust)                                  
- * │ • orbiting    : Circular motion around center (love, thinking)                    
+ * │ • orbiting    : Circular motion around center (love)                              
+ * │ • radiant     : Radiating outward like sun rays (euphoria)                        
+ * │
+ * │ SPECIAL EFFECTS (Unique visual effects)
+ * │ • burst       : Explosive expansion (surprise)                                    
+ * │ • popcorn     : Spontaneous popping with gravity (joy)                            
  * │ • connecting  : Chaotic with attraction (connection states)                       
- * │ • resting     : Ultra-slow drift (deep relaxation)                                
  * │ • ascending   : Slow rise like incense (zen)                                      
  * │ • erratic     : Nervous, jittery movement (anxiety)                               
  * │ • cautious    : Slow with pauses (suspicion - deprecated)                         
- * │ • radiant     : Radiating outward like sun rays (euphoria)                        
- * │ • popcorn     : Spontaneous popping with gravity bounces (joy)                    
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🌟 PARTICLE PROPERTIES                                                            
+ * │ 🎮 FOR VIBE CODERS - QUICK START GUIDE                                            
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Position (x, y)     : Current location on canvas                                
- * │ • Velocity (vx, vy)   : Movement speed and direction                              
- * │ • Life (0.0 - 1.0)    : Current lifecycle stage                                   
- * │ • Size                : Radius in pixels (4-10 typical)                           
- * │ • Opacity             : Transparency (0.0 - 1.0)                                  
- * │ • Color               : Individual color from emotion palette with weights        
- * │ • Glow                : 33% chance of glow effect                                  
- * │ • Cell Shading        : 33% chance of cartoon style                               
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🔄 LIFECYCLE STAGES                                                               
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ 1. BIRTH    : Fade in (15% of life)                                               
- * │ 2. PRIME    : Full opacity and size                                               
- * │ 3. DECAY    : Fade out (last 30% of life)                                         
- * │ 4. DEATH    : Removed and returned to pool                                        
+ * │ Want to tweak particle behavior? Here's where to start:                           
  * │                                                                                    
- * │ • lifeDecay : Rate of aging (0.001 - 0.02 per frame)                              
- * │ • age       : Current age (0.0 - 1.0)                                             
- * │ • fadeIn    : 15% of lifecycle                                                    
- * │ • fadeOut   : 30% of lifecycle                                                    
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎮 GESTURE RESPONSE                                                               
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ Particles respond to gestures through motion types:                               
- * │ • Overriding  : Gesture completely controls particle (wave, tilt, drift)          
- * │ • Blending    : Gesture adds to existing motion (pulse, shake, bounce)            
- * │ • Special     : Unique effects per gesture (breathe synchronization)              
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ ⚡ PERFORMANCE OPTIMIZATIONS                                                      
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Cached trigonometry    : Pre-calculated sin/cos values                          
- * │ • Object pooling         : Reuse particle instances                               
- * │ • Gradient caching       : Store gradient objects                                 
- * │ • Boundary constraints   : Prevent off-screen calculations                        
- * │ • Frame-independent      : DeltaTime-based movement                               
+ * │ 1. PLAYGROUND VALUES (Line 200) - Safe values to modify                           
+ * │    Change these to make particles faster, bouncier, sparklier!                    
+ * │                                                                                    
+ * │ 2. Add a new behavior:                                                            
+ * │    a) Copy any initialize method (e.g., initializeAmbient)                        
+ * │    b) Copy the matching update method (e.g., updateAmbient)                       
+ * │    c) Add your behavior name to BEHAVIOR_REGISTRY                                 
+ * │    d) Use it in emotionMap.js!                                                    
+ * │                                                                                    
+ * │ 3. Debug your changes:                                                            
+ * │    Set window.DEBUG_PARTICLES = true to see velocity vectors!                     
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ════════════════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *                           SECTION 1: CONFIGURATION & CONSTANTS
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ */
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ PHYSICS CONSTANTS - Core physics values (modify with caution)
+// └─────────────────────────────────────────────────────────────────────────────────────
+const PHYSICS = {
+    GRAVITY: 0.098,           // Downward acceleration (Earth-like)
+    AIR_RESISTANCE: 0.99,     // Velocity dampening per frame
+    BOUNCE_DAMPENING: 0.5,    // Energy lost on boundary collision
+    MIN_VELOCITY: 0.01,       // Velocity below this is set to 0
+    MAX_VELOCITY: 10,         // Speed limit to prevent runaway particles
+    BOUNDARY_MARGIN: 20,      // Pixels from canvas edge
+    
+    // Math constants
+    TWO_PI: Math.PI * 2,
+    HALF_PI: Math.PI / 2,
+    QUARTER_PI: Math.PI / 4
+};
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ LIFECYCLE CONSTANTS - Particle birth/death timing
+// └─────────────────────────────────────────────────────────────────────────────────────
+const LIFECYCLE = {
+    FADE_IN_PERCENT: 0.15,    // First 15% of life fades in
+    FADE_OUT_PERCENT: 0.30,   // Last 30% of life fades out
+    MIN_LIFESPAN: 50,         // Minimum frames before death
+    MAX_LIFESPAN: 500,        // Maximum frames before death
+    DEFAULT_DECAY: 0.01       // Standard life lost per frame
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *                           SECTION 2: 🎮 PLAYGROUND VALUES
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ * SAFE TO MODIFY! These values are designed for experimentation.
+ * Change them to create new visual effects and behaviors.
+ * 
+ * TIP: After changing values, refresh your browser to see the effects!
+ * TIP: Set window.DEBUG_PARTICLES = true in console to visualize changes
+ */
+
+const PLAYGROUND = {
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ PARTICLE APPEARANCE - How particles look
+    // └─────────────────────────────────────────────────────────────────────────────────
+    particle: {
+        MIN_SIZE: 4,           // 🎯 Smallest particle (pixels) - Try: 2-10
+        MAX_SIZE: 10,          // 🎯 Largest particle (pixels) - Try: 5-20
+        GLOW_CHANCE: 0.33,     // 🎯 Chance of glowing (0=never, 1=always)
+        CELL_SHADE_CHANCE: 0.33, // 🎯 Chance of cartoon style (0=never, 1=always)
+        BASE_OPACITY: 1.0      // 🎯 Starting opacity (0=invisible, 1=solid)
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ SPARKLE & SHIMMER - Valentine firefly effects (love state)
+    // └─────────────────────────────────────────────────────────────────────────────────
+    sparkle: {
+        BLINK_SPEED_MIN: 0.3,  // 🎯 Slowest blink rate - Try: 0.1-1.0
+        BLINK_SPEED_MAX: 1.5,  // 🎯 Fastest blink rate - Try: 0.5-3.0
+        INTENSITY_MIN: 0.6,    // 🎯 Dimmest sparkle - Try: 0.3-0.8
+        INTENSITY_MAX: 1.0,    // 🎯 Brightest sparkle - Try: 0.8-1.2
+        SIZE_PULSE: 0.3        // 🎯 Size change during sparkle - Try: 0.1-0.5
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ POPCORN BEHAVIOR - Joy particles that pop!
+    // └─────────────────────────────────────────────────────────────────────────────────
+    popcorn: {
+        POP_DELAY_MIN: 100,    // 🎯 Fastest pop (ms) - Try: 50-500
+        POP_DELAY_MAX: 2000,   // 🎯 Slowest pop (ms) - Try: 1000-5000
+        POP_FORCE_MIN: 3,      // 🎯 Weakest pop - Try: 1-5
+        POP_FORCE_MAX: 8,      // 🎯 Strongest pop - Try: 5-15
+        BOUNCE_HEIGHT: 0.7     // 🎯 Bounce energy retained - Try: 0.3-0.9
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ EMOTION INTENSITIES - How dramatic each emotion appears
+    // └─────────────────────────────────────────────────────────────────────────────────
+    emotions: {
+        ANGER_SHAKE: 2.0,      // 🎯 Anger intensity - Try: 1.0-3.0
+        FEAR_JITTER: 1.5,      // 🎯 Fear nervousness - Try: 0.5-2.5
+        LOVE_SWAY: 1.2,        // 🎯 Love romance - Try: 0.8-2.0
+        JOY_BOUNCE: 1.8,       // 🎯 Joy energy - Try: 1.0-3.0
+        SADNESS_WEIGHT: 0.6    // 🎯 Sadness heaviness - Try: 0.3-0.8
+    }
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *                           SECTION 3: PERFORMANCE CACHE
+ * ═══════════════════════════════════════════════════════════════════════════════════════
  */
 
 // Cached trigonometric values for performance - using arrays instead of Maps
@@ -171,7 +262,23 @@ function selectWeightedColor(colors) {
     return parsedColors[parsedColors.length - 1].color;
 }
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *                           SECTION 5: PARTICLE CLASS
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ */
+
 class Particle {
+    /**
+     * Creates a new particle with specific behavior and appearance
+     * 
+     * @param {number} x - Starting X position on canvas
+     * @param {number} y - Starting Y position on canvas
+     * @param {string} behavior - Behavior type (ambient, rising, falling, etc.)
+     * @param {number} scaleFactor - Global scale multiplier (affects size/distance)
+     * @param {number} particleSizeMultiplier - Additional size multiplier
+     * @param {Array} emotionColors - Array of color options with weights
+     */
     constructor(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null) {
         // Position and movement
         this.x = x;
@@ -185,6 +292,7 @@ class Particle {
         this.lifeDecay = 0.01; // Life lost per frame
         this.fadeInTime = 0.15; // 15% of life for fade-in
         this.fadeOutTime = 0.3; // Last 30% of life for fade-out
+        this.isFadingOut = false; // Track if particle is in fade-out phase
         this.age = 0; // Track particle age for smooth fading
         
         // Visual properties - matching original Emotive scale
@@ -386,14 +494,17 @@ class Particle {
     initializeBurst() {
         // For suspicion, make burst slower and more controlled
         const isSuspicion = this.emotion === 'suspicion';
+        const isSurprise = this.emotion === 'surprise';
         const angle = Math.random() * Math.PI * 2;
         const speed = isSuspicion ? 
-            (1.0 + Math.random() * 0.8) :  // Faster burst for suspicion to spread out
-            (3.5 + Math.random() * 2.5);   // Much faster burst for surprise
+            (1.0 + Math.random() * 0.8) :  // Controlled burst for suspicion
+            (isSurprise ? 
+                (7.0 + Math.random() * 5.0) :   // Much faster burst for wide spread (7-12)
+                (3.5 + Math.random() * 2.5));   // Normal burst for others
         
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
-        this.lifeDecay = isSuspicion ? 0.010 : 0.015;  // Live longer to spread further
+        this.lifeDecay = isSuspicion ? 0.010 : (isSurprise ? 0.006 + Math.random() * 0.008 : 0.015);  // Longer life for surprise to travel further
         
         // Use emotion colors if provided
         if (this.emotionColors && this.emotionColors.length > 0) {
@@ -408,11 +519,18 @@ class Particle {
             this.baseOpacity = this.opacity;
         }
         
+        // Keep surprise particles normal sized
+        if (this.emotion === 'surprise') {
+            this.hasGlow = Math.random() < 0.3; // 30% have subtle glow
+            this.glowSizeMultiplier = this.hasGlow ? 1.3 : 0; // Subtle glow
+        }
+        
         this.behaviorData = {
             initialSpeed: speed,
-            expansion: isSuspicion ? 1.02 : 1.05,  // Less expansion for suspicion
+            expansion: isSuspicion ? 1.02 : 1.05,  // Normal expansion
             fadeStart: 0.7,
-            isSuspicion: isSuspicion
+            isSuspicion: isSuspicion,
+            isSurprise: this.emotion === 'surprise'
         };
     }
 
@@ -516,7 +634,8 @@ class Particle {
         // Start with little to no movement (kernel waiting to pop)
         this.vx = (Math.random() - 0.5) * 0.1;
         this.vy = (Math.random() - 0.5) * 0.1;
-        this.lifeDecay = 0.008; // Medium-short life - particles pop and fade
+        // Faster, more varied decay for dynamic disappearing
+        this.lifeDecay = 0.008 + Math.random() * 0.012; // Random between 0.008-0.020 (faster fade)
         
         // Use emotion colors if provided, otherwise default popcorn colors
         if (this.emotionColors && this.emotionColors.length > 0) {
@@ -539,9 +658,9 @@ class Particle {
         
         this.behaviorData = {
             // Popcorn popping mechanics
-            popDelay: Math.random() * 2000,     // Random delay before popping (0-2 seconds)
+            popDelay: Math.random() * 800,     // Even faster, more varied popping (0-0.8 seconds)
             hasPopped: false,                    // Track if this kernel has popped
-            popStrength: 1.5 + Math.random() * 2, // How hard it pops (velocity multiplier)
+            popStrength: 2.5 + Math.random() * 3.5, // Much stronger pops for wide spread (2.5-6)
             bounceCount: 0,                      // Track bounces after popping
             maxBounces: 2 + Math.floor(Math.random() * 3), // 2-4 bounces
             gravity: 0.02,                       // Gravity acceleration
@@ -555,20 +674,53 @@ class Particle {
      * Orbiting behavior - gentle circular motion (love)
      */
     initializeOrbiting() {
-        this.lifeDecay = 0.002;  // Very slow decay for love
+        // Individual fade timing - each particle has its own lifespan
+        this.lifeDecay = 0.001 + Math.random() * 0.002;  // Variable decay (0.001-0.003)
         
-        // Use emotion colors if provided
+        // Use emotion colors if provided - glittery valentine palette
         if (this.emotionColors && this.emotionColors.length > 0) {
             this.color = selectWeightedColor(this.emotionColors);
         }
         
+        // Check if this is a lighter/sparkle color (light pinks)
+        this.isSparkle = this.color === '#FFE4E1' || this.color === '#FFCCCB' || this.color === '#FFC0CB';
+        
+        // Particles orbit at various distances for depth
+        const orbRadius = (this.scaleFactor || 1) * 40; // Approximate orb size
+        const depthLayer = Math.random();
+        const baseRadius = orbRadius * (1.3 + depthLayer * 0.9); // 1.3x to 2.2x orb radius
+        
+        // Glitter firefly properties - each with unique timing
+        this.blinkPhase = Math.random() * Math.PI * 2; // Random starting phase
+        this.blinkSpeed = 0.3 + Math.random() * 1.2; // Varied blink speeds (0.3-1.5)
+        this.blinkIntensity = 0.6 + Math.random() * 0.4; // How bright the blink gets
+        
+        // Individual fade properties
+        this.fadePhase = Math.random() * Math.PI * 2; // Random fade starting phase
+        this.fadeSpeed = 0.1 + Math.random() * 0.3; // Different fade speeds
+        this.minOpacity = 0.2 + Math.random() * 0.2; // Min brightness varies (0.2-0.4)
+        this.maxOpacity = 0.8 + Math.random() * 0.2; // Max brightness varies (0.8-1.0)
+        
+        // Sparkles have different properties
+        if (this.isSparkle) {
+            this.blinkSpeed *= 2; // Sparkles blink faster
+            this.blinkIntensity = 1.0; // Full intensity sparkles
+            this.minOpacity = 0; // Can fade to nothing
+            this.maxOpacity = 1.0; // Can be fully bright
+        }
+        
         this.behaviorData = {
             angle: Math.random() * Math.PI * 2,
-            radius: 40 + Math.random() * 60,
-            angularVelocity: 0.003 + Math.random() * 0.005,  // MUCH slower orbit
-            radiusOscillation: 0.01,
-            centerX: this.x,
-            centerY: this.y
+            radius: baseRadius,
+            baseRadius: baseRadius,
+            angularVelocity: 0.0008 + Math.random() * 0.0017,  // Varied rotation speeds
+            swayAmount: 3 + Math.random() * 7,  // Gentle floating sway
+            swaySpeed: 0.2 + Math.random() * 0.5,  // Varied sway rhythm
+            floatOffset: Math.random() * Math.PI * 2,  // Random vertical float phase
+            floatSpeed: 0.3 + Math.random() * 0.7,  // Varied vertical floating speed
+            floatAmount: 2 + Math.random() * 6,  // How much they float up/down
+            twinklePhase: Math.random() * Math.PI * 2,  // Individual twinkle timing
+            twinkleSpeed: 2 + Math.random() * 3  // Fast twinkle for glitter effect
         };
     }
     
@@ -734,6 +886,12 @@ class Particle {
         // Smooth fade-out at death
         else {
             this.life = (1.0 - this.age) / this.fadeOutTime;
+            this.isFadingOut = true;
+            
+            // Dynamic size reduction for popcorn during fade-out
+            if (this.behavior === 'popcorn') {
+                this.size = this.baseSize * (0.5 + 0.5 * this.life); // Shrink to 50% size
+            }
         }
         
         this.life = Math.max(0, Math.min(1, this.life));
@@ -806,6 +964,21 @@ class Particle {
 
     /**
      * Update ambient behavior - gentle outward emanation
+     * 
+     * Used for: NEUTRAL emotion (calm, peaceful state)
+     * Visual effect: Particles gently drift upward like smoke or steam
+     * 
+     * VISUAL DIAGRAM:
+     *        ↑  ↑  ↑
+     *       ·  ·  ·    ← particles
+     *      ·  ·  ·  
+     *     ·  ⭐  ·     ← orb center
+     *      ·  ·  ·
+     *       ·  ·  ·
+     * 
+     * @param {number} dt - Delta time (frame time)
+     * @param {number} centerX - Orb center X (unused but kept for consistency)
+     * @param {number} centerY - Orb center Y (unused but kept for consistency)
      */
     updateAmbient(dt, centerX, centerY) {
         const data = this.behaviorData;
@@ -926,11 +1099,37 @@ class Particle {
     updateBurst(dt) {
         const data = this.behaviorData;
         
-        // Expand outward with decreasing speed (frame-independent)
-        // Suspicion particles slow down quickly to hover nearby
-        const friction = data.isSuspicion ? 0.99 : 0.95;
-        this.vx *= Math.pow(friction, dt);
-        this.vy *= Math.pow(friction, dt);
+        // Surprise particles: burst out then STOP suddenly
+        if (data.isSurprise) {
+            // Track age for timing the stop
+            data.age = (data.age || 0) + dt * 0.016; // Convert to seconds
+            
+            if (data.age < 0.15) {
+                // First 0.15 seconds: maintain high speed
+                // Very little friction
+                const friction = 0.98;
+                this.vx *= Math.pow(friction, dt);
+                this.vy *= Math.pow(friction, dt);
+            } else if (data.age < 0.25) {
+                // 0.15-0.25 seconds: SUDDEN STOP!
+                const friction = 0.85; // Heavy braking
+                this.vx *= Math.pow(friction, dt);
+                this.vy *= Math.pow(friction, dt);
+            } else {
+                // After stop: float gently
+                const friction = 0.99;
+                this.vx *= Math.pow(friction, dt);
+                this.vy *= Math.pow(friction, dt);
+                // Tiny random drift
+                this.vx += (Math.random() - 0.5) * 0.01 * dt;
+                this.vy += (Math.random() - 0.5) * 0.01 * dt;
+            }
+        } else {
+            // Normal burst behavior for other emotions
+            const friction = data.isSuspicion ? 0.99 : 0.95;
+            this.vx *= Math.pow(friction, dt);
+            this.vy *= Math.pow(friction, dt);
+        }
         
         // For suspicion, add a subtle scanning motion
         if (data.isSuspicion) {
@@ -1001,38 +1200,82 @@ class Particle {
     
     /**
      * Update radiant behavior - particles radiate outward like sun rays
+     * 
+     * Used for: EUPHORIA emotion (first day of spring, sunrise vibes)
+     * Visual effect: Particles burst outward from center like sunbeams, with a 
+     *                shimmering/twinkling effect as they travel
+     * 
+     * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
+     * @param {number} centerX - X coordinate of the orb's center (canvas center)
+     * @param {number} centerY - Y coordinate of the orb's center (canvas center)
      */
     updateRadiant(dt, centerX, centerY) {
         const data = this.behaviorData;
         
-        // Calculate direction from center
+        // STEP 1: Calculate this particle's direction from the orb center
+        // dx/dy = distance from center to particle (can be negative)
         const dx = this.x - centerX;
         const dy = this.y - centerY;
+        // dist = straight-line distance using Pythagorean theorem
         const dist = Math.sqrt(dx * dx + dy * dy);
         
+        // STEP 2: Push particle outward from center (like sun rays)
         if (dist > 0) {
-            // Normalized direction away from center
+            // Convert dx/dy into a unit vector (length = 1) pointing away from center
+            // This gives us pure direction without magnitude
             const dirX = dx / dist;
             const dirY = dy / dist;
             
-            // Apply radial acceleration (sunburst effect)
+            // Add velocity in the outward direction
+            // radialSpeed controls how fast particles shoot outward (defined in initializeRadiant)
+            // Multiply by dt to make movement frame-rate independent
             this.vx += dirX * data.radialSpeed * dt;
             this.vy += dirY * data.radialSpeed * dt;
         }
         
-        // Add shimmer effect (oscillating brightness/size)
+        // STEP 3: Create shimmering effect (particles twinkle as they radiate)
+        // Increment shimmer phase over time (shimmerSpeed controls twinkle rate)
         data.shimmer += data.shimmerSpeed * dt;
+        // Create sine wave oscillation (-1 to 1)
         const shimmerEffect = Math.sin(data.shimmer);
-        this.size = this.baseSize * (1 + shimmerEffect * 0.2); // Size oscillates ±20%
-        this.opacity = this.baseOpacity * (1 + shimmerEffect * 0.3); // Opacity oscillates ±30%
+        // Make particle size pulse: baseSize ± 20%
+        // When shimmerEffect = 1: size = baseSize * 1.2 (120%)
+        // When shimmerEffect = -1: size = baseSize * 0.8 (80%)
+        this.size = this.baseSize * (1 + shimmerEffect * 0.2);
+        // Make particle opacity pulse: baseOpacity ± 30%
+        // Creates a twinkling star effect as particles radiate
+        this.opacity = this.baseOpacity * (1 + shimmerEffect * 0.3);
         
-        // Apply friction
+        // STEP 4: Apply friction to slow particles over time
+        // This prevents infinite acceleration and creates natural deceleration
+        // Math.pow(friction, dt) ensures frame-rate independent decay
+        // If friction = 0.99 and dt = 1, velocity reduces by 1% per frame
         this.vx *= Math.pow(data.friction, dt);
         this.vy *= Math.pow(data.friction, dt);
     }
     
     /**
      * Update popcorn behavior - spontaneous popping with bounces
+     * 
+     * Used for: JOY emotion (celebration, happiness)
+     * Visual effect: Particles wait, then POP! and bounce around with gravity
+     * 
+     * VISUAL DIAGRAM:
+     *     Stage 1: Wait      Stage 2: POP!       Stage 3: Bounce
+     *         ·                  💥 ↗             ↘ 
+     *        ···                ↖ 💥 ↗              ↓
+     *       ·⭐·                  💥                 🎊 ← bounce!
+     *        ···                ↙ 💥 ↘              ↑
+     *         ·                  💥 ↓               ↗
+     * 
+     * RECIPE TO MODIFY:
+     * - Decrease popDelay for faster popping (more energetic)
+     * - Increase popStrength for bigger pops
+     * - Adjust gravity for different bounce physics
+     * 
+     * @param {number} dt - Delta time (frame time)
+     * @param {number} centerX - Orb center X (unused)
+     * @param {number} centerY - Orb center Y (unused)
      */
     updatePopcorn(dt, centerX, centerY) {
         const data = this.behaviorData;
@@ -1040,14 +1283,14 @@ class Particle {
         
         // Check if it's time to pop
         if (!data.hasPopped && data.lifetime > data.popDelay) {
-            // POP! Sudden burst of velocity
+            // POP! Sudden burst of velocity in all directions for celebration
             data.hasPopped = true;
-            const popAngle = Math.random() * Math.PI * 2;
-            this.vx = Math.cos(popAngle) * data.popStrength;
-            this.vy = Math.sin(popAngle) * data.popStrength - 1; // Slight upward bias
+            const popAngle = Math.random() * Math.PI * 2; // Full 360 degree spread
+            this.vx = Math.cos(popAngle) * data.popStrength * 1.5; // Extra horizontal spread
+            this.vy = Math.sin(popAngle) * data.popStrength - 0.3; // Slight upward bias for joy
             
-            // Expand size when popping
-            this.size = this.baseSize * 1.5;
+            // Expand size when popping for dramatic effect
+            this.size = this.baseSize * 1.25;
         }
         
         if (data.hasPopped) {
@@ -1069,33 +1312,114 @@ class Particle {
                 this.size = this.baseSize * (1.5 - data.bounceCount * 0.1);
             }
             
-            // Fade faster after final bounce
+            // Fade dramatically after final bounce
             if (data.bounceCount >= data.maxBounces) {
-                this.lifeDecay = 0.02; // Fade quickly
+                this.lifeDecay = 0.03 + Math.random() * 0.02; // Very fast fade (0.03-0.05)
+                this.size *= 0.95; // Also shrink rapidly
+            }
+            
+            // Dynamic fading based on velocity - slower particles fade faster
+            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            if (speed < 0.5) {
+                this.lifeDecay *= 1.5; // 50% faster fade when moving slowly
             }
         }
     }
     
     /**
      * Update orbiting behavior - circular motion
+     * 
+     * Used for: LOVE emotion (romantic, valentine's day vibes)
+     * Visual effect: Particles orbit around orb like fireflies dancing,
+     *                with individual blinking and fading
+     * 
+     * VISUAL DIAGRAM:
+     *        ✨     ✨
+     *      💕  ╭───╮  💕    ← particles orbit & sparkle
+     *    ✨   │  ⭐  │   ✨   ← orb center
+     *      💕  ╰───╯  💕
+     *        ✨     ✨
+     * 
+     * RECIPE TO MODIFY:
+     * - Increase angularVelocity for faster spinning
+     * - Increase floatAmount for more vertical movement
+     * - Adjust blinkSpeed for different firefly effects
+     * 
+     * @param {number} dt - Delta time (frame time)
+     * @param {number} centerX - Orb center X position
+     * @param {number} centerY - Orb center Y position
      */
     updateOrbiting(dt, centerX, centerY) {
         const data = this.behaviorData;
         
-        // Update angle
+        // Slow romantic rotation around the orb
         data.angle += data.angularVelocity * dt;
         
-        // Oscillate radius slightly
-        const radiusVariation = Math.sin(data.angle * 3) * 5;
-        const currentRadius = data.radius + radiusVariation;
+        // Gentle swaying motion
+        const swayOffset = Math.sin(data.angle * data.swaySpeed) * data.swayAmount;
+        
+        // Radius changes for breathing effect
+        const radiusPulse = Math.sin(data.angle * 1.5) * 6;
+        const currentRadius = data.baseRadius + radiusPulse + swayOffset * 0.2;
         
         // Calculate orbital position
         this.x = centerX + Math.cos(data.angle) * currentRadius;
         this.y = centerY + Math.sin(data.angle) * currentRadius;
         
-        // Set velocity for smooth movement
-        this.vx = -Math.sin(data.angle) * data.angularVelocity * currentRadius;
-        this.vy = Math.cos(data.angle) * data.angularVelocity * currentRadius;
+        // Add gentle vertical floating (like fireflies)
+        data.floatOffset += data.floatSpeed * dt * 0.001;
+        const verticalFloat = Math.sin(data.floatOffset) * data.floatAmount;
+        this.y += verticalFloat;
+        
+        // Update individual fade phase
+        this.fadePhase += this.fadeSpeed * dt * 0.001;
+        
+        // Calculate individual particle fade (independent timing)
+        const fadeValue = Math.sin(this.fadePhase) * 0.5 + 0.5; // 0 to 1
+        const fadeOpacity = this.minOpacity + (this.maxOpacity - this.minOpacity) * fadeValue;
+        
+        // Firefly blinking effect
+        this.blinkPhase += this.blinkSpeed * dt * 0.002;
+        
+        // Create a complex glitter blink with multiple harmonics
+        let blinkValue;
+        if (this.isSparkle) {
+            // Sparkles have sharp, dramatic twinkles
+            data.twinklePhase += data.twinkleSpeed * dt * 0.001;
+            const twinkle = Math.pow(Math.sin(data.twinklePhase), 16); // Sharp peaks
+            const shimmer = Math.sin(this.blinkPhase * 5) * 0.2;
+            blinkValue = twinkle * 0.7 + shimmer + 0.1;
+        } else {
+            // Regular particles have smoother, firefly-like pulses
+            blinkValue = Math.sin(this.blinkPhase) * 0.4 + 
+                        Math.sin(this.blinkPhase * 3) * 0.3 +
+                        Math.sin(this.blinkPhase * 7) * 0.2 +
+                        Math.sin(this.blinkPhase * 11) * 0.1; // Added harmonic
+        }
+        
+        // Map to 0-1 range with intensity control
+        const normalizedBlink = (blinkValue + 1) * 0.5; // Convert from -1,1 to 0,1
+        const blink = 0.2 + normalizedBlink * this.blinkIntensity * 0.8;
+        
+        // Combine individual fade with blink effect
+        this.opacity = this.baseOpacity * fadeOpacity * blink;
+        
+        // Sparkles pulse size more dramatically
+        if (this.isSparkle) {
+            this.size = this.baseSize * (0.5 + normalizedBlink * 1.0); // 50-150% size
+        } else {
+            this.size = this.baseSize * (0.8 + normalizedBlink * 0.3); // 80-110% size
+        }
+        
+        // Add subtle color shift for sparkles (shimmer effect)
+        if (this.isSparkle) {
+            // Light pink sparkles can shift to white at peak brightness
+            if (normalizedBlink > 0.85) {
+                this.tempColor = '#FFFFFF'; // Flash white at peak for extra sparkle
+            } else {
+                this.tempColor = this.color;
+            }
+        }
     }
     
     
@@ -1174,7 +1498,8 @@ class Particle {
         const safeSize = Math.max(0.1, this.size);
         
         // Use the particle's own color if set, otherwise fall back to emotion color
-        const particleColor = this.color || emotionColor;
+        // tempColor is used for special effects like sparkle flashes
+        const particleColor = this.tempColor || this.color || emotionColor;
         
         ctx.save();
         
@@ -1326,6 +1651,13 @@ class Particle {
                 } else {
                     this.vx += oscillation * 0.5 * dt;
                 }
+                
+                // Dampen velocities near end to prevent wiggle
+                if (progress > 0.9) {
+                    const dampFactor = 1 - ((progress - 0.9) * 10);
+                    this.vx *= (0.95 + dampFactor * 0.05);
+                    this.vy *= (0.95 + dampFactor * 0.05);
+                }
                 break;
             }
             
@@ -1403,6 +1735,9 @@ class Particle {
                 // Cleanup
                 if (progress >= 0.99) {
                     this.gestureData.tiltInitialized = false;
+                    // Reset velocities to prevent wiggle
+                    this.vx *= 0.1;
+                    this.vy *= 0.1;
                 }
                 break;
             }
@@ -1558,6 +1893,9 @@ class Particle {
                 // Cleanup
                 if (progress >= 0.99) {
                     this.gestureData.driftInitialized = false;
+                    // Reset velocities to prevent wiggle
+                    this.vx *= 0.1;
+                    this.vy *= 0.1;
                 }
                 break;
             }
@@ -1700,11 +2038,14 @@ class Particle {
                 const fadeFactor = Math.sin(easeProgress * Math.PI);
                 this.opacity = this.baseOpacity * (0.5 + fadeFactor * 0.5);
                 
-                // Cleanup wave data (velocity reset handled universally)
+                // Cleanup wave data
                 if (progress >= 0.99) {
                     this.gestureData.waveInitialized = false;
                     this.gestureData.waveStartX = null;
                     this.gestureData.waveStartY = null;
+                    // Reset velocities to prevent wiggle
+                    this.vx *= 0.1;
+                    this.vy *= 0.1;
                 }
                 break;
             }
@@ -1798,10 +2139,13 @@ class Particle {
                 this.vx = this.gestureData.stretchStartDX * (scaleX - 1) * strength * 0.1;
                 this.vy = this.gestureData.stretchStartDY * (scaleY - 1) * strength * 0.1;
                 
-                // Cleanup stretch data (velocity reset handled universally)
+                // Cleanup stretch data
                 if (progress >= 0.99) {
                     this.gestureData.stretchStartDX = null;
                     this.gestureData.stretchStartDY = null;
+                    // Reset velocities to prevent wiggle
+                    this.vx *= 0.1;
+                    this.vy *= 0.1;
                 }
                 break;
             }
@@ -1930,8 +2274,11 @@ class Particle {
             }
         }
         
-        // Reset gesture data when gesture completes
+        // Reset gesture data and velocities when gesture completes
         if (progress >= 1) {
+            // Clear velocities to prevent stuck wiggling
+            this.vx = 0;
+            this.vy = 0;
             this.gestureData = null;
         }
     }
