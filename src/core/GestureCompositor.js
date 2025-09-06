@@ -32,7 +32,7 @@
  * ┌───────────────────────────────────────────────────────────────────────────────────
  * │ 🔗 DEPENDENCIES                                                                    
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • gestureConfig.js      : Base gesture parameters                                 
+ * │ • gestures/index.js     : Modular gesture system with base configs                
  * │ • emotionModifiers.js   : How emotions affect movement                            
  * │ • undertoneModifiers.js : Subtle variations in expression                         
  * └───────────────────────────────────────────────────────────────────────────────────
@@ -40,8 +40,8 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import { getGestureBaseConfig } from '../config/gestureConfig.js';
-import { getEmotionModifier } from '../config/emotionModifiers.js';
+import { getGesture } from './gestures/index.js';
+import { getEmotionModifiers } from './emotions/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
 
 class GestureCompositor {
@@ -117,9 +117,14 @@ class GestureCompositor {
             return this.cache.get(cacheKey);
         }
         
-        // Get base configuration
-        const base = getGestureBaseConfig(gesture);
-        const emotionMod = getEmotionModifier(emotion);
+        // Get base configuration from modular gesture system
+        const gestureModule = getGesture(gesture);
+        const base = gestureModule ? gestureModule.config : {
+            duration: 500,
+            amplitude: 20,
+            easing: 'sine'
+        };
+        const emotionMod = getEmotionModifiers(emotion);
         const undertoneMod = getUndertoneModifier(undertone);
         
         // Compose the final parameters

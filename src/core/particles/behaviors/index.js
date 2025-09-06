@@ -41,6 +41,7 @@ import radiant from './radiant.js';
 import ascending from './ascending.js';
 import erratic from './erratic.js';
 import cautious from './cautious.js';
+import pluginAdapter from './plugin-adapter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ BEHAVIOR COLLECTION
@@ -74,12 +75,21 @@ BEHAVIORS.forEach(behavior => {
 });
 
 /**
- * Get a behavior by name
+ * Get a behavior by name (checks both core and plugin behaviors)
  * @param {string} name - Behavior name (e.g., 'ambient', 'orbiting')
  * @returns {Object|null} Behavior object or null if not found
  */
 export function getBehavior(name) {
-    return BEHAVIOR_REGISTRY[name] || null;
+    // Check core behaviors first
+    if (BEHAVIOR_REGISTRY[name]) {
+        return BEHAVIOR_REGISTRY[name];
+    }
+    // Check plugin behaviors
+    const pluginBehavior = pluginAdapter.getPluginBehavior(name);
+    if (pluginBehavior) {
+        return pluginBehavior;
+    }
+    return null;
 }
 
 /**
@@ -121,15 +131,31 @@ export function updateBehavior(particle, behaviorName, dt, centerX, centerY) {
 }
 
 /**
- * Get list of all available behaviors
+ * Get list of all available behaviors (core and plugin)
  * @returns {Array} Array of behavior names and descriptions
  */
 export function listBehaviors() {
-    return Object.values(BEHAVIOR_REGISTRY).map(behavior => ({
+    // Get core behaviors
+    const coreBehaviors = Object.values(BEHAVIOR_REGISTRY).map(behavior => ({
         name: behavior.name,
         emoji: behavior.emoji || '🎯',
-        description: behavior.description || 'No description'
+        description: behavior.description || 'No description',
+        type: 'core'
     }));
+    
+    // Get plugin behaviors
+    const pluginBehaviorNames = pluginAdapter.getAllPluginBehaviors();
+    const pluginBehaviors = pluginBehaviorNames.map(name => {
+        const behavior = pluginAdapter.getPluginBehavior(name);
+        return {
+            name: behavior.name,
+            emoji: behavior.emoji || '🔌',
+            description: behavior.description || 'Plugin behavior',
+            type: 'plugin'
+        };
+    });
+    
+    return [...coreBehaviors, ...pluginBehaviors];
 }
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -144,11 +170,15 @@ if (typeof window !== 'undefined' && window.DEBUG_PARTICLES) {
     console.log('🎯 Particle Behaviors Loaded:', listBehaviors());
 }
 
+// Export plugin adapter for external use
+export { pluginAdapter };
+
 // Export everything
 export default {
     BEHAVIOR_REGISTRY,
     getBehavior,
     initializeBehavior,
     updateBehavior,
-    listBehaviors
+    listBehaviors,
+    pluginAdapter
 };

@@ -18,7 +18,7 @@
 ### Production-Ready Engine
 - **20+ Emotional States**: From joy to contemplation, each with unique particle behaviors
 - **15 Particle Behaviors**: Modular, extensible behaviors with visual documentation
-- **Complete Gesture System**: Jump, morph, stretch, flicker, wave, and more
+- **24 Gesture Animations**: Modular gesture system with blending and override modes
 - **Performance Optimized**: Rock-solid 60fps with 1000+ particles
 - **Adaptive Degradation**: Automatically adjusts quality for consistent performance
 - **Web Worker Support**: Offload heavy computations for smooth main thread
@@ -28,7 +28,7 @@
 - **Zero Heavy Dependencies**: Pure JavaScript, no Three.js or WebGL required
 - **Dynamic Visual Resampling**: Maintains quality on resize without re-initialization
 - **Particle Pooling**: Efficient memory management with object recycling
-- **Plugin Architecture**: Extensible system for custom emotions and behaviors
+- **Plugin Architecture**: Extensible system for custom emotions, behaviors, and gestures
 - **Mobile Optimized**: Touch support with adaptive performance scaling
 - **Accessibility Built-in**: Screen reader support and keyboard navigation
 
@@ -74,15 +74,59 @@ mascot.on('stateChange', (state) => {
 
 ## 🏗️ Architecture
 
-### Modular Particle System (v3.0.0)
+### Modular Systems (v3.1.0)
 
-The particle system has been completely modularized for maintainability and extensibility:
+The entire engine has been modularized with three core systems, each following the same registry pattern for consistency and extensibility:
 
 ```
 src/core/
-├── Particle.js           # Orchestrator (500 lines)
+├── Particle.js           # Particle orchestrator
+├── emotions/            # Modular emotion system (NEW)
+│   ├── index.js         # Emotion registry
+│   └── states/          # 13 emotional states
+│       ├── neutral.js   # Calm baseline
+│       ├── joy.js       # Playful happiness
+│       ├── sadness.js   # Melancholic sorrow
+│       ├── anger.js     # Intense rage
+│       ├── fear.js      # Anxious fleeing
+│       ├── surprise.js  # Sudden shock
+│       ├── disgust.js   # Revulsion
+│       ├── love.js      # Warm affection
+│       ├── suspicion.js # Watchful alertness
+│       ├── excited.js   # High energy
+│       ├── resting.js   # Deep relaxation
+│       ├── euphoria.js  # Radiant hope
+│       └── focused.js   # Intense concentration
+├── gestures/            # Modular gesture system
+│   ├── index.js         # Gesture registry
+│   ├── GestureMotion.js # Orchestrator
+│   ├── motions/         # Blending gestures (6)
+│   │   ├── bounce.js    # Vertical oscillation
+│   │   ├── pulse.js     # Radial expansion
+│   │   ├── shake.js     # Random jitter
+│   │   ├── oscillate.js # Smooth wave
+│   │   ├── radial.js    # Circular motion
+│   │   └── jitter.js    # Micro vibrations
+│   ├── transforms/      # Override gestures (6)
+│   │   ├── spin.js      # Rotation around center
+│   │   ├── jump.js      # Squash and leap
+│   │   ├── morph.js     # Shape formations
+│   │   ├── stretch.js   # Axis scaling
+│   │   ├── tilt.js      # Gather and sway
+│   │   └── orbital.js   # Planetary motion
+│   └── effects/         # Visual effects (9)
+│       ├── wave.js      # Infinity pattern
+│       ├── drift.js     # Controlled float
+│       ├── flicker.js   # Opacity variation
+│       ├── burst.js     # Explosive spread
+│       ├── directional.js # Linear motion
+│       ├── settle.js    # Gentle landing
+│       ├── fade.js      # Transparency effect
+│       ├── hold.js      # Freeze position
+│       └── breathe.js   # Expansion/contraction
 └── particles/
     ├── behaviors/        # 15 particle behaviors
+    │   ├── index.js      # Behavior registry
     │   ├── ambient.js    # Gentle drift (neutral)
     │   ├── rising.js     # Upward float (joy)
     │   ├── falling.js    # Downward sink (sadness)
@@ -97,15 +141,15 @@ src/core/
     │   ├── popcorn.js    # Bouncing (celebration)
     │   ├── ascending.js  # Incense smoke (zen)
     │   ├── erratic.js    # Nervous jitter (anxiety)
-    │   └── cautious.js   # Watchful pause (suspicion)
-    ├── gestures/         # Gesture motion system
+    │   ├── cautious.js   # Watchful pause (suspicion)
+    │   └── plugin-adapter.js # Plugin integration
     ├── config/           # Physics and settings
     └── utils/            # Color, math, easing
 ```
 
-### Adding New Behaviors
+### Adding New Behaviors, Gestures & Emotions
 
-Creating a new particle behavior is simple:
+#### Creating a New Particle Behavior
 
 1. Copy `particles/behaviors/_template.js`
 2. Implement `initialize()` and `update()` functions
@@ -113,7 +157,86 @@ Creating a new particle behavior is simple:
 4. Import in `behaviors/index.js`
 5. That's it! The registry handles the rest
 
+#### Creating a New Gesture
+
+1. Choose the appropriate category:
+   - `gestures/motions/` for blending gestures
+   - `gestures/transforms/` for override gestures
+   - `gestures/effects/` for visual effects
+2. Create your gesture file with this structure:
+   ```javascript
+   export default {
+     name: 'myGesture',
+     emoji: '🎭',
+     type: 'blending', // or 'override'
+     description: 'What it does',
+     apply: function(particle, progress, motion, dt, centerX, centerY) {
+       // Your gesture logic here
+     },
+     cleanup: function(particle) {
+       // Optional cleanup
+     }
+   };
+   ```
+3. Import in `gestures/index.js`
+4. The gesture is now available everywhere!
+
+#### Creating a New Emotion
+
+1. Create a new file in `emotions/states/`
+2. Define the emotion with all its properties:
+   ```javascript
+   export default {
+     name: 'myEmotion',
+     emoji: '😊',
+     description: 'What this emotion represents',
+     
+     // Visual properties
+     visual: {
+       glowColor: '#FFD700',
+       glowIntensity: 1.2,
+       particleRate: 15,
+       particleBehavior: 'ambient',
+       breathRate: 1.0,
+       particleColors: [
+         { color: '#FFD700', weight: 30 },
+         // ... depth palette
+       ]
+     },
+     
+     // Gesture modifiers
+     modifiers: {
+       speed: 1.0,
+       amplitude: 1.0,
+       intensity: 1.0,
+       smoothness: 1.0,
+       regularity: 1.0
+     },
+     
+     // Typical gestures for this emotion
+     typicalGestures: ['bounce', 'spin', 'pulse'],
+     
+     // Transition configuration
+     transitions: {
+       duration: 500,
+       easing: 'easeInOut',
+       priority: 5
+     }
+   };
+   ```
+3. Import in `emotions/index.js`
+4. The emotion is now fully integrated!
+
 ## 🧠 Emotional Intelligence
+
+### Modular Emotion System (v3.1.0)
+
+Each emotion is now a self-contained module combining:
+- **Visual Properties**: Colors, glow, particle spawn rates
+- **Gesture Modifiers**: How this emotion affects animations
+- **Typical Gestures**: Common animations for this emotion
+- **Transition Hints**: Smooth state changes
+- **Special Effects**: Unique features per emotion
 
 ### Core Emotions & Particle Behaviors
 
@@ -134,23 +257,48 @@ Creating a new particle behavior is simple:
 | **Nervous** | `erratic` | Jittery, unpredictable movement |
 | **Suspicion** | `cautious` | Slow movement with watchful pauses |
 
-### Gesture System
+### Modular Gesture System (v3.0.0)
 
-Complete gesture implementations for expressive animations:
+The gesture system has been completely modularized with 24 gesture animations organized by type:
 
-| Gesture | Type | Description |
-|---------|------|-------------|
-| `bounce` | Blending | Vertical oscillation |
-| `pulse` | Blending | Radial expansion/contraction |
-| `shake` | Blending | Random jitter |
-| `spin` | Override | Orbital rotation |
-| `jump` | Override | Squash, leap, and land |
-| `morph` | Override | Form geometric patterns |
-| `stretch` | Override | Axis scaling |
-| `wave` | Override | Infinity pattern flow |
-| `tilt` | Override | Gather and sway |
-| `drift` | Override | Controlled float |
-| `flicker` | Blending | Opacity and motion variation |
+#### Motion Gestures (Blending)
+These gestures blend with existing particle behavior:
+
+| Gesture | Description | Use Case |
+|---------|-------------|----------|
+| `bounce` | Vertical oscillation | Joy, excitement |
+| `pulse` | Radial expansion/contraction | Heartbeat, emphasis |
+| `shake` | Random jitter | Nervousness, cold |
+| `oscillate` | Smooth wave motion | Calm, floating |
+| `radial` | Circular motion | Energy, spinning |
+| `jitter` | Micro vibrations | Anxiety, tension |
+
+#### Transform Gestures (Override)
+These gestures completely control particle motion:
+
+| Gesture | Description | Use Case |
+|---------|-------------|----------|
+| `spin` | Rotation around center | Confusion, dizzy |
+| `jump` | Squash, leap, and land | Surprise, celebration |
+| `morph` | Form geometric patterns | Transformation |
+| `stretch` | Axis scaling | Yawn, reaching |
+| `tilt` | Gather and sway | Curiosity, lean |
+| `orbital` | Planetary motion | Mystery, cosmic |
+
+#### Effect Gestures (Visual)
+These gestures create visual effects:
+
+| Gesture | Description | Use Case |
+|---------|-------------|----------|
+| `wave` | Infinity pattern flow | Greeting, flow |
+| `drift` | Controlled float | Daydream, float |
+| `flicker` | Opacity variation | Glitch, unstable |
+| `burst` | Explosive spread | Excitement, pop |
+| `directional` | Linear motion | Focus, point |
+| `settle` | Gentle landing | Calm, rest |
+| `fade` | Transparency effect | Disappear, ghost |
+| `hold` | Freeze position | Pause, think |
+| `breathe` | Expansion/contraction | Life, meditation |
 
 ## 🎨 Visual System
 
@@ -250,16 +398,14 @@ const mascot = new EmotiveMascot(config);
 5. **LOD System**: Reduces particle complexity at distance
 6. **Worker Offloading**: Heavy calculations in Web Workers
 
-### Benchmarks
+### Performance Targets
 
-| Particles | FPS (Chrome) | FPS (Firefox) | FPS (Safari) |
-|-----------|--------------|---------------|--------------|
-| 100       | 60           | 60            | 60           |
-| 500       | 60           | 60            | 60           |
-| 1000      | 60           | 58            | 56           |
-| 2000      | 55           | 52            | 48           |
+The engine is optimized to maintain 60fps with the following particle counts:
+- **100-500 particles**: Rock-solid 60fps on modern browsers
+- **1000 particles**: Target 60fps with adaptive degradation
+- **2000+ particles**: Graceful performance scaling
 
-*Tested on M1 MacBook Pro at 1920x1080 resolution*
+*Performance varies by hardware and browser. The adaptive system automatically adjusts quality to maintain smooth animations.*
 
 ## 🤝 Contributing
 
@@ -277,6 +423,7 @@ We welcome contributions! The modular architecture makes it easy to add new beha
 - JSDoc comments
 - Visual diagrams in comments
 - Performance-conscious implementations
+- Modular registry pattern for extensibility
 
 ## 📄 License
 
@@ -284,7 +431,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ## 🙏 Credits
 
-Created by Josh Tolley and the Emotive Engine team.
+Created by Joshua Tollette and the Emotive Engine team.
 
 Special thanks to all contributors who helped make this engine production-ready.
 

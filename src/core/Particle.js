@@ -17,10 +17,10 @@
  * ║                                                                                    
  * ║ STRUCTURE:                                                                         
  * ║ - Particle class (this file) - orchestrates everything                            
- * ║ - particles/behaviors/* - 15 behavior modules                                     
+ * ║ - particles/behaviors/* - behavior modules                                     
  * ║ - particles/config/* - configuration constants                                    
  * ║ - particles/utils/* - utility functions                                           
- * ║ - particles/gestures/* - gesture system (coming soon)                             
+ * ║ - gestures/* - modular gesture system                             
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -33,8 +33,12 @@ import { selectWeightedColor } from './particles/utils/colorUtils.js';
 // Import config
 import { PHYSICS } from './particles/config/physics.js';
 
-// Import gesture system
-import { applyGestureMotion as applyFullGestureMotion } from './particles/gestures/applyGestureMotion.js';
+// Import gesture system - NOW USING MODULAR GESTURES!
+import { 
+    applyGestureMotion as applyFullGestureMotion,
+    isGestureOverriding,
+    isGestureBlending 
+} from './gestures/GestureMotion.js';
 
 /**
  * Particle class - Individual particle with behavior and rendering
@@ -127,12 +131,11 @@ class Particle {
         const dt = cappedDeltaTime / 16.67; // 16.67ms = 60 FPS frame time
         
         // Universal law: Gestures override state behavior based on their motion type
-        const blendingMotionTypes = ['radial', 'oscillate', 'jitter', 'directional', 'burst', 'flicker', 'fade', 'settle', 'hold', 'breathe'];
-        // Note: 'drift', 'tilt', 'wave', 'orbital', 'morph', 'jump', 'stretch' are overriding types
-        const isGestureOverriding = gestureMotion && gestureProgress > 0 && 
-            !blendingMotionTypes.includes(gestureMotion.type);
+        // Use the modular gesture system to determine gesture behavior
+        const gestureIsOverriding = gestureMotion && gestureProgress > 0 && 
+            isGestureOverriding(gestureMotion.type);
         
-        if (isGestureOverriding) {
+        if (gestureIsOverriding) {
             // Gesture completely controls particle - skip normal behavior
             this.applyGestureMotion(gestureMotion, gestureProgress, dt, centerX, centerY);
         } else {
@@ -151,7 +154,7 @@ class Particle {
         }
         
         // Apply velocity to position (unless gesture is directly controlling position)
-        if (!isGestureOverriding) {
+        if (!gestureIsOverriding) {
             this.x += this.vx * dt;
             this.y += this.vy * dt;
         }

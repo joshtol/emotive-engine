@@ -1,0 +1,216 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Tilt Gesture
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Tilt gesture - particles gather and sway together
+ * @author Emotive Engine Team
+ * @module gestures/transforms/tilt
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a cohesive tilting motion where particles first gather toward the center, 
+ * ║ then tilt and sway as a unified group. Perfect for curious or questioning         
+ * ║ expressions, like a head tilt.                                                    
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *    Phase 1: Gather    Phase 2: Tilt Left    Phase 3: Tilt Right
+ *      · · ·               ↖ ⭐                    ⭐ ↗
+ *     · · · ·      →      ↖ ⭐ ⭐        →      ⭐ ⭐ ↗
+ *      · · ·               ↖ ⭐                    ⭐ ↗
+ *    (scattered)         (tilted left)         (tilted right)
+ * 
+ * USED BY:
+ * - Curiosity/questioning states
+ * - Contemplation animations
+ * - Playful head-tilt effects
+ * - Character personality expressions
+ */
+
+/**
+ * Tilt gesture configuration and implementation
+ */
+export default {
+    name: 'tilt',
+    emoji: '🤔',
+    type: 'override', // Completely replaces motion
+    description: 'Gather particles then tilt as unified group',
+    
+    // Default configuration
+    config: {
+        duration: 500,         // Animation duration (from gestureConfig)
+        gatherPhase: 0.2,      // QUICK gathering phase
+        tiltAngle: 45,         // DRAMATIC tilt angle - crunk style
+        swayAmount: 80,        // BIG horizontal sway - whip it
+        liftAmount: 60,        // HIGH lift during tilt - get crazy
+        frequency: 3,          // More tilts for dance effect
+        homeRadius: 20,        // Pull particles CLOSE to center first
+        easing: 'sine',        // Easing function
+        strength: 2.5,         // STRONG motion for dramatic effect
+        // Particle motion configuration for AnimationController
+        particleMotion: {
+            type: 'tilt',
+            strength: 2.5,
+            frequency: 3,
+            swayAmount: 80,
+            liftAmount: 60
+        },
+        smoothness: 0.25       // Smoother for flowing dance motion
+    },
+    
+    /**
+     * Initialize gesture data for a particle
+     * @param {Particle} particle - The particle to initialize
+     * @param {Object} motion - Gesture motion configuration
+     * @param {number} centerX - Orb center X
+     * @param {number} centerY - Orb center Y
+     */
+    initialize: function(particle, motion, centerX, centerY) {
+        if (!particle.gestureData) {
+            particle.gestureData = {};
+        }
+        
+        // Calculate initial position and angle
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const angle = Math.atan2(dy, dx);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Assign a role for variation (some particles lag slightly)
+        const role = Math.random();
+        
+        // Calculate home position (where particle gathers to)
+        const config = { ...this.config, ...motion };
+        const homeRadius = (config.homeRadius + Math.random() * 20) * particle.scaleFactor;
+        
+        particle.gestureData.tilt = {
+            startX: particle.x,
+            startY: particle.y,
+            originalVx: particle.vx,
+            originalVy: particle.vy,
+            angle: angle,
+            distance: distance,
+            homeRadius: homeRadius,
+            homeX: centerX + Math.cos(angle) * homeRadius,
+            homeY: centerY + Math.sin(angle) * homeRadius,
+            role: role, // 0-1, affects timing and smoothness
+            initialized: true
+        };
+    },
+    
+    /**
+     * Apply tilt motion to particle
+     * @param {Particle} particle - The particle to animate
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @param {number} dt - Delta time
+     * @param {number} centerX - Orb center X
+     * @param {number} centerY - Orb center Y
+     */
+    apply: function(particle, progress, motion, dt, centerX, centerY) {
+        // Initialize on first frame
+        if (!particle.gestureData?.tilt?.initialized) {
+            this.initialize(particle, motion, centerX, centerY);
+        }
+        
+        const data = particle.gestureData.tilt;
+        const config = { ...this.config, ...motion };
+        const strength = motion.strength || 1.0;
+        
+        let targetX, targetY;
+        
+        if (progress < config.gatherPhase) {
+            // PHASE 1: Gather toward center
+            const gatherProgress = progress / config.gatherPhase;
+            const easedGather = this.easeInOutCubic(gatherProgress);
+            
+            // Interpolate from start to home position
+            targetX = data.startX + (data.homeX - data.startX) * easedGather;
+            targetY = data.startY + (data.homeY - data.startY) * easedGather;
+            
+            // AGGRESSIVE gathering - pull them in FAST
+            const speed = 0.6;  // Much faster gathering
+            particle.x += (targetX - particle.x) * speed;
+            particle.y += (targetY - particle.y) * speed;
+            
+        } else {
+            // PHASE 2: Tilting motion
+            const tiltPhase = (progress - config.gatherPhase) / (1 - config.gatherPhase);
+            const t = tiltPhase * Math.PI * config.frequency;
+            const tiltProgress = Math.sin(t);
+            
+            // Convert tilt angle to radians
+            const maxTiltRad = (config.tiltAngle * Math.PI / 180) * strength;
+            
+            // Calculate sway angle (oscillates left and right)
+            const swayAngle = data.angle + (tiltProgress * maxTiltRad);
+            
+            // Add lift effect (particles rise slightly during tilt)
+            const liftAmount = Math.abs(tiltProgress) * config.liftAmount * particle.scaleFactor;
+            const currentRadius = data.homeRadius + liftAmount;
+            
+            // Calculate target position with tilt
+            targetX = centerX + Math.cos(swayAngle) * currentRadius;
+            targetY = centerY + Math.sin(swayAngle) * currentRadius - liftAmount * 0.3; // Slight upward bias
+            
+            // Apply role-based variation (some particles lag)
+            const smoothness = config.smoothness + data.role * 0.1;
+            
+            // Smooth movement to target
+            particle.x += (targetX - particle.x) * smoothness;
+            particle.y += (targetY - particle.y) * smoothness;
+            
+            // Add subtle rotation feel with velocity
+            const tangentX = -Math.sin(swayAngle);
+            const tangentY = Math.cos(swayAngle);
+            particle.vx = tangentX * tiltProgress * 2;
+            particle.vy = tangentY * tiltProgress * 2;
+        }
+        
+        // Store current velocity for trails
+        if (progress < config.gatherPhase) {
+            particle.vx = (targetX - particle.x) * 0.25;
+            particle.vy = (targetY - particle.y) * 0.25;
+        }
+        
+        // Smooth ending - return to original velocities
+        if (progress > 0.9) {
+            const endFactor = (1 - progress) * 10;
+            const returnX = data.startX + (particle.x - data.startX) * endFactor;
+            const returnY = data.startY + (particle.y - data.startY) * endFactor;
+            
+            particle.x = returnX;
+            particle.y = returnY;
+            particle.vx = particle.vx * endFactor + data.originalVx * (1 - endFactor);
+            particle.vy = particle.vy * endFactor + data.originalVy * (1 - endFactor);
+        }
+    },
+    
+    /**
+     * Clean up gesture data when complete
+     * @param {Particle} particle - The particle to clean up
+     */
+    cleanup: function(particle) {
+        if (particle.gestureData?.tilt) {
+            const data = particle.gestureData.tilt;
+            particle.vx = data.originalVx;
+            particle.vy = data.originalVy;
+            delete particle.gestureData.tilt;
+        }
+    },
+    
+    /**
+     * Easing function for smooth animation
+     * @param {number} t - Progress (0-1)
+     * @returns {number} Eased value
+     */
+    easeInOutCubic: function(t) {
+        return t < 0.5 
+            ? 4 * t * t * t 
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+};

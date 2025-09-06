@@ -45,7 +45,7 @@ import ParticleSystem from './core/ParticleSystem.js';
 import EmotiveRenderer from './core/EmotiveRenderer.js';
 import GazeTracker from './core/GazeTracker.js';
 import IdleBehavior from './core/IdleBehavior.js';
-import { getEmotionParams } from './config/emotionMap.js';
+import { getEmotionParams } from './core/emotions/index.js';
 import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
