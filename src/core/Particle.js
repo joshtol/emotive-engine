@@ -127,7 +127,8 @@ class Particle {
         const dt = cappedDeltaTime / 16.67; // 16.67ms = 60 FPS frame time
         
         // Universal law: Gestures override state behavior based on their motion type
-        const blendingMotionTypes = ['radial', 'oscillate', 'jitter', 'directional', 'burst', 'flicker', 'fade', 'settle', 'hold'];
+        const blendingMotionTypes = ['radial', 'oscillate', 'jitter', 'directional', 'burst', 'flicker', 'fade', 'settle', 'hold', 'breathe'];
+        // Note: 'drift', 'tilt', 'wave', 'orbital', 'morph', 'jump', 'stretch' are overriding types
         const isGestureOverriding = gestureMotion && gestureProgress > 0 && 
             !blendingMotionTypes.includes(gestureMotion.type);
         
