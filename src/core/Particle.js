@@ -33,6 +33,9 @@ import { selectWeightedColor } from './particles/utils/colorUtils.js';
 // Import config
 import { PHYSICS } from './particles/config/physics.js';
 
+// Import gesture system
+import { applyGestureMotion as applyFullGestureMotion } from './particles/gestures/applyGestureMotion.js';
+
 /**
  * Particle class - Individual particle with behavior and rendering
  * 
@@ -218,34 +221,8 @@ class Particle {
      * @param {number} centerY - Orb center Y
      */
     applyGestureMotion(motion, progress, dt, centerX, centerY) {
-        // Simple implementation for now - will be expanded with gesture system
-        const strength = motion.strength || 1;
-        
-        switch (motion.type) {
-            case 'pulse':
-                // Particles expand and contract with orb
-                const pulseFactor = 1 + Math.sin(progress * Math.PI * 2) * 0.3 * strength;
-                const dx = this.x - centerX;
-                const dy = this.y - centerY;
-                this.x = centerX + dx * pulseFactor;
-                this.y = centerY + dy * pulseFactor;
-                break;
-                
-            case 'wave':
-                // Particles flow in wave pattern
-                const waveOffset = Math.sin(progress * Math.PI * 2 + this.x * 0.01) * 10 * strength;
-                this.y += waveOffset * dt * 0.1;
-                break;
-                
-            case 'gather':
-                // Particles gather towards center
-                if (progress < 0.5) {
-                    const gatherStrength = progress * 2 * strength;
-                    this.vx += (centerX - this.x) * gatherStrength * 0.001 * dt;
-                    this.vy += (centerY - this.y) * gatherStrength * 0.001 * dt;
-                }
-                break;
-        }
+        // Use the full gesture system from the original
+        applyFullGestureMotion(this, dt, motion, progress, centerX, centerY);
     }
 
     /**
@@ -258,6 +235,104 @@ class Particle {
         const margin = 50; // Allow some margin for particles to re-enter
         return this.x < -margin || this.x > width + margin || 
                this.y < -margin || this.y > height + margin;
+    }
+
+    /**
+     * Check if particle is still alive
+     * @returns {boolean} True if particle life > 0
+     */
+    isAlive() {
+        return this.life > 0;
+    }
+
+    /**
+     * Set outward velocity for gesture effects
+     * @param {number} angle - Direction angle in radians
+     */
+    setOutwardVelocity(angle) {
+        if (this.behaviorData && this.behaviorData.outwardSpeed !== undefined) {
+            const speed = this.behaviorData.outwardSpeed;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed + (this.behaviorData.upwardBias || 0);
+        }
+    }
+
+    /**
+     * Get particle state for debugging
+     * @returns {Object} Current particle state
+     */
+    getState() {
+        return {
+            position: { x: this.x, y: this.y },
+            velocity: { x: this.vx, y: this.vy },
+            life: this.life,
+            behavior: this.behavior,
+            size: this.size,
+            opacity: this.opacity
+        };
+    }
+
+    /**
+     * Apply undertone modifier
+     * @param {number} dt - Delta time
+     * @param {Object} modifier - Undertone modifier settings
+     */
+    applyUndertoneModifier(dt, modifier) {
+        if (!modifier) return;
+        
+        // This is already handled in applyUndertone method
+        // Just redirect to that
+        this.applyUndertone(modifier, dt);
+    }
+
+    /**
+     * Reset particle for reuse from pool
+     * @param {number} x - New X position
+     * @param {number} y - New Y position
+     * @param {string} behavior - New behavior type
+     * @param {number} scaleFactor - Scale factor
+     * @param {number} particleSizeMultiplier - Size multiplier
+     * @param {Array} emotionColors - Emotion colors
+     */
+    reset(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null) {
+        this.x = x;
+        this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.life = 0.0;  // Start at 0 for fade-in
+        this.age = 0;  // Reset age
+        this.scaleFactor = scaleFactor;
+        this.particleSizeMultiplier = particleSizeMultiplier;
+        this.size = (4 + Math.random() * 6) * scaleFactor * particleSizeMultiplier;  // Scaled size
+        this.baseSize = this.size;
+        this.emotionColors = emotionColors;  // Store emotion colors
+        
+        // Clear cached colors for reuse
+        this.cachedColors.clear();
+        this.opacity = 0.0;  // Start invisible
+        this.isFadingOut = false;
+        this.baseOpacity = 0.3 + Math.random() * 0.4;  // Reset base opacity
+        this.color = '#ffffff';  // Reset color to white before reinitializing
+        this.behavior = behavior;
+        
+        // Clear gesture data if it exists
+        this.gestureData = {
+            initialX: x,
+            initialY: y
+        };
+        
+        // Reset behavior data
+        if (!this.behaviorData) {
+            this.behaviorData = {};
+        } else {
+            // Clear existing properties
+            for (let key in this.behaviorData) {
+                delete this.behaviorData[key];
+            }
+        }
+        
+        // Reinitialize behavior
+        initializeBehavior(this, behavior);
     }
 
     /**
@@ -289,6 +364,17 @@ class Particle {
         if (!result) return `rgba(255, 255, 255, ${alpha})`;
         
         return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})`;
+    }
+
+    /**
+     * Cubic ease in/out function for smooth animations
+     * @param {number} t - Progress value (0-1)
+     * @returns {number} Eased value (0-1)
+     */
+    easeInOutCubic(t) {
+        return t < 0.5 
+            ? 4 * t * t * t 
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     /**
