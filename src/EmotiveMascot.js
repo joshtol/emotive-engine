@@ -640,18 +640,14 @@ class EmotiveMascot {
             const gestureConfig = getGesture(gesture);
             
             if (gestureConfig) {
-                // Set gesture motion on all particles
-                const particles = this.particleSystem.particles;
-                particles.forEach(particle => {
-                    particle.gestureMotion = {
-                        type: gesture,
-                        amplitude: 1.0,
-                        frequency: 1.0,
-                        intensity: 1.0
-                    };
-                    particle.gestureProgress = 0;
-                    particle.gestureDuration = gestureConfig.defaultParams?.duration || 1000;
-                });
+                // Store the current gesture info for the particle system to use
+                this.currentModularGesture = {
+                    type: gesture,
+                    config: gestureConfig,
+                    startTime: performance.now(),
+                    duration: gestureConfig.defaultParams?.duration || 1000,
+                    progress: 0
+                };
                 
                 console.log(`Executed ${gesture} through particle system`);
                 
@@ -1763,16 +1759,7 @@ class EmotiveMascot {
                     this.idleBehavior.update(deltaTime);
                 }
                 
-                // Update gesture progress on particles
-                this.particleSystem.particles.forEach(particle => {
-                    if (particle.gestureProgress < 1 && particle.gestureDuration) {
-                        particle.gestureProgress += deltaTime / particle.gestureDuration;
-                        if (particle.gestureProgress >= 1) {
-                            particle.gestureMotion = null;
-                            particle.gestureProgress = 0;
-                        }
-                    }
-                });
+                // Gesture progress is now handled above when checking currentModularGesture
                 
                 // Combine gaze and sway offsets
                 if (this.gazeTracker && this.idleBehavior) {
@@ -1952,11 +1939,30 @@ class EmotiveMascot {
                 particleModifier = { ...(undertoneModifier || {}), zenVortexIntensity: this.renderer.state.zenVortexIntensity };
             }
             
-            // Get current gesture info from renderer for particle motion
+            // Get current gesture info from renderer or modular gesture
             let gestureMotion = null;
             let gestureProgress = 0;
             
-            if (this.renderer && this.renderer.getCurrentGesture) {
+            // First check for modular gesture
+            if (this.currentModularGesture) {
+                const elapsed = performance.now() - this.currentModularGesture.startTime;
+                gestureProgress = Math.min(elapsed / this.currentModularGesture.duration, 1);
+                
+                if (gestureProgress >= 1) {
+                    // Gesture finished
+                    this.currentModularGesture = null;
+                } else {
+                    // Set gesture motion for particles
+                    gestureMotion = {
+                        type: this.currentModularGesture.type,
+                        amplitude: 1.0,
+                        frequency: 1.0,
+                        intensity: 1.0
+                    };
+                }
+            }
+            // Fallback to renderer gesture
+            else if (this.renderer && this.renderer.getCurrentGesture) {
                 const currentGesture = this.renderer.getCurrentGesture();
                 if (currentGesture && currentGesture.particleMotion) {
                     gestureMotion = currentGesture.particleMotion;
@@ -2076,7 +2082,7 @@ class EmotiveMascot {
             const debugInfo = [
                 `Emotion: ${state.emotion}${state.undertone ? ` (${state.undertone})` : ''}`,
                 `Particles: ${particleStats.activeParticles}/${particleStats.maxParticles}`,
-                `Gesture: ${this.particleSystem.particles.some(p => p.gestureMotion) ? 'active' : 'none'}`,
+                `Gesture: ${this.currentModularGesture ? this.currentModularGesture.type : 'none'}`,
                 `Queue: 0`,
                 `Speaking: ${this.speaking ? 'yes' : 'no'}`,
                 `Audio Level: ${(this.audioLevel * 100).toFixed(1)}%`
