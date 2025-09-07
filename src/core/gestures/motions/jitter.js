@@ -9,35 +9,48 @@
 export default {
     name: 'jitter',
     type: 'blending',
-    emoji: '⚡',
-    description: 'Rapid random jittery movement',
+    emoji: '🫨',
+    description: 'Nervous jittery movement',
     
-    defaultParams: {
-        duration: 500,
+    config: {
+        duration: 1000,
         intensity: 5,
-        frequency: 30,
-        easing: 'linear'
+        frequency: 20,
+        strength: 0.8
     },
     
-    getMotion: function(progress, params = {}) {
-        const intensity = params.intensity || this.defaultParams.intensity;
-        const frequency = params.frequency || this.defaultParams.frequency;
+    /**
+     * Apply jitter motion to particle
+     * @param {Particle} particle - The particle to animate
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @param {number} dt - Delta time
+     * @param {number} centerX - Orb center X
+     * @param {number} centerY - Orb center Y
+     */
+    apply: function(particle, progress, motion, dt, centerX, centerY) {
+        const config = { ...this.config, ...motion };
+        const intensity = config.intensity || this.config.intensity;
+        const strength = config.strength || this.config.strength;
         
-        // High frequency random movement
-        const time = progress * frequency;
-        const x = (Math.random() - 0.5) * intensity * 2;
-        const y = (Math.random() - 0.5) * intensity * 2;
+        // Random jitter in both directions
+        const jitterX = (Math.random() - 0.5) * intensity * strength;
+        const jitterY = (Math.random() - 0.5) * intensity * strength;
         
-        // Random scale jitter
-        const scaleJitter = 1 + (Math.random() - 0.5) * 0.05;
+        // Apply jitter with decreasing intensity over time
+        const fadeOut = 1 - progress * 0.5;
+        particle.vx += jitterX * 0.1 * dt * fadeOut;
+        particle.vy += jitterY * 0.1 * dt * fadeOut;
         
-        return {
-            x: x,
-            y: y,
-            scaleX: scaleJitter,
-            scaleY: scaleJitter,
-            rotation: (Math.random() - 0.5) * 3,
-            strength: 0.9
-        };
+        // Slight size variation for nervous effect
+        particle.size = particle.baseSize * (1 + (Math.random() - 0.5) * 0.1);
+    },
+    
+    /**
+     * Clean up gesture data when complete
+     * @param {Particle} particle - The particle to clean up
+     */
+    cleanup: function(particle) {
+        particle.size = particle.baseSize;
     }
 };
