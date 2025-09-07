@@ -46,10 +46,16 @@ export default {
     /**
      * Initialize particle state for glitchy behavior
      */
-    initialize: function(particle, config) {
+    initialize: function(particle, config, centerX, centerY) {
         // Set particle color from emotion palette
         if (particle.emotionColors && particle.emotionColors.length > 0) {
             particle.color = selectWeightedColor(particle.emotionColors);
+        }
+        
+        // Set initial position with vertical offset
+        const verticalOffset = 50;
+        if (centerY) {
+            particle.y = centerY + verticalOffset;
         }
         
         particle.behaviorState = {
@@ -181,8 +187,10 @@ export default {
             const wobbleRadius = state.orbitRadius * (1 + state.dropIntensity * 0.3 * Math.sin(state.beatPhase * 4));
             
             // Calculate target position relative to center
+            // Add vertical offset to move particles down to align with orb
+            const verticalOffset = 50; // Move particles down by 50 pixels
             let targetX = centerX + Math.cos(state.orbitAngle) * wobbleRadius;
-            let targetY = centerY + Math.sin(state.orbitAngle) * wobbleRadius * 0.6; // Elliptical
+            let targetY = centerY + verticalOffset + Math.sin(state.orbitAngle) * wobbleRadius * 0.6; // Elliptical
             
             // Apply glitch offset
             if (state.isGlitching) {
