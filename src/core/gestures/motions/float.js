@@ -29,6 +29,17 @@ export default {
      * @param {number} centerY - Orb center Y
      */
     apply: function(particle, progress, motion, dt, centerX, centerY) {
+        // Store original values on first frame
+        if (!particle.gestureData) {
+            particle.gestureData = {};
+        }
+        if (!particle.gestureData.float) {
+            particle.gestureData.float = {
+                originalSize: particle.size,
+                originalOpacity: particle.opacity || 1
+            };
+        }
+        
         const config = { ...this.config, ...motion };
         const amplitude = config.amplitude || this.config.amplitude;
         const wobbleAmount = config.wobbleAmount || this.config.wobbleAmount;
@@ -53,7 +64,19 @@ export default {
      * @param {Particle} particle - The particle to clean up
      */
     cleanup: function(particle) {
-        particle.opacity = 1;
-        particle.size = particle.baseSize;
+        // Reset to original values
+        if (particle.gestureData?.float) {
+            particle.opacity = particle.gestureData.float.originalOpacity;
+            particle.size = particle.gestureData.float.originalSize;
+            delete particle.gestureData.float;
+        } else {
+            // Fallback if no data stored
+            particle.opacity = 1;
+            particle.size = particle.baseSize;
+        }
+        
+        // Dampen velocity to help particle settle
+        particle.vx *= 0.5;
+        particle.vy *= 0.5;
     }
 };

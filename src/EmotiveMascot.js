@@ -1949,8 +1949,22 @@ class EmotiveMascot {
                 gestureProgress = Math.min(elapsed / this.currentModularGesture.duration, 1);
                 
                 if (gestureProgress >= 1) {
-                    // Gesture finished
-                    this.currentModularGesture = null;
+                    // Ensure cleanup happens before clearing gesture
+                    gestureMotion = {
+                        type: this.currentModularGesture.type,
+                        amplitude: 1.0,
+                        frequency: 1.0,
+                        intensity: 1.0
+                    };
+                    // Pass progress = 1 to trigger cleanup
+                    gestureProgress = 1.0;
+                    // Clear gesture on next frame after cleanup
+                    if (!this.currentModularGesture.cleanupPending) {
+                        this.currentModularGesture.cleanupPending = true;
+                    } else {
+                        // Cleanup was called last frame, now clear the gesture
+                        this.currentModularGesture = null;
+                    }
                 } else {
                     // Set gesture motion for particles
                     gestureMotion = {

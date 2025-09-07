@@ -29,6 +29,16 @@ export default {
      * @param {number} centerY - Orb center Y
      */
     apply: function(particle, progress, motion, dt, centerX, centerY) {
+        // Store original values on first frame
+        if (!particle.gestureData) {
+            particle.gestureData = {};
+        }
+        if (!particle.gestureData.jitter) {
+            particle.gestureData.jitter = {
+                originalSize: particle.size
+            };
+        }
+        
         const config = { ...this.config, ...motion };
         const intensity = config.intensity || this.config.intensity;
         const strength = config.strength || this.config.strength;
@@ -51,6 +61,16 @@ export default {
      * @param {Particle} particle - The particle to clean up
      */
     cleanup: function(particle) {
-        particle.size = particle.baseSize;
+        // Reset to original values
+        if (particle.gestureData?.jitter) {
+            particle.size = particle.gestureData.jitter.originalSize;
+            delete particle.gestureData.jitter;
+        } else {
+            particle.size = particle.baseSize;
+        }
+        
+        // Dampen velocity to help particle settle
+        particle.vx *= 0.7;
+        particle.vy *= 0.7;
     }
 };
