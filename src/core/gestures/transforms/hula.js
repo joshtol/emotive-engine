@@ -45,13 +45,18 @@ export default {
         
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
+        const calculatedRadius = Math.sqrt(dx * dx + dy * dy);
         
         // Random direction for hula-hoop
         const direction = Math.random() < 0.5 ? 1 : -1;
         
+        // Set minimum radius to prevent center clustering - 3x larger spread
+        const MIN_RADIUS = 100; // Slightly larger for hula effect
+        const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 180); // At least 210-390 pixels
+        
         particle.gestureData.hula = {
-            radius: Math.sqrt(dx * dx + dy * dy),
-            angle: Math.atan2(dy, dx),
+            radius: radius,
+            angle: calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx), // Random angle if at center
             originalVx: particle.vx,
             originalVy: particle.vy,
             originalZ: particle.z || 0,

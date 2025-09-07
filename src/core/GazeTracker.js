@@ -57,10 +57,10 @@ class GazeTracker {
         };
         
         // State
-        this.mousePos = { x: 0, y: 0 };
+        this.canvasCenter = { x: 0, y: 0 };
+        this.mousePos = { x: 0, y: 0 };  // Will be initialized to center after updateCanvasCenter
         this.targetGaze = { x: 0, y: 0 };
         this.currentGaze = { x: 0, y: 0 };
-        this.canvasCenter = { x: 0, y: 0 };
         this.isLocked = false;
         this.proximity = 0;  // 0-1 value for how close cursor is
         
@@ -102,6 +102,10 @@ class GazeTracker {
             x: this.cachedRect.width / 2,
             y: this.cachedRect.height / 2
         };
+        // Initialize mouse position to center if not set
+        if (this.mousePos.x === 0 && this.mousePos.y === 0) {
+            this.mousePos = { x: this.canvasCenter.x, y: this.canvasCenter.y };
+        }
     }
     
     /**
@@ -147,6 +151,8 @@ class GazeTracker {
         this.targetGaze = { x: 0, y: 0 };
         this.isLocked = false;
         this.proximity = 0;
+        // Reset mouse position to center when leaving
+        this.mousePos = { x: this.canvasCenter.x, y: this.canvasCenter.y };
     }
     
     /**

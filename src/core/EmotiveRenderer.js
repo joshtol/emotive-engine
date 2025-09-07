@@ -980,7 +980,8 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
         const safeRadius = Math.max(50, maxRadius); // Ensure minimum radius
         
         // Try to get cached glow or create new one
-        const glowImage = this.getCachedGlow(safeRadius, this.state.glowColor);
+        let glowColor = this.state.glowColor;
+        const glowImage = this.getCachedGlow(safeRadius, glowColor);
         
         // Draw the cached glow image
         if (glowImage) {
@@ -992,7 +993,7 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
             const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, safeRadius);
             
             // Create smooth gradient with reasonable stops
-            const color = this.state.glowColor;
+            let color = this.state.glowColor;
             const stops = 20;
             for (let i = 0; i <= stops; i++) {
                 const position = i / stops;
@@ -1882,6 +1883,8 @@ this.ctx.fill();
      * @param {number} duration - Transition duration in ms
      */
     startColorTransition(targetColor, targetIntensity, duration = 1500) {
+        // Color transition started
+        
         // Don't start a new transition if we're already at the target
         if (this.state.glowColor === targetColor && 
             this.state.glowIntensity === targetIntensity) {
@@ -1942,6 +1945,7 @@ this.ctx.fill();
      * Set emotional state
      */
     setEmotionalState(emotion, properties, undertone = null) {
+        
         // Clear glow cache when emotion changes (colors will change)
         if (this.state.emotion !== emotion) {
             this.glowCache.clear();
@@ -1960,7 +1964,15 @@ this.ctx.fill();
         
         // Get base color and apply undertone shifts
         const baseColor = properties.glowColor || this.config.defaultGlowColor;
-        const targetColor = this.applyUndertoneToColor(baseColor, weightedModifier || undertone);
+        
+        // Get target color - for suspicion, use the dynamic color directly
+        let targetColor;
+        if (emotion === 'suspicion') {
+            // Use the dynamic color from properties (includes threat level)
+            targetColor = properties.glowColor || baseColor;
+        } else {
+            targetColor = this.applyUndertoneToColor(baseColor, weightedModifier || undertone);
+        }
         
         // Apply intensity modifier from undertone
         const modifier = weightedModifier || (undertone ? this.undertoneModifiers[undertone] : null);

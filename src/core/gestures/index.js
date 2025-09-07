@@ -35,6 +35,10 @@ import shake from './motions/shake.js';
 import nod from './motions/nod.js';
 import vibrate from './motions/vibrate.js';
 import orbit from './motions/orbit.js';
+import twitch from './motions/twitch.js';
+import sway from './motions/sway.js';
+import float from './motions/float.js';
+import jitter from './motions/jitter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
@@ -46,6 +50,7 @@ import stretch from './transforms/stretch.js';
 import tilt from './transforms/tilt.js';
 import orbital from './transforms/orbital.js';
 import hula from './transforms/hula.js';
+import scan from './transforms/scan.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT EFFECT GESTURES (Visual effects)
@@ -63,6 +68,7 @@ import expand from './effects/expand.js';
 import contract from './effects/contract.js';
 import flash from './effects/flash.js';
 import glow from './effects/glow.js';
+import peek from './effects/peek.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ GESTURE COLLECTIONS
@@ -73,7 +79,11 @@ const MOTION_GESTURES = [
     shake,
     nod,
     vibrate,
-    orbit
+    orbit,
+    twitch,
+    sway,
+    float,
+    jitter
 ];
 
 const TRANSFORM_GESTURES = [
@@ -83,7 +93,8 @@ const TRANSFORM_GESTURES = [
     stretch,
     tilt,
     orbital,
-    hula
+    hula,
+    scan
 ];
 
 const EFFECT_GESTURES = [
@@ -99,7 +110,8 @@ const EFFECT_GESTURES = [
     expand,
     contract,
     flash,
-    glow
+    glow,
+    peek
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
   <img src="assets/emotive-engine-full-BW.svg" alt="Emotive Engine" width="600" />
   
   [![npm version](https://img.shields.io/npm/v/emotive-engine.svg)](https://www.npmjs.com/package/emotive-engine)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![License: Dual](https://img.shields.io/badge/License-Dual%20(Free%2FCommercial)-yellow.svg)](./LICENSE.md)
   [![Performance](https://img.shields.io/badge/Performance-60fps-green.svg)](https://github.com/joshtol/emotive-engine)
   [![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Optimized-blue.svg)](https://github.com/joshtol/emotive-engine)
 
@@ -536,9 +536,53 @@ We welcome contributions! The modular architecture makes it easy to add new beha
 - Performance-conscious implementations
 - Modular registry pattern for extensibility
 
-## 📄 License
+## 📜 Licensing
 
-MIT License - see [LICENSE](LICENSE) file for details
+Emotive Engine is released under a **dual license**:
+
+- 🎨 **Artists, hobbyists, students, and educators** → **Free forever**  
+- 💼 **Commercial use (companies, startups, monetized projects)** → **Requires a paid license**
+
+---
+
+### ✅ Free for Non-Commercial Use
+You can use Emotive Engine at no cost if:
+- You're an independent artist, student, or hobbyist.
+- Your projects are personal, experimental, educational, or cultural.
+- Your work is not monetized, sponsored, or tied to a business.
+
+Examples:
+- Personal Twitch overlays, YouTube experiments (no ads), music visualizers.
+- School projects or academic research.
+- Interactive art installations not backed by a brand.
+
+---
+
+### 💰 Commercial Licensing
+If you or your organization make money, or your use supports a business, you need a **Commercial License**.
+
+**Current Pricing (2025):**
+
+| Tier       | Requirements                     | Pricing            |
+|------------|----------------------------------|--------------------|
+| 🎨 Indie   | Revenue < $100k/year             | $99/year or $499 one-time |
+| 🚀 Startup | Revenue < $1M/year OR ≤ 10 staff | $500/year or $2,500 one-time |
+| 🏢 Enterprise | Revenue ≥ $1M/year OR > 10 staff | Custom – starts at $25,000/year |
+
+📧 For commercial inquiries: **licensing@emotiveengine.dev**
+
+---
+
+### ⚠️ Quick Rules
+- If you're an **Artist** (independent human creator, not under contract with a company) → free.  
+- If your project directly supports a **company, brand, or monetized activity** → paid license required.  
+- The name **"Emotive Engine™"** is a claimed trademark. You may reference it factually, but not use it in branding or promotions without permission.
+
+---
+
+### 📖 Legal Docs
+- [LICENSE.md](./LICENSE.md) → Non-Commercial License terms  
+- [COMMERCIAL-LICENSE.md](./COMMERCIAL-LICENSE.md) → Sample commercial agreement
 
 ## 🙏 Credits
 

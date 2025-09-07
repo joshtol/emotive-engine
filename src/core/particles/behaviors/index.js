@@ -39,6 +39,8 @@ import radiant from './radiant.js';
 import ascending from './ascending.js';
 import erratic from './erratic.js';
 import cautious from './cautious.js';
+import surveillance from './surveillance.js';
+import glitchy from './glitchy.js';
 import pluginAdapter from './plugin-adapter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -59,7 +61,9 @@ const BEHAVIORS = [
     radiant,
     ascending,
     erratic,
-    cautious
+    cautious,
+    surveillance,
+    glitchy
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────

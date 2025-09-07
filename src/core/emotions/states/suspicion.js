@@ -9,40 +9,65 @@
 export default {
     name: 'suspicion',
     emoji: '🤨',
-    description: 'Watchful alertness with scanning particles',
+    description: 'Paranoid watchfulness with surveillance scanning',
     
     // Visual properties
     visual: {
-        glowColor: '#8B7355',       // Cautious brown-amber
-        glowIntensity: 0.85,        // Subdued, watchful glow
-        particleRate: 15,           // Moderate probing emission
-        minParticles: 4,            // Constant vigilant presence
-        maxParticles: 8,            // Limited cautious display
-        particleBehavior: 'burst',  // Investigative bursts
-        breathRate: 0.8,            // Controlled, measured breathing
-        breathDepth: 0.05,          // Shallow, careful breaths
-        coreJitter: false,          // Still, observant core
+        glowColor: '#6B46C1',       // Deep purple paranoia
+        glowIntensity: 0.85,        // Watchful glow that intensifies with threat
+        particleRate: 18,           // Increased surveillance particles
+        minParticles: 6,            // More eyes watching
+        maxParticles: 12,           // Heightened alert capacity
+        particleBehavior: 'surveillance',  // NEW: Searchlight scanning behavior
+        particleSpeed: 0.2,         // Base particle speed
+        breathRate: 0.6,            // Slower, more deliberate breathing
+        breathDepth: 0.04,          // Very shallow, tense breaths
+        coreJitter: 0.02,           // Slight nervous tremor
         particleColors: [
-            { color: '#8B7355', weight: 30 },  // Primary suspicious brown
-            { color: '#9A8A7A', weight: 20 },  // Neutral observation tone
-            { color: '#A67C52', weight: 20 },  // Alert amber accent
-            { color: '#B39880', weight: 15 },  // Light scrutiny highlights
-            { color: '#5C4A3A', weight: 15 }   // Deep distrust shadows
-        ]
+            { color: '#6B46C1', weight: 30 },  // Deep purple paranoia
+            { color: '#4A5568', weight: 25 },  // Shadowy slate gray
+            { color: '#8B4789', weight: 20 },  // Dark magenta mystery
+            { color: '#9F7AEA', weight: 15 },  // Alert purple highlights
+            { color: '#2D3748', weight: 10 }   // Deep shadow lurking
+        ],
+        // Dynamic threat level properties
+        threatLevel: 0,             // 0-1 scale, updated by gaze distance
+        getGlowIntensity: function() {
+            return 0.3 + (this.threatLevel * 0.7);
+        },
+        getParticleSpeed: function() {
+            return 0.2 + (this.threatLevel * 0.8);
+        },
+        getGlowColor: function() {
+            // Color shifts from purple to red as threat increases
+            const baseColor = { r: 107, g: 70, b: 193 };  // #6B46C1
+            const alertColor = { r: 220, g: 38, b: 127 }; // #DC267F (magenta-red)
+            
+            const t = this.threatLevel || 0;
+            
+            const r = Math.round(baseColor.r + (alertColor.r - baseColor.r) * t);
+            const g = Math.round(baseColor.g + (alertColor.g - baseColor.g) * t);
+            const b = Math.round(baseColor.b + (alertColor.b - baseColor.b) * t);
+            
+            // Convert to hex
+            const toHex = (val) => val.toString(16).padStart(2, '0');
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
     },
     
     // Gesture modifiers
     modifiers: {
-        speed: 0.8,         // Cautious, deliberate pace
-        amplitude: 0.9,     // Slightly restricted range
-        intensity: 0.9,     // Controlled investigation force
-        smoothness: 0.9,    // Mostly smooth observation
-        regularity: 0.6,    // Irregular, unpredictable scanning
+        speed: 0.4,         // Slower, more deliberate movements
+        amplitude: 0.6,     // Smaller, controlled movements
+        intensity: 1.2,     // Higher alertness
+        smoothness: 0.3,    // Jerky, paranoid movements
+        regularity: 0.2,    // Highly unpredictable patterns
+        focus: 1.5,         // Hyper-focused attention
         addWobble: true     // Uncertain, questioning motion
     },
     
     // Typical gestures for suspicion
-    typicalGestures: ['scan', 'tilt', 'squint', 'peer', 'wobble'],
+    typicalGestures: ['scan', 'twitch', 'peek', 'tilt', 'hold'],
     
     // Transition configuration
     transitions: { 
@@ -53,9 +78,13 @@ export default {
     
     // Special suspicion properties
     special: {
-        coreSquint: 0.4,        // Eye narrowing amount
-        scanInterval: 3000,     // Time between scans
-        scanDuration: 800,      // Length of scanning motion
-        scanAngle: 45          // Scanning angle range
+        coreSquint: 0.6,        // More pronounced eye narrowing
+        scanInterval: 2000,     // More frequent scans
+        scanDuration: 1200,     // Longer, more thorough scanning
+        scanAngle: 60,          // Wider scanning range
+        twitchChance: 0.02,     // 2% chance per frame to twitch
+        peekInterval: 4000,     // Time between peek gestures
+        maxThreatDistance: 300, // Distance for threat calculation
+        alertThreshold: 0.7     // Threat level for maximum alert
     }
 };

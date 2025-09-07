@@ -9,6 +9,14 @@
  * @author Emotive Engine Team
  * @module gestures/transforms/orbital
  * 
+ * GESTURE TYPE:
+ * type: 'override' - Takes complete control of particle motion
+ * 
+ * ACCEPTABLE TYPES:
+ * - 'blending' : Adds motion to existing particle behavior (used in motions/)
+ * - 'override' : Replaces particle motion completely (used in transforms/)
+ * - 'effect'   : Visual effects without changing position (used in effects/)
+ * 
  * VISUAL EFFECT:
  * Particles orbit around the center while transitioning between foreground and
  * background layers, creating a true 3D effect where particles pass behind and
@@ -44,13 +52,19 @@ export default {
         
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
+        const calculatedRadius = Math.sqrt(dx * dx + dy * dy);
         
         // Random direction for orbit
         const direction = Math.random() < 0.5 ? 1 : -1;
         
+        // Set minimum radius to prevent center clustering - 3x larger spread
+        const MIN_RADIUS = 100;
+        const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 180); // At least 180-360 pixels
+        
         particle.gestureData.orbital = {
-            radius: Math.sqrt(dx * dx + dy * dy),
-            angle: Math.atan2(dy, dx),
+            radius: radius,
+            targetRadius: radius, // Store target for smooth transitions
+            angle: calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx), // Random angle if at center
             originalVx: particle.vx,
             originalVy: particle.vy,
             originalZ: particle.z || 0,  // Store original z-coordinate
@@ -70,10 +84,11 @@ export default {
         // Update angle with direction (dt is already normalized to 60fps)
         data.angle += speed * dt * data.direction;
         
-        // Calculate new position
+        // Use the stored radius (which has minimum enforced)
         let radius = data.radius;
+        
         if (!motion.maintainRadius) {
-            // Allow radius to vary slightly
+            // Allow radius to vary slightly for organic motion
             radius = data.radius * (1 + Math.sin(progress * Math.PI * 2) * 0.1);
         }
         

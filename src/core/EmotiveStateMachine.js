@@ -76,6 +76,7 @@
 
 import { interpolateHsl } from '../utils/colorUtils.js';
 import { applyEasing, easeInOutCubic } from '../utils/easing.js';
+import { hasEmotion, listEmotions } from './emotions/index.js';
 
 class EmotiveStateMachine {
     constructor(errorBoundary) {
@@ -328,9 +329,11 @@ class EmotiveStateMachine {
             this.interpolationCache.cachedProperties = null;
             this.interpolationCache.cachedRenderState = null;
             
-            // Validate emotion
-            if (!this.emotionalStates.hasOwnProperty(emotion)) {
-                throw new Error(`Invalid emotion: ${emotion}. Valid emotions: ${Object.keys(this.emotionalStates).join(', ')}`);
+            // Validate emotion using modular system
+            if (!hasEmotion(emotion) && !this.emotionalStates.hasOwnProperty(emotion)) {
+                const validEmotions = [...Object.keys(this.emotionalStates), ...listEmotions()];
+                const uniqueEmotions = [...new Set(validEmotions)];
+                throw new Error(`Invalid emotion: ${emotion}. Valid emotions: ${uniqueEmotions.join(', ')}`);
             }
 
             // Validate undertone

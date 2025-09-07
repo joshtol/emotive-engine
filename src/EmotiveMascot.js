@@ -45,7 +45,7 @@ import ParticleSystem from './core/ParticleSystem.js';
 import EmotiveRenderer from './core/EmotiveRenderer.js';
 import GazeTracker from './core/GazeTracker.js';
 import IdleBehavior from './core/IdleBehavior.js';
-import { getEmotionParams } from './core/emotions/index.js';
+import { getEmotionVisualParams, getEmotion } from './core/emotions/index.js';
 import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
@@ -536,7 +536,7 @@ class EmotiveMascot {
                 
                 // Update Emotive renderer if in classic mode
                 if (this.config.renderingStyle === 'classic' && this.renderer.setEmotionalState) {
-                    const emotionParams = getEmotionParams(mappedEmotion);
+                    const emotionParams = getEmotionVisualParams(mappedEmotion);
                     this.renderer.setEmotionalState(mappedEmotion, emotionParams, undertone);
                 }
                 
@@ -564,6 +564,22 @@ class EmotiveMascot {
             
             // console.log('Express called with gesture:', gesture);
             
+            // First check if this is a modular gesture
+            if (this.gestureController) {
+                const hasGesture = this.gestureController.hasGesture(gesture);
+                if (hasGesture) {
+                    this.gestureController.triggerGesture(gesture);
+                    console.log(`Triggered ${gesture} via gesture controller`);
+                    
+                    // Play gesture sound effect if available
+                    if (this.soundSystem.isAvailable()) {
+                        this.soundSystem.playGestureSound(gesture);
+                    }
+                    
+                    return this;
+                }
+            }
+            
             // Direct mapping to renderer methods for all gestures
             const rendererMethods = {
                 'bounce': 'startBounce',
@@ -586,13 +602,22 @@ class EmotiveMascot {
                 'slowBlink': 'startSlowBlink',
                 'look': 'startLook',
                 'settle': 'startSettle',
-                'orbital': 'startOrbital',
+                'orbit': 'startOrbital',
+                'orbital': 'startOrbital',  // Alias for backwards compatibility
                 'hula': 'startHula',
+                'sway': 'startSway',
                 'breathIn': 'startBreathIn',
                 'breathOut': 'startBreathOut',
                 'breathHold': 'startBreathHold',
                 'breathHoldEmpty': 'startBreathHoldEmpty',
-                'jump': 'startJump'
+                'jump': 'startJump',
+                'burst': 'startBurst',
+                'peek': 'startPeek',
+                'hold': 'startHold',
+                'scan': 'startScan',
+                'twitch': 'startTwitch',
+                'jitter': 'startJitter',
+                'float': 'startFloat'
             };
             
             // Check if this gesture has a direct renderer method
@@ -1026,7 +1051,7 @@ class EmotiveMascot {
                     const currentState = this.stateMachine.getCurrentState();
                     const emotion = currentState.emotion;
                     const undertone = currentState.undertone;
-                    const emotionParams = getEmotionParams(emotion);
+                    const emotionParams = getEmotionVisualParams(emotion);
                     
                     // Get the actual orb position from the renderer (includes gaze offset)
                     let orbX, orbY;
@@ -1677,6 +1702,38 @@ class EmotiveMascot {
                 // Update gaze tracker
                 if (this.gazeTracker) {
                     this.gazeTracker.update(deltaTime);
+                    
+                    // Update threat level for suspicion emotion
+                    const currentEmotion = this.stateMachine.getCurrentState().emotion;
+                    if (currentEmotion === 'suspicion') {
+                        // Get mouse position and calculate distance to center
+                        const mousePos = this.gazeTracker.mousePos;
+                        const centerX = this.canvas.width / 2;
+                        const centerY = this.canvas.height / 2;
+                        const distance = Math.sqrt(
+                            Math.pow(mousePos.x - centerX, 2) + 
+                            Math.pow(mousePos.y - centerY, 2)
+                        );
+                        
+                        // Get emotion configuration (already imported at top)
+                        const suspicionEmotion = getEmotion('suspicion');
+                        
+                        if (suspicionEmotion && suspicionEmotion.special) {
+                            const maxDist = suspicionEmotion.special.maxThreatDistance || 300;
+                            // Closer = higher threat (inverse relationship)
+                            const threatLevel = Math.max(0, Math.min(1, 1 - (distance / maxDist)));
+                            
+                            // Update the emotion's threat level
+                            if (suspicionEmotion.visual) {
+                                suspicionEmotion.visual.threatLevel = threatLevel;
+                                
+                                // Log for debugging
+                                if (this.debugMode && Math.random() < 0.02) { // Log occasionally
+                                    console.log(`Threat Level: ${threatLevel.toFixed(2)}, Distance: ${distance.toFixed(0)}`);
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 // Update idle behaviors
@@ -1742,6 +1799,7 @@ class EmotiveMascot {
                 audioLevel: this.audioLevelProcessor.getCurrentLevel()
             };
             
+            
             // Track frame timing for debugging
             if (this.debugMode) {
                 emotiveDebugger.trackFrameTiming(deltaTime);
@@ -1751,8 +1809,40 @@ class EmotiveMascot {
             // Clear canvas ONCE at the beginning
             this.canvasManager.clear();
             
-            // For Emotive style, convert emotion to visual params
-            const emotionParams = getEmotionParams(renderState.emotion);
+            // Update gaze tracker
+            if (this.gazeTracker) {
+                this.gazeTracker.update(deltaTime);
+            }
+            
+            // Update threat level for suspicion state based on gaze distance
+            if (renderState.emotion === 'suspicion' && this.gazeTracker) {
+                const suspicionEmotion = getEmotion('suspicion');
+                if (suspicionEmotion && suspicionEmotion.visual) {
+                    const gazeState = this.gazeTracker.getState();
+                    const mousePos = this.gazeTracker.mousePos;
+                    const centerX = this.canvasManager.width / 2;
+                    const centerY = this.canvasManager.height / 2;
+                    
+                    // Calculate distance from mouse to center
+                    const distance = Math.sqrt(
+                        Math.pow(mousePos.x - centerX, 2) + 
+                        Math.pow(mousePos.y - centerY, 2)
+                    );
+                    
+                    // Maximum distance for threat calculation (canvas diagonal / 3)
+                    const maxDist = Math.min(this.canvasManager.width, this.canvasManager.height) / 2;
+                    
+                    // Closer = higher threat (inverted distance)
+                    const threatLevel = Math.max(0, Math.min(1, 1 - (distance / maxDist)));
+                    
+                    // Update the threat level
+                    suspicionEmotion.visual.threatLevel = threatLevel;
+                }
+            }
+            
+            // For Emotive style, convert emotion to visual params (AFTER updating threat level)
+            let emotionParams = getEmotionVisualParams(renderState.emotion);
+            
             this.renderer.setEmotionalState(renderState.emotion, emotionParams, renderState.undertone);
             
             // Always use center for particle spawning (not gaze-adjusted position)

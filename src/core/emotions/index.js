@@ -37,6 +37,7 @@ import excited from './states/excited.js';
 import resting from './states/resting.js';
 import euphoria from './states/euphoria.js';
 import focused from './states/focused.js';
+import glitch from './states/glitch.js';
 
 // Registry to store all registered emotions
 const emotionRegistry = new Map();
@@ -52,11 +53,12 @@ const emotionAliases = {
 
 // Register all emotions SYNCHRONOUSLY
 [neutral, joy, sadness, anger, fear, surprise, disgust,
- love, suspicion, excited, resting, euphoria, focused].forEach(emotion => {
+ love, suspicion, excited, resting, euphoria, focused, glitch].forEach(emotion => {
     if (emotion && emotion.name) {
         emotionRegistry.set(emotion.name, emotion);
     }
 });
+
 
 /**
  * Register an emotion module
@@ -95,17 +97,51 @@ export function getEmotion(emotionName) {
 }
 
 /**
- * Get emotion parameters (visual properties)
+ * Get emotion parameters (visual properties) with dynamic evaluation
  * @param {string} emotionName - Name of the emotion
  * @returns {Object} Visual parameters for the emotion
  */
-export function getEmotionParams(emotionName) {
+export function getEmotionVisualParams(emotionName) {
     const emotion = getEmotion(emotionName);
     if (!emotion) {
         console.warn(`Unknown emotion: ${emotionName}, using neutral`);
         return getEmotion('neutral').visual;
     }
-    return emotion.visual;
+    
+    // Make sure visual exists
+    if (!emotion.visual) {
+        return {};
+    }
+    
+    // Create a copy of visual properties, excluding functions
+    const visual = emotion.visual;
+    const params = {};
+    
+    // Copy non-function properties
+    for (const key in visual) {
+        if (typeof visual[key] !== 'function') {
+            params[key] = visual[key];
+        }
+    }
+    
+    // Evaluate dynamic functions if they exist and override static values
+    if (typeof visual.getGlowIntensity === 'function') {
+        params.glowIntensity = visual.getGlowIntensity.call(visual);
+    }
+    
+    if (typeof visual.getParticleSpeed === 'function') {
+        params.particleSpeed = visual.getParticleSpeed.call(visual);
+    }
+    
+    if (typeof visual.getParticleRate === 'function') {
+        params.particleRate = visual.getParticleRate.call(visual);
+    }
+    
+    if (typeof visual.getGlowColor === 'function') {
+        params.glowColor = visual.getGlowColor.call(visual);
+    }
+    
+    return params;
 }
 
 /**
@@ -221,7 +257,8 @@ export { pluginAdapter };
 export default {
     registerEmotion,
     getEmotion,
-    getEmotionParams,
+    getEmotionVisualParams,
+    getEmotionParams: getEmotionVisualParams, // Alias for compatibility
     getEmotionModifiers,
     listEmotions,
     getAllEmotions,
