@@ -46,6 +46,7 @@ import EmotiveRenderer from './core/EmotiveRenderer.js';
 import GazeTracker from './core/GazeTracker.js';
 import IdleBehavior from './core/IdleBehavior.js';
 import { getEmotionVisualParams, getEmotion } from './core/emotions/index.js';
+import { getGesture } from './core/gestures/index.js';
 import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
@@ -426,13 +427,17 @@ class EmotiveMascot {
         // Handle volume spikes for gesture triggering
         this.audioLevelProcessor.onVolumeSpike((spikeData) => {
             // Trigger pulse gesture if not already active
-            if (!this.gestureSystem.isActive()) {
+            // Check if any particle has an active gesture
+            const hasActiveGesture = this.particleSystem.particles.some(p => p.gestureProgress < 1);
+            if (!hasActiveGesture) {
                 const emotionalContext = {
                     emotion: this.stateMachine.getCurrentState().emotion,
                     properties: this.stateMachine.getCurrentEmotionalProperties()
                 };
                 
-                const success = this.gestureSystem.execute('pulse', emotionalContext);
+                // Execute pulse gesture through express method
+                this.express('pulse');
+                const success = true;
                 
                 if (success) {
                     // Emit volume spike event with gesture trigger info
@@ -629,25 +634,33 @@ class EmotiveMascot {
                 return this;
             }
             
-            // Try to execute gesture through the gesture system
+            // Try to execute gesture through the particle system
             // This handles modular gestures from the gesture registry
-            if (this.gestureSystem) {
-                const emotionalContext = {
-                    emotion: this.stateMachine.getCurrentState().emotion,
-                    properties: this.stateMachine.getCurrentEmotionalProperties()
-                };
+            // Check if gesture exists in the gesture registry
+            const gestureConfig = getGesture(gesture);
+            
+            if (gestureConfig) {
+                // Set gesture motion on all particles
+                const particles = this.particleSystem.particles;
+                particles.forEach(particle => {
+                    particle.gestureMotion = {
+                        type: gesture,
+                        amplitude: 1.0,
+                        frequency: 1.0,
+                        intensity: 1.0
+                    };
+                    particle.gestureProgress = 0;
+                    particle.gestureDuration = gestureConfig.defaultParams?.duration || 1000;
+                });
                 
-                const success = this.gestureSystem.execute(gesture, emotionalContext);
-                if (success) {
-                    console.log(`Executed ${gesture} through gesture system`);
-                    
-                    // Play gesture sound effect if available
-                    if (this.soundSystem.isAvailable()) {
-                        this.soundSystem.playGestureSound(gesture);
-                    }
-                    
-                    return this;
+                console.log(`Executed ${gesture} through particle system`);
+                
+                // Play gesture sound effect if available
+                if (this.soundSystem.isAvailable()) {
+                    this.soundSystem.playGestureSound(gesture);
                 }
+                
+                return this;
             }
             
             // Unknown gesture - throttled warning
@@ -835,10 +848,8 @@ class EmotiveMascot {
                 if (event.name === 'word') {
                     // Subtle pulse on each word
                     if (Math.random() < 0.3) { // 30% chance per word
-                        this.gestureSystem.execute('microPulse', {
-                            emotion: this.stateMachine.getCurrentState().emotion,
-                            properties: this.stateMachine.getCurrentEmotionalProperties()
-                        });
+                        // Trigger micro pulse gesture
+                        this.express('pulse');
                     }
                 }
             };
@@ -945,14 +956,12 @@ class EmotiveMascot {
             console.log('Starting sleep sequence...');
             
             // First: Yawn
-            if (this.gestureSystem && this.gestureSystem.physics) {
-                await this.gestureSystem.physics.startYawn();
-            }
+            this.express('yawn');
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Second: Drowsy sway
-            if (this.gestureSystem && this.gestureSystem.physics) {
-                await this.gestureSystem.physics.startDrowsySway();
-            }
+            this.express('sway');
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Now enter sleep state
             this.sleeping = true;
@@ -1003,19 +1012,16 @@ class EmotiveMascot {
             console.log('Starting wake sequence...');
             
             // First: Stretch
-            if (this.gestureSystem && this.gestureSystem.physics) {
-                await this.gestureSystem.physics.startStretch();
-            }
+            this.express('stretch');
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Second: Slow blink
-            if (this.gestureSystem && this.gestureSystem.physics) {
-                await this.gestureSystem.physics.startSlowBlink();
-            }
+            this.express('slowBlink');
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Third: Small shake to fully wake
-            if (this.gestureSystem && this.gestureSystem.physics) {
-                await this.gestureSystem.physics.startShake();
-            }
+            this.express('shake');
+            await new Promise(resolve => setTimeout(resolve, 500));
             
             // Emit wake event
             this.emit('wake');
@@ -1757,10 +1763,16 @@ class EmotiveMascot {
                     this.idleBehavior.update(deltaTime);
                 }
                 
-                // Update gesture system (including physics)
-                if (this.gestureSystem) {
-                    this.gestureSystem.update(deltaTime, performance.now());
-                }
+                // Update gesture progress on particles
+                this.particleSystem.particles.forEach(particle => {
+                    if (particle.gestureProgress < 1 && particle.gestureDuration) {
+                        particle.gestureProgress += deltaTime / particle.gestureDuration;
+                        if (particle.gestureProgress >= 1) {
+                            particle.gestureMotion = null;
+                            particle.gestureProgress = 0;
+                        }
+                    }
+                });
                 
                 // Combine gaze and sway offsets
                 if (this.gazeTracker && this.idleBehavior) {
@@ -2064,8 +2076,8 @@ class EmotiveMascot {
             const debugInfo = [
                 `Emotion: ${state.emotion}${state.undertone ? ` (${state.undertone})` : ''}`,
                 `Particles: ${particleStats.activeParticles}/${particleStats.maxParticles}`,
-                `Gesture: ${this.gestureSystem.getCurrentGestureId() || 'none'}`,
-                `Queue: ${this.gestureSystem.getQueueLength()}`,
+                `Gesture: ${this.particleSystem.particles.some(p => p.gestureMotion) ? 'active' : 'none'}`,
+                `Queue: 0`,
                 `Speaking: ${this.speaking ? 'yes' : 'no'}`,
                 `Audio Level: ${(this.audioLevel * 100).toFixed(1)}%`
             ];
