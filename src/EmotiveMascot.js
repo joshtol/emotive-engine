@@ -610,14 +610,9 @@ class EmotiveMascot {
                 'breathOut': 'startBreathOut',
                 'breathHold': 'startBreathHold',
                 'breathHoldEmpty': 'startBreathHoldEmpty',
-                'jump': 'startJump',
-                'burst': 'startBurst',
-                'peek': 'startPeek',
-                'hold': 'startHold',
-                'scan': 'startScan',
-                'twitch': 'startTwitch',
-                'jitter': 'startJitter',
-                'float': 'startFloat'
+                'jump': 'startJump'
+                // Note: burst, peek, hold, scan, twitch, jitter, float 
+                // are handled by the gesture system below
             };
             
             // Check if this gesture has a direct renderer method
@@ -632,6 +627,27 @@ class EmotiveMascot {
                 }
                 
                 return this;
+            }
+            
+            // Try to execute gesture through the gesture system
+            // This handles modular gestures from the gesture registry
+            if (this.gestureSystem) {
+                const emotionalContext = {
+                    emotion: this.stateMachine.getCurrentState().emotion,
+                    properties: this.stateMachine.getCurrentEmotionalProperties()
+                };
+                
+                const success = this.gestureSystem.execute(gesture, emotionalContext);
+                if (success) {
+                    console.log(`Executed ${gesture} through gesture system`);
+                    
+                    // Play gesture sound effect if available
+                    if (this.soundSystem.isAvailable()) {
+                        this.soundSystem.playGestureSound(gesture);
+                    }
+                    
+                    return this;
+                }
             }
             
             // Unknown gesture - throttled warning
