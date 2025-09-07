@@ -41,21 +41,21 @@ export default {
     type: 'blending', // Adds to existing motion
     description: 'Vertical oscillation with smooth easing',
     
-    // Default configuration (from gestureConfig.js)
+    // Default configuration
     config: {
-        duration: 800,      // Animation duration in ms
-        amplitude: 30,      // Bounce height in pixels (was 50, now matching gestureConfig)
-        frequency: 2,       // Number of bounces (was 4, now matching gestureConfig)
-        axis: 'vertical',   // 'vertical' or 'horizontal'
-        damping: true,      // Reduce amplitude over time
-        easing: 'sine',     // Easing function (was 'inOutCubic', now matching gestureConfig)
-        strength: 0.6,      // Particle motion strength from gestureConfig
+        duration: 800,      // Animation duration
+        amplitude: 30,      // Bounce height range
+        frequency: 2,       // Number of oscillations
+        axis: 'vertical',   // Movement axis: 'vertical' or 'horizontal'
+        damping: true,      // Enable amplitude reduction over time
+        easing: 'sine',     // Animation curve type
+        strength: 0.6,      // Overall motion intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'oscillate',
-            axis: 'vertical',
-            strength: 0.6,
-            frequency: 2
+            type: 'bounce',
+            axis: 'vertical',   // Oscillation direction
+            strength: 0.6,      // Particle bounce strength
+            frequency: 2        // Particle oscillation count
         }
     },
     
@@ -108,7 +108,7 @@ export default {
         // Apply damping if enabled
         let amplitude = config.amplitude * strength * particle.scaleFactor;
         if (config.damping && progress > 0.7) {
-            // Reduce amplitude in last 30% of animation
+            // Reduce amplitude toward end of animation
             const dampProgress = (progress - 0.7) / 0.3;
             amplitude *= (1 - dampProgress * 0.8);
         }

@@ -1,15 +1,15 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE
+ *    ●●  ENGINE v4.0
  *  └─○═╝                                                                             
  *              ◐ ◑ ◒ ◓  EXAMPLE: CUSTOM GESTURE PLUGIN  ◓ ◒ ◑ ◐              
  *                                                                                    
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Example Custom Gesture Plugin - Create New Animations!
+ * @fileoverview Example Custom Gesture Plugin using v4.0 Plugin Adapter System
  * @author Emotive Engine Team
- * @version 1.0.0
+ * @version 2.0.0
  * @module ExampleGesturePlugin
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
@@ -96,29 +96,82 @@ class CustomGesturePlugin {
         this.mascot = mascot;
         this.initialized = true;
         
-        // Register gesture handlers
-        this.setupGestureHandlers();
+        // Register gestures with the plugin adapter
+        this.registerGestures();
         
         console.log(`[${this.name}] Initialized with gestures:`, Object.keys(this.gestures));
     }
     
     /**
-     * Set up handlers for custom gestures
+     * Register custom gestures with the gesture plugin adapter
      * @private
      */
-    setupGestureHandlers() {
-        // Store original triggerGesture method
-        const originalTriggerGesture = this.mascot.triggerGesture.bind(this.mascot);
+    registerGestures() {
+        // Import the gesture plugin adapter
+        const gestureModule = this.mascot.Gestures || window.Gestures;
+        if (!gestureModule || !gestureModule.pluginAdapter) {
+            console.warn(`[${this.name}] Gesture plugin adapter not found`);
+            return;
+        }
         
-        // Override triggerGesture to intercept our custom gestures
-        this.mascot.triggerGesture = (gestureName, options = {}) => {
-            if (this.gestures[gestureName]) {
-                this.startGesture(gestureName, options);
-                return true;
-            }
-            // Fall back to original for built-in gestures
-            return originalTriggerGesture(gestureName, options);
+        const adapter = gestureModule.pluginAdapter;
+        
+        // Register each gesture properly
+        Object.entries(this.gestures).forEach(([name, config]) => {
+            const gestureDef = {
+                name,
+                type: 'blending',
+                emoji: this.getGestureEmoji(name),
+                description: config.description,
+                config,
+                apply: (particle, progress, motion, dt, centerX, centerY) => {
+                    // Create a temporary animation state if needed
+                    if (!this.activeAnimations.has(name)) {
+                        this.startGesture(name, {});
+                    }
+                    
+                    // Update the animation
+                    const animation = this.activeAnimations.get(name);
+                    if (animation) {
+                        animation.progress = progress;
+                        
+                        switch (name) {
+                            case 'wobble':
+                                this.applyWobbleToParticle(particle, animation, progress);
+                                break;
+                            case 'figure8':
+                                this.applyFigure8ToParticle(particle, animation, progress);
+                                break;
+                            case 'heartbeat':
+                                this.applyHeartbeatToParticle(particle, animation, progress);
+                                break;
+                        }
+                    }
+                },
+                cleanup: (particle) => {
+                    // Clean up any gesture-specific data
+                    if (particle.gestureData && particle.gestureData[name]) {
+                        delete particle.gestureData[name];
+                    }
+                    this.activeAnimations.delete(name);
+                }
+            };
+            
+            adapter.registerPluginGesture(name, gestureDef);
+        });
+    }
+    
+    /**
+     * Get emoji for gesture
+     * @private
+     */
+    getGestureEmoji(name) {
+        const emojis = {
+            wobble: '〰️',
+            figure8: '♾️',
+            heartbeat: '💓'
         };
+        return emojis[name] || '🔌';
     }
     
     /**
@@ -189,6 +242,37 @@ class CustomGesturePlugin {
     }
     
     /**
+     * Apply wobble to individual particle
+     * @private
+     */
+    applyWobbleToParticle(particle, animation, progress) {
+        const { amplitude, frequency, axis } = animation.gesture;
+        
+        // Apply easing
+        const easedProgress = this.applyEasing(progress, animation.gesture.easing);
+        
+        // Calculate wobble offset using sine wave
+        const wobbleOffset = Math.sin(easedProgress * Math.PI * 2 * frequency) * 
+                            amplitude * (1 - progress); // Decay over time
+        
+        // Initialize gesture data if needed
+        if (!particle.gestureData) particle.gestureData = {};
+        if (!particle.gestureData.wobble) {
+            particle.gestureData.wobble = {
+                originalX: particle.x,
+                originalY: particle.y
+            };
+        }
+        
+        // Apply offset to particle
+        if (axis === 'horizontal') {
+            particle.x = particle.gestureData.wobble.originalX + wobbleOffset;
+        } else {
+            particle.y = particle.gestureData.wobble.originalY + wobbleOffset;
+        }
+    }
+    
+    /**
      * Update wobble animation
      * @private
      */
@@ -210,6 +294,70 @@ class CustomGesturePlugin {
                 this.mascot.renderer.state.gazeOffset.y = animation.initialPosition.y + wobbleOffset;
             }
         }
+    }
+    
+    /**
+     * Apply figure-8 to individual particle
+     * @private
+     */
+    applyFigure8ToParticle(particle, animation, progress) {
+        const { radius, rotationSpeed } = animation.gesture;
+        
+        // Calculate figure-8 position
+        const t = progress * Math.PI * 2 * rotationSpeed;
+        const x = radius * Math.sin(t);
+        const y = radius * Math.sin(t * 2) / 2; // Half height for figure-8 shape
+        
+        // Initialize gesture data if needed
+        if (!particle.gestureData) particle.gestureData = {};
+        if (!particle.gestureData.figure8) {
+            particle.gestureData.figure8 = {
+                originalX: particle.x,
+                originalY: particle.y
+            };
+        }
+        
+        // Apply offset to particle
+        particle.x = particle.gestureData.figure8.originalX + x;
+        particle.y = particle.gestureData.figure8.originalY + y;
+    }
+    
+    /**
+     * Apply heartbeat to individual particle
+     * @private
+     */
+    applyHeartbeatToParticle(particle, animation, progress) {
+        const { firstPulse, secondPulse, pauseBetween, duration } = animation.gesture;
+        
+        let scale = 1.0;
+        const beatDuration = (duration - pauseBetween) / 2;
+        const elapsed = progress * duration;
+        
+        if (elapsed < beatDuration) {
+            // First beat
+            const beatProgress = elapsed / beatDuration;
+            const easedProgress = this.applyEasing(beatProgress, 'easeOutQuad');
+            scale = 1.0 + (firstPulse - 1.0) * (1 - Math.abs(easedProgress * 2 - 1));
+        } else if (elapsed < beatDuration + pauseBetween) {
+            // Pause between beats
+            scale = 1.0;
+        } else {
+            // Second beat
+            const beatProgress = (elapsed - beatDuration - pauseBetween) / beatDuration;
+            const easedProgress = this.applyEasing(beatProgress, 'easeOutQuad');
+            scale = 1.0 + (secondPulse - 1.0) * (1 - Math.abs(easedProgress * 2 - 1));
+        }
+        
+        // Initialize gesture data if needed
+        if (!particle.gestureData) particle.gestureData = {};
+        if (!particle.gestureData.heartbeat) {
+            particle.gestureData.heartbeat = {
+                originalSize: particle.size
+            };
+        }
+        
+        // Apply scale to particle size
+        particle.size = particle.gestureData.heartbeat.originalSize * scale;
     }
     
     /**
@@ -355,8 +503,14 @@ class CustomGesturePlugin {
         // Clear active animations
         this.activeAnimations.clear();
         
-        // Restore original triggerGesture method if possible
-        // (In production, you'd store and restore the original method properly)
+        // Unregister gestures from the plugin adapter
+        const gestureModule = this.mascot?.Gestures || window.Gestures;
+        if (gestureModule && gestureModule.pluginAdapter) {
+            const adapter = gestureModule.pluginAdapter;
+            Object.keys(this.gestures).forEach(gestureName => {
+                adapter.unregisterPluginGesture(gestureName);
+            });
+        }
         
         this.initialized = false;
         console.log(`[${this.name}] Plugin destroyed`);

@@ -38,22 +38,22 @@ export default {
     type: 'blending', // Adds to existing motion
     description: 'Random jitter movement for vibration effects',
     
-    // Default configuration (from gestureConfig.js)
+    // Default configuration
     config: {
-        duration: 400,      // Animation duration in ms
-        amplitude: 15,      // VIOLENT shake intensity
-        frequency: 15,      // Higher frequency for chaos
-        decay: 0.9,         // Less decay for sustained violence
-        smoothing: 0.1,     // Less smoothing for sharper shakes
-        axes: 'both',       // 'both', 'horizontal', 'vertical'
-        easing: 'linear',   // Animation easing
-        strength: 3.0,      // MUCH stronger particle motion
+        duration: 400,      // Animation duration
+        amplitude: 15,      // Shake movement range
+        frequency: 15,      // Oscillation speed
+        decay: 0.9,         // Intensity reduction over time
+        smoothing: 0.1,     // Motion smoothness factor
+        axes: 'both',       // Affected axes: 'both', 'horizontal', 'vertical'
+        easing: 'linear',   // Animation curve type
+        strength: 3.0,      // Overall shake intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'jitter',
-            strength: 3.0,
-            frequency: 15,
-            decay: false    // No decay for consistent violence
+            type: 'shake',
+            strength: 3.0,      // Particle shake strength
+            frequency: 15,      // Particle oscillation rate
+            decay: false        // Maintain consistent intensity
         }
     },
     
@@ -77,6 +77,7 @@ export default {
     
     /**
      * Apply shake motion to particle
+     * Creates synchronized vibration effect matching orb shake
      * @param {Particle} particle - The particle to animate
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
@@ -94,16 +95,17 @@ export default {
         const config = { ...this.config, ...motion };
         const strength = config.strength || this.config.strength || 1.0;
         
-        // EXACTLY MATCH THE ORB SHAKE LOGIC from EmotiveRenderer
+        // Match orb shake logic for synchronized movement
+        // Apply decay if enabled to reduce intensity over time
         const decay = config.decay ? (1 - progress) : 1;
         const shake = Math.sin(progress * Math.PI * config.frequency) * config.amplitude * decay * strength * particle.scaleFactor;
         
-        // Calculate offset using the same formula as the orb
+        // Calculate directional offset using particle's random angle
         const offsetX = shake * Math.cos(data.randomAngle);
         const offsetY = shake * Math.sin(data.randomAngle);
         
-        // DIRECTLY SET PARTICLE POSITION (like the orb does)
-        // This makes particles shake in perfect sync with the orb
+        // Set particle position directly for perfect synchronization
+        // Particles shake in unison with the orb
         particle.x = data.originalX + offsetX;
         particle.y = data.originalY + offsetY;
     },

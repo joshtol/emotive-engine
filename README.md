@@ -16,20 +16,21 @@
 ## 🌟 Features
 
 ### Production-Ready Engine
-- **20+ Emotional States**: From joy to contemplation, each with unique particle behaviors
+- **13+ Emotional States**: From joy to contemplation, each with unique particle behaviors
 - **15 Particle Behaviors**: Modular, extensible behaviors with visual documentation
-- **24 Gesture Animations**: Modular gesture system with blending and override modes
+- **26 Gesture Animations**: Modular gesture system with blending, override, and effect modes
 - **Performance Optimized**: Rock-solid 60fps with 1000+ particles
 - **Adaptive Degradation**: Automatically adjusts quality for consistent performance
 - **Web Worker Support**: Offload heavy computations for smooth main thread
 
 ### Technical Excellence
 - **Modular Architecture**: Clean separation of concerns with registry pattern
+- **Plugin System**: Full extensibility for emotions, gestures, and behaviors via adapters
 - **3D Particle Depth**: Z-coordinate system with foreground/background layers
 - **Zero Heavy Dependencies**: Pure JavaScript, no Three.js or WebGL required
 - **Dynamic Visual Resampling**: Maintains quality on resize without re-initialization
 - **Particle Pooling**: Efficient memory management with object recycling
-- **Plugin Architecture**: Extensible system for custom emotions, behaviors, and gestures
+- **Value-Agnostic Design**: All configurations externalized for easy tuning
 - **Mobile Optimized**: Touch support with adaptive performance scaling
 - **Accessibility Built-in**: Screen reader support and keyboard navigation
 
@@ -75,15 +76,16 @@ mascot.on('stateChange', (state) => {
 
 ## 🏗️ Architecture
 
-### Modular Systems (v3.1.0)
+### Modular Systems (v4.0.0)
 
-The entire engine has been modularized with three core systems, each following the same registry pattern for consistency and extensibility:
+The entire engine has been fully modularized with plugin support. Each system uses a registry pattern with plugin adapters for complete extensibility:
 
 ```
 src/core/
 ├── Particle.js           # Particle orchestrator
-├── emotions/            # Modular emotion system (NEW)
-│   ├── index.js         # Emotion registry
+├── emotions/            # Modular emotion system
+│   ├── index.js         # Emotion registry with plugin support
+│   ├── plugin-adapter.js # Plugin emotion integration
 │   └── states/          # 13 emotional states
 │       ├── neutral.js   # Calm baseline
 │       ├── joy.js       # Playful happiness
@@ -99,23 +101,24 @@ src/core/
 │       ├── euphoria.js  # Radiant hope
 │       └── focused.js   # Intense concentration
 ├── gestures/            # Modular gesture system
-│   ├── index.js         # Gesture registry
-│   ├── GestureMotion.js # Orchestrator
+│   ├── index.js         # Gesture registry with plugin support
+│   ├── plugin-adapter.js # Plugin gesture integration
 │   ├── motions/         # Blending gestures (6)
 │   │   ├── bounce.js    # Vertical oscillation
 │   │   ├── pulse.js     # Radial expansion
 │   │   ├── shake.js     # Random jitter
-│   │   ├── oscillate.js # Smooth wave
-│   │   ├── radial.js    # Circular motion
-│   │   └── jitter.js    # Micro vibrations
-│   ├── transforms/      # Override gestures (6)
+│   │   ├── nod.js       # Up-down motion
+│   │   ├── vibrate.js   # High-frequency shake
+│   │   └── orbit.js     # Circular motion
+│   ├── transforms/      # Override gestures (7)
 │   │   ├── spin.js      # Rotation around center
 │   │   ├── jump.js      # Squash and leap
 │   │   ├── morph.js     # Shape formations
 │   │   ├── stretch.js   # Axis scaling
 │   │   ├── tilt.js      # Gather and sway
-│   │   └── orbital.js   # Planetary motion
-│   └── effects/         # Visual effects (9)
+│   │   ├── orbital.js   # Planetary motion
+│   │   └── hula.js      # Hula-hoop motion
+│   └── effects/         # Visual effects (13)
 │       ├── wave.js      # Infinity pattern
 │       ├── drift.js     # Controlled float
 │       ├── flicker.js   # Opacity variation
@@ -124,7 +127,11 @@ src/core/
 │       ├── settle.js    # Gentle landing
 │       ├── fade.js      # Transparency effect
 │       ├── hold.js      # Freeze position
-│       └── breathe.js   # Expansion/contraction
+│       ├── breathe.js   # Expansion/contraction
+│       ├── expand.js    # Growing outward
+│       ├── contract.js  # Shrinking inward
+│       ├── flash.js     # Brightness burst
+│       └── glow.js      # Radiant light
 └── particles/
     ├── behaviors/        # 15 particle behaviors
     │   ├── index.js      # Behavior registry
@@ -147,6 +154,79 @@ src/core/
     ├── config/           # Physics and settings
     └── utils/            # Color, math, easing
 ```
+
+## 🔌 Plugin System (v4.0.0)
+
+The Emotive Engine features a powerful plugin system that allows you to extend functionality without modifying core files. Perfect for npm package users who want to add custom features.
+
+### Creating a Plugin
+
+Plugins can add custom emotions, gestures, behaviors, and even modify rendering:
+
+```javascript
+class MyCustomPlugin {
+    constructor() {
+        this.type = 'composite'; // emotion, gesture, behavior, or composite
+        this.name = 'MyCustomPlugin';
+        this.version = '1.0.0';
+    }
+    
+    init(mascot) {
+        // Called when plugin is registered
+        // Access emotion/gesture adapters via mascot.Emotions or mascot.Gestures
+    }
+    
+    update(deltaTime, state) {
+        // Called every frame
+    }
+    
+    render(ctx, state) {
+        // Optional custom rendering
+    }
+    
+    destroy() {
+        // Cleanup when unregistered
+    }
+}
+
+// Use the plugin
+import EmotiveMascot from 'emotive-engine';
+const mascot = new EmotiveMascot(canvas);
+mascot.registerPlugin(new MyCustomPlugin());
+```
+
+### Plugin Adapters
+
+The engine provides adapters for registering custom content:
+
+```javascript
+// In your plugin's init() method:
+init(mascot) {
+    // Register a custom emotion
+    const emotionAdapter = mascot.Emotions.pluginAdapter;
+    emotionAdapter.registerPluginEmotion('zen', {
+        name: 'zen',
+        color: '#9B7EDE',
+        visual: { /* ... */ },
+        modifiers: { /* ... */ }
+    });
+    
+    // Register a custom gesture
+    const gestureAdapter = mascot.Gestures.pluginAdapter;
+    gestureAdapter.registerPluginGesture('meditate', {
+        name: 'meditate',
+        type: 'blending',
+        apply: (particle, progress) => { /* ... */ }
+    });
+}
+```
+
+### Example Plugins
+
+See `src/plugins/` for complete examples:
+- `example-emotion-plugin.js` - Adds "nostalgic" and "determined" emotions
+- `example-gesture-plugin.js` - Adds "wobble", "figure8", and "heartbeat" gestures
+- `example-particle-plugin.js` - Custom particle behaviors
 
 ### Adding New Behaviors, Gestures & Emotions
 
@@ -258,9 +338,9 @@ Each emotion is now a self-contained module combining:
 | **Nervous** | `erratic` | Jittery, unpredictable movement |
 | **Suspicion** | `cautious` | Slow movement with watchful pauses |
 
-### Modular Gesture System (v3.0.0)
+### Modular Gesture System (v4.0.0)
 
-The gesture system has been completely modularized with 24 gesture animations organized by type:
+The gesture system has been completely modularized with 26 gesture animations organized by type, with full plugin support:
 
 #### Motion Gestures (Blending)
 These gestures blend with existing particle behavior:
@@ -270,9 +350,9 @@ These gestures blend with existing particle behavior:
 | `bounce` | Vertical oscillation | Joy, excitement |
 | `pulse` | Radial expansion/contraction | Heartbeat, emphasis |
 | `shake` | Random jitter | Nervousness, cold |
-| `oscillate` | Smooth wave motion | Calm, floating |
-| `radial` | Circular motion | Energy, spinning |
-| `jitter` | Micro vibrations | Anxiety, tension |
+| `nod` | Up-down motion | Agreement, understanding |
+| `vibrate` | High-frequency shake | Intensity, energy |
+| `orbit` | Circular motion | Mystery, cycles |
 
 #### Transform Gestures (Override)
 These gestures completely control particle motion:
@@ -285,6 +365,7 @@ These gestures completely control particle motion:
 | `stretch` | Axis scaling | Yawn, reaching |
 | `tilt` | Gather and sway | Curiosity, lean |
 | `orbital` | Planetary motion | Mystery, cosmic |
+| `hula` | Hula-hoop motion | Playful, circular |
 
 #### Effect Gestures (Visual)
 These gestures create visual effects:
@@ -300,6 +381,10 @@ These gestures create visual effects:
 | `fade` | Transparency effect | Disappear, ghost |
 | `hold` | Freeze position | Pause, think |
 | `breathe` | Expansion/contraction | Life, meditation |
+| `expand` | Growing outward | Growth, bloom |
+| `contract` | Shrinking inward | Focus, compress |
+| `flash` | Brightness burst | Alert, attention |
+| `glow` | Radiant light | Warmth, energy |
 
 ## 🎨 Visual System
 

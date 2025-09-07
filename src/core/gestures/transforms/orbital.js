@@ -21,19 +21,19 @@ export default {
     type: 'override',
     description: 'Orbital motion around center',
     
+    // Default configuration
     config: {
-        speed: 0.02,
-        maintainRadius: true,
-        elliptical: false,
+        speed: 0.02,              // Orbital rotation speed
+        maintainRadius: true,     // Keep constant orbit radius
+        elliptical: false,        // Use circular orbit
         use3D: true,              // Enable z-coordinate animation
         zPhaseOffset: 0,          // Phase offset for z-oscillation
         verticalOscillation: 0,   // Vertical movement for hula-hoop effect
-        duration: 3000,           // 3 second orbit
-        // CRITICAL: This tells the system this gesture affects particles
+        duration: 3000,           // Animation duration
+        // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'orbital',
             strength: 1.0
-            // speed is inherited from config.speed above - no redundancy!
         }
     },
     
@@ -86,7 +86,7 @@ export default {
             // When angle is 0/2π (right side), z is positive (front)
             // When angle is π (left side), z is negative (back)
             const zAngle = data.angle + data.zPhase + (motion.zPhaseOffset || 0);
-            particle.z = Math.sin(zAngle) * 0.8; // Range from -0.8 to +0.8
+            particle.z = Math.sin(zAngle) * 0.8; // Z-depth range for layering
             
             // Add vertical oscillation for hula-hoop effect
             if (motion.verticalOscillation) {

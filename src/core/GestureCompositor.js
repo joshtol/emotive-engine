@@ -203,7 +203,7 @@ class GestureCompositor {
         if (emotionMod.addBounce) result.effects.push('bounce');
         if (emotionMod.addGravity) result.effects.push('gravity');
         if (emotionMod.addShake) result.effects.push('shake');
-        if (emotionMod.addJitter) result.effects.push('jitter');
+        if (emotionMod.addJitter) result.effects.push('shake');
         if (emotionMod.addPop) result.effects.push('pop');
         if (emotionMod.addRecoil) result.effects.push('recoil');
         if (emotionMod.addWarmth) result.effects.push('warmth');

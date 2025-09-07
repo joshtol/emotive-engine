@@ -42,23 +42,23 @@ export default {
     
     // Default configuration
     config: {
-        duration: 800,         // Animation duration (from gestureConfig)
-        flickerRate: 15,       // Flickers per second (was frequency: 6 in config)
-        frequency: 6,          // Number of flickers
-        minOpacity: 0.3,       // Minimum opacity (from gestureConfig)
-        maxOpacity: 1.0,       // Maximum opacity (from gestureConfig)
-        jitterAmount: 2,       // Position jitter in pixels
-        colorShift: false,     // Enable color shifting during flicker
-        strobe: false,         // Use strobe pattern vs random
-        pulseMode: false,      // Smooth pulsing vs sharp flicker
-        groupFlicker: 0.3,     // Chance particles flicker together (0-1)
-        easing: 'linear',
-        strength: 0.7,
+        duration: 800,         // Animation duration
+        flickerRate: 15,       // Flicker speed
+        frequency: 6,          // Flicker count
+        minOpacity: 0.3,       // Minimum visibility
+        maxOpacity: 1.0,       // Maximum visibility
+        jitterAmount: 2,       // Position wobble range
+        colorShift: false,     // Enable hue variation
+        strobe: false,         // Regular vs random pattern
+        pulseMode: false,      // Smooth vs sharp transitions
+        groupFlicker: 0.3,     // Group synchronization probability
+        easing: 'linear',      // Animation curve type
+        strength: 0.7,         // Overall effect intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'flicker',
-            strength: 0.7,
-            frequency: 6
+            strength: 0.7,     // Particle flicker strength
+            frequency: 6       // Particle flicker rate
         }
     },
     
@@ -74,7 +74,7 @@ export default {
         
         const config = { ...this.config, ...motion };
         
-        // Determine if this particle is part of a group flicker
+        // Determine if this particle is part of a synchronized group
         const isGrouped = Math.random() < config.groupFlicker;
         
         particle.gestureData.flicker = {
@@ -86,8 +86,8 @@ export default {
             lastFlicker: 0,
             flickerState: true,
             isGrouped: isGrouped,
-            groupId: isGrouped ? Math.floor(Math.random() * 3) : -1, // 3 flicker groups
-            phase: Math.random() * Math.PI * 2,
+            groupId: isGrouped ? Math.floor(Math.random() * 3) : -1, // Assign to flicker group
+            phase: Math.random() * Math.PI * 2,  // Random phase offset
             colorHue: 0,
             initialized: true
         };
@@ -181,12 +181,12 @@ export default {
             particle.color = this.shiftHue(data.baseColor, hueShift * strength);
         }
         
-        // Fade effect at start and end
+        // Smooth fade in/out at gesture boundaries
         let fadeFactor = 1;
         if (progress < 0.1) {
-            fadeFactor = progress / 0.1;
+            fadeFactor = progress / 0.1;  // Fade in
         } else if (progress > 0.9) {
-            fadeFactor = (1 - progress) / 0.1;
+            fadeFactor = (1 - progress) / 0.1;  // Fade out
         }
         
         particle.opacity *= fadeFactor;

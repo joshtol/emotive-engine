@@ -21,32 +21,32 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#FFD54F',       // Golden yellow - sunny happiness
-        glowIntensity: 1.4,         // Brighter glow for more joy
-        particleRate: 40,           // Frequent celebration particles
-        minParticles: 0,            // Start from zero
-        maxParticles: 40,           // Maximum joy expression
+        glowColor: '#FFD54F',       // Golden yellow happiness
+        glowIntensity: 1.4,         // Bright, cheerful glow
+        particleRate: 40,           // Abundant celebration particles
+        minParticles: 0,            // Can start from stillness
+        maxParticles: 40,           // Maximum joyful expression
         particleBehavior: 'popcorn', // Spontaneous popping effect
-        breathRate: 1.5,            // Excited breathing (20-30 bpm)
-        breathDepth: 0.10,          // 10% size variation
-        coreJitter: false,          // No jitter, just happiness
+        breathRate: 1.5,            // Excited, happy breathing
+        breathDepth: 0.10,          // Moderate breath variation
+        coreJitter: false,          // Stable, confident happiness
         particleColors: [
-            { color: '#FFD54F', weight: 30 },  // 30% golden yellow
-            { color: '#C4B888', weight: 20 },  // 20% desaturated
-            { color: '#FFFF00', weight: 20 },  // 20% electric joy
-            { color: '#FFE082', weight: 15 },  // 15% sun-kissed
-            { color: '#B39C2F', weight: 15 }   // 15% deep gold
+            { color: '#FFD54F', weight: 30 },  // Primary golden joy
+            { color: '#C4B888', weight: 20 },  // Muted warm tone
+            { color: '#FFFF00', weight: 20 },  // Electric happiness burst
+            { color: '#FFE082', weight: 15 },  // Soft sunny highlights
+            { color: '#B39C2F', weight: 15 }   // Deep golden warmth
         ]
     },
     
     // Gesture modifiers
     modifiers: {
-        speed: 1.8,        // 80% faster animations
-        amplitude: 1.9,    // 90% bigger movements
-        intensity: 1.1,    // 10% more intense
-        smoothness: 1.0,   // Normal smoothness
-        regularity: 0.9,   // Slightly bouncy/irregular
-        addBounce: true    // Extra springiness flag
+        speed: 1.8,        // Energetic, lively pace
+        amplitude: 1.9,    // Expansive, celebratory movements
+        intensity: 1.1,    // Enhanced joyful energy
+        smoothness: 1.0,   // Natural, flowing motion
+        regularity: 0.9,   // Playful, varied rhythm
+        addBounce: true    // Extra springiness effect
     },
     
     // Typical gestures for joy
@@ -61,10 +61,10 @@ export default {
     
     // Transition hints
     transitions: {
-        duration: 400,         // Quick transition to joy
-        easing: 'easeOutBack', // Bouncy entrance
-        priority: 5,           // Higher priority for positive emotions
-        burstOnEntry: true     // Particle burst when becoming joyful
+        duration: 400,         // Swift mood elevation
+        easing: 'easeOutBack', // Bouncy, playful entrance
+        priority: 5,           // Elevated positive priority
+        burstOnEntry: true     // Celebratory particle burst
     },
     
     // Audio/sound associations
@@ -85,11 +85,11 @@ export default {
     
     // Eye/core appearance
     coreAppearance: {
-        pupilSize: 1.2,          // Slightly dilated (excited)
-        irisPattern: 'radiant',   // Radiant iris pattern
-        blinkRate: 'frequent',    // Happy blinking
-        lookDirection: 'up',      // Looking up optimistically
-        specialEffect: 'twinkle'  // Eye twinkle effect
+        pupilSize: 1.2,          // Dilated with excitement
+        irisPattern: 'radiant',   // Radiant, sparkling iris
+        blinkRate: 'frequent',    // Happy, frequent blinking
+        lookDirection: 'up',      // Optimistic upward gaze
+        specialEffect: 'twinkle'  // Sparkling eye effect
     },
     
     /**

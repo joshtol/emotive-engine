@@ -1,15 +1,15 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE
+ *    ●●  ENGINE v4.0
  *  └─○═╝                                                                             
  *              ◐ ◑ ◒ ◓  EXAMPLE: CUSTOM EMOTION PLUGIN  ◓ ◒ ◑ ◐              
  *                                                                                    
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Example Custom Emotion Plugin - Add Your Own Emotions!
+ * @fileoverview Example Custom Emotion Plugin using v4.0 Plugin Adapter System
  * @author Emotive Engine Team
- * @version 1.0.0
+ * @version 2.0.0
  * @module ExampleEmotionPlugin
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
@@ -122,26 +122,115 @@ class CustomEmotionPlugin {
         this.mascot = mascot;
         this.initialized = true;
         
-        // Register our custom emotions with the state machine
-        if (mascot.stateMachine) {
-            Object.keys(this.emotions).forEach(emotionName => {
-                // Add emotion to valid states
-                mascot.stateMachine.validStates.add(emotionName);
-                
-                // Add emotion configuration
-                const config = this.emotions[emotionName];
-                mascot.stateMachine.stateConfigs[emotionName] = {
-                    primaryColor: config.primaryColor,
-                    glowIntensity: config.glowIntensity,
-                    particleRate: config.particleRate,
-                    minParticles: config.minParticles,
-                    maxParticles: config.maxParticles,
-                    particleBehavior: config.particleBehavior
-                };
-            });
-        }
+        // Register emotions with the plugin adapter
+        this.registerEmotions();
         
         console.log(`[${this.name}] Initialized with custom emotions:`, Object.keys(this.emotions));
+    }
+    
+    /**
+     * Register custom emotions with the emotion plugin adapter
+     * @private
+     */
+    registerEmotions() {
+        // Import the emotion plugin adapter
+        const emotionModule = this.mascot.Emotions || window.Emotions;
+        if (!emotionModule || !emotionModule.pluginAdapter) {
+            console.warn(`[${this.name}] Emotion plugin adapter not found`);
+            return;
+        }
+        
+        const adapter = emotionModule.pluginAdapter;
+        
+        // Register each emotion properly
+        Object.entries(this.emotions).forEach(([name, config]) => {
+            const emotionDef = {
+                name,
+                emoji: this.getEmotionEmoji(name),
+                color: config.primaryColor,
+                energy: this.getEmotionEnergy(name),
+                
+                visual: {
+                    primaryColor: config.primaryColor,
+                    secondaryColor: config.secondaryColor,
+                    particleCount: config.particleRate || 15,
+                    particleSize: { 
+                        min: (config.particleSize || 1) * 2, 
+                        max: (config.particleSize || 1) * 6 
+                    },
+                    glowIntensity: config.glowIntensity || 0.5,
+                    trailLength: 5,
+                    pulseRate: config.breathRate || 1.0
+                },
+                
+                particles: {
+                    behavior: config.particleBehavior || 'ambient',
+                    density: this.getParticleDensity(config.particleRate),
+                    speed: this.getParticleSpeed(config.particleSpeed)
+                },
+                
+                modifiers: {
+                    speed: config.particleSpeed || 1.0,
+                    amplitude: 1.0,
+                    intensity: config.glowIntensity || 1.0,
+                    smoothness: 1.0
+                },
+                
+                gestures: config.defaultGesture ? [config.defaultGesture] : [],
+                
+                transitions: {
+                    neutral: {
+                        duration: 1000,
+                        easing: 'ease-in-out',
+                        gesture: config.defaultGesture || null
+                    }
+                }
+            };
+            
+            adapter.registerPluginEmotion(name, emotionDef);
+        });
+    }
+    
+    /**
+     * Get emoji for emotion
+     * @private
+     */
+    getEmotionEmoji(name) {
+        const emojis = {
+            nostalgic: '💭',
+            determined: '💪'
+        };
+        return emojis[name] || '🔌';
+    }
+    
+    /**
+     * Get energy level for emotion
+     * @private
+     */
+    getEmotionEnergy(name) {
+        if (name === 'nostalgic') return 'low';
+        if (name === 'determined') return 'high';
+        return 'medium';
+    }
+    
+    /**
+     * Convert particle rate to density
+     * @private
+     */
+    getParticleDensity(rate) {
+        if (rate < 10) return 'low';
+        if (rate > 20) return 'high';
+        return 'medium';
+    }
+    
+    /**
+     * Convert particle speed to speed category
+     * @private
+     */
+    getParticleSpeed(speed) {
+        if (speed < 0.5) return 'slow';
+        if (speed > 1.2) return 'fast';
+        return 'normal';
     }
     
     /**
@@ -248,11 +337,12 @@ class CustomEmotionPlugin {
      * Clean up when plugin is unregistered
      */
     destroy() {
-        // Remove our custom emotions from the state machine
-        if (this.mascot && this.mascot.stateMachine) {
+        // Unregister emotions from the plugin adapter
+        const emotionModule = this.mascot?.Emotions || window.Emotions;
+        if (emotionModule && emotionModule.pluginAdapter) {
+            const adapter = emotionModule.pluginAdapter;
             Object.keys(this.emotions).forEach(emotionName => {
-                this.mascot.stateMachine.validStates.delete(emotionName);
-                delete this.mascot.stateMachine.stateConfigs[emotionName];
+                adapter.unregisterPluginEmotion(emotionName);
             });
         }
         

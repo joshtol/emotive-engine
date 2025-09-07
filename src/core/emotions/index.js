@@ -1,24 +1,27 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Emotion Registry
+ *    ●●  ENGINE v4.0 - Emotion Registry
  *  └─○═╝                                                                             
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Central emotion registry - manages all emotional states
+ * @fileoverview Central emotion registry with full plugin support
  * @author Emotive Engine Team
+ * @version 4.0.0
  * @module emotions
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Central registry for modular emotion system. Each emotion is self-contained with:
- * ║ • Visual properties (colors, particles, glow)
- * ║ • Gesture modifiers (speed, amplitude, intensity)
- * ║ • Typical gestures (what animations this emotion commonly uses)
- * ║ • Transition hints (how to smoothly change to/from this emotion)
+ * ║ Central registry for modular emotion system with plugin adapter integration.
+ * ║ • Core emotions are loaded synchronously at startup
+ * ║ • Plugin emotions can be registered dynamically via adapter
+ * ║ • Each emotion is self-contained with visual, gesture, and transition data
+ * ║ • Value-agnostic design allows easy tuning without code changes
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
+
+import pluginAdapter from './plugin-adapter.js';
 
 // Import all emotion modules
 import neutral from './states/neutral.js';
@@ -47,6 +50,14 @@ const emotionAliases = {
     'sad': 'sadness'
 };
 
+// Register all emotions SYNCHRONOUSLY
+[neutral, joy, sadness, anger, fear, surprise, disgust,
+ love, suspicion, excited, resting, euphoria, focused].forEach(emotion => {
+    if (emotion && emotion.name) {
+        emotionRegistry.set(emotion.name, emotion);
+    }
+});
+
 /**
  * Register an emotion module
  * @param {Object} emotionModule - The emotion module to register
@@ -60,14 +71,27 @@ export function registerEmotion(emotionModule) {
 }
 
 /**
- * Get emotion configuration by name
+ * Get emotion configuration by name (checks both core and plugin emotions)
  * @param {string} emotionName - Name of the emotion (or alias)
  * @returns {Object|null} The emotion configuration or null if not found
  */
 export function getEmotion(emotionName) {
     // Check aliases first
     const resolvedName = emotionAliases[emotionName] || emotionName;
-    return emotionRegistry.get(resolvedName) || null;
+    
+    // Check core emotions
+    const coreEmotion = emotionRegistry.get(resolvedName);
+    if (coreEmotion) {
+        return coreEmotion;
+    }
+    
+    // Check plugin emotions
+    const pluginEmotion = pluginAdapter.getPluginEmotion(resolvedName);
+    if (pluginEmotion) {
+        return pluginEmotion;
+    }
+    
+    return null;
 }
 
 /**
@@ -98,123 +122,112 @@ export function getEmotionModifiers(emotionName) {
 }
 
 /**
- * Get typical gestures for an emotion
- * @param {string} emotionName - Name of the emotion
- * @returns {Array} Array of typical gesture names
+ * Get list of available emotions (core and plugin)
+ * @returns {Array<string>} List of emotion names
  */
-export function getEmotionGestures(emotionName) {
-    const emotion = getEmotion(emotionName);
-    return emotion?.typicalGestures || [];
+export function listEmotions() {
+    const coreEmotions = Array.from(emotionRegistry.keys());
+    const pluginEmotions = pluginAdapter.getAllPluginEmotions();
+    return [...coreEmotions, ...pluginEmotions];
 }
 
 /**
- * Get all registered emotion names
- * @returns {Array} Array of emotion names
+ * Get all emotion configurations
+ * @returns {Object} Object mapping emotion names to configurations
  */
 export function getAllEmotions() {
-    return Array.from(emotionRegistry.keys());
+    const emotions = {};
+    emotionRegistry.forEach((value, key) => {
+        emotions[key] = value;
+    });
+    return emotions;
 }
 
 /**
- * Check if emotion exists
- * @param {string} emotionName - Name to check
+ * Check if an emotion exists (checks both core and plugin)
+ * @param {string} emotionName - Name of the emotion to check
  * @returns {boolean} True if emotion exists
  */
 export function hasEmotion(emotionName) {
     const resolvedName = emotionAliases[emotionName] || emotionName;
-    return emotionRegistry.has(resolvedName);
+    return emotionRegistry.has(resolvedName) || pluginAdapter.getPluginEmotion(resolvedName) !== null;
 }
 
 /**
- * Interpolate between two emotion states
+ * Add an emotion alias
+ * @param {string} alias - The alias name
+ * @param {string} emotionName - The actual emotion name
+ */
+export function addEmotionAlias(alias, emotionName) {
+    emotionAliases[alias] = emotionName;
+}
+
+/**
+ * Get emotion transition parameters
  * @param {string} fromEmotion - Starting emotion
  * @param {string} toEmotion - Target emotion
- * @param {number} progress - Progress (0-1)
- * @returns {Object} Interpolated parameters
+ * @returns {Object} Transition parameters
  */
-export function interpolateEmotions(fromEmotion, toEmotion, progress) {
+export function getTransitionParams(fromEmotion, toEmotion) {
     const from = getEmotion(fromEmotion);
     const to = getEmotion(toEmotion);
     
     if (!from || !to) {
-        console.warn('Invalid emotions for interpolation');
-        return getEmotion('neutral').visual;
+        return {
+            duration: 1000,
+            easing: 'ease-in-out'
+        };
     }
     
-    // Helper to interpolate colors
-    const interpolateColor = (color1, color2, t) => {
-        const rgb1 = hexToRgb(color1);
-        const rgb2 = hexToRgb(color2);
-        
-        const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
-        const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
-        const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
-        
-        return rgbToHex(r, g, b);
-    };
+    // Check if 'to' emotion has specific transition hints
+    if (to.transitions && to.transitions[fromEmotion]) {
+        return to.transitions[fromEmotion];
+    }
     
-    // Interpolate numeric values
-    const lerp = (a, b, t) => a + (b - a) * t;
-    
+    // Use default transition
     return {
-        glowColor: interpolateColor(from.visual.glowColor, to.visual.glowColor, progress),
-        glowIntensity: lerp(from.visual.glowIntensity, to.visual.glowIntensity, progress),
-        particleRate: Math.round(lerp(from.visual.particleRate, to.visual.particleRate, progress)),
-        particleBehavior: progress < 0.5 ? from.visual.particleBehavior : to.visual.particleBehavior,
-        breathRate: lerp(from.visual.breathRate, to.visual.breathRate, progress),
-        breathDepth: lerp(from.visual.breathDepth, to.visual.breathDepth, progress),
-        coreJitter: progress < 0.5 ? from.visual.coreJitter : to.visual.coreJitter,
-        particleColors: progress < 0.5 ? from.visual.particleColors : to.visual.particleColors
+        duration: 1000,
+        easing: 'ease-in-out',
+        gesture: to.transitions?.defaultGesture || null
     };
 }
 
-// Color utility functions
-function hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : { r: 0, g: 0, b: 0 };
+/**
+ * Get typical gestures for an emotion
+ * @param {string} emotionName - Name of the emotion
+ * @returns {Array<string>} List of typical gesture names
+ */
+export function getEmotionGestures(emotionName) {
+    const emotion = getEmotion(emotionName);
+    return emotion?.gestures || [];
 }
 
-function rgbToHex(r, g, b) {
-    return '#' + [r, g, b].map(x => {
-        const hex = x.toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-    }).join('');
+// Debug utilities
+if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
+    window.Emotions = {
+        registry: emotionRegistry,
+        aliases: emotionAliases,
+        list: listEmotions,
+        get: getEmotion,
+        has: hasEmotion
+    };
+    console.log('💗 Emotions Loaded:', listEmotions());
 }
 
-// Register all built-in emotions
-registerEmotion(neutral);
-registerEmotion(joy);
-registerEmotion(sadness);
-registerEmotion(anger);
-registerEmotion(fear);
-registerEmotion(surprise);
-registerEmotion(disgust);
-registerEmotion(love);
-registerEmotion(suspicion);
-registerEmotion(excited);
-registerEmotion(resting);
-registerEmotion(euphoria);
-registerEmotion(focused);
+// Export plugin adapter for external use
+export { pluginAdapter };
 
-// Export for backwards compatibility
-export const emotionMap = Object.fromEntries(
-    Array.from(emotionRegistry.entries()).map(([name, emotion]) => 
-        [name, emotion.visual]
-    )
-);
-
+// Export everything
 export default {
     registerEmotion,
     getEmotion,
     getEmotionParams,
     getEmotionModifiers,
-    getEmotionGestures,
+    listEmotions,
     getAllEmotions,
     hasEmotion,
-    interpolateEmotions,
-    emotionMap
+    addEmotionAlias,
+    getTransitionParams,
+    getEmotionGestures,
+    pluginAdapter
 };

@@ -16,13 +16,18 @@ export default {
     type: 'blending',
     description: 'Fade particle opacity',
     
+    // Default configuration
     config: {
-        fadeIn: false,
-        fadeOut: true,
-        minOpacity: 0,
-        maxOpacity: 1
+        fadeIn: false,      // Enable fade in effect
+        fadeOut: true,      // Enable fade out effect
+        minOpacity: 0,      // Minimum opacity level
+        maxOpacity: 1       // Maximum opacity level
     },
     
+    /**
+     * Initialize fade data
+     * Stores particle's original opacity
+     */
     initialize: function(particle) {
         if (!particle.gestureData) {
             particle.gestureData = {};
@@ -32,6 +37,10 @@ export default {
         };
     },
     
+    /**
+     * Apply fade effect to particle
+     * Smoothly transitions opacity based on configuration
+     */
     apply: function(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.fade) {
             this.initialize(particle);
@@ -42,13 +51,13 @@ export default {
         
         let targetOpacity;
         if (config.fadeIn && !config.fadeOut) {
-            // Fade in only
+            // Fade in only - opacity increases over time
             targetOpacity = config.minOpacity + (config.maxOpacity - config.minOpacity) * progress;
         } else if (config.fadeOut && !config.fadeIn) {
-            // Fade out only
+            // Fade out only - opacity decreases over time
             targetOpacity = config.maxOpacity - (config.maxOpacity - config.minOpacity) * progress;
         } else {
-            // Fade in then out
+            // Fade in then out - peak opacity at midpoint
             if (progress < 0.5) {
                 targetOpacity = config.minOpacity + (config.maxOpacity - config.minOpacity) * (progress * 2);
             } else {
@@ -56,12 +65,18 @@ export default {
             }
         }
         
+        // Apply calculated opacity
         particle.opacity = data.baseOpacity * targetOpacity;
+        // Also update life property for particles that use it
         if (particle.life !== undefined) {
             particle.life = particle.opacity;
         }
     },
     
+    /**
+     * Clean up fade effect
+     * Restores original opacity values
+     */
     cleanup: function(particle) {
         if (particle.gestureData?.fade) {
             particle.opacity = particle.gestureData.fade.baseOpacity;

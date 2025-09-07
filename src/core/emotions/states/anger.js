@@ -21,32 +21,32 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#FF5252',       // Bright crimson - intense rage
-        glowIntensity: 1.4,         // Intense glow
-        particleRate: 15,           // Controlled chaos
-        minParticles: 3,            // Always some anger
-        maxParticles: 8,            // Limited for performance
-        particleBehavior: 'aggressive', // Aggressive particle behavior
-        breathRate: 2.2,            // Rapid breathing (30-40 bpm)
-        breathDepth: 0.15,          // Heavy, forceful breathing
-        coreJitter: true,           // Shake with anger
+        glowColor: '#FF5252',       // Primary rage color - crimson intensity
+        glowIntensity: 1.4,         // Heightened aura strength
+        particleRate: 15,           // Frequent particle generation for chaos
+        minParticles: 3,            // Maintain constant agitation
+        maxParticles: 8,            // Cap for performance while showing intensity
+        particleBehavior: 'aggressive', // Erratic, forceful particle movement
+        breathRate: 2.2,            // Rapid, agitated breathing rhythm
+        breathDepth: 0.15,          // Deep, forceful breath cycles
+        coreJitter: true,           // Visual tremor from internal rage
         particleColors: [
-            { color: '#FF5252', weight: 30 },  // 30% bright red
-            { color: '#C47777', weight: 20 },  // 20% smoldering
-            { color: '#FF0000', weight: 20 },  // 20% pure rage
-            { color: '#FF7B7B', weight: 15 },  // 15% hot flash
-            { color: '#B73636', weight: 15 }   // 15% dark fury
+            { color: '#FF5252', weight: 30 },  // Primary bright rage tone
+            { color: '#C47777', weight: 20 },  // Smoldering undertone
+            { color: '#FF0000', weight: 20 },  // Pure intensity accent
+            { color: '#FF7B7B', weight: 15 },  // Hot flash highlights
+            { color: '#B73636', weight: 15 }   // Dark fury shadows
         ]
     },
     
     // Gesture modifiers
     modifiers: {
-        speed: 1.5,        // 50% faster
-        amplitude: 1.4,    // 40% bigger movements
-        intensity: 1.3,    // 30% more intense
-        smoothness: 0.3,   // 70% less smooth (sharp)
-        regularity: 0.7,   // More erratic
-        addShake: true     // Angry tremor
+        speed: 1.5,        // Accelerated motion for urgency
+        amplitude: 1.4,    // Exaggerated movement range
+        intensity: 1.3,    // Heightened force and impact
+        smoothness: 0.3,   // Sharp, abrupt transitions
+        regularity: 0.7,   // Erratic, unpredictable patterns
+        addShake: true     // Tremor effect from rage
     },
     
     // Typical gestures for anger
@@ -61,10 +61,10 @@ export default {
     
     // Transition hints
     transitions: {
-        duration: 300,          // Quick snap to anger
-        easing: 'easeOutExpo',  // Explosive entrance
-        priority: 8,            // High priority (danger)
-        shakeOnEntry: true      // Screen shake on anger
+        duration: 300,          // Swift state change
+        easing: 'easeOutExpo',  // Explosive, sudden entrance
+        priority: 8,            // High priority emotional state
+        shakeOnEntry: true      // Trigger screen disturbance
     },
     
     // Audio/sound associations
@@ -85,19 +85,19 @@ export default {
     
     // Eye/core appearance
     coreAppearance: {
-        pupilSize: 0.7,           // Constricted (focused rage)
-        irisPattern: 'sharp',      // Sharp, angular iris
-        blinkRate: 'rare',        // Intense stare
-        lookDirection: 'forward',  // Direct confrontation
-        specialEffect: 'flames',   // Fire in eyes
-        pulseRate: 'rapid'        // Rapid pulsing
+        pupilSize: 0.7,           // Constricted for focused intensity
+        irisPattern: 'sharp',      // Angular, aggressive iris pattern
+        blinkRate: 'rare',        // Unwavering, intense gaze
+        lookDirection: 'forward',  // Direct, confrontational focus
+        specialEffect: 'flames',   // Fire-like eye effects
+        pulseRate: 'rapid'        // Quick, agitated pulsing
     },
     
     // Special anger properties
     special: {
-        screenShake: true,         // Shake the screen
-        particleTrails: 'fire',    // Fire trails on particles
-        glowPulse: true,          // Pulsing glow
-        temperatureEffect: 'hot'   // Hot color temperature
+        screenShake: true,         // Environmental disturbance effect
+        particleTrails: 'fire',    // Incendiary particle trail style
+        glowPulse: true,          // Rhythmic aura fluctuation
+        temperatureEffect: 'hot'   // Warm spectrum color shifting
     }
 };

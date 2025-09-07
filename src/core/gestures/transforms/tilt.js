@@ -42,15 +42,15 @@ export default {
     
     // Default configuration
     config: {
-        duration: 500,         // Animation duration (from gestureConfig)
-        gatherPhase: 0.2,      // QUICK gathering phase
-        tiltAngle: 45,         // DRAMATIC tilt angle - crunk style
-        swayAmount: 80,        // BIG horizontal sway - whip it
-        liftAmount: 60,        // HIGH lift during tilt - get crazy
-        frequency: 3,          // More tilts for dance effect
-        homeRadius: 20,        // Pull particles CLOSE to center first
-        easing: 'sine',        // Easing function
-        strength: 2.5,         // STRONG motion for dramatic effect
+        duration: 500,         // Animation duration
+        gatherPhase: 0.2,      // Gathering phase ratio
+        tiltAngle: 45,         // Maximum tilt angle in degrees
+        swayAmount: 80,        // Horizontal sway distance
+        liftAmount: 60,        // Vertical lift distance during tilt
+        frequency: 3,          // Number of tilt cycles
+        homeRadius: 20,        // Gathering radius from center
+        easing: 'sine',        // Animation curve type
+        strength: 2.5,         // Overall motion intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'tilt',
@@ -59,7 +59,7 @@ export default {
             swayAmount: 80,
             liftAmount: 60
         },
-        smoothness: 0.25       // Smoother for flowing dance motion
+        smoothness: 0.25       // Movement smoothing factor
     },
     
     /**
@@ -97,7 +97,7 @@ export default {
             homeRadius: homeRadius,
             homeX: centerX + Math.cos(angle) * homeRadius,
             homeY: centerY + Math.sin(angle) * homeRadius,
-            role: role, // 0-1, affects timing and smoothness
+            role: role, // Variation factor for timing and smoothness
             initialized: true
         };
     },
@@ -132,8 +132,8 @@ export default {
             targetX = data.startX + (data.homeX - data.startX) * easedGather;
             targetY = data.startY + (data.homeY - data.startY) * easedGather;
             
-            // AGGRESSIVE gathering - pull them in FAST
-            const speed = 0.6;  // Much faster gathering
+            // Apply gathering motion
+            const speed = 0.6;  // Gathering speed factor
             particle.x += (targetX - particle.x) * speed;
             particle.y += (targetY - particle.y) * speed;
             
@@ -155,7 +155,7 @@ export default {
             
             // Calculate target position with tilt
             targetX = centerX + Math.cos(swayAngle) * currentRadius;
-            targetY = centerY + Math.sin(swayAngle) * currentRadius - liftAmount * 0.3; // Slight upward bias
+            targetY = centerY + Math.sin(swayAngle) * currentRadius - liftAmount * 0.3; // Add upward bias
             
             // Apply role-based variation (some particles lag)
             const smoothness = config.smoothness + data.role * 0.1;

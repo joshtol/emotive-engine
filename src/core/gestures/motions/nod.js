@@ -16,19 +16,20 @@ export default {
     type: 'blending',
     description: 'Vertical nodding motion',
     
+    // Default configuration
     config: {
-        duration: 500,
-        amplitude: 15,      // Vertical movement
-        frequency: 2,       // Number of nods
-        easing: 'sine',
-        strength: 0.4,
+        duration: 500,      // Animation duration
+        amplitude: 15,      // Vertical movement range
+        frequency: 2,       // Number of nod cycles
+        easing: 'sine',     // Animation curve type
+        strength: 0.4,      // Overall motion intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'oscillate',
-            axis: 'vertical',
-            strength: 0.4,
-            frequency: 2,
-            phase: 0 // In sync with orb
+            type: 'bounce',
+            axis: 'vertical',   // Movement direction
+            strength: 0.4,      // Particle nod strength
+            frequency: 2,       // Particle nod count
+            phase: 0           // Synchronization with orb
         }
     },
     

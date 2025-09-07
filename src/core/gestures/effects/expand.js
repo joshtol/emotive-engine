@@ -16,19 +16,20 @@ export default {
     type: 'blending',
     description: 'Radial expansion from center',
     
+    // Default configuration
     config: {
-        duration: 600,
-        scaleAmount: 3.0,   // HUGE expansion - 300%
-        scaleTarget: 3.0,   // Jedi force push away
-        glowAmount: 0.5,    // Bigger glow for power
-        easing: 'back',     // Overshoot effect
-        strength: 3.0,      // STRONG push force
+        duration: 600,        // Gesture duration
+        scaleAmount: 3.0,     // Core scale expansion amount
+        scaleTarget: 3.0,     // Target expansion distance ratio
+        glowAmount: 0.5,      // Glow intensity increase
+        easing: 'back',       // Overshoot animation curve
+        strength: 3.0,        // Outward push force intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'radial',
-            strength: 3.0,
-            direction: 'outward',
-            persist: true // Keep expanded position
+            type: 'pulse',
+            strength: 3.0,        // Particle push strength
+            direction: 'outward', // Movement away from center
+            persist: true         // Maintain expanded position
         }
     },
     
@@ -47,6 +48,10 @@ export default {
         };
     },
     
+    /**
+     * Apply expansion motion to particle
+     * Pushes particles outward from center with explosive force
+     */
     apply: function(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.expand?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -56,21 +61,21 @@ export default {
         const config = { ...this.config, ...motion };
         const strength = config.strength || 1.0;
         
-        // Calculate expansion
+        // Calculate expansion amount based on progress
         const expandFactor = 1 + (config.scaleTarget - 1) * progress * strength;
         const targetRadius = data.baseRadius * expandFactor;
         
-        // Move particle outward
+        // Calculate target position farther from center
         const targetX = centerX + Math.cos(data.angle) * targetRadius;
         const targetY = centerY + Math.sin(data.angle) * targetRadius;
         
-        // Apply STRONG Jedi push forces
+        // Apply strong outward push forces
         const dx = targetX - particle.x;
         const dy = targetY - particle.y;
-        particle.vx += dx * 0.8 * dt;  // Much stronger push
-        particle.vy += dy * 0.8 * dt;  // Much stronger push
+        particle.vx += dx * 0.8 * dt;  // Strong explosive push
+        particle.vy += dy * 0.8 * dt;  // Strong explosive push
         
-        // Apply damping
+        // Apply velocity damping for controlled motion
         particle.vx *= 0.95;
         particle.vy *= 0.95;
     },

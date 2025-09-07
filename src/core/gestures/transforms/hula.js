@@ -20,20 +20,20 @@ export default {
     type: 'override',
     description: 'Hula-hoop motion with vertical waves',
     
+    // Default configuration
     config: {
-        speed: 0.015,             // Moderate speed rotation for visible effect
+        speed: 0.015,             // Rotation speed
         maintainRadius: false,     // Allow radius variation for organic feel
-        elliptical: true,          // More elliptical than circular
-        use3D: true,               // Always use 3D depth
-        zPhaseOffset: Math.PI / 4, // Tilt the ring 45 degrees
-        verticalOscillation: 0.3,  // Strong vertical movement
-        wobbleAmount: 0.15,        // Ring wobbles as it spins
-        duration: 2500,            // Match wave duration (2.5 seconds)
-        // CRITICAL: This tells the system this gesture affects particles
+        elliptical: true,          // Elliptical orbit shape
+        use3D: true,               // Enable 3D depth effect
+        zPhaseOffset: Math.PI / 4, // Ring tilt angle
+        verticalOscillation: 0.3,  // Vertical wave amount
+        wobbleAmount: 0.15,        // Ring wobble intensity
+        duration: 2500,            // Animation duration
+        // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'hula',
             strength: 1.0,
-            // speed is inherited from config.speed above - no redundancy!
             verticalOscillation: 0.3
         }
     },
@@ -77,7 +77,7 @@ export default {
         
         // Calculate elliptical radius with wobble
         let radiusX = data.radius * (1 + wobble);
-        let radiusY = data.radius * (0.7 + wobble); // Elliptical shape
+        let radiusY = data.radius * (0.7 + wobble); // Elliptical shape factor
         
         // Position on the ellipse
         particle.x = centerX + Math.cos(data.angle) * radiusX;
@@ -87,7 +87,7 @@ export default {
         const zAngle = data.angle + data.zPhase + (motion.zPhaseOffset || this.config.zPhaseOffset);
         
         // Z-coordinate for depth (behind/in front)
-        particle.z = Math.sin(zAngle) * 0.9; // Stronger depth range
+        particle.z = Math.sin(zAngle) * 0.9; // Depth range for layering
         
         // Vertical oscillation synchronized with z-depth
         const verticalAmount = motion.verticalOscillation || this.config.verticalOscillation;

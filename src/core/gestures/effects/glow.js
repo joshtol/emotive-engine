@@ -16,18 +16,19 @@ export default {
     type: 'blending',
     description: 'Sustained glowing effect',
     
+    // Default configuration
     config: {
-        duration: 1500,
-        glowAmount: 1.5,    // Sustained glow
-        glowPeak: 2.0,
-        easing: 'sine',
-        strength: 0.3,
+        duration: 1500,      // Animation duration
+        glowAmount: 1.5,     // Sustained brightness level
+        glowPeak: 2.0,       // Maximum glow intensity
+        easing: 'sine',      // Smooth curve type
+        strength: 0.3,       // Overall effect intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'radial',
-            strength: 0.3,
-            direction: 'outward',
-            gentle: true
+            type: 'pulse',
+            strength: 0.3,       // Gentle radial force
+            direction: 'outward', // Expansion direction
+            gentle: true         // Soft movement mode
         }
     },
     
@@ -51,7 +52,7 @@ export default {
         const config = { ...this.config, ...motion };
         const strength = config.strength || 1.0;
         
-        // Smooth glow effect using sine wave
+        // Calculate smooth glow intensity using sine wave curve
         const glowIntensity = Math.sin(progress * Math.PI) * config.glowPeak;
         
         // Apply glow

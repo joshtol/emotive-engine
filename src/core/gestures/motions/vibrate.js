@@ -16,15 +16,16 @@ export default {
     type: 'blending',
     description: 'High frequency vibration',
     
+    // Default configuration
     config: {
-        duration: 500,
-        frequency: 20,      // HIGHER frequency for intense vibration
-        amplitude: 8,       // BIGGER amplitude for visible effect
-        easing: 'linear',
-        strength: 2.0,      // MUCH stronger
+        duration: 500,      // Animation duration
+        frequency: 20,      // Vibration frequency
+        amplitude: 8,       // Vibration amplitude
+        easing: 'linear',   // Animation curve type
+        strength: 2.0,      // Overall motion intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'jitter',
+            type: 'shake',
             strength: 2.0,
             frequency: 20,
             amplitude: 8
@@ -58,11 +59,11 @@ export default {
         const vibrateX = (Math.random() - 0.5) * config.amplitude * strength;
         const vibrateY = (Math.random() - 0.5) * config.amplitude * strength;
         
-        // Apply BIGGER, rapid movements
+        // Apply rapid vibration movements
         particle.vx += vibrateX * 0.5 * dt;
         particle.vy += vibrateY * 0.5 * dt;
         
-        // Strong damping to keep it controlled
+        // Apply damping for control
         particle.vx *= 0.9;
         particle.vy *= 0.9;
         

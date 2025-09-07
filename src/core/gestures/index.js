@@ -1,27 +1,30 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Gesture Registry
+ *    ●●  ENGINE v4.0 - Gesture Registry
  *  └─○═╝                                                                             
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Central registry for all gesture animations
+ * @fileoverview Central registry for all gesture animations with plugin support
  * @author Emotive Engine Team
+ * @version 4.0.0
  * @module gestures
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ This is the control center for all gestures. Instead of a giant switch            
- * ║ statement, gestures are registered here and can be looked up by name.             
+ * ║ Control center for all gestures with full plugin adapter integration.             
+ * ║ • Three gesture types: blending (motions), override (transforms), effects        
+ * ║ • Core gestures loaded synchronously at startup                                   
+ * ║ • Plugin gestures registered dynamically via adapter                              
+ * ║ • Value-agnostic configurations for easy tuning                                   
  * ║                                                                                    
- * ║ TO ADD A NEW GESTURE:                                                             
- * ║ 1. Create a new file in motions/, transforms/, or effects/                        
- * ║ 2. Import it below                                                                
- * ║ 3. Add it to the appropriate array                                                
- * ║ 4. That's it! It's now available everywhere                                       
+ * ║ TO ADD A PLUGIN GESTURE:                                                          
+ * ║ Use pluginAdapter.registerPluginGesture() from your plugin                        
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
+
+import pluginAdapter from './plugin-adapter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT MOTION GESTURES (Blending - add to existing motion)
@@ -29,11 +32,9 @@
 import bounce from './motions/bounce.js';
 import pulse from './motions/pulse.js';
 import shake from './motions/shake.js';
-import oscillate from './motions/oscillate.js';
-import radial from './motions/radial.js';
-import jitter from './motions/jitter.js';
 import nod from './motions/nod.js';
 import vibrate from './motions/vibrate.js';
+import orbit from './motions/orbit.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
@@ -64,23 +65,15 @@ import flash from './effects/flash.js';
 import glow from './effects/glow.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ IMPORT PLUGIN ADAPTER
-// └─────────────────────────────────────────────────────────────────────────────────────
-// TODO: Create plugin adapter for custom gestures
-// import pluginAdapter from './plugin-adapter.js';
-
-// ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ GESTURE COLLECTIONS
 // └─────────────────────────────────────────────────────────────────────────────────────
 const MOTION_GESTURES = [
     bounce,
     pulse,
     shake,
-    oscillate,
-    radial,
-    jitter,
     nod,
-    vibrate
+    vibrate,
+    orbit
 ];
 
 const TRANSFORM_GESTURES = [
@@ -114,7 +107,7 @@ const EFFECT_GESTURES = [
 // └─────────────────────────────────────────────────────────────────────────────────────
 export const GESTURE_REGISTRY = {};
 
-// Build the registry from all gesture arrays
+// Build the registry from all gesture arrays - SYNCHRONOUSLY
 [...MOTION_GESTURES, ...TRANSFORM_GESTURES, ...EFFECT_GESTURES].forEach(gesture => {
     GESTURE_REGISTRY[gesture.name] = gesture;
 });
@@ -129,7 +122,7 @@ export const GESTURE_TYPES = {
 };
 
 /**
- * Get a gesture by name
+ * Get a gesture by name (checks both core and plugin gestures)
  * @param {string} name - Gesture name (e.g., 'bounce', 'spin')
  * @returns {Object|null} Gesture object or null if not found
  */
@@ -139,11 +132,11 @@ export function getGesture(name) {
         return GESTURE_REGISTRY[name];
     }
     
-    // TODO: Check plugin gestures when adapter is ready
-    // const pluginGesture = pluginAdapter.getPluginGesture(name);
-    // if (pluginGesture) {
-    //     return pluginGesture;
-    // }
+    // Check plugin gestures
+    const pluginGesture = pluginAdapter.getPluginGesture(name);
+    if (pluginGesture) {
+        return pluginGesture;
+    }
     
     return null;
 }
@@ -201,7 +194,7 @@ export function applyGesture(particle, gestureName, progress, motion, dt, center
 }
 
 /**
- * Get list of all available gestures
+ * Get list of all available gestures (core and plugin)
  * @returns {Array} Array of gesture info objects
  */
 export function listGestures() {
@@ -218,18 +211,18 @@ export function listGestures() {
         });
     });
     
-    // TODO: Add plugin gestures when adapter is ready
-    // const pluginGestureNames = pluginAdapter.getAllPluginGestures();
-    // pluginGestureNames.forEach(name => {
-    //     const gesture = pluginAdapter.getPluginGesture(name);
-    //     allGestures.push({
-    //         name: gesture.name,
-    //         emoji: gesture.emoji || '🔌',
-    //         type: gesture.type,
-    //         description: gesture.description || 'Plugin gesture',
-    //         source: 'plugin'
-    //     });
-    // });
+    // Add plugin gestures
+    const pluginGestureNames = pluginAdapter.getAllPluginGestures();
+    pluginGestureNames.forEach(name => {
+        const gesture = pluginAdapter.getPluginGesture(name);
+        allGestures.push({
+            name: gesture.name,
+            emoji: gesture.emoji || '🔌',
+            type: gesture.type,
+            description: gesture.description || 'Plugin gesture',
+            source: 'plugin'
+        });
+    });
     
     return allGestures;
 }
@@ -249,6 +242,9 @@ if (typeof window !== 'undefined' && window.DEBUG_GESTURES) {
     console.log('🎭 Gestures Loaded:', listGestures());
 }
 
+// Export plugin adapter for external use
+export { pluginAdapter };
+
 // Export everything
 export default {
     GESTURE_REGISTRY,
@@ -257,5 +253,6 @@ export default {
     isBlendingGesture,
     isOverrideGesture,
     applyGesture,
-    listGestures
+    listGestures,
+    pluginAdapter
 };

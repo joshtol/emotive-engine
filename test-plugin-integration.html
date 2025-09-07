@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Integration Test - Emotive Engine</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e1e2e 0%, #0a0a0f 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(30, 30, 46, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .controls h3 {
+            margin: 0 0 15px 0;
+            color: #00E5FF;
+            font-size: 18px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .control-group h4 {
+            margin: 10px 0;
+            color: #FFB347;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button.core {
+            background: linear-gradient(135deg, #00E5FF 0%, #00A8CC 100%);
+        }
+        
+        button.plugin {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+        }
+        
+        .info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(30, 30, 46, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 30, 46, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+        }
+        
+        .status-item {
+            margin: 5px 0;
+        }
+        
+        .status-label {
+            color: #FFB347;
+            font-weight: 600;
+        }
+        
+        .status-value {
+            color: #00E5FF;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mascot-canvas"></canvas>
+    
+    <div class="controls">
+        <h3>🔌 Plugin Integration Test</h3>
+        
+        <div class="control-group">
+            <h4>📦 Plugin Management</h4>
+            <button onclick="loadPlugins()">Load Plugins</button>
+            <button onclick="unloadPlugins()">Unload Plugins</button>
+        </div>
+        
+        <div class="control-group">
+            <h4>🎭 Core Emotions</h4>
+            <button class="core" onclick="setEmotion('neutral')">Neutral</button>
+            <button class="core" onclick="setEmotion('joy')">Joy</button>
+            <button class="core" onclick="setEmotion('sadness')">Sadness</button>
+            <button class="core" onclick="setEmotion('anger')">Anger</button>
+        </div>
+        
+        <div class="control-group" id="plugin-emotions" style="display: none;">
+            <h4>🔌 Plugin Emotions</h4>
+            <button class="plugin" onclick="setEmotion('nostalgic')">Nostalgic</button>
+            <button class="plugin" onclick="setEmotion('determined')">Determined</button>
+        </div>
+        
+        <div class="control-group">
+            <h4>🎬 Core Gestures</h4>
+            <button class="core" onclick="triggerGesture('bounce')">Bounce</button>
+            <button class="core" onclick="triggerGesture('pulse')">Pulse</button>
+            <button class="core" onclick="triggerGesture('shake')">Shake</button>
+            <button class="core" onclick="triggerGesture('spin')">Spin</button>
+        </div>
+        
+        <div class="control-group" id="plugin-gestures" style="display: none;">
+            <h4>🔌 Plugin Gestures</h4>
+            <button class="plugin" onclick="triggerGesture('wobble')">Wobble</button>
+            <button class="plugin" onclick="triggerGesture('figure8')">Figure-8</button>
+            <button class="plugin" onclick="triggerGesture('heartbeat')">Heartbeat</button>
+        </div>
+        
+        <div class="control-group">
+            <h4>🔍 Debug</h4>
+            <button onclick="listRegisteredItems()">List All Registered</button>
+        </div>
+    </div>
+    
+    <div class="status">
+        <div class="status-item">
+            <span class="status-label">Current Emotion:</span>
+            <span class="status-value" id="current-emotion">neutral</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Plugins Loaded:</span>
+            <span class="status-value" id="plugins-loaded">No</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Total Emotions:</span>
+            <span class="status-value" id="total-emotions">0</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Total Gestures:</span>
+            <span class="status-value" id="total-gestures">0</span>
+        </div>
+    </div>
+    
+    <div class="info">
+        <strong>Testing Plugin Integration:</strong><br>
+        • Click "Load Plugins" to add custom emotions and gestures<br>
+        • Try core and plugin features<br>
+        • Click "Unload Plugins" to remove them<br>
+        • "List All Registered" shows everything in console
+    </div>
+    
+    <script type="module">
+        import EmotiveMascot from './src/EmotiveMascot.js';
+        import Gestures from './src/core/gestures/index.js';
+        import Emotions from './src/core/emotions/index.js';
+        import CustomGesturePlugin from './src/plugins/example-gesture-plugin.js';
+        import CustomEmotionPlugin from './src/plugins/example-emotion-plugin.js';
+        
+        // Enable debug mode
+        window.DEBUG_GESTURES = true;
+        window.DEBUG_EMOTIONS = true;
+        
+        // Make modules globally accessible
+        window.Gestures = Gestures;
+        window.Emotions = Emotions;
+        
+        // Initialize mascot
+        const canvas = document.getElementById('mascot-canvas');
+        const mascot = new EmotiveMascot(canvas);
+        
+        // Plugin instances
+        let gesturePlugin = null;
+        let emotionPlugin = null;
+        
+        // Update status display
+        function updateStatus() {
+            document.getElementById('current-emotion').textContent = mascot.currentEmotion || 'neutral';
+            document.getElementById('plugins-loaded').textContent = (gesturePlugin || emotionPlugin) ? 'Yes' : 'No';
+            
+            const emotions = Emotions.listEmotions();
+            const gestures = Gestures.listGestures();
+            
+            document.getElementById('total-emotions').textContent = emotions.length;
+            document.getElementById('total-gestures').textContent = gestures.length;
+        }
+        
+        // Load plugins
+        window.loadPlugins = function() {
+            if (!gesturePlugin) {
+                gesturePlugin = new CustomGesturePlugin();
+                mascot.registerPlugin(gesturePlugin);
+                document.getElementById('plugin-gestures').style.display = 'block';
+                console.log('✅ Gesture plugin loaded');
+            }
+            
+            if (!emotionPlugin) {
+                emotionPlugin = new CustomEmotionPlugin();
+                mascot.registerPlugin(emotionPlugin);
+                document.getElementById('plugin-emotions').style.display = 'block';
+                console.log('✅ Emotion plugin loaded');
+            }
+            
+            updateStatus();
+        };
+        
+        // Unload plugins
+        window.unloadPlugins = function() {
+            if (gesturePlugin) {
+                mascot.unregisterPlugin(gesturePlugin);
+                gesturePlugin = null;
+                document.getElementById('plugin-gestures').style.display = 'none';
+                console.log('❌ Gesture plugin unloaded');
+            }
+            
+            if (emotionPlugin) {
+                mascot.unregisterPlugin(emotionPlugin);
+                emotionPlugin = null;
+                document.getElementById('plugin-emotions').style.display = 'none';
+                console.log('❌ Emotion plugin unloaded');
+                
+                // Reset to neutral if using a plugin emotion
+                const currentEmotion = mascot.currentEmotion;
+                if (currentEmotion === 'nostalgic' || currentEmotion === 'determined') {
+                    mascot.setEmotion('neutral');
+                }
+            }
+            
+            updateStatus();
+        };
+        
+        // Set emotion
+        window.setEmotion = function(emotion) {
+            console.log(`Setting emotion to: ${emotion}`);
+            mascot.setEmotion(emotion);
+            updateStatus();
+        };
+        
+        // Trigger gesture
+        window.triggerGesture = function(gesture) {
+            console.log(`Triggering gesture: ${gesture}`);
+            mascot.triggerGesture(gesture);
+        };
+        
+        // List all registered items
+        window.listRegisteredItems = function() {
+            console.group('📋 Registered Items');
+            
+            console.group('🎭 Emotions:');
+            const emotions = Emotions.listEmotions();
+            emotions.forEach(emotion => {
+                const source = Emotions.pluginAdapter.getPluginEmotion(emotion) ? '🔌 Plugin' : '⚙️ Core';
+                console.log(`${source} - ${emotion}`);
+            });
+            console.groupEnd();
+            
+            console.group('🎬 Gestures:');
+            const gestures = Gestures.listGestures();
+            gestures.forEach(gesture => {
+                console.log(`${gesture.source === 'plugin' ? '🔌 Plugin' : '⚙️ Core'} - ${gesture.name}: ${gesture.description}`);
+            });
+            console.groupEnd();
+            
+            console.groupEnd();
+        };
+        
+        // Initial setup
+        updateStatus();
+        
+        // Start animation
+        mascot.start();
+        
+        // Make mascot globally accessible for debugging
+        window.mascot = mascot;
+        
+        console.log('🚀 Plugin Integration Test Ready!');
+        console.log('Use the controls to test plugin functionality');
+    </script>
+</body>
+</html>

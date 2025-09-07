@@ -16,9 +16,10 @@ export default {
     type: 'override',
     description: 'Hold particles in current position',
     
+    // Default configuration
     config: {
-        holdStrength: 0.95,
-        allowDrift: false
+        holdStrength: 0.95,  // Position retention strength
+        allowDrift: false    // Enable slight movement
     },
     
     initialize: function(particle) {
@@ -33,6 +34,10 @@ export default {
         };
     },
     
+    /**
+     * Apply hold effect to particle
+     * Freezes or slows particle movement based on configuration
+     */
     apply: function(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.hold) {
             this.initialize(particle);
@@ -42,18 +47,18 @@ export default {
         const holdStrength = motion.holdStrength || this.config.holdStrength;
         
         if (motion.allowDrift) {
-            // Allow slight drift
+            // Allow slight drift with velocity damping
             particle.vx *= holdStrength;
             particle.vy *= holdStrength;
         } else {
-            // Hard hold - return to hold position
+            // Hard hold - lock to position
             particle.x += (data.holdX - particle.x) * (1 - holdStrength);
             particle.y += (data.holdY - particle.y) * (1 - holdStrength);
             particle.vx = 0;
             particle.vy = 0;
         }
         
-        // Restore velocity at end
+        // Gradually restore velocity near end
         if (progress > 0.9) {
             const restoreFactor = (progress - 0.9) * 10;
             particle.vx = particle.vx * (1 - restoreFactor) + data.originalVx * restoreFactor;

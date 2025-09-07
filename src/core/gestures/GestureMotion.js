@@ -122,20 +122,17 @@ function normalizeMotion(motion) {
     // Handle legacy motion properties
     const normalized = { ...motion };
     
-    // Map old property names to new ones if needed
-    if (motion.type === 'radial' && !getGesture('radial')) {
-        // Map 'radial' to 'pulse' for compatibility
+    // Map legacy aliases to their primary gestures
+    if (motion.type === 'radial') {
         normalized.type = 'pulse';
     }
     
-    if (motion.type === 'oscillate' && !getGesture('oscillate')) {
-        // Map 'oscillate' to 'bounce' for compatibility
+    if (motion.type === 'oscillate') {
         normalized.type = 'bounce';
         normalized.axis = motion.axis || 'vertical';
     }
     
-    if (motion.type === 'jitter' && !getGesture('jitter')) {
-        // Map 'jitter' to 'shake' for compatibility
+    if (motion.type === 'jitter') {
         normalized.type = 'shake';
     }
     

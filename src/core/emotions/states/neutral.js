@@ -19,33 +19,33 @@ export default {
     emoji: '😐',
     description: 'Calm, balanced emotional state',
     
-    // Visual properties (from emotionMap.js)
+    // Visual properties
     visual: {
-        glowColor: '#32ACE2',        // Supple blue - otherworldly depth
-        glowIntensity: 1.0,          // Standard glow brightness
-        particleRate: 2,              // Particles per second
-        minParticles: 8,             // Minimum particles always present
-        maxParticles: 10,            // Maximum particle cap
-        particleBehavior: 'ambient', // Particle behavior type
-        breathRate: 1.0,             // Normal: 12-20 breaths/min
-        breathDepth: 0.08,           // 8% size variation during breathing
-        coreJitter: false,           // No shaking/vibrating
+        glowColor: '#32ACE2',        // Calm blue baseline
+        glowIntensity: 1.0,          // Standard glow presence
+        particleRate: 2,              // Minimal particle generation
+        minParticles: 8,             // Baseline particle presence
+        maxParticles: 10,            // Limited particle count
+        particleBehavior: 'ambient', // Gentle floating behavior
+        breathRate: 1.0,             // Normal, relaxed breathing
+        breathDepth: 0.08,           // Subtle breath variation
+        coreJitter: false,           // Stable, still core
         particleColors: [
-            { color: '#32ACE2', weight: 30 },  // 30% supple blue midtone
-            { color: '#5A92A8', weight: 20 },  // 20% desaturated (background)
-            { color: '#00B4FF', weight: 20 },  // 20% oversaturated (foreground)
-            { color: '#7CC8F2', weight: 15 },  // 15% highlight
-            { color: '#1A5A74', weight: 15 }   // 15% shadow
+            { color: '#32ACE2', weight: 30 },  // Primary calm blue
+            { color: '#5A92A8', weight: 20 },  // Muted background tone
+            { color: '#00B4FF', weight: 20 },  // Bright accent
+            { color: '#7CC8F2', weight: 15 },  // Soft highlights
+            { color: '#1A5A74', weight: 15 }   // Deep shadow tone
         ]
     },
     
-    // Gesture modifiers (from emotionModifiers.js)
+    // Gesture modifiers
     modifiers: {
-        speed: 1.0,        // Normal speed
-        amplitude: 1.0,    // Normal amplitude
-        intensity: 1.0,    // Normal intensity
-        smoothness: 1.0,   // Normal smoothness
-        regularity: 1.0    // Normal regularity
+        speed: 1.0,        // Baseline movement speed
+        amplitude: 1.0,    // Standard motion range
+        intensity: 1.0,    // Default force level
+        smoothness: 1.0,   // Natural motion flow
+        regularity: 1.0    // Consistent patterns
     },
     
     // Typical gestures for this emotion
@@ -58,9 +58,9 @@ export default {
     
     // Transition hints
     transitions: {
-        duration: 500,      // Default transition time to this state
-        easing: 'easeInOut', // Smooth transition
-        priority: 0         // Base priority
+        duration: 500,      // Standard transition duration
+        easing: 'easeInOut', // Balanced transition curve
+        priority: 0         // Baseline priority level
     },
     
     // Audio/sound associations (optional)
@@ -80,10 +80,10 @@ export default {
     
     // Eye/core appearance
     coreAppearance: {
-        pupilSize: 1.0,        // Normal pupil size
-        irisPattern: 'default', // Default iris pattern
-        blinkRate: 'normal',    // Normal blink rate
-        lookDirection: 'center' // Looking straight ahead
+        pupilSize: 1.0,        // Standard pupil dilation
+        irisPattern: 'default', // Basic iris pattern
+        blinkRate: 'normal',    // Regular blink frequency
+        lookDirection: 'center' // Centered, neutral gaze
     },
     
     /**

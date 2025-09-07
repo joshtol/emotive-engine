@@ -43,19 +43,19 @@ export default {
     
     // Default configuration
     config: {
-        duration: 1000,         // Animation duration (from gestureConfig)
-        morphType: 'fluid',     // Type of morph animation (from gestureConfig)
-        pattern: 'star',        // Shape to morph into (was circle, now star from config)
+        duration: 1000,         // Animation duration
+        morphType: 'fluid',     // Type of morph animation
+        pattern: 'star',        // Shape to morph into
         points: 5,              // Number of points (for star/polygon)
         innerRadius: 0.4,       // Inner radius ratio (for star)
         size: 80,               // Base size of the pattern
-        amplitude: 20,          // From gestureConfig
+        amplitude: 20,          // Motion amplitude
         rotation: 0,            // Rotation angle in degrees
         smooth: true,           // Smooth movement to positions
         randomizeOrder: false,  // Randomize which particles go where
-        holdTime: 0.3,         // Time to hold the shape (0-1)
-        easing: 'sine',
-        strength: 1.2,          // Strong formation (from gestureConfig)
+        holdTime: 0.3,         // Time to hold the shape
+        easing: 'sine',         // Animation curve type
+        strength: 1.2,          // Formation strength
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'morph',

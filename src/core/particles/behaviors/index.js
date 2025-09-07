@@ -1,25 +1,23 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Behavior Registry
+ *    ●●  ENGINE v4.0 - Behavior Registry
  *  └─○═╝                                                                             
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Central registry for all particle behaviors
+ * @fileoverview Central registry for all particle behaviors with plugin support
  * @author Emotive Engine Team
+ * @version 4.0.0
  * @module particles/behaviors
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ This is the control center for all particle behaviors. Instead of a giant switch  
- * ║ statement, behaviors are registered here and can be looked up by name.            
- * ║                                                                                    
- * ║ TO ADD A NEW BEHAVIOR:                                                            
- * ║ 1. Create a new file in this folder (e.g., sparkle.js)                            
- * ║ 2. Import it below                                                                
- * ║ 3. Add it to the BEHAVIORS array                                                  
- * ║ 4. That's it! It's now available everywhere                                       
+ * ║ Control center for particle behaviors with plugin adapter integration.            
+ * ║ • Each behavior defines unique particle physics and movement patterns             
+ * ║ • Core behaviors loaded synchronously at startup                                  
+ * ║ • Plugin behaviors registered dynamically via adapter                             
+ * ║ • Value-agnostic design for easy physics tuning                                   
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -69,7 +67,7 @@ const BEHAVIORS = [
 // └─────────────────────────────────────────────────────────────────────────────────────
 export const BEHAVIOR_REGISTRY = {};
 
-// Build the registry from the behaviors array
+// Build the registry from the behaviors array - SYNCHRONOUSLY
 BEHAVIORS.forEach(behavior => {
     BEHAVIOR_REGISTRY[behavior.name] = behavior;
 });

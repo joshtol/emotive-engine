@@ -39,20 +39,20 @@ export default {
     type: 'blending', // Adds to existing motion
     description: 'Radial expansion and contraction from center',
     
-    // Default configuration (from gestureConfig.js)
+    // Default configuration
     config: {
-        duration: 600,      // Animation duration in ms
-        amplitude: 30,      // Expansion distance in pixels
-        frequency: 1,       // Number of pulses (was 2, now matching gestureConfig)
-        holdPeak: 0.1,      // Hold at peak expansion (0-1)
-        easing: 'sine',     // Smooth breathing motion (simplified from 'inOutSine')
-        scaleAmount: 0.2,   // 20% scale change for orb
-        glowAmount: 0.3,    // 30% glow change for orb
-        strength: 0.15,     // Particle motion strength (reduced from 0.5)
+        duration: 600,      // Animation duration
+        amplitude: 30,      // Expansion distance
+        frequency: 1,       // Number of pulses
+        holdPeak: 0.1,      // Peak expansion hold time
+        easing: 'sine',     // Animation curve type
+        scaleAmount: 0.2,   // Orb scale variation
+        glowAmount: 0.3,    // Orb glow intensity change
+        strength: 0.15,     // Particle motion strength
         direction: 'outward', // Radial direction
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'radial',
+            type: 'pulse',
             strength: 0.15,
             direction: 'outward',
             frequency: 1

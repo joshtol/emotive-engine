@@ -42,20 +42,20 @@ export default {
     
     // Default configuration
     config: {
-        duration: 2500,        // Animation duration (from gestureConfig)
-        amplitude: 40,         // Width of the infinity pattern (from gestureConfig)
-        frequency: 1,          // Number of complete cycles
-        phaseShift: 0.3,       // Phase difference between particles
-        liftHeight: 20,        // Vertical lift during wave
-        fadeInOut: true,       // Fade particles during motion
-        smoothness: 0.1,       // Movement smoothness
-        easing: 'sine',        // Easing function
-        strength: 1.0,         // Motion strength
+        duration: 2500,        // Animation duration
+        amplitude: 40,         // Infinity pattern width
+        frequency: 1,          // Complete cycle count
+        phaseShift: 0.3,       // Particle timing offset
+        liftHeight: 20,        // Vertical movement range
+        fadeInOut: true,       // Enable opacity transitions
+        smoothness: 0.1,       // Motion fluidity factor
+        easing: 'sine',        // Animation curve type
+        strength: 1.0,         // Overall effect intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'wave',
-            strength: 1.0,
-            amplitude: 50
+            strength: 1.0,     // Wave motion strength
+            amplitude: 50      // Pattern size
         }
     },
     

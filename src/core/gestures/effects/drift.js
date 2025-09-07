@@ -43,21 +43,21 @@ export default {
     // Default configuration
     config: {
         duration: 800,         // Animation duration
-        distance: 50,          // Maximum drift distance (from gestureConfig)
-        angle: 45,             // Direction in degrees
-        returnToOrigin: true,  // Return to starting position (was returnToCenter)
-        fadeOut: true,         // Fade during drift
-        holdTime: 0.2,         // Time to hold at drift peak (0-1)
-        turbulence: 0.1,       // Random movement variation
-        angleSpread: 45,       // Spread angle in degrees
-        easing: 'sine',
-        strength: 0.8,
+        distance: 50,          // Maximum drift distance
+        angle: 45,             // Primary drift direction
+        returnToOrigin: true,  // Return to starting position
+        fadeOut: true,         // Apply fade effect during drift
+        holdTime: 0.2,         // Pause duration at drift peak
+        turbulence: 0.1,       // Random movement variation amount
+        angleSpread: 45,       // Directional spread range
+        easing: 'sine',        // Smooth motion curve
+        strength: 0.8,         // Overall drift intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'drift',
-            strength: 0.8,
-            distance: 60,
-            returnToOrigin: true
+            strength: 0.8,         // Particle drift strength
+            distance: 60,          // Particle drift range
+            returnToOrigin: true   // Particles return home
         },
         smoothness: 0.12       // Movement smoothness
     },

@@ -59,7 +59,7 @@ export function applyOrbit(particle, gestureData, config, progress, strength, ce
         gestureData.initialAngle = Math.atan2(dy, dx);
         
         // Random orbit parameters for variety
-        gestureData.orbitSpeed = config.speed * (0.8 + Math.random() * 0.4); // ±20% speed variation
+        gestureData.orbitSpeed = config.speed * (0.8 + Math.random() * 0.4); // Speed variation
         gestureData.orbitTilt = Math.random() * 0.3; // Slight tilt for realism
         
         gestureData.initialized = true;
@@ -69,7 +69,7 @@ export function applyOrbit(particle, gestureData, config, progress, strength, ce
     const angle = gestureData.initialAngle + (progress * Math.PI * 2 * config.rotations);
     
     // Calculate orbital radius (can pulse slightly)
-    const radiusPulse = 1 + Math.sin(progress * Math.PI * 4) * 0.05; // Subtle 5% pulse
+    const radiusPulse = 1 + Math.sin(progress * Math.PI * 4) * 0.05; // Subtle pulse effect
     const currentRadius = gestureData.radius * strength * radiusPulse;
     
     // Calculate new position in orbit
@@ -79,7 +79,7 @@ export function applyOrbit(particle, gestureData, config, progress, strength, ce
     // CRITICAL: Update z-coordinate for 3D effect
     // Particles in front (positive z) when at top of orbit, behind (negative z) at bottom
     const zAngle = angle * config.zRotations; // Can rotate in z-plane at different rate
-    particle.z = Math.sin(zAngle) * 0.8; // Range from -0.8 to +0.8
+    particle.z = Math.sin(zAngle) * 0.8; // Z-depth range for layering
     
     // Add vertical oscillation for hula-hoop effect if enabled
     if (config.verticalOscillation > 0) {
@@ -95,7 +95,7 @@ export function applyOrbit(particle, gestureData, config, progress, strength, ce
     
     // Apply centripetal acceleration effect (particles speed up when closer)
     if (config.centripetal) {
-        const speed = 1 + (1 - Math.abs(particle.z)) * 0.3; // Faster when z is near 0 (side view)
+        const speed = 1 + (1 - Math.abs(particle.z)) * 0.3; // Speed varies with z-position
         const speedAngle = gestureData.initialAngle + (progress * Math.PI * 2 * config.rotations * speed);
         particle.x = centerX + Math.cos(speedAngle) * currentRadius;
         particle.y = centerY + Math.sin(speedAngle) * currentRadius;

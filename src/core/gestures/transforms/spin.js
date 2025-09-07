@@ -40,18 +40,18 @@ export default {
     type: 'override', // Completely replaces motion
     description: 'Orbital rotation around center point',
     
-    // Default configuration (from gestureConfig.js)
+    // Default configuration
     config: {
-        duration: 600,          // Animation duration in ms
-        rotations: 1,           // Number of full rotations (was 2, now from config)
+        duration: 600,          // Animation duration
+        rotations: 1,           // Number of full rotations
         direction: 'random',    // 'clockwise', 'counter-clockwise', or 'random'
-        radiusMultiplier: 1.0,  // Orbital radius on orb perimeter (was 1.2)
+        radiusMultiplier: 1.0,  // Orbital radius multiplier
         spiralOut: false,       // Spiral outward while spinning
         accelerate: true,       // Speed up then slow down
         maintainDistance: true, // Keep relative distance from center
-        scaleAmount: 0.1,       // Scale change during spin (from config)
-        easing: 'linear',       // Linear for complete rotation
-        strength: 0.7,          // Particle motion strength (from config)
+        scaleAmount: 0.1,       // Scale change during spin
+        easing: 'linear',       // Animation curve type
+        strength: 0.7,          // Particle motion strength
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'spin',
@@ -133,7 +133,7 @@ export default {
         // Calculate radius (with optional spiral)
         let currentRadius = data.startRadius;
         if (config.spiralOut) {
-            currentRadius *= (1 + progress * 0.5); // Expand by 50%
+            currentRadius *= (1 + progress * 0.5); // Expand outward during spin
         }
         if (config.radiusMultiplier !== 1) {
             // Apply radius multiplier with smooth curve

@@ -43,20 +43,20 @@ export default {
     
     // Default configuration
     config: {
-        duration: 2000,        // Animation duration (from gestureConfig)
-        scaleX: 1.3,           // Horizontal scale factor (from gestureConfig)
-        scaleY: 0.9,           // Vertical scale factor (from gestureConfig)
+        duration: 2000,        // Animation duration
+        scaleX: 1.3,           // Horizontal scale factor
+        scaleY: 0.9,           // Vertical scale factor
         alternate: false,      // Alternate between X and Y stretch
         elastic: true,         // Add elastic overshoot
-        overshoot: 0.1,        // Elastic overshoot amount (0-1)
+        overshoot: 0.1,        // Elastic overshoot amount
         frequency: 1,          // Number of stretches
-        easing: 'sine',
-        strength: 1.0,
+        easing: 'sine',        // Animation curve type
+        strength: 1.0,         // Motion strength
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'stretch',
-            scaleX: 1.8,       // Exaggerated for particles
-            scaleY: 0.6,       // More compression
+            scaleX: 1.8,       // Particle horizontal scale
+            scaleY: 0.6,       // Particle vertical scale
             strength: 1.0
         },
         centerBased: true,     // Scale from center vs. origin
@@ -129,7 +129,7 @@ export default {
             if (progress < 0.5) {
                 const altProgress = progress * 2;
                 scaleX = 1 + (scaleX - 1) * this.getElasticProgress(altProgress, config);
-                scaleY = 1 + (1 / scaleX - 1) * (config.preserveArea ? 1 : 0); // Compensate if preserving area
+                scaleY = 1 + (1 / scaleX - 1) * (config.preserveArea ? 1 : 0); // Area compensation
             } else {
                 const altProgress = (progress - 0.5) * 2;
                 scaleX = scaleX + (1 - scaleX) * this.getElasticProgress(altProgress, config);

@@ -16,19 +16,20 @@ export default {
     type: 'blending',
     description: 'Radial contraction toward center',
     
+    // Default configuration
     config: {
-        duration: 600,
-        scaleAmount: 0.2,   // Pull MUCH closer - 20% of original distance
-        scaleTarget: 0.2,   // Jedi force pull to core
-        glowAmount: -0.2,   // Glow decrease
-        easing: 'cubic',
-        strength: 2.5,      // STRONG pull force
+        duration: 600,        // Gesture duration
+        scaleAmount: 0.2,     // Core scale reduction amount
+        scaleTarget: 0.2,     // Target contraction distance ratio
+        glowAmount: -0.2,     // Glow intensity reduction
+        easing: 'cubic',      // Smooth acceleration curve
+        strength: 2.5,        // Inward pull force intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'radial',
-            strength: 2.5,
-            direction: 'inward',
-            persist: true
+            type: 'pulse',
+            strength: 2.5,        // Particle pull strength
+            direction: 'inward',  // Movement toward center
+            persist: true         // Effect continues after gesture
         }
     },
     
@@ -47,6 +48,10 @@ export default {
         };
     },
     
+    /**
+     * Apply contraction motion to particle
+     * Pulls particles toward center with magnetic-like force
+     */
     apply: function(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.contract?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -56,21 +61,21 @@ export default {
         const config = { ...this.config, ...motion };
         const strength = config.strength || 1.0;
         
-        // Calculate contraction
+        // Calculate contraction amount based on progress
         const contractFactor = 1 - (1 - config.scaleTarget) * progress * strength;
         const targetRadius = data.baseRadius * contractFactor;
         
-        // Move particle inward
+        // Calculate target position closer to center
         const targetX = centerX + Math.cos(data.angle) * targetRadius;
         const targetY = centerY + Math.sin(data.angle) * targetRadius;
         
-        // Apply STRONG Jedi pull forces
+        // Apply strong inward pull forces
         const dx = targetX - particle.x;
         const dy = targetY - particle.y;
-        particle.vx += dx * 0.5 * dt;  // Much stronger pull
-        particle.vy += dy * 0.5 * dt;  // Much stronger pull
+        particle.vx += dx * 0.5 * dt;  // Strong magnetic pull
+        particle.vy += dy * 0.5 * dt;  // Strong magnetic pull
         
-        // Apply damping
+        // Apply velocity damping for controlled motion
         particle.vx *= 0.95;
         particle.vy *= 0.95;
     },

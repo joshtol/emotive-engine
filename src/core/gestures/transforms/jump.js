@@ -41,22 +41,22 @@ export default {
     
     // Default configuration
     config: {
-        duration: 800,         // Animation duration in ms
-        jumpHeight: 60,        // Maximum height of jump in pixels (from gestureConfig)
-        squashAmount: 0.8,     // Size multiplier during squash (from gestureConfig)
-        stretchAmount: 1.2,    // Size multiplier during stretch (from gestureConfig)
-        anticipation: 0.2,     // Duration of anticipation phase (0-1)
-        hangTime: 0.1,         // Time at peak of jump (0-1)
-        landingImpact: true,   // Add landing squash effect
-        driftOutward: true,    // Particles drift away from center during jump
-        easing: 'quad',        // Easing function
+        duration: 800,         // Animation duration
+        jumpHeight: 60,        // Maximum vertical leap distance
+        squashAmount: 0.8,     // Compression ratio during squash
+        stretchAmount: 1.2,    // Extension ratio during stretch
+        anticipation: 0.2,     // Pre-jump preparation duration ratio
+        hangTime: 0.1,         // Pause duration at jump peak
+        landingImpact: true,   // Enable landing squash effect
+        driftOutward: true,    // Particles spread during jump
+        easing: 'quad',        // Animation curve type
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'jump',
-            strength: 0.9,
-            jumpHeight: 60,
-            squash: 0.8,
-            stretch: 1.2
+            strength: 0.9,         // Jump motion intensity
+            jumpHeight: 60,        // Particle jump height
+            squash: 0.8,          // Particle compression amount
+            stretch: 1.2          // Particle extension amount
         }
     },
     
