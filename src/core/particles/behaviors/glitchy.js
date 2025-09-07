@@ -102,9 +102,13 @@ export default {
     /**
      * Update particle physics for glitchy behavior
      */
-    update: function(particle, dt, config) {
+    update: function(particle, dt, config, centerX, centerY) {
         const state = particle.behaviorState;
         if (!state) return;
+        
+        // Ensure we have center coordinates
+        centerX = centerX || 400;
+        centerY = centerY || 300;
         
         // Update timers
         state.glitchTimer += dt * 16;
@@ -176,9 +180,9 @@ export default {
             // Add drop wobble
             const wobbleRadius = state.orbitRadius * (1 + state.dropIntensity * 0.3 * Math.sin(state.beatPhase * 4));
             
-            // Calculate target position
-            let targetX = Math.cos(state.orbitAngle) * wobbleRadius;
-            let targetY = Math.sin(state.orbitAngle) * wobbleRadius * 0.6; // Elliptical
+            // Calculate target position relative to center
+            let targetX = centerX + Math.cos(state.orbitAngle) * wobbleRadius;
+            let targetY = centerY + Math.sin(state.orbitAngle) * wobbleRadius * 0.6; // Elliptical
             
             // Apply glitch offset
             if (state.isGlitching) {

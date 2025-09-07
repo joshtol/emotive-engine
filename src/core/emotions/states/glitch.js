@@ -13,6 +13,7 @@ export default {
     
     // Visual properties
     visual: {
+        primaryColor: '#00FF41',    // Matrix green primary
         glowColor: '#00FF41',       // Matrix green primary
         glowIntensity: 2.0,         // Intense, flickering energy
         particleRate: 30,           // High rate for glitchy effect
@@ -23,6 +24,8 @@ export default {
         breathRate: 0.3,            // Rapid, stuttering breaths
         breathDepth: 0.08,          // Shallow, digital hiccups
         coreJitter: 0.04,           // Constant digital tremor
+        coreSize: 1.1,              // Slightly enlarged core
+        eyeOpenness: 1.0,           // Wide open eyes
         particleColors: [
             { color: '#00FF41', weight: 30 },  // Matrix green
             { color: '#FF00FF', weight: 25 },  // Magenta glitch
