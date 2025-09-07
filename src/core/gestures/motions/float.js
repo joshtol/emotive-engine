@@ -13,10 +13,10 @@ export default {
     description: 'Gentle floating upward motion',
     
     config: {
-        duration: 3000,
-        amplitude: 40,
-        wobbleAmount: 10,
-        strength: 0.6
+        duration: 2000,
+        amplitude: 80,  // Increased for more visible effect
+        wobbleAmount: 20,  // More wobble
+        strength: 1.0  // Full strength
     },
     
     /**

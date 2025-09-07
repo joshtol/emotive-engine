@@ -14,9 +14,9 @@ export default {
     
     config: {
         duration: 1000,
-        intensity: 5,
-        frequency: 20,
-        strength: 0.8
+        intensity: 15,  // Increased for more visible jitter
+        frequency: 30,  // Higher frequency
+        strength: 1.0  // Full strength
     },
     
     /**

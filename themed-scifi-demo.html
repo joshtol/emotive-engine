@@ -754,6 +754,7 @@
                     <button class="sci-fi-btn gesture-btn" data-gesture="stretch" aria-label="Trigger stretch animation">Stretch</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="glow" aria-label="Trigger glow animation">Glow</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="orbit" aria-label="Trigger orbit animation">Orbit</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="hula" aria-label="Trigger hula animation">Hula</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="sway" aria-label="Trigger sway animation">Sway</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="flicker" aria-label="Trigger flicker animation">Flicker</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="vibrate" aria-label="Trigger vibrate animation">Vibrate</button>
@@ -786,7 +787,7 @@
         
         // Load EmotiveEngine asynchronously
         const loadEngine = async () => {
-            const module = await import('./src/EmotiveMascot.js?v=2.0.5');
+            const module = await import('./src/EmotiveMascot.js?v=2.0.6');
             EmotiveEngine = module.default;
             return EmotiveEngine;
         };
