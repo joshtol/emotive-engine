@@ -41,6 +41,8 @@ import erratic from './erratic.js';
 import cautious from './cautious.js';
 import surveillance from './surveillance.js';
 import glitchy from './glitchy.js';
+import directed from './directed.js';
+import fizzy from './fizzy.js';
 import pluginAdapter from './plugin-adapter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -48,6 +50,8 @@ import pluginAdapter from './plugin-adapter.js';
 // └─────────────────────────────────────────────────────────────────────────────────────
 const BEHAVIORS = [
     ambient,
+    directed,
+    fizzy,
     orbiting,
     rising,
     falling,

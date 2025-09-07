@@ -572,7 +572,7 @@ class EmotiveStateMachine {
             this.interpolationCache.lastUpdate = now;
 
             return properties;
-        }, 'emotional-properties', this.emotionalStates.neutral)();
+        }, 'emotional-properties', () => this.emotionalStates.neutral)();
     }
 
     /**

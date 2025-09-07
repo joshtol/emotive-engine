@@ -2075,7 +2075,8 @@ class EmotiveMascot {
      */
     getEmotionalColor() {
         const properties = this.stateMachine.getCurrentEmotionalProperties();
-        return properties.primaryColor;
+        // Fallback to neutral gray if properties are undefined
+        return properties?.primaryColor || '#B0B0B0';
     }
 
     /**

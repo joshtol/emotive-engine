@@ -569,7 +569,7 @@ If you or your organization make money, or your use supports a business, you nee
 | 🚀 Startup | Revenue < $1M/year OR ≤ 10 staff | $500/year or $2,500 one-time |
 | 🏢 Enterprise | Revenue ≥ $1M/year OR > 10 staff | Custom – starts at $25,000/year |
 
-📧 For commercial inquiries: **licensing@emotiveengine.dev**
+📧 For commercial inquiries: **licensing@emotiveengine.com**
 
 ---
 
