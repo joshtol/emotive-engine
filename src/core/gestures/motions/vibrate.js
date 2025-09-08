@@ -32,6 +32,45 @@ export default {
         }
     },
     
+    // Rhythm configuration - vibrate as tremolo effect
+    rhythm: {
+        enabled: true,
+        syncMode: 'subdivision',
+        
+        // Vibration frequency syncs to tempo
+        frequencySync: {
+            subdivision: 'thirty-second',  // Very fast subdivisions
+            baseFrequency: 20,
+            tempoScaling: true  // Scale with BPM
+        },
+        
+        // Amplitude pulses with beat
+        amplitudeSync: {
+            onBeat: 1.5,
+            offBeat: 0.8,
+            curve: 'pulse'
+        },
+        
+        // Duration in musical time
+        durationSync: {
+            mode: 'beats',
+            beats: 1  // Vibrate for 1 beat
+        },
+        
+        // Pattern-specific vibration
+        patternOverrides: {
+            'dubstep': {
+                // Bass wobble vibration
+                frequencySync: { subdivision: 'sixteenth' },
+                amplitudeSync: { onBeat: 2.0, dropBeat: 3.0 }
+            },
+            'breakbeat': {
+                // Chaotic vibration
+                frequencySync: { mode: 'random', range: [15, 30] }
+            }
+        }
+    },
+    
     initialize: function(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
@@ -52,12 +91,23 @@ export default {
         const config = { ...this.config, ...motion };
         const strength = config.strength || this.config.strength || 1.0;
         
+        // Apply rhythm modulation if present
+        let amplitude = config.amplitude;
+        let frequency = config.frequency;
+        if (motion.rhythmModulation) {
+            amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            if (motion.rhythmModulation.frequencyMultiplier) {
+                frequency *= motion.rhythmModulation.frequencyMultiplier;
+            }
+        }
+        
         // Update timer
-        data.timer += dt * config.frequency;
+        data.timer += dt * frequency;
         
         // High frequency vibration
-        const vibrateX = (Math.random() - 0.5) * config.amplitude * strength;
-        const vibrateY = (Math.random() - 0.5) * config.amplitude * strength;
+        const vibrateX = (Math.random() - 0.5) * amplitude * strength;
+        const vibrateY = (Math.random() - 0.5) * amplitude * strength;
         
         // Apply rapid vibration movements
         particle.vx += vibrateX * 0.5 * dt;

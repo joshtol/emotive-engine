@@ -33,6 +33,53 @@ export default {
         }
     },
     
+    // Rhythm configuration - nod as agreement to the beat
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',
+        
+        // Nod frequency locks to beat
+        frequencySync: {
+            mode: 'subdivision',
+            subdivision: 'half',  // Nod on half notes
+            multiplier: 1.0
+        },
+        
+        // Amplitude stronger on downbeats
+        amplitudeSync: {
+            onBeat: 1.4,
+            offBeat: 0.8,
+            curve: 'ease'
+        },
+        
+        // Duration in beats
+        durationSync: {
+            mode: 'beats',
+            beats: 2  // Nod for 2 beats
+        },
+        
+        // Pattern-specific nodding
+        patternOverrides: {
+            'waltz': {
+                // Graceful 3/4 nod
+                frequencySync: { subdivision: 'quarter' },
+                amplitudeSync: { onBeat: 1.6, curve: 'ease' }
+            },
+            'swing': {
+                // Jazzy syncopated nod
+                amplitudeSync: { onBeat: 1.5, offBeat: 0.9 }
+            },
+            'dubstep': {
+                // Heavy head-bang on drop
+                amplitudeSync: {
+                    onBeat: 1.2,
+                    dropBeat: 3.0,
+                    curve: 'pulse'
+                }
+            }
+        }
+    },
+    
     initialize: function(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
@@ -50,9 +97,20 @@ export default {
         
         const config = { ...this.config, ...motion };
         const strength = config.strength || this.config.strength || 1.0;
-        const frequency = config.frequency;
+        let frequency = config.frequency;
+        let amplitude = config.amplitude;
+        
+        // Apply rhythm modulation if present
+        if (motion.rhythmModulation) {
+            amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            if (motion.rhythmModulation.frequencyMultiplier) {
+                frequency *= motion.rhythmModulation.frequencyMultiplier;
+            }
+        }
+        
         const oscillation = Math.sin(progress * Math.PI * 2 * frequency);
-        const amplitude = config.amplitude * strength * particle.scaleFactor;
+        amplitude = amplitude * strength * particle.scaleFactor;
         
         // Apply vertical nodding motion
         particle.vy += oscillation * amplitude * 0.01 * dt;

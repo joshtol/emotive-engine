@@ -65,11 +65,26 @@ export function applyOrbit(particle, gestureData, config, progress, strength, ce
         gestureData.initialized = true;
     }
     
+    // Apply rhythm modulation if present
+    let rotations = config.rotations;
+    let radiusPulseAmount = 0.05;
+    if (config.rhythmModulation) {
+        if (config.rhythmModulation.speedMultiplier) {
+            gestureData.orbitSpeed *= config.rhythmModulation.speedMultiplier;
+        }
+        if (config.rhythmModulation.rotationMultiplier) {
+            rotations *= config.rhythmModulation.rotationMultiplier;
+        }
+        if (config.rhythmModulation.radiusPulse) {
+            radiusPulseAmount = config.rhythmModulation.radiusPulse;
+        }
+    }
+    
     // Calculate current angle based on progress
-    const angle = gestureData.initialAngle + (progress * Math.PI * 2 * config.rotations);
+    const angle = gestureData.initialAngle + (progress * Math.PI * 2 * rotations);
     
     // Calculate orbital radius (can pulse slightly)
-    const radiusPulse = 1 + Math.sin(progress * Math.PI * 4) * 0.05; // Subtle pulse effect
+    const radiusPulse = 1 + Math.sin(progress * Math.PI * 4) * radiusPulseAmount;
     const currentRadius = gestureData.radius * strength * radiusPulse;
     
     // Calculate new position in orbit
@@ -117,6 +132,60 @@ export default {
         smoothness: 0.15,        // Position interpolation factor
         verticalOscillation: 0,  // Hula-hoop vertical movement (0 = flat orbit)
         centripetal: false,      // Enable speed variation based on position
+    },
+    
+    // Rhythm configuration - orbital motion syncs to musical cycles
+    rhythm: {
+        enabled: true,
+        syncMode: 'bar',  // Complete orbit per bar
+        
+        // Orbital speed syncs to tempo
+        speedSync: {
+            mode: 'tempo',
+            baseSpeed: 1.0,
+            scaling: 'linear'  // Speed scales with BPM
+        },
+        
+        // Rotations per musical period
+        rotationSync: {
+            mode: 'bars',
+            rotationsPerBar: 1,  // One full orbit per bar
+            zSync: true  // Z-rotation also syncs
+        },
+        
+        // Radius pulses with beat
+        radiusSync: {
+            subdivision: 'quarter',
+            pulsAmount: 0.1,  // 10% radius variation
+            curve: 'ease'
+        },
+        
+        // Pattern-specific orbital styles
+        patternOverrides: {
+            'waltz': {
+                // Elegant 3-step orbit
+                rotationSync: { rotationsPerBar: 0.75 },
+                radiusSync: { pulsAmount: 0.15 }
+            },
+            'swing': {
+                // Jazzy elliptical orbit
+                speedSync: { mode: 'swing', ratio: 0.67 },
+                verticalOscillation: 0.2
+            },
+            'dubstep': {
+                // Wobbling orbit with drops
+                radiusSync: { 
+                    subdivision: 'eighth',
+                    pulsAmount: 0.3,
+                    dropMultiplier: 2.0
+                }
+            },
+            'breakbeat': {
+                // Chaotic orbital patterns
+                speedSync: { mode: 'random', range: [0.5, 2.0] },
+                centripetal: true
+            }
+        }
     },
     
     // Apply function
