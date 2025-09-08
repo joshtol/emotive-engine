@@ -19,6 +19,38 @@ export default {
         strength: 0.5
     },
     
+    // Rhythm configuration - sway naturally follows the beat
+    rhythm: {
+        enabled: true,
+        syncMode: 'bar',  // Sway completes one cycle per bar
+        
+        // Amplitude increases on downbeats
+        amplitudeSync: {
+            onBeat: 1.2,
+            offBeat: 0.9,
+            curve: 'ease'  // Smooth transitions
+        },
+        
+        // Duration syncs to bars for natural rhythm
+        durationSync: {
+            mode: 'bars',
+            bars: 1  // One full sway per bar
+        },
+        
+        // Pattern-specific swaying
+        patternOverrides: {
+            'waltz': {
+                // 3/4 time creates elegant waltz sway
+                durationSync: { bars: 1 },
+                amplitudeSync: { onBeat: 1.5, curve: 'ease' }
+            },
+            'swing': {
+                // Jazzy swing sway
+                amplitudeSync: { onBeat: 1.3, offBeat: 0.7, curve: 'bounce' }
+            }
+        }
+    },
+    
     /**
      * Apply sway motion to particle
      * @param {Particle} particle - The particle to animate

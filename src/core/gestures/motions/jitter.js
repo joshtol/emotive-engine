@@ -19,6 +19,31 @@ export default {
         strength: 1.0  // Full strength
     },
     
+    // Rhythm configuration - jitter intensifies on beat
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',
+        
+        // Jitter intensity syncs to beat
+        amplitudeSync: {
+            onBeat: 2.0,      // Double jitter on beat
+            offBeat: 0.5,     // Calmer between beats
+            curve: 'pulse'    // Sharp attack
+        },
+        
+        // Different patterns create different nervousness
+        patternOverrides: {
+            'breakbeat': {
+                // Chaotic jitter for breakbeat
+                amplitudeSync: { onBeat: 3.0, offBeat: 0.3 }
+            },
+            'dubstep': {
+                // Freeze then explode
+                amplitudeSync: { onBeat: 5.0, offBeat: 0.1, curve: 'pulse' }
+            }
+        }
+    },
+    
     /**
      * Apply jitter motion to particle
      * @param {Particle} particle - The particle to animate
@@ -40,8 +65,14 @@ export default {
         }
         
         const config = { ...this.config, ...motion };
-        const intensity = config.intensity || this.config.intensity;
+        let intensity = config.intensity || this.config.intensity;
         const strength = config.strength || this.config.strength;
+        
+        // Apply rhythm modulation if present
+        if (motion.rhythmModulation) {
+            intensity *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            intensity *= (motion.rhythmModulation.accentMultiplier || 1);
+        }
         
         // Random jitter in both directions
         const jitterX = (Math.random() - 0.5) * intensity * strength;

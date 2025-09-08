@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Rhythm Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #fff;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #mascot-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Rhythm Controls Panel */
+        .rhythm-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 255, 128, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 300px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .rhythm-panel h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .rhythm-control {
+            margin-bottom: 15px;
+        }
+        
+        .rhythm-control label {
+            display: block;
+            margin-bottom: 5px;
+            color: #88ff88;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .rhythm-control input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 255, 128, 0.2);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .rhythm-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #00ff88;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 128, 0.5);
+        }
+        
+        .rhythm-control select {
+            width: 100%;
+            padding: 8px;
+            background: rgba(0, 255, 128, 0.1);
+            border: 1px solid rgba(0, 255, 128, 0.3);
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .rhythm-control select option {
+            background: #1a1f3a;
+        }
+        
+        .rhythm-value {
+            display: inline-block;
+            color: #00ff88;
+            font-weight: bold;
+            float: right;
+        }
+        
+        .rhythm-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .rhythm-btn {
+            flex: 1;
+            padding: 10px;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        
+        .rhythm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 128, 0.4);
+        }
+        
+        .rhythm-btn:active {
+            transform: translateY(0);
+        }
+        
+        .rhythm-btn.stop {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+        }
+        
+        /* Beat Indicator */
+        .beat-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(0, 255, 128, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .beat-light {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #00ff88 0%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0.2;
+            transition: opacity 0.1s;
+        }
+        
+        .beat-light.active {
+            opacity: 1;
+            box-shadow: 0 0 30px #00ff88;
+        }
+        
+        /* Emotion Controls */
+        .emotion-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(128, 0, 255, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .emotion-panel h4 {
+            color: #ff88ff;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .emotion-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .emotion-btn {
+            padding: 8px;
+            background: rgba(128, 0, 255, 0.2);
+            border: 1px solid rgba(128, 0, 255, 0.4);
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 20px;
+        }
+        
+        .emotion-btn:hover {
+            background: rgba(128, 0, 255, 0.4);
+            transform: scale(1.1);
+        }
+        
+        /* Gesture Controls */
+        .gesture-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 128, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .gesture-panel h4 {
+            color: #ffaa44;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .gesture-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .gesture-btn {
+            padding: 8px;
+            background: rgba(255, 128, 0, 0.2);
+            border: 1px solid rgba(255, 128, 0, 0.4);
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+        
+        .gesture-btn:hover {
+            background: rgba(255, 128, 0, 0.4);
+            transform: scale(1.05);
+        }
+        
+        /* Info Display */
+        .info-display {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff88;
+            min-width: 200px;
+        }
+        
+        .info-line {
+            margin: 2px 0;
+        }
+        
+        .info-label {
+            color: #88ff88;
+            display: inline-block;
+            width: 80px;
+        }
+        
+        .info-value {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div id="mascot-container">
+        <canvas id="mascot-canvas"></canvas>
+    </div>
+    
+    <!-- Rhythm Controls -->
+    <div class="rhythm-panel">
+        <h3>🎵 Rhythm Engine</h3>
+        
+        <div class="rhythm-control">
+            <label>BPM <span class="rhythm-value" id="bpm-value">120</span></label>
+            <input type="range" id="bpm-slider" min="60" max="180" value="120" step="5">
+        </div>
+        
+        <div class="rhythm-control">
+            <label>Pattern</label>
+            <select id="pattern-select">
+                <option value="straight">Straight</option>
+                <option value="swing">Swing</option>
+                <option value="waltz">Waltz (3/4)</option>
+                <option value="dubstep">Dubstep</option>
+                <option value="breakbeat">Breakbeat</option>
+            </select>
+        </div>
+        
+        <div class="rhythm-control">
+            <label>Intensity <span class="rhythm-value" id="intensity-value">1.0</span></label>
+            <input type="range" id="intensity-slider" min="0" max="2" value="1" step="0.1">
+        </div>
+        
+        <div class="rhythm-buttons">
+            <button class="rhythm-btn" id="start-rhythm">Start</button>
+            <button class="rhythm-btn stop" id="stop-rhythm">Stop</button>
+        </div>
+    </div>
+    
+    <!-- Beat Indicator -->
+    <div class="beat-indicator">
+        <div class="beat-light" id="beat-light"></div>
+    </div>
+    
+    <!-- Info Display -->
+    <div class="info-display">
+        <div class="info-line">
+            <span class="info-label">Beat:</span>
+            <span class="info-value" id="beat-count">0</span>
+        </div>
+        <div class="info-line">
+            <span class="info-label">Bar:</span>
+            <span class="info-value" id="bar-count">0</span>
+        </div>
+        <div class="info-line">
+            <span class="info-label">Status:</span>
+            <span class="info-value" id="rhythm-status">Stopped</span>
+        </div>
+    </div>
+    
+    <!-- Emotion Controls -->
+    <div class="emotion-panel">
+        <h4>Emotions</h4>
+        <div class="emotion-buttons">
+            <button class="emotion-btn" data-emotion="neutral">😐</button>
+            <button class="emotion-btn" data-emotion="happy">😊</button>
+            <button class="emotion-btn" data-emotion="love">💕</button>
+            <button class="emotion-btn" data-emotion="excited">🤩</button>
+            <button class="emotion-btn" data-emotion="sad">😢</button>
+            <button class="emotion-btn" data-emotion="angry">😠</button>
+            <button class="emotion-btn" data-emotion="focused">🎯</button>
+            <button class="emotion-btn" data-emotion="sleepy">😴</button>
+            <button class="emotion-btn" data-emotion="suspicious">🤨</button>
+            <button class="emotion-btn" data-emotion="dizzy">😵</button>
+            <button class="emotion-btn" data-emotion="glitch">⚡</button>
+            <button class="emotion-btn" data-emotion="cosmic">🌌</button>
+        </div>
+    </div>
+    
+    <!-- Gesture Controls -->
+    <div class="gesture-panel">
+        <h4>Gestures</h4>
+        <div class="gesture-buttons">
+            <button class="gesture-btn" data-gesture="pulse">Pulse</button>
+            <button class="gesture-btn" data-gesture="breathe">Breathe</button>
+            <button class="gesture-btn" data-gesture="sway">Sway</button>
+            <button class="gesture-btn" data-gesture="bounce">Bounce</button>
+            <button class="gesture-btn" data-gesture="shake">Shake</button>
+            <button class="gesture-btn" data-gesture="float">Float</button>
+            <button class="gesture-btn" data-gesture="jitter">Jitter</button>
+            <button class="gesture-btn" data-gesture="twitch">Twitch</button>
+            <button class="gesture-btn" data-gesture="hula">Hula</button>
+        </div>
+    </div>
+    
+    <script type="module">
+        import EmotiveMascot from './src/EmotiveMascot.js';
+        import rhythmIntegration from './src/core/rhythmIntegration.js';
+        import rhythmEngine from './src/core/rhythm.js';
+        
+        // Initialize mascot
+        const canvas = document.getElementById('mascot-canvas');
+        const mascot = new EmotiveMascot(canvas, {
+            size: 180,
+            particleCount: 40,
+            glowIntensity: 1.5,
+            particleSpeed: 1.2,
+            showFPS: true
+        });
+        
+        // Initialize rhythm integration
+        rhythmIntegration.initialize();
+        
+        // Start with neutral emotion
+        mascot.setEmotion('love');
+        
+        // Rhythm Controls
+        const bpmSlider = document.getElementById('bpm-slider');
+        const bpmValue = document.getElementById('bpm-value');
+        const patternSelect = document.getElementById('pattern-select');
+        const intensitySlider = document.getElementById('intensity-slider');
+        const intensityValue = document.getElementById('intensity-value');
+        const startBtn = document.getElementById('start-rhythm');
+        const stopBtn = document.getElementById('stop-rhythm');
+        const beatLight = document.getElementById('beat-light');
+        const beatCount = document.getElementById('beat-count');
+        const barCount = document.getElementById('bar-count');
+        const rhythmStatus = document.getElementById('rhythm-status');
+        
+        // Update BPM display
+        bpmSlider.addEventListener('input', (e) => {
+            const bpm = e.target.value;
+            bpmValue.textContent = bpm;
+            if (rhythmEngine.isPlaying) {
+                rhythmIntegration.setBPM(parseInt(bpm));
+            }
+        });
+        
+        // Update intensity display
+        intensitySlider.addEventListener('input', (e) => {
+            const intensity = e.target.value;
+            intensityValue.textContent = intensity;
+            rhythmEngine.intensity = parseFloat(intensity);
+        });
+        
+        // Pattern change
+        patternSelect.addEventListener('change', (e) => {
+            if (rhythmEngine.isPlaying) {
+                rhythmIntegration.setPattern(e.target.value);
+            }
+        });
+        
+        // Start rhythm
+        startBtn.addEventListener('click', () => {
+            const bpm = parseInt(bpmSlider.value);
+            const pattern = patternSelect.value;
+            rhythmIntegration.start(bpm, pattern);
+            rhythmStatus.textContent = 'Playing';
+            
+            // Make mascot aware of rhythm
+            if (mascot.rhythmEnabled !== undefined) {
+                mascot.rhythmEnabled = true;
+            }
+        });
+        
+        // Stop rhythm
+        stopBtn.addEventListener('click', () => {
+            rhythmIntegration.stop();
+            rhythmStatus.textContent = 'Stopped';
+            beatLight.classList.remove('active');
+            
+            if (mascot.rhythmEnabled !== undefined) {
+                mascot.rhythmEnabled = false;
+            }
+        });
+        
+        // Subscribe to beat events for visual feedback
+        rhythmEngine.on('beat', (beatInfo) => {
+            // Flash beat indicator
+            beatLight.classList.add('active');
+            setTimeout(() => beatLight.classList.remove('active'), 100);
+            
+            // Update counters
+            beatCount.textContent = beatInfo.beat;
+            barCount.textContent = beatInfo.bar;
+        });
+        
+        // Emotion buttons
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const emotion = e.target.dataset.emotion;
+                mascot.setEmotion(emotion);
+            });
+        });
+        
+        // Gesture buttons
+        document.querySelectorAll('.gesture-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const gesture = e.target.dataset.gesture;
+                mascot.triggerGesture(gesture);
+            });
+        });
+        
+        // Resize canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Start animation
+        mascot.start();
+    </script>
+</body>
+</html>

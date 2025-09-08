@@ -43,6 +43,58 @@ export default {
     emoji: '⚡',
     description: 'Digital glitch with stuttering orbits and corruption',
     
+    // Rhythm configuration for glitchy behavior
+    rhythm: {
+        enabled: true,
+        
+        // Glitch events sync to rhythm
+        glitchTiming: {
+            mode: 'subdivision',     // Glitch on subdivisions
+            subdivision: 'sixteenth', // 16th notes for rapid glitches
+            probability: 0.3,        // 30% chance on each 16th
+            intensityOnBeat: 2.0,    // Stronger glitches on beat
+            intensityOffBeat: 0.5    // Weaker between beats
+        },
+        
+        // Stutter/freeze timing
+        stutterSync: {
+            mode: 'pattern',         // Based on rhythm pattern
+            patterns: {
+                'dubstep': {
+                    freezeOnDrop: true,  // Freeze on the drop (beat 3)
+                    dropDuration: 100    // Freeze for 100ms
+                },
+                'breakbeat': {
+                    randomFreeze: 0.1,   // 10% chance per beat
+                    duration: 50         // Short 50ms freezes
+                }
+            }
+        },
+        
+        // Orbital speed modulation
+        orbitRhythm: {
+            baseSpeed: 'tempo',      // Speed scales with BPM
+            wobbleSync: 'eighth',    // Wobble on 8th notes
+            beatAcceleration: 1.5,   // Speed boost on beat
+            barReset: true           // Reset orbit angle each bar
+        },
+        
+        // RGB split effect rhythm
+        rgbSync: {
+            enabled: true,
+            amount: 'intensity',     // Split based on musical intensity
+            direction: 'beat',        // Change split direction on beat
+            maxSplit: 10             // Maximum pixel split
+        },
+        
+        // Digital noise bursts
+        noiseRhythm: {
+            trigger: 'accent',       // Noise on accented beats
+            duration: 50,            // 50ms noise bursts
+            intensity: 'drop'        // Scale with drop intensity
+        }
+    },
+    
     /**
      * Initialize particle state for glitchy behavior
      */

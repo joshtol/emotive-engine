@@ -19,6 +19,7 @@
  */
 
 import { getGesture, isBlendingGesture, isOverrideGesture } from './index.js';
+import rhythmIntegration from '../rhythmIntegration.js';
 
 /**
  * Apply gesture motion to a particle using the modular system
@@ -58,9 +59,24 @@ export function applyGestureMotion(particle, dt, motion, progress, centerX, cent
         return;
     }
     
+    // Apply rhythm modulation if enabled
+    let rhythmModifiedMotion = motion;
+    if (rhythmIntegration.isEnabled() && gesture.rhythm?.enabled) {
+        const modulation = rhythmIntegration.applyGestureRhythm(gesture, particle, progress, dt);
+        
+        // Create modified motion with rhythm adjustments
+        rhythmModifiedMotion = {
+            ...motion,
+            amplitude: (motion.amplitude || 1) * (modulation.amplitudeMultiplier || 1) * (modulation.accentMultiplier || 1),
+            wobbleAmount: (motion.wobbleAmount || 0) * (modulation.wobbleMultiplier || 1),
+            // Allow rhythm to affect other parameters as needed
+            rhythmModulation: modulation
+        };
+    }
+    
     // Apply the gesture using its modular implementation
     if (gesture.apply) {
-        gesture.apply(particle, progress, motion, dt, centerX, centerY);
+        gesture.apply(particle, progress, rhythmModifiedMotion, dt, centerX, centerY);
     }
     
     // Handle cleanup when gesture completes

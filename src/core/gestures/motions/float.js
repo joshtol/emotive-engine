@@ -19,6 +19,47 @@ export default {
         strength: 1.0  // Full strength
     },
     
+    // Rhythm configuration - defines how this gesture responds to musical timing
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',  // 'beat', 'bar', 'continuous', or 'none'
+        
+        // How amplitude changes with beat
+        amplitudeSync: {
+            onBeat: 1.5,      // Multiply amplitude on beat
+            offBeat: 0.8,     // Reduce amplitude off beat
+            curve: 'bounce'   // Animation curve: 'linear', 'ease', 'bounce', 'pulse'
+        },
+        
+        // How wobble syncs to subdivisions
+        wobbleSync: {
+            subdivision: 'eighth',  // Sync to 8th notes
+            intensity: 0.7          // How much rhythm affects wobble
+        },
+        
+        // Duration can sync to musical time
+        durationSync: {
+            mode: 'bars',     // Duration in bars instead of milliseconds
+            bars: 2           // Float for 2 bars
+        },
+        
+        // Response to musical accents
+        accentResponse: {
+            enabled: true,
+            multiplier: 1.3   // Boost effect on accented beats
+        },
+        
+        // Optional: Different behavior for different patterns
+        patternOverrides: {
+            'waltz': {
+                wobbleSync: { subdivision: 'quarter', intensity: 0.9 }
+            },
+            'dubstep': {
+                amplitudeSync: { onBeat: 2.0, curve: 'pulse' }
+            }
+        }
+    },
+    
     /**
      * Apply float motion to particle
      * @param {Particle} particle - The particle to animate
@@ -41,9 +82,16 @@ export default {
         }
         
         const config = { ...this.config, ...motion };
-        const amplitude = config.amplitude || this.config.amplitude;
-        const wobbleAmount = config.wobbleAmount || this.config.wobbleAmount;
+        let amplitude = config.amplitude || this.config.amplitude;
+        let wobbleAmount = config.wobbleAmount || this.config.wobbleAmount;
         const strength = config.strength || this.config.strength;
+        
+        // Apply rhythm modulation if present (passed from GestureMotion.js)
+        if (motion.rhythmModulation) {
+            amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            wobbleAmount *= (motion.rhythmModulation.wobbleMultiplier || 1);
+        }
         
         // Upward floating with slight wobble
         const wobble = Math.sin(progress * Math.PI * 4) * wobbleAmount;

@@ -36,6 +36,46 @@
 import { selectWeightedColor } from '../utils/colorUtils.js';
 import { PHYSICS } from '../config/physics.js';
 
+// Rhythm configuration for orbiting particles
+export const rhythmConfig = {
+    enabled: true,
+    
+    // Orbital speed syncs to tempo
+    orbitSpeed: {
+        baseSync: 'tempo',       // Speed scales with BPM
+        beatAcceleration: 1.3,   // Speed up on beat
+        offBeatSpeed: 0.9        // Slow between beats
+    },
+    
+    // Radius pulses with rhythm
+    radiusPulse: {
+        subdivision: 'quarter',  // Pulse on quarter notes
+        amount: 0.1,            // 10% radius variation
+        curve: 'ease'           // Smooth pulsing
+    },
+    
+    // Twinkle/sparkle syncs to beat
+    twinkleSync: {
+        onBeat: true,           // Extra sparkles on beat
+        intensity: 2.0,         // Double sparkle on beat
+        probability: 0.3        // 30% chance per beat
+    },
+    
+    // Pattern-specific behaviors
+    patterns: {
+        'waltz': {
+            // Elegant 3/4 waltz orbiting
+            orbitSpeed: { beatAcceleration: 1.1 },
+            radiusPulse: { amount: 0.15 }
+        },
+        'swing': {
+            // Jazzy swing orbiting
+            orbitSpeed: { beatAcceleration: 1.5 },
+            twinkleSync: { intensity: 3.0 }
+        }
+    }
+};
+
 /**
  * Initialize orbiting behavior for a particle
  * Creates valentine fireflies with individual timing

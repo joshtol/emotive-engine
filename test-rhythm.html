@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm System Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: monospace;
+        }
+        #status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #00ff88;
+        }
+        .beat-flash {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #00ff88;
+            border-radius: 50%;
+            margin-left: 10px;
+            opacity: 0.2;
+            transition: opacity 0.1s;
+        }
+        .beat-flash.active {
+            opacity: 1;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #00ff88;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00cc66;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 2px 0;
+            font-size: 12px;
+        }
+        .log-entry.beat {
+            color: #00ff88;
+        }
+        .log-entry.bar {
+            color: #88ff00;
+        }
+        .log-entry.error {
+            color: #ff4444;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">
+        <h2>Rhythm System Test <span class="beat-flash" id="beat-indicator"></span></h2>
+        
+        <div>
+            <button id="start-btn">Start Rhythm</button>
+            <button id="stop-btn">Stop Rhythm</button>
+            <button id="test-integration-btn">Test Integration</button>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <label>BPM: <input type="number" id="bpm-input" value="120" min="60" max="300" style="width: 60px;"></label>
+            <button id="set-bpm-btn">Set BPM</button>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <label>Pattern: 
+                <select id="pattern-select">
+                    <option value="straight">Straight</option>
+                    <option value="swing">Swing</option>
+                    <option value="waltz">Waltz</option>
+                    <option value="dubstep">Dubstep</option>
+                    <option value="breakbeat">Breakbeat</option>
+                </select>
+            </label>
+            <button id="set-pattern-btn">Set Pattern</button>
+        </div>
+        
+        <div class="log" id="log">
+            <div class="log-entry">Ready to test rhythm system...</div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import rhythmEngine from './src/core/rhythm.js';
+        import rhythmIntegration from './src/core/rhythmIntegration.js';
+        
+        const beatIndicator = document.getElementById('beat-indicator');
+        const logDiv = document.getElementById('log');
+        let logEntries = [];
+        
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // Keep only last 50 entries
+            if (logDiv.children.length > 50) {
+                logDiv.removeChild(logDiv.firstChild);
+            }
+        }
+        
+        // Initialize rhythm integration
+        try {
+            rhythmIntegration.initialize();
+            log('✓ Rhythm integration initialized successfully');
+        } catch (error) {
+            log(`✗ Failed to initialize rhythm integration: ${error.message}`, 'error');
+        }
+        
+        // Test rhythm engine adapter
+        try {
+            const adapter = rhythmEngine.getAdapter();
+            log('✓ Rhythm adapter retrieved successfully');
+            
+            // Test adapter methods
+            if (adapter.getTimeInfo && adapter.isOnBeat && adapter.getBeatSync) {
+                log('✓ All adapter methods available');
+            } else {
+                log('✗ Some adapter methods missing', 'error');
+            }
+        } catch (error) {
+            log(`✗ Failed to get rhythm adapter: ${error.message}`, 'error');
+        }
+        
+        // Subscribe to rhythm events
+        let beatCount = 0;
+        let barCount = 0;
+        
+        rhythmEngine.on('beat', (beatInfo) => {
+            beatCount++;
+            beatIndicator.classList.add('active');
+            setTimeout(() => beatIndicator.classList.remove('active'), 100);
+            
+            if (beatCount % 4 === 1) {
+                log(`Beat ${beatInfo.beat} | Bar ${beatInfo.bar} | Accent: ${beatInfo.accent.toFixed(2)}`, 'beat');
+            }
+        });
+        
+        rhythmEngine.on('bar', (barInfo) => {
+            barCount++;
+            log(`New Bar: ${barInfo.bar}`, 'bar');
+        });
+        
+        rhythmEngine.on('start', (info) => {
+            log(`Rhythm started - BPM: ${info.bpm}, Time Signature: ${info.timeSignature.join('/')}`);
+        });
+        
+        rhythmEngine.on('stop', (info) => {
+            log(`Rhythm stopped - Total beats: ${info.totalBeats}, Total bars: ${info.totalBars}`);
+        });
+        
+        // Button handlers
+        document.getElementById('start-btn').addEventListener('click', () => {
+            try {
+                rhythmEngine.start();
+                log('✓ Rhythm engine started');
+            } catch (error) {
+                log(`✗ Failed to start rhythm: ${error.message}`, 'error');
+            }
+        });
+        
+        document.getElementById('stop-btn').addEventListener('click', () => {
+            try {
+                rhythmEngine.stop();
+                log('✓ Rhythm engine stopped');
+                beatCount = 0;
+                barCount = 0;
+            } catch (error) {
+                log(`✗ Failed to stop rhythm: ${error.message}`, 'error');
+            }
+        });
+        
+        document.getElementById('set-bpm-btn').addEventListener('click', () => {
+            const bpm = parseInt(document.getElementById('bpm-input').value);
+            try {
+                rhythmEngine.setBPM(bpm);
+                log(`✓ BPM set to ${bpm}`);
+            } catch (error) {
+                log(`✗ Failed to set BPM: ${error.message}`, 'error');
+            }
+        });
+        
+        document.getElementById('set-pattern-btn').addEventListener('click', () => {
+            const pattern = document.getElementById('pattern-select').value;
+            try {
+                rhythmEngine.setPattern(pattern);
+                log(`✓ Pattern set to ${pattern}`);
+            } catch (error) {
+                log(`✗ Failed to set pattern: ${error.message}`, 'error');
+            }
+        });
+        
+        document.getElementById('test-integration-btn').addEventListener('click', () => {
+            log('Testing integration features...');
+            
+            // Test registering a mock config
+            try {
+                rhythmIntegration.registerConfig('test', 'mockGesture', {
+                    rhythm: {
+                        enabled: true,
+                        amplitudeSync: { onBeat: 2.0, offBeat: 0.5 }
+                    }
+                });
+                log('✓ Mock config registered');
+            } catch (error) {
+                log(`✗ Failed to register config: ${error.message}`, 'error');
+            }
+            
+            // Test rhythm modulation
+            try {
+                const modulation = rhythmIntegration.applyGestureRhythm(
+                    { rhythm: { enabled: true, amplitudeSync: { onBeat: 2.0, offBeat: 0.5 } } },
+                    {}, 0.5, 16
+                );
+                log(`✓ Rhythm modulation applied: amplitude multiplier = ${modulation.amplitudeMultiplier || 1}`);
+            } catch (error) {
+                log(`✗ Failed to apply modulation: ${error.message}`, 'error');
+            }
+            
+            // Test time info
+            try {
+                const timeInfo = rhythmEngine.getAdapter().getTimeInfo();
+                log(`✓ Time info: Beat ${timeInfo.beat}, Progress ${timeInfo.beatProgress.toFixed(2)}`);
+            } catch (error) {
+                log(`✗ Failed to get time info: ${error.message}`, 'error');
+            }
+        });
+        
+        log('Test interface ready - click "Start Rhythm" to begin');
+    </script>
+</body>
+</html>

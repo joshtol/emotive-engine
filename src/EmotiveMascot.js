@@ -57,6 +57,7 @@ import MobileOptimization from './core/MobileOptimization.js';
 import PluginSystem from './core/PluginSystem.js';
 import { browserCompatibility, CanvasContextRecovery } from './utils/browserCompatibility.js';
 import { emotiveDebugger, runtimeCapabilities } from './utils/debugger.js';
+import rhythmIntegration from './core/rhythmIntegration.js';
 
 class EmotiveMascot {
     constructor(config = {}) {
@@ -291,6 +292,10 @@ class EmotiveMascot {
         
         // Track warning frequency to reduce spam
         this.warningTimestamps = {};
+        
+        // Initialize rhythm integration
+        this.rhythmEnabled = false;
+        rhythmIntegration.initialize();
         this.warningThrottle = 5000; // Only show same warning every 5 seconds
         
         // Recording state (listening/capturing)
@@ -500,6 +505,11 @@ class EmotiveMascot {
             const success = this.stateMachine.setEmotion(mappedEmotion, undertone, duration);
             
             if (success) {
+                // Register emotion's rhythm configuration
+                const emotionConfig = getEmotion(mappedEmotion);
+                if (emotionConfig) {
+                    rhythmIntegration.registerConfig('emotion', mappedEmotion, emotionConfig);
+                }
                 // Clear and reset particles when changing emotional states
                 if (this.particleSystem) {
                     // Clear all existing particles
@@ -640,6 +650,9 @@ class EmotiveMascot {
             const gestureConfig = getGesture(gesture);
             
             if (gestureConfig) {
+                // Register gesture's rhythm configuration
+                rhythmIntegration.registerConfig('gesture', gesture, gestureConfig);
+                
                 // Store the current gesture info for the particle system to use
                 this.currentModularGesture = {
                     type: gesture,

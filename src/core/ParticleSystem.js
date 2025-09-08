@@ -75,6 +75,8 @@
 
 import Particle from './Particle.js';
 import { applyUndertoneSaturationToArray } from '../utils/colorUtils.js';
+import rhythmIntegration from './rhythmIntegration.js';
+import { getEmotion } from './emotions/index.js';
 
 class ParticleSystem {
     constructor(maxParticles = 50, errorBoundary = null) {
@@ -240,6 +242,27 @@ class ParticleSystem {
             applyUndertoneSaturationToArray(emotionColors, undertone) : 
             emotionColors;
         
+        // Apply rhythm modulation if enabled
+        let rhythmModulatedRate = particleRate;
+        if (rhythmIntegration.isEnabled()) {
+            const emotionConfig = getEmotion(emotion);
+            if (emotionConfig) {
+                const modulation = rhythmIntegration.applyParticleRhythm(emotionConfig, this);
+                
+                // Apply emission burst on beat
+                if (modulation.emitBurst) {
+                    for (let i = 0; i < modulation.emitBurst && this.particles.length < maxParticles; i++) {
+                        this.spawnSingleParticle(behavior, centerX, centerY);
+                    }
+                }
+                
+                // Modulate emission rate
+                if (modulation.emissionRate !== undefined) {
+                    rhythmModulatedRate *= modulation.emissionRate;
+                }
+            }
+        }
+        
         
         // If specific count is provided, spawn that many
         if (count !== null) {
@@ -265,14 +288,14 @@ class ParticleSystem {
         }
         
         // Don't spawn if rate is 0
-        if (particleRate <= 0) return;
+        if (rhythmModulatedRate <= 0) return;
         
         // TIME-BASED SPAWNING using accumulation
-        // particleRate represents desired particles at 60 FPS
+        // rhythmModulatedRate represents desired particles at 60 FPS
         // So rate of 1 = 1 particle per 60 frames = 1 particle per second at 60fps
         // Cap deltaTime to prevent huge accumulation spikes
         const cappedDeltaTime = Math.min(deltaTime, 50);
-        const particlesPerSecond = particleRate; // Direct mapping: rate = particles/second
+        const particlesPerSecond = rhythmModulatedRate; // Direct mapping: rate = particles/second
         const particlesPerMs = particlesPerSecond / 1000;
         
         // Accumulate spawn time with capped delta

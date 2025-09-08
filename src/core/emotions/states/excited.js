@@ -49,5 +49,51 @@ export default {
         duration: 300,              // Quick state entry
         easing: 'easeOutElastic',  // Bouncy, elastic entrance
         priority: 6                // High-energy priority level
+    },
+    
+    // Rhythm configuration - excited syncs energetically to beat
+    rhythm: {
+        enabled: true,
+        
+        // Particle emission doubles on beat
+        particleEmission: {
+            syncMode: 'beat',
+            burstSize: 5,           // Big bursts on beat
+            offBeatRate: 0.5        // Calmer between beats
+        },
+        
+        // Core jitter syncs to subdivisions
+        jitterSync: {
+            subdivision: 'sixteenth',  // Rapid jitter on 16th notes
+            intensity: 0.8,           // Strong rhythm influence
+            onBeat: 1.5              // Extra jitter on beat
+        },
+        
+        // Glow pulses rapidly with beat
+        glowSync: {
+            intensityRange: [1.0, 1.8],
+            syncTo: 'eighth',         // Pulse on 8th notes
+            attack: 0.05,            // Very quick attack
+            decay: 0.2               // Quick decay
+        },
+        
+        // Different patterns create different excitement
+        patternBehaviors: {
+            'dubstep': {
+                // Heavy drops create explosion effects
+                particleEmission: { 
+                    syncMode: 'beat',
+                    burstSize: 10,      // Huge bursts on drop
+                    dropMultiplier: 2   // Double on beat 3
+                }
+            },
+            'breakbeat': {
+                // Broken beats create chaotic energy
+                jitterSync: {
+                    subdivision: 'random',
+                    intensity: 1.0
+                }
+            }
+        }
     }
 };
