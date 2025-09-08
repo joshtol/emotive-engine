@@ -59,6 +59,64 @@ export default {
         }
     },
     
+    // Rhythm configuration - pulse as heartbeat synced to music
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',  // Heartbeat on every beat
+        
+        // Pulse strength syncs to beat
+        amplitudeSync: {
+            onBeat: 1.6,      // Strong expansion on beat
+            offBeat: 0.8,     // Gentle contraction off beat
+            curve: 'pulse'    // Sharp attack, gradual release
+        },
+        
+        // Frequency locks to tempo
+        frequencySync: {
+            mode: 'locked',   // One pulse per beat
+            subdivision: 'quarter'  // Pulse on quarter notes
+        },
+        
+        // Duration in musical time
+        durationSync: {
+            mode: 'beats',
+            beats: 1          // One pulse per beat
+        },
+        
+        // Stronger pulse on downbeats
+        accentResponse: {
+            enabled: true,
+            multiplier: 2.0   // Double strength on accent
+        },
+        
+        // Pattern-specific pulse styles
+        patternOverrides: {
+            'waltz': {
+                // Elegant 3/4 heartbeat
+                amplitudeSync: { onBeat: 2.0, offBeat: 0.5 },
+                durationSync: { beats: 3 }
+            },
+            'swing': {
+                // Syncopated jazz pulse
+                amplitudeSync: { onBeat: 1.8, offBeat: 0.6, curve: 'ease' },
+                frequencySync: { subdivision: 'swing' }
+            },
+            'dubstep': {
+                // Deep bass pulse on drop
+                amplitudeSync: {
+                    onBeat: 1.2,
+                    dropBeat: 4.0,  // Massive pulse on beat 3
+                    curve: 'pulse'
+                }
+            },
+            'breakbeat': {
+                // Erratic heartbeat
+                frequencySync: { mode: 'random', range: [0.5, 2.0] },
+                amplitudeSync: { onBeat: 2.5, offBeat: 0.3 }
+            }
+        }
+    },
+    
     /**
      * Initialize gesture data for a particle
      * @param {Particle} particle - The particle to initialize
@@ -110,7 +168,18 @@ export default {
         
         // Calculate pulse with optional peak hold
         let pulseValue;
-        const frequency = config.frequency;
+        let frequency = config.frequency;
+        let amplitude = config.amplitude;
+        
+        // Apply rhythm modulation if present
+        if (motion.rhythmModulation) {
+            amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            if (motion.rhythmModulation.frequencyMultiplier) {
+                frequency *= motion.rhythmModulation.frequencyMultiplier;
+            }
+        }
+        
         const rawPulse = (easeProgress * frequency * 2) % 2;
         
         if (config.holdPeak > 0 && rawPulse > (1 - config.holdPeak) && rawPulse < (1 + config.holdPeak)) {
@@ -122,7 +191,7 @@ export default {
         }
         
         // Calculate expansion amount
-        const expansion = pulseValue * config.amplitude * strength * particle.scaleFactor;
+        const expansion = pulseValue * amplitude * strength * particle.scaleFactor;
         
         // Calculate target position
         const targetDistance = data.baseDistance + expansion;

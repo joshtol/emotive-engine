@@ -33,6 +33,44 @@ export default {
         sharpness: 0.9         // How sudden the movements are
     },
     
+    // Rhythm configuration - twitch syncs to nervous subdivisions
+    rhythm: {
+        enabled: true,
+        syncMode: 'subdivision',
+        
+        // Twitch probability increases on beat
+        probabilitySync: {
+            subdivision: 'sixteenth',
+            onBeat: 0.3,        // 30% chance on beat
+            offBeat: 0.05,      // 5% chance off beat
+            accentBoost: 2.0    // Double on accents
+        },
+        
+        // Intensity follows rhythm
+        intensitySync: {
+            onBeat: 2.0,
+            offBeat: 0.8,
+            curve: 'pulse'      // Sharp, sudden
+        },
+        
+        // Pattern-specific twitching
+        patternOverrides: {
+            'breakbeat': {
+                // Erratic broken twitches
+                probabilitySync: { onBeat: 0.5, offBeat: 0.1 },
+                intensitySync: { onBeat: 3.0, offBeat: 0.5 }
+            },
+            'dubstep': {
+                // Heavy twitch on drop
+                intensitySync: {
+                    onBeat: 1.5,
+                    dropBeat: 5.0,
+                    curve: 'pulse'
+                }
+            }
+        }
+    },
+    
     apply: function(particle, progress, motion, dt, centerX, centerY) {
         // Initialize twitch data if needed
         if (!particle.gestureData) {
@@ -52,7 +90,17 @@ export default {
         
         const data = particle.gestureData.twitch;
         const config = this.config;
-        const intensity = motion.intensity || config.intensity;
+        let intensity = motion.intensity || config.intensity;
+        let frequency = config.frequency;
+        
+        // Apply rhythm modulation if present
+        if (motion.rhythmModulation) {
+            intensity *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            intensity *= (motion.rhythmModulation.accentMultiplier || 1);
+            if (motion.rhythmModulation.probabilityMultiplier) {
+                frequency *= motion.rhythmModulation.probabilityMultiplier;
+            }
+        }
         
         // Update timers
         const currentTime = Date.now();

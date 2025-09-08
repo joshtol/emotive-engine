@@ -59,6 +59,63 @@ export default {
         }
     },
     
+    // Rhythm configuration - bounce syncs perfectly to beat
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',  // Each bounce lands on a beat
+        
+        // Bounce height syncs to beat intensity
+        amplitudeSync: {
+            onBeat: 1.8,      // Higher bounce on beat
+            offBeat: 0.6,     // Lower between beats
+            curve: 'bounce'   // Natural bounce curve
+        },
+        
+        // Frequency can sync to tempo
+        frequencySync: {
+            mode: 'tempo',    // Bounces per beat scale with BPM
+            multiplier: 1.0   // 1 bounce per beat
+        },
+        
+        // Duration syncs to musical time
+        durationSync: {
+            mode: 'beats',    // Duration in beats
+            beats: 4          // Bounce for 4 beats (1 bar in 4/4)
+        },
+        
+        // Accent response for stronger downbeats
+        accentResponse: {
+            enabled: true,
+            multiplier: 1.5   // 50% higher on accented beats
+        },
+        
+        // Pattern-specific bouncing styles
+        patternOverrides: {
+            'waltz': {
+                // 3/4 time creates elegant triple bounce
+                frequencySync: { multiplier: 0.75 },
+                durationSync: { beats: 3 }
+            },
+            'swing': {
+                // Jazzy swing bounce with syncopation
+                amplitudeSync: { onBeat: 2.0, offBeat: 0.4, curve: 'ease' }
+            },
+            'dubstep': {
+                // Heavy drop on beat 3
+                amplitudeSync: { 
+                    onBeat: 1.5,
+                    dropBeat: 3.0,  // Massive bounce on the drop
+                    curve: 'pulse'
+                }
+            },
+            'breakbeat': {
+                // Chaotic broken rhythm bouncing
+                frequencySync: { multiplier: 1.5 },
+                amplitudeSync: { onBeat: 2.2, offBeat: 0.3 }
+            }
+        }
+    },
+    
     /**
      * Initialize gesture data for a particle
      * Called once when gesture starts
@@ -101,12 +158,21 @@ export default {
         const easeProgress = this.easeInOutCubic(progress);
         
         // Calculate oscillation
-        const frequency = config.frequency;
+        let frequency = config.frequency;
         const phase = motion.phase || 0;
-        const oscillation = Math.sin((easeProgress + phase) * Math.PI * 2 * frequency);
         
-        // Apply damping if enabled
+        // Apply rhythm modulation if present
         let amplitude = config.amplitude * strength * particle.scaleFactor;
+        if (motion.rhythmModulation) {
+            amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            // Frequency modulation for tempo sync
+            if (motion.rhythmModulation.frequencyMultiplier) {
+                frequency *= motion.rhythmModulation.frequencyMultiplier;
+            }
+        }
+        
+        const oscillation = Math.sin((easeProgress + phase) * Math.PI * 2 * frequency);
         if (config.damping && progress > 0.7) {
             // Reduce amplitude toward end of animation
             const dampProgress = (progress - 0.7) / 0.3;

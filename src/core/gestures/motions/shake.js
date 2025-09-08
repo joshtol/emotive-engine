@@ -57,6 +57,55 @@ export default {
         }
     },
     
+    // Rhythm configuration - shake intensifies with tempo
+    rhythm: {
+        enabled: true,
+        syncMode: 'subdivision',  // Shake on subdivisions
+        
+        // Shake intensity modulation
+        amplitudeSync: {
+            subdivision: 'sixteenth',  // Shake on 16th notes
+            onBeat: 2.5,              // Violent shake on beat
+            offBeat: 0.7,             // Gentler between beats
+            curve: 'pulse'            // Sharp attack
+        },
+        
+        // Frequency scales with tempo
+        frequencySync: {
+            mode: 'tempo',
+            baseFrequency: 15,        // Base at 120 BPM
+            scaling: 'linear'         // Linear scaling with BPM
+        },
+        
+        // Duration in musical time
+        durationSync: {
+            mode: 'beats',
+            beats: 2                  // Shake for 2 beats
+        },
+        
+        // Pattern-specific shake styles
+        patternOverrides: {
+            'breakbeat': {
+                // Chaotic broken shake
+                amplitudeSync: { onBeat: 3.0, offBeat: 0.2 },
+                frequencySync: { mode: 'random', range: [8, 20] }
+            },
+            'dubstep': {
+                // Bass wobble shake
+                amplitudeSync: {
+                    subdivision: 'eighth',
+                    onBeat: 4.0,
+                    dropBeat: 6.0,  // Massive shake on drop
+                    curve: 'pulse'
+                }
+            },
+            'swing': {
+                // Jazzy shimmy shake
+                amplitudeSync: { onBeat: 1.8, offBeat: 1.0, curve: 'ease' }
+            }
+        }
+    },
+    
     /**
      * Initialize gesture data for a particle
      * @param {Particle} particle - The particle to initialize
@@ -95,10 +144,21 @@ export default {
         const config = { ...this.config, ...motion };
         const strength = config.strength || this.config.strength || 1.0;
         
+        // Apply rhythm modulation if present
+        let amplitude = config.amplitude;
+        let frequency = config.frequency;
+        if (motion.rhythmModulation) {
+            amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            if (motion.rhythmModulation.frequencyMultiplier) {
+                frequency *= motion.rhythmModulation.frequencyMultiplier;
+            }
+        }
+        
         // Match orb shake logic for synchronized movement
         // Apply decay if enabled to reduce intensity over time
         const decay = config.decay ? (1 - progress) : 1;
-        const shake = Math.sin(progress * Math.PI * config.frequency) * config.amplitude * decay * strength * particle.scaleFactor;
+        const shake = Math.sin(progress * Math.PI * frequency) * amplitude * decay * strength * particle.scaleFactor;
         
         // Calculate directional offset using particle's random angle
         const offsetX = shake * Math.cos(data.randomAngle);
