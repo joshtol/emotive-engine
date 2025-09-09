@@ -108,7 +108,7 @@ export function applyOrbit(particle, gestureData, config, progress, strength, ce
         particle.y += (targetY - particle.y) * lerpFactor;
     }
     
-    // Apply centripetal acceleration effect (particles speed up when closer)
+    // Apply centripetal acContinceleration effect (particles speed up when closer)
     if (config.centripetal) {
         const speed = 1 + (1 - Math.abs(particle.z)) * 0.3; // Speed varies with z-position
         const speedAngle = gestureData.initialAngle + (progress * Math.PI * 2 * config.rotations * speed);

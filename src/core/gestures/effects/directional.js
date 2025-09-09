@@ -23,6 +23,97 @@ export default {
         strength: 1.0           // Force intensity
     },
     
+    // Rhythm configuration - directional movement following musical flow
+    rhythm: {
+        enabled: true,
+        syncMode: 'flow',  // Follow musical flow and direction
+        
+        // Direction changes with musical progression
+        angleSync: {
+            verse: 0,             // Right movement in verses
+            chorus: 90,           // Upward movement in choruses  
+            bridge: 180,          // Left movement in bridges
+            outro: 270,           // Downward movement in outros
+            transition: 'smooth'  // Smooth direction changes
+        },
+        
+        // Strength pulses with rhythm
+        strengthSync: {
+            onBeat: 1.8,          // Strong push on beats
+            offBeat: 0.6,         // Gentle drift off-beat
+            curve: 'wave'         // Wave-like motion curve
+        },
+        
+        // Return motion syncs to musical sections
+        returnSync: {
+            enabled: true,
+            onSectionChange: true, // Return on section changes
+            duration: 'transition', // Use transition timing
+            strength: 1.2
+        },
+        
+        // Accent response affects direction
+        accentResponse: {
+            enabled: true,
+            multiplier: 2.0,      // Sharp directional push on accents
+            type: 'strength'      // Accent affects movement force
+        },
+        
+        // Pattern-specific directional styles
+        patternOverrides: {
+            'march': {
+                // Military-style directional movement
+                angleSync: { verse: 0, chorus: 0 }, // Always forward
+                strengthSync: { onBeat: 2.5, offBeat: 1.0 }
+            },
+            'waltz': {
+                // Flowing, circular directional movement
+                angleSync: { 
+                    verse: 45, 
+                    chorus: 135,
+                    bridge: 225,
+                    outro: 315,
+                    transition: 'circular'
+                }
+            },
+            'swing': {
+                // Syncopated directional swaying
+                strengthSync: { 
+                    onBeat: 1.6, 
+                    offBeat: 1.4,  // Strong off-beat emphasis
+                    swing: true 
+                }
+            },
+            'electronic': {
+                // Sharp, precise directional cuts
+                angleSync: { transition: 'instant' },
+                strengthSync: { onBeat: 2.2, offBeat: 0.4, curve: 'sharp' }
+            }
+        },
+        
+        // Musical dynamics variations
+        dynamics: {
+            forte: {
+                // Powerful, decisive direction changes
+                strengthSync: { 
+                    onBeat: { multiplier: 1.6 },
+                    offBeat: { multiplier: 1.2 }
+                },
+                angleSync: { transition: 'sharp' },
+                accentResponse: { multiplier: 2.5 }
+            },
+            piano: {
+                // Gentle, subtle directional drift
+                strengthSync: { 
+                    onBeat: { multiplier: 0.7 },
+                    offBeat: { multiplier: 0.8 }
+                },
+                angleSync: { transition: 'gradual' },
+                accentResponse: { multiplier: 1.4 }
+            }
+        }
+    },
+    
     /**
      * Initialize directional movement data
      * Stores particle's starting position for return motion

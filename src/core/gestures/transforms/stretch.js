@@ -63,6 +63,48 @@ export default {
         preserveArea: false    // Keep total area constant
     },
     
+    // Rhythm configuration - stretch pulses with rhythm
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',  // Stretch on beats
+        
+        // Scale modulation with rhythm
+        scaleSync: {
+            onBeat: { x: 1.5, y: 0.7 },     // Stretch wide on beat
+            offBeat: { x: 0.8, y: 1.3 },     // Stretch tall off beat
+            subdivision: 'eighth',            // Change every 8th note
+            curve: 'elastic'                 // Bouncy stretch
+        },
+        
+        // Alternation pattern
+        alternateSync: {
+            pattern: 'XYXY',                 // X stretch, Y stretch pattern
+            beatsPerChange: 1,               // Change axis each beat
+            overlap: 0.1                      // Slight overlap in transitions
+        },
+        
+        // Elastic overshoot on accents
+        overshootSync: {
+            normal: 0.1,                     // Standard overshoot
+            accent: 0.3,                     // Big overshoot on accent
+            downbeat: 0.2,                   // Medium on downbeat
+            curve: 'spring'                  // Spring-like motion
+        },
+        
+        // Area preservation modes
+        preservationSync: {
+            verse: true,                     // Maintain area in verse
+            chorus: false,                   // Free deformation in chorus
+            bridge: true                     // Back to preservation
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: { scaleX: 2.0, scaleY: 0.5, overshoot: 0.4 },
+            piano: { scaleX: 1.1, scaleY: 0.95, overshoot: 0.05 }
+        }
+    },
+    
     /**
      * Initialize gesture data for a particle
      * @param {Particle} particle - The particle to initialize

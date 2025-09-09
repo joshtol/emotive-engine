@@ -88,6 +88,8 @@ import { interpolateHsl, applyUndertoneSaturation, rgbToHex, hexToRgb } from '..
 import GestureCompositor from './GestureCompositor.js';
 import { getEmotion } from './emotions/index.js';
 import { getEffect, applyEffect, isEffectActive } from './effects/index.js';
+import { getGesture } from './gestures/index.js';
+import musicalDuration from './MusicalDuration.js';
 
 class EmotiveRenderer {
     constructor(canvasManager, options = {}) {
@@ -2620,7 +2622,9 @@ this.ctx.fill();
             if (!anim.active) continue;
             
             const elapsed = now - anim.startTime;
-            anim.progress = Math.min(elapsed / anim.params.duration, 1);
+            // Use stored duration or fallback to params duration
+            const duration = anim.duration || (anim.params ? anim.params.duration : 1000);
+            anim.progress = Math.min(elapsed / duration, 1);
             
             // Apply easing
             const easedProgress = this.applyEasing(anim.progress, anim.params.easing);
@@ -3131,12 +3135,27 @@ this.ctx.fill();
     startGesture(gestureName) {
         console.log(`EmotiveRenderer: Starting ${gestureName} animation`);
         
+        // Get the gesture configuration
+        const gesture = getGesture(gestureName);
+        
         // Get composed parameters based on current emotion and undertone
         const params = this.gestureCompositor.compose(
             gestureName,
             this.state.emotion,
             this.currentUndertone
         );
+        
+        // Calculate duration from gesture config
+        let duration = 1000; // Default fallback
+        if (gesture && gesture.config) {
+            if (gesture.config.musicalDuration) {
+                // Use musical duration system
+                duration = musicalDuration.toMilliseconds(gesture.config.musicalDuration);
+            } else if (gesture.config.duration) {
+                // Use fixed duration
+                duration = gesture.config.duration;
+            }
+        }
         
         // Set up the animation
         const anim = this.gestureAnimations[gestureName];
@@ -3145,6 +3164,7 @@ this.ctx.fill();
             anim.startTime = performance.now();
             anim.progress = 0;
             anim.params = params;
+            anim.duration = duration; // Store calculated duration
             
             // Reset random values for gestures that use them
             if (gestureName === 'shake') {
@@ -3174,23 +3194,41 @@ this.ctx.fill();
         // Check override gestures first
         for (const gestureName of overrideGestures) {
             const anim = this.gestureAnimations[gestureName];
-            if (anim && anim.active && anim.params && anim.params.particleMotion) {
+            if (anim && anim.active) {
+                // Get the actual gesture configuration
+                const gesture = getGesture(gestureName);
+                
+                // Use the gesture's config for particleMotion, or create one from gesture type
+                const particleMotion = gesture?.config?.particleMotion || {
+                    type: gestureName,  // This ensures the modular gesture system will find it
+                    strength: anim.params?.strength || 1.0
+                };
+                
                 const gestureInfo = {
                     name: gestureName,
-                    particleMotion: anim.params.particleMotion,
+                    particleMotion: particleMotion,
                     progress: anim.progress || 0,
                     params: anim.params
                 };
+                
                 return gestureInfo;
             }
         }
         
         // Then check all other gestures
         for (const [gestureName, anim] of Object.entries(this.gestureAnimations)) {
-            if (anim.active && anim.params && anim.params.particleMotion) {
+            if (anim.active) {
+                // Get the actual gesture configuration
+                const gesture = getGesture(gestureName);
+                
+                // Use the gesture's config for particleMotion, or params if available
+                const particleMotion = gesture?.config?.particleMotion || 
+                                      anim.params?.particleMotion || 
+                                      { type: gestureName, strength: anim.params?.strength || 1.0 };
+                
                 const gestureInfo = {
                     name: gestureName,
-                    particleMotion: anim.params.particleMotion,
+                    particleMotion: particleMotion,
                     progress: anim.progress || 0,
                     params: anim.params
                 };

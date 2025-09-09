@@ -37,6 +37,11 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'beat',
+        timingSync: 'nextBeat',     // Wait for next beat to start
+        interruptible: false,        // Must complete the nod
+        priority: 5,                 // Medium priority
+        blendable: false,            // Don't blend with other motions
+        minDuration: 'halfBar',      // Minimum time before interrupt
         
         // Nod frequency locks to beat
         frequencySync: {

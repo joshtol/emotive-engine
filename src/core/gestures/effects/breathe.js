@@ -18,7 +18,22 @@ export default {
     
     // Default configuration
     config: {
-        duration: 3500,        // Full breath cycle duration
+        // Musical duration - one full breath per bar
+        musicalDuration: {
+            musical: true,
+            bars: 1,           // Default to 1 bar breathing cycle
+            minBeats: 2,       // Minimum half bar
+            maxBeats: 16       // Maximum 4 bars for slow breathing
+        },
+        
+        // Musical phases of breathing
+        phases: [
+            { name: 'inhale', beats: 1.5 },     // Inhale phase
+            { name: 'hold_in', beats: 0.5 },    // Hold at peak
+            { name: 'exhale', beats: 1.5 },     // Exhale phase
+            { name: 'hold_out', beats: 0.5 }    // Hold at rest
+        ],
+        
         inhaleRadius: 1.5,     // Maximum expansion distance
         exhaleRadius: 0.3,     // Minimum contraction distance
         breathRate: 0.3,       // Breathing rhythm speed
@@ -28,14 +43,104 @@ export default {
         frequency: 1,          // Number of breath cycles
         easing: 'sine',        // Smooth, natural curve type
         strength: 0.8,         // Overall motion influence
-        holdPercent: 0.1,      // Pause duration at breath peaks
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'breathe',
             strength: 0.8,         // Particle response strength
             inhaleRadius: 1.5,     // Particle expansion limit
-            exhaleRadius: 0.3,     // Particle contraction limit
-            holdPercent: 0.1       // Particle pause duration
+            exhaleRadius: 0.3      // Particle contraction limit
+        }
+    },
+    
+    // Rhythm configuration - breathing synced to musical phrases
+    rhythm: {
+        enabled: true,
+        syncMode: 'phrase',  // Long breathing cycles across musical phrases
+        
+        // Breath rate syncs to musical tempo
+        breathRateSync: {
+            mode: 'tempo',
+            bpm: 'auto',          // Match song tempo
+            subdivision: 'whole', // Full breaths on whole notes
+            curve: 'sine'         // Natural breathing curve
+        },
+        
+        // Inhale/exhale expansion syncs to dynamics
+        radiusSync: {
+            inhale: {
+                onUpbeat: 1.8,    // Deeper inhale on upbeats
+                onDownbeat: 1.4,  // Standard inhale on downbeats
+                curve: 'ease-in'
+            },
+            exhale: {
+                onUpbeat: 0.2,    // Complete exhale on upbeats
+                onDownbeat: 0.4,  // Gentle exhale on downbeats
+                curve: 'ease-out'
+            }
+        },
+        
+        // Duration matches musical phrasing
+        durationSync: {
+            mode: 'phrases',
+            phrases: 2,           // Breathe across 2 musical phrases
+            hold: 'fermata'       // Hold breath on fermatas
+        },
+        
+        // Respond to musical accents
+        accentResponse: {
+            enabled: true,
+            multiplier: 1.5,      // Deeper breath on accents
+            type: 'expansion'     // Accent affects radius expansion
+        },
+        
+        // Pattern-specific breathing styles
+        patternOverrides: {
+            'ballad': {
+                // Slow, deep breathing for emotional ballads
+                breathRateSync: { subdivision: 'double-whole' },
+                radiusSync: { 
+                    inhale: { onUpbeat: 2.2, onDownbeat: 1.8 },
+                    exhale: { onUpbeat: 0.1, onDownbeat: 0.2 }
+                }
+            },
+            'uptempo': {
+                // Quick, energetic breathing
+                breathRateSync: { subdivision: 'half' },
+                radiusSync: { 
+                    inhale: { onUpbeat: 1.4, onDownbeat: 1.2 },
+                    exhale: { onUpbeat: 0.3, onDownbeat: 0.4 }
+                }
+            },
+            'ambient': {
+                // Ethereal, floating breathing
+                breathRateSync: { subdivision: 'whole', curve: 'ease' },
+                radiusSync: { 
+                    inhale: { onUpbeat: 1.6, onDownbeat: 1.6 },
+                    exhale: { onUpbeat: 0.2, onDownbeat: 0.2 }
+                }
+            }
+        },
+        
+        // Musical dynamics variations
+        dynamics: {
+            forte: {
+                // Powerful, deep breathing
+                radiusSync: { 
+                    inhale: { multiplier: 1.8 },
+                    exhale: { multiplier: 0.5 }
+                },
+                spiralStrength: 0.004,  // More spiral motion
+                scaleAmount: 0.4
+            },
+            piano: {
+                // Gentle, subtle breathing
+                radiusSync: { 
+                    inhale: { multiplier: 1.2 },
+                    exhale: { multiplier: 0.8 }
+                },
+                spiralStrength: 0.001,  // Minimal spiral
+                scaleAmount: 0.1
+            }
         }
     },
     

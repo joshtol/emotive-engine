@@ -45,6 +45,50 @@ export default {
         }
     },
     
+    // Rhythm configuration - orbital paths sync to harmony
+    rhythm: {
+        enabled: true,
+        syncMode: 'harmonic',  // Orbit follows harmonic intervals
+        
+        // Speed based on harmonic ratios
+        speedSync: {
+            tonic: 0.02,              // Base orbit speed
+            fifth: 0.03,              // 3:2 ratio (perfect fifth)
+            octave: 0.04,             // 2:1 ratio (octave)
+            third: 0.025,             // 5:4 ratio (major third)
+            curve: 'smooth'           // Smooth transitions
+        },
+        
+        // Orbital layers by pitch
+        radiusSync: {
+            bass: 150,                // Outer orbit for low notes
+            mid: 100,                 // Middle orbit for mids
+            treble: 50,               // Inner orbit for highs
+            scaling: 'logarithmic'    // Natural pitch scaling
+        },
+        
+        // 3D depth syncs to chord progression
+        depthSync: {
+            major: { z: 1.0, phase: 0 },        // Front-facing for major
+            minor: { z: -1.0, phase: Math.PI }, // Back-facing for minor
+            diminished: { z: 0.5, phase: Math.PI/2 }, // Side angle
+            augmented: { z: 0.8, phase: -Math.PI/2 }  // Other side
+        },
+        
+        // Phase relationships
+        phaseSync: {
+            mode: 'harmonic',         // Particles phase-lock harmonically
+            intervals: [1, 1.5, 2],   // Unison, fifth, octave
+            drift: 0.05               // Slight phase drift for organic feel
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: { speed: 0.04, maintainRadius: false }, // Chaotic orbits
+            piano: { speed: 0.01, maintainRadius: true }   // Stable orbits
+        }
+    },
+    
     initialize: function(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};

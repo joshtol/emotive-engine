@@ -101,6 +101,26 @@
             background: rgba(0, 229, 255, 0.2); border-color: rgba(0, 229, 255, 0.8);
             color: #00e5ff; box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
         }
+        .sci-fi-btn.gesture-pending {
+            animation: pending-pulse 0.5s infinite;
+            border-color: rgba(255, 200, 0, 0.6);
+            color: rgba(255, 200, 0, 0.8);
+        }
+        .sci-fi-btn.gesture-triggered {
+            animation: trigger-flash 0.2s;
+            background: rgba(0, 255, 100, 0.3) !important;
+            border-color: rgba(0, 255, 100, 0.8) !important;
+            color: #00ff64 !important;
+        }
+        @keyframes pending-pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        @keyframes trigger-flash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 100, 0.6); }
+            100% { transform: scale(1); }
+        }
         .btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 5px; }
         
         /* 5. Holo Effects & Decorations */
@@ -255,6 +275,39 @@
 
         <div class="controls-right">
             <div class="control-section">
+                <h3>Rhythm Sync Module</h3>
+                <div class="rhythm-controls">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <button class="sci-fi-btn" id="rhythm-toggle" style="flex: 1;">
+                            <span id="rhythm-status">▶ START</span>
+                        </button>
+                        <div id="beat-indicator" style="width: 30px; height: 30px; border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <div id="beat-dot" style="width: 10px; height: 10px; background: rgba(0, 229, 255, 0.5); border-radius: 50%; transition: all 0.1s;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="color: rgba(0, 229, 255, 0.7); font-size: 0.7rem; display: block; margin-bottom: 5px;">BPM: <span id="bpm-value">120</span></label>
+                        <input type="range" id="bpm-slider" min="60" max="180" value="120" style="width: 100%; accent-color: #00e5ff;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="color: rgba(0, 229, 255, 0.7); font-size: 0.7rem; display: block; margin-bottom: 5px;">PATTERN</label>
+                        <select id="pattern-select" class="sci-fi-btn" style="width: 100%; padding: 5px; font-size: 0.8rem;">
+                            <option value="straight">Straight</option>
+                            <option value="swing">Swing</option>
+                            <option value="breakbeat">Breakbeat</option>
+                            <option value="dubstep">Dubstep</option>
+                            <option value="four-on-floor">Four on Floor</option>
+                        </select>
+                    </div>
+                    <div class="btn-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                        <button class="sci-fi-btn rhythm-preset" data-preset="ambient" style="font-size: 0.7rem;">Ambient</button>
+                        <button class="sci-fi-btn rhythm-preset" data-preset="electronic" style="font-size: 0.7rem;">Electronic</button>
+                        <button class="sci-fi-btn rhythm-preset" data-preset="jazz" style="font-size: 0.7rem;">Jazz</button>
+                        <button class="sci-fi-btn rhythm-preset" data-preset="dnb" style="font-size: 0.7rem;">Drum & Bass</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-section">
                 <h3>Gesture Protocol</h3>
                 <div class="btn-group">
                     <button class="sci-fi-btn gesture-btn" data-gesture="bounce">Bounce</button>
@@ -284,12 +337,45 @@
     <script type="module">
         // Import the real EmotiveEngine
         import EmotiveEngine from './src/EmotiveMascot.js?v=2.1.0';
+        import rhythmIntegration from './src/core/rhythmIntegration.js';
+        import rhythmEngine from './src/core/rhythm.js';
+        import GestureScheduler from './src/core/GestureScheduler.js';
 
         let mascot;
+        let gestureScheduler;
         let currentEmotion = 'neutral';
         let currentUndertone = '';
         let showingFPS = false;
         let isRecording = false;
+        let rhythmActive = false;
+        
+        // Rhythm presets for different music genres
+        const rhythmPresets = {
+            ambient: { 
+                bpm: 70, 
+                pattern: 'straight', 
+                emotions: ['zen', 'serene', 'neutral'],
+                gestures: ['breathe', 'float', 'drift']
+            },
+            electronic: { 
+                bpm: 128, 
+                pattern: 'four-on-floor', 
+                emotions: ['energetic', 'excited', 'euphoria'],
+                gestures: ['pulse', 'flash', 'vibrate']
+            },
+            jazz: { 
+                bpm: 120, 
+                pattern: 'swing', 
+                emotions: ['joy', 'playful', 'curious'],
+                gestures: ['sway', 'bounce', 'tilt']
+            },
+            dnb: { 
+                bpm: 174, 
+                pattern: 'breakbeat', 
+                emotions: ['excited', 'energetic', 'intense'],
+                gestures: ['shake', 'jitter', 'twitch']
+            }
+        };
 
         async function init() {
             mascot = new EmotiveEngine({
@@ -305,8 +391,153 @@
                 maxParticles: 100
             });
             mascot.start();
+            
+            // Initialize rhythm system
+            rhythmIntegration.initialize();
+            
+            // Initialize gesture scheduler
+            gestureScheduler = new GestureScheduler(mascot);
+            
+            // Setup scheduler callbacks for visual feedback
+            gestureScheduler.onGestureQueued = (item) => {
+                const btn = document.querySelector(`.gesture-btn[data-gesture="${item.gestureName}"]`);
+                if (btn) {
+                    btn.classList.add('gesture-pending');
+                }
+            };
+            
+            gestureScheduler.onGestureTriggered = (item) => {
+                const btn = document.querySelector(`.gesture-btn[data-gesture="${item.gestureName}"]`);
+                if (btn) {
+                    btn.classList.remove('gesture-pending');
+                    btn.classList.add('gesture-triggered');
+                    setTimeout(() => btn.classList.remove('gesture-triggered'), 200);
+                }
+            };
+            
+            // Setup beat indicator
+            rhythmEngine.on('beat', (beatInfo) => {
+                if (rhythmActive) {
+                    const beatDot = document.getElementById('beat-dot');
+                    beatDot.style.width = '20px';
+                    beatDot.style.height = '20px';
+                    beatDot.style.background = 'rgba(0, 229, 255, 1)';
+                    beatDot.style.boxShadow = '0 0 20px rgba(0, 229, 255, 0.8)';
+                    setTimeout(() => {
+                        beatDot.style.width = '10px';
+                        beatDot.style.height = '10px';
+                        beatDot.style.background = 'rgba(0, 229, 255, 0.5)';
+                        beatDot.style.boxShadow = 'none';
+                    }, 100);
+                }
+            });
+            
             setupEventHandlers();
+            setupRhythmControls();
             updateDisplay();
+            
+            // Start with ambient preset by default
+            setTimeout(() => {
+                // Set ambient preset values
+                const ambientPreset = rhythmPresets.ambient;
+                document.getElementById('bpm-slider').value = ambientPreset.bpm;
+                document.getElementById('bpm-value').textContent = ambientPreset.bpm;
+                document.getElementById('pattern-select').value = ambientPreset.pattern;
+                
+                // Mark ambient preset as active
+                document.querySelector('.rhythm-preset[data-preset="ambient"]').classList.add('active');
+                
+                // Start rhythm in ambient mode
+                startRhythm();
+                
+                // Trigger a gentle breathing gesture through scheduler
+                setTimeout(() => {
+                    gestureScheduler.requestGesture('breathe');
+                }, 500);
+            }, 1000); // Wait a second for everything to initialize
+        }
+        
+        function startRhythm() {
+            const bpm = document.getElementById('bpm-slider').value;
+            const pattern = document.getElementById('pattern-select').value;
+            rhythmIntegration.start(parseInt(bpm), pattern);
+            rhythmActive = true;
+            document.getElementById('rhythm-status').textContent = '■ STOP';
+            document.getElementById('rhythm-toggle').classList.add('active');
+            
+            // Trigger a rhythm-appropriate gesture through scheduler
+            const rhythmGestures = ['pulse', 'bounce', 'sway', 'float'];
+            const randomGesture = rhythmGestures[Math.floor(Math.random() * rhythmGestures.length)];
+            gestureScheduler.requestGesture(randomGesture);
+        }
+        
+        function stopRhythm() {
+            rhythmIntegration.stop();
+            rhythmActive = false;
+            document.getElementById('rhythm-status').textContent = '▶ START';
+            document.getElementById('rhythm-toggle').classList.remove('active');
+        }
+        
+        function setupRhythmControls() {
+            // Rhythm toggle button
+            document.getElementById('rhythm-toggle').addEventListener('click', () => {
+                if (rhythmActive) {
+                    stopRhythm();
+                } else {
+                    startRhythm();
+                }
+            });
+            
+            // BPM slider
+            const bpmSlider = document.getElementById('bpm-slider');
+            const bpmValue = document.getElementById('bpm-value');
+            bpmSlider.addEventListener('input', (e) => {
+                bpmValue.textContent = e.target.value;
+                if (rhythmActive) {
+                    rhythmIntegration.setBPM(parseInt(e.target.value));
+                }
+            });
+            
+            // Pattern selector
+            document.getElementById('pattern-select').addEventListener('change', (e) => {
+                if (rhythmActive) {
+                    rhythmIntegration.setPattern(e.target.value);
+                }
+            });
+            
+            // Preset buttons
+            document.querySelectorAll('.rhythm-preset').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const preset = rhythmPresets[btn.dataset.preset];
+                    if (preset) {
+                        // Apply preset settings
+                        document.getElementById('bpm-slider').value = preset.bpm;
+                        document.getElementById('bpm-value').textContent = preset.bpm;
+                        document.getElementById('pattern-select').value = preset.pattern;
+                        
+                        // Set a matching emotion
+                        const randomEmotion = preset.emotions[Math.floor(Math.random() * preset.emotions.length)];
+                        const emotionBtn = document.querySelector(`.emotion-btn[data-emotion="${randomEmotion}"]`);
+                        if (emotionBtn) emotionBtn.click();
+                        
+                        // Start rhythm if not already running
+                        if (!rhythmActive) {
+                            startRhythm();
+                        } else {
+                            rhythmIntegration.setBPM(preset.bpm);
+                            rhythmIntegration.setPattern(preset.pattern);
+                        }
+                        
+                        // Trigger a matching gesture
+                        const randomGesture = preset.gestures[Math.floor(Math.random() * preset.gestures.length)];
+                        mascot.express(randomGesture);
+                        
+                        // Visual feedback
+                        document.querySelectorAll('.rhythm-preset').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    }
+                });
+            });
         }
 
         function setupEventHandlers() {
@@ -321,7 +552,15 @@
             });
 
             document.querySelectorAll('.gesture-btn').forEach(btn => {
-                btn.addEventListener('click', () => mascot.express(btn.dataset.gesture));
+                btn.addEventListener('click', () => {
+                    if (rhythmActive) {
+                        // Use scheduler when rhythm is active
+                        gestureScheduler.requestGesture(btn.dataset.gesture);
+                    } else {
+                        // Direct trigger when rhythm is off
+                        mascot.express(btn.dataset.gesture);
+                    }
+                });
             });
 
             document.querySelectorAll('.undertone-btn').forEach(btn => {

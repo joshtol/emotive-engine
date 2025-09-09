@@ -32,6 +32,73 @@ export default {
         }
     },
     
+    // Rhythm configuration - sustained luminosity following musical phrases
+    rhythm: {
+        enabled: true,
+        syncMode: 'phrase',  // Long, sustained glow following musical phrases
+        
+        // Glow intensity responds to harmonic content
+        intensitySync: {
+            onPhrase: 2.5,        // Strong glow during musical phrases
+            offPhrase: 1.2,       // Gentle glow between phrases
+            curve: 'sustained'    // Smooth transitions, no sharp changes
+        },
+        
+        // Duration extends with phrase length
+        durationSync: {
+            mode: 'phrase',
+            minBeats: 4,          // Minimum 4-beat glow
+            maxBeats: 16,         // Maximum full phrase glow
+            sustain: true         // Maintain glow through phrase
+        },
+        
+        // Gentle response to harmonic changes
+        harmonicResponse: {
+            enabled: true,
+            multiplier: 1.8,      // Moderate brightness increase
+            type: 'brightness'    // Affects glow intensity
+        },
+        
+        // Style variations for different music types
+        patternOverrides: {
+            'ambient': {
+                // Ethereal, floating glow
+                intensitySync: { onPhrase: 2.8, offPhrase: 1.5, curve: 'ethereal' },
+                durationSync: { minBeats: 8, maxBeats: 32 }
+            },
+            'classical': {
+                // Expressive, dynamic glow
+                intensitySync: { onPhrase: 2.2, offPhrase: 0.8 },
+                harmonicResponse: { multiplier: 2.2 }
+            },
+            'electronic': {
+                // Precise, controlled glow
+                intensitySync: { onPhrase: 2.6, offPhrase: 1.0, curve: 'precise' },
+                durationSync: { minBeats: 2, maxBeats: 8 }
+            }
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: {
+                // Brilliant, radiant glow
+                intensitySync: { 
+                    onPhrase: { multiplier: 1.8 },
+                    offPhrase: { multiplier: 1.4 }
+                },
+                harmonicResponse: { multiplier: 2.5 }
+            },
+            piano: {
+                // Soft, gentle luminosity
+                intensitySync: { 
+                    onPhrase: { multiplier: 0.7 },
+                    offPhrase: { multiplier: 0.5 }
+                },
+                harmonicResponse: { multiplier: 1.3 }
+            }
+        }
+    },
+    
     initialize: function(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};

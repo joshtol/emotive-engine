@@ -33,6 +33,92 @@ export default {
         }
     },
     
+    // Rhythm configuration - magnetic contraction synced to musical tension
+    rhythm: {
+        enabled: true,
+        syncMode: 'tension',  // Contract during musical tension builds
+        
+        // Contraction strength responds to musical intensity
+        strengthSync: {
+            onTension: 4.0,       // Strong pull during tension
+            onRelease: 1.5,       // Gentle pull during release
+            curve: 'magnetic'     // Smooth magnetic pull curve
+        },
+        
+        // Scale target changes with dynamics
+        scaleTargetSync: {
+            forte: 0.1,           // Tight contraction for loud sections
+            piano: 0.4,           // Gentle contraction for soft sections
+            crescendo: 'gradual', // Gradual tightening on crescendos
+            diminuendo: 'ease'    // Easy relaxation on diminuendos
+        },
+        
+        // Duration responds to phrase length
+        durationSync: {
+            mode: 'phrases',
+            shortPhrase: 0.8,     // Quick contraction for short phrases  
+            longPhrase: 1.5,      // Extended contraction for long phrases
+            hold: 'sustain'       // Maintain contraction during holds
+        },
+        
+        // Strong accent response
+        accentResponse: {
+            enabled: true,
+            multiplier: 2.2,      // Sharp contraction on accents
+            type: 'strength'      // Accent affects pull force
+        },
+        
+        // Pattern-specific contraction styles
+        patternOverrides: {
+            'classical': {
+                // Elegant, controlled contraction
+                strengthSync: { onTension: 3.5, onRelease: 1.8 },
+                scaleTargetSync: { forte: 0.15, piano: 0.35 }
+            },
+            'metal': {
+                // Aggressive, tight contraction
+                strengthSync: { onTension: 5.0, onRelease: 2.0, curve: 'sharp' },
+                scaleTargetSync: { forte: 0.05, piano: 0.25 }
+            },
+            'ambient': {
+                // Slow, atmospheric contraction
+                strengthSync: { onTension: 2.8, onRelease: 1.2, curve: 'ease' },
+                durationSync: { shortPhrase: 1.2, longPhrase: 2.0 }
+            },
+            'trap': {
+                // Sudden, rhythmic contraction on drops
+                strengthSync: { 
+                    onTension: 4.5, 
+                    onRelease: 1.0,
+                    dropBeat: 6.0   // Massive contraction on trap drops
+                },
+                scaleTargetSync: { forte: 0.08, piano: 0.3 }
+            }
+        },
+        
+        // Musical dynamics variations
+        dynamics: {
+            forte: {
+                // Powerful, crushing contraction
+                strengthSync: { 
+                    onTension: { multiplier: 1.8 },
+                    onRelease: { multiplier: 1.4 }
+                },
+                scaleTargetSync: { multiplier: 0.6 },  // Tighter contraction
+                accentResponse: { multiplier: 2.8 }
+            },
+            piano: {
+                // Gentle, subtle contraction
+                strengthSync: { 
+                    onTension: { multiplier: 0.7 },
+                    onRelease: { multiplier: 0.8 }
+                },
+                scaleTargetSync: { multiplier: 1.4 },  // Looser contraction
+                accentResponse: { multiplier: 1.6 }
+            }
+        }
+    },
+    
     initialize: function(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};

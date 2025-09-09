@@ -19,6 +19,7 @@
 - **13+ Emotional States**: From joy to contemplation, each with unique particle behaviors
 - **15 Particle Behaviors**: Modular, extensible behaviors with visual documentation
 - **26 Gesture Animations**: Modular gesture system with blending, override, and effect modes
+- **Musical Rhythm Synchronization**: Beat-locked animations with tempo-aware gesture scheduling
 - **Performance Optimized**: Rock-solid 60fps with 1000+ particles
 - **Adaptive Degradation**: Automatically adjusts quality for consistent performance
 - **Web Worker Support**: Offload heavy computations for smooth main thread
@@ -69,6 +70,137 @@ mascot.on('stateChange', (state) => {
   console.log(`Mascot is feeling ${state.emotion} (${state.undertone || 'clear'})`);
 });
 ```
+
+## 🎵 Musical Rhythm Integration
+
+### Rhythm-Aware Animation System
+
+The Emotive Engine features a sophisticated rhythm synchronization system that makes the mascot dance perfectly to any beat:
+
+```javascript
+import rhythmIntegration from './src/core/rhythmIntegration.js';
+import GestureScheduler from './src/core/GestureScheduler.js';
+
+// Initialize rhythm system
+rhythmIntegration.initialize();
+rhythmIntegration.start(120, 'straight'); // 120 BPM, straight pattern
+
+// Gestures automatically sync to the beat
+const scheduler = new GestureScheduler(mascot);
+scheduler.requestGesture('nod'); // Will trigger on next beat
+scheduler.requestGesture('bounce'); // Queues after nod, on following beat
+```
+
+### Features
+- **Beat-Locked Gestures**: All animations snap to musical time
+- **Intelligent Queueing**: Gestures wait for the right musical moment
+- **Pattern Support**: Straight, swing, breakbeat, dubstep, four-on-floor
+- **Tempo Adaptation**: Animations scale with BPM (60-180)
+- **Musical Presets**: Ambient, Electronic, Jazz, Drum & Bass styles
+- **Musical Duration System**: Gestures use beats/bars instead of milliseconds
+- **Active Gesture Tracking**: Prevents gesture overlap and spam
+- **Per-Gesture Queues**: Individual queue limits for each gesture type
+
+### Musical Duration System
+
+All gesture animations now use musical time (beats and bars) instead of fixed milliseconds, ensuring perfect tempo synchronization.
+
+#### The Core Formula
+
+The system is built on a fundamental musical constant: **60,000 milliseconds = 1 minute**
+
+```javascript
+// BPM to milliseconds conversion
+const beatDuration = 60000 / bpm;
+
+// Examples:
+// 60 BPM:  60,000 ÷ 60  = 1,000ms per beat (1 second)
+// 120 BPM: 60,000 ÷ 120 = 500ms per beat (half second)  
+// 140 BPM: 60,000 ÷ 140 = ~428ms per beat
+// 180 BPM: 60,000 ÷ 180 = ~333ms per beat
+```
+
+This conversion enables all timing calculations:
+- **Quarter note** = 1 beat duration
+- **Eighth note** = beat duration ÷ 2  
+- **Whole note** = beat duration × 4
+- **One bar** (in 4/4) = beat duration × 4
+
+#### Gesture Configuration
+
+```javascript
+// Gesture configuration with musical durations
+export default {
+  name: 'wave',
+  config: {
+    // Duration in musical time
+    musicalDuration: {
+      musical: true,
+      bars: 1,        // Default to 1 bar
+      minBeats: 4,    // Minimum 1 bar
+      maxBeats: 16    // Maximum 4 bars
+    },
+    
+    // Musical phases define the gesture's rhythm
+    phases: [
+      { name: 'gather', beats: 0.5 },     // Particles gather
+      { name: 'rise', beats: 0.5 },       // Begin rising
+      { name: 'waveLeft', beats: 1 },     // Wave to the left
+      { name: 'waveRight', beats: 1 },    // Wave to the right
+      { name: 'settle', beats: 1 }        // Settle back
+    ]
+  }
+};
+```
+
+#### Benefits
+- **Perfect Tempo Sync**: Gestures automatically adjust duration with BPM changes
+- **No Overlap**: Active gesture tracking prevents spam and ensures clean transitions
+- **Musical Coherence**: Animations feel like choreographed dance moves
+- **Phase Control**: Break gestures into musical segments for complex patterns
+
+#### Supported Gestures with Musical Duration
+- **Wave**: Flows for exactly 1 bar with defined phases
+- **Morph**: Shape transitions over 2 beats
+- **Breathe**: Full breathing cycle per bar
+- **Jump**: Anticipation and release on beat boundaries
+- **Spin**: Rotations complete on bar endings
+
+### Real-Time Audio Analysis (Coming Soon)
+
+We're building a universal audio analysis system that will work with ANY audio source - not just streaming services:
+
+#### Background
+While platforms like Spotify previously offered tempo and musical feature APIs, these endpoints have been deprecated, limiting direct integration possibilities. In response, we're developing a more powerful, universal solution that works with any audio source.
+
+#### Planned Audio Features
+- **Universal Input**: Microphone, system audio, file upload, or any web audio stream
+- **Real-time Beat Detection**: Onset detection and tempo estimation using Web Audio API
+- **Genre Classification**: Frequency analysis to identify musical style
+- **Energy Tracking**: Dynamic range and intensity analysis
+- **Harmonic Analysis**: Key detection and chord progression tracking
+- **Zero Latency**: Client-side processing for instant response
+
+#### Technical Approach
+```javascript
+// Future API (in development)
+const audioAnalyzer = new AudioAnalyzer();
+await audioAnalyzer.connectToSource('microphone'); // or 'system', 'file'
+
+audioAnalyzer.on('beat', (beatInfo) => {
+  mascot.pulse(); // React to beat in real-time
+});
+
+audioAnalyzer.on('genreDetected', (genre) => {
+  rhythmIntegration.applyPreset(genre); // Auto-adapt to music style
+});
+```
+
+This approach ensures the Emotive Engine works with:
+- Live performances and DJ sets
+- YouTube, SoundCloud, or any web player
+- Local music files
+- Even humming or tapping
 
 ## 🎨 Live Demo
 

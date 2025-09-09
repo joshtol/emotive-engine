@@ -33,6 +33,105 @@ export default {
         }
     },
     
+    // Rhythm configuration - expansive growth synced to musical crescendos
+    rhythm: {
+        enabled: true,
+        syncMode: 'crescendo',  // Expand during musical crescendos
+        
+        // Expansion strength follows dynamics
+        strengthSync: {
+            pianissimo: 1.5,      // Gentle expansion in quiet sections
+            fortissimo: 5.0,      // Massive expansion in loud sections
+            crescendo: 'build',   // Gradual build during crescendos
+            sforzando: 'burst'    // Sudden expansion on sforzandos
+        },
+        
+        // Scale target responds to musical intensity
+        scaleTargetSync: {
+            verse: 2.0,           // Moderate expansion in verses
+            chorus: 4.5,          // Large expansion in choruses
+            climax: 6.0,          // Maximum expansion at climax
+            curve: 'exponential'  // Exponential growth curve
+        },
+        
+        // Duration matches musical phrasing
+        durationSync: {
+            mode: 'phrases',
+            build: 1.2,           // Extended duration during builds
+            release: 0.8,         // Quick expansion on releases
+            sustain: 'hold'       // Hold expansion during sustains
+        },
+        
+        // Strong accent response
+        accentResponse: {
+            enabled: true,
+            multiplier: 2.8,      // Massive expansion on accents
+            type: 'strength'      // Accent affects expansion force
+        },
+        
+        // Pattern-specific expansion styles
+        patternOverrides: {
+            'orchestral': {
+                // Epic, cinematic expansion
+                strengthSync: { 
+                    pianissimo: 2.0, 
+                    fortissimo: 6.5,
+                    crescendo: 'dramatic'
+                },
+                scaleTargetSync: { climax: 8.0 }
+            },
+            'rock': {
+                // Aggressive, powerful expansion
+                strengthSync: { 
+                    pianissimo: 1.8, 
+                    fortissimo: 5.5,
+                    curve: 'power'
+                },
+                accentResponse: { multiplier: 3.2 }
+            },
+            'ambient': {
+                // Gentle, organic expansion
+                strengthSync: { 
+                    pianissimo: 1.2, 
+                    fortissimo: 3.5,
+                    crescendo: 'organic'
+                },
+                durationSync: { build: 1.8, release: 1.2 }
+            },
+            'electronic': {
+                // Sharp, controlled expansion
+                strengthSync: { 
+                    pianissimo: 1.6, 
+                    fortissimo: 4.8,
+                    curve: 'digital'
+                },
+                scaleTargetSync: { curve: 'linear' }
+            }
+        },
+        
+        // Musical dynamics variations
+        dynamics: {
+            forte: {
+                // Powerful, overwhelming expansion
+                strengthSync: { 
+                    pianissimo: { multiplier: 1.4 },
+                    fortissimo: { multiplier: 1.8 }
+                },
+                scaleTargetSync: { multiplier: 1.6 },
+                accentResponse: { multiplier: 3.5 }
+            },
+            piano: {
+                // Delicate, controlled expansion
+                strengthSync: { 
+                    pianissimo: { multiplier: 0.8 },
+                    fortissimo: { multiplier: 1.2 }
+                },
+                scaleTargetSync: { multiplier: 0.7 },
+                accentResponse: { multiplier: 2.0 }
+            }
+        }
+    },
+    
     initialize: function(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};

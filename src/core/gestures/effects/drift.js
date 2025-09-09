@@ -46,20 +46,106 @@ export default {
         distance: 50,          // Maximum drift distance
         angle: 45,             // Primary drift direction
         returnToOrigin: true,  // Return to starting position
-        fadeOut: true,         // Apply fade effect during drift
+        fadeOut: false,        // Apply fade effect during drift (disabled to prevent disappearing)
         holdTime: 0.2,         // Pause duration at drift peak
         turbulence: 0.1,       // Random movement variation amount
         angleSpread: 45,       // Directional spread range
-        easing: 'sine',        // Smooth motion curve
-        strength: 0.8,         // Overall drift intensity
+        smoothness: 0.08,      // Movement fluidity factor
+        easing: 'ease',        // Animation curve type
+        strength: 1.0,         // Overall drift intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'drift',
-            strength: 0.8,         // Particle drift strength
-            distance: 60,          // Particle drift range
-            returnToOrigin: true   // Particles return home
+            strength: 1.0,     // Drift motion strength
+            distance: 60       // Maximum drift distance
+        }
+    },
+    
+    // Rhythm configuration - ethereal drift following ambient musical textures
+    rhythm: {
+        enabled: true,
+        syncMode: 'ambient',  // Sync to ambient musical textures
+        
+        // Distance varies with musical dynamics
+        distanceSync: {
+            quiet: 30,            // Small drift in quiet sections
+            loud: 80,             // Large drift in loud sections
+            crescendo: 'expand',  // Expand drift on crescendos
+            diminuendo: 'contract' // Contract drift on diminuendos
         },
-        smoothness: 0.12       // Movement smoothness
+        
+        // Angle follows harmonic progression
+        angleSync: {
+            major: 45,            // Upward drift in major keys
+            minor: 225,           // Downward drift in minor keys
+            modulation: 'smooth', // Smooth angle changes
+            cadence: 'return'     // Return to center on cadences
+        },
+        
+        // Hold time syncs to phrase length
+        holdSync: {
+            shortPhrase: 0.1,     // Brief hold for short phrases
+            longPhrase: 0.4,      // Extended hold for long phrases
+            fermata: 'sustain'    // Sustain hold on fermatas
+        },
+        
+        // Gentle accent response
+        accentResponse: {
+            enabled: true,
+            multiplier: 1.3,      // Subtle drift increase on accents
+            type: 'distance'      // Accent affects drift distance
+        },
+        
+        // Pattern-specific drift styles
+        patternOverrides: {
+            'ambient': {
+                // Slow, ethereal drifting
+                distanceSync: { quiet: 40, loud: 100 },
+                holdSync: { shortPhrase: 0.3, longPhrase: 0.6 }
+            },
+            'classical': {
+                // Elegant, controlled drifting
+                angleSync: { major: 30, minor: 210 },
+                distanceSync: { quiet: 25, loud: 60 }
+            },
+            'jazz': {
+                // Syncopated, unpredictable drifting
+                angleSync: { 
+                    major: 60, 
+                    minor: 240,
+                    swing: true,
+                    syncopated: true
+                }
+            },
+            'new_age': {
+                // Meditative, flowing drift
+                distanceSync: { quiet: 35, loud: 70 },
+                holdSync: { shortPhrase: 0.4, longPhrase: 0.8 },
+                angleSync: { modulation: 'gradual' }
+            }
+        },
+        
+        // Musical dynamics variations
+        dynamics: {
+            forte: {
+                // Expansive, bold drifting
+                distanceSync: { 
+                    quiet: { multiplier: 1.5 },
+                    loud: { multiplier: 1.8 }
+                },
+                holdSync: { multiplier: 1.2 },
+                accentResponse: { multiplier: 1.6 }
+            },
+            piano: {
+                // Delicate, subtle drifting
+                distanceSync: { 
+                    quiet: { multiplier: 0.6 },
+                    loud: { multiplier: 0.8 }
+                },
+                holdSync: { multiplier: 0.8 },
+                accentResponse: { multiplier: 1.1 }
+            }
+        }
     },
     
     /**

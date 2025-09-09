@@ -33,6 +33,50 @@ export default {
         duration: 3000            // Total animation duration
     },
     
+    // Rhythm configuration - scanning syncs to measures
+    rhythm: {
+        enabled: true,
+        syncMode: 'measure',  // Scan sweeps align with measures
+        
+        // Scan timing to musical structure
+        sweepSync: {
+            beatsPerSweep: 4,         // One sweep per measure
+            pauseOnDownbeat: true,    // Pause at measure start
+            reverseOnBar: true,       // Change direction each bar
+            curve: 'linear'           // Steady scan motion
+        },
+        
+        // Layer activation by dynamics
+        layerSync: {
+            quiet: 1,                 // Single layer when quiet
+            moderate: 2,              // Two layers at medium
+            loud: 3,                  // All layers when loud
+            stagger: 'sequential'     // Layers activate in order
+        },
+        
+        // Pause duration on beats
+        pauseSync: {
+            onBeat: 500,              // Longer pause on beat
+            offBeat: 100,             // Quick pause off beat
+            accent: 800,              // Extra pause on accent
+            subdivision: 'quarter'    // Check every quarter note
+        },
+        
+        // Width modulation
+        widthSync: {
+            verse: 80,                // Narrow scan in verse
+            chorus: 140,              // Wide scan in chorus
+            bridge: 100,              // Medium in bridge
+            transition: 'smooth'      // Smooth width changes
+        },
+        
+        // Musical tension mapping
+        dynamics: {
+            forte: { scanSpeed: 0.012, layers: 4 },    // Frantic scanning
+            piano: { scanSpeed: 0.004, layers: 1 }     // Slow, single beam
+        }
+    },
+    
     initialize: function(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};

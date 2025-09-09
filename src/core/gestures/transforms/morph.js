@@ -43,7 +43,22 @@ export default {
     
     // Default configuration
     config: {
-        duration: 1000,         // Animation duration
+        // Musical duration - morph over 2 beats
+        musicalDuration: {
+            musical: true,
+            beats: 2,          // Default to half a bar
+            minBeats: 1,       // Minimum quarter note
+            maxBeats: 8        // Maximum 2 bars
+        },
+        
+        // Musical phases of the morph
+        phases: [
+            { name: 'gather', beats: 0.25 },    // Particles gather
+            { name: 'form', beats: 0.75 },      // Form the shape
+            { name: 'hold', beats: 0.5 },       // Hold the shape
+            { name: 'dissolve', beats: 0.5 }    // Dissolve back
+        ],
+        
         morphType: 'fluid',     // Type of morph animation
         pattern: 'star',        // Shape to morph into
         points: 5,              // Number of points (for star/polygon)
@@ -53,7 +68,6 @@ export default {
         rotation: 0,            // Rotation angle in degrees
         smooth: true,           // Smooth movement to positions
         randomizeOrder: false,  // Randomize which particles go where
-        holdTime: 0.3,         // Time to hold the shape
         easing: 'sine',         // Animation curve type
         strength: 1.2,          // Formation strength
         // Particle motion configuration for AnimationController
@@ -63,6 +77,49 @@ export default {
             strength: 1.2,
             smooth: true,
             points: 5
+        }
+    },
+    
+    // Rhythm configuration - morphs on musical phrases
+    rhythm: {
+        enabled: true,
+        syncMode: 'phrase',  // Morph on musical phrases
+        
+        // Pattern changes with musical structure
+        patternSync: {
+            verse: 'circle',          // Simple shape for verse
+            chorus: 'star',           // Complex shape for chorus
+            bridge: 'heart',          // Special shape for bridge
+            drop: 'explosion'         // Dramatic for drops
+        },
+        
+        // Morph timing syncs to measures
+        timingSync: {
+            formationBeat: 1,         // Start forming on beat 1
+            holdBeats: 2,             // Hold shape for 2 beats
+            dissolveBeat: 4,          // Dissolve on beat 4
+            curve: 'anticipatory'     // Ease into formation
+        },
+        
+        // Size pulses with rhythm
+        sizeSync: {
+            onBeat: 1.2,              // Expand on beat
+            offBeat: 0.95,            // Contract off beat
+            subdivision: 'quarter',    // Pulse every quarter note
+            curve: 'elastic'          // Bouncy expansion
+        },
+        
+        // Rotation syncs to bars
+        rotationSync: {
+            mode: 'continuous',       // Continuous rotation
+            degreesPerBar: 90,        // Rotate 90° per bar
+            direction: 'clockwise'    // Rotation direction
+        },
+        
+        // Musical dynamics affect complexity
+        dynamics: {
+            forte: { points: 8, size: 100 },    // Complex shapes when loud
+            piano: { points: 3, size: 60 }      // Simple shapes when soft
         }
     },
     

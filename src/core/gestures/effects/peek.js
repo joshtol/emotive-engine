@@ -33,6 +33,88 @@ export default {
         duration: 1500          // Total animation duration
     },
     
+    // Rhythm configuration - quick glimpse movements synchronized to rhythmic accents
+    rhythm: {
+        enabled: true,
+        syncMode: 'accent',  // Peek on rhythmic accents and syncopation
+        
+        // Peek distance responds to accent strength
+        distanceSync: {
+            onAccent: 60,         // Far peek on accents
+            offAccent: 25,        // Short peek off-accent
+            curve: 'quick'        // Sharp, sudden movement
+        },
+        
+        // Speed adapts to musical tempo
+        speedSync: {
+            mode: 'tempo',
+            fast: 0.25,           // Quick peeks for fast music
+            slow: 0.10,           // Slower peeks for slow music
+            hideMultiplier: 1.8   // Hide speed relative to peek speed
+        },
+        
+        // Duration matches rhythmic subdivisions
+        durationSync: {
+            mode: 'subdivision',
+            beats: 0.25,          // Quarter-beat peek duration
+            staggerBeats: 0.125,  // Eighth-beat stagger delay
+            sustain: false        // No sustain, quick action
+        },
+        
+        // Strong response to syncopated rhythms
+        syncopationResponse: {
+            enabled: true,
+            multiplier: 1.8,      // More dramatic peek on syncopation
+            type: 'distance'      // Affects peek distance
+        },
+        
+        // Style variations for different music types
+        patternOverrides: {
+            'funk': {
+                // Sharp, syncopated peeks
+                distanceSync: { onAccent: 70, offAccent: 35, curve: 'funky' },
+                syncopationResponse: { multiplier: 2.2 }
+            },
+            'latin': {
+                // Rhythmic, dance-like peeks
+                speedSync: { fast: 0.30, slow: 0.12 },
+                durationSync: { beats: 0.5, staggerBeats: 0.25 }
+            },
+            'breakbeat': {
+                // Erratic, complex peek patterns
+                distanceSync: { onAccent: 55, offAccent: 40 },
+                syncopationResponse: { multiplier: 2.5 }
+            },
+            'classical': {
+                // Subtle, expressive peeks
+                distanceSync: { onAccent: 45, offAccent: 20, curve: 'elegant' },
+                speedSync: { fast: 0.18, slow: 0.08 }
+            }
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: {
+                // Bold, assertive peeks
+                distanceSync: { 
+                    onAccent: { multiplier: 1.6 },
+                    offAccent: { multiplier: 1.3 }
+                },
+                speedSync: { multiplier: 1.4 },
+                syncopationResponse: { multiplier: 2.8 }
+            },
+            piano: {
+                // Cautious, subtle peeks
+                distanceSync: { 
+                    onAccent: { multiplier: 0.6 },
+                    offAccent: { multiplier: 0.4 }
+                },
+                speedSync: { multiplier: 0.7 },
+                syncopationResponse: { multiplier: 1.2 }
+            }
+        }
+    },
+    
     apply: function(particle, progress, motion, dt, centerX, centerY) {
         // Initialize peek data if needed
         if (!particle.gestureData) {

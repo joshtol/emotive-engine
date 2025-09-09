@@ -283,6 +283,7 @@ class RhythmIntegration {
         if (pattern) rhythmEngine.setPattern(pattern);
         rhythmEngine.start();
         this.enabled = true;
+        console.log('[RhythmIntegration] Started with BPM:', bpm, 'Pattern:', pattern);
     }
     
     /**
@@ -290,6 +291,8 @@ class RhythmIntegration {
      */
     stop() {
         rhythmEngine.stop();
+        this.enabled = false;
+        console.log('[RhythmIntegration] Stopped');
     }
     
     /**

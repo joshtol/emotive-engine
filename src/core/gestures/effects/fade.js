@@ -24,6 +24,42 @@ export default {
         maxOpacity: 1       // Maximum opacity level
     },
     
+    // Rhythm configuration - fades sync to musical dynamics
+    rhythm: {
+        enabled: true,
+        syncMode: 'dynamic',  // Fade with volume/intensity changes
+        
+        // Opacity modulation with beat
+        opacitySync: {
+            onBeat: 0.9,              // Nearly visible on beat
+            offBeat: 0.3,             // Ghostly between beats
+            subdivision: 'eighth',     // Check every 8th note
+            curve: 'exponential'      // Sharp opacity changes
+        },
+        
+        // Fade timing with musical structure
+        fadePhaseSync: {
+            verse: { fadeIn: true, fadeOut: false },    // Build in verse
+            chorus: { fadeIn: false, fadeOut: false },  // Full visibility
+            bridge: { fadeIn: true, fadeOut: true },    // In and out
+            outro: { fadeIn: false, fadeOut: true }     // Fade to end
+        },
+        
+        // Pulse with rhythm
+        pulseSync: {
+            enabled: true,
+            frequency: 'quarter',     // Pulse every quarter note
+            intensity: 0.2,           // Pulse depth
+            onAccent: 0.4            // Deeper pulse on accents
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: { minOpacity: 0.5, maxOpacity: 1.0 },    // More visible when loud
+            piano: { minOpacity: 0.0, maxOpacity: 0.4 }     // Ghostly when quiet
+        }
+    },
+    
     /**
      * Initialize fade data
      * Stores particle's original opacity

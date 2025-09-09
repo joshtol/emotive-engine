@@ -22,6 +22,78 @@ export default {
         allowDrift: false    // Enable slight movement
     },
     
+    // Rhythm configuration - synchronized pause effects following musical structure
+    rhythm: {
+        enabled: true,
+        syncMode: 'rest',    // Hold particles during musical rests and pauses
+        
+        // Hold strength responds to musical silence
+        holdSync: {
+            onRest: 0.98,         // Very strong hold during rests
+            onSound: 0.80,        // Looser hold when music plays
+            curve: 'immediate'    // Instant response to silence/sound
+        },
+        
+        // Duration matches rest length
+        durationSync: {
+            mode: 'rests',
+            minBeats: 0.5,        // Minimum half-beat hold
+            maxBeats: 8,          // Maximum 8-beat hold
+            sustain: true         // Maintain hold through entire rest
+        },
+        
+        // Response to fermatas and caesuras
+        pauseResponse: {
+            enabled: true,
+            multiplier: 1.5,      // Stronger hold during marked pauses
+            type: 'strength'      // Affects hold strength
+        },
+        
+        // Style variations for different music types
+        patternOverrides: {
+            'classical': {
+                // Expressive holds for dramatic pauses
+                holdSync: { onRest: 0.99, onSound: 0.75, curve: 'dramatic' },
+                pauseResponse: { multiplier: 2.0 }
+            },
+            'minimal': {
+                // Extended, meditative holds
+                holdSync: { onRest: 0.95, onSound: 0.85 },
+                durationSync: { minBeats: 2, maxBeats: 16 }
+            },
+            'jazz': {
+                // Subtle holds that allow for swing
+                holdSync: { onRest: 0.90, onSound: 0.70 },
+                allowDrift: true  // Enable slight movement for swing feel
+            },
+            'electronic': {
+                // Precise, digital-style holds
+                holdSync: { onRest: 0.99, onSound: 0.60, curve: 'digital' },
+                pauseResponse: { multiplier: 1.2 }
+            }
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: {
+                // Strong, definitive holds
+                holdSync: { 
+                    onRest: { multiplier: 1.02 },
+                    onSound: { multiplier: 0.9 }
+                },
+                pauseResponse: { multiplier: 2.2 }
+            },
+            piano: {
+                // Gentle, floating holds
+                holdSync: { 
+                    onRest: { multiplier: 0.97 },
+                    onSound: { multiplier: 0.85 }
+                },
+                pauseResponse: { multiplier: 1.3 }
+            }
+        }
+    },
+    
     initialize: function(particle) {
         if (!particle.gestureData) {
             particle.gestureData = {};

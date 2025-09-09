@@ -62,6 +62,51 @@ export default {
         }
     },
     
+    // Rhythm configuration - flicker syncs to subdivisions
+    rhythm: {
+        enabled: true,
+        syncMode: 'subdivision',  // Flicker on subdivisions
+        
+        // Flicker rate syncs to tempo
+        rateSync: {
+            subdivision: 'sixteenth',  // Flicker on 16th notes
+            onBeat: 30,               // Rapid flicker on beat
+            offBeat: 10,              // Slower between beats
+            triplet: 20,              // Medium on triplets
+            curve: 'step'             // Instant changes
+        },
+        
+        // Opacity patterns with rhythm
+        opacitySync: {
+            pattern: 'HLMH',          // High-Low-Medium-High
+            subdivision: 'eighth',     // Pattern rate
+            onAccent: 0.1,           // Nearly off on accent (dramatic)
+            regular: 0.5              // Medium normally
+        },
+        
+        // Jitter amount varies
+        jitterSync: {
+            onBeat: 5,                // Big jitter on beat
+            offBeat: 1,               // Minimal between
+            accent: 10,               // Extreme on accent
+            curve: 'random'           // Chaotic motion
+        },
+        
+        // Strobe modes
+        strobeSync: {
+            verse: false,             // No strobe in verse
+            chorus: true,             // Strobe in chorus
+            drop: 'intense',          // Intense strobe on drop
+            pattern: 'XOXO'          // Strobe pattern
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: { flickerRate: 25, jitterAmount: 5, minOpacity: 0.1 },
+            piano: { flickerRate: 8, jitterAmount: 1, minOpacity: 0.5 }
+        }
+    },
+    
     /**
      * Initialize gesture data for a particle
      * @param {Particle} particle - The particle to initialize

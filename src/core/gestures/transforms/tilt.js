@@ -62,6 +62,50 @@ export default {
         smoothness: 0.25       // Movement smoothing factor
     },
     
+    // Rhythm configuration - tilts sync to swing rhythm
+    rhythm: {
+        enabled: true,
+        syncMode: 'swing',  // Tilt with swing feel
+        
+        // Tilt angle syncs to beat pattern
+        angleSync: {
+            onBeat: 45,                      // Full tilt on beat
+            offBeat: -30,                    // Counter-tilt off beat
+            swing: 15,                       // Extra tilt on swing beats
+            subdivision: 'triplet',          // Triplet feel for smooth sway
+            curve: 'ease-in-out'            // Smooth tilt transitions
+        },
+        
+        // Gathering phase timing
+        gatherSync: {
+            beatsBefore: 0.5,                // Gather half beat before tilt
+            releaseAfter: 0.25,              // Release quarter beat after
+            intensity: 'dynamic'             // Gather speed varies with tempo
+        },
+        
+        // Sway amount modulation
+        swaySync: {
+            verse: 60,                       // Gentle sway in verse
+            chorus: 100,                     // Big sway in chorus
+            bridge: 80,                      // Medium in bridge
+            syncopated: true                 // Off-beat emphasis
+        },
+        
+        // Lift coordination
+        liftSync: {
+            upOnTilt: true,                  // Lift when tilting
+            heightOnAccent: 80,              // Higher lift on accents
+            normalHeight: 40,                // Standard lift height
+            curve: 'bounce'                  // Bouncy lift motion
+        },
+        
+        // Musical expression
+        dynamics: {
+            forte: { tiltAngle: 60, swayAmount: 120, frequency: 4 },
+            piano: { tiltAngle: 20, swayAmount: 40, frequency: 2 }
+        }
+    },
+    
     /**
      * Initialize gesture data for a particle
      * @param {Particle} particle - The particle to initialize

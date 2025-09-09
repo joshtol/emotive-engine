@@ -32,6 +32,53 @@ export default {
         }
     },
     
+    // Rhythm configuration - flash on beats and accents
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',  // Flash on beats
+        timingSync: 'immediate',    // Flash immediately (for impact)
+        interruptible: true,         // Can interrupt
+        priority: 8,                 // High priority
+        blendable: true,             // Can layer over other effects
+        
+        // Flash intensity syncs to beat strength
+        intensitySync: {
+            onBeat: 3.5,              // Bright flash on beat
+            offBeat: 1.0,             // Dim between beats
+            accent: 5.0,              // Blinding on accent
+            subdivision: 'quarter',    // Flash every quarter note
+            curve: 'exponential'      // Sharp flash attack
+        },
+        
+        // Duration varies with tempo
+        durationSync: {
+            mode: 'tempo',
+            baseDuration: 400,        // Base at 120 BPM
+            scaling: 'inverse'        // Faster tempo = shorter flash
+        },
+        
+        // Scale pulse with flash
+        scaleSync: {
+            onBeat: 1.2,              // Expand on beat
+            offBeat: 1.0,             // Normal size off beat
+            accent: 1.4,              // Big expansion on accent
+            curve: 'elastic'          // Bouncy scale
+        },
+        
+        // Strobe patterns
+        strobeSync: {
+            enabled: false,           // Enable for strobe effect
+            pattern: 'XXOX',          // X=flash, O=dark
+            subdivision: 'sixteenth'  // Strobe rate
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: { glowPeak: 4.0, scalePeak: 1.3, duration: 300 },
+            piano: { glowPeak: 2.0, scalePeak: 1.05, duration: 500 }
+        }
+    },
+    
     initialize: function(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};

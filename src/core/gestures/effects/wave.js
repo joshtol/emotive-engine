@@ -42,7 +42,23 @@ export default {
     
     // Default configuration
     config: {
-        duration: 2500,        // Animation duration
+        // Musical duration - wave flows for exactly 1 bar
+        musicalDuration: {
+            musical: true,
+            bars: 1,           // Default to 1 bar of wave motion
+            minBeats: 4,       // Minimum 1 bar
+            maxBeats: 16       // Maximum 4 bars
+        },
+        
+        // Musical phases of the wave gesture
+        phases: [
+            { name: 'gather', beats: 0.5 },     // Particles gather
+            { name: 'rise', beats: 0.5 },       // Begin rising motion
+            { name: 'waveLeft', beats: 1 },     // Wave to the left
+            { name: 'waveRight', beats: 1 },    // Wave to the right
+            { name: 'settle', beats: 1 }        // Settle back to center
+        ],
+        
         amplitude: 40,         // Infinity pattern width
         frequency: 1,          // Complete cycle count
         phaseShift: 0.3,       // Particle timing offset
@@ -56,6 +72,97 @@ export default {
             type: 'wave',
             strength: 1.0,     // Wave motion strength
             amplitude: 50      // Pattern size
+        }
+    },
+    
+    // Rhythm configuration - flowing wave patterns synchronized to musical waves and phrases
+    rhythm: {
+        enabled: true,
+        syncMode: 'wave',    // Flow with musical wave patterns and melodic contours
+        
+        // Amplitude responds to musical dynamics and melodic range
+        amplitudeSync: {
+            onWave: 65,           // Large waves during musical waves
+            onStatic: 25,         // Small waves during static sections
+            curve: 'flowing'      // Smooth, continuous transitions
+        },
+        
+        // Frequency matches musical phrase rhythm
+        frequencySync: {
+            mode: 'phrase',
+            slow: 0.7,            // Slower waves for slow phrases
+            fast: 1.8,            // Faster waves for quick phrases
+            curve: 'melodic'      // Follows melodic contour
+        },
+        
+        // Duration automatically syncs to bars via musicalDuration config
+        durationSync: {
+            mode: 'bars',         // Uses bars from musicalDuration
+            adaptToPhrase: true,  // Extend to complete musical phrases
+            sustain: true         // Maintain wave through phrase
+        },
+        
+        // Phase shift creates ensemble wave effects
+        phaseSync: {
+            enabled: true,
+            multiplier: 0.5,      // Moderate phase variation
+            type: 'ensemble'      // Creates group wave patterns
+        },
+        
+        // Response to melodic contour
+        melodicResponse: {
+            enabled: true,
+            multiplier: 1.4,      // Wave amplitude follows melody
+            type: 'amplitude'     // Affects wave size
+        },
+        
+        // Style variations for different music types
+        patternOverrides: {
+            'ambient': {
+                // Slow, hypnotic waves
+                amplitudeSync: { onWave: 80, onStatic: 40, curve: 'hypnotic' },
+                frequencySync: { slow: 0.5, fast: 1.2 },
+                durationSync: { minBeats: 16, maxBeats: 64 }
+            },
+            'ocean': {
+                // Natural, oceanic wave patterns
+                amplitudeSync: { onWave: 90, onStatic: 20, curve: 'natural' },
+                phaseSync: { multiplier: 0.8 },
+                melodicResponse: { multiplier: 1.8 }
+            },
+            'electronic': {
+                // Precise, digital wave forms
+                amplitudeSync: { onWave: 70, onStatic: 30, curve: 'digital' },
+                frequencySync: { slow: 0.8, fast: 2.5, curve: 'precise' }
+            },
+            'orchestral': {
+                // Rich, complex wave interactions
+                amplitudeSync: { onWave: 75, onStatic: 35 },
+                phaseSync: { multiplier: 0.7 },
+                melodicResponse: { multiplier: 2.0 }
+            }
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: {
+                // Powerful, sweeping waves
+                amplitudeSync: { 
+                    onWave: { multiplier: 1.8 },
+                    onStatic: { multiplier: 1.4 }
+                },
+                frequencySync: { multiplier: 1.3 },
+                melodicResponse: { multiplier: 2.2 }
+            },
+            piano: {
+                // Gentle, subtle waves
+                amplitudeSync: { 
+                    onWave: { multiplier: 0.6 },
+                    onStatic: { multiplier: 0.4 }
+                },
+                frequencySync: { multiplier: 0.7 },
+                melodicResponse: { multiplier: 1.1 }
+            }
         }
     },
     

@@ -63,6 +63,11 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'beat',  // Each bounce lands on a beat
+        timingSync: 'nextBeat',     // Start on next beat
+        interruptible: true,         // Can interrupt mid-bounce
+        priority: 3,                 // Lower priority
+        blendable: true,             // Can blend with other effects
+        crossfadePoint: 'anyBeat',   // Can transition out on any beat
         
         // Bounce height syncs to beat intensity
         amplitudeSync: {

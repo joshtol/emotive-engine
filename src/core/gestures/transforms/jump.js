@@ -60,6 +60,47 @@ export default {
         }
     },
     
+    // Rhythm configuration - jump lands on beat
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',  // Jump timing syncs to beat
+        
+        // Jump phases sync to rhythm
+        phaseSync: {
+            anticipation: 'eighth',    // Squash on 8th note before beat
+            jump: 'beat',              // Launch on the beat
+            landing: 'sixteenth'       // Land on 16th after beat
+        },
+        
+        // Jump height modulation
+        heightSync: {
+            onBeat: 1.5,              // Higher jumps on strong beats
+            offBeat: 0.8,             // Lower jumps on weak beats
+            accent: 2.0,              // Extra high on accented beats
+            curve: 'exponential'      // Sharp takeoff
+        },
+        
+        // Squash and stretch intensity
+        deformationSync: {
+            squashOnBeat: 0.6,        // More squash on beat
+            stretchOnBeat: 1.4,       // More stretch on beat
+            timing: 'anticipatory'    // Deform before beat hits
+        },
+        
+        // Hang time varies with tempo
+        hangTimeSync: {
+            mode: 'tempo',
+            baseDuration: 0.1,        // Base hang at 120 BPM
+            scaling: 'inverse'        // Slower tempo = longer hang
+        },
+        
+        // Musical dynamics
+        dynamics: {
+            forte: { jumpHeight: 80, stretch: 1.3 },   // Big jumps on loud
+            piano: { jumpHeight: 30, stretch: 1.1 }    // Small hops on soft
+        }
+    },
+    
     /**
      * Initialize gesture data for a particle
      * @param {Particle} particle - The particle to initialize

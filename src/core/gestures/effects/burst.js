@@ -22,6 +22,91 @@ export default {
         strength: 2.0    // Initial explosion intensity
     },
     
+    // Rhythm configuration - explosive bursts on strong beats
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',  // Burst on strong beats and accents
+        
+        // Strength syncs to beat intensity
+        strengthSync: {
+            onBeat: 3.5,          // Powerful burst on beats
+            offBeat: 1.0,         // Gentle burst off-beat
+            curve: 'explosion'    // Sharp attack, rapid decay
+        },
+        
+        // Decay rate responds to tempo
+        decaySync: {
+            mode: 'tempo',
+            fast: 0.8,            // Quick decay for fast songs
+            slow: 0.3,            // Slow decay for slow songs
+            curve: 'exponential'
+        },
+        
+        // Duration matches beat timing
+        durationSync: {
+            mode: 'beats',
+            beats: 0.5,           // Half-beat burst duration
+            sustain: false        // No sustain, pure burst
+        },
+        
+        // Strong response to accents
+        accentResponse: {
+            enabled: true,
+            multiplier: 2.5,      // Massive burst on accents
+            type: 'strength'      // Accent affects burst power
+        },
+        
+        // Pattern-specific burst styles
+        patternOverrides: {
+            'rock': {
+                // Heavy, aggressive bursts
+                strengthSync: { onBeat: 4.0, offBeat: 1.5 },
+                decaySync: { fast: 0.6, slow: 0.4 }
+            },
+            'electronic': {
+                // Sharp, precise bursts
+                strengthSync: { onBeat: 3.8, offBeat: 0.8, curve: 'sharp' },
+                decaySync: { fast: 0.9, slow: 0.7 }
+            },
+            'jazz': {
+                // Syncopated, varied bursts
+                strengthSync: { 
+                    onBeat: 2.8, 
+                    offBeat: 1.8,  // Strong off-beat emphasis
+                    swing: true 
+                },
+                decaySync: { fast: 0.5, slow: 0.2 }
+            },
+            'orchestral': {
+                // Dynamic, expressive bursts
+                strengthSync: { onBeat: 3.2, offBeat: 0.5 },
+                accentResponse: { multiplier: 3.0 }  // Very responsive to dynamics
+            }
+        },
+        
+        // Musical dynamics variations
+        dynamics: {
+            forte: {
+                // Explosive, powerful bursts
+                strengthSync: { 
+                    onBeat: { multiplier: 2.0 },
+                    offBeat: { multiplier: 1.5 }
+                },
+                decaySync: { multiplier: 0.7 },  // Slower decay for impact
+                accentResponse: { multiplier: 3.5 }
+            },
+            piano: {
+                // Subtle, gentle bursts
+                strengthSync: { 
+                    onBeat: { multiplier: 0.6 },
+                    offBeat: { multiplier: 0.3 }
+                },
+                decaySync: { multiplier: 1.3 },  // Faster decay for gentleness
+                accentResponse: { multiplier: 1.8 }
+            }
+        }
+    },
+    
     /**
      * Apply explosive burst motion to particle
      * Pushes particles radially outward with decaying force

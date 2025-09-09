@@ -38,6 +38,39 @@ export default {
         }
     },
     
+    // Rhythm configuration - hula syncs to groove
+    rhythm: {
+        enabled: true,
+        syncMode: 'bar',  // Full rotation per bar
+        
+        // Speed syncs to tempo for consistent rotation
+        speedSync: {
+            mode: 'tempo',
+            baseSpeed: 0.015,      // Base speed at 120 BPM
+            scaling: 'proportional' // Speed scales with BPM
+        },
+        
+        // Wobble syncs to beat for rhythmic variation
+        wobbleSync: {
+            onBeat: 0.25,          // More wobble on beat
+            offBeat: 0.1,          // Less wobble off beat
+            curve: 'sine'          // Smooth transitions
+        },
+        
+        // Vertical oscillation creates wave patterns
+        verticalSync: {
+            subdivision: 'quarter', // Wave every quarter note
+            amplitude: 0.4,        // Wave height on beat
+            phase: 'sequential'    // Waves follow rotation
+        },
+        
+        // Musical expression
+        dynamics: {
+            forte: { wobbleAmount: 0.3, speed: 1.2 },  // Wilder on loud
+            piano: { wobbleAmount: 0.05, speed: 0.8 }  // Gentler on soft
+        }
+    },
+    
     initialize: function(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
