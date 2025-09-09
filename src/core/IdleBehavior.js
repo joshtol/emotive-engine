@@ -140,6 +140,11 @@ class IdleBehavior {
      * Update blinking behavior
      */
     updateBlinking(deltaTime) {
+        // Check if blinking is disabled
+        if (!this.isBlinkingEnabled()) {
+            return;
+        }
+        
         if (!this.state.isBlinking) {
             // Wait for next blink
             this.timers.blink += deltaTime;
@@ -339,6 +344,26 @@ class IdleBehavior {
         if (this.state.isAsleep) {
             this.wakeUp();
         }
+    }
+    
+    /**
+     * Enable or disable blinking
+     * @param {boolean} enabled - Whether blinking should be enabled
+     */
+    setBlinkingEnabled(enabled) {
+        this.config.blinkingEnabled = enabled;
+        if (!enabled && this.state.isBlinking) {
+            // If currently blinking, finish the blink
+            this.endBlink();
+        }
+    }
+    
+    /**
+     * Check if blinking is enabled
+     * @returns {boolean} Whether blinking is enabled
+     */
+    isBlinkingEnabled() {
+        return this.config.blinkingEnabled !== false;
     }
     
     /**
