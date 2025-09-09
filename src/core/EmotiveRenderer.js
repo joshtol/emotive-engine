@@ -135,6 +135,7 @@ class EmotiveRenderer {
             recording: false,
             sleeping: false,
             blinking: false,
+            blinkingEnabled: true,  // Add flag to control blinking
             gazeOffset: { x: 0, y: 0 },
             gazeIntensity: 0,
             gazeLocked: false,
@@ -1705,8 +1706,8 @@ this.ctx.fillStyle = this.config.coreColor;
             this.state.breathDepth = breathDepthOverride;
         }
         
-        // Blinking (only when not sleeping or in zen)
-        if (!this.state.sleeping && this.state.emotion !== 'zen') {
+        // Blinking (only when enabled and not sleeping or in zen)
+        if (this.state.blinkingEnabled && !this.state.sleeping && this.state.emotion !== 'zen') {
             if (!this.state.blinking) {
                 this.blinkTimer += deltaTime;
                 if (this.blinkTimer >= this.nextBlinkTime) {
@@ -2556,6 +2557,20 @@ this.ctx.fillStyle = this.config.coreColor;
      */
     getRandomBlinkTime() {
         return 2000 + Math.random() * 4000; // 2-6 seconds normally
+    }
+    
+    /**
+     * Set whether blinking is enabled
+     * @param {boolean} enabled - Whether blinking should be enabled
+     */
+    setBlinkingEnabled(enabled) {
+        this.state.blinkingEnabled = enabled;
+        if (!enabled) {
+            // If disabling blinking, immediately stop any current blink
+            this.state.blinking = false;
+            this.blinkTimer = 0;
+            this.nextBlinkTime = this.getRandomBlinkTime();
+        }
     }
     
     /**
