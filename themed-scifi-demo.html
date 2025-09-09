@@ -750,12 +750,6 @@
                 </div>
             </div>
             
-            <div class="control-section">
-                <h3>Options</h3>
-                <div class="btn-group">
-                    <button class="sci-fi-btn" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true" style="width: 100%;">Blinking ON</button>
-                </div>
-            </div>
         </nav>
 
         <div class="center-container">
@@ -790,10 +784,11 @@
                     </div>
                 </div>
                 <div class="system-controls" role="group" aria-label="System controls">
-                    <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">Show FPS</button>
-                    <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">Record</button>
-                    <button class="sci-fi-btn" id="randomize-btn" aria-label="Randomize emotion and undertone">Randomize</button>
-                    <button class="sci-fi-btn" id="reset-btn" aria-label="Reset to default state">Reset</button>
+                    <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">👁 Blinking</button>
+                    <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">📊 FPS</button>
+                    <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">🔴 Record</button>
+                    <button class="sci-fi-btn" id="randomize-btn" aria-label="Randomize emotion and undertone">🎲 Random</button>
+                    <button class="sci-fi-btn" id="reset-btn" aria-label="Reset to default state">↺ Reset</button>
                 </div>
             </div>
         </div>
@@ -1386,7 +1381,8 @@
             document.getElementById('fps-toggle').addEventListener('click', function() {
                 showingFPS = !showingFPS;
                 document.getElementById('fps-display').classList.toggle('active', showingFPS);
-                this.textContent = showingFPS ? 'Hide FPS' : 'Show FPS';
+                this.innerHTML = showingFPS ? '📊 Hide FPS' : '📊 FPS';
+                this.classList.toggle('active', showingFPS);
                 this.setAttribute('aria-pressed', showingFPS ? 'true' : 'false');
                 
                 // Start or stop FPS updates
@@ -1399,7 +1395,8 @@
             let blinkingEnabled = true;
             document.getElementById('blinking-toggle').addEventListener('click', function() {
                 blinkingEnabled = !blinkingEnabled;
-                this.textContent = blinkingEnabled ? 'Blinking ON' : 'Blinking OFF';
+                this.innerHTML = blinkingEnabled ? '👁 Blinking' : '👁‍🗨 No Blink';
+                this.classList.toggle('active', blinkingEnabled);
                 this.setAttribute('aria-pressed', blinkingEnabled ? 'true' : 'false');
                 
                 // Set blinking on the renderer (which actually controls the blinking)
@@ -1471,7 +1468,7 @@
             
             document.getElementById('record-btn').addEventListener('click', function() {
                 isRecording = !isRecording;
-                this.textContent = isRecording ? 'Stop' : 'Record';
+                this.innerHTML = isRecording ? '⏹ Stop' : '🔴 Record';
                 this.classList.toggle('active', isRecording);
                 this.setAttribute('aria-pressed', isRecording ? 'true' : 'false');
                 if (isRecording) mascot.startRecording(); else mascot.stopRecording();
