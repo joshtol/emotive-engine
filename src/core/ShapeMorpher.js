@@ -11,7 +11,7 @@
  */
 
 import { MusicalDuration } from './MusicalDuration.js';
-import { rhythmEngine } from './RhythmEngine.js';
+import { rhythmEngine } from './rhythm.js';
 
 /**
  * Shape definitions as normalized point arrays
@@ -116,16 +116,28 @@ function generateMoon(numPoints) {
     const points = [];
     for (let i = 0; i < numPoints; i++) {
         const t = (i / numPoints) * Math.PI * 2;
-        let x, y;
         
-        if (t < Math.PI) {
-            // Outer arc
-            x = Math.cos(t) * 0.5;
-            y = Math.sin(t) * 0.5;
+        // Create crescent moon using two offset circles
+        // Outer circle for the main moon body
+        const outerX = Math.cos(t) * 0.45;
+        const outerY = Math.sin(t) * 0.45;
+        
+        // Inner circle offset to create crescent
+        const innerAngle = t - 0.3; // Slight offset
+        const innerX = Math.cos(innerAngle) * 0.35 + 0.15; // Offset to the right
+        const innerY = Math.sin(innerAngle) * 0.35;
+        
+        // Blend between outer and inner based on angle
+        let x, y;
+        if (t > 0.5 && t < Math.PI * 1.5) {
+            // Use inner circle for the crescent cutout
+            const blend = (Math.sin((t - 0.5) * 2) + 1) / 2;
+            x = outerX * (1 - blend) + innerX * blend;
+            y = outerY * (1 - blend) + innerY * blend;
         } else {
-            // Inner arc (creates crescent)
-            x = Math.cos(t) * 0.3 + 0.1;
-            y = Math.sin(t) * 0.3;
+            // Use outer circle
+            x = outerX;
+            y = outerY;
         }
         
         points.push({
@@ -142,13 +154,35 @@ function generateMoon(numPoints) {
 function generateEclipse(numPoints) {
     const points = [];
     for (let i = 0; i < numPoints; i++) {
-        const angle = (i / numPoints) * Math.PI * 2;
-        const inOverlap = angle > Math.PI * 0.3 && angle < Math.PI * 1.7;
-        const offset = inOverlap ? 0.1 : 0;
+        const t = (i / numPoints) * Math.PI * 2;
+        
+        // Two circles slightly offset to create eclipse effect
+        const circle1X = Math.cos(t) * 0.45 - 0.05;
+        const circle1Y = Math.sin(t) * 0.45;
+        
+        const circle2X = Math.cos(t) * 0.45 + 0.05;
+        const circle2Y = Math.sin(t) * 0.45;
+        
+        // Create eclipse by combining the two circles
+        let x, y;
+        if (t > Math.PI * 0.25 && t < Math.PI * 0.75) {
+            // Top portion - use circle2 (right circle)
+            x = circle2X;
+            y = circle2Y;
+        } else if (t > Math.PI * 1.25 && t < Math.PI * 1.75) {
+            // Bottom portion - use circle1 (left circle)
+            x = circle1X;
+            y = circle1Y;
+        } else {
+            // Blend for smooth transition
+            const blend = Math.abs(Math.sin(t * 2));
+            x = circle1X * (1 - blend) + circle2X * blend;
+            y = circle1Y * (1 - blend) + circle2Y * blend;
+        }
         
         points.push({
-            x: 0.5 + Math.cos(angle) * 0.5 + offset,
-            y: 0.5 + Math.sin(angle) * 0.5
+            x: 0.5 + x,
+            y: 0.5 + y
         });
     }
     return points;

@@ -657,6 +657,35 @@
             from { transform: translate(-50%, -50%) rotate(0deg); } 
             to { transform: translate(-50%, -50%) rotate(360deg); } 
         }
+        
+        /* Sci-fi styled audio player */
+        audio#audio-player {
+            width: 100%;
+            height: 35px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0;
+            filter: hue-rotate(180deg) invert(1);
+        }
+        
+        .dark audio#audio-player,
+        .night audio#audio-player {
+            filter: hue-rotate(190deg) saturate(2);
+        }
+        
+        .light audio#audio-player {
+            filter: none;
+            background: var(--bg-primary);
+        }
+        
+        audio#audio-player::-webkit-media-controls-panel {
+            background: var(--bg-secondary);
+        }
+        
+        audio#audio-player::-webkit-media-controls-play-button,
+        audio#audio-player::-webkit-media-controls-mute-button {
+            filter: brightness(2);
+        }
     </style>
 </head>
 <body class="night">
@@ -696,6 +725,35 @@
                     <button class="sci-fi-btn undertone-btn" data-undertone="nervous" aria-label="Set undertone to nervous" aria-pressed="false">Nervous</button>
                     <button class="sci-fi-btn undertone-btn" data-undertone="confident" aria-label="Set undertone to confident" aria-pressed="false">Confident</button>
                     <button class="sci-fi-btn undertone-btn" data-undertone="intense" aria-label="Set undertone to intense" aria-pressed="false">Intense</button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Shape Morph</h3>
+                <div class="shape-controls">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
+                        <button class="sci-fi-btn shape-btn active" data-shape="circle" style="font-size: 0.7rem;">Circle</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="heart" style="font-size: 0.7rem;">Heart ❤</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="star" style="font-size: 0.7rem;">Star ⭐</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="sun" style="font-size: 0.7rem;">Sun ☀</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="moon" style="font-size: 0.7rem;">Moon 🌙</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="eclipse" style="font-size: 0.7rem;">Eclipse</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="square" style="font-size: 0.7rem;">Square</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="triangle" style="font-size: 0.7rem;">Triangle</button>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <select id="morph-mode-select" class="sci-fi-btn" style="width: 100%; padding: 5px; font-size: 0.8rem;">
+                            <option value="hybrid">Hybrid (Core + Particles)</option>
+                            <option value="core-only">Core Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Options</h3>
+                <div class="btn-group">
+                    <button class="sci-fi-btn" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true" style="width: 100%;">Blinking ON</button>
                 </div>
             </div>
         </nav>
@@ -770,29 +828,6 @@
                         <button class="sci-fi-btn rhythm-preset" data-preset="electronic" style="font-size: 0.7rem;">Electronic</button>
                         <button class="sci-fi-btn rhythm-preset" data-preset="jazz" style="font-size: 0.7rem;">Jazz</button>
                         <button class="sci-fi-btn rhythm-preset" data-preset="dnb" style="font-size: 0.7rem;">Drum & Bass</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="control-section">
-                <h3>Shape Morph</h3>
-                <div class="shape-controls">
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
-                        <button class="sci-fi-btn shape-btn" data-shape="circle" style="font-size: 0.7rem;">Circle</button>
-                        <button class="sci-fi-btn shape-btn" data-shape="heart" style="font-size: 0.7rem;">Heart</button>
-                        <button class="sci-fi-btn shape-btn" data-shape="star" style="font-size: 0.7rem;">Star</button>
-                        <button class="sci-fi-btn shape-btn" data-shape="sun" style="font-size: 0.7rem;">Sun</button>
-                        <button class="sci-fi-btn shape-btn" data-shape="moon" style="font-size: 0.7rem;">Moon</button>
-                        <button class="sci-fi-btn shape-btn" data-shape="eclipse" style="font-size: 0.7rem;">Eclipse</button>
-                        <button class="sci-fi-btn shape-btn" data-shape="square" style="font-size: 0.7rem;">Square</button>
-                        <button class="sci-fi-btn shape-btn" data-shape="triangle" style="font-size: 0.7rem;">Triangle</button>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <label style="color: var(--text-secondary); font-size: 0.7rem;">Morph Mode:</label>
-                        <select id="morph-mode" class="sci-fi-btn" style="width: 100%; padding: 5px; font-size: 0.8rem;">
-                            <option value="hybrid">Hybrid (Core + Particles)</option>
-                            <option value="core-only">Core Only</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -874,7 +909,7 @@
         
         // Load EmotiveEngine asynchronously
         const loadEngine = async () => {
-            const module = await import('./src/EmotiveMascot.js?v=2.1.0');
+            const module = await import('./src/EmotiveMascot.js');
             EmotiveEngine = module.default;
             return EmotiveEngine;
         };
@@ -916,7 +951,7 @@
                 import('./src/utils/FPSCounter.js')
             ]);
             rhythmIntegration = rhythmIntegrationModule.default;
-            rhythmEngine = rhythmModule.default;
+            rhythmEngine = rhythmModule.rhythmEngine;
             GestureScheduler = gestureModule.default;
             FPSCounter = fpsModule.default;
         };
@@ -1345,6 +1380,18 @@
                 }
             });
             
+            // Blinking toggle
+            let blinkingEnabled = true;
+            document.getElementById('blinking-toggle').addEventListener('click', function() {
+                blinkingEnabled = !blinkingEnabled;
+                this.textContent = blinkingEnabled ? 'Blinking ON' : 'Blinking OFF';
+                this.setAttribute('aria-pressed', blinkingEnabled ? 'true' : 'false');
+                
+                if (mascot && mascot.idleBehavior) {
+                    mascot.idleBehavior.setEnabled(blinkingEnabled);
+                }
+            });
+            
             // Rhythm controls
             document.getElementById('rhythm-toggle').addEventListener('click', function() {
                 const bpm = document.getElementById('bpm-slider').value;
@@ -1434,7 +1481,7 @@
             document.querySelectorAll('.shape-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const shape = btn.dataset.shape;
-                    const mode = document.getElementById('morph-mode').value;
+                    const mode = document.getElementById('morph-mode-select').value;
                     
                     if (mascot) {
                         // Visual feedback
