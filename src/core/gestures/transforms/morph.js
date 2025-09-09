@@ -129,8 +129,9 @@ export default {
      * @param {Object} motion - Gesture motion configuration
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
+     * @param {EmotiveMascot} mascot - The mascot instance for core morphing
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize: function(particle, motion, centerX, centerY, mascot) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }

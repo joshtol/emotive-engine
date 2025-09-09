@@ -1346,7 +1346,22 @@
             document.querySelectorAll('.gesture-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const gestureName = btn.dataset.gesture;
-                    if (rhythmActive && gestureScheduler) {
+                    
+                    // Special handling for morph gesture - morph core to random shape
+                    if (gestureName === 'morph' && mascot) {
+                        const shapes = ['heart', 'star', 'sun', 'moon', 'eclipse', 'square', 'triangle'];
+                        const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+                        mascot.morphTo(randomShape, {
+                            duration: rhythmActive ? 'bar' : 1000,
+                            mode: 'core-only',
+                            onBeat: rhythmActive
+                        });
+                        
+                        // Update visual feedback
+                        document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+                        const shapeBtn = document.querySelector(`.shape-btn[data-shape="${randomShape}"]`);
+                        if (shapeBtn) shapeBtn.classList.add('active');
+                    } else if (rhythmActive && gestureScheduler) {
                         gestureScheduler.requestGesture(gestureName);
                     } else {
                         mascot.express(gestureName);

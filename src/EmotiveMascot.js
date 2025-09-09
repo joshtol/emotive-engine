@@ -145,6 +145,14 @@ class EmotiveMascot {
         // Always use EmotiveRenderer
         this.renderer = new EmotiveRenderer(this.canvasManager, this.config.classicConfig || {});
         
+        // Initialize shape morphing and audio analysis early
+        this.shapeMorpher = new ShapeMorpher();
+        this.audioAnalyzer = new AudioAnalyzer();
+        
+        // Pass them to renderer
+        this.renderer.shapeMorpher = this.shapeMorpher;
+        this.renderer.audioAnalyzer = this.audioAnalyzer;
+        
         // Connect renderer and state machine for undertone modifiers
         this.renderer.stateMachine = this.stateMachine;
         this.stateMachine.renderer = this.renderer;
@@ -297,12 +305,6 @@ class EmotiveMascot {
         
         // Initialize rhythm integration
         this.rhythmEnabled = false;
-        
-        // Initialize shape morphing system
-        this.shapeMorpher = new ShapeMorpher();
-        
-        // Initialize audio analyzer for vocal visualization
-        this.audioAnalyzer = new AudioAnalyzer();
         rhythmIntegration.initialize();
         this.warningThrottle = 5000; // Only show same warning every 5 seconds
         

@@ -2734,6 +2734,12 @@ this.ctx.fillStyle = this.config.coreColor;
                 case 'jump':
                     gestureTransform = this.applyJump(anim, easedProgress);
                     break;
+                case 'sway':
+                    gestureTransform = this.applySway(anim, easedProgress);
+                    break;
+                case 'float':
+                    gestureTransform = this.applyFloat(anim, easedProgress);
+                    break;
             }
             
             // Combine transforms
@@ -3153,6 +3159,48 @@ this.ctx.fillStyle = this.config.coreColor;
         return {
             offsetY: yOffset,
             scale: scale
+        };
+    }
+    
+    applySway(anim, progress) {
+        // Gentle pendulum-like swaying motion for the core
+        const swayAmplitude = (anim.params?.amplitude || 30) * this.scaleFactor;
+        const swayFrequency = anim.params?.frequency || 1;
+        
+        // Sway side to side with a gentle ease
+        const swayX = Math.sin(progress * Math.PI * 2 * swayFrequency) * swayAmplitude;
+        
+        // Slight vertical bob for realism
+        const bobY = Math.sin(progress * Math.PI * 4 * swayFrequency) * swayAmplitude * 0.1;
+        
+        // Slight rotation to match the sway
+        const rotation = Math.sin(progress * Math.PI * 2 * swayFrequency) * 5; // 5 degrees max
+        
+        return {
+            offsetX: swayX,
+            offsetY: bobY,
+            rotation: rotation
+        };
+    }
+    
+    applyFloat(anim, progress) {
+        // Ethereal floating motion with both vertical and horizontal drift
+        const floatAmplitude = (anim.params?.amplitude || 20) * this.scaleFactor;
+        const floatSpeed = anim.params?.speed || 1;
+        
+        // Primary vertical float with sine wave
+        const floatY = Math.sin(progress * Math.PI * 2 * floatSpeed) * floatAmplitude;
+        
+        // Secondary horizontal drift for natural movement
+        const driftX = Math.sin(progress * Math.PI * 3 * floatSpeed) * floatAmplitude * 0.3;
+        
+        // Slight scale pulsation for breathing effect
+        const scalePulse = 1 + Math.sin(progress * Math.PI * 4 * floatSpeed) * 0.02;
+        
+        return {
+            offsetX: driftX,
+            offsetY: floatY,
+            scale: scalePulse
         };
     }
     
