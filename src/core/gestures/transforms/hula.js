@@ -107,45 +107,81 @@ export default {
         const data = particle.gestureData.hula;
         const speed = (motion.speed || this.config.speed) * (motion.strength || 1);
         
+        // Smooth entry/exit transitions
+        let transitionFactor = 1.0;
+        if (progress < 0.1) {
+            // Smooth entry (first 10%)
+            transitionFactor = progress / 0.1;
+            transitionFactor = Math.sin(transitionFactor * Math.PI * 0.5); // Smooth ease-in
+        } else if (progress > 0.9) {
+            // Smooth exit (last 10%)
+            transitionFactor = (1 - progress) / 0.1;
+            transitionFactor = Math.sin(transitionFactor * Math.PI * 0.5); // Smooth ease-out
+        }
+        
         // Update angle with direction (dt is already normalized to 60fps)
-        data.angle += speed * dt * data.direction;
+        data.angle += speed * dt * data.direction * transitionFactor;
         
         // Wobble effect - the hoop wobbles as it spins
-        const wobble = Math.sin(data.angle * 2 + data.wobblePhase) * (motion.wobbleAmount || this.config.wobbleAmount);
+        const wobble = Math.sin(data.angle * 2 + data.wobblePhase) * (motion.wobbleAmount || this.config.wobbleAmount) * transitionFactor;
         
-        // Calculate elliptical radius with wobble
-        let radiusX = data.radius * (1 + wobble);
-        let radiusY = data.radius * (0.7 + wobble); // Elliptical shape factor
+        // Calculate elliptical radius with wobble and transition
+        let radiusX = data.radius * (1 + wobble) * transitionFactor;
+        let radiusY = data.radius * (0.7 + wobble) * transitionFactor; // Elliptical shape factor
         
-        // Position on the ellipse
-        particle.x = centerX + Math.cos(data.angle) * radiusX;
-        particle.y = centerY + Math.sin(data.angle) * radiusY;
+        // Smoothly transition from original position to orbit position
+        const targetX = centerX + Math.cos(data.angle) * radiusX;
+        const targetY = centerY + Math.sin(data.angle) * radiusY;
+        
+        if (progress < 0.1) {
+            // During entry, lerp from original position
+            const dx = particle.x - centerX;
+            const dy = particle.y - centerY;
+            const currentRadius = Math.sqrt(dx * dx + dy * dy);
+            if (currentRadius < 50) {
+                // If particle is at center, move it out smoothly
+                particle.x = centerX + Math.cos(data.angle) * radiusX;
+                particle.y = centerY + Math.sin(data.angle) * radiusY;
+            } else {
+                particle.x = particle.x + (targetX - particle.x) * transitionFactor * 0.5;
+                particle.y = particle.y + (targetY - particle.y) * transitionFactor * 0.5;
+            }
+        } else {
+            particle.x = targetX;
+            particle.y = targetY;
+        }
         
         // 3D DEPTH with strong vertical oscillation
         const zAngle = data.angle + data.zPhase + (motion.zPhaseOffset || this.config.zPhaseOffset);
         
-        // Z-coordinate for depth (behind/in front)
-        particle.z = Math.sin(zAngle) * 0.9; // Depth range for layering
+        // Z-coordinate for depth (behind/in front) with transition
+        particle.z = Math.sin(zAngle) * 0.9 * transitionFactor;
         
         // Vertical oscillation synchronized with z-depth
         const verticalAmount = motion.verticalOscillation || this.config.verticalOscillation;
-        const verticalOffset = Math.cos(zAngle * 2) * verticalAmount * data.radius * 0.2;
+        const verticalOffset = Math.cos(zAngle * 2) * verticalAmount * data.radius * 0.2 * transitionFactor;
         particle.y += verticalOffset;
         
         // Tilt effect - particles higher when in front, lower when behind
         const tiltOffset = particle.z * data.radius * 0.1;
         particle.y -= tiltOffset;
         
-        // Set velocity to match motion
-        particle.vx = -Math.sin(data.angle) * radiusX * speed;
-        particle.vy = Math.cos(data.angle) * radiusY * speed;
+        // Set velocity to match motion with smooth transitions
+        const targetVx = -Math.sin(data.angle) * radiusX * speed;
+        const targetVy = Math.cos(data.angle) * radiusY * speed;
         
-        // Restore original state at end
-        if (progress > 0.9) {
-            const blendFactor = (1 - progress) * 10;
-            particle.vx = particle.vx * blendFactor + data.originalVx * (1 - blendFactor);
-            particle.vy = particle.vy * blendFactor + data.originalVy * (1 - blendFactor);
-            particle.z = particle.z * blendFactor + data.originalZ * (1 - blendFactor);
+        if (progress < 0.1) {
+            // Smooth velocity transition during entry
+            particle.vx = data.originalVx + (targetVx - data.originalVx) * transitionFactor;
+            particle.vy = data.originalVy + (targetVy - data.originalVy) * transitionFactor;
+        } else if (progress > 0.9) {
+            // Smooth velocity transition during exit
+            particle.vx = targetVx * transitionFactor + data.originalVx * (1 - transitionFactor);
+            particle.vy = targetVy * transitionFactor + data.originalVy * (1 - transitionFactor);
+            particle.z = particle.z * transitionFactor + data.originalZ * (1 - transitionFactor);
+        } else {
+            particle.vx = targetVx;
+            particle.vy = targetVy;
         }
     },
     

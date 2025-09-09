@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMOTIVE A.I. Core - Neural Interface</title>
+    <link rel="icon" type="image/svg+xml" href="assets/emotive-engine-icon.svg">
+    <!-- External dependencies removed for performance -->
+    <style>
+        /* Fallback fonts - use system fonts for better performance */
+        @font-face {
+            font-family: 'Chakra Petch';
+            src: local('system-ui'), local('-apple-system'), local('BlinkMacSystemFont');
+        }
+        @font-face {
+            font-family: 'Orbitron';  
+            src: local('system-ui'), local('-apple-system'), local('BlinkMacSystemFont');
+            font-weight: 700;
+        }
+    </style>
+    <style>
+        :root {
+            --blur-strength: 16px;
+            --control-width: clamp(240px, 30vw, 320px);
+            --gap: 20px;
+        }
+
+        /* Theme Variables - Light Theme (CAN have blue) */
+        .light {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-grid: rgba(0, 0, 0, 0.05);
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --accent-primary: #007acc;
+            --accent-glow: #0099ff;
+            --border-color: rgba(0, 122, 204, 0.3);
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --button-bg: rgba(255, 255, 255, 0.8);
+            --button-hover: rgba(0, 122, 204, 0.1);
+            --canvas-bg: rgba(242, 241, 241, 0.3);
+            --canvas-backdrop: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Dark Theme (CAN have blue) */
+        .dark {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-grid: rgba(255, 255, 255, 0.05);
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent-primary: #00e5ff;
+            --accent-glow: #00ccff;
+            --border-color: rgba(0, 229, 255, 0.3);
+            --panel-bg: rgba(42, 42, 42, 0.95);
+            --button-bg: rgba(0, 0, 0, 0.4);
+            --button-hover: rgba(0, 229, 255, 0.1);
+            --canvas-bg: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Night Theme (NO BLUES - Burnt orange/copper accents) */
+        .night {
+            --bg-primary: #0E0E0E;  /* flex tape dark */
+            --bg-secondary: #1A1A1A; /* slightly lighter dark */
+            --bg-grid: rgba(204, 102, 51, 0.08); /* burnt orange grid */
+            --text-primary: #FFF5F0; /* off-white with subtle orange tint */
+            --text-secondary: rgba(255, 245, 240, 0.8); /* orange-tinted white */
+            --accent-primary: #CC6633; /* burnt orange for frame borders - NO BLUES */
+            --accent-glow: #E67E50;    /* slightly brighter for glow */
+            --border-color: rgba(204, 102, 51, 0.3); /* burnt orange border for frame */
+            --panel-bg: rgba(14, 14, 14, 0.95); /* flex tape based */
+            --button-bg: rgba(0, 0, 0, 0.4);
+            --button-hover: rgba(255, 138, 101, 0.15); /* brighter orange hover */
+            --canvas-bg: rgba(14, 14, 14, 0.3);
+            --canvas-backdrop: rgba(0, 0, 0, 0.1);
+        }
+
+        /* 1. Base Reset & Typography */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; }
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: var(--bg-primary);
+            background-image:
+                linear-gradient(var(--bg-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+            background-size: 25px 25px;
+            color: var(--text-primary);
+        }
+
+        /* Theme Switcher */
+        .theme-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            width: 30px;
+            height: 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-switcher:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-icon {
+            width: 32px;
+            height: 32px;
+            transition: transform 0.3s ease;
+            opacity: 0.33;
+        }
+
+        .theme-switcher:hover .theme-icon {
+            transform: rotate(360deg);
+            opacity: 1;
+        }
+
+        /* Skip Navigation Link - WCAG 2.1 AA */
+        .skip-nav {
+            position: absolute;
+            left: -9999px;
+            z-index: 999;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border: 2px solid var(--accent-primary);
+            border-radius: 4px;
+        }
+        
+        .skip-nav:focus {
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+        }
+
+        /* 2. Main Layout Structure (Mobile First) */
+        body {
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-height: 100%;
+        }
+        
+        .center-container {
+            order: 1;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transform-origin: center center;
+        }
+        .controls-left { 
+            order: 2; 
+            background-color: var(--bg-primary); 
+            transform-origin: left center;
+        }
+        .controls-right { 
+            order: 3; 
+            background-color: var(--bg-primary);
+            transform-origin: right center;
+        }
+
+        /* 3. Central Display Unit */
+        .display-and-controls {
+            display: flex;
+            flex-direction: column;
+        }
+        .display-container {
+            width: 100%;
+            aspect-ratio: 1 / 1 !important; /* THE LAW: Always square */
+            position: relative;
+            background: rgba(10, 14, 26, 0.25);
+            backdrop-filter: blur(var(--blur-strength));
+            -webkit-backdrop-filter: blur(var(--blur-strength));
+            min-height: 0; /* Prevent flex from overriding aspect-ratio */
+            contain: layout size paint; /* Isolate layout calculations and painting */
+        }
+        
+        #emotive-canvas {
+            /* Removed will-change and image-rendering as they can hurt performance */
+            transform: translateZ(0); /* Keep GPU acceleration */
+            -webkit-transform: translateZ(0);
+        }
+        /* Fallback for browsers without aspect-ratio support - only for mobile portrait */
+        @media (orientation: portrait), (max-width: 1024px) {
+            .display-container::before {
+                content: "";
+                display: block;
+                padding-top: 100%; /* Forces 1:1 Aspect Ratio using the width */
+            }
+        }
+        .display-content {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--canvas-bg);
+        }
+        .system-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px;
+            height: 60px;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        /* 4. Control Panels & Buttons */
+        .control-section { padding: 15px; }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+        .control-section h3 {
+            color: var(--accent-primary); 
+            font-size: 0.8rem;
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            margin: 0;
+        }
+        /* Night theme headings use brighter orange */
+        .night .control-section h3 {
+            color: #FF8A65; /* brighter orange for headings */
+        }
+        .night .section-header {
+            border-bottom-color: rgba(255, 138, 101, 0.2);
+        }
+        .sound-toggle {
+            background: transparent;
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .sound-toggle:hover {
+            background: var(--button-hover);
+            transform: scale(1.05);
+        }
+        .sound-toggle.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+        .sound-toggle svg {
+            width: 16px;
+            height: 16px;
+        }
+        .sci-fi-btn {
+            width: 100%; 
+            padding: 8px; 
+            margin: 4px 0;
+            background: var(--button-bg); 
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary); 
+            border-radius: 4px; 
+            cursor: pointer;
+            transition: all 0.2s; 
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        .sci-fi-btn:hover {
+            background: var(--button-hover); 
+            border-color: var(--accent-primary);
+            color: var(--accent-primary); 
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+        
+        /* Keyboard focus indicators - WCAG 2.1 AA compliant */
+        .sci-fi-btn:focus {
+            outline: 3px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+        
+        /* Enhanced focus for keyboard navigation only */
+        .sci-fi-btn:focus-visible {
+            outline: 3px solid var(--accent-primary);
+            outline-offset: 3px;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        
+        /* Remove outline for mouse users */
+        .sci-fi-btn:focus:not(:focus-visible) {
+            outline: none;
+        }
+        
+        .sci-fi-btn.active {
+            background: var(--button-hover); 
+            border-color: var(--accent-primary);
+            color: var(--accent-primary); 
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+        .sci-fi-btn.gesture-pending {
+            animation: pending-pulse 0.5s infinite;
+            border-color: rgba(255, 200, 0, 0.6);
+            color: rgba(255, 200, 0, 0.8);
+        }
+        .sci-fi-btn.gesture-triggered {
+            animation: trigger-flash 0.2s;
+            background: rgba(0, 255, 100, 0.3) !important;
+            border-color: rgba(0, 255, 100, 0.8) !important;
+            color: #00ff64 !important;
+        }
+        @keyframes pending-pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        @keyframes trigger-flash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 100, 0.6); }
+            100% { transform: scale(1); }
+        }
+        .btn-group { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+            gap: 5px; 
+        }
+        
+        /* 5. Holo Effects & Decorations */
+        .holo-element { position: absolute; pointer-events: none; }
+        .corner-bracket { z-index: 50; width: 40px; height: 40px; }
+        .corner-bracket::before, .corner-bracket::after { 
+            content: ''; 
+            position: absolute; 
+            background-color: var(--accent-primary); 
+            animation: subtle-glow 4s infinite ease-in-out; 
+        }
+        .top-left { top: 0; left: 0; } 
+        .top-left::before { height: 4px; width: 100%; } 
+        .top-left::after { width: 4px; height: 100%; }
+        .top-right { top: 0; right: 0; } 
+        .top-right::before { height: 4px; width: 100%; } 
+        .top-right::after { width: 4px; height: 100%; right: 0; }
+        .bottom-left { bottom: 0; left: 0; } 
+        .bottom-left::before { height: 4px; width: 100%; bottom: 0; } 
+        .bottom-left::after { width: 4px; height: 100%; }
+        .bottom-right { bottom: 0; right: 0; } 
+        .bottom-right::before { height: 4px; width: 100%; bottom: 0; } 
+        .bottom-right::after { width: 4px; height: 100%; right: 0; }
+        .holo-circle { 
+            z-index: 5; 
+            border: 2px solid; 
+            border-radius: 50%; 
+            animation: rotate 80s infinite linear; 
+            aspect-ratio: 1 / 1; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+        }
+        .circle-1 { 
+            width: 90%; 
+            border-color: var(--border-color); 
+            border-style: dotted; 
+        }
+        .circle-2 { 
+            width: 80%; 
+            border-color: var(--border-color); 
+            animation-direction: reverse; 
+            animation-duration: 15s; 
+        }
+        .info-display { 
+            z-index: 200; 
+            bottom: 25px; 
+            left: 25px; 
+            font-family: 'Chakra Petch', sans-serif; 
+            font-size: 1rem; 
+            width: calc(100% - 50px); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .info-display > .status-text { 
+            animation: subtle-glow-cyan 4s infinite ease-in-out; 
+            text-transform: uppercase; 
+        }
+        .info-display > .undertone-text { 
+            background: rgba(0, 0, 0, 0.4); 
+            border: 1px solid var(--border-color); 
+            padding: 4px 12px; 
+            border-radius: 4px; 
+            color: var(--text-secondary); 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+        }
+        /* Light theme undertone tag styling */
+        .light .info-display > .undertone-text {
+            background: rgba(0, 122, 204, 0.15);
+            border: 1px solid rgba(0, 122, 204, 0.4);
+            color: #007acc;
+        }
+        /* Light theme FPS display styling */
+        .light .fps-display {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 122, 204, 0.4);
+            color: #007acc;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .fps-display { 
+            z-index: 200; 
+            position: absolute; 
+            bottom: 60px; 
+            right: 25px;
+            font-family: 'Chakra Petch', sans-serif; 
+            font-size: 0.75rem; 
+            color: var(--accent-primary); 
+            background: rgba(0, 0, 0, 0.6); 
+            border: 1px solid var(--border-color); 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            display: none; 
+            text-align: right; 
+            line-height: 1.4; 
+        }
+        .fps-display.active { display: block; } 
+        .fps-display .fps-value { font-size: 1.2rem; font-weight: bold; }
+
+        /* 6. Landscape Mode for Mobile/Tablet Devices */
+        @media (orientation: landscape) and (max-height: 768px) {
+            body { overflow: hidden; }
+            .main-layout {
+                flex-direction: row;
+                height: 100vh;
+                padding: 5px;
+                gap: 5px;
+            }
+            .center-container {
+                order: 0;
+                position: relative;
+                flex: 1;
+                min-width: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .controls-left, .controls-right {
+                order: 0;
+                width: 180px;
+                flex-shrink: 0;
+                height: 100%;
+                overflow-y: auto;
+                overflow-x: hidden;
+                background-color: var(--panel-bg);
+            }
+            .display-and-controls {
+                height: 100%;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .display-container {
+                width: 100%;
+                max-width: calc(100vh - 70px); /* Account for system controls */
+                max-height: calc(100vh - 70px);
+                aspect-ratio: 1 / 1 !important;
+                margin: 0 auto;
+            }
+            /* Hide the ::before pseudo-element in landscape */
+            .display-container::before {
+                display: none;
+            }
+            .system-controls {
+                height: 45px;
+                font-size: 0.7rem;
+                padding: 0 5px;
+                flex-shrink: 0;
+            }
+            .system-controls .sci-fi-btn {
+                padding: 5px 8px;
+            }
+            .btn-group { 
+                grid-template-columns: 1fr 1fr;
+                gap: 2px;
+            }
+            .sci-fi-btn {
+                padding: 5px;
+                font-size: 0.65rem;
+                margin: 2px 0;
+            }
+            .control-section {
+                padding: 8px;
+            }
+            .control-section h3 {
+                font-size: 0.65rem;
+                margin-bottom: 6px;
+            }
+        }
+        
+
+        /* 7. Desktop Layout Overrides */
+        @media (min-width: 1025px) {
+            body { overflow: hidden; }
+            .main-layout {
+                flex-direction: row;
+                height: 100vh;
+                padding: var(--gap);
+                gap: var(--gap);
+                box-sizing: border-box;
+            }
+            .center-container {
+                order: 0;
+                position: relative;
+                flex: 1;
+                min-width: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .controls-left, .controls-right {
+                order: 0;
+                width: var(--control-width);
+                flex-shrink: 0;
+                height: 100%;
+                overflow-y: auto;
+                overflow-x: hidden;
+                background-color: var(--panel-bg);
+                box-sizing: border-box;
+            }
+            .display-and-controls {
+                height: 100%;
+                width: 100%;
+                max-height: calc(100vh - 40px); /* Account for padding */
+                max-width: 800px;
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+            }
+            .display-container {
+                width: 100%;
+                flex: 1 1 auto;
+                max-height: calc(100% - 60px); /* Account for system controls */
+                aspect-ratio: 1 / 1 !important;
+            }
+            /* Hide the ::before pseudo-element in desktop */
+            .display-container::before {
+                display: none;
+            }
+            .system-controls {
+                flex-shrink: 0;
+            }
+            .btn-group { grid-template-columns: 1fr 1fr; }
+            .controls-left::-webkit-scrollbar, .controls-right::-webkit-scrollbar { width: 8px; }
+            .controls-left::-webkit-scrollbar-track, .controls-right::-webkit-scrollbar-track { 
+                background: var(--button-bg); 
+            }
+            .controls-left::-webkit-scrollbar-thumb, .controls-right::-webkit-scrollbar-thumb { 
+                background: var(--border-color); 
+                border-radius: 4px; 
+            }
+        }
+
+        /* 8. Animations */
+        #emotive-canvas { 
+            display: block; 
+            position: absolute; 
+            z-index: 10; 
+            width: 100%; 
+            height: 100%; 
+            top: 0;
+            left: 0;
+        }
+        @keyframes pulse { 
+            0%, 100% { 
+                opacity: 0.8; 
+                transform: scale(1); 
+                box-shadow: 0 0 10px var(--accent-glow); 
+            } 
+            50% { 
+                opacity: 1; 
+                transform: scale(1.02); 
+                box-shadow: 0 0 15px var(--accent-glow); 
+            } 
+        }
+        @keyframes subtle-glow { 
+            0%, 100% { 
+                background-color: var(--accent-primary); 
+            } 
+            50% { 
+                background-color: var(--accent-glow); 
+            } 
+        }
+        @keyframes subtle-glow-cyan { 
+            0%, 100% { 
+                color: var(--accent-primary); 
+                text-shadow: 0 0 5px var(--accent-glow); 
+            } 
+            50% { 
+                color: var(--accent-glow); 
+                text-shadow: 0 0 8px var(--accent-glow); 
+            } 
+        }
+        /* Night theme specific styles */
+        .night .sci-fi-btn.active {
+            color: #FFF5F0; /* orange-tinted white for active buttons */
+            border-color: #FF8A65; /* brighter orange border */
+            box-shadow: 0 0 15px rgba(255, 138, 101, 0.6);
+        }
+        .night .info-display .status-text {
+            color: #FEFEFE !important; /* force white core */
+            text-shadow: 0 0 15px #FF8A65; /* single orange glow */
+            animation: none !important; /* disable the animation */
+        }
+        .night .info-display > .undertone-text {
+            background: rgba(20, 14, 10, 0.8);
+            border: 1px solid #FF8A65;
+            color: #FFD4B8;
+        }
+        .night .fps-display {
+            background: rgba(20, 14, 10, 0.8);
+            border: 1px solid #FF8A65;
+            color: #FF8A65;
+        }
+        
+        /* Dark theme specific styles */
+        .dark .info-display .status-text {
+            color: #FEFEFE !important; /* force white core */
+            text-shadow: 0 0 15px #00e5ff; /* cyan blue glow */
+            animation: none !important; /* disable the animation */
+        }
+        
+        /* Light theme specific styles */
+        .light .info-display .status-text {
+            color: #0E0E0E !important; /* flex tape dark text */
+            text-shadow: 0 0 15px #007acc; /* blue glow */
+            animation: none !important; /* disable the animation */
+        }
+        @keyframes rotate { 
+            from { transform: translate(-50%, -50%) rotate(0deg); } 
+            to { transform: translate(-50%, -50%) rotate(360deg); } 
+        }
+    </style>
+</head>
+<body class="night">
+    <a href="#display-container" class="skip-nav">Skip to main content</a>
+    <main class="main-layout" role="main">
+        
+        <nav class="controls-left" role="navigation" aria-label="Emotion controls">
+            <div class="control-section">
+                <h3>Emotion Matrix</h3>
+                <div class="btn-group" role="group" aria-label="Emotion selection">
+                    <button class="sci-fi-btn emotion-btn active" data-emotion="neutral" aria-label="Set emotion to neutral" aria-pressed="true">Neutral</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="joy" aria-label="Set emotion to joy" aria-pressed="false">Joy</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="sadness" aria-label="Set emotion to sadness" aria-pressed="false">Sadness</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="anger" aria-label="Set emotion to anger" aria-pressed="false">Anger</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="fear" aria-label="Set emotion to fear" aria-pressed="false">Fear</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="surprise" aria-label="Set emotion to surprise" aria-pressed="false">Surprise</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="disgust" aria-label="Set emotion to disgust" aria-pressed="false">Disgust</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="love" aria-label="Set emotion to love" aria-pressed="false">Love</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="suspicion" aria-label="Set emotion to suspicion" aria-pressed="false">Suspicion</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="excited" aria-label="Set emotion to excited" aria-pressed="false">Excited</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="resting" aria-label="Set emotion to resting" aria-pressed="false">Resting</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Set emotion to euphoria" aria-pressed="false">Euphoria</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="focused" aria-label="Set emotion to focused" aria-pressed="false">Focused</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="glitch" aria-label="Set emotion to glitch" aria-pressed="false">Glitch</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Set emotion to euphoria" aria-pressed="false">Euphoria</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="excited" aria-label="Set emotion to excited" aria-pressed="false">Excited</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="suspicion" aria-label="Set emotion to suspicion" aria-pressed="false">Suspicion</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="resting" aria-label="Set emotion to resting" aria-pressed="false">Resting</button>
+                </div>
+            </div>
+            <div class="control-section">
+                <h3>Undertone Modifier</h3>
+                <div class="btn-group" role="group" aria-label="Undertone modifier selection">
+                    <button class="sci-fi-btn undertone-btn" data-undertone="subdued" aria-label="Set undertone to subdued" aria-pressed="false">Subdued</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="tired" aria-label="Set undertone to tired" aria-pressed="false">Tired</button>
+                    <button class="sci-fi-btn undertone-btn active" data-undertone="" aria-label="Clear undertone" aria-pressed="true">Clear</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="nervous" aria-label="Set undertone to nervous" aria-pressed="false">Nervous</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="confident" aria-label="Set undertone to confident" aria-pressed="false">Confident</button>
+                    <button class="sci-fi-btn undertone-btn" data-undertone="intense" aria-label="Set undertone to intense" aria-pressed="false">Intense</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="center-container">
+            <div class="display-and-controls">
+                <div id="display-container" class="display-container">
+                    <div class="display-content">
+                        <canvas id="emotive-canvas"></canvas>
+                        <div style="position: absolute; top: 20px; left: 20px; z-index: 100; opacity: 0.33;">
+                            <img id="logo-image" src="assets/emotive-engine-full-BW.svg" alt="Emotive Engine" style="height: 40px; filter: brightness(0) invert(1);">
+                        </div>
+                        <!-- Theme Switcher -->
+                        <div class="theme-switcher" id="theme-switcher">
+                            <svg class="theme-icon" id="theme-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <!-- Icon path will be replaced dynamically -->
+                                <path d="" fill-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="holo-element corner-bracket top-left"></div>
+                        <div class="holo-element corner-bracket top-right"></div>
+                        <div class="holo-element corner-bracket bottom-left"></div>
+                        <div class="holo-element corner-bracket bottom-right"></div>
+                        <div class="holo-element holo-circle circle-1"></div>
+                        <div class="holo-element holo-circle circle-2"></div>
+                        <div class="holo-element info-display">
+                            <div class="status-text" id="emotion-display">EMOTION: NEUTRAL</div>
+                            <div class="undertone-text" id="undertone-display">STABLE</div>
+                        </div>
+                        <div class="fps-display" id="fps-display">
+                            <span class="fps-value" id="fps-value">0</span>
+                            <span class="fps-label">FPS</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="system-controls" role="group" aria-label="System controls">
+                    <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">Show FPS</button>
+                    <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">Record</button>
+                    <button class="sci-fi-btn" id="randomize-btn" aria-label="Randomize emotion and undertone">Randomize</button>
+                    <button class="sci-fi-btn" id="reset-btn" aria-label="Reset to default state">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <aside class="controls-right" role="complementary" aria-label="Gesture controls">
+            <div class="control-section">
+                <h3>Rhythm Sync Module</h3>
+                <div class="rhythm-controls">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                        <button class="sci-fi-btn" id="rhythm-toggle" style="flex: 1;">
+                            <span id="rhythm-status">▶ START</span>
+                        </button>
+                        <div id="beat-indicator" style="width: 30px; height: 30px; border: 1px solid var(--border-color); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <div id="beat-dot" style="width: 10px; height: 10px; background: var(--accent-primary); border-radius: 50%; transition: all 0.1s;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="color: var(--text-secondary); font-size: 0.7rem; display: block; margin-bottom: 5px;">BPM: <span id="bpm-value">120</span></label>
+                        <input type="range" id="bpm-slider" min="60" max="180" value="120" style="width: 100%; accent-color: var(--accent-primary);">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <select id="pattern-select" class="sci-fi-btn" style="width: 100%; padding: 5px; font-size: 0.8rem;">
+                            <option value="4/4">4/4 Common</option>
+                            <option value="3/4">3/4 Waltz</option>
+                            <option value="6/8">6/8 Compound</option>
+                            <option value="5/4">5/4 Complex</option>
+                            <option value="7/8">7/8 Irregular</option>
+                        </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
+                        <button class="sci-fi-btn rhythm-preset" data-preset="ambient" style="font-size: 0.7rem;">Ambient</button>
+                        <button class="sci-fi-btn rhythm-preset" data-preset="electronic" style="font-size: 0.7rem;">Electronic</button>
+                        <button class="sci-fi-btn rhythm-preset" data-preset="jazz" style="font-size: 0.7rem;">Jazz</button>
+                        <button class="sci-fi-btn rhythm-preset" data-preset="dnb" style="font-size: 0.7rem;">Drum & Bass</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Shape Morph</h3>
+                <div class="shape-controls">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
+                        <button class="sci-fi-btn shape-btn" data-shape="circle" style="font-size: 0.7rem;">Circle</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="heart" style="font-size: 0.7rem;">Heart</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="star" style="font-size: 0.7rem;">Star</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="sun" style="font-size: 0.7rem;">Sun</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="moon" style="font-size: 0.7rem;">Moon</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="eclipse" style="font-size: 0.7rem;">Eclipse</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="square" style="font-size: 0.7rem;">Square</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="triangle" style="font-size: 0.7rem;">Triangle</button>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="color: var(--text-secondary); font-size: 0.7rem;">Morph Mode:</label>
+                        <select id="morph-mode" class="sci-fi-btn" style="width: 100%; padding: 5px; font-size: 0.8rem;">
+                            <option value="hybrid">Hybrid (Core + Particles)</option>
+                            <option value="core-only">Core Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Audio Vocal Viz</h3>
+                <div class="audio-controls">
+                    <input type="file" id="audio-file" accept="audio/*" style="display: none;">
+                    <button class="sci-fi-btn" id="load-audio-btn" style="width: 100%; margin-bottom: 5px;">Load Audio File</button>
+                    <button class="sci-fi-btn" id="mic-btn" style="width: 100%; margin-bottom: 10px;">Use Microphone</button>
+                    <audio id="audio-player" controls style="width: 100%; display: none;"></audio>
+                    <div id="audio-status" style="color: var(--text-secondary); font-size: 0.7rem; text-align: center;"></div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-header">
+                    <h3>Gesture Protocol</h3>
+                    <button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound" title="Toggle sound" aria-pressed="false">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <g class="sound-on" style="display: none;">
+                                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                            </g>
+                            <g class="sound-off">
+                                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                                <line x1="23" y1="9" x2="17" y2="15"/>
+                                <line x1="17" y1="9" x2="23" y2="15"/>
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+                <div class="btn-group" role="group" aria-label="Gesture animations">
+                    <button class="sci-fi-btn gesture-btn" data-gesture="bounce" aria-label="Trigger bounce animation">Bounce</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="pulse" aria-label="Trigger pulse animation">Pulse</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="shake" aria-label="Trigger shake animation">Shake</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="spin" aria-label="Trigger spin animation">Spin</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="nod" aria-label="Trigger nod animation">Nod</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="wave" aria-label="Trigger wave animation">Wave</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="breathe" aria-label="Trigger breathe animation">Breathe</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="tilt" aria-label="Trigger tilt animation">Tilt</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="expand" aria-label="Trigger expand animation">Expand</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="contract" aria-label="Trigger contract animation">Contract</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="flash" aria-label="Trigger flash animation">Flash</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="drift" aria-label="Trigger drift animation">Drift</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="stretch" aria-label="Trigger stretch animation">Stretch</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="glow" aria-label="Trigger glow animation">Glow</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="orbit" aria-label="Trigger orbit animation">Orbit</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="hula" aria-label="Trigger hula animation">Hula</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="sway" aria-label="Trigger sway animation">Sway</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="flicker" aria-label="Trigger flicker animation">Flicker</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="vibrate" aria-label="Trigger vibrate animation">Vibrate</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="morph" aria-label="Trigger morph animation">Morph</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="jump" aria-label="Trigger jump animation">Jump</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="burst" aria-label="Trigger burst animation">Burst</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="settle" aria-label="Trigger settle animation">Settle</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="peek" aria-label="Trigger peek animation">Peek</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="hold" aria-label="Trigger hold animation">Hold</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="scan" aria-label="Trigger scan animation">Scan</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="twitch" aria-label="Trigger twitch animation">Twitch</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="jitter" aria-label="Trigger jitter animation">Jitter</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="float" aria-label="Trigger float animation">Float</button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <script type="module">
+        // Performance optimization: Use dynamic import for faster initial load
+        let EmotiveEngine;
+        let mascot;
+        let currentEmotion = 'neutral';
+        let currentUndertone = '';
+        let showingFPS = false;
+        let isRecording = false;
+        let currentTheme = 'night';
+        let soundEnabled = false;
+        
+        // Load EmotiveEngine asynchronously
+        const loadEngine = async () => {
+            const module = await import('./src/EmotiveMascot.js?v=2.1.0');
+            EmotiveEngine = module.default;
+            return EmotiveEngine;
+        };
+        
+        // Load rhythm and gesture modules
+        let rhythmIntegration, rhythmEngine, GestureScheduler, FPSCounter;
+        let gestureScheduler, fpsCounter;
+        let rhythmActive = false;
+        
+        // Rhythm presets for different music genres
+        const rhythmPresets = {
+            ambient: {
+                bpm: 72,
+                pattern: '4/4',
+                gestures: ['breathe', 'float', 'drift']
+            },
+            electronic: {
+                bpm: 128,
+                pattern: '4/4',
+                gestures: ['pulse', 'flash', 'vibrate']
+            },
+            jazz: {
+                bpm: 96,
+                pattern: '4/4',
+                gestures: ['sway', 'bounce', 'tilt']
+            },
+            dnb: {
+                bpm: 174,
+                pattern: '4/4',
+                gestures: ['shake', 'jitter', 'twitch']
+            }
+        };
+        
+        const loadRhythmModules = async () => {
+            const [rhythmIntegrationModule, rhythmModule, gestureModule, fpsModule] = await Promise.all([
+                import('./src/core/rhythmIntegration.js'),
+                import('./src/core/rhythm.js'),
+                import('./src/core/GestureScheduler.js'),
+                import('./src/utils/FPSCounter.js')
+            ]);
+            rhythmIntegration = rhythmIntegrationModule.default;
+            rhythmEngine = rhythmModule.default;
+            GestureScheduler = gestureModule.default;
+            FPSCounter = fpsModule.default;
+        };
+
+        // Theme management
+        const themes = ['light', 'dark', 'night'];
+        const themeIcons = {
+            // Sun icon for light theme - larger starburst with eclipse-matching center hole
+            'light': 'M 12 0 L 9.5 6.5 A 5.5 5.5 0 0 1 14.5 6.5 L 12 0 z M 2 2 L 6.5 9.5 A 5.5 5.5 0 0 1 9.5 6.5 L 2 2 z M 0 12 L 6.5 14.5 A 5.5 5.5 0 0 1 6.5 9.5 L 0 12 z M 2 22 L 9.5 17.5 A 5.5 5.5 0 0 1 6.5 14.5 L 2 22 z M 12 24 L 14.5 17.5 A 5.5 5.5 0 0 1 9.5 17.5 L 12 24 z M 22 22 L 17.5 14.5 A 5.5 5.5 0 0 1 14.5 17.5 L 22 22 z M 24 12 L 17.5 9.5 A 5.5 5.5 0 0 1 17.5 14.5 L 24 12 z M 22 2 L 14.5 6.5 A 5.5 5.5 0 0 1 17.5 9.5 L 22 2 z',
+            // Moon icon for dark theme - crescent using negative space
+            'dark': 'M 12 3 C 7.03 3 3 7.03 3 12 C 3 16.97 7.03 21 12 21 C 16.97 21 21 16.97 21 12 C 21 11.34 20.91 10.7 20.75 10.09 C 19.84 10.67 18.75 11 17.57 11 C 14.48 11 12 8.52 12 5.43 C 12 4.25 12.33 3.16 12.91 2.25 C 12.61 3.09 12 3 12 3 z',
+            // Eclipse icon for night theme - sun with moon overlay
+            'night': 'M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 z M 15 4.5 C 18.04 4.5 20.5 6.96 20.5 10 C 20.5 13.04 18.04 15.5 15 15.5 C 11.96 15.5 9.5 13.04 9.5 10 C 9.5 6.96 11.96 4.5 15 4.5 z'
+        };
+        const iconColors = {
+            'light': '#007acc',  /* blue - light theme CAN have blue */
+            'dark': '#00e5ff',   /* cyan - dark theme CAN have blue */
+            'night': '#CC6633'   /* burnt orange/copper - night theme NO blues */
+        };
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            const path = icon.querySelector('path');
+            path.setAttribute('d', themeIcons[theme]);
+            path.setAttribute('fill-rule', 'evenodd');
+            icon.style.color = iconColors[theme];
+        }
+
+        function cycleTheme() {
+            const currentIndex = themes.indexOf(currentTheme);
+            currentTheme = themes[(currentIndex + 1) % themes.length];
+            
+            // Remove all theme classes and apply new one
+            document.body.classList.remove(...themes);
+            document.body.classList.add(currentTheme);
+            
+            // Update icon
+            updateThemeIcon(currentTheme);
+            
+            // Update logo filter to match theme with subtle tint
+            const logo = document.getElementById('logo-image');
+            if (logo) {
+                switch(currentTheme) {
+                    case 'light':
+                        // Subtle blue tint for light theme
+                        logo.style.filter = 'brightness(0) sepia(1) saturate(5) hue-rotate(190deg) brightness(0.4)';
+                        break;
+                    case 'night':
+                        // Subtle orange tint for night theme  
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(15deg) brightness(0.9)';
+                        break;
+                    case 'dark':
+                    default:
+                        // Subtle cyan tint for dark theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(150deg) brightness(0.95)';
+                        break;
+                }
+            }
+            
+            // Save preference
+            localStorage.setItem('emotive-theme', currentTheme);
+        }
+
+        async function init() {
+            // Load saved theme
+            const savedTheme = localStorage.getItem('emotive-theme') || 'night';
+            currentTheme = savedTheme;
+            document.body.classList.remove(...themes);
+            document.body.classList.add(currentTheme);
+            updateThemeIcon(currentTheme);
+            
+            // Set initial logo filter based on theme with subtle tint
+            const logo = document.getElementById('logo-image');
+            if (logo) {
+                switch(currentTheme) {
+                    case 'light':
+                        // Subtle blue tint for light theme
+                        logo.style.filter = 'brightness(0) sepia(1) saturate(5) hue-rotate(190deg) brightness(0.4)';
+                        break;
+                    case 'night':
+                        // Subtle orange tint for night theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(15deg) brightness(0.9)';
+                        break;
+                    case 'dark':
+                    default:
+                        // Subtle cyan tint for dark theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(150deg) brightness(0.95)';
+                        break;
+                }
+            }
+
+            // Load engine dynamically for better performance
+            await loadEngine();
+            
+            mascot = new EmotiveEngine({
+                canvasId: 'emotive-canvas',
+                startingEmotion: 'neutral',
+                emotionalResponsiveness: 0.8,
+                particleIntensity: 1.0,
+                glowIntensity: 0.8,
+                audioEnabled: true,  // Initialize audio system
+                showFPS: false,
+                debugMode: false,
+                renderMode: 'default',
+                maxParticles: 100
+            });
+            
+            // After mascot is created, disable sound until user enables it
+            setTimeout(() => {
+                if (mascot.soundSystem) {
+                    mascot.soundSystem.isEnabled = false;
+                }
+            }, 100);
+            
+            mascot.start();
+            
+            // Load and initialize rhythm modules
+            await loadRhythmModules();
+            
+            // Initialize rhythm system
+            rhythmIntegration.initialize();
+            
+            // Initialize gesture scheduler
+            gestureScheduler = new GestureScheduler(mascot);
+            
+            // Setup scheduler callbacks for visual feedback
+            gestureScheduler.onGestureQueued = (item) => {
+                const btn = document.querySelector(`.gesture-btn[data-gesture="${item.gestureName}"]`);
+                if (btn) {
+                    btn.classList.add('gesture-pending');
+                }
+            };
+            
+            gestureScheduler.onGestureTriggered = (item) => {
+                const btn = document.querySelector(`.gesture-btn[data-gesture="${item.gestureName}"]`);
+                if (btn) {
+                    btn.classList.remove('gesture-pending');
+                    btn.classList.add('gesture-triggered');
+                    setTimeout(() => btn.classList.remove('gesture-triggered'), 200);
+                }
+            };
+            
+            // Setup beat indicator
+            rhythmEngine.on('beat', (beatInfo) => {
+                if (rhythmActive) {
+                    const beatDot = document.getElementById('beat-dot');
+                    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary');
+                    const glowColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-glow');
+                    
+                    beatDot.style.width = '20px';
+                    beatDot.style.height = '20px';
+                    beatDot.style.background = accentColor;
+                    beatDot.style.boxShadow = `0 0 20px ${glowColor}`;
+                    
+                    setTimeout(() => {
+                        beatDot.style.width = '10px';
+                        beatDot.style.height = '10px';
+                        beatDot.style.background = accentColor;
+                        beatDot.style.boxShadow = 'none';
+                    }, 100);
+                }
+            });
+            
+            // Initialize FPS counter
+            fpsCounter = new FPSCounter();
+            
+            // Start FPS tracking animation loop
+            function updateFPS() {
+                const fps = fpsCounter.update();
+                if (showingFPS) {
+                    document.getElementById('fps-value').textContent = fps;
+                }
+                requestAnimationFrame(updateFPS);
+            }
+            updateFPS();
+            
+            setupEventHandlers();
+            updateDisplay();
+            
+            // Handle orientation changes - blur both sides of transition
+            let previousOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            let isTransitioning = false;
+            
+            const handleOrientationChange = () => {
+                const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+                
+                if (currentOrientation !== previousOrientation && !isTransitioning) {
+                    isTransitioning = true;
+                    
+                    // Heavy blur on current frame
+                    document.body.style.filter = 'blur(30px)';
+                    
+                    // Wait for blur, then switch with new view pre-blurred
+                    setTimeout(() => {
+                        previousOrientation = currentOrientation;
+                        
+                        // Clear particles while blurred
+                        if (mascot && mascot.particleSystem) {
+                            mascot.particleSystem.particles = [];
+                        }
+                        
+                        // Force canvas resize to prevent orb squishing
+                        if (mascot && mascot.canvasManager) {
+                            // Wait a frame for layout to settle
+                            requestAnimationFrame(() => {
+                                // Force full canvas reset
+                                const canvas = mascot.canvasManager.canvas;
+                                
+                                // Clear any inline dimensions
+                                canvas.style.width = '';
+                                canvas.style.height = '';
+                                
+                                // Let CSS reflow
+                                const rect = canvas.getBoundingClientRect();
+                                
+                                // Reset the canvas internal dimensions
+                                mascot.canvasManager.dpr = window.devicePixelRatio || 1;
+                                mascot.canvasManager.width = rect.width;
+                                mascot.canvasManager.height = rect.height;
+                                mascot.canvasManager.canvas.width = rect.width * mascot.canvasManager.dpr;
+                                mascot.canvasManager.canvas.height = rect.height * mascot.canvasManager.dpr;
+                                mascot.canvasManager.centerX = rect.width / 2;
+                                mascot.canvasManager.centerY = rect.height / 2;
+                                
+                                // Reset context scaling
+                                mascot.canvasManager.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                                mascot.canvasManager.ctx.scale(mascot.canvasManager.dpr, mascot.canvasManager.dpr);
+                                
+                                // Update renderer's scale factor
+                                if (mascot.renderer) {
+                                    const canvasSize = Math.min(rect.width || 400, rect.height || 400);
+                                    mascot.renderer.scaleFactor = (canvasSize / 400) * (mascot.renderer.config.baseScale || 1.0);
+                                    
+                                    // Force offscreen canvas update
+                                    if (mascot.renderer.offscreenCanvas) {
+                                        mascot.renderer.offscreenCanvas.width = rect.width;
+                                        mascot.renderer.offscreenCanvas.height = rect.height;
+                                    }
+                                    
+                                    // Clear caches
+                                    if (mascot.renderer.glowCache) {
+                                        mascot.renderer.glowCache.clear();
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Keep blur for incoming view
+                        document.body.style.filter = 'blur(25px)';
+                        
+                        // Then quickly unblur to reveal new layout
+                        setTimeout(() => {
+                            document.body.style.filter = '';
+                            isTransitioning = false;
+                            
+                            // Double-check canvas dimensions after transition
+                            if (mascot && mascot.canvasManager) {
+                                // Wait two frames to ensure complete layout settlement
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        const canvas = mascot.canvasManager.canvas;
+                                        canvas.style.width = '';
+                                        canvas.style.height = '';
+                                        
+                                        const rect = canvas.getBoundingClientRect();
+                                        
+                                        mascot.canvasManager.dpr = window.devicePixelRatio || 1;
+                                        mascot.canvasManager.width = rect.width;
+                                        mascot.canvasManager.height = rect.height;
+                                        mascot.canvasManager.canvas.width = rect.width * mascot.canvasManager.dpr;
+                                        mascot.canvasManager.canvas.height = rect.height * mascot.canvasManager.dpr;
+                                        mascot.canvasManager.centerX = rect.width / 2;
+                                        mascot.canvasManager.centerY = rect.height / 2;
+                                        
+                                        mascot.canvasManager.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                                        mascot.canvasManager.ctx.scale(mascot.canvasManager.dpr, mascot.canvasManager.dpr);
+                                        
+                                        if (mascot.renderer) {
+                                            const canvasSize = Math.min(rect.width || 400, rect.height || 400);
+                                            mascot.renderer.scaleFactor = (canvasSize / 400) * (mascot.renderer.config.baseScale || 1.0);
+                                            
+                                            if (mascot.renderer.offscreenCanvas) {
+                                                mascot.renderer.offscreenCanvas.width = rect.width;
+                                                mascot.renderer.offscreenCanvas.height = rect.height;
+                                            }
+                                            
+                                            if (mascot.renderer.glowCache) {
+                                                mascot.renderer.glowCache.clear();
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+                        }, 50);
+                    }, 150);
+                }
+            };
+            
+            // Single debounced resize handler
+            let resizeTimeout;
+            let blurApplied = false;
+            
+            window.addEventListener('resize', () => {
+                const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+                
+                // Only apply blur once when orientation actually changes
+                if (currentOrientation !== previousOrientation && !isTransitioning && !blurApplied) {
+                    document.body.style.filter = 'blur(30px)';
+                    blurApplied = true;
+                }
+                
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    handleOrientationChange();
+                    blurApplied = false; // Reset for next orientation change
+                }, 100);
+            });
+            
+            if ('orientation' in window) {
+                window.addEventListener('orientationchange', () => {
+                    if (!isTransitioning) {
+                        // Apply heavy blur immediately
+                        document.body.style.filter = 'blur(30px)';
+                        setTimeout(handleOrientationChange, 100);
+                    }
+                });
+            }
+        }
+
+        function setupEventHandlers() {
+            // Theme switcher
+            document.getElementById('theme-switcher').addEventListener('click', cycleTheme);
+            
+            // Sound toggle
+            const soundToggle = document.getElementById('sound-toggle');
+            const soundOn = soundToggle.querySelector('.sound-on');
+            const soundOff = soundToggle.querySelector('.sound-off');
+            
+            // Function to update button appearance based on state
+            const updateSoundButton = (enabled) => {
+                if (enabled) {
+                    soundToggle.classList.add('active');
+                    soundOn.style.display = 'block';
+                    soundOff.style.display = 'none';
+                    soundToggle.setAttribute('aria-pressed', 'true');
+                } else {
+                    soundToggle.classList.remove('active');
+                    soundOn.style.display = 'none';
+                    soundOff.style.display = 'block';
+                    soundToggle.setAttribute('aria-pressed', 'false');
+                }
+            };
+            
+            // Initialize button to show disabled state
+            updateSoundButton(false);
+            
+            soundToggle.addEventListener('click', () => {
+                if (!mascot || !mascot.soundSystem) return;
+                
+                // Toggle the sound state
+                soundEnabled = !soundEnabled;
+                
+                // Update mascot configuration and sound system
+                mascot.config.enableAudio = soundEnabled;
+                mascot.soundSystem.isEnabled = soundEnabled;
+                
+                // Update button appearance
+                updateSoundButton(soundEnabled);
+                
+                if (!soundEnabled && mascot.soundSystem.isAvailable()) {
+                    // Stop any playing ambient tones when disabling
+                    mascot.soundSystem.stopAmbientTone(200);
+                }
+                
+                console.log('Sound', soundEnabled ? 'enabled' : 'disabled');
+            });
+
+            document.querySelectorAll('.emotion-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentEmotion = btn.dataset.emotion;
+                    mascot.setEmotion(currentEmotion, currentUndertone || undefined);
+                    document.querySelectorAll('.emotion-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
+                    updateDisplay();
+                });
+            });
+
+            document.querySelectorAll('.gesture-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const gestureName = btn.dataset.gesture;
+                    if (rhythmActive && gestureScheduler) {
+                        gestureScheduler.requestGesture(gestureName);
+                    } else {
+                        mascot.express(gestureName);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.undertone-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentUndertone = btn.dataset.undertone;
+                    mascot.setEmotion(currentEmotion, currentUndertone || undefined);
+                    document.querySelectorAll('.undertone-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
+                    updateDisplay();
+                });
+            });
+
+            document.getElementById('fps-toggle').addEventListener('click', function() {
+                showingFPS = !showingFPS;
+                document.getElementById('fps-display').classList.toggle('active', showingFPS);
+                this.textContent = showingFPS ? 'Hide FPS' : 'Show FPS';
+                this.setAttribute('aria-pressed', showingFPS ? 'true' : 'false');
+                
+                // Start or stop FPS updates
+                if (showingFPS) {
+                    updateFPS();
+                }
+            });
+            
+            // Rhythm controls
+            document.getElementById('rhythm-toggle').addEventListener('click', function() {
+                const bpm = document.getElementById('bpm-slider').value;
+                const pattern = document.getElementById('pattern-select').value;
+                
+                if (!rhythmActive) {
+                    rhythmIntegration.start(parseInt(bpm), pattern);
+                    rhythmActive = true;
+                    document.getElementById('rhythm-status').textContent = '■ STOP';
+                    this.classList.add('active');
+                } else {
+                    rhythmIntegration.stop();
+                    rhythmActive = false;
+                    document.getElementById('rhythm-status').textContent = '▶ START';
+                    this.classList.remove('active');
+                }
+            });
+            
+            document.getElementById('bpm-slider').addEventListener('input', function(e) {
+                const bpm = parseInt(e.target.value);
+                document.getElementById('bpm-value').textContent = bpm;
+                if (rhythmActive) {
+                    rhythmIntegration.setBPM(bpm);
+                }
+            });
+            
+            document.getElementById('pattern-select').addEventListener('change', function(e) {
+                if (rhythmActive) {
+                    rhythmIntegration.setPattern(e.target.value);
+                }
+            });
+            
+            // Rhythm presets
+            document.querySelectorAll('.rhythm-preset').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const presetName = this.dataset.preset;
+                    const preset = rhythmPresets[presetName];
+                    
+                    if (preset) {
+                        document.getElementById('bpm-slider').value = preset.bpm;
+                        document.getElementById('bpm-value').textContent = preset.bpm;
+                        document.getElementById('pattern-select').value = preset.pattern;
+                        
+                        if (rhythmActive) {
+                            rhythmIntegration.setBPM(preset.bpm);
+                            rhythmIntegration.setPattern(preset.pattern);
+                        }
+                        
+                        // Trigger one of the preset gestures randomly
+                        if (preset.gestures && preset.gestures.length > 0) {
+                            const randomGesture = preset.gestures[Math.floor(Math.random() * preset.gestures.length)];
+                            if (rhythmActive && gestureScheduler) {
+                                gestureScheduler.requestGesture(randomGesture);
+                            } else {
+                                mascot.express(randomGesture);
+                            }
+                        }
+                    }
+                });
+            });
+            
+            document.getElementById('record-btn').addEventListener('click', function() {
+                isRecording = !isRecording;
+                this.textContent = isRecording ? 'Stop' : 'Record';
+                this.classList.toggle('active', isRecording);
+                this.setAttribute('aria-pressed', isRecording ? 'true' : 'false');
+                if (isRecording) mascot.startRecording(); else mascot.stopRecording();
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                currentEmotion = 'neutral';
+                currentUndertone = '';
+                mascot.setEmotion('neutral');
+                document.querySelectorAll('.emotion-btn, .undertone-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.emotion-btn[data-emotion="neutral"]').classList.add('active');
+                document.querySelector('.undertone-btn[data-undertone=""]').classList.add('active');
+                updateDisplay();
+            });
+            
+            document.getElementById('randomize-btn').addEventListener('click', () => {
+                const emotions = Array.from(document.querySelectorAll('.emotion-btn')).map(b => b.dataset.emotion);
+                const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+                document.querySelector(`.emotion-btn[data-emotion="${randomEmotion}"]`).click();
+            });
+            
+            // Shape morphing controls
+            document.querySelectorAll('.shape-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const shape = btn.dataset.shape;
+                    const mode = document.getElementById('morph-mode').value;
+                    
+                    if (mascot) {
+                        // Visual feedback
+                        document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        
+                        // Morph to new shape
+                        mascot.morphTo(shape, {
+                            duration: rhythmActive ? 'bar' : 1000, // Musical time if rhythm active
+                            mode: mode,
+                            onBeat: rhythmActive
+                        });
+                    }
+                });
+            });
+            
+            // Audio controls
+            const audioFile = document.getElementById('audio-file');
+            const audioPlayer = document.getElementById('audio-player');
+            const audioStatus = document.getElementById('audio-status');
+            let micActive = false;
+            
+            document.getElementById('load-audio-btn').addEventListener('click', () => {
+                audioFile.click();
+            });
+            
+            audioFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    audioPlayer.src = url;
+                    audioPlayer.style.display = 'block';
+                    audioStatus.textContent = 'Audio loaded. Press play to start visualization.';
+                    
+                    // Connect audio to mascot when it starts playing
+                    audioPlayer.addEventListener('play', () => {
+                        if (mascot) {
+                            mascot.connectAudio(audioPlayer);
+                            audioStatus.textContent = 'Visualizing audio...';
+                        }
+                    });
+                    
+                    audioPlayer.addEventListener('pause', () => {
+                        audioStatus.textContent = 'Audio paused';
+                    });
+                    
+                    audioPlayer.addEventListener('ended', () => {
+                        if (mascot) {
+                            mascot.disconnectAudio();
+                            audioStatus.textContent = 'Audio ended';
+                        }
+                    });
+                }
+            });
+            
+            document.getElementById('mic-btn').addEventListener('click', async () => {
+                if (!micActive) {
+                    try {
+                        if (mascot) {
+                            await mascot.connectMicrophone();
+                            micActive = true;
+                            document.getElementById('mic-btn').textContent = 'Stop Microphone';
+                            document.getElementById('mic-btn').classList.add('active');
+                            audioStatus.textContent = 'Microphone active - speak to see visualization';
+                        }
+                    } catch (error) {
+                        console.error('Microphone access denied:', error);
+                        audioStatus.textContent = 'Microphone access denied';
+                    }
+                } else {
+                    if (mascot) {
+                        mascot.disconnectAudio();
+                        micActive = false;
+                        document.getElementById('mic-btn').textContent = 'Use Microphone';
+                        document.getElementById('mic-btn').classList.remove('active');
+                        audioStatus.textContent = 'Microphone stopped';
+                    }
+                }
+            });
+        }
+
+        function updateDisplay() {
+            document.getElementById('emotion-display').textContent = `EMOTION: ${currentEmotion.toUpperCase()}`;
+            document.getElementById('undertone-display').textContent = currentUndertone.toUpperCase() || 'STABLE';
+        }
+        
+        let lastFPSValue = -1;
+        function updateFPS() {
+            if (!showingFPS || !mascot) return;
+            
+            const metrics = mascot.getPerformanceMetrics();
+            const fps = Math.round(metrics.fps || 0);
+            
+            // Only update DOM if value changed
+            if (fps !== lastFPSValue) {
+                document.getElementById('fps-value').textContent = fps;
+                lastFPSValue = fps;
+            }
+            
+            // Continue updating while showing FPS
+            requestAnimationFrame(updateFPS);
+        }
+
+        init().catch(console.error);
+    </script>
+</body>
+</html>

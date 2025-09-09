@@ -76,7 +76,7 @@ const builds = [];
 
 // Full-featured builds
 builds.push({
-  input: 'src/mascot.js',
+  input: 'src/EmotiveMascot.js',
   output: [
     {
       // UMD production bundle
@@ -84,7 +84,7 @@ builds.push({
       format: 'umd',
       name: 'EmotiveMascot',
       sourcemap: true, // Always generate source maps
-      banner: `/*! Emotive Mascot v${process.env.npm_package_version || '1.0.0'} | MIT License */`
+      banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
     },
     {
       // UMD development bundle
@@ -98,7 +98,7 @@ builds.push({
       file: 'dist/mascot.js',
       format: 'es',
       sourcemap: true, // Always generate source maps
-      banner: `/*! Emotive Mascot v${process.env.npm_package_version || '1.0.0'} | MIT License */`
+      banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
     },
     {
       // ES Module development bundle
@@ -121,20 +121,20 @@ builds.push({
 
 // Minimal build (core functionality only)
 builds.push({
-  input: 'src/minimal.js', // Use existing minimal version
+  input: 'src/EmotiveMascot.js', // Use main file for now
   output: [
     {
       file: 'dist/emotive-mascot.minimal.js',
       format: 'es',
       sourcemap: true, // Always generate source maps
-      banner: `/*! Emotive Mascot Minimal v${process.env.npm_package_version || '1.0.0'} | MIT License */`
+      banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
     },
     {
       file: 'dist/emotive-mascot.minimal.umd.js',
       format: 'umd',
       name: 'EmotiveMascotMinimal',
       sourcemap: true, // Always generate source maps
-      banner: `/*! Emotive Mascot Minimal v${process.env.npm_package_version || '1.0.0'} | MIT License */`
+      banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
     }
   ],
   plugins: [
@@ -153,13 +153,13 @@ builds.push({
 
 // Audio-only build (for audio-focused applications)
 builds.push({
-  input: 'src/audio-only.js', // We'll create this
+  input: 'src/EmotiveMascot.js', // Use main file for now
   output: [
     {
       file: 'dist/emotive-mascot.audio.js',
       format: 'es',
       sourcemap: true, // Always generate source maps
-      banner: `/*! Emotive Mascot Audio v${process.env.npm_package_version || '1.0.0'} | MIT License */`
+      banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
     }
   ],
   plugins: [

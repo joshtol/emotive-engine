@@ -58,6 +58,8 @@ import PluginSystem from './core/PluginSystem.js';
 import { browserCompatibility, CanvasContextRecovery } from './utils/browserCompatibility.js';
 import { emotiveDebugger, runtimeCapabilities } from './utils/debugger.js';
 import rhythmIntegration from './core/rhythmIntegration.js';
+import { ShapeMorpher } from './core/ShapeMorpher.js';
+import { AudioAnalyzer } from './core/AudioAnalyzer.js';
 
 class EmotiveMascot {
     constructor(config = {}) {
@@ -295,6 +297,12 @@ class EmotiveMascot {
         
         // Initialize rhythm integration
         this.rhythmEnabled = false;
+        
+        // Initialize shape morphing system
+        this.shapeMorpher = new ShapeMorpher();
+        
+        // Initialize audio analyzer for vocal visualization
+        this.audioAnalyzer = new AudioAnalyzer();
         rhythmIntegration.initialize();
         this.warningThrottle = 5000; // Only show same warning every 5 seconds
         
@@ -2692,6 +2700,165 @@ class EmotiveMascot {
     }
     
     /**
+     * Morph the core to a different shape
+     * @param {string} shape - Target shape name (circle, heart, star, sun, moon, eclipse, square, triangle)
+     * @param {Object} config - Morph configuration
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    morphTo(shape, config = {}) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.shapeMorpher) {
+                console.warn('ShapeMorpher not initialized');
+                return this;
+            }
+            
+            // Start the morph
+            this.shapeMorpher.startMorph(shape, config);
+            
+            // Pass shape morpher to renderer
+            if (this.renderer) {
+                this.renderer.shapeMorpher = this.shapeMorpher;
+            }
+            
+            // Emit event
+            this.emit('shapeMorphStarted', { from: this.shapeMorpher.currentShape, to: shape });
+            
+            console.log(`Morphing from ${this.shapeMorpher.currentShape} to ${shape}`);
+            return this;
+        }, 'morphTo', this)();
+    }
+    
+    /**
+     * Connect audio element for vocal visualization
+     * @param {HTMLAudioElement} audioElement - Audio element to analyze
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    connectAudio(audioElement) {
+        return this.errorBoundary.wrap(async () => {
+            if (!this.audioAnalyzer) {
+                console.warn('AudioAnalyzer not initialized');
+                return this;
+            }
+            
+            // Initialize audio context if needed
+            if (!this.audioAnalyzer.audioContext) {
+                await this.audioAnalyzer.init();
+            }
+            
+            // Connect the audio element
+            this.audioAnalyzer.connectAudioElement(audioElement);
+            
+            // Start updating shape morpher with vocal data
+            if (this.vocalUpdateInterval) {
+                clearInterval(this.vocalUpdateInterval);
+            }
+            
+            this.vocalUpdateInterval = setInterval(() => {
+                if (this.audioAnalyzer.isAnalyzing && this.shapeMorpher) {
+                    const data = this.audioAnalyzer.getShapeMorpherData();
+                    this.shapeMorpher.setVocalData(data.instability, data.frequencies);
+                }
+            }, 50); // Update at 20 FPS
+            
+            // Pass audio analyzer to renderer
+            if (this.renderer) {
+                this.renderer.audioAnalyzer = this.audioAnalyzer;
+            }
+            
+            console.log('Audio connected for vocal visualization');
+            return this;
+        }, 'connectAudio', this)();
+    }
+    
+    /**
+     * Connect microphone for real-time vocal visualization
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    async connectMicrophone() {
+        return this.errorBoundary.wrap(async () => {
+            if (!this.audioAnalyzer) {
+                console.warn('AudioAnalyzer not initialized');
+                return this;
+            }
+            
+            // Initialize audio context if needed
+            if (!this.audioAnalyzer.audioContext) {
+                await this.audioAnalyzer.init();
+            }
+            
+            // Connect the microphone
+            const stream = await this.audioAnalyzer.connectMicrophone();
+            
+            if (stream) {
+                // Store stream for cleanup
+                this.microphoneStream = stream;
+                
+                // Start updating shape morpher with vocal data
+                if (this.vocalUpdateInterval) {
+                    clearInterval(this.vocalUpdateInterval);
+                }
+                
+                this.vocalUpdateInterval = setInterval(() => {
+                    if (this.audioAnalyzer.isAnalyzing && this.shapeMorpher) {
+                        const data = this.audioAnalyzer.getShapeMorpherData();
+                        this.shapeMorpher.setVocalData(data.instability, data.frequencies);
+                    }
+                }, 50); // Update at 20 FPS
+                
+                // Pass audio analyzer to renderer
+                if (this.renderer) {
+                    this.renderer.audioAnalyzer = this.audioAnalyzer;
+                }
+                
+                console.log('Microphone connected for vocal visualization');
+            }
+            
+            return this;
+        }, 'connectMicrophone', this)();
+    }
+    
+    /**
+     * Disconnect audio analysis
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    disconnectAudio() {
+        return this.errorBoundary.wrap(() => {
+            // Stop analysis
+            if (this.audioAnalyzer) {
+                this.audioAnalyzer.stop();
+            }
+            
+            // Clear update interval
+            if (this.vocalUpdateInterval) {
+                clearInterval(this.vocalUpdateInterval);
+                this.vocalUpdateInterval = null;
+            }
+            
+            // Stop microphone if active
+            if (this.microphoneStream) {
+                this.microphoneStream.getTracks().forEach(track => track.stop());
+                this.microphoneStream = null;
+            }
+            
+            // Clear vocal data
+            if (this.shapeMorpher) {
+                this.shapeMorpher.setVocalData(0, []);
+            }
+            
+            console.log('Audio disconnected');
+            return this;
+        }, 'disconnectAudio', this)();
+    }
+    
+    /**
+     * Get available shapes for morphing
+     * @returns {Array} List of available shape names
+     */
+    getAvailableShapes() {
+        return ShapeMorpher.getAvailableShapes();
+    }
+    
+    /**
      * Destroys the mascot instance and cleans up resources
      */
     destroy() {
@@ -2748,6 +2915,16 @@ class EmotiveMascot {
             
             if (this.pluginSystem) {
                 this.pluginSystem.destroy();
+            }
+            
+            // Clean up shape morpher and audio analyzer
+            if (this.audioAnalyzer) {
+                this.disconnectAudio();
+                this.audioAnalyzer.destroy();
+            }
+            
+            if (this.shapeMorpher) {
+                this.shapeMorpher.reset();
             }
             
             // DegradationManager removed

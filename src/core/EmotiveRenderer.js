@@ -1256,10 +1256,26 @@ this.ctx.fillStyle = this.config.coreColor;
             this.ctx.arc(0, 0, radius, startAngle, endAngle, false);
             this.ctx.closePath();
         } else {
-            // Normal circular eye
-            this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            // Use shape morpher if available, otherwise normal circular eye
+            if (this.shapeMorpher) {
+                // Update shape morpher
+                this.shapeMorpher.update();
+                
+                // Get shape points in canvas coordinates
+                const points = this.shapeMorpher.getCanvasPoints(0, 0, radius);
+                
+                // Draw the shape
+                this.ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    this.ctx.lineTo(points[i].x, points[i].y);
+                }
+                this.ctx.closePath();
+            } else {
+                // Normal circular eye
+                this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            }
         }
-this.ctx.fill();
+        this.ctx.fill();
         
         // Add inner glow for luminosity with nervous shimmer
         let shimmerAlpha = 1.0;
@@ -1275,7 +1291,18 @@ this.ctx.fill();
         
         this.ctx.fillStyle = innerGradient;
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, radius * 0.9, 0, Math.PI * 2);
+        
+        // Use shape morpher for inner glow too
+        if (this.shapeMorpher) {
+            const innerPoints = this.shapeMorpher.getCanvasPoints(0, 0, radius * 0.9);
+            this.ctx.moveTo(innerPoints[0].x, innerPoints[0].y);
+            for (let i = 1; i < innerPoints.length; i++) {
+                this.ctx.lineTo(innerPoints[i].x, innerPoints[i].y);
+            }
+            this.ctx.closePath();
+        } else {
+            this.ctx.arc(0, 0, radius * 0.9, 0, Math.PI * 2);
+        }
         this.ctx.fill();
         
         this.ctx.restore();

@@ -47,15 +47,23 @@
 export function applyOrbit(particle, gestureData, config, progress, strength, centerX, centerY) {
     // Initialize gesture data if needed
     if (!gestureData.initialized) {
-        // Store original position
+        // Store original position and velocity
         gestureData.originalX = particle.x;
         gestureData.originalY = particle.y;
-        gestureData.originalZ = particle.z;
+        gestureData.originalZ = particle.z || 0;
+        gestureData.originalVx = particle.vx || 0;
+        gestureData.originalVy = particle.vy || 0;
         
         // Calculate initial angle and radius from center
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         gestureData.radius = Math.sqrt(dx * dx + dy * dy);
+        
+        // Ensure minimum radius to prevent clustering at center
+        if (gestureData.radius < 50) {
+            gestureData.radius = 50 + Math.random() * 100;
+        }
+        
         gestureData.initialAngle = Math.atan2(dy, dx);
         
         // Random orbit parameters for variety
@@ -80,32 +88,78 @@ export function applyOrbit(particle, gestureData, config, progress, strength, ce
         }
     }
     
-    // Calculate current angle based on progress
-    const angle = gestureData.initialAngle + (progress * Math.PI * 2 * rotations);
+    // Smooth entry/exit transitions
+    let transitionFactor = 1.0;
+    let velocityTransition = 1.0;
     
-    // Calculate orbital radius (can pulse slightly)
-    const radiusPulse = 1 + Math.sin(progress * Math.PI * 4) * radiusPulseAmount;
-    const currentRadius = gestureData.radius * strength * radiusPulse;
+    if (progress < 0.15) {
+        // Smooth entry (first 15%)
+        transitionFactor = progress / 0.15;
+        transitionFactor = transitionFactor * transitionFactor * (3 - 2 * transitionFactor); // Smooth step
+        velocityTransition = transitionFactor;
+    } else if (progress > 0.85) {
+        // Smooth exit (last 15%)
+        transitionFactor = (1 - progress) / 0.15;
+        transitionFactor = transitionFactor * transitionFactor * (3 - 2 * transitionFactor); // Smooth step
+        velocityTransition = transitionFactor;
+    }
+    
+    // Calculate current angle based on progress with smooth acceleration
+    const angle = gestureData.initialAngle + (progress * Math.PI * 2 * rotations * transitionFactor);
+    
+    // Calculate orbital radius (can pulse slightly) with transition
+    const radiusPulse = 1 + Math.sin(progress * Math.PI * 4) * radiusPulseAmount * transitionFactor;
+    const currentRadius = gestureData.radius * strength * radiusPulse * transitionFactor;
     
     // Calculate new position in orbit
     const targetX = centerX + Math.cos(angle) * currentRadius;
     const targetY = centerY + Math.sin(angle) * currentRadius;
     
-    // CRITICAL: Update z-coordinate for 3D effect
+    // CRITICAL: Update z-coordinate for 3D effect with smooth transition
     // Particles in front (positive z) when at top of orbit, behind (negative z) at bottom
     const zAngle = angle * config.zRotations; // Can rotate in z-plane at different rate
-    particle.z = Math.sin(zAngle) * 0.8; // Z-depth range for layering
+    particle.z = Math.sin(zAngle) * 0.8 * transitionFactor + gestureData.originalZ * (1 - transitionFactor);
     
-    // Add vertical oscillation for hula-hoop effect if enabled
-    if (config.verticalOscillation > 0) {
-        const verticalOffset = Math.sin(angle * 2) * config.verticalOscillation * strength;
-        particle.y = targetY + verticalOffset;
-        particle.x = targetX;
-    } else {
-        // Smooth interpolation to target position
-        const lerpFactor = config.smoothness || 0.1;
-        particle.x += (targetX - particle.x) * lerpFactor;
-        particle.y += (targetY - particle.y) * lerpFactor;
+    // During entry, smoothly transition from original position
+    if (progress < 0.15) {
+        const entryLerp = transitionFactor * 0.3; // Slower entry
+        particle.x = gestureData.originalX + (targetX - gestureData.originalX) * entryLerp;
+        particle.y = gestureData.originalY + (targetY - gestureData.originalY) * entryLerp;
+        
+        // Smooth velocity transition
+        const orbitalVx = -Math.sin(angle) * currentRadius * gestureData.orbitSpeed;
+        const orbitalVy = Math.cos(angle) * currentRadius * gestureData.orbitSpeed;
+        particle.vx = gestureData.originalVx + (orbitalVx - gestureData.originalVx) * velocityTransition;
+        particle.vy = gestureData.originalVy + (orbitalVy - gestureData.originalVy) * velocityTransition;
+    } 
+    // During exit, smoothly return to original
+    else if (progress > 0.85) {
+        particle.x = targetX + (gestureData.originalX - targetX) * (1 - transitionFactor);
+        particle.y = targetY + (gestureData.originalY - targetY) * (1 - transitionFactor);
+        
+        // Smooth velocity transition back
+        const orbitalVx = -Math.sin(angle) * currentRadius * gestureData.orbitSpeed;
+        const orbitalVy = Math.cos(angle) * currentRadius * gestureData.orbitSpeed;
+        particle.vx = orbitalVx * velocityTransition + gestureData.originalVx * (1 - velocityTransition);
+        particle.vy = orbitalVy * velocityTransition + gestureData.originalVy * (1 - velocityTransition);
+    }
+    // Normal orbit
+    else {
+        // Add vertical oscillation for hula-hoop effect if enabled
+        if (config.verticalOscillation > 0) {
+            const verticalOffset = Math.sin(angle * 2) * config.verticalOscillation * strength;
+            particle.y = targetY + verticalOffset;
+            particle.x = targetX;
+        } else {
+            // Smooth interpolation to target position
+            const lerpFactor = config.smoothness || 0.1;
+            particle.x += (targetX - particle.x) * lerpFactor;
+            particle.y += (targetY - particle.y) * lerpFactor;
+        }
+        
+        // Set orbital velocity
+        particle.vx = -Math.sin(angle) * currentRadius * gestureData.orbitSpeed;
+        particle.vy = Math.cos(angle) * currentRadius * gestureData.orbitSpeed;
     }
     
     // Apply centripetal acContinceleration effect (particles speed up when closer)

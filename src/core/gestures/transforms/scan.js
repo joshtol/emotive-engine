@@ -93,9 +93,12 @@ export default {
             isPaused: false,
             originalX: particle.x,
             originalY: particle.y,
+            originalVx: particle.vx,
+            originalVy: particle.vy,
             scanOffset: (Math.random() - 0.5) * 20,  // Individual variation
             verticalOffset: layer * 30 - 30,  // Layer separation
-            initialized: true
+            initialized: true,
+            startTime: Date.now()
         };
     },
     
@@ -132,9 +135,24 @@ export default {
         const scanX = Math.sin(data.phase) * width;
         const scanY = Math.cos(data.phase * 0.5) * (this.config.scanHeight / 2);
         
-        // Apply layer-specific positioning
-        particle.x = centerX + scanX + data.scanOffset;
-        particle.y = centerY + scanY + data.verticalOffset;
+        // Smooth entry transition (first 15% of animation)
+        let transitionFactor = 1.0;
+        if (progress < 0.15) {
+            transitionFactor = progress / 0.15;
+            transitionFactor = transitionFactor * transitionFactor; // Ease in
+        }
+        // Smooth exit transition (last 15% of animation)
+        else if (progress > 0.85) {
+            transitionFactor = (1 - progress) / 0.15;
+            transitionFactor = transitionFactor * transitionFactor; // Ease out
+        }
+        
+        // Apply layer-specific positioning with smooth transitions
+        const targetX = centerX + scanX + data.scanOffset;
+        const targetY = centerY + scanY + data.verticalOffset;
+        
+        particle.x = data.originalX + (targetX - data.originalX) * transitionFactor;
+        particle.y = data.originalY + (targetY - data.originalY) * transitionFactor;
         
         // Slow down during pauses for more realistic scanning
         if (data.isPaused) {
@@ -155,6 +173,10 @@ export default {
     
     cleanup: function(particle) {
         if (particle.gestureData?.scan) {
+            const data = particle.gestureData.scan;
+            // Restore original velocities for smooth exit
+            particle.vx = data.originalVx;
+            particle.vy = data.originalVy;
             delete particle.gestureData.scan;
         }
     }

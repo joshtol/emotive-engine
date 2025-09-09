@@ -17,8 +17,11 @@ coverage/
 
 # Demo files
 emotive-scifi-demo.html
+themed-scifi-demo.html
 test-*.html
 DELETEME/
+DEFENSIVE_PUBLICATION.md
+DELETEME-*.md
 
 # Build tools and config
 rollup.config.js

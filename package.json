@@ -1,11 +1,16 @@
 {
   "type": "module",
-  "name": "emotive-engine",
-  "version": "1.0.0",
-  "description": "A high-performance, emotionally-aware particle mascot system for next-generation conversational UIs.",
-  "main": "dist/emotive-engine.umd.js",
-  "module": "dist/emotive-engine.js",
+  "name": "@joshtol/emotive-engine",
+  "version": "2.1.0",
+  "description": "Proprietary animation engine with musical time synchronization",
+  "main": "src/EmotiveMascot.js",
+  "module": "src/EmotiveMascot.js",
   "types": "types/index.d.ts",
+  "private": false,
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
   "files": [
     "dist",
     "src",
@@ -23,7 +28,10 @@
     "build:all": "npm run build && npm run build:dev",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "publish:patch": "npm version patch && npm publish",
+    "publish:minor": "npm version minor && npm publish",
+    "publish:major": "npm version major && npm publish"
   },
   "keywords": [
     "mascot",
@@ -42,7 +50,7 @@
     "emotive"
   ],
   "author": "Joshua Tollette",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE.md",
   "homepage": "https://github.com/joshtol/emotive-engine",
   "repository": {
     "type": "git",
