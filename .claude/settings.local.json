@@ -118,7 +118,9 @@
       "Bash(start http://localhost:8080/audio-test.html)",
       "Bash(powershell:*)",
       "Bash(npm run build:*)",
-      "Bash(start http://localhost:8080/test-public-api.html)"
+      "Bash(start http://localhost:8080/test-public-api.html)",
+      "Bash(cp:*)",
+      "Bash(start http://localhost:8080/public-api-demo.html)"
     ],
     "deny": [],
     "ask": []
