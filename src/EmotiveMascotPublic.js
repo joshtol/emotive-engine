@@ -150,7 +150,7 @@ class EmotiveMascotPublic {
      * @returns {Object} Audio analysis (beats, tempo, energy)
      */
     getAudioAnalysis() {
-        if (!this._engine.audioAnalyzer) return null;
+        if (!this._engine || !this._engine.audioAnalyzer) return null;
         
         return {
             bpm: this._engine.rhythmIntegration?.getBPM() || 0,
@@ -158,6 +158,121 @@ class EmotiveMascotPublic {
             energy: this._engine.audioAnalyzer?.getEnergyLevel() || 0,
             frequencies: this._engine.audioAnalyzer?.getFrequencyData() || []
         };
+    }
+    
+    /**
+     * Connect microphone for audio input
+     * @returns {Promise<void>}
+     */
+    async connectMicrophone() {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        
+        try {
+            // Get microphone stream
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            // Connect to audio handler if available
+            if (this._engine.audioHandler) {
+                await this._engine.audioHandler.connectMicrophone();
+            }
+            
+            return Promise.resolve();
+        } catch (error) {
+            console.error('Microphone connection failed:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Disconnect microphone
+     */
+    disconnectMicrophone() {
+        if (!this._engine) return;
+        
+        if (this._engine.audioHandler) {
+            this._engine.audioHandler.disconnectMicrophone();
+        }
+    }
+    
+    /**
+     * Connect audio element for visualization
+     * @param {HTMLAudioElement} audioElement - Audio element to connect
+     */
+    connectAudio(audioElement) {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        
+        if (this._engine.connectAudio) {
+            this._engine.connectAudio(audioElement);
+        }
+    }
+    
+    /**
+     * Get spectrum data for visualization
+     * @returns {Array} Frequency spectrum data
+     */
+    getSpectrumData() {
+        if (!this._engine || !this._engine.audioAnalyzer) return [];
+        
+        // Get frequency data if available
+        if (this._engine.audioAnalyzer.getFrequencyData) {
+            return this._engine.audioAnalyzer.getFrequencyData();
+        }
+        
+        return [];
+    }
+    
+    /**
+     * Start rhythm sync
+     * @param {number} [bpm] - Optional BPM to sync to
+     */
+    startRhythmSync(bpm) {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        
+        if (this._engine.rhythmIntegration) {
+            if (bpm) {
+                this._engine.rhythmIntegration.setBPM(bpm);
+            }
+            this._engine.rhythmIntegration.start();
+        }
+    }
+    
+    /**
+     * Stop rhythm sync
+     */
+    stopRhythmSync() {
+        if (!this._engine) return;
+        
+        if (this._engine.rhythmIntegration) {
+            this._engine.rhythmIntegration.stop();
+        }
+    }
+    
+    /**
+     * Get performance metrics
+     * @returns {Object} Performance data
+     */
+    getPerformanceMetrics() {
+        if (!this._engine) return { fps: 0, frameTime: 0 };
+        
+        // Try to get from performance monitor
+        if (this._engine.performanceMonitor) {
+            return {
+                fps: this._engine.performanceMonitor.getCurrentFPS() || 0,
+                frameTime: this._engine.performanceMonitor.getAverageFrameTime() || 0,
+                particleCount: this._engine.particleSystem?.activeParticles || 0
+            };
+        }
+        
+        // Fallback to animation controller
+        if (this._engine.animationController) {
+            return {
+                fps: this._engine.animationController.currentFPS || 0,
+                frameTime: 1000 / 60, // Default to 60fps timing
+                particleCount: 0
+            };
+        }
+        
+        return { fps: 0, frameTime: 0, particleCount: 0 };
     }
 
     // === Animation Control ===
@@ -187,21 +302,44 @@ class EmotiveMascotPublic {
     /**
      * Set emotion state
      * @param {string} emotion - Emotion name
+     * @param {string|Object} [undertoneOrOptions] - Undertone string or options object
      * @param {number} [timestamp] - Optional timestamp for recording
      */
-    setEmotion(emotion, timestamp) {
+    setEmotion(emotion, undertoneOrOptions, timestamp) {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        
+        // Handle different parameter formats
+        let undertone = null;
+        let recordTime = timestamp;
+        
+        if (typeof undertoneOrOptions === 'string') {
+            // It's an undertone
+            undertone = undertoneOrOptions;
+        } else if (typeof undertoneOrOptions === 'number') {
+            // It's a timestamp (no undertone provided)
+            recordTime = undertoneOrOptions;
+        } else if (undertoneOrOptions && typeof undertoneOrOptions === 'object') {
+            // It's an options object
+            undertone = undertoneOrOptions.undertone;
+        }
+        
         // Record if in recording mode
         if (this._isRecording) {
-            const time = timestamp || (Date.now() - this._recordingStartTime);
+            const time = recordTime || (Date.now() - this._recordingStartTime);
             this._timeline.push({
                 type: 'emotion',
                 name: emotion,
+                undertone: undertone,
                 time: time
             });
         }
         
-        // Set in engine
-        this._engine.setEmotion(emotion);
+        // Set in engine with undertone
+        if (undertone) {
+            this._engine.setEmotion(emotion, { undertone: undertone });
+        } else {
+            this._engine.setEmotion(emotion);
+        }
     }
 
     /**

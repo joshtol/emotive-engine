@@ -1370,13 +1370,14 @@
             
             // Initialize audio visualizer update loop
             function updateAudioViz() {
-                if (mascot && mascot.shapeMorpher) {
-                    const morpher = mascot.shapeMorpher;
+                if (mascot) {
+                    // Get spectrum data from public API
+                    const frequencyData = mascot.getSpectrumData();
                     
                     // Update spectrum bars
-                    if (morpher.frequencyData && morpher.frequencyData.length > 0) {
+                    if (frequencyData && frequencyData.length > 0) {
                         const bars = spectrumViz.querySelectorAll('.spectrum-bar');
-                        const bandsPerBar = Math.floor(morpher.frequencyData.length / numBars);
+                        const bandsPerBar = Math.floor(frequencyData.length / numBars);
                         
                         bars.forEach((bar, i) => {
                             // Average the energy for bands that map to this bar
@@ -1384,8 +1385,8 @@
                             let count = 0;
                             for (let j = 0; j < bandsPerBar; j++) {
                                 const bandIndex = i * bandsPerBar + j;
-                                if (bandIndex < morpher.frequencyData.length) {
-                                    energy += morpher.frequencyData[bandIndex] || 0;
+                                if (bandIndex < frequencyData.length) {
+                                    energy += frequencyData[bandIndex] || 0;
                                     count++;
                                 }
                             }
@@ -1689,7 +1690,7 @@
             document.querySelectorAll('.emotion-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     currentEmotion = btn.dataset.emotion;
-                    mascot.setEmotion(currentEmotion);
+                    mascot.setEmotion(currentEmotion, currentUndertone || undefined);
                     
                     document.querySelectorAll('.emotion-btn').forEach(b => {
                         b.classList.remove('active');
@@ -1726,7 +1727,7 @@
             document.querySelectorAll('.undertone-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     currentUndertone = btn.dataset.undertone;
-                    mascot.setEmotion(currentEmotion);
+                    mascot.setEmotion(currentEmotion, currentUndertone || undefined);
                     document.querySelectorAll('.undertone-btn').forEach(b => {
                         b.classList.remove('active');
                         b.setAttribute('aria-pressed', 'false');
@@ -1914,9 +1915,9 @@
                     // Resume audio context if suspended
                     // Audio will be handled through public API
                     // No direct access to audioAnalyzer
-                    }
-                    // Note: Public API uses loadAudio for audio files
-                    // For now, audio visualization won't work with audio element
+                    
+                    // Connect audio element for visualization
+                    mascot.connectAudio(audioPlayer);
                 }
             });
             
