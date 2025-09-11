@@ -91,6 +91,11 @@ import { getEffect, applyEffect, isEffectActive } from './effects/index.js';
 import { getGesture } from './gestures/index.js';
 import musicalDuration from './MusicalDuration.js';
 
+// Import modular renderer components
+import { GestureAnimator } from './renderer/GestureAnimator.js';
+import { ColorUtilities } from './renderer/ColorUtilities.js';
+import { SpecialEffects } from './renderer/SpecialEffects.js';
+
 class EmotiveRenderer {
     constructor(canvasManager, options = {}) {
         this.canvasManager = canvasManager;
@@ -102,6 +107,11 @@ class EmotiveRenderer {
         
         // Gesture compositor for emotion/undertone modulation
         this.gestureCompositor = new GestureCompositor();
+        
+        // Initialize modular components
+        this.gestureAnimator = new GestureAnimator(this);
+        this.colorUtilities = new ColorUtilities();
+        this.specialEffects = new SpecialEffects(this);
         
         // Configuration - matching original Emotive proportions
         this.config = {
@@ -1241,13 +1251,74 @@ this.ctx.translate(x, y);
         }
         this.ctx.scale(scaleX, scaleY);
         
-        // Add subtle shadow for depth
-        this.ctx.shadowBlur = this.scaleValue(10);
-        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        this.ctx.shadowOffsetY = this.scaleValue(2);
+        // Cache points for reuse - HUGE performance boost
+        let cachedPoints = null;
+        let cachedInnerPoints = null;
+        if (this.shapeMorpher) {
+            // Update shape morpher ONCE
+            this.shapeMorpher.update();
+            // Get points ONCE
+            cachedPoints = this.shapeMorpher.getCanvasPoints(0, 0, radius);
+            cachedInnerPoints = this.shapeMorpher.getCanvasPoints(0, 0, radius * 0.9);
+        }
         
-        // Draw white core with eye arc effect
-this.ctx.fillStyle = this.config.coreColor;
+        // Draw a fake shadow using gradient (MUCH faster than shadowBlur)
+        // OPTIMIZATION: Skip shadow during rapid animations and audio deformation for better FPS
+        const isAnimating = this.shapeMorpher && this.shapeMorpher.isTransitioning;
+        const hasAudioDeformation = this.shapeMorpher && 
+                                   (this.shapeMorpher.audioDeformation > 0.1 || 
+                                    this.shapeMorpher.vocalEnergy > 0.1);
+        
+        if (!hasAudioDeformation && (!isAnimating || this.shapeMorpher.morphProgress > 0.8)) {
+            this.ctx.save();
+            const shadowOffset = this.scaleValue(2);
+            this.ctx.translate(0, shadowOffset);
+            
+            // OPTIMIZATION: Use simpler shadow for deformed shapes
+            if (cachedPoints && cachedPoints.length > 32) {
+                // Simple dark circle shadow when shape is complex
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, radius * 1.05, 0, Math.PI * 2);
+                this.ctx.fill();
+            } else {
+                // Shadow gradient - dark center fading to transparent
+                const shadowGradient = this.ctx.createRadialGradient(0, 0, radius * 0.7, 0, 0, radius * 1.2);
+                shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
+                shadowGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.1)');
+                shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                
+                this.ctx.fillStyle = shadowGradient;
+                this.ctx.beginPath();
+                if (cachedPoints) {
+                    // Scale points for shadow - use fewer points for performance
+                    const scale = 1.1;
+                    const step = cachedPoints.length > 20 ? 2 : 1; // Skip every other point if many points
+                    this.ctx.moveTo(cachedPoints[0].x * scale, cachedPoints[0].y * scale);
+                    for (let i = step; i < cachedPoints.length; i += step) {
+                        this.ctx.lineTo(cachedPoints[i].x * scale, cachedPoints[i].y * scale);
+                    }
+                    this.ctx.closePath();
+                } else {
+                    this.ctx.arc(0, 0, radius * 1.1, 0, Math.PI * 2);
+                }
+                this.ctx.fill();
+            }
+            this.ctx.restore();
+        }
+        
+        // Draw core with appropriate color (moon gets gray, others white)
+        let coreColor = this.config.coreColor;
+        const isMoon = this.shapeMorpher && this.shapeMorpher.currentShape === 'moon';
+        if (isMoon) {
+            // Use gradient fade instead of blur for better performance
+            const moonGradient = this.ctx.createRadialGradient(0, 0, radius * 0.9, 0, 0, radius);
+            moonGradient.addColorStop(0, '#e8e8e8');
+            moonGradient.addColorStop(0.95, '#e8e8e8');
+            moonGradient.addColorStop(1, '#d0d0d0'); // Slightly darker edge for soft appearance
+            coreColor = moonGradient;
+        }
+        this.ctx.fillStyle = coreColor;
         this.ctx.beginPath();
         
         if (eyeArc !== 0 && scaleY < 0.5) {
@@ -1257,18 +1328,12 @@ this.ctx.fillStyle = this.config.coreColor;
             this.ctx.arc(0, 0, radius, startAngle, endAngle, false);
             this.ctx.closePath();
         } else {
-            // Use shape morpher if available, otherwise normal circular eye
-            if (this.shapeMorpher) {
-                // Update shape morpher
-                this.shapeMorpher.update();
-                
-                // Get shape points in canvas coordinates
-                const points = this.shapeMorpher.getCanvasPoints(0, 0, radius);
-                
-                // Draw the shape
-                this.ctx.moveTo(points[0].x, points[0].y);
-                for (let i = 1; i < points.length; i++) {
-                    this.ctx.lineTo(points[i].x, points[i].y);
+            // Use cached points if available
+            if (cachedPoints) {
+                // Draw the shape using CACHED points
+                this.ctx.moveTo(cachedPoints[0].x, cachedPoints[0].y);
+                for (let i = 1; i < cachedPoints.length; i++) {
+                    this.ctx.lineTo(cachedPoints[i].x, cachedPoints[i].y);
                 }
                 this.ctx.closePath();
             } else {
@@ -1278,33 +1343,462 @@ this.ctx.fillStyle = this.config.coreColor;
         }
         this.ctx.fill();
         
-        // Add inner glow for luminosity with nervous shimmer
-        let shimmerAlpha = 1.0;
-        if (this.state.undertone === 'nervous') {
-            // Subtle flickering shimmer
-            shimmerAlpha = 0.95 + Math.sin(Date.now() / 50) * 0.05; // 95-100% opacity flicker
+        // Add inner glow only if needed (skip for performance)
+        let needsInnerGlow = this.state.undertone === 'nervous' || true; // Always show for quality
+        
+        if (needsInnerGlow) {
+            let shimmerAlpha = 1.0;
+            if (this.state.undertone === 'nervous') {
+                // Subtle flickering shimmer
+                shimmerAlpha = 0.95 + Math.sin(Date.now() / 50) * 0.05; // 95-100% opacity flicker
+            }
+            
+            // Simplified inner glow - fewer stops
+            const innerGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+            innerGradient.addColorStop(0, `rgba(255, 255, 255, ${shimmerAlpha})`);
+            innerGradient.addColorStop(1, `rgba(255, 255, 255, ${0.8 * shimmerAlpha})`);
+            
+            this.ctx.fillStyle = innerGradient;
+        } else {
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         }
-        
-        const innerGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-        innerGradient.addColorStop(0, `rgba(255, 255, 255, ${shimmerAlpha})`);
-        innerGradient.addColorStop(0.7, `rgba(255, 255, 255, ${0.9 * shimmerAlpha})`);
-        innerGradient.addColorStop(1, `rgba(255, 255, 255, ${0.8 * shimmerAlpha})`);
-        
-        this.ctx.fillStyle = innerGradient;
         this.ctx.beginPath();
         
-        // Use shape morpher for inner glow too
-        if (this.shapeMorpher) {
-            const innerPoints = this.shapeMorpher.getCanvasPoints(0, 0, radius * 0.9);
-            this.ctx.moveTo(innerPoints[0].x, innerPoints[0].y);
-            for (let i = 1; i < innerPoints.length; i++) {
-                this.ctx.lineTo(innerPoints[i].x, innerPoints[i].y);
+        // Use cached inner points
+        if (cachedInnerPoints) {
+            this.ctx.moveTo(cachedInnerPoints[0].x, cachedInnerPoints[0].y);
+            for (let i = 1; i < cachedInnerPoints.length; i++) {
+                this.ctx.lineTo(cachedInnerPoints[i].x, cachedInnerPoints[i].y);
             }
             this.ctx.closePath();
         } else {
             this.ctx.arc(0, 0, radius * 0.9, 0, Math.PI * 2);
         }
         this.ctx.fill();
+        
+        // Apply shape-specific custom rendering
+        if (this.shapeMorpher) {
+            // Get custom renderer from shape module
+            const customRenderer = this.shapeMorpher.getCurrentRenderer();
+            
+            // If shape has custom renderer, use it
+            if (customRenderer && typeof customRenderer === 'function') {
+                let shadow = this.shapeMorpher.getCurrentShadow();
+                const progress = this.shapeMorpher.getProgress() || 1;
+                
+                
+                // Call the shape module's custom renderer
+                customRenderer(this.ctx, 0, 0, radius, progress, {
+                    shadow: shadow,
+                    time: Date.now() / 100,
+                    shimmerAlpha: shimmerAlpha,
+                    shapeMorpher: this.shapeMorpher
+                });
+            } else {
+                // Standard shadow rendering
+                let shadow = this.shapeMorpher.getCurrentShadow();
+                
+                
+                if (shadow && shadow.type !== 'none') {
+                    this.ctx.save();
+                    
+                    // Sun rendering
+                    if (shadow.type === 'sun') {
+                        const time = Date.now() / 100;
+                        
+                        // Check if we're transitioning from moon to sun
+                        let effectiveProgress = 1.0;
+                        if (this.shapeMorpher) {
+                            const currentShape = this.shapeMorpher.currentShape;
+                            const targetShape = this.shapeMorpher.targetShape;
+                            const morphProgress = this.shapeMorpher.getProgress();
+                            const transitionConfig = this.shapeMorpher.transitionConfig;
+                            
+                            // Moon transitions - delay effects until shadow is gone
+                            if (currentShape === 'moon' && targetShape && morphProgress < 1) {
+                                const shadowSlideRatio = transitionConfig?.shadowSlideRatio || 0.4;
+                                if (morphProgress < shadowSlideRatio) {
+                                    effectiveProgress = 0; // No effects during shadow slide
+                                } else {
+                                    effectiveProgress = (morphProgress - shadowSlideRatio) / (1 - shadowSlideRatio); // Remap remaining progress
+                                }
+                            }
+                        }
+                        
+                        // 1. Surface texture - turbulent plasma (OPTIMIZED)
+                        if (shadow.texture && (shadow.textureOpacity === undefined || shadow.textureOpacity > 0) && effectiveProgress > 0) {
+                            this.ctx.save();
+                            this.ctx.globalCompositeOperation = 'screen';
+                            this.ctx.globalAlpha = (shadow.textureOpacity !== undefined ? shadow.textureOpacity : 1) * effectiveProgress;
+                            
+                            // Single plasma texture instead of 3 layers
+                            const offset = time * 0.05 * (shadow.turbulence || 0.3) / 0.3;
+                            const textureGradient = this.ctx.createRadialGradient(
+                                Math.sin(offset) * radius * 0.15,
+                                Math.cos(offset * 0.7) * radius * 0.15,
+                                radius * 0.2,
+                                0, 0, radius
+                            );
+                            textureGradient.addColorStop(0, 'rgba(255, 255, 200, 0)');
+                            textureGradient.addColorStop(0.4, 'rgba(255, 200, 100, 0.1)');
+                            textureGradient.addColorStop(0.7, 'rgba(255, 150, 50, 0.08)');
+                            textureGradient.addColorStop(1, 'rgba(255, 100, 30, 0.05)');
+                            
+                            this.ctx.fillStyle = textureGradient;
+                            this.ctx.beginPath();
+                            this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                            this.ctx.fill();
+                            
+                            this.ctx.restore();
+                        }
+                        
+                        // 2. Bright corona layers
+                        const coronaOpacity = shadow.coronaOpacity !== undefined ? shadow.coronaOpacity : 1;
+                        if (coronaOpacity > 0) {
+                            this.ctx.save();
+                            this.ctx.globalCompositeOperation = 'screen';
+                            
+                            // Inner bright glow
+                            const innerGlow = this.ctx.createRadialGradient(0, 0, radius * 0.5, 0, 0, radius * 1.1);
+                            innerGlow.addColorStop(0, `rgba(255, 255, 255, ${0.8 * coronaOpacity})`);
+                            innerGlow.addColorStop(0.3, `rgba(255, 250, 200, ${0.6 * coronaOpacity})`);
+                            innerGlow.addColorStop(0.5, `rgba(255, 200, 100, ${0.4 * coronaOpacity})`);
+                            innerGlow.addColorStop(0.7, `rgba(255, 150, 50, ${0.2 * coronaOpacity})`);
+                            innerGlow.addColorStop(1, 'rgba(255, 100, 20, 0)');
+                            
+                            this.ctx.fillStyle = innerGlow;
+                            this.ctx.beginPath();
+                            this.ctx.arc(0, 0, radius * 1.1, 0, Math.PI * 2);
+                            this.ctx.fill();
+                            
+                            // Outer corona with animation (OPTIMIZED - 2 layers instead of 4)
+                            for (let i = 0; i < 2; i++) {
+                                const scale = 1.3 + i * 0.4;
+                                const opacity = (0.35 - i * 0.15) * coronaOpacity;
+                                const wobble = Math.sin(time * 0.1 + i) * 0.05;
+                                
+                                const coronaGradient = this.ctx.createRadialGradient(
+                                    0, 0, radius * (0.9 + wobble), 
+                                    0, 0, radius * (scale + wobble)
+                                );
+                                coronaGradient.addColorStop(0, 'rgba(255, 255, 200, 0)');
+                                coronaGradient.addColorStop(0.4, `rgba(255, 200, 100, ${opacity * 0.5})`);
+                                coronaGradient.addColorStop(0.7, `rgba(255, 150, 50, ${opacity})`);
+                                coronaGradient.addColorStop(0.9, `rgba(255, 100, 30, ${opacity * 0.5})`);
+                                coronaGradient.addColorStop(1, 'rgba(255, 50, 10, 0)');
+                                
+                                this.ctx.fillStyle = coronaGradient;
+                                this.ctx.beginPath();
+                                this.ctx.arc(0, 0, radius * (scale + wobble), 0, Math.PI * 2);
+                                this.ctx.fill();
+                            }
+                            
+                            this.ctx.restore();
+                        }
+                    
+                        // 3. Optimized ethereal flame pennants - TONS of rays
+                        if (shadow.flares) {
+                        this.ctx.save();
+                        
+                        // Pre-calculate common values
+                        const wave1 = Math.sin(time * 0.08);
+                        const wave2 = Math.sin(time * 0.12);
+                        const wave3 = Math.sin(time * 0.16);
+                        
+                        // Create single gradient for all flames
+                        const grad = this.ctx.createLinearGradient(0, -radius, 0, -radius * 3);
+                        grad.addColorStop(0, 'rgba(255, 255, 230, 0.4)');
+                        grad.addColorStop(0.2, 'rgba(255, 220, 150, 0.25)');
+                        grad.addColorStop(0.5, 'rgba(255, 180, 80, 0.15)');
+                        grad.addColorStop(0.8, 'rgba(255, 120, 40, 0.08)');
+                        grad.addColorStop(1, 'rgba(255, 60, 20, 0)');
+                        
+                        this.ctx.fillStyle = grad;
+                        this.ctx.globalCompositeOperation = 'screen';
+                        
+                        // Single path for ALL flames - massive performance boost
+                        this.ctx.beginPath();
+                        
+                        // Helper function for simple flame shape
+                        const addFlame = (angle, length, width, wave) => {
+                            const cos = Math.cos(angle);
+                            const sin = Math.sin(angle);
+                            const baseX = cos * radius;
+                            const baseY = sin * radius;
+                            const tipX = cos * (radius + length);
+                            const tipY = sin * (radius + length);
+                            const perpX = -sin * width * 0.5;
+                            const perpY = cos * width * 0.5;
+                            const waveOffset = wave * width * 0.3;
+                            
+                            // Simple triangle with slight curve
+                            this.ctx.moveTo(baseX - perpX, baseY - perpY);
+                            this.ctx.quadraticCurveTo(
+                                (baseX + tipX) * 0.5 + perpX * waveOffset,
+                                (baseY + tipY) * 0.5 + perpY * waveOffset,
+                                tipX, tipY
+                            );
+                            this.ctx.quadraticCurveTo(
+                                (baseX + tipX) * 0.5 - perpX * waveOffset,
+                                (baseY + tipY) * 0.5 - perpY * waveOffset,
+                                baseX + perpX, baseY + perpY
+                            );
+                        };
+                        
+                        // OPTIMIZED: Reduced ray count for better performance (50 rays instead of 100)
+                        
+                        // Layer 1: Long primary rays (8 instead of 12)
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (i / 8) * Math.PI * 2 + wave1 * 0.1;
+                            const length = radius * (1.8 + Math.sin(time * 0.1 + i * 0.5) * 0.4);
+                            const width = radius * 0.18;
+                            const wave = Math.sin(time * 0.15 + i);
+                            addFlame(angle, length, width, wave);
+                        }
+                        
+                        // Layer 2: Medium rays between primaries (12 instead of 18)
+                        for (let i = 0; i < 12; i++) {
+                            const angle = ((i + 0.5) / 12) * Math.PI * 2 + wave2 * 0.08;
+                            const length = radius * (1.2 + Math.sin(time * 0.13 + i * 0.7) * 0.3);
+                            const width = radius * 0.12;
+                            const wave = Math.sin(time * 0.18 + i * 1.2);
+                            addFlame(angle, length, width, wave);
+                        }
+                        
+                        // Layer 3: Short rays filling gaps (15 instead of 30)
+                        for (let i = 0; i < 15; i++) {
+                            const angle = (i / 15) * Math.PI * 2 + wave3 * 0.05;
+                            const length = radius * (0.7 + Math.sin(time * 0.17 + i * 0.9) * 0.25);
+                            const width = radius * 0.08;
+                            const wave = Math.sin(time * 0.2 + i * 1.5);
+                            addFlame(angle, length, width, wave);
+                        }
+                        
+                        // Layer 4: Tiny rays for density (15 instead of 40)
+                        for (let i = 0; i < 15; i++) {
+                            const angle = ((i + 0.25) / 15) * Math.PI * 2;
+                            const length = radius * (0.4 + Math.sin(time * 0.22 + i) * 0.2);
+                            const width = radius * 0.06;
+                            // Simple triangles for tiny rays
+                            const cos = Math.cos(angle);
+                            const sin = Math.sin(angle);
+                            const baseX = cos * radius;
+                            const baseY = sin * radius;
+                            const tipX = cos * (radius + length);
+                            const tipY = sin * (radius + length);
+                            const perpX = -sin * width * 0.5;
+                            const perpY = cos * width * 0.5;
+                            
+                            this.ctx.moveTo(baseX - perpX, baseY - perpY);
+                            this.ctx.lineTo(tipX, tipY);
+                            this.ctx.lineTo(baseX + perpX, baseY + perpY);
+                        }
+                        
+                            // Single fill operation for all 100 rays!
+                            this.ctx.fill();
+                            this.ctx.restore();
+                        }
+                        
+                        // 4. Bright rim lighting
+                        const rimGradient = this.ctx.createRadialGradient(0, 0, radius * 0.95, 0, 0, radius * 1.05);
+                        rimGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                        rimGradient.addColorStop(0.7, 'rgba(255, 255, 200, 0.2)');
+                        rimGradient.addColorStop(0.9, 'rgba(255, 200, 100, 0.5)');
+                        rimGradient.addColorStop(1, 'rgba(255, 150, 50, 0.3)');
+                        
+                        this.ctx.fillStyle = rimGradient;
+                        this.ctx.beginPath();
+                        this.ctx.arc(0, 0, radius * 1.05, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                }
+                
+                if (shadow.type === 'crescent') {
+                    // Crescent moon - smooth shadow without pixelation
+                    this.ctx.save();
+                    
+                    // Get morph progress to animate the shadow sliding in
+                    let shadowProgress = 1.0; // Default to fully visible
+                    if (this.shapeMorpher) {
+                        const morphProgress = this.shapeMorpher.getProgress();
+                        const currentShape = this.shapeMorpher.currentShape;
+                        const targetShape = this.shapeMorpher.targetShape;
+                        
+                        // Animate shadow sliding in when morphing TO moon
+                        if (targetShape === 'moon' && morphProgress !== undefined && morphProgress < 1) {
+                            // Shadow slides in from the left
+                            shadowProgress = morphProgress;
+                        }
+                        // FROM MOON TO ANY SHAPE - let ShapeMorpher control the shadow slide
+                        else if (currentShape === 'moon' && targetShape && targetShape !== 'moon' && morphProgress !== undefined && morphProgress < 1) {
+                            // DO NOT INTERFERE - ShapeMorpher handles the shadow slide
+                            shadowProgress = 1.0; // Keep shadow visible, ShapeMorpher controls the animation
+                        }
+                    }
+                    
+                    const baseOffset = shadow.offset || 0.7;
+                    // Animate the offset - starts far left (-2) and slides to final position
+                    const animatedOffset = -2 + (baseOffset + 2) * shadowProgress;
+                    const angleRad = (shadow.angle || -30) * Math.PI / 180;
+                    const offsetX = Math.cos(angleRad) * radius * animatedOffset;
+                    const offsetY = Math.sin(angleRad) * radius * animatedOffset;
+                    
+                    // Enable high quality rendering
+                    this.ctx.imageSmoothingEnabled = true;
+                    this.ctx.imageSmoothingQuality = 'high';
+                    
+                    // Clip to the ACTUAL deformed moon shape using cached points
+                    this.ctx.beginPath();
+                    if (cachedPoints) {
+                        // Use the cached deformed shape for clipping
+                        this.ctx.moveTo(cachedPoints[0].x, cachedPoints[0].y);
+                        for (let i = 1; i < cachedPoints.length; i++) {
+                            this.ctx.lineTo(cachedPoints[i].x, cachedPoints[i].y);
+                        }
+                        this.ctx.closePath();
+                    } else {
+                        // Fallback to circle
+                        this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    }
+                    this.ctx.clip();
+                    
+                    // Use a single smooth gradient for the entire shadow
+                    const shadowGradient = this.ctx.createRadialGradient(
+                        offsetX, offsetY, radius * 0.9,
+                        offsetX, offsetY, radius * 1.1
+                    );
+                    
+                    // More gradient stops for smoother transition
+                    // Also fade opacity based on shadowProgress for smoother appearance
+                    // Use shadow.coverage if available (from ShapeMorpher during transitions)
+                    const baseCoverage = shadow.coverage !== undefined ? shadow.coverage : 0.85;
+                    const shadowOpacity = Math.min(1, shadowProgress * 1.2) * (baseCoverage / 0.85); // Apply coverage scaling
+                    shadowGradient.addColorStop(0, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.80, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.88, `rgba(0, 0, 0, ${0.98 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.91, `rgba(0, 0, 0, ${0.95 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.93, `rgba(0, 0, 0, ${0.9 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.95, `rgba(0, 0, 0, ${0.8 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.96, `rgba(0, 0, 0, ${0.65 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.97, `rgba(0, 0, 0, ${0.45 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.98, `rgba(0, 0, 0, ${0.25 * shadowOpacity})`);
+                    shadowGradient.addColorStop(0.99, `rgba(0, 0, 0, ${0.1 * shadowOpacity})`);
+                    shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    
+                    this.ctx.fillStyle = shadowGradient;
+                    this.ctx.beginPath();
+                    this.ctx.arc(offsetX, offsetY, radius * 1.1, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    this.ctx.restore();
+                }
+                
+                if (shadow.type === 'lunar') {
+                    // Lunar eclipse - diffuse reddish shadow
+                    this.ctx.save();
+                    
+                    // Check for moon-to-lunar transition
+                    let transitionProgress = 1.0;
+                    let fromMoon = false;
+                    if (this.shapeMorpher) {
+                        const morphProgress = this.shapeMorpher.getProgress();
+                        const currentShape = this.shapeMorpher.currentShape;
+                        const targetShape = this.shapeMorpher.targetShape;
+                        
+                        // Special animation when coming FROM moon
+                        if (currentShape === 'moon' && targetShape === 'lunar' && morphProgress !== undefined && morphProgress < 1) {
+                            transitionProgress = morphProgress;
+                            fromMoon = true;
+                        }
+                        // Or when morphing TO lunar from other shapes
+                        else if (targetShape === 'lunar' && currentShape !== 'moon' && morphProgress !== undefined && morphProgress < 1) {
+                            transitionProgress = morphProgress;
+                        }
+                    }
+                    
+                    // Position based on transition
+                    let shadowX = shadow.shadowX !== undefined ? shadow.shadowX * radius : 0;
+                    let shadowY = shadow.shadowY !== undefined ? shadow.shadowY * radius : 0;
+                    
+                    // If transitioning from moon, animate the crescent shadow moving to center
+                    if (fromMoon) {
+                        // Start from crescent position and move to center
+                        const crescentAngle = -30 * Math.PI / 180;
+                        const startX = Math.cos(crescentAngle) * radius * 0.7;
+                        const startY = Math.sin(crescentAngle) * radius * 0.7;
+                        
+                        // Interpolate position
+                        shadowX = startX * (1 - transitionProgress);
+                        shadowY = startY * (1 - transitionProgress);
+                    }
+                    
+                    // Diffusion affects gradient spread - animate this too
+                    const diffusion = fromMoon ? 
+                        transitionProgress : // Start sharp (like crescent), become diffuse
+                        (shadow.diffusion !== undefined ? shadow.diffusion : 1);
+                    const sharpness = 1 - diffusion; // 0 = fully diffuse, 1 = sharp
+                    
+                    // Clip to moon shape
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    this.ctx.clip();
+                    
+                    // Penumbra (diffuse outer shadow) - MUCH DARKER
+                    const penumbraRadius = radius * (1.8 - sharpness * 0.5); // Smaller when sharp
+                    const penumbraGradient = this.ctx.createRadialGradient(
+                        shadowX, shadowY, radius * 0.2,
+                        shadowX, shadowY, penumbraRadius
+                    );
+                    
+                    // Animate colors from black (moon) to reddish (lunar)
+                    const baseOpacity = shadow.coverage || 0.9;
+                    const colorTransition = fromMoon ? transitionProgress : 1.0;
+                    
+                    // Interpolate from black to red based on transition
+                    const r1 = Math.floor(10 * colorTransition);
+                    const r2 = Math.floor(20 * colorTransition);
+                    const r3 = Math.floor(40 * colorTransition);
+                    const r4 = Math.floor(60 * colorTransition);
+                    const r5 = Math.floor(80 * colorTransition);
+                    
+                    penumbraGradient.addColorStop(0, `rgba(${r1}, ${Math.floor(r1 * 0.2)}, 0, ${baseOpacity})`);
+                    penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(${r2}, ${Math.floor(r2 * 0.25)}, 0, ${baseOpacity * 0.95})`);
+                    penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(${r3}, ${Math.floor(r3 * 0.25)}, ${Math.floor(r3 * 0.125)}, ${baseOpacity * 0.8})`);
+                    penumbraGradient.addColorStop(0.85, `rgba(${r4}, ${Math.floor(r4 * 0.25)}, ${Math.floor(r4 * 0.167)}, ${baseOpacity * 0.4})`);
+                    penumbraGradient.addColorStop(1, `rgba(${r5}, ${Math.floor(r5 * 0.25)}, ${Math.floor(r5 * 0.188)}, 0)`);
+                    
+                    this.ctx.fillStyle = penumbraGradient;
+                    this.ctx.beginPath();
+                    this.ctx.arc(shadowX, shadowY, penumbraRadius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Umbra (even darker inner shadow) - only when somewhat sharp
+                    if (sharpness > 0.3) {
+                        const umbraRadius = radius * (0.8 + sharpness * 0.3);
+                        const umbraGradient = this.ctx.createRadialGradient(
+                            shadowX, shadowY, 0,
+                            shadowX, shadowY, umbraRadius
+                        );
+                        
+                        // Even darker - essentially black in the center
+                        umbraGradient.addColorStop(0, `rgba(0, 0, 0, ${baseOpacity})`);  // Pure black
+                        umbraGradient.addColorStop(0.5, `rgba(10, 2, 0, ${baseOpacity * 0.9})`);
+                        umbraGradient.addColorStop(0.8, `rgba(20, 5, 0, ${baseOpacity * 0.5})`);
+                        umbraGradient.addColorStop(1, 'rgba(30, 8, 5, 0)');
+                        
+                        this.ctx.fillStyle = umbraGradient;
+                        this.ctx.beginPath();
+                        this.ctx.arc(shadowX, shadowY, umbraRadius, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                    
+                    this.ctx.restore();
+                }
+                
+                this.ctx.restore();
+            }
+        }
+        
         
         this.ctx.restore();
     }
@@ -1751,7 +2245,7 @@ this.ctx.fillStyle = this.config.coreColor;
             return;
         }
         
-        // Legacy string-based undertone handling
+        // String-based undertone handling
         if (!undertone || !this.undertoneModifiers[undertone]) {
             // Reset to defaults if no undertone
             this.state.sizeMultiplier = 1.0;
@@ -1769,7 +2263,7 @@ this.ctx.fillStyle = this.config.coreColor;
         
         const modifier = this.undertoneModifiers[undertone];
         
-        // Apply all modifiers directly (legacy mode)
+        // Apply all modifiers directly
         this.state.sizeMultiplier = modifier.sizeMultiplier;
         this.state.jitterAmount = modifier.jitterAmount || 0;
         this.state.episodicFlutter = modifier.episodicFlutter || false;
@@ -1797,177 +2291,40 @@ this.ctx.fillStyle = this.config.coreColor;
      * - SUBDUED   : -50% saturation (ghostly, withdrawn)
      */
     applyUndertoneToColor(baseColor, undertone) {
-        // Handle weighted modifier for smooth transitions
-        if (undertone && typeof undertone === 'object' && undertone.weight !== undefined) {
-            // For weighted transitions, interpolate between clear and target undertone
-            // This maintains the new saturation-only system during transitions
-            const weight = undertone.weight;
-            const undertoneType = undertone.type || 'clear';
-            
-            // Apply weighted saturation adjustment
-            if (undertoneType === 'clear' || weight === 0) {
-                return baseColor;
-            }
-            
-            // Get full saturation adjustment for this undertone
-            const fullySaturated = applyUndertoneSaturation(baseColor, undertoneType);
-            
-            // Interpolate between base and fully saturated based on weight
-            const rgb1 = hexToRgb(baseColor);
-            const rgb2 = hexToRgb(fullySaturated);
-            
-            const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * weight);
-            const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * weight);
-            const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * weight);
-            
-            return rgbToHex(r, g, b);
-        }
-        
-        // Direct string-based undertone - use new saturation system
-        if (!undertone || undertone === 'clear') return baseColor;
-        
-        // Apply saturation-based undertone adjustment
-        return applyUndertoneSaturation(baseColor, undertone);
+        return this.colorUtilities.applyUndertoneToColor(baseColor, undertone);
     }
     
-    /**
-     * Convert hex to RGB
-     */
     hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : null;
+        return this.colorUtilities.hexToRgb(hex);
     }
     
-    /**
-     * Convert RGB to HSL
-     */
     rgbToHsl(r, g, b) {
-        r /= 255;
-        g /= 255;
-        b /= 255;
-        
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
-        
-        if (max === min) {
-            h = s = 0; // achromatic
-        } else {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            
-            switch (max) {
-                case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-                case g: h = ((b - r) / d + 2) / 6; break;
-                case b: h = ((r - g) / d + 4) / 6; break;
-            }
-        }
-        
-        return { h: h * 360, s, l };
+        return this.colorUtilities.rgbToHsl(r, g, b);
     }
     
-    /**
-     * Convert HSL to hex
-     */
     hslToHex(h, s, l) {
-        h = h / 360;
-        
-        let r, g, b;
-        
-        if (s === 0) {
-            r = g = b = l; // achromatic
-        } else {
-            const hue2rgb = (p, q, t) => {
-                if (t < 0) t += 1;
-                if (t > 1) t -= 1;
-                if (t < 1/6) return p + (q - p) * 6 * t;
-                if (t < 1/2) return q;
-                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                return p;
-            };
-            
-            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            const p = 2 * l - q;
-            
-            r = hue2rgb(p, q, h + 1/3);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1/3);
-        }
-        
-        const toHex = x => {
-            const hex = Math.round(x * 255).toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
-        };
-        
-        return '#' + toHex(r) + toHex(g) + toHex(b);
+        return this.colorUtilities.hslToHex(h, s, l);
     }
     
-    /**
-     * Start a color transition
-     * @param {string} targetColor - Target hex color
-     * @param {number} targetIntensity - Target glow intensity
-     * @param {number} duration - Transition duration in ms
-     */
+    hexToRgba(hex, alpha = 1) {
+        const rgb = this.hexToRgb(hex);
+        if (!rgb) return `rgba(255, 255, 255, ${alpha})`;
+        return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+    }
+    
     startColorTransition(targetColor, targetIntensity, duration = 1500) {
-        // Color transition started
-        
-        // Don't start a new transition if we're already at the target
-        if (this.state.glowColor === targetColor && 
-            this.state.glowIntensity === targetIntensity) {
-            return;
-        }
-        
-        this.colorTransition = {
-            active: true,
-            fromColor: this.state.glowColor,
-            toColor: targetColor,
-            fromIntensity: this.state.glowIntensity,
-            toIntensity: targetIntensity,
-            progress: 0,
-            startTime: performance.now(),
-            duration: duration
-        };
-        
-        // Color transition will be updated in main render loop
+        this.colorUtilities.currentColor = this.state.glowColor;
+        this.colorUtilities.currentIntensity = this.state.glowIntensity;
+        this.colorUtilities.startColorTransition(targetColor, targetIntensity, duration);
+        this.colorTransition = this.colorUtilities.colorTransition;
     }
     
-    /**
-     * Update the color transition (called from main render loop)
-     * @param {number} deltaTime - Time since last frame
-     */
     updateColorTransition(deltaTime) {
-        if (!this.colorTransition.active) return;
-        
-        const elapsed = performance.now() - this.colorTransition.startTime;
-        const progress = Math.min(elapsed / this.colorTransition.duration, 1);
-        
-        // Use ease-out-quad for smooth deceleration
-        const eased = 1 - Math.pow(1 - progress, 2);
-        
-        // Interpolate color
-        this.state.glowColor = interpolateHsl(
-            this.colorTransition.fromColor,
-            this.colorTransition.toColor,
-            eased
-        );
-        
-        // Interpolate intensity - with NaN safety check
-        const interpolatedIntensity = this.colorTransition.fromIntensity + 
-            (this.colorTransition.toIntensity - this.colorTransition.fromIntensity) * eased;
-        
-        if (!isFinite(interpolatedIntensity)) {
-            // Remove console.error for performance
-            this.state.glowIntensity = 1.0; // Fallback silently
-        } else {
-            this.state.glowIntensity = interpolatedIntensity;
-        }
-        
-        if (progress >= 1) {
-            this.colorTransition.active = false;
+        const result = this.colorUtilities.updateColorTransition(deltaTime);
+        if (result) {
+            this.state.glowColor = result.color;
+            this.state.glowIntensity = result.intensity;
+            this.colorTransition = this.colorUtilities.colorTransition;
         }
     }
     
@@ -1983,7 +2340,7 @@ this.ctx.fillStyle = this.config.coreColor;
         
         // Store undertone for color processing
         this.state.undertone = undertone;
-        this.currentUndertone = undertone;  // Keep legacy reference
+        this.currentUndertone = undertone;
         
         // Get weighted undertone modifier from state machine if available
         const weightedModifier = this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers ? 
@@ -3334,34 +3691,34 @@ this.ctx.fillStyle = this.config.coreColor;
         return null;
     }
     
-    // Individual start methods for each gesture
-    startBounce() { this.startGesture('bounce'); }
-    startPulse() { this.startGesture('pulse'); }
-    startShake() { this.startGesture('shake'); }
-    startSpin() { this.startGesture('spin'); }
-    startNod() { this.startGesture('nod'); }
-    startTilt() { this.startGesture('tilt'); }
-    startExpand() { this.startGesture('expand'); }
-    startContract() { this.startGesture('contract'); }
-    startFlash() { this.startGesture('flash'); }
-    startDrift() { this.startGesture('drift'); }
-    startStretch() { this.startGesture('stretch'); }
-    startGlow() { this.startGesture('glow'); }
-    startFlicker() { this.startGesture('flicker'); }
-    startVibrate() { this.startGesture('vibrate'); }
-    startOrbital() { this.startGesture('orbital'); }
-    startHula() { this.startGesture('hula'); }
-    startWave() { this.startGesture('wave'); }
-    startBreathe() { this.startGesture('breathe'); }
-    startMorph() { this.startGesture('morph'); }
-    startSlowBlink() { this.startGesture('slowBlink'); }
-    startLook() { this.startGesture('look'); }
-    startSettle() { this.startGesture('settle'); }
-    startBreathIn() { this.startGesture('breathIn'); }
-    startBreathOut() { this.startGesture('breathOut'); }
-    startBreathHold() { this.startGesture('breathHold'); }
-    startBreathHoldEmpty() { this.startGesture('breathHoldEmpty'); }
-    startJump() { this.startGesture('jump'); }
+    // Individual start methods for each gesture - delegate to GestureAnimator
+    startBounce() { this.gestureAnimator.startBounce(); }
+    startPulse() { this.gestureAnimator.startPulse(); }
+    startShake() { this.gestureAnimator.startShake(); }
+    startSpin() { this.gestureAnimator.startSpin(); }
+    startNod() { this.gestureAnimator.startNod(); }
+    startTilt() { this.gestureAnimator.startTilt(); }
+    startExpand() { this.gestureAnimator.startExpand(); }
+    startContract() { this.gestureAnimator.startContract(); }
+    startFlash() { this.gestureAnimator.startFlash(); }
+    startDrift() { this.gestureAnimator.startDrift(); }
+    startStretch() { this.gestureAnimator.startStretch(); }
+    startGlow() { this.gestureAnimator.startGlow(); }
+    startFlicker() { this.gestureAnimator.startFlicker(); }
+    startVibrate() { this.gestureAnimator.startVibrate(); }
+    startOrbital() { this.gestureAnimator.startOrbital(); }
+    startHula() { this.gestureAnimator.startHula(); }
+    startWave() { this.gestureAnimator.startWave(); }
+    startBreathe() { this.gestureAnimator.startBreathe(); }
+    startMorph() { this.gestureAnimator.startMorph(); }
+    startSlowBlink() { this.gestureAnimator.startSlowBlink(); }
+    startLook() { this.gestureAnimator.startLook(); }
+    startSettle() { this.gestureAnimator.startSettle(); }
+    startBreathIn() { this.gestureAnimator.startBreathIn(); }
+    startBreathOut() { this.gestureAnimator.startBreathOut(); }
+    startBreathHold() { this.gestureAnimator.startBreathHold(); }
+    startBreathHoldEmpty() { this.gestureAnimator.startBreathHoldEmpty(); }
+    startJump() { this.gestureAnimator.startJump(); }
     
     /**
      * Stop all active gestures

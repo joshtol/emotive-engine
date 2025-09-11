@@ -110,7 +110,12 @@
       "Bash(start http://localhost:8080/themed-scifi-demo.html)",
       "Read(/c:\\Users\\raven\\Downloads/**)",
       "Bash(cmd /c dir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(mkdir:*)",
+      "Bash(awk:*)",
+      "Bash(start http://localhost:8080/audio-test.html)"
     ],
     "deny": [],
     "ask": []

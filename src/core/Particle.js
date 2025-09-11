@@ -147,7 +147,7 @@ class Particle {
         
         // Universal law: Gestures override state behavior based on their motion type
         // Use the modular gesture system to determine gesture behavior
-        const gestureIsOverriding = gestureMotion && gestureProgress > 0 && 
+        const gestureIsOverriding = gestureMotion && gestureMotion.type && gestureProgress > 0 && 
             isGestureOverriding(gestureMotion.type);
         
         if (gestureIsOverriding) {

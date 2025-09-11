@@ -18,8 +18,11 @@ export class AudioAnalyzer {
         this.audioContext = null;
         this.analyser = null;
         this.source = null;
+        this.elementSource = null;  // Track audio element source separately
         this.dataArray = null;
         this.isAnalyzing = false;
+        this.connectedElement = null;
+        this.microphoneStream = null;
         
         // Frequency band configuration
         this.frequencyBands = 32;
@@ -66,21 +69,42 @@ export class AudioAnalyzer {
             return;
         }
         
-        // Disconnect previous source if exists
-        if (this.source) {
-            this.source.disconnect();
+        // Clean up microphone if it was connected
+        if (this.microphoneStream) {
+            this.microphoneStream.getTracks().forEach(track => track.stop());
+            this.microphoneStream = null;
+            if (this.source) {
+                try {
+                    this.source.disconnect();
+                } catch (e) {}
+                this.source = null;
+            }
         }
         
         try {
-            this.source = this.audioContext.createMediaElementSource(audioElement);
-            this.source.connect(this.analyser);
-            this.source.connect(this.audioContext.destination); // Pass through audio
+            // Create source from audio element (only if not already created)
+            if (!this.elementSource || this.connectedElement !== audioElement) {
+                this.elementSource = this.audioContext.createMediaElementSource(audioElement);
+                this.elementSource.connect(this.analyser);
+                this.elementSource.connect(this.audioContext.destination); // Pass through audio
+            }
+            this.source = this.elementSource;  // Set current source
+            this.connectedElement = audioElement;
             this.isAnalyzing = true;
             
             // Start analysis loop
             this.analyze();
         } catch (error) {
-            console.error('Failed to connect audio element:', error);
+            // If already connected, just restart analysis
+            if (error.message && error.message.includes('already been used')) {
+                console.log('Audio element already connected, restarting analysis');
+                this.source = this.elementSource;  // Use existing source
+                this.connectedElement = audioElement;
+                this.isAnalyzing = true;
+                this.analyze();
+            } else {
+                console.error('Failed to connect audio element:', error);
+            }
         }
     }
     
@@ -93,17 +117,46 @@ export class AudioAnalyzer {
             return;
         }
         
+        // Resume audio context if suspended
+        if (this.audioContext.state === 'suspended') {
+            await this.audioContext.resume();
+        }
+        
+        // Clean up any existing microphone connection
+        if (this.microphoneStream) {
+            this.microphoneStream.getTracks().forEach(track => track.stop());
+            this.microphoneStream = null;
+        }
+        
+        // Disconnect element source from analyser if it exists
+        if (this.elementSource) {
+            try {
+                this.elementSource.disconnect(this.analyser);
+                // Keep connection to destination for audio passthrough
+            } catch (e) {}
+        }
+        
+        // Disconnect old microphone source if it exists
+        if (this.source && this.source !== this.elementSource) {
+            try {
+                this.source.disconnect();
+            } catch (e) {}
+            this.source = null;
+        }
+        
+        // Clear any audio element connection
+        this.connectedElement = null;
+        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
-            // Disconnect previous source
-            if (this.source) {
-                this.source.disconnect();
-            }
             
             this.source = this.audioContext.createMediaStreamSource(stream);
             this.source.connect(this.analyser);
             this.isAnalyzing = true;
+            
+            // Store stream for cleanup
+            this.microphoneStream = stream;
+            this.connectedElement = null; // Clear any audio element connection
             
             // Start analysis loop
             this.analyze();
@@ -197,7 +250,8 @@ export class AudioAnalyzer {
         const now = performance.now();
         
         // Simple threshold-based beat detection
-        if (amplitude > this.beatThreshold && now - this.lastBeatTime > 100) {
+        // Allow faster beats - 273ms = 220 BPM, but go down to 60ms for very fast tapping
+        if (amplitude > this.beatThreshold && now - this.lastBeatTime > 60) {
             this.lastBeatTime = now;
             
             // Trigger beat callbacks
@@ -248,9 +302,28 @@ export class AudioAnalyzer {
     stop() {
         this.isAnalyzing = false;
         
-        if (this.source) {
-            this.source.disconnect();
-            this.source = null;
+        // Only disconnect microphone sources, not audio elements
+        if (this.microphoneStream) {
+            if (this.source && this.source !== this.elementSource) {
+                try {
+                    this.source.disconnect();
+                } catch (e) {
+                    // Ignore disconnect errors
+                }
+                this.source = null;
+            }
+            this.microphoneStream.getTracks().forEach(track => track.stop());
+            this.microphoneStream = null;
+        }
+        
+        // Reconnect element source to analyser if it was disconnected
+        if (this.elementSource && this.connectedElement) {
+            try {
+                this.elementSource.connect(this.analyser);
+            } catch (e) {
+                // Already connected, that's fine
+            }
+            this.source = this.elementSource;
         }
     }
     

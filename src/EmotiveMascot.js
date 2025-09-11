@@ -58,8 +58,15 @@ import PluginSystem from './core/PluginSystem.js';
 import { browserCompatibility, CanvasContextRecovery } from './utils/browserCompatibility.js';
 import { emotiveDebugger, runtimeCapabilities } from './utils/debugger.js';
 import rhythmIntegration from './core/rhythmIntegration.js';
-import { ShapeMorpher } from './core/ShapeMorpher.js';
+import ShapeMorpher from './core/ShapeMorpher.js';
 import { AudioAnalyzer } from './core/AudioAnalyzer.js';
+
+// Import modular handlers
+import { AudioHandler } from './mascot/AudioHandler.js';
+import { GestureController } from './mascot/GestureController.js';
+import { StateCoordinator } from './mascot/StateCoordinator.js';
+import { VisualizationRunner } from './mascot/VisualizationRunner.js';
+import { ConfigurationManager } from './mascot/ConfigurationManager.js';
 
 class EmotiveMascot {
     constructor(config = {}) {
@@ -148,6 +155,9 @@ class EmotiveMascot {
         // Initialize shape morphing and audio analysis early
         this.shapeMorpher = new ShapeMorpher();
         this.audioAnalyzer = new AudioAnalyzer();
+        
+        // Pass audioAnalyzer to shapeMorpher for audio-reactive deformation
+        this.shapeMorpher.audioAnalyzer = this.audioAnalyzer;
         
         // Pass them to renderer
         this.renderer.shapeMorpher = this.shapeMorpher;
@@ -282,7 +292,7 @@ class EmotiveMascot {
         // Set parent mascot reference for audio level updates
         this.animationController.setParentMascot(this);
         
-        // Backward compatibility properties
+        // Runtime state
         this.isRunning = false;
         
         // Initialize sound system if enabled
@@ -320,6 +330,19 @@ class EmotiveMascot {
             speaking: false,
             currentUtterance: null
         };
+        
+        // Initialize modular handlers
+        this.audioHandler = new AudioHandler(this);
+        this.gestureController = new GestureController(this);
+        this.stateCoordinator = new StateCoordinator(this);
+        this.visualizationRunner = new VisualizationRunner(this);
+        this.configurationManager = new ConfigurationManager(this, config);
+        
+        // Initialize the handlers
+        this.audioHandler.init();
+        this.gestureController.init();
+        this.stateCoordinator.init();
+        this.visualizationRunner.init();
         
         // EventManager already initialized in constructor
         
@@ -482,96 +505,12 @@ class EmotiveMascot {
     /**
      * Sets the emotional state with optional undertone
      * @param {string} emotion - The emotion to set
-     * @param {Object|string|null} options - Options object or undertone string for backward compatibility
+     * @param {Object|string|null} options - Options object or undertone string
      * @returns {EmotiveMascot} This instance for chaining
      */
     setEmotion(emotion, options = null) {
         return this.errorBoundary.wrap(() => {
-            // Map common aliases to actual emotion states
-            const emotionMapping = {
-                'happy': 'joy',
-                // 'excited': 'surprise', // Removed - excited is now its own emotion!
-                'calm': 'neutral',
-                'curious': 'surprise',
-                'frustrated': 'anger',
-                'sad': 'sadness'
-            };
-            
-            // Use mapped emotion or original if not an alias
-            const mappedEmotion = emotionMapping[emotion] || emotion;
-            
-            // Handle backward compatibility - if options is a string, treat as undertone
-            let undertone = null;
-            let duration = 500;
-            
-            if (typeof options === 'string') {
-                undertone = options;
-            } else if (options && typeof options === 'object') {
-                undertone = options.undertone || null;
-                duration = options.duration || 500;
-            }
-            
-            // Set emotional state in state machine
-            const success = this.stateMachine.setEmotion(mappedEmotion, undertone, duration);
-            
-            if (success) {
-                // Register emotion's rhythm configuration
-                const emotionConfig = getEmotion(mappedEmotion);
-                if (emotionConfig) {
-                    rhythmIntegration.registerConfig('emotion', mappedEmotion, emotionConfig);
-                }
-                // Clear and reset particles when changing emotional states
-                if (this.particleSystem) {
-                    // Clear all existing particles
-                    this.particleSystem.clear();
-                    
-                    // Get the new emotional properties
-                    const emotionalProps = this.stateMachine.getCurrentEmotionalProperties();
-                    
-                    // Spawn initial particles for the new state
-                    // Use burst to immediately populate with a few particles
-                    // DECIMATED neutral
-                    let initialCount;
-                    if (mappedEmotion === 'neutral') {
-                        initialCount = 1;  // DECIMATED to 1 particle
-                    } else if (mappedEmotion === 'resting') {
-                        initialCount = 4;  // Keep resting at 4
-                    } else {
-                        initialCount = Math.min(3, Math.floor(emotionalProps.particleRate / 4));
-                    }
-                    
-                    if (initialCount > 0) {
-                        // Always spawn from canvas center, not gaze-adjusted position
-                        const centerX = this.canvasManager.width / 2;
-                        const centerY = this.canvasManager.height / 2;
-                        
-                        this.particleSystem.burst(
-                            initialCount, 
-                            emotionalProps.particleBehavior,
-                            centerX,
-                            centerY
-                        );
-                    }
-                }
-                
-                // Update sound system ambient tone - DISABLED (annoying)
-                // if (this.soundSystem.isAvailable()) {
-                //     this.soundSystem.setAmbientTone(mappedEmotion, duration);
-                // }
-                
-                // Update Emotive renderer if in classic mode
-                if (this.config.renderingStyle === 'classic' && this.renderer.setEmotionalState) {
-                    const emotionParams = getEmotionVisualParams(mappedEmotion);
-                    this.renderer.setEmotionalState(mappedEmotion, emotionParams, undertone);
-                }
-                
-                // Emit emotion change event
-                this.emit('emotionChanged', { emotion: mappedEmotion, undertone, duration });
-                
-                // console.log(`Emotion set to: ${mappedEmotion}${undertone ? ` (${undertone})` : ''}`);
-            }
-            
-            return this;
+            return this.stateCoordinator.setEmotion(emotion, options);
         }, 'emotion-setting', this)();
     }
 
@@ -590,20 +529,21 @@ class EmotiveMascot {
             // console.log('Express called with gesture:', gesture);
             
             // First check if this is a modular gesture
-            if (this.gestureController) {
-                const hasGesture = this.gestureController.hasGesture(gesture);
-                if (hasGesture) {
-                    this.gestureController.triggerGesture(gesture);
-                    console.log(`Triggered ${gesture} via gesture controller`);
-                    
-                    // Play gesture sound effect if available
-                    if (this.soundSystem.isAvailable()) {
-                        this.soundSystem.playGestureSound(gesture);
-                    }
-                    
-                    return this;
-                }
-            }
+            // TODO: Re-enable once gestureController methods are moved
+            // if (this.gestureController) {
+            //     const hasGesture = this.gestureController.hasGesture(gesture);
+            //     if (hasGesture) {
+            //         this.gestureController.triggerGesture(gesture);
+            //         console.log(`Triggered ${gesture} via gesture controller`);
+            //         
+            //         // Play gesture sound effect if available
+            //         if (this.soundSystem.isAvailable()) {
+            //             this.soundSystem.playGestureSound(gesture);
+            //         }
+            //         
+            //         return this;
+            //     }
+            // }
             
             // Direct mapping to renderer methods for all gestures
             const rendererMethods = {
@@ -757,31 +697,7 @@ class EmotiveMascot {
      */
     stopSpeaking() {
         return this.errorBoundary.wrap(() => {
-            if (!this.speaking) {
-                console.warn('Speech reactivity is not active');
-                return this;
-            }
-            
-            // Store previous state for event
-            const previousAudioLevel = this.audioLevelProcessor.getCurrentLevel();
-            
-            // Clean up audio level processor
-            this.audioLevelProcessor.cleanup();
-            
-            // Reset speech state
-            this.speaking = false;
-            
-            // Notify renderer about speech stop (triggers 500ms return-to-base transition)
-            this.renderer.onSpeechStop();
-            
-            // Emit speech stop event
-            this.emit('speechStopped', { 
-                previousAudioLevel,
-                returnToBaseTime: 500
-            });
-            
-            console.log('Speech reactivity stopped - returning to base emotional state');
-            return this;
+            return this.audioHandler.stopSpeaking();
         }, 'speech-stop', this)();
     }
 
@@ -1076,67 +992,7 @@ class EmotiveMascot {
      */
     start() {
         return this.errorBoundary.wrap(() => {
-            if (this.animationController.isAnimating()) {
-                console.warn('EmotiveMascot is already running');
-                return this;
-            }
-            
-            // Start the animation controller
-            const success = this.animationController.start();
-            
-            if (success) {
-                this.isRunning = true;
-                
-                // Spawn initial particles for classic mode
-                if (this.config.renderingStyle === 'classic' && this.particleSystem) {
-                    const currentState = this.stateMachine.getCurrentState();
-                    const emotion = currentState.emotion;
-                    const undertone = currentState.undertone;
-                    const emotionParams = getEmotionVisualParams(emotion);
-                    
-                    // Get the actual orb position from the renderer (includes gaze offset)
-                    let orbX, orbY;
-                    if (this.renderer && this.renderer.getCurrentOrbPosition) {
-                        const orbPos = this.renderer.getCurrentOrbPosition();
-                        orbX = orbPos.x;
-                        orbY = orbPos.y;
-                    } else {
-                        // Fallback to center if method doesn't exist
-                        orbX = this.canvasManager.width / 2;
-                        orbY = this.canvasManager.height / 2;
-                    }
-                    
-                    // Spawn initial batch of particles - fewer for smoother start
-                    const initialParticleCount = emotion === 'neutral' ? 3 : 5; // Start with fewer particles
-                    console.log(`Starting with emotion: ${emotion}, spawning ${initialParticleCount} particles`);
-                    this.particleSystem.spawn(
-                        emotionParams.particleBehavior || 'ambient',
-                        emotion,
-                        emotionParams.particleRate || 15,
-                        orbX,
-                        orbY,
-                        16, // Assume 60fps frame time
-                        initialParticleCount,  // Force spawn this many
-                        0,  // minParticles
-                        50,  // maxParticles
-                        this.renderer.scaleFactor || 1,  // Pass scale factor
-                        this.config.classicConfig?.particleSizeMultiplier || 1,  // Pass particle size multiplier
-                        emotionParams.particleColors || null,  // Pass emotion colors
-                        undertone  // Pass undertone for saturation adjustments
-                    );
-                }
-                
-                // Start degradation monitoring if enabled
-                if (this.degradationManager && this.config.enableAutoOptimization) {
-                    this.degradationManager.startMonitoring();
-                }
-                
-                // Emit start event
-                this.emit('started');
-                console.log(`EmotiveMascot started (target: ${this.animationController.targetFPS} FPS)`);
-            }
-            
-            return this;
+            return this.visualizationRunner.start();
         }, 'start', this)();
     }
 
@@ -1146,33 +1002,7 @@ class EmotiveMascot {
      */
     stop() {
         return this.errorBoundary.wrap(() => {
-            if (!this.animationController.isAnimating()) {
-                console.warn('EmotiveMascot is not running');
-                return this;
-            }
-            
-            // Stop speech reactivity if active
-            if (this.speaking) {
-                this.stopSpeaking();
-            }
-            
-            // Stop the animation controller
-            const success = this.animationController.stop();
-            
-            if (success) {
-                this.isRunning = false;
-                
-                // Stop degradation monitoring
-                if (this.degradationManager) {
-                    this.degradationManager.stopMonitoring();
-                }
-                
-                // Emit stop event
-                this.emit('stopped');
-                console.log('EmotiveMascot stopped');
-            }
-            
-            return this;
+            return this.visualizationRunner.stop();
         }, 'stop', this)();
     }
 
@@ -1733,80 +1563,7 @@ class EmotiveMascot {
      */
     update(deltaTime) {
         this.errorBoundary.wrap(() => {
-            // Update audio level monitoring if speaking
-            if (this.speaking && this.audioLevelProcessor.isProcessingActive()) {
-                this.audioLevelProcessor.updateAudioLevel(deltaTime);
-            }
-            
-            // Update classic mode components
-            if (this.config.renderingStyle === 'classic') {
-                // Update gaze tracker
-                if (this.gazeTracker) {
-                    this.gazeTracker.update(deltaTime);
-                    
-                    // Update threat level for suspicion emotion
-                    const currentEmotion = this.stateMachine.getCurrentState().emotion;
-                    if (currentEmotion === 'suspicion') {
-                        // Get mouse position and calculate distance to center
-                        const mousePos = this.gazeTracker.mousePos;
-                        const centerX = this.canvas.width / 2;
-                        const centerY = this.canvas.height / 2;
-                        const distance = Math.sqrt(
-                            Math.pow(mousePos.x - centerX, 2) + 
-                            Math.pow(mousePos.y - centerY, 2)
-                        );
-                        
-                        // Get emotion configuration (already imported at top)
-                        const suspicionEmotion = getEmotion('suspicion');
-                        
-                        if (suspicionEmotion && suspicionEmotion.special) {
-                            const maxDist = suspicionEmotion.special.maxThreatDistance || 300;
-                            // Closer = higher threat (inverse relationship)
-                            const threatLevel = Math.max(0, Math.min(1, 1 - (distance / maxDist)));
-                            
-                            // Update the emotion's threat level
-                            if (suspicionEmotion.visual) {
-                                suspicionEmotion.visual.threatLevel = threatLevel;
-                                
-                                // Log for debugging
-                                if (this.debugMode && Math.random() < 0.02) { // Log occasionally
-                                    console.log(`Threat Level: ${threatLevel.toFixed(2)}, Distance: ${distance.toFixed(0)}`);
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Update idle behaviors
-                if (this.idleBehavior) {
-                    this.idleBehavior.update(deltaTime);
-                }
-                
-                // Gesture progress is now handled above when checking currentModularGesture
-                
-                // Combine gaze and sway offsets
-                if (this.gazeTracker && this.idleBehavior) {
-                    const gazeOffset = this.gazeTracker.getGazeOffset();
-                    const swayOffset = this.idleBehavior.getSwayOffset();
-                    
-                    // Get full gaze state including proximity for eye narrowing
-                    const gazeState = this.gazeTracker.getState();
-                    
-                    // Combine the offsets and include proximity data
-                    const gazeData = {
-                        offset: {
-                            x: gazeOffset.x + swayOffset.x,
-                            y: gazeOffset.y + swayOffset.y
-                        },
-                        proximity: gazeState.proximity || 0,
-                        isLocked: gazeState.isLocked || false
-                    };
-                    
-                    this.renderer.setGazeOffset(gazeData);
-                }
-            }
-            
-            // DegradationManager removed - no performance checks
+            this.visualizationRunner.update(deltaTime);
         }, 'audio-update')();
     }
 
@@ -2246,17 +2003,7 @@ class EmotiveMascot {
      */
     setVolume(volume) {
         return this.errorBoundary.wrap(() => {
-            const clampedVolume = Math.max(0, Math.min(1, volume));
-            this.config.masterVolume = clampedVolume;
-            
-            if (this.soundSystem.isAvailable()) {
-                const currentEmotion = this.stateMachine.getCurrentState().emotion;
-                this.soundSystem.setMasterVolume(clampedVolume, currentEmotion);
-            }
-            
-            this.emit('volumeChanged', { volume: clampedVolume });
-            
-            return this;
+            return this.audioHandler.setVolume(volume);
         }, 'volume-setting', this)();
     }
 
@@ -2715,7 +2462,7 @@ class EmotiveMascot {
             }
             
             // Start the morph
-            this.shapeMorpher.startMorph(shape, config);
+            this.shapeMorpher.morphTo(shape, config);
             
             // Pass shape morpher to renderer
             if (this.renderer) {
@@ -2737,38 +2484,7 @@ class EmotiveMascot {
      */
     connectAudio(audioElement) {
         return this.errorBoundary.wrap(async () => {
-            if (!this.audioAnalyzer) {
-                console.warn('AudioAnalyzer not initialized');
-                return this;
-            }
-            
-            // Initialize audio context if needed
-            if (!this.audioAnalyzer.audioContext) {
-                await this.audioAnalyzer.init();
-            }
-            
-            // Connect the audio element
-            this.audioAnalyzer.connectAudioElement(audioElement);
-            
-            // Start updating shape morpher with vocal data
-            if (this.vocalUpdateInterval) {
-                clearInterval(this.vocalUpdateInterval);
-            }
-            
-            this.vocalUpdateInterval = setInterval(() => {
-                if (this.audioAnalyzer.isAnalyzing && this.shapeMorpher) {
-                    const data = this.audioAnalyzer.getShapeMorpherData();
-                    this.shapeMorpher.setVocalData(data.instability, data.frequencies);
-                }
-            }, 50); // Update at 20 FPS
-            
-            // Pass audio analyzer to renderer
-            if (this.renderer) {
-                this.renderer.audioAnalyzer = this.audioAnalyzer;
-            }
-            
-            console.log('Audio connected for vocal visualization');
-            return this;
+            return await this.audioHandler.connectAudio(audioElement);
         }, 'connectAudio', this)();
     }
     
@@ -2778,44 +2494,7 @@ class EmotiveMascot {
      */
     async connectMicrophone() {
         return this.errorBoundary.wrap(async () => {
-            if (!this.audioAnalyzer) {
-                console.warn('AudioAnalyzer not initialized');
-                return this;
-            }
-            
-            // Initialize audio context if needed
-            if (!this.audioAnalyzer.audioContext) {
-                await this.audioAnalyzer.init();
-            }
-            
-            // Connect the microphone
-            const stream = await this.audioAnalyzer.connectMicrophone();
-            
-            if (stream) {
-                // Store stream for cleanup
-                this.microphoneStream = stream;
-                
-                // Start updating shape morpher with vocal data
-                if (this.vocalUpdateInterval) {
-                    clearInterval(this.vocalUpdateInterval);
-                }
-                
-                this.vocalUpdateInterval = setInterval(() => {
-                    if (this.audioAnalyzer.isAnalyzing && this.shapeMorpher) {
-                        const data = this.audioAnalyzer.getShapeMorpherData();
-                        this.shapeMorpher.setVocalData(data.instability, data.frequencies);
-                    }
-                }, 50); // Update at 20 FPS
-                
-                // Pass audio analyzer to renderer
-                if (this.renderer) {
-                    this.renderer.audioAnalyzer = this.audioAnalyzer;
-                }
-                
-                console.log('Microphone connected for vocal visualization');
-            }
-            
-            return this;
+            return await this.audioHandler.connectMicrophone();
         }, 'connectMicrophone', this)();
     }
     
@@ -2825,30 +2504,7 @@ class EmotiveMascot {
      */
     disconnectAudio() {
         return this.errorBoundary.wrap(() => {
-            // Stop analysis
-            if (this.audioAnalyzer) {
-                this.audioAnalyzer.stop();
-            }
-            
-            // Clear update interval
-            if (this.vocalUpdateInterval) {
-                clearInterval(this.vocalUpdateInterval);
-                this.vocalUpdateInterval = null;
-            }
-            
-            // Stop microphone if active
-            if (this.microphoneStream) {
-                this.microphoneStream.getTracks().forEach(track => track.stop());
-                this.microphoneStream = null;
-            }
-            
-            // Clear vocal data
-            if (this.shapeMorpher) {
-                this.shapeMorpher.setVocalData(0, []);
-            }
-            
-            console.log('Audio disconnected');
-            return this;
+            return this.audioHandler.disconnectAudio();
         }, 'disconnectAudio', this)();
     }
     

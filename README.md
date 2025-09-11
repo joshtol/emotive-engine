@@ -71,7 +71,34 @@ mascot.on('stateChange', (state) => {
 });
 ```
 
-## 🎵 Musical Rhythm Integration
+## 🎵 Musical Rhythm Integration (v2.2.0)
+
+### Advanced Shape Morphing with Musical Quantization
+
+The latest version introduces sophisticated shape morphing with adaptive musical quantization that ensures smooth, rhythmic transitions:
+
+```javascript
+// Shape morphing with automatic queueing
+mascot.morphTo('star');  // Queues if currently morphing
+mascot.morphTo('heart', { force: true });  // Force immediate morph
+
+// Musical quantization adapts to tempo
+// - Slow songs (< 90 BPM): Fluid, organic motion
+// - Medium tempo (90 BPM): Optimal rhythmic sync  
+// - Fast songs (> 140 BPM): Smooth, less rigid timing
+
+// Check morph queue status
+if (mascot.shapeMorpher.hasQueuedMorph()) {
+  console.log('Next shape queued');
+}
+```
+
+#### Shape System Features
+- **Fire-like Sun Rays**: Organic flickering flames with turbulence
+- **Smooth Lunar Eclipse**: Gradual shadow transitions with S-curve blending
+- **Smart Moon Shadow**: Always slides away before ANY transformation
+- **Morph Queue System**: Prevents interruptions with optional force override
+- **Adaptive Quantization**: BPM-aware smoothness adjustments
 
 ### Rhythm-Aware Animation System
 
@@ -166,12 +193,61 @@ export default {
 - **Jump**: Anticipation and release on beat boundaries
 - **Spin**: Rotations complete on bar endings
 
-### Real-Time Audio Analysis (Coming Soon)
+### Real-Time Audio Analysis
 
-We're building a universal audio analysis system that will work with ANY audio source - not just streaming services:
+The Emotive Engine features advanced audio-reactive visualization that responds to music in real-time:
+
+#### Features
+
+##### 🎵 Spectral Analysis
+- **32-band FFT Analysis**: Real-time frequency spectrum analysis (0-24kHz)
+- **Spectral Flux Detection**: Identifies musical onsets and transients
+- **Adaptive Thresholding**: Dynamic response that adjusts to the music
+- **Web Audio API Integration**: Works with any audio source (files, streams, microphone)
+
+##### 🔊 Bass Response System
+- **Thump Detection**: Identifies kick drums and bass drops (bands 0-2)
+- **Dynamic Wobble**: Organic wave effects that travel around the shape
+- **Directional Randomization**: Bass wobbles change direction for natural movement
+- **Smooth Decay**: Natural energy dissipation over ~400ms
+
+##### ✨ Vocal/Lead Detection
+- **Frequency Targeting**: Focuses on bands 9-13 where vocals/leads typically reside
+- **Gaussian Weighting**: Emphasizes band 11 (vocal center frequency)
+- **Drum Rejection**: Filters out false positives from percussion
+- **Subtle Effects**: Gentle shimmer and glow boost instead of harsh glitches
+
+##### 📊 Visual Feedback
+- **Real-time Frequency Monitor**: Color-coded band visualization
+- **Effect Indicators**: Visual confirmation of bass and vocal detection
+- **Debug Console**: Optional logging for tuning detection parameters
+
+#### Usage
+
+```javascript
+// Connect to audio file
+const audioElement = document.getElementById('audio-player');
+mascot.connectAudio(audioElement);
+
+// Or connect to microphone
+await mascot.connectMicrophone();
+
+// Audio effects are automatic:
+// - Bass thumps trigger directional wobbles
+// - Vocals/leads create subtle shimmers
+// - Overall amplitude affects shape expansion
+```
+
+#### Technical Details
+
+The audio system uses sophisticated onset detection algorithms:
+1. **Spectral Flux**: Measures positive spectral change between frames
+2. **Adaptive Thresholding**: Uses median + margin for dynamic sensitivity
+3. **Hold Times**: Sustains effects for musical coherence (250ms for vocals, 400ms for bass)
+4. **Frequency Isolation**: Separates bass, mids, and highs for targeted effects
 
 #### Background
-While platforms like Spotify previously offered tempo and musical feature APIs, these endpoints have been deprecated, limiting direct integration possibilities. In response, we're developing a more powerful, universal solution that works with any audio source.
+While platforms like Spotify previously offered tempo and musical feature APIs, these endpoints have been deprecated, limiting direct integration possibilities. Our solution works universally with any audio source through the Web Audio API.
 
 #### Planned Audio Features
 - **Universal Input**: Microphone, system audio, file upload, or any web audio stream

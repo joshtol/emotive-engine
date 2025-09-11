@@ -105,9 +105,9 @@ export default {
         }
         
         particle.behaviorState = {
-            // Orbital properties (base from love state)
+            // Orbital properties (tighter orbit to stay centered)
             orbitAngle: Math.random() * Math.PI * 2,
-            orbitRadius: 40 + Math.random() * 80,
+            orbitRadius: 30 + Math.random() * 40,  // Reduced from 40-120 to 30-70
             orbitSpeed: 0.01 + Math.random() * 0.02,
             
             // Glitch properties
@@ -154,13 +154,12 @@ export default {
     /**
      * Update particle physics for glitchy behavior
      */
-    update: function(particle, dt, config, centerX, centerY) {
+    update: function(particle, dt, centerX, centerY) {
         const state = particle.behaviorState;
         if (!state) return;
         
-        // Ensure we have center coordinates
-        centerX = centerX || 400;
-        centerY = centerY || 300;
+        // centerX and centerY are passed correctly from updateBehavior
+        // No need for fallbacks - they should always be provided
         
         // Update timers
         state.glitchTimer += dt * 16;
@@ -181,10 +180,10 @@ export default {
                 state.stutterTimer = 0;
                 state.nextStutter = 100 + Math.random() * 300;
                 
-                // Sometimes jump on unfreeze
+                // Sometimes jump on unfreeze (smaller jumps to stay centered)
                 if (Math.random() < 0.3) {
-                    particle.x += (Math.random() - 0.5) * 50;
-                    particle.y += (Math.random() - 0.5) * 50;
+                    particle.x += (Math.random() - 0.5) * 20;  // Reduced from 50
+                    particle.y += (Math.random() - 0.5) * 20;  // Reduced from 50
                 }
             }
         }
@@ -194,8 +193,8 @@ export default {
             state.isGlitching = true;
             state.glitchDuration = 50 + Math.random() * 100;
             state.glitchOffset = {
-                x: (Math.random() - 0.5) * 100,
-                y: (Math.random() - 0.5) * 100
+                x: (Math.random() - 0.5) * 30,  // Reduced from 100 to keep particles closer
+                y: (Math.random() - 0.5) * 30   // Reduced from 100 to keep particles closer
             };
             state.glitchTimer = 0;
             
@@ -236,10 +235,10 @@ export default {
             let targetX = centerX + Math.cos(state.orbitAngle) * wobbleRadius;
             let targetY = centerY + Math.sin(state.orbitAngle) * wobbleRadius * 0.6; // Elliptical
             
-            // Apply glitch offset
+            // Apply glitch offset (smaller random factor to stay closer)
             if (state.isGlitching) {
-                targetX += state.glitchOffset.x * Math.random();
-                targetY += state.glitchOffset.y * Math.random();
+                targetX += state.glitchOffset.x * Math.random() * 0.5;  // Reduced effect
+                targetY += state.glitchOffset.y * Math.random() * 0.5;  // Reduced effect
             }
             
             // RGB split effect
@@ -250,14 +249,14 @@ export default {
                 state.rgbPhase += 0.1 * dt;
             }
             
-            // Digital noise bursts on drops
+            // Digital noise bursts on drops (smaller to stay centered)
             if (state.dropIntensity > 0.8 && Math.random() < 0.1) {
-                targetX += (Math.random() - 0.5) * 20;
-                targetY += (Math.random() - 0.5) * 20;
+                targetX += (Math.random() - 0.5) * 10;  // Reduced from 20
+                targetY += (Math.random() - 0.5) * 10;  // Reduced from 20
             }
             
-            // Smooth approach with occasional jumps
-            const smoothing = state.isGlitching ? 0.02 : 0.05;
+            // Stronger pull to center to prevent wandering
+            const smoothing = state.isGlitching ? 0.05 : 0.08;  // Increased from 0.02/0.05
             particle.vx = (targetX - particle.x) * smoothing;
             particle.vy = (targetY - particle.y) * smoothing;
             

@@ -59,6 +59,67 @@ class RhythmIntegration {
     }
     
     /**
+     * Update BPM from detected audio
+     * @param {number} newBPM - Detected BPM from audio analysis
+     */
+    updateBPM(newBPM) {
+        if (newBPM >= 60 && newBPM <= 220) {
+            // Check if rhythm was manually stopped
+            if (window.rhythmManuallyStoppedForCurrentAudio) {
+                return; // Don't auto-update if manually stopped
+            }
+            
+            // Auto-start rhythm engine if not running
+            if (!rhythmEngine.isRunning) {
+                console.log(`🎵 Auto-starting rhythm engine at ${newBPM} BPM`);
+                
+                // Update UI before starting
+                const bpmSlider = document.getElementById('bpm-slider');
+                if (bpmSlider) {
+                    bpmSlider.value = newBPM;
+                }
+                const bpmValue = document.getElementById('bpm-value');
+                if (bpmValue) {
+                    bpmValue.textContent = newBPM;
+                }
+                
+                // Update rhythm toggle button state
+                const rhythmToggle = document.getElementById('rhythm-toggle');
+                if (rhythmToggle) {
+                    rhythmToggle.classList.remove('pending'); // Remove pending state
+                    rhythmToggle.classList.add('active');
+                    const rhythmStatus = document.getElementById('rhythm-status');
+                    if (rhythmStatus) {
+                        rhythmStatus.textContent = '■ STOP';
+                    }
+                    // Update the global rhythmActive flag if it exists
+                    if (typeof window.rhythmActive !== 'undefined') {
+                        window.rhythmActive = true;
+                    }
+                }
+                
+                this.start(newBPM, 'straight');
+                return;
+            }
+            
+            // If running, always update BPM regardless of whether it changed
+            // This ensures new tracks get their correct BPM
+            rhythmEngine.setBPM(newBPM);
+            // console.log(`🎵 Rhythm sync updated to ${newBPM} BPM`);
+            
+            // Update UI to show new BPM
+            const bpmSlider = document.getElementById('bpm-slider');
+            if (bpmSlider) {
+                bpmSlider.value = newBPM;
+            }
+            const bpmValue = document.getElementById('bpm-value');
+            if (bpmValue) {
+                bpmValue.textContent = newBPM;
+            }
+        }
+    }
+    
+    /**
      * Register a subsystem's rhythm configuration
      * Called when loading gestures, emotions, behaviors, etc.
      */
@@ -307,6 +368,27 @@ class RhythmIntegration {
      */
     setBPM(bpm) {
         rhythmEngine.setBPM(bpm);
+    }
+    
+    /**
+     * Set time signature from detected pattern
+     */
+    setTimeSignature(signature) {
+        this.timeSignature = signature;
+        console.log(`🎼 Rhythm Integration: Time signature set to ${signature}`);
+        
+        // Update UI if available
+        const timeSigDisplay = document.getElementById('time-sig-display');
+        if (timeSigDisplay) {
+            timeSigDisplay.textContent = signature;
+        }
+        
+        // Could update rhythm patterns based on time signature here
+        // For example, switch to waltz pattern for 3/4
+        if (signature === '3/4' && rhythmEngine.getPattern() !== 'waltz') {
+            // Could auto-switch to waltz pattern
+            // rhythmEngine.setPattern('waltz');
+        }
     }
     
     /**

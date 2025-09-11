@@ -37,6 +37,30 @@ class MusicalDuration {
         // Cache for performance
         this.cache = new Map();
         this.lastBPM = 0;
+        
+        // Pre-warm cache with common BPMs and durations
+        this.prewarmCache();
+    }
+    
+    /**
+     * Pre-calculate common durations to prevent first-run lag
+     */
+    prewarmCache() {
+        const commonBPMs = [60, 90, 120, 140, 160, 180];
+        const commonDurations = [
+            { musical: true, beats: 1 },      // 1 beat
+            { musical: true, bars: 1 },       // 1 bar
+            { musical: true, beats: 0.5 },    // Half beat
+            { musical: true, beats: 2 }       // 2 beats
+        ];
+        
+        commonBPMs.forEach(bpm => {
+            commonDurations.forEach(duration => {
+                const key = `${bpm}_${JSON.stringify(duration)}`;
+                const ms = this.toMilliseconds(duration, bpm);
+                this.cache.set(key, ms);
+            });
+        });
     }
     
     /**

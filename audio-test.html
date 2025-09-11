@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Audio Visualization Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0f;
+            color: #fff;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        #mascot-container {
+            width: 400px;
+            height: 400px;
+            border: 2px solid #00ffcc;
+            position: relative;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #00ffcc20;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        
+        button:hover {
+            background: #00ffcc40;
+        }
+        
+        button.active {
+            background: #00ffcc;
+            color: #000;
+        }
+        
+        audio {
+            width: 400px;
+        }
+        
+        #status {
+            color: #00ffcc;
+            font-size: 14px;
+            min-height: 20px;
+        }
+        
+        #debug {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            font-size: 12px;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Visualization Test</h1>
+    
+    <div id="mascot-container"></div>
+    
+    <audio id="audio-player" controls>
+        <source src="assets/Electric Glow (Remix).wav" type="audio/wav">
+    </audio>
+    
+    <div class="controls">
+        <button id="play-btn">Play with Viz</button>
+        <button id="mic-btn">Use Microphone</button>
+        <button id="shape-circle">Circle</button>
+        <button id="shape-triangle">Triangle</button>
+        <button id="shape-square">Square</button>
+        <button id="shape-star">Star</button>
+    </div>
+    
+    <div id="status">Ready</div>
+    
+    <div id="debug">
+        <div>Amplitude: <span id="amp">0</span></div>
+        <div>Vocal: <span id="vocal">0</span></div>
+        <div>Analyzing: <span id="analyzing">false</span></div>
+        <div>Shape: <span id="current-shape">circle</span></div>
+    </div>
+
+    <script type="module">
+        import { EmotiveMascot } from './src/EmotiveMascot.js';
+        
+        let mascot;
+        let debugInterval;
+        
+        async function init() {
+            const container = document.getElementById('mascot-container');
+            
+            mascot = new EmotiveMascot({
+                element: container,
+                startingEmotion: 'neutral',
+                startingUndertone: 'none',
+                shape: 'circle',
+                enableRhythm: true,
+                audioEnabled: true,
+                showFPS: true
+            });
+            
+            await mascot.init();
+            mascot.start();
+            
+            // Initialize audio analyzer
+            if (mascot.audioAnalyzer) {
+                await mascot.audioAnalyzer.init();
+                document.getElementById('status').textContent = 'Audio analyzer initialized';
+            }
+            
+            setupControls();
+            startDebugMonitor();
+        }
+        
+        function setupControls() {
+            const audioPlayer = document.getElementById('audio-player');
+            const playBtn = document.getElementById('play-btn');
+            const micBtn = document.getElementById('mic-btn');
+            
+            // Play button
+            playBtn.addEventListener('click', async () => {
+                if (audioPlayer.paused) {
+                    // Resume audio context if needed
+                    if (mascot.audioAnalyzer) {
+                        await mascot.audioAnalyzer.resume();
+                    }
+                    
+                    audioPlayer.play();
+                    mascot.connectAudio(audioPlayer);
+                    playBtn.textContent = 'Stop';
+                    playBtn.classList.add('active');
+                    document.getElementById('status').textContent = 'Playing with visualization';
+                } else {
+                    audioPlayer.pause();
+                    mascot.disconnectAudio();
+                    playBtn.textContent = 'Play with Viz';
+                    playBtn.classList.remove('active');
+                    document.getElementById('status').textContent = 'Stopped';
+                }
+            });
+            
+            // Audio player events
+            audioPlayer.addEventListener('play', () => {
+                if (!playBtn.classList.contains('active')) {
+                    mascot.connectAudio(audioPlayer);
+                    document.getElementById('status').textContent = 'Audio connected';
+                }
+            });
+            
+            audioPlayer.addEventListener('pause', () => {
+                document.getElementById('status').textContent = 'Audio paused';
+            });
+            
+            audioPlayer.addEventListener('ended', () => {
+                mascot.disconnectAudio();
+                playBtn.textContent = 'Play with Viz';
+                playBtn.classList.remove('active');
+                document.getElementById('status').textContent = 'Audio ended';
+            });
+            
+            // Microphone button
+            let micActive = false;
+            micBtn.addEventListener('click', async () => {
+                if (!micActive) {
+                    try {
+                        await mascot.connectMicrophone();
+                        micActive = true;
+                        micBtn.textContent = 'Stop Mic';
+                        micBtn.classList.add('active');
+                        document.getElementById('status').textContent = 'Microphone active';
+                    } catch (error) {
+                        document.getElementById('status').textContent = 'Mic access denied';
+                        console.error('Mic error:', error);
+                    }
+                } else {
+                    mascot.disconnectAudio();
+                    micActive = false;
+                    micBtn.textContent = 'Use Microphone';
+                    micBtn.classList.remove('active');
+                    document.getElementById('status').textContent = 'Microphone stopped';
+                }
+            });
+            
+            // Shape buttons
+            const shapes = ['circle', 'triangle', 'square', 'star'];
+            shapes.forEach(shape => {
+                document.getElementById(`shape-${shape}`).addEventListener('click', () => {
+                    mascot.morphToShape(shape);
+                    document.getElementById('current-shape').textContent = shape;
+                });
+            });
+        }
+        
+        function startDebugMonitor() {
+            debugInterval = setInterval(() => {
+                if (mascot && mascot.audioAnalyzer) {
+                    const amp = mascot.audioAnalyzer.currentAmplitude || 0;
+                    const vocal = mascot.audioAnalyzer.getVocalInstability ? 
+                                  mascot.audioAnalyzer.getVocalInstability() : 0;
+                    const analyzing = mascot.audioAnalyzer.isAnalyzing || false;
+                    
+                    document.getElementById('amp').textContent = amp.toFixed(3);
+                    document.getElementById('vocal').textContent = vocal.toFixed(3);
+                    document.getElementById('analyzing').textContent = analyzing;
+                    
+                    // Also check ShapeMorpher values
+                    if (mascot.shapeMorpher) {
+                        const state = mascot.shapeMorpher.getState();
+                        if (state) {
+                            document.getElementById('current-shape').textContent = 
+                                `${state.currentShape} (vocal: ${state.vocalEnergy?.toFixed(2) || 0})`;
+                        }
+                    }
+                }
+            }, 100);
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', init);
+        
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (debugInterval) {
+                clearInterval(debugInterval);
+            }
+            if (mascot) {
+                mascot.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

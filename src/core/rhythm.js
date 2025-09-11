@@ -93,6 +93,15 @@ class RhythmEngine {
         // Basic patterns - these are just timing references
         // Actual animations define their own responses to these patterns
         
+        // Common time signatures
+        this.patterns.set('4/4', {
+            name: '4/4',
+            description: 'Common time - 4 beats per bar',
+            timeSignature: [4, 4],
+            groove: 0,
+            accents: [1, 0.5, 0.7, 0.5]  // Beat emphasis pattern
+        });
+        
         this.patterns.set('straight', {
             name: 'straight',
             description: 'Straight, even timing',
@@ -107,11 +116,39 @@ class RhythmEngine {
             accents: [1, 0.3, 0.8, 0.3]
         });
         
+        this.patterns.set('3/4', {
+            name: '3/4',
+            description: 'Waltz time - 3 beats per bar',
+            timeSignature: [3, 4],
+            accents: [1, 0.5, 0.5]
+        });
+        
         this.patterns.set('waltz', {
             name: 'waltz',
             description: '3/4 waltz timing',
             timeSignature: [3, 4],
             accents: [1, 0.5, 0.5]
+        });
+        
+        this.patterns.set('6/8', {
+            name: '6/8',
+            description: 'Compound duple time',
+            timeSignature: [6, 8],
+            accents: [1, 0.3, 0.3, 0.7, 0.3, 0.3]
+        });
+        
+        this.patterns.set('5/4', {
+            name: '5/4',
+            description: 'Complex meter - 5 beats per bar',
+            timeSignature: [5, 4],
+            accents: [1, 0.5, 0.6, 0.5, 0.7]
+        });
+        
+        this.patterns.set('7/8', {
+            name: '7/8',
+            description: 'Irregular meter',
+            timeSignature: [7, 8],
+            accents: [1, 0.5, 0.5, 0.7, 0.5, 0.5, 0.6]
         });
         
         this.patterns.set('dubstep', {

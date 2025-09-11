@@ -230,8 +230,7 @@ class EmotiveStateMachine {
                 coreSize: 0.85,  // Slightly smaller than neutral
                 breathRate: 1.5,  // Excited breathing
                 breathDepth: 0.08,  // Moderate breath
-                eyeOpenness: 1.0,  // Wide eyes
-                verticalOffset: 0.05  // Move orb down just a bit (5% of canvas height)
+                eyeOpenness: 1.0  // Wide eyes
             },
             resting: {
                 primaryColor: '#7C3AED',   // Soft purple for resting
@@ -560,8 +559,9 @@ class EmotiveStateMachine {
                     transition.progress
                 );
             } else {
-                // Use current state properties
-                properties = { ...this.emotionalStates[this.state.emotion] };
+                // Use current state properties - fallback to neutral if emotion not found
+                const emotionState = this.emotionalStates[this.state.emotion] || this.emotionalStates.neutral;
+                properties = { ...emotionState };
             }
 
             // Apply undertone modifiers
@@ -583,8 +583,8 @@ class EmotiveStateMachine {
      * @returns {Object} Interpolated properties
      */
     interpolateEmotionalProperties(fromEmotion, toEmotion, progress) {
-        const fromProps = this.emotionalStates[fromEmotion];
-        const toProps = this.emotionalStates[toEmotion];
+        const fromProps = this.emotionalStates[fromEmotion] || this.emotionalStates.neutral;
+        const toProps = this.emotionalStates[toEmotion] || this.emotionalStates.neutral;
         
         // Apply easing to progress
         const easedProgress = applyEasing(progress, 0, 1, 'easeOutCubic');

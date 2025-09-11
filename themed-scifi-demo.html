@@ -215,13 +215,101 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            padding: 0 10px;
-            height: 60px;
-            background: var(--bg-secondary);
-            backdrop-filter: blur(10px);
+            gap: 1px;
+            padding: 4px;
+            height: 44px;
+            background: transparent;
             flex-shrink: 0;
+            position: relative;
         }
+        
+        
+        .system-controls .sci-fi-btn {
+            flex: 1;
+            max-width: 110px;
+            height: 36px;
+            padding: 0 10px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            border: 1px solid transparent;
+            border-radius: 0;
+            background: #000;
+            color: #666;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            cursor: pointer;
+            outline: none;
+            box-shadow: none;
+        }
+        
+        /* Hover - subtle border appears */
+        .system-controls .sci-fi-btn:hover {
+            background: #000;
+            color: #888;
+            border: 1px solid var(--accent-primary);
+            opacity: 0.7;
+        }
+        
+        /* Active state - full border frame */
+        .system-controls .sci-fi-btn.active {
+            background: #000;
+            color: #999;
+            border: 1px solid var(--accent-primary);
+            opacity: 0.5;
+        }
+        
+        /* Recording button - red border when recording */
+        .system-controls .sci-fi-btn.recording {
+            background: #200;
+            color: #888;
+            border: 1px solid #400;
+            border-radius: 2px;
+        }
+        
+        /* Master dice button special styling */
+        .system-controls .sci-fi-btn.master-dice {
+            background: linear-gradient(135deg, #111, #222);
+            border: 1px solid transparent;
+        }
+        
+        .system-controls .sci-fi-btn.master-dice:hover {
+            background: linear-gradient(135deg, #222, #333);
+            border: 1px solid var(--accent-primary);
+            opacity: 0.9;
+        }
+        
+        /* Light theme specific overrides for system controls */
+        .light .system-controls .sci-fi-btn {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .light .system-controls .sci-fi-btn.master-dice {
+            background: linear-gradient(135deg, #e0e0e0, #d0d0d0);
+        }
+        
+        .light .system-controls .sci-fi-btn:hover {
+            background: #f0f0f0;
+            color: #000;
+            border: 1px solid var(--accent-primary);
+            opacity: 1;
+        }
+        
+        .light .system-controls .sci-fi-btn.active {
+            background: #f0f0f0;
+            color: #000;
+            border: 1px solid var(--accent-primary);
+            opacity: 1;
+        }
+        
+        /* Simple icon styling */
+        .system-controls .sci-fi-btn span {
+            display: inline-block;
+            margin-right: 4px;
+        }
+        
 
         /* 4. Control Panels & Buttons */
         .control-section { padding: 15px; }
@@ -246,6 +334,23 @@
         }
         .night .section-header {
             border-bottom-color: rgba(255, 138, 101, 0.2);
+        }
+        .dice-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.2s ease;
+            opacity: 0.7;
+        }
+        .dice-btn:hover {
+            transform: rotate(10deg) scale(1.1);
+            opacity: 1;
+        }
+        .dice-btn:active {
+            transform: rotate(360deg);
+            transition: transform 0.3s ease;
         }
         .sound-toggle {
             background: transparent;
@@ -288,22 +393,14 @@
         }
         .sci-fi-btn:hover {
             background: var(--button-hover); 
-            border-color: var(--accent-primary);
-            color: var(--accent-primary); 
-            box-shadow: 0 0 10px var(--accent-glow);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
         }
         
-        /* Keyboard focus indicators - WCAG 2.1 AA compliant */
+        /* Keyboard focus indicators */
         .sci-fi-btn:focus {
-            outline: 3px solid var(--accent-primary);
-            outline-offset: 2px;
-        }
-        
-        /* Enhanced focus for keyboard navigation only */
-        .sci-fi-btn:focus-visible {
-            outline: 3px solid var(--accent-primary);
-            outline-offset: 3px;
-            box-shadow: 0 0 20px var(--accent-glow);
+            outline: 1px solid var(--border-color);
+            outline-offset: 1px;
         }
         
         /* Remove outline for mouse users */
@@ -314,8 +411,7 @@
         .sci-fi-btn.active {
             background: var(--button-hover); 
             border-color: var(--accent-primary);
-            color: var(--accent-primary); 
-            box-shadow: 0 0 15px var(--accent-glow);
+            color: var(--accent-primary);
         }
         .sci-fi-btn.gesture-pending {
             animation: pending-pulse 0.5s infinite;
@@ -440,6 +536,207 @@
         }
         .fps-display.active { display: block; } 
         .fps-display .fps-value { font-size: 1.2rem; font-weight: bold; }
+
+        /* Audio player container glassmorphism for each theme */
+        #audio-player-container {
+            background: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(20px) saturate(1.8) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
+            border: none !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+        }
+        
+        /* Dark/default theme glass */
+        .dark #audio-player-container {
+            background: rgba(17, 25, 40, 0.7) !important;
+            backdrop-filter: blur(20px) saturate(1.8) !important;
+        }
+        
+        /* Light theme glass */
+        .light #audio-player-container {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px) saturate(1.8) !important;
+        }
+        
+        /* Blue theme glass */
+        .blue #audio-player-container {
+            background: rgba(0, 122, 204, 0.3) !important;
+            backdrop-filter: blur(20px) saturate(1.8) !important;
+        }
+        
+        /* Purple theme glass */
+        .purple #audio-player-container {
+            background: rgba(139, 92, 246, 0.3) !important;
+            backdrop-filter: blur(20px) saturate(1.8) !important;
+        }
+        
+        /* Ocean theme glass */
+        .ocean #audio-player-container {
+            background: rgba(6, 182, 212, 0.3) !important;
+            backdrop-filter: blur(20px) saturate(1.8) !important;
+        }
+        
+        /* Night/Sunset theme glass - warm only */
+        .night #audio-player-container,
+        .sunset #audio-player-container {
+            background: rgba(204, 102, 51, 0.4) !important;
+            backdrop-filter: blur(20px) saturate(1.5) !important;
+        }
+        
+        /* Neon theme glass */
+        .neon #audio-player-container {
+            background: rgba(255, 0, 255, 0.3) !important;
+            backdrop-filter: blur(20px) saturate(2) !important;
+        }
+        
+        /* Forest theme glass */
+        .forest #audio-player-container {
+            background: rgba(34, 197, 94, 0.3) !important;
+            backdrop-filter: blur(20px) saturate(1.8) !important;
+        }
+        
+        /* Terminal theme glass */
+        .terminal #audio-player-container {
+            background: rgba(0, 255, 0, 0.2) !important;
+            backdrop-filter: blur(20px) saturate(1.5) !important;
+        }
+        
+        /* Synthwave theme glass */
+        .synthwave #audio-player-container {
+            background: linear-gradient(135deg, rgba(255, 0, 128, 0.3), rgba(0, 255, 255, 0.3)) !important;
+            backdrop-filter: blur(20px) saturate(2) !important;
+        }
+        
+        /* Monochrome theme glass */
+        .monochrome #audio-player-container {
+            background: rgba(128, 128, 128, 0.4) !important;
+            backdrop-filter: blur(20px) grayscale(1) !important;
+        }
+        
+        /* High contrast theme glass */
+        .high-contrast #audio-player-container {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: none !important;
+        }
+        
+        /* Audio player styling for visibility across all themes */
+        #audio-player {
+            /* Reset browser default audio styling */
+            color-scheme: dark;
+            border: none !important;
+            outline: none !important;
+        }
+        
+        /* Remove ALL borders from audio controls */
+        #audio-player::-webkit-media-controls-enclosure {
+            border: none !important;
+            outline: none !important;
+        }
+        
+        #audio-player::-webkit-media-controls-panel {
+            border: none !important;
+            outline: none !important;
+        }
+        
+        /* For light themes, ensure controls are visible */
+        .light #audio-player-container {
+            background: rgba(50, 50, 50, 0.8) !important;
+        }
+        
+        .light #audio-player {
+            color-scheme: light;
+        }
+        
+        .light #audio-player::-webkit-media-controls-panel {
+            background: transparent;
+            color: white;
+        }
+        
+        .light #audio-player::-webkit-media-controls-current-time-display,
+        .light #audio-player::-webkit-media-controls-time-remaining-display {
+            color: black !important;
+            text-shadow: none !important;
+        }
+        
+        /* For dark themes, ensure proper visibility */
+        .dark #audio-player,
+        .blue #audio-player,
+        .purple #audio-player,
+        .ocean #audio-player,
+        .neon #audio-player,
+        .forest #audio-player,
+        .terminal #audio-player,
+        .synthwave #audio-player,
+        .monochrome #audio-player {
+            filter: brightness(1.2) contrast(1.1);
+        }
+        
+        /* Night/sunset theme - warm colors only, NO BLUE */
+        .night #audio-player,
+        .sunset #audio-player {
+            filter: brightness(1.2) contrast(1.1) hue-rotate(30deg) saturate(1.2);
+        }
+        
+        /* High contrast theme needs stronger filter */
+        .high-contrast #audio-player {
+            filter: brightness(1.5) contrast(1.3);
+        }
+        
+        /* Audio visualizer container backgrounds per theme */
+        .audio-viz-container {
+            background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6));
+        }
+        
+        /* Audio visualizer container backgrounds per theme */
+        .audio-viz-container {
+            background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6));
+        }
+        
+        .light .audio-viz-container {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,240,240,0.8));
+        }
+        
+        .blue .audio-viz-container {
+            background: linear-gradient(135deg, rgba(0,30,60,0.85), rgba(0,50,100,0.7));
+        }
+        
+        .purple .audio-viz-container {
+            background: linear-gradient(135deg, rgba(30,0,60,0.85), rgba(50,0,100,0.7));
+        }
+        
+        .ocean .audio-viz-container {
+            background: linear-gradient(135deg, rgba(0,40,60,0.85), rgba(0,60,80,0.7));
+        }
+        
+        .night .audio-viz-container,
+        .sunset .audio-viz-container {
+            background: linear-gradient(135deg, rgba(40,20,0,0.85), rgba(60,30,10,0.7));
+        }
+        
+        .neon .audio-viz-container {
+            background: linear-gradient(135deg, rgba(20,0,40,0.85), rgba(40,0,60,0.7));
+        }
+        
+        .forest .audio-viz-container {
+            background: linear-gradient(135deg, rgba(0,20,10,0.85), rgba(0,40,20,0.7));
+        }
+        
+        .terminal .audio-viz-container {
+            background: linear-gradient(135deg, rgba(0,10,0,0.9), rgba(0,20,0,0.8));
+        }
+        
+        .synthwave .audio-viz-container {
+            background: linear-gradient(135deg, rgba(20,0,40,0.85), rgba(40,0,60,0.7));
+        }
+        
+        .monochrome .audio-viz-container {
+            background: linear-gradient(135deg, rgba(20,20,20,0.85), rgba(40,40,40,0.7));
+        }
+        
+        .high-contrast .audio-viz-container {
+            background: #000;
+        }
 
         /* 6. Landscape Mode for Mobile/Tablet Devices */
         @media (orientation: landscape) and (max-height: 768px) {
@@ -597,7 +894,7 @@
             50% { 
                 opacity: 1; 
                 transform: scale(1.02); 
-                box-shadow: 0 0 15px var(--accent-glow); 
+ 
             } 
         }
         @keyframes subtle-glow { 
@@ -622,7 +919,6 @@
         .night .sci-fi-btn.active {
             color: #FFF5F0; /* orange-tinted white for active buttons */
             border-color: #FF8A65; /* brighter orange border */
-            box-shadow: 0 0 15px rgba(255, 138, 101, 0.6);
         }
         .night .info-display .status-text {
             color: #FEFEFE !important; /* force white core */
@@ -658,33 +954,16 @@
             to { transform: translate(-50%, -50%) rotate(360deg); } 
         }
         
-        /* Sci-fi styled audio player */
-        audio#audio-player {
-            width: 100%;
-            height: 35px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 0;
-            filter: hue-rotate(180deg) invert(1);
+        /* Remove conflicting audio player styles - handled above */
+        
+        /* Simple audio player text color styling */
+        #audio-player::-webkit-media-controls-current-time-display,
+        #audio-player::-webkit-media-controls-time-remaining-display {
+            color: var(--text-primary);
         }
         
-        .dark audio#audio-player,
-        .night audio#audio-player {
-            filter: hue-rotate(190deg) saturate(2);
-        }
-        
-        .light audio#audio-player {
-            filter: none;
-            background: var(--bg-primary);
-        }
-        
-        audio#audio-player::-webkit-media-controls-panel {
-            background: var(--bg-secondary);
-        }
-        
-        audio#audio-player::-webkit-media-controls-play-button,
-        audio#audio-player::-webkit-media-controls-mute-button {
-            filter: brightness(2);
+        #audio-player::-webkit-media-controls-panel {
+            background: transparent;
         }
     </style>
 </head>
@@ -694,7 +973,10 @@
         
         <nav class="controls-left" role="navigation" aria-label="Emotion controls">
             <div class="control-section">
-                <h3>Emotion Matrix</h3>
+                <div class="section-header">
+                    <h3>Emotion Matrix</h3>
+                    <button class="dice-btn" id="randomize-btn" aria-label="Random emotion" title="Random emotion">🎲</button>
+                </div>
                 <div class="btn-group" role="group" aria-label="Emotion selection">
                     <button class="sci-fi-btn emotion-btn active" data-emotion="neutral" aria-label="Set emotion to neutral" aria-pressed="true">Neutral</button>
                     <button class="sci-fi-btn emotion-btn" data-emotion="joy" aria-label="Set emotion to joy" aria-pressed="false">Joy</button>
@@ -704,20 +986,16 @@
                     <button class="sci-fi-btn emotion-btn" data-emotion="surprise" aria-label="Set emotion to surprise" aria-pressed="false">Surprise</button>
                     <button class="sci-fi-btn emotion-btn" data-emotion="disgust" aria-label="Set emotion to disgust" aria-pressed="false">Disgust</button>
                     <button class="sci-fi-btn emotion-btn" data-emotion="love" aria-label="Set emotion to love" aria-pressed="false">Love</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="suspicion" aria-label="Set emotion to suspicion" aria-pressed="false">Suspicion</button>
                     <button class="sci-fi-btn emotion-btn" data-emotion="excited" aria-label="Set emotion to excited" aria-pressed="false">Excited</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="resting" aria-label="Set emotion to resting" aria-pressed="false">Resting</button>
                     <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Set emotion to euphoria" aria-pressed="false">Euphoria</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="focused" aria-label="Set emotion to focused" aria-pressed="false">Focused</button>
                     <button class="sci-fi-btn emotion-btn" data-emotion="glitch" aria-label="Set emotion to glitch" aria-pressed="false">Glitch</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Set emotion to euphoria" aria-pressed="false">Euphoria</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="excited" aria-label="Set emotion to excited" aria-pressed="false">Excited</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="suspicion" aria-label="Set emotion to suspicion" aria-pressed="false">Suspicion</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="resting" aria-label="Set emotion to resting" aria-pressed="false">Resting</button>
                 </div>
             </div>
             <div class="control-section">
-                <h3>Undertone Modifier</h3>
+                <div class="section-header">
+                    <h3>Undertone Modifier</h3>
+                    <button class="dice-btn" id="randomize-undertone-btn" aria-label="Random undertone" title="Random undertone">🎲</button>
+                </div>
                 <div class="btn-group" role="group" aria-label="Undertone modifier selection">
                     <button class="sci-fi-btn undertone-btn" data-undertone="subdued" aria-label="Set undertone to subdued" aria-pressed="false">Subdued</button>
                     <button class="sci-fi-btn undertone-btn" data-undertone="tired" aria-label="Set undertone to tired" aria-pressed="false">Tired</button>
@@ -729,7 +1007,10 @@
             </div>
             
             <div class="control-section">
-                <h3>Shape Morph</h3>
+                <div class="section-header">
+                    <h3>Shape Morph</h3>
+                    <button class="dice-btn" id="randomize-shape-btn" aria-label="Random shape" title="Random shape">🎲</button>
+                </div>
                 <div class="shape-controls">
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
                         <button class="sci-fi-btn shape-btn active" data-shape="circle" style="font-size: 0.7rem;">Circle</button>
@@ -737,15 +1018,9 @@
                         <button class="sci-fi-btn shape-btn" data-shape="star" style="font-size: 0.7rem;">Star ⭐</button>
                         <button class="sci-fi-btn shape-btn" data-shape="sun" style="font-size: 0.7rem;">Sun ☀</button>
                         <button class="sci-fi-btn shape-btn" data-shape="moon" style="font-size: 0.7rem;">Moon 🌙</button>
-                        <button class="sci-fi-btn shape-btn" data-shape="eclipse" style="font-size: 0.7rem;">Eclipse</button>
+                        <button class="sci-fi-btn shape-btn" data-shape="lunar" style="font-size: 0.7rem;">Lunar 🌑</button>
                         <button class="sci-fi-btn shape-btn" data-shape="square" style="font-size: 0.7rem;">Square</button>
                         <button class="sci-fi-btn shape-btn" data-shape="triangle" style="font-size: 0.7rem;">Triangle</button>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <select id="morph-mode-select" class="sci-fi-btn" style="width: 100%; padding: 5px; font-size: 0.8rem;">
-                            <option value="hybrid">Hybrid (Core + Particles)</option>
-                            <option value="core-only">Core Only</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -784,11 +1059,10 @@
                     </div>
                 </div>
                 <div class="system-controls" role="group" aria-label="System controls">
-                    <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">👁 Blinking</button>
-                    <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">📊 FPS</button>
-                    <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">🔴 Record</button>
-                    <button class="sci-fi-btn" id="randomize-btn" aria-label="Randomize emotion and undertone">🎲 Random</button>
-                    <button class="sci-fi-btn" id="reset-btn" aria-label="Reset to default state">↺ Reset</button>
+                    <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true"><span>👁</span> Blinking</button>
+                    <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false"><span>📊</span> FPS</button>
+                    <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false"><span>🔴</span> Record</button>
+                    <button class="sci-fi-btn master-dice" id="randomize-all-btn" aria-label="Randomize everything" aria-pressed="false"><span>🎰</span> Roll All</button>
                 </div>
             </div>
         </div>
@@ -807,40 +1081,60 @@
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label style="color: var(--text-secondary); font-size: 0.7rem; display: block; margin-bottom: 5px;">BPM: <span id="bpm-value">120</span></label>
-                        <input type="range" id="bpm-slider" min="60" max="180" value="120" style="width: 100%; accent-color: var(--accent-primary);">
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <select id="pattern-select" class="sci-fi-btn" style="width: 100%; padding: 5px; font-size: 0.8rem;">
-                            <option value="4/4">4/4 Common</option>
-                            <option value="3/4">3/4 Waltz</option>
-                            <option value="6/8">6/8 Compound</option>
-                            <option value="5/4">5/4 Complex</option>
-                            <option value="7/8">7/8 Irregular</option>
-                        </select>
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
-                        <button class="sci-fi-btn rhythm-preset" data-preset="ambient" style="font-size: 0.7rem;">Ambient</button>
-                        <button class="sci-fi-btn rhythm-preset" data-preset="electronic" style="font-size: 0.7rem;">Electronic</button>
-                        <button class="sci-fi-btn rhythm-preset" data-preset="jazz" style="font-size: 0.7rem;">Jazz</button>
-                        <button class="sci-fi-btn rhythm-preset" data-preset="dnb" style="font-size: 0.7rem;">Drum & Bass</button>
+                        <input type="range" id="bpm-slider" min="60" max="220" value="120" style="width: 100%; accent-color: var(--accent-primary);">
                     </div>
                 </div>
             </div>
             
             <div class="control-section">
-                <h3>Audio Vocal Viz</h3>
                 <div class="audio-controls">
                     <input type="file" id="audio-file" accept="audio/*" style="display: none;">
-                    <button class="sci-fi-btn" id="load-audio-btn" style="width: 100%; margin-bottom: 5px;">Load Audio File</button>
-                    <button class="sci-fi-btn" id="mic-btn" style="width: 100%; margin-bottom: 10px;">Use Microphone</button>
-                    <audio id="audio-player" controls style="width: 100%; display: none;"></audio>
-                    <div id="audio-status" style="color: var(--text-secondary); font-size: 0.7rem; text-align: center;"></div>
+                    <!-- Audio source buttons in a compact row -->
+                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                        <button class="sci-fi-btn" id="load-audio-btn" style="flex: 1; padding: 8px; font-size: 0.8rem;">Load File</button>
+                        <button class="sci-fi-btn" id="load-song-btn" style="flex: 1; padding: 8px; font-size: 0.8rem;">Electric Glow</button>
+                        <button class="sci-fi-btn" id="mic-btn" style="flex: 1; padding: 8px; font-size: 0.8rem;">Use Microphone</button>
+                    </div>
+                    
+                    <!-- Visualizer with integrated controls -->
+                    <div id="audio-viz" class="audio-viz-container" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; position: relative; overflow: hidden; min-height: 100px;">
+                        <!-- Animated background effect -->
+                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 50%, var(--accent-glow), transparent); opacity: 0.1; pointer-events: none;"></div>
+                        
+                        <!-- Audio player overlay (top-right safe zone) -->
+                        <div style="
+                            position: absolute; 
+                            top: 10px; 
+                            right: 10px; 
+                            width: 220px; 
+                            height: 32px;
+                            z-index: 10;
+                            display: none;
+                        " id="audio-player-container">
+                            <audio id="audio-player" controls style="
+                                width: 100%; 
+                                height: 100%;
+                                border: none !important;
+                                outline: none !important;
+                                background: transparent;
+                                display: block;
+                                margin: 0;
+                                padding: 0;
+                            "></audio>
+                        </div>
+                        
+                        <!-- Frequency spectrum visualizer -->
+                        <div id="spectrum-viz" style="height: 80px; display: flex; align-items: flex-end; gap: 1px; position: relative;">
+                            <!-- Bars will be dynamically created -->
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <div class="control-section">
                 <div class="section-header">
                     <h3>Gesture Protocol</h3>
+                    <button class="dice-btn" id="randomize-gesture-btn" aria-label="Random gesture" title="Random gesture">🎲</button>
                     <button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound" title="Toggle sound" aria-pressed="false">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <g class="sound-on" style="display: none;">
@@ -877,13 +1171,10 @@
                     <button class="sci-fi-btn gesture-btn" data-gesture="vibrate" aria-label="Trigger vibrate animation">Vibrate</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="morph" aria-label="Trigger morph animation">Morph</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="jump" aria-label="Trigger jump animation">Jump</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="burst" aria-label="Trigger burst animation">Burst</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="settle" aria-label="Trigger settle animation">Settle</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="peek" aria-label="Trigger peek animation">Peek</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="hold" aria-label="Trigger hold animation">Hold</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="scan" aria-label="Trigger scan animation">Scan</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="twitch" aria-label="Trigger twitch animation">Twitch</button>
-                    <button class="sci-fi-btn gesture-btn" data-gesture="jitter" aria-label="Trigger jitter animation">Jitter</button>
                     <button class="sci-fi-btn gesture-btn" data-gesture="float" aria-label="Trigger float animation">Float</button>
                 </div>
             </div>
@@ -912,7 +1203,8 @@
         // Load rhythm and gesture modules
         let rhythmIntegration, rhythmEngine, GestureScheduler, FPSCounter;
         let gestureScheduler, fpsCounter;
-        let rhythmActive = false;
+        // Make rhythmActive global so rhythmIntegration can update it
+        window.rhythmActive = false;
         
         // Rhythm presets for different music genres
         const rhythmPresets = {
@@ -1054,6 +1346,11 @@
                 maxParticles: 100
             });
             
+            // Initialize audio analyzer
+            if (mascot.audioAnalyzer) {
+                await mascot.audioAnalyzer.init();
+            }
+            
             // After mascot is created, disable sound until user enables it
             setTimeout(() => {
                 if (mascot.soundSystem) {
@@ -1063,11 +1360,92 @@
             
             mascot.start();
             
+            // Initialize spectrum visualizer bars
+            const spectrumViz = document.getElementById('spectrum-viz');
+            const numBars = 16; // Reduced for cleaner look
+            for (let i = 0; i < numBars; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'spectrum-bar';
+                bar.style.cssText = `
+                    flex: 1;
+                    background: linear-gradient(180deg, var(--accent-glow), var(--accent-primary));
+                    border-radius: 2px 2px 0 0;
+                    transition: height 0.15s ease-out;
+                    opacity: 0.8;
+                    min-height: 2px;
+                    height: 2px;
+                `;
+                spectrumViz.appendChild(bar);
+            }
+            
+            // Initialize audio visualizer update loop
+            function updateAudioViz() {
+                if (mascot && mascot.shapeMorpher) {
+                    const morpher = mascot.shapeMorpher;
+                    
+                    // Update spectrum bars
+                    if (morpher.frequencyData && morpher.frequencyData.length > 0) {
+                        const bars = spectrumViz.querySelectorAll('.spectrum-bar');
+                        const bandsPerBar = Math.floor(morpher.frequencyData.length / numBars);
+                        
+                        bars.forEach((bar, i) => {
+                            // Average the energy for bands that map to this bar
+                            let energy = 0;
+                            let count = 0;
+                            for (let j = 0; j < bandsPerBar; j++) {
+                                const bandIndex = i * bandsPerBar + j;
+                                if (bandIndex < morpher.frequencyData.length) {
+                                    energy += morpher.frequencyData[bandIndex] || 0;
+                                    count++;
+                                }
+                            }
+                            energy = count > 0 ? energy / count : 0;
+                            
+                            // Apply logarithmic scaling for better visual response
+                            const height = Math.pow(energy, 0.7) * 100;
+                            bar.style.height = `${Math.max(2, Math.min(100, height))}%`;
+                            
+                            // Color variation based on frequency range
+                            if (i < 2) {
+                                // Bass frequencies - use primary accent
+                                bar.style.opacity = '1';
+                                bar.style.filter = 'hue-rotate(0deg)';
+                            } else if (i >= 6 && i <= 10) {
+                                // Mid frequencies (vocals) - use secondary accent  
+                                bar.style.opacity = '0.9';
+                                bar.style.filter = 'hue-rotate(60deg)';
+                            } else {
+                                // High frequencies
+                                bar.style.opacity = '0.7';
+                                bar.style.filter = 'hue-rotate(120deg)';
+                            }
+                        });
+                    }
+                }
+                
+                requestAnimationFrame(updateAudioViz);
+            }
+            updateAudioViz();
+            
             // Load and initialize rhythm modules
             await loadRhythmModules();
             
             // Initialize rhythm system
             rhythmIntegration.initialize();
+            
+            // Make rhythmIntegration globally accessible for BPM updates
+            window.rhythmIntegration = rhythmIntegration;
+            
+            // Also update UI when rhythm auto-starts
+            const originalStart = rhythmIntegration.start.bind(rhythmIntegration);
+            rhythmIntegration.start = function(bpm, pattern) {
+                originalStart(bpm, pattern);
+                window.rhythmActive = true;
+                const rhythmStatus = document.getElementById('rhythm-status');
+                if (rhythmStatus) {
+                    rhythmStatus.textContent = '■ STOP';
+                }
+            };
             
             // Initialize gesture scheduler
             gestureScheduler = new GestureScheduler(mascot);
@@ -1091,7 +1469,7 @@
             
             // Setup beat indicator
             rhythmEngine.on('beat', (beatInfo) => {
-                if (rhythmActive) {
+                if (window.rhythmActive) {
                     const beatDot = document.getElementById('beat-dot');
                     const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary');
                     const glowColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-glow');
@@ -1328,6 +1706,7 @@
                 btn.addEventListener('click', () => {
                     currentEmotion = btn.dataset.emotion;
                     mascot.setEmotion(currentEmotion, currentUndertone || undefined);
+                    
                     document.querySelectorAll('.emotion-btn').forEach(b => {
                         b.classList.remove('active');
                         b.setAttribute('aria-pressed', 'false');
@@ -1344,19 +1723,19 @@
                     
                     // Special handling for morph gesture - morph core to random shape
                     if (gestureName === 'morph' && mascot) {
-                        const shapes = ['heart', 'star', 'sun', 'moon', 'eclipse', 'square', 'triangle'];
+                        const shapes = ['heart', 'star', 'sun', 'moon', 'lunar', 'solar', 'square', 'triangle'];
                         const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
                         mascot.morphTo(randomShape, {
-                            duration: rhythmActive ? 'bar' : 1000,
+                            duration: window.rhythmActive ? 'bar' : 1000,
                             mode: 'core-only',
-                            onBeat: rhythmActive
+                            onBeat: window.rhythmActive
                         });
                         
                         // Update visual feedback
                         document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
                         const shapeBtn = document.querySelector(`.shape-btn[data-shape="${randomShape}"]`);
                         if (shapeBtn) shapeBtn.classList.add('active');
-                    } else if (rhythmActive && gestureScheduler) {
+                    } else if (window.rhythmActive && gestureScheduler) {
                         gestureScheduler.requestGesture(gestureName);
                     } else {
                         mascot.express(gestureName);
@@ -1408,63 +1787,71 @@
             // Rhythm controls
             document.getElementById('rhythm-toggle').addEventListener('click', function() {
                 const bpm = document.getElementById('bpm-slider').value;
-                const pattern = document.getElementById('pattern-select').value;
+                const pattern = 'straight'; // Default pattern
                 
-                if (!rhythmActive) {
-                    rhythmIntegration.start(parseInt(bpm), pattern);
-                    rhythmActive = true;
-                    document.getElementById('rhythm-status').textContent = '■ STOP';
-                    this.classList.add('active');
+                if (!window.rhythmActive) {
+                    // Starting rhythm
+                    const shapeMorpher = mascot?.shapeMorpher;
+                    
+                    // If audio is playing, reset detection to get fresh BPM
+                    if (shapeMorpher && audioPlayer && !audioPlayer.paused) {
+                        // Reset detection for fresh readings
+                        shapeMorpher.resetMusicDetection();
+                        console.log('🔄 Resampling BPM and time signature...');
+                        
+                        // Clear the manual stop flag so auto-detection can work
+                        window.rhythmManuallyStoppedForCurrentAudio = false;
+                        
+                        // The BPM detection will auto-start rhythm when ready
+                        // For now, show pending state
+                        document.getElementById('rhythm-status').textContent = '⏳ DETECTING...';
+                        this.classList.add('pending');
+                        
+                        // Fallback: start with slider value if no BPM detected after 2 seconds
+                        setTimeout(() => {
+                            if (!window.rhythmActive) {
+                                console.log('⏰ Timeout - starting with default BPM');
+                                rhythmIntegration.start(parseInt(bpm), pattern);
+                                window.rhythmActive = true;
+                                document.getElementById('rhythm-status').textContent = '■ STOP';
+                                this.classList.remove('pending');
+                                this.classList.add('active');
+                            }
+                        }, 2000);
+                    } else {
+                        // No audio playing, use slider value immediately
+                        rhythmIntegration.start(parseInt(bpm), pattern);
+                        window.rhythmActive = true;
+                        window.rhythmManuallyStoppedForCurrentAudio = false;
+                        document.getElementById('rhythm-status').textContent = '■ STOP';
+                        this.classList.add('active');
+                    }
                 } else {
+                    // Stopping rhythm
                     rhythmIntegration.stop();
-                    rhythmActive = false;
+                    window.rhythmActive = false;
+                    window.rhythmManuallyStoppedForCurrentAudio = true;
                     document.getElementById('rhythm-status').textContent = '▶ START';
                     this.classList.remove('active');
+                    this.classList.remove('pending');
+                    
+                    // Also stop any pending detection
+                    if (mascot?.shapeMorpher) {
+                        // Don't reset, just mark as manually stopped
+                        console.log('🛑 Rhythm sync stopped');
+                    }
                 }
             });
             
             document.getElementById('bpm-slider').addEventListener('input', function(e) {
                 const bpm = parseInt(e.target.value);
                 document.getElementById('bpm-value').textContent = bpm;
-                if (rhythmActive) {
+                if (window.rhythmActive) {
                     rhythmIntegration.setBPM(bpm);
                 }
             });
             
-            document.getElementById('pattern-select').addEventListener('change', function(e) {
-                if (rhythmActive) {
-                    rhythmIntegration.setPattern(e.target.value);
-                }
-            });
-            
-            // Rhythm presets
-            document.querySelectorAll('.rhythm-preset').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const presetName = this.dataset.preset;
-                    const preset = rhythmPresets[presetName];
-                    
-                    if (preset) {
-                        document.getElementById('bpm-slider').value = preset.bpm;
-                        document.getElementById('bpm-value').textContent = preset.bpm;
-                        document.getElementById('pattern-select').value = preset.pattern;
-                        
-                        if (rhythmActive) {
-                            rhythmIntegration.setBPM(preset.bpm);
-                            rhythmIntegration.setPattern(preset.pattern);
-                        }
-                        
-                        // Trigger one of the preset gestures randomly
-                        if (preset.gestures && preset.gestures.length > 0) {
-                            const randomGesture = preset.gestures[Math.floor(Math.random() * preset.gestures.length)];
-                            if (rhythmActive && gestureScheduler) {
-                                gestureScheduler.requestGesture(randomGesture);
-                            } else {
-                                mascot.express(randomGesture);
-                            }
-                        }
-                    }
-                });
-            });
+            // Pattern select removed - using default pattern
             
             document.getElementById('record-btn').addEventListener('click', function() {
                 isRecording = !isRecording;
@@ -1474,27 +1861,49 @@
                 if (isRecording) mascot.startRecording(); else mascot.stopRecording();
             });
 
-            document.getElementById('reset-btn').addEventListener('click', () => {
-                currentEmotion = 'neutral';
-                currentUndertone = '';
-                mascot.setEmotion('neutral');
-                document.querySelectorAll('.emotion-btn, .undertone-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector('.emotion-btn[data-emotion="neutral"]').classList.add('active');
-                document.querySelector('.undertone-btn[data-undertone=""]').classList.add('active');
-                updateDisplay();
-            });
             
+            // Random emotion dice
             document.getElementById('randomize-btn').addEventListener('click', () => {
                 const emotions = Array.from(document.querySelectorAll('.emotion-btn')).map(b => b.dataset.emotion);
                 const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
                 document.querySelector(`.emotion-btn[data-emotion="${randomEmotion}"]`).click();
             });
             
+            // Random undertone dice
+            document.getElementById('randomize-undertone-btn').addEventListener('click', () => {
+                const undertones = Array.from(document.querySelectorAll('.undertone-btn')).map(b => b.dataset.undertone);
+                const randomUndertone = undertones[Math.floor(Math.random() * undertones.length)];
+                document.querySelector(`.undertone-btn[data-undertone="${randomUndertone}"]`).click();
+            });
+            
+            // Random shape dice
+            document.getElementById('randomize-shape-btn').addEventListener('click', () => {
+                const shapes = Array.from(document.querySelectorAll('.shape-btn')).map(b => b.dataset.shape);
+                const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+                document.querySelector(`.shape-btn[data-shape="${randomShape}"]`).click();
+            });
+            
+            // Random gesture dice
+            document.getElementById('randomize-gesture-btn').addEventListener('click', () => {
+                const gestures = Array.from(document.querySelectorAll('.gesture-btn')).map(b => b.dataset.gesture);
+                const randomGesture = gestures[Math.floor(Math.random() * gestures.length)];
+                document.querySelector(`.gesture-btn[data-gesture="${randomGesture}"]`).click();
+            });
+            
+            // Master dice - roll everything!
+            document.getElementById('randomize-all-btn').addEventListener('click', () => {
+                // Trigger all individual dice with a slight delay for visual effect
+                document.getElementById('randomize-btn').click();
+                setTimeout(() => document.getElementById('randomize-undertone-btn').click(), 100);
+                setTimeout(() => document.getElementById('randomize-shape-btn').click(), 200);
+                setTimeout(() => document.getElementById('randomize-gesture-btn').click(), 300);
+            });
+            
             // Shape morphing controls
             document.querySelectorAll('.shape-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const shape = btn.dataset.shape;
-                    const mode = document.getElementById('morph-mode-select').value;
+                    const mode = 'hybrid'; // Default to hybrid mode
                     
                     if (mascot) {
                         // Visual feedback
@@ -1503,9 +1912,9 @@
                         
                         // Morph to new shape
                         mascot.morphTo(shape, {
-                            duration: rhythmActive ? 'bar' : 1000, // Musical time if rhythm active
+                            duration: window.rhythmActive ? 'bar' : 1000, // Musical time if rhythm active
                             mode: mode,
-                            onBeat: rhythmActive
+                            onBeat: window.rhythmActive
                         });
                     }
                 });
@@ -1514,8 +1923,34 @@
             // Audio controls
             const audioFile = document.getElementById('audio-file');
             const audioPlayer = document.getElementById('audio-player');
-            const audioStatus = document.getElementById('audio-status');
             let micActive = false;
+            
+            // Set up audio player event listeners once
+            audioPlayer.addEventListener('play', async () => {
+                if (mascot) {
+                    // Reset music detection when audio starts playing
+                    if (mascot.shapeMorpher) {
+                        mascot.shapeMorpher.resetMusicDetection();
+                        // Clear the manual stop flag so rhythm can auto-start
+                        window.rhythmManuallyStoppedForCurrentAudio = false;
+                    }
+                    
+                    // Resume audio context if suspended
+                    if (mascot.audioAnalyzer && mascot.audioAnalyzer.audioContext) {
+                        await mascot.audioAnalyzer.resume();
+                    }
+                    mascot.connectAudio(audioPlayer);
+                }
+            });
+            
+            audioPlayer.addEventListener('pause', () => {
+            });
+            
+            audioPlayer.addEventListener('ended', () => {
+                if (mascot) {
+                    mascot.disconnectAudio();
+                }
+            });
             
             document.getElementById('load-audio-btn').addEventListener('click', () => {
                 audioFile.click();
@@ -1526,43 +1961,36 @@
                 if (file) {
                     const url = URL.createObjectURL(file);
                     audioPlayer.src = url;
-                    audioPlayer.style.display = 'block';
-                    audioStatus.textContent = 'Audio loaded. Press play to start visualization.';
-                    
-                    // Connect audio to mascot when it starts playing
-                    audioPlayer.addEventListener('play', () => {
-                        if (mascot) {
-                            mascot.connectAudio(audioPlayer);
-                            audioStatus.textContent = 'Visualizing audio...';
-                        }
-                    });
-                    
-                    audioPlayer.addEventListener('pause', () => {
-                        audioStatus.textContent = 'Audio paused';
-                    });
-                    
-                    audioPlayer.addEventListener('ended', () => {
-                        if (mascot) {
-                            mascot.disconnectAudio();
-                            audioStatus.textContent = 'Audio ended';
-                        }
-                    });
+                    document.getElementById('audio-player-container').style.display = 'block';
                 }
+            });
+            
+            // Load Electric Glow button
+            document.getElementById('load-song-btn').addEventListener('click', () => {
+                audioPlayer.src = 'assets/Electric Glow (Remix).wav';
+                document.getElementById('audio-player-container').style.display = 'block';
             });
             
             document.getElementById('mic-btn').addEventListener('click', async () => {
                 if (!micActive) {
                     try {
-                        if (mascot) {
-                            await mascot.connectMicrophone();
-                            micActive = true;
-                            document.getElementById('mic-btn').textContent = 'Stop Microphone';
-                            document.getElementById('mic-btn').classList.add('active');
-                            audioStatus.textContent = 'Microphone active - speak to see visualization';
+                        if (!mascot) {
+                            console.error('Mascot not initialized');
+                            alert('Engine not initialized. Please wait for the page to fully load.');
+                            return;
                         }
+                        
+                        console.log('Attempting to connect microphone...');
+                        await mascot.connectMicrophone();
+                        micActive = true;
+                        document.getElementById('mic-btn').textContent = 'Stop Microphone';
+                        document.getElementById('mic-btn').classList.add('active');
+                        // Reset manual stop flag when switching to microphone
+                        window.rhythmManuallyStoppedForCurrentAudio = false;
+                        console.log('Microphone connected successfully');
                     } catch (error) {
-                        console.error('Microphone access denied:', error);
-                        audioStatus.textContent = 'Microphone access denied';
+                        console.error('Microphone error:', error);
+                        alert('Microphone access failed: ' + error.message);
                     }
                 } else {
                     if (mascot) {
@@ -1570,7 +1998,7 @@
                         micActive = false;
                         document.getElementById('mic-btn').textContent = 'Use Microphone';
                         document.getElementById('mic-btn').classList.remove('active');
-                        audioStatus.textContent = 'Microphone stopped';
+                        console.log('Microphone disconnected');
                     }
                 }
             });
