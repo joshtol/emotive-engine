@@ -116,7 +116,9 @@
       "Bash(mkdir:*)",
       "Bash(awk:*)",
       "Bash(start http://localhost:8080/audio-test.html)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(npm run build:*)",
+      "Bash(start http://localhost:8080/test-public-api.html)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine Public API Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+        }
+        canvas {
+            border: 1px solid #0f0;
+            display: block;
+            margin: 20px 0;
+        }
+        button {
+            background: #111;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+        .info {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #0f0;
+            background: #111;
+        }
+        .timeline {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Emotive Engine Public API Test</h1>
+    
+    <canvas id="canvas" width="800" height="600"></canvas>
+    
+    <div>
+        <h2>Engine Controls</h2>
+        <button onclick="testAPI.init()">Initialize</button>
+        <button onclick="testAPI.start()">Start</button>
+        <button onclick="testAPI.stop()">Stop</button>
+        <button onclick="testAPI.pause()">Pause</button>
+        <button onclick="testAPI.resume()">Resume</button>
+    </div>
+    
+    <div>
+        <h2>Gestures</h2>
+        <button onclick="testAPI.gesture('bounce')">Bounce</button>
+        <button onclick="testAPI.gesture('pulse')">Pulse</button>
+        <button onclick="testAPI.gesture('spin')">Spin</button>
+        <button onclick="testAPI.gesture('wave')">Wave</button>
+        <button onclick="testAPI.gesture('glow')">Glow</button>
+        <button onclick="testAPI.gesture('flash')">Flash</button>
+    </div>
+    
+    <div>
+        <h2>Emotions</h2>
+        <button onclick="testAPI.emotion('joy')">Joy</button>
+        <button onclick="testAPI.emotion('sadness')">Sadness</button>
+        <button onclick="testAPI.emotion('love')">Love</button>
+        <button onclick="testAPI.emotion('neutral')">Neutral</button>
+    </div>
+    
+    <div>
+        <h2>Shapes</h2>
+        <button onclick="testAPI.shape('circle')">Circle</button>
+        <button onclick="testAPI.shape('square')">Square</button>
+        <button onclick="testAPI.shape('heart')">Heart</button>
+        <button onclick="testAPI.shape('star')">Star</button>
+    </div>
+    
+    <div>
+        <h2>Recording</h2>
+        <button onclick="testAPI.startRecording()">Start Recording</button>
+        <button onclick="testAPI.stopRecording()">Stop Recording</button>
+        <button onclick="testAPI.playback()">Playback</button>
+        <button onclick="testAPI.exportTimeline()">Export Timeline</button>
+    </div>
+    
+    <div class="info">
+        <h3>API Info</h3>
+        <div id="api-info"></div>
+    </div>
+    
+    <div class="info timeline">
+        <h3>Timeline</h3>
+        <pre id="timeline"></pre>
+    </div>
+
+    <script type="module">
+        import EmotiveMascotPublic from './src/EmotiveMascotPublic.js';
+        
+        class TestAPI {
+            constructor() {
+                this.engine = null;
+                this.canvas = document.getElementById('canvas');
+                this.infoEl = document.getElementById('api-info');
+                this.timelineEl = document.getElementById('timeline');
+            }
+            
+            async init() {
+                try {
+                    this.engine = new EmotiveMascotPublic({
+                        quality: 'medium',
+                        enableAudio: false
+                    });
+                    
+                    await this.engine.init(this.canvas);
+                    
+                    // Display capabilities
+                    const capabilities = this.engine.getCapabilities();
+                    const version = this.engine.getVersion();
+                    const gestures = this.engine.getAvailableGestures();
+                    const emotions = this.engine.getAvailableEmotions();
+                    const shapes = this.engine.getAvailableShapes();
+                    
+                    this.infoEl.innerHTML = `
+                        <p>Version: ${version}</p>
+                        <p>Capabilities: ${JSON.stringify(capabilities, null, 2)}</p>
+                        <p>Gestures: ${gestures.length} available</p>
+                        <p>Emotions: ${emotions.length} available</p>
+                        <p>Shapes: ${shapes.length} available</p>
+                    `;
+                    
+                    console.log('Engine initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize:', error);
+                    this.infoEl.innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
+                }
+            }
+            
+            start() {
+                if (this.engine) {
+                    this.engine.start();
+                    console.log('Engine started');
+                }
+            }
+            
+            stop() {
+                if (this.engine) {
+                    this.engine.stop();
+                    console.log('Engine stopped');
+                }
+            }
+            
+            pause() {
+                if (this.engine) {
+                    this.engine.pause();
+                    console.log('Engine paused');
+                }
+            }
+            
+            resume() {
+                if (this.engine) {
+                    this.engine.resume();
+                    console.log('Engine resumed');
+                }
+            }
+            
+            gesture(name) {
+                if (this.engine) {
+                    this.engine.triggerGesture(name);
+                    console.log('Triggered gesture:', name);
+                }
+            }
+            
+            emotion(name) {
+                if (this.engine) {
+                    this.engine.setEmotion(name);
+                    console.log('Set emotion:', name);
+                }
+            }
+            
+            shape(name) {
+                if (this.engine) {
+                    this.engine.setShape(name);
+                    console.log('Set shape:', name);
+                }
+            }
+            
+            startRecording() {
+                if (this.engine) {
+                    this.engine.startRecording();
+                    console.log('Recording started');
+                    this.timelineEl.textContent = 'Recording...';
+                }
+            }
+            
+            stopRecording() {
+                if (this.engine) {
+                    const timeline = this.engine.stopRecording();
+                    console.log('Recording stopped, events:', timeline.length);
+                    this.timelineEl.textContent = JSON.stringify(timeline, null, 2);
+                }
+            }
+            
+            playback() {
+                if (this.engine) {
+                    const timeline = this.engine.getTimeline();
+                    this.engine.playTimeline(timeline);
+                    console.log('Playing timeline with', timeline.length, 'events');
+                }
+            }
+            
+            exportTimeline() {
+                if (this.engine) {
+                    const json = this.engine.exportTimeline();
+                    console.log('Exported timeline:', json);
+                    
+                    // Download as file
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'timeline.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            }
+        }
+        
+        // Make it globally accessible
+        window.testAPI = new TestAPI();
+        
+        // Auto-initialize
+        window.addEventListener('load', () => {
+            setTimeout(() => testAPI.init(), 100);
+        });
+    </script>
+</body>
+</html>

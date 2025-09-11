@@ -4,7 +4,7 @@
  */
 
 import { getGesture } from '../gestures/index.js';
-import musicalDuration from '../musicalDuration.js';
+import musicalDuration from '../MusicalDuration.js';
 
 export class GestureAnimator {
     constructor(renderer) {
