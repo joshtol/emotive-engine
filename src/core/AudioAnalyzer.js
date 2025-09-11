@@ -170,6 +170,15 @@ export class AudioAnalyzer {
         
         requestAnimationFrame(() => this.analyze());
         
+        // Throttle audio processing to ~20fps (every 3 frames at 60fps)
+        if (!this.frameCounter) this.frameCounter = 0;
+        this.frameCounter++;
+        
+        // Only process every 3rd frame
+        if (this.frameCounter % 3 !== 0) {
+            return; // Skip processing but keep RAF loop running
+        }
+        
         // Get frequency data
         this.analyser.getByteFrequencyData(this.dataArray);
         

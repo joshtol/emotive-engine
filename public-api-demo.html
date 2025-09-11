@@ -1193,18 +1193,34 @@
         let currentTheme = 'night';
         let soundEnabled = false;
         
-        // Load EmotiveEngine Public API asynchronously
-        const loadEngine = async () => {
-            const module = await import('./src/EmotiveMascotPublic.js');
-            EmotiveEngine = module.default;
-            return EmotiveEngine;
-        };
-        
-        // Load rhythm and gesture modules
+        // Load EmotiveEngine and modules from minified bundle
         let rhythmIntegration, rhythmEngine, GestureScheduler, FPSCounter;
         let gestureScheduler, fpsCounter;
-        // Make rhythmActive global so rhythmIntegration can update it
         window.rhythmActive = false;
+        
+        const loadEngine = async () => {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = './dist/emotive-demo.min.js';
+                script.onload = () => {
+                    // Rollup IIFE exposes EmotiveDemo as the constructor with modules as properties
+                    if (window.EmotiveDemo) {
+                        // EmotiveDemo IS the constructor
+                        EmotiveEngine = window.EmotiveDemo;
+                        // Modules are attached as properties
+                        rhythmIntegration = window.EmotiveDemo.rhythmIntegration;
+                        rhythmEngine = window.EmotiveDemo.rhythmEngine;
+                        GestureScheduler = window.EmotiveDemo.GestureScheduler;
+                        FPSCounter = window.EmotiveDemo.FPSCounter;
+                        resolve(EmotiveEngine);
+                    } else {
+                        reject(new Error('EmotiveDemo bundle not found'));
+                    }
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        };
         
         // Rhythm presets for different music genres
         const rhythmPresets = {
@@ -1230,18 +1246,7 @@
             }
         };
         
-        const loadRhythmModules = async () => {
-            const [rhythmIntegrationModule, rhythmModule, gestureModule, fpsModule] = await Promise.all([
-                import('./src/core/rhythmIntegration.js'),
-                import('./src/core/rhythm.js'),
-                import('./src/core/GestureScheduler.js'),
-                import('./src/utils/FPSCounter.js')
-            ]);
-            rhythmIntegration = rhythmIntegrationModule.default;
-            rhythmEngine = rhythmModule.rhythmEngine;
-            GestureScheduler = gestureModule.default;
-            FPSCounter = fpsModule.default;
-        };
+        // Rhythm modules are loaded from the bundle, no need for separate loading
 
         // Theme management
         const themes = ['light', 'dark', 'night'];
@@ -1418,10 +1423,7 @@
             }
             updateAudioViz();
             
-            // Load and initialize rhythm modules
-            await loadRhythmModules();
-            
-            // Initialize rhythm system
+            // Initialize rhythm system (modules already loaded from bundle)
             rhythmIntegration.initialize();
             
             // Make rhythmIntegration globally accessible for BPM updates
@@ -1438,8 +1440,13 @@
                 }
             };
             
-            // Initialize gesture scheduler
-            gestureScheduler = new GestureScheduler(mascot);
+            // Initialize gesture scheduler with a wrapper for public API compatibility
+            const mascotWrapper = {
+                express: (gesture) => mascot.triggerGesture(gesture),
+                // Add other methods that GestureScheduler might need
+                setEmotion: (emotion, undertone) => mascot.setEmotion(emotion, undertone)
+            };
+            gestureScheduler = new GestureScheduler(mascotWrapper);
             
             // Setup scheduler callbacks for visual feedback
             gestureScheduler.onGestureQueued = (item) => {
@@ -1681,10 +1688,8 @@
                 // Update button appearance
                 updateSoundButton(soundEnabled);
                 
-                // Note: Public API doesn't expose sound system directly
-                // Audio features will work through loadAudio method
-                
-                console.log('Sound', soundEnabled ? 'enabled' : 'disabled');
+                // Apply sound state to mascot
+                mascot.setSoundEnabled(soundEnabled);
             });
 
             document.querySelectorAll('.emotion-btn').forEach(btn => {
@@ -1710,7 +1715,15 @@
                     if (gestureName === 'morph' && mascot) {
                         const shapes = ['heart', 'star', 'sun', 'moon', 'lunar', 'solar', 'square', 'triangle'];
                         const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
-                        mascot.setShape(randomShape);
+                        
+                        // Use rhythm config if rhythm is active
+                        const config = window.rhythmActive ? {
+                            duration: 'bar',
+                            mode: 'core-only',
+                            onBeat: true
+                        } : {};
+                        
+                        mascot.setShape(randomShape, config);
                         
                         // Update visual feedback
                         document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
@@ -1891,8 +1904,14 @@
                         document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
                         
-                        // Morph to new shape
-                        mascot.setShape(shape);
+                        // Morph to new shape with rhythm config if active
+                        const config = window.rhythmActive ? {
+                            duration: 'bar',
+                            mode: 'hybrid',
+                            onBeat: true
+                        } : {};
+                        
+                        mascot.setShape(shape, config);
                     }
                 });
             });

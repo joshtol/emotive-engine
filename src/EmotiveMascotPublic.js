@@ -29,6 +29,14 @@ class EmotiveMascotPublic {
     }
 
     /**
+     * Get real engine for internal use
+     * @private
+     */
+    _getReal() {
+        return this._realEngine || this._engine;
+    }
+    
+    /**
      * Sanitize configuration to prevent access to internal features
      * @private
      */
@@ -42,6 +50,11 @@ class EmotiveMascotPublic {
         
         // Force production mode
         safeConfig.mode = 'production';
+        
+        // Enable gaze tracking by default
+        if (safeConfig.enableGazeTracking === undefined) {
+            safeConfig.enableGazeTracking = true;
+        }
         
         return safeConfig;
     }
@@ -62,8 +75,84 @@ class EmotiveMascotPublic {
             canvasId: canvas  // This accepts either string ID or element
         };
         
-        // Create and initialize the engine
-        this._engine = new EmotiveMascot(engineConfig);
+        // Create and initialize the engine - wrap in protective proxy
+        const engine = new EmotiveMascot(engineConfig);
+        
+        // Keep real engine reference for internal use (hidden from external access)
+        Object.defineProperty(this, '_realEngine', {
+            value: engine,
+            writable: false,
+            enumerable: false,  // Hide from Object.keys()
+            configurable: false
+        });
+        
+        // Create a protective proxy that hides internal components
+        this._engine = new Proxy(engine, {
+            get(target, prop) {
+                // Block access to sensitive internal components
+                const blockedProps = [
+                    'soundSystem', 'stateMachine', 'emotionLibrary',
+                    'audioLevelProcessor', 'particleSystem', 'errorBoundary',
+                    'performanceMonitor', 'config', 'debugMode'
+                ];
+                
+                if (blockedProps.includes(prop)) {
+                    // Return a dummy object that looks empty
+                    return new Proxy({}, {
+                        get() { return undefined; },
+                        set() { return false; },
+                        has() { return false; },
+                        ownKeys() { return []; },
+                        getOwnPropertyDescriptor() { return undefined; }
+                    });
+                }
+                
+                // For allowed components, wrap them too
+                if (prop === 'renderer' || prop === 'shapeMorpher' || 
+                    prop === 'audioAnalyzer' || prop === 'gazeTracker') {
+                    const component = target[prop];
+                    if (!component) return undefined;
+                    
+                    // Return wrapped version that hides internals
+                    return new Proxy(component, {
+                        get(compTarget, compProp) {
+                            // Only expose essential methods
+                            const allowedMethods = {
+                                'renderer': ['setBlinkingEnabled'],
+                                'shapeMorpher': ['resetMusicDetection', 'frequencyData'],
+                                'audioAnalyzer': ['microphoneStream', 'currentFrequencies'],
+                                'gazeTracker': ['enable', 'disable', 'mousePos', 'updateTargetGaze', 'currentGaze', 'getState']
+                            };
+                            
+                            if (allowedMethods[prop]?.includes(compProp)) {
+                                return compTarget[compProp];
+                            }
+                            return undefined;
+                        },
+                        set() { return false; },
+                        has() { return false; },
+                        ownKeys() { return []; }
+                    });
+                }
+                
+                // Allow safe methods
+                return target[prop];
+            },
+            set() {
+                return false; // Prevent any modifications
+            },
+            has(target, prop) {
+                // Hide internal properties from 'in' operator
+                const blockedProps = ['soundSystem', 'stateMachine', 'emotionLibrary'];
+                return !blockedProps.includes(prop) && prop in target;
+            },
+            ownKeys(target) {
+                // Hide internal properties from Object.keys()
+                const allowedKeys = ['canvas', 'start', 'stop', 'pause', 'resume', 
+                                   'setEmotion', 'morphTo', 'express'];
+                return allowedKeys.filter(key => key in target);
+            }
+        });
         
         // Store canvas reference
         this.canvas = this._engine.canvas;
@@ -77,32 +166,36 @@ class EmotiveMascotPublic {
      * Start the animation engine
      */
     start() {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
-        this._engine.start();
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.start();
     }
 
     /**
      * Stop the animation engine
      */
     stop() {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
-        this._engine.stop();
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.stop();
     }
 
     /**
      * Pause the animation
      */
     pause() {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
-        this._engine.pause();
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.pause();
     }
 
     /**
      * Resume the animation
      */
     resume() {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
-        this._engine.resume();
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.resume();
     }
 
     // === Audio Management ===
@@ -139,9 +232,9 @@ class EmotiveMascotPublic {
             audio.load();
         });
         
-        // Connect to engine's audio system
-        if (this._engine.soundSystem) {
-            await this._engine.soundSystem.loadAudioFromURL(url);
+        // Connect to engine's audio system using real engine reference
+        if (this._realEngine && this._realEngine.soundSystem) {
+            await this._realEngine.soundSystem.loadAudioFromURL(url);
         }
     }
 
@@ -150,13 +243,14 @@ class EmotiveMascotPublic {
      * @returns {Object} Audio analysis (beats, tempo, energy)
      */
     getAudioAnalysis() {
-        if (!this._engine || !this._engine.audioAnalyzer) return null;
+        const engine = this._getReal();
+        if (!engine || !engine.audioAnalyzer) return null;
         
         return {
-            bpm: this._engine.rhythmIntegration?.getBPM() || 0,
-            beats: this._engine.rhythmIntegration?.getBeatMarkers() || [],
-            energy: this._engine.audioAnalyzer?.getEnergyLevel() || 0,
-            frequencies: this._engine.audioAnalyzer?.getFrequencyData() || []
+            bpm: engine.rhythmIntegration?.getBPM() || 0,
+            beats: engine.rhythmIntegration?.getBeatMarkers() || [],
+            energy: engine.audioAnalyzer?.getEnergyLevel() || 0,
+            frequencies: engine.audioAnalyzer?.getFrequencyData() || []
         };
     }
     
@@ -165,7 +259,8 @@ class EmotiveMascotPublic {
      * @returns {Promise<void>}
      */
     async connectMicrophone() {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
         
         try {
             // Get microphone stream
@@ -187,7 +282,8 @@ class EmotiveMascotPublic {
      * Disconnect microphone
      */
     disconnectMicrophone() {
-        if (!this._engine) return;
+        const engine = this._getReal();
+        if (!engine) return;
         
         if (this._engine.audioHandler) {
             this._engine.audioHandler.disconnectMicrophone();
@@ -199,10 +295,24 @@ class EmotiveMascotPublic {
      * @param {HTMLAudioElement} audioElement - Audio element to connect
      */
     connectAudio(audioElement) {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
         
-        if (this._engine.connectAudio) {
-            this._engine.connectAudio(audioElement);
+        if (engine.connectAudio) {
+            engine.connectAudio(audioElement);
+        }
+    }
+    
+    /**
+     * Disconnect audio element
+     * @param {HTMLAudioElement} [audioElement] - Audio element to disconnect
+     */
+    disconnectAudio(audioElement) {
+        const engine = this._getReal();
+        if (!engine) return;
+        
+        if (engine.disconnectAudio) {
+            engine.disconnectAudio(audioElement);
         }
     }
     
@@ -211,11 +321,18 @@ class EmotiveMascotPublic {
      * @returns {Array} Frequency spectrum data
      */
     getSpectrumData() {
-        if (!this._engine || !this._engine.audioAnalyzer) return [];
+        const engine = this._getReal();
+        if (!engine || !engine.audioAnalyzer) return [];
         
-        // Get frequency data if available
-        if (this._engine.audioAnalyzer.getFrequencyData) {
-            return this._engine.audioAnalyzer.getFrequencyData();
+        // Get raw frequency data from the analyzer
+        if (engine.audioAnalyzer.dataArray) {
+            // Convert Uint8Array to regular array and normalize to 0-1
+            return Array.from(engine.audioAnalyzer.dataArray).map(v => v / 255);
+        }
+        
+        // Try alternative sources
+        if (engine.shapeMorpher && engine.shapeMorpher.frequencyData) {
+            return Array.from(engine.shapeMorpher.frequencyData);
         }
         
         return [];
@@ -226,13 +343,14 @@ class EmotiveMascotPublic {
      * @param {number} [bpm] - Optional BPM to sync to
      */
     startRhythmSync(bpm) {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
         
-        if (this._engine.rhythmIntegration) {
+        if (engine.rhythmIntegration) {
             if (bpm) {
-                this._engine.rhythmIntegration.setBPM(bpm);
+                engine.rhythmIntegration.setBPM(bpm);
             }
-            this._engine.rhythmIntegration.start();
+            engine.rhythmIntegration.start();
         }
     }
     
@@ -240,10 +358,11 @@ class EmotiveMascotPublic {
      * Stop rhythm sync
      */
     stopRhythmSync() {
-        if (!this._engine) return;
+        const engine = this._getReal();
+        if (!engine) return;
         
-        if (this._engine.rhythmIntegration) {
-            this._engine.rhythmIntegration.stop();
+        if (engine.rhythmIntegration) {
+            engine.rhythmIntegration.stop();
         }
     }
     
@@ -252,7 +371,8 @@ class EmotiveMascotPublic {
      * @returns {Object} Performance data
      */
     getPerformanceMetrics() {
-        if (!this._engine) return { fps: 0, frameTime: 0 };
+        const engine = this._getReal();
+        if (!engine) return { fps: 0, frameTime: 0 };
         
         // Try to get from performance monitor
         if (this._engine.performanceMonitor) {
@@ -283,7 +403,8 @@ class EmotiveMascotPublic {
      * @param {number} [timestamp] - Optional timestamp for recording
      */
     triggerGesture(gestureName, timestamp) {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
         
         // Record if in recording mode
         if (this._isRecording) {
@@ -296,7 +417,7 @@ class EmotiveMascotPublic {
         }
         
         // Trigger in engine
-        this._engine.express(gestureName);
+        engine.express(gestureName);
     }
 
     /**
@@ -306,7 +427,8 @@ class EmotiveMascotPublic {
      * @param {number} [timestamp] - Optional timestamp for recording
      */
     setEmotion(emotion, undertoneOrOptions, timestamp) {
-        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
         
         // Handle different parameter formats
         let undertone = null;
@@ -336,30 +458,109 @@ class EmotiveMascotPublic {
         
         // Set in engine with undertone
         if (undertone) {
-            this._engine.setEmotion(emotion, { undertone: undertone });
+            engine.setEmotion(emotion, { undertone: undertone });
         } else {
-            this._engine.setEmotion(emotion);
+            engine.setEmotion(emotion);
+        }
+    }
+
+    /**
+     * Enable or disable sound
+     * @param {boolean} enabled - Whether sound should be enabled
+     */
+    setSoundEnabled(enabled) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        
+        // Set sound state in the engine's sound system
+        if (engine.soundSystem) {
+            engine.soundSystem.enabled = enabled;
         }
     }
 
     /**
      * Set shape
      * @param {string} shape - Shape name
-     * @param {number} [timestamp] - Optional timestamp for recording
+     * @param {Object|number} [configOrTimestamp] - Config object or timestamp for recording
      */
-    setShape(shape, timestamp) {
+    setShape(shape, configOrTimestamp) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        
+        let config = {};
+        let timestamp = undefined;
+        
+        // Handle parameter overloading
+        if (typeof configOrTimestamp === 'number') {
+            timestamp = configOrTimestamp;
+        } else if (configOrTimestamp && typeof configOrTimestamp === 'object') {
+            config = configOrTimestamp;
+            timestamp = config.timestamp;
+        }
+        
         // Record if in recording mode
         if (this._isRecording) {
             const time = timestamp || (Date.now() - this._recordingStartTime);
             this._timeline.push({
                 type: 'shape',
                 name: shape,
-                time: time
+                time: time,
+                config: config
             });
         }
         
-        // Set in engine
-        this._engine.morphTo(shape);
+        // Set in engine with config for rhythm sync
+        if (engine) engine.morphTo(shape, config);
+    }
+
+    /**
+     * Enable gaze tracking
+     */
+    enableGazeTracking() {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        if (engine.gazeTracker) {
+            engine.gazeTracker.enable();
+        }
+    }
+
+    /**
+     * Disable gaze tracking
+     */
+    disableGazeTracking() {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        if (engine.gazeTracker) {
+            engine.gazeTracker.disable();
+        }
+    }
+
+    /**
+     * Set gaze target position
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     */
+    setGazeTarget(x, y) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        if (engine.gazeTracker) {
+            // Update the mouse position directly
+            engine.gazeTracker.mousePos = { x, y };
+            engine.gazeTracker.updateTargetGaze();
+        }
+    }
+
+    /**
+     * Get gaze tracker state
+     * @returns {Object} Gaze state
+     */
+    getGazeState() {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        if (engine.gazeTracker) {
+            return engine.gazeTracker.getState();
+        }
+        return null;
     }
 
     /**
@@ -367,8 +568,9 @@ class EmotiveMascotPublic {
      * @param {number} bpm - Beats per minute
      */
     setBPM(bpm) {
-        if (this._engine.rhythmIntegration) {
-            this._engine.rhythmIntegration.setBPM(bpm);
+        const engine = this._getReal();
+        if (engine && engine.rhythmIntegration) {
+            engine.rhythmIntegration.setBPM(bpm);
         }
     }
 
@@ -429,15 +631,18 @@ class EmotiveMascotPublic {
             setTimeout(() => {
                 if (!this._isPlaying) return;
                 
+                const engine = this._getReal();
+                if (!engine) return;
+                
                 switch (event.type) {
                     case 'gesture':
-                        this._engine.express(event.name);
+                        engine.express(event.name);
                         break;
                     case 'emotion':
-                        this._engine.setEmotion(event.name);
+                        engine.setEmotion(event.name);
                         break;
                     case 'shape':
-                        this._engine.morphTo(event.name);
+                        engine.morphTo(event.name);
                         break;
                 }
             }, event.time);
@@ -523,11 +728,14 @@ class EmotiveMascotPublic {
         });
         
         // Apply states
-        if (lastEvents.emotion) {
-            this._engine.setEmotion(lastEvents.emotion.name);
-        }
-        if (lastEvents.shape) {
-            this._engine.morphTo(lastEvents.shape.name);
+        const engine = this._getReal();
+        if (engine) {
+            if (lastEvents.emotion) {
+                engine.setEmotion(lastEvents.emotion.name);
+            }
+            if (lastEvents.shape) {
+                engine.morphTo(lastEvents.shape.name);
+            }
         }
     }
 
@@ -637,8 +845,49 @@ class EmotiveMascotPublic {
             shapes: true,
             gestures: true,
             emotions: true,
-            particles: true
+            particles: true,
+            gazeTracking: true
         };
+    }
+
+    // Getter properties for components needed by demo - return safe proxies
+    get renderer() {
+        const engine = this._getReal();
+        if (!engine || !engine.renderer) return null;
+        
+        // Return safe proxy that only exposes necessary methods
+        return new Proxy(engine.renderer, {
+            get(target, prop) {
+                const allowed = ['setBlinkingEnabled'];
+                return allowed.includes(prop) ? target[prop] : undefined;
+            }
+        });
+    }
+
+    get shapeMorpher() {
+        const engine = this._getReal();
+        if (!engine || !engine.shapeMorpher) return null;
+        
+        // Return safe proxy
+        return new Proxy(engine.shapeMorpher, {
+            get(target, prop) {
+                const allowed = ['resetMusicDetection', 'frequencyData'];
+                return allowed.includes(prop) ? target[prop] : undefined;
+            }
+        });
+    }
+
+    get gazeTracker() {
+        const engine = this._getReal();
+        if (!engine || !engine.gazeTracker) return null;
+        
+        // Return safe proxy
+        return new Proxy(engine.gazeTracker, {
+            get(target, prop) {
+                const allowed = ['enable', 'disable', 'mousePos', 'updateTargetGaze', 'currentGaze', 'getState'];
+                return allowed.includes(prop) ? target[prop] : undefined;
+            }
+        });
     }
 
     /**
@@ -650,8 +899,9 @@ class EmotiveMascotPublic {
         this._isRecording = false;
         this._isPlaying = false;
         
-        if (this._engine.destroy) {
-            this._engine.destroy();
+        const engine = this._getReal();
+        if (engine && engine.destroy) {
+            engine.destroy();
         }
     }
 }

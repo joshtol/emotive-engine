@@ -120,7 +120,9 @@
       "Bash(npm run build:*)",
       "Bash(start http://localhost:8080/test-public-api.html)",
       "Bash(cp:*)",
-      "Bash(start http://localhost:8080/public-api-demo.html)"
+      "Bash(start http://localhost:8080/public-api-demo.html)",
+      "Bash(npx rollup:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

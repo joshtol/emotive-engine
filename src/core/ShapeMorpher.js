@@ -13,6 +13,7 @@
 import { MusicalDuration } from './MusicalDuration.js';
 import { rhythmEngine } from './rhythm.js';
 import { SHAPE_DEFINITIONS } from './shapes/shapeDefinitions.js';
+import arrayPool from '../utils/ArrayPool.js';
 
 // Import modular components
 import { AudioDeformer } from './morpher/AudioDeformer.js';
@@ -60,7 +61,7 @@ class ShapeMorpher {
         
         // Enhanced audio visualization
         this.audioAnalyzer = null; // Reference to audio analyzer for frequency data
-        this.frequencyData = new Array(32).fill(0); // Store frequency bands
+        this.frequencyData = arrayPool.acquire(32, 'float32'); // Store frequency bands
         this.glitchPoints = []; // Track points that are glitching
         this.undulationPhase = 0; // Phase for wave animation
         this.undulationDirection = 1; // Random direction for bass wobble
@@ -71,8 +72,8 @@ class ShapeMorpher {
         this.vocalPresence = 0; // Mid frequency energy (250-4000 Hz)
         
         // Rolling averages for dynamic thresholds
-        this.bassHistory = new Array(60).fill(0); // 2 seconds at 30fps
-        this.vocalHistory = new Array(60).fill(0);
+        this.bassHistory = arrayPool.acquire(60, 'float32'); // 2 seconds at 30fps
+        this.vocalHistory = arrayPool.acquire(60, 'float32');
         this.historyIndex = 0;
         
         // Cooldown timers to prevent effect spam
@@ -142,8 +143,8 @@ class ShapeMorpher {
                 this.shapeCache.set(shapeName, circlePoints);
                 return circlePoints;
             }
-            // Clone the points array to avoid mutations
-            const points = shapeDef.points.map(p => ({ ...p }));
+            // Store reference directly - shapes are immutable
+            const points = shapeDef.points;
             this.shapeCache.set(shapeName, points);
             return points;
         }
@@ -187,14 +188,19 @@ class ShapeMorpher {
         
         // Configure timing - use transition config duration if available
         if (options.duration === 'bar' || options.duration === 'beat') {
-            // Musical timing
-            this.musicalDuration = new MusicalDuration();
-            const musicalConfig = {
-                musical: true,
-                [options.duration === 'bar' ? 'bars' : 'beats']: 1
-            };
-            this.morphDuration = this.musicalDuration.toMilliseconds(musicalConfig);
-            this.onBeat = true;
+            // Musical timing - calculate duration based on current BPM
+            const bpm = rhythmEngine.bpm || 120;
+            const beatDuration = 60000 / bpm; // ms per beat
+            
+            if (options.duration === 'bar') {
+                // Assume 4/4 time signature
+                this.morphDuration = beatDuration * 4; // 4 beats per bar
+            } else {
+                this.morphDuration = beatDuration; // 1 beat
+            }
+            
+            this.musicalDuration = true; // Flag for musical timing
+            this.onBeat = options.onBeat !== false; // Default true for musical timing
         } else {
             // Fixed duration - prefer transition config duration
             this.morphDuration = transitionConfig?.duration || options.duration || 1000;
@@ -222,6 +228,17 @@ class ShapeMorpher {
         // Calculate progress based on total elapsed time
         const currentTime = Date.now();
         const elapsed = currentTime - this.morphStartTime;
+        
+        // Recalculate duration if BPM changed during morph (for rhythm sync)
+        if (this.musicalDuration) {
+            const currentBpm = rhythmEngine.bpm || 120;
+            const beatDuration = 60000 / currentBpm;
+            // Recalculate based on original intention (bar or beat)
+            const originalDuration = this.morphDuration;
+            const wasBar = originalDuration > beatDuration * 2; // Heuristic: if > 2 beats, it was a bar
+            this.morphDuration = wasBar ? beatDuration * 4 : beatDuration;
+        }
+        
         let progress = Math.min(elapsed / this.morphDuration, 1);
         
         // Apply musical quantization if needed
@@ -344,7 +361,12 @@ class ShapeMorpher {
             normalizedPoints = this.generateFallbackCircle();
         }
         
-        const canvasPoints = [];
+        // Reuse canvas points array
+        if (!this.canvasPointsCache) {
+            this.canvasPointsCache = [];
+        }
+        const canvasPoints = this.canvasPointsCache;
+        canvasPoints.length = 0; // Clear without allocating new array
         
         // Handle case where points aren't loaded yet
         if (!normalizedPoints || normalizedPoints.length === 0) {

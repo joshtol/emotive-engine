@@ -647,6 +647,11 @@ class EmotiveRenderer {
         // Update animation timers
         this.updateTimers(deltaTime);
         
+        // Update gaze offset if provided
+        if (state.gazeOffset) {
+            this.setGazeOffset(state.gazeOffset);
+        }
+        
         // Calculate dimensions - using logical size for proper scaling
         const canvasSize = Math.min(logicalWidth, logicalHeight);
         let centerX = logicalWidth / 2;

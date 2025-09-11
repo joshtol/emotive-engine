@@ -81,11 +81,17 @@ export class AudioDeformer {
             const maxBass = Math.max(...this.morpher.bassPeakHistory);
             
             // THUMP = small increase above baseline
+            // Check if we're using microphone (lower levels) or audio file (higher levels)
+            const isMicrophoneMode = this.morpher.audioAnalyzer && this.morpher.audioAnalyzer.microphoneStream;
+            const minThreshold = isMicrophoneMode ? 0.15 : 0.25; // Lower threshold for both, but mic is lowest
+            
             const isThump = currentBassEnergy > avgBass * 1.08 && // Just 8% above average
-                           currentBassEnergy > 0.5; // Lower threshold
+                           currentBassEnergy > minThreshold;
             
             if (isThump) {
-                this.bassEnergy = Math.min(1.0, (currentBassEnergy - avgBass) * 5); // Stronger effect
+                // Boost the effect more for microphone input
+                const effectMultiplier = isMicrophoneMode ? 8 : 6; // Increase audio multiplier too
+                this.bassEnergy = Math.min(1.0, (currentBassEnergy - avgBass) * effectMultiplier);
                 this.morpher.bassThumpTimer = 12; // Shorter hold (12 frames ~0.4 seconds)
             } else if (this.morpher.bassThumpTimer > 0) {
                 this.morpher.bassThumpTimer--;

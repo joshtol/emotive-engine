@@ -1585,7 +1585,8 @@ class EmotiveMascot {
                 undertone: this.stateMachine.getCurrentState().undertone,
                 particleSystem: this.particleSystem,
                 speaking: this.speaking,
-                audioLevel: this.audioLevelProcessor.getCurrentLevel()
+                audioLevel: this.audioLevelProcessor.getCurrentLevel(),
+                gazeOffset: this.gazeTracker ? this.gazeTracker.currentGaze : { x: 0, y: 0 }
             };
             
             
