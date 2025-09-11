@@ -8,8 +8,9 @@ import EmotiveMascot from './EmotiveMascot.js';
 
 class EmotiveMascotPublic {
     constructor(config = {}) {
-        // Create internal instance with restricted config
-        this._engine = new EmotiveMascot(this._sanitizeConfig(config));
+        // Store config for later initialization
+        this._config = this._sanitizeConfig(config);
+        this._engine = null;
         this._timeline = [];
         this._isRecording = false;
         this._recordingStartTime = 0;
@@ -17,6 +18,7 @@ class EmotiveMascotPublic {
         this._isPlaying = false;
         this._audioBlob = null;
         this._audioDuration = 0;
+        this._initialized = false;
         
         // Bind public methods
         this.init = this.init.bind(this);
@@ -50,13 +52,32 @@ class EmotiveMascotPublic {
      * @returns {Promise<void>}
      */
     async init(canvas) {
-        await this._engine.init(canvas);
+        if (this._initialized) {
+            return Promise.resolve();
+        }
+        
+        // Create engine instance with canvas
+        const engineConfig = {
+            ...this._config,
+            canvasId: canvas  // This accepts either string ID or element
+        };
+        
+        // Create and initialize the engine
+        this._engine = new EmotiveMascot(engineConfig);
+        
+        // Store canvas reference
+        this.canvas = this._engine.canvas;
+        this._initialized = true;
+        
+        // The initialize method is synchronous, but we keep async for future compatibility
+        return Promise.resolve();
     }
 
     /**
      * Start the animation engine
      */
     start() {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
         this._engine.start();
     }
 
@@ -64,6 +85,7 @@ class EmotiveMascotPublic {
      * Stop the animation engine
      */
     stop() {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
         this._engine.stop();
     }
 
@@ -71,6 +93,7 @@ class EmotiveMascotPublic {
      * Pause the animation
      */
     pause() {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
         this._engine.pause();
     }
 
@@ -78,6 +101,7 @@ class EmotiveMascotPublic {
      * Resume the animation
      */
     resume() {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
         this._engine.resume();
     }
 
@@ -144,6 +168,8 @@ class EmotiveMascotPublic {
      * @param {number} [timestamp] - Optional timestamp for recording
      */
     triggerGesture(gestureName, timestamp) {
+        if (!this._engine) throw new Error('Engine not initialized. Call init() first.');
+        
         // Record if in recording mode
         if (this._isRecording) {
             const time = timestamp || (Date.now() - this._recordingStartTime);
@@ -195,7 +221,7 @@ class EmotiveMascotPublic {
         }
         
         // Set in engine
-        this._engine.morphToShape(shape);
+        this._engine.morphTo(shape);
     }
 
     /**
@@ -273,7 +299,7 @@ class EmotiveMascotPublic {
                         this._engine.setEmotion(event.name);
                         break;
                     case 'shape':
-                        this._engine.morphToShape(event.name);
+                        this._engine.morphTo(event.name);
                         break;
                 }
             }, event.time);
@@ -363,7 +389,7 @@ class EmotiveMascotPublic {
             this._engine.setEmotion(lastEvents.emotion.name);
         }
         if (lastEvents.shape) {
-            this._engine.morphToShape(lastEvents.shape.name);
+            this._engine.morphTo(lastEvents.shape.name);
         }
     }
 
@@ -375,7 +401,7 @@ class EmotiveMascotPublic {
      * @returns {string} Data URL
      */
     getFrameData(format = 'png') {
-        const canvas = this._engine.canvas;
+        const canvas = this.canvas || this._engine.canvas;
         if (!canvas) return null;
         
         return canvas.toDataURL(`image/${format}`);
@@ -387,7 +413,7 @@ class EmotiveMascotPublic {
      * @returns {Promise<Blob>} Image blob
      */
     async getFrameBlob(format = 'png') {
-        const canvas = this._engine.canvas;
+        const canvas = this.canvas || this._engine.canvas;
         if (!canvas) return null;
         
         return new Promise(resolve => {
