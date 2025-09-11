@@ -234,17 +234,17 @@ export class PolyfillManager {
 
         const polyfillFn = this.polyfills.get(feature);
         if (!polyfillFn) {
-            // console.warn(`No polyfill registered for feature: ${feature}`);
+            // No polyfill registered for feature
             return false;
         }
 
         try {
             polyfillFn();
             this.applied.add(feature);
-            // console.log(`Applied polyfill for: ${feature}`);
+            // Applied polyfill for feature
             return true;
         } catch (error) {
-            // console.error(`Failed to apply polyfill for ${feature}:`, error);
+            // Failed to apply polyfill for feature
             return false;
         }
     }
@@ -383,7 +383,7 @@ export function polyfillWebAudio() {
         };
     };
 
-    // console.warn('Web Audio API not supported - using fallback implementation');
+    // Web Audio API not supported - using fallback implementation
 }
 
 /**
@@ -406,20 +406,20 @@ export class CanvasContextRecovery {
         this.canvas.addEventListener('webglcontextlost', (event) => {
             event.preventDefault();
             this.isContextLost = true;
-            // console.warn('Canvas context lost');
+            // Canvas context lost
         });
 
         this.canvas.addEventListener('webglcontextrestored', () => {
             this.isContextLost = false;
             this.context = this.canvas.getContext('2d');
-            // console.log('Canvas context restored');
+            // Canvas context restored
             
             // Execute recovery callbacks
             this.recoveryCallbacks.forEach(callback => {
                 try {
                     callback(this.context);
                 } catch (error) {
-                    // console.error('Context recovery callback failed:', error);
+                    // Context recovery callback failed
                 }
             });
         });
@@ -438,7 +438,7 @@ export class CanvasContextRecovery {
             try {
                 this.context = this.canvas.getContext('2d');
             } catch (error) {
-                // console.error('Failed to get canvas context:', error);
+                // Failed to get canvas context
                 return null;
             }
         }
@@ -478,7 +478,7 @@ export class CanvasContextRecovery {
                 return true;
             }
         } catch (error) {
-            // console.error('Manual context recovery failed:', error);
+            // Manual context recovery failed
         }
 
         return false;
@@ -592,10 +592,10 @@ export class BrowserOptimizations {
                 // Re-get context with optimization hint
                 const optimizedContext = canvas.getContext('2d', { willReadFrequently: true });
                 if (optimizedContext) {
-                    // console.log('Applied willReadFrequently optimization');
+                    // Applied willReadFrequently optimization
                 }
             } catch (error) {
-                // console.warn('Failed to apply canvas optimization:', error);
+                // Failed to apply canvas optimization
             }
         }
     }

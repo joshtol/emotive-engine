@@ -91,7 +91,6 @@ class IdleBehavior {
             onWake: null
         };
         
-        console.log('IdleBehavior initialized');
     }
     
     /**
@@ -276,7 +275,6 @@ class IdleBehavior {
             }
         }
         
-        console.log('IdleBehavior: Entering sleep mode');
         
         if (this.callbacks.onSleep) {
             this.callbacks.onSleep();
@@ -294,7 +292,6 @@ class IdleBehavior {
         this.state.breathDepth = this.config.breathingDepth;
         this.timers.idle = 0; // Reset idle timer
         
-        console.log('IdleBehavior: Waking up');
         
         // Trigger a shake animation
         if (this.callbacks.onWake) {

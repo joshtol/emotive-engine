@@ -71,7 +71,7 @@ class MyCustomPlugin {
     init(mascot) {
         this.mascot = mascot;
         // Setup your plugin
-        console.log('Plugin initialized!');
+        // Plugin initialized
     }
     
     update(deltaTime, state) {
@@ -84,7 +84,7 @@ class MyCustomPlugin {
     
     destroy() {
         // Cleanup
-        console.log('Plugin destroyed');
+        // Plugin destroyed
     }
     
     getInfo() {
@@ -137,7 +137,7 @@ export default MyCustomPlugin;
 
 ## 🐛 Debugging Tips
 
-- Use `console.log()` in lifecycle methods to track execution
+- Use debug comments in lifecycle methods to track execution
 - Check `this.mascot` properties for available APIs
 - Test with `mascot.getPlugins()` to verify registration
 - Use browser DevTools Performance tab to profile

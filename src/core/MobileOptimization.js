@@ -132,14 +132,6 @@ export class MobileOptimization {
         
         // Apply initial optimizations
         this.applyMobileOptimizations();
-        
-        console.log('MobileOptimization initialized', {
-            isMobile: this.isMobile,
-            isTablet: this.isTablet,
-            isTouchDevice: this.isTouchDevice,
-            viewportSize: this.viewportSize,
-            pixelRatio: this.pixelRatio
-        });
     }
     
     /**
@@ -275,7 +267,6 @@ export class MobileOptimization {
             // Initial battery optimization
             this.onBatteryChange();
         } catch (error) {
-            console.log('Battery API not available:', error);
         }
     }
     
@@ -876,7 +867,6 @@ export class MobileOptimization {
         this.touches.clear();
         this.gestureHistory = [];
         
-        console.log('MobileOptimization destroyed');
     }
 }
 

@@ -179,11 +179,11 @@ export class EmotiveDebugger {
      */
     getConsoleMethod(level) {
         switch (level) {
-            case 'ERROR': return console.error.bind(console);
-            case 'WARN': return console.warn.bind(console);
-            case 'DEBUG': return console.debug.bind(console);
-            case 'TRACE': return console.trace.bind(console);
-            default: return console.log.bind(console);
+            case 'ERROR': return (() => {}).bind(console);
+            case 'WARN': return (() => {}).bind(console);
+            case 'DEBUG': return (() => {}).bind(console);
+            case 'TRACE': return (() => {}).bind(console);
+            default: return (() => {}).bind(console);
         }
     }
 

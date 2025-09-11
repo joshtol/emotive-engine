@@ -205,11 +205,6 @@ export class AccessibilityManager {
         // Listen for preference changes
         this.setupPreferenceListeners();
         
-        console.log('AccessibilityManager initialized', {
-            reducedMotion: this.reducedMotionPreferred,
-            highContrast: this.highContrastEnabled,
-            screenReader: this.screenReaderActive
-        });
     }
     
     /**
@@ -652,7 +647,6 @@ export class AccessibilityManager {
     setColorBlindMode(mode) {
         const validModes = ['none', 'protanopia', 'deuteranopia', 'tritanopia'];
         if (!validModes.includes(mode)) {
-            console.warn(`Invalid color blind mode: ${mode}`);
             return;
         }
         
@@ -687,7 +681,6 @@ export class AccessibilityManager {
      * @param {*} value - New value
      */
     onPreferenceChange(preference, value) {
-        console.log(`Accessibility preference changed: ${preference} = ${value}`);
         
         // Notify about the change
         this.announce(`${preference} is now ${value ? 'enabled' : 'disabled'}`);
@@ -740,7 +733,6 @@ export class AccessibilityManager {
         this.announcementQueue = [];
         this.focusHistory = [];
         
-        console.log('AccessibilityManager destroyed');
     }
 }
 

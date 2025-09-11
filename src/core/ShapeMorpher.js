@@ -116,6 +116,7 @@ class ShapeMorpher {
             'lunar', 'square', 'triangle'
         ];
         
+        
         commonShapes.forEach(shape => {
             if (SHAPE_DEFINITIONS[shape]) {
                 // Generate and cache the points
@@ -137,7 +138,6 @@ class ShapeMorpher {
         if (!this.shapeCache.has(shapeName)) {
             const shapeDef = SHAPE_DEFINITIONS[shapeName];
             if (!shapeDef || !shapeDef.points) {
-                console.warn(`Shape ${shapeName} not found, using circle`);
                 const circlePoints = SHAPE_DEFINITIONS.circle.points;
                 this.shapeCache.set(shapeName, circlePoints);
                 return circlePoints;
@@ -157,7 +157,6 @@ class ShapeMorpher {
      */
     morphTo(targetShape, options = {}) {
         if (!this.shapesLoaded) {
-            console.warn('ShapeMorpher: Shapes not loaded yet');
             return;
         }
         
@@ -342,7 +341,6 @@ class ShapeMorpher {
         try {
             normalizedPoints = this.getInterpolatedPoints();
         } catch (e) {
-            console.error('Error getting interpolated points:', e);
             normalizedPoints = this.generateFallbackCircle();
         }
         
@@ -415,7 +413,6 @@ class ShapeMorpher {
             
             // Handle missing points
             if (!current || !target) {
-                console.warn(`Missing point at index ${i}`);
                 const angle = (i / this.numPoints) * Math.PI * 2;
                 points.push({
                     x: 0.5 + Math.cos(angle) * 0.5,
@@ -454,371 +451,8 @@ class ShapeMorpher {
      * Apply audio-reactive deformation to points
      */
     applyAudioDeformation(points) {
-        // Validate points
-        if (!points || points.length === 0) {
-            return this.generateFallbackCircle();
-        }
-        
-        // Get fresh frequency data if analyzer is available
-        if (this.audioAnalyzer && this.audioAnalyzer.currentFrequencies && this.audioAnalyzer.currentFrequencies.length > 0) {
-            this.frequencyData = [...this.audioAnalyzer.currentFrequencies];
-            
-            // Debug: Show ALL bands to see what's happening
-            if (Math.random() < 0.01) { // Log 1% of the time
-                console.log('ALL BANDS:', this.frequencyData.map((v, i) => `${i}:${v.toFixed(2)}`).join(' '));
-            }
-            
-            // We have 32 frequency bands (0-31) that cover the full spectrum
-            // Approximate mapping: each band covers ~750 Hz (24000 Hz / 32 bands)
-            // Band 0-1: Sub-bass
-            // Band 2-4: Bass
-            // Band 5-15: Midrange
-            // Band 16-25: Upper mids/presence
-            // Band 26-31: Treble
-            
-            // BASS THUMP DETECTION: Only trigger on meaty kicks
-            let currentBassEnergy = 0;
-            let bassCount = 0;
-            
-            // Focus on low bass (bands 0-2) for the real thumps
-            for (let i = 0; i <= 2 && i < this.frequencyData.length; i++) {
-                currentBassEnergy += this.frequencyData[i];
-                bassCount++;
-            }
-            if (bassCount > 0) {
-                currentBassEnergy /= bassCount;
-            }
-            
-            // Initialize bass thump detection
-            if (!this.bassPeakHistory) {
-                this.bassPeakHistory = [];
-                this.bassThumpTimer = 0;
-            }
-            
-            // Track recent bass peaks
-            this.bassPeakHistory.push(currentBassEnergy);
-            if (this.bassPeakHistory.length > 20) { // ~0.6 seconds of history
-                this.bassPeakHistory.shift();
-            }
-            
-            // Calculate dynamic threshold
-            const avgBass = this.bassPeakHistory.reduce((a, b) => a + b, 0) / this.bassPeakHistory.length;
-            const maxBass = Math.max(...this.bassPeakHistory);
-            
-            // THUMP = small increase above baseline
-            const isThump = currentBassEnergy > avgBass * 1.08 && // Just 8% above average
-                           currentBassEnergy > 0.5; // Lower threshold
-            
-            if (isThump) {
-                this.bassEnergy = Math.min(1.0, (currentBassEnergy - avgBass) * 5); // Stronger effect
-                this.bassThumpTimer = 12; // Shorter hold (12 frames ~0.4 seconds)
-                
-                // Debug log
-                if (Math.random() < 0.2) {
-                    console.log(`🔊 BASS THUMP! Energy: ${currentBassEnergy.toFixed(2)}, Avg: ${avgBass.toFixed(2)}`);
-                }
-            } else if (this.bassThumpTimer > 0) {
-                this.bassThumpTimer--;
-                this.bassEnergy *= 0.9; // Slower decay for smooth wobble
-            } else {
-                this.bassEnergy = 0;
-            }
-            
-            // VOCAL PRESENCE DETECTION: 2-4 kHz range where vocals cut through
-            // With FFT 2048 and 48kHz sample rate:
-            // - 1024 bins cover 0-24kHz
-            // - Each bin = ~23.4 Hz
-            // - 32 bands get 32 bins each (1024/32)
-            // - Each band = ~750 Hz
-            
-            // Band mapping (LINEAR):
-            // Band 2: 1500-2250 Hz
-            // Band 3: 2250-3000 Hz  } Vocal presence range
-            // Band 4: 3000-3750 Hz
-            // Band 5: 3750-4500 Hz
-            
-            let vocalPresenceEnergy = 0;
-            let vocalBandCount = 0;
-            
-            // SPECTRAL FLUX: Detect onsets in the VOCAL RANGE you identified (bands 4-15, emphasis on 11)
-            // This targets the actual vocal/lead frequencies in Electric Glow
-            
-            // Initialize spectral history if needed
-            if (!this.spectralHistory) {
-                this.spectralHistory = [];
-                this.spectralFluxHistory = [];
-                // Music detection initialization
-                this.onsetThreshold = 0;
-                this.musicDetector.reset();
-                this.detectedBPM = 0;
-                
-                // Time signature detection
-                this.onsetStrengths = []; // Array of {time: ms, strength: 0-1, bassWeight: 0-1}
-                this.detectedTimeSignature = null;
-                this.timeSignatureConfidence = 0;
-                this.measureStartTime = 0;
-                this.timeSignatureHistory = [];
-                this.timeSignatureLocked = false;
-            }
-            
-            // Store current spectrum
-            const currentSpectrum = [...this.frequencyData];
-            
-            // SIMPLER APPROACH: Look for changes in vocal bands with bass rejection
-            let spectralFlux = 0;
-            let bassFlux = 0;
-            
-            if (this.spectralHistory.length > 0) {
-                const prevSpectrum = this.spectralHistory[this.spectralHistory.length - 1];
-                
-                // Calculate bass flux (bands 0-2)
-                for (let i = 0; i <= 2 && i < currentSpectrum.length; i++) {
-                    const diff = currentSpectrum[i] - prevSpectrum[i];
-                    if (diff > 0) bassFlux += diff;
-                }
-                
-                // Calculate flux in extended vocal range (bands 4-15)
-                // But weight the center (9-13) more heavily
-                for (let i = 4; i <= 15 && i < currentSpectrum.length; i++) {
-                    const diff = currentSpectrum[i] - prevSpectrum[i];
-                    if (diff > 0) {
-                        // Extra weight for bands 9-13
-                        const weight = (i >= 9 && i <= 13) ? 2.0 : 1.0;
-                        spectralFlux += diff * weight;
-                    }
-                }
-                
-                // Suppress if there's a strong bass hit (likely a drum)
-                if (bassFlux > 0.15) {
-                    spectralFlux *= 0.3; // Reduce by 70% for drum hits
-                }
-            }
-            
-            // Store history (keep last 30 frames for ~1 second at 30fps)
-            this.spectralHistory.push(currentSpectrum);
-            if (this.spectralHistory.length > 30) {
-                this.spectralHistory.shift();
-            }
-            
-            // Store flux history for adaptive thresholding
-            this.spectralFluxHistory.push(spectralFlux);
-            if (this.spectralFluxHistory.length > 30) {
-                this.spectralFluxHistory.shift();
-            }
-            
-            // Calculate adaptive threshold (median + margin)
-            if (this.spectralFluxHistory.length >= 10) {
-                const sorted = [...this.spectralFluxHistory].sort((a, b) => a - b);
-                const median = sorted[Math.floor(sorted.length / 2)];
-                const mean = sorted.reduce((a, b) => a + b, 0) / sorted.length;
-                
-                // Threshold is slightly above the median to catch significant onsets
-                this.onsetThreshold = median + (mean - median) * 0.5;
-            }
-            
-            // Detect onset (transient/attack) - focus on stronger transients for BPM
-            // Use higher threshold for BPM detection vs vocal detection
-            const isVocalOnset = spectralFlux > this.onsetThreshold * 1.2 && spectralFlux > 0.02;
-            const isBeatOnset = spectralFlux > this.onsetThreshold * 2.0 && spectralFlux > 0.05; // Stronger threshold for beats
-            
-            // Smooth the detection with a short hold time
-            if (isVocalOnset) {
-                this.transientHoldTime = 8; // Hold for 8 frames (~250ms) for visible glitches
-                this.vocalGlowBoost = 0.3; // Add 30% glow boost on vocal onset
-            }
-            
-            // BPM DETECTION: Only track stronger onsets that are likely beats
-            if (isBeatOnset) {
-                const now = performance.now();
-                
-                // Store onset strength for time signature detection
-                const onsetStrength = {
-                    time: now,
-                    strength: spectralFlux / (this.onsetThreshold || 1), // Normalized strength
-                    bassWeight: bassFlux // Keep bass weight for downbeat detection
-                };
-                this.onsetStrengths.push(onsetStrength);
-                // Keep last 40 onsets (about 16-20 beats)
-                if (this.onsetStrengths.length > 40) {
-                    this.onsetStrengths.shift();
-                }
-                
-                // Delegate onset tracking to music detector
-                this.musicDetector.addOnset(now, spectralFlux);
-                
-            }
-            
-            // Update BPM detection through music detector
-            this.musicDetector.update(performance.now());
-            this.detectedBPM = this.musicDetector.detectedBPM;
-            this.bpmConfidence = this.musicDetector.bpmConfidence;
-            
-            // Update local references for compatibility
-            if (this.detectedBPM > 0 && this.bpmConfidence > 0.8) {
-                // Clear fast mode once we've detected BPM with confidence
-                if (this.forceFastDetection) {
-                    this.forceFastDetection = false;
-                    console.log('✅ Fast detection complete');
-                }
-            }
-            
-            if (this.transientHoldTime > 0) {
-                this.transientHoldTime--;
-            }
-            
-            // Decay glow boost smoothly
-            if (this.vocalGlowBoost > 0) {
-                this.vocalGlowBoost *= 0.92; // Smooth decay
-            }
-            
-            // Set vocal presence based on flux intensity
-            this.vocalPresence = spectralFlux;
-            
-            // No spectral contrast needed
-            const spectralContrast = 0;
-            
-            // Update rolling averages for smarter detection
-            this.bassHistory[this.historyIndex] = this.bassEnergy;
-            this.vocalHistory[this.historyIndex] = this.vocalPresence;
-            this.historyIndex = (this.historyIndex + 1) % this.bassHistory.length;
-            
-            // Calculate averages
-            const bassAvg = this.bassHistory.reduce((a, b) => a + b, 0) / this.bassHistory.length;
-            const vocalAvg = this.vocalHistory.reduce((a, b) => a + b, 0) / this.vocalHistory.length;
-            
-            // Bass effect is now controlled by thump detection above
-            this.bassEffectActive = this.bassThumpTimer > 0;
-            
-            // ENHANCED VOCAL DETECTION
-            // Vocals are present when:
-            // 1. Bands 9-13 have high contrast vs background
-            // 2. Energy is above minimum threshold
-            // 3. Either sudden spike OR sustained presence
-            
-            this.lastVocalPresence = this.lastVocalPresence || 0;
-            const vocalDelta = this.vocalPresence - this.lastVocalPresence;
-            this.lastVocalPresence = this.vocalPresence;
-            
-            // Transient detection - triggers on musical onsets
-            this.vocalEffectActive = this.transientHoldTime > 0;
-            
-        }
-        
-        // If no analyzer, fallback to using audioDeformation for effects
-        if (!this.audioAnalyzer || this.frequencyData.every(f => f === 0)) {
-            // Simple fallback - use audioDeformation to trigger effects
-            if (this.audioDeformation > 0.3) {
-                this.bassEffectActive = true;
-                this.bassEnergy = this.audioDeformation * 0.5;
-            }
-            if (this.vocalEnergy > 0.3) {
-                this.vocalEffectActive = true;
-                this.vocalPresence = this.vocalEnergy;
-            }
-        }
-        
-        // No deformation if no audio
-        const hasAudio = this.audioDeformation !== 0 || this.bassEnergy > 0.01 || 
-                        this.vocalPresence > 0.01;
-        if (!hasAudio) {
-            return points;
-        }
-        
-        const deformed = [];
-        const center = { x: 0.5, y: 0.5 };
-        const time = Date.now() / 1000; // Time in seconds
-        
-        // Update undulation phase only when bass is active
-        if (this.bassEffectActive) {
-            // Randomly change direction occasionally
-            if (Math.random() < 0.05) { // 5% chance per frame
-                this.undulationDirection *= -1; // Reverse direction
-            }
-            this.undulationPhase += 0.08 * this.undulationDirection; // Apply direction
-        }
-        
-        // Update glitch points on beat
-        if (this.audioAnalyzer && this.beatGlitchIntensity > 0) {
-            this.beatGlitchIntensity *= 0.9; // Decay glitch intensity
-        }
-        
-        // Create SUBTLE glitch points when vocal presence is detected
-        if (this.vocalEffectActive && Math.random() < 0.2) { // 20% chance (reduced)
-            this.glitchPoints = [];
-            const numGlitches = 2 + Math.floor(Math.random() * 2); // 2-3 points (fewer)
-            for (let i = 0; i < numGlitches; i++) {
-                this.glitchPoints.push({
-                    index: Math.floor(Math.random() * points.length),
-                    intensity: 0.02 + Math.random() * 0.03, // 0.02-0.05 intensity (much subtler)
-                    decay: 0.94 + Math.random() * 0.02 // Slightly slower decay for smoothness
-                });
-            }
-        }
-        
-        // Update existing glitch points
-        this.glitchPoints = this.glitchPoints.filter(g => {
-            g.intensity *= g.decay;
-            return g.intensity > 0.01;
-        });
-        
-        for (let i = 0; i < points.length; i++) {
-            const point = points[i];
-            
-            // Handle invalid point
-            if (!point || typeof point.x === 'undefined' || typeof point.y === 'undefined') {
-                const angle = (i / points.length) * Math.PI * 2;
-                deformed.push({
-                    x: 0.5 + Math.cos(angle) * 0.5,
-                    y: 0.5 + Math.sin(angle) * 0.5
-                });
-                continue;
-            }
-            
-            // Calculate base position
-            const dx = point.x - center.x;
-            const dy = point.y - center.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const angle = Math.atan2(dy, dx);
-            
-            // 1. Base expansion from overall amplitude - always active for responsiveness
-            const baseExpansion = Math.abs(this.audioDeformation) * 0.12; // Reduced to 12%
-            
-            // 2. Bass-triggered wiggle effect
-            let undulation = 0;
-            let breathPulse = 0;
-            
-            if (this.bassEffectActive) {
-                // Strong bass-driven undulation
-                const waveCount = 2; // 2 waves for clean look
-                const wiggleIntensity = this.bassEnergy * 0.25; // Increased from 0.15 to 0.25
-                undulation = Math.sin(angle * waveCount + this.undulationPhase) * wiggleIntensity;
-                
-                // Subtle breathing pulse synced with undulation
-                breathPulse = Math.sin(this.undulationPhase * 0.5) * this.bassEnergy * 0.08; // Increased from 0.05
-            }
-            
-            // 5. Check for glitch points - SUBTLE shimmer/ripple effect
-            let glitchOffset = 0;
-            const glitchPoint = this.glitchPoints.find(g => g.index === i);
-            if (glitchPoint) {
-                // Create a subtle ripple/shimmer instead of harsh glitch
-                const shimmerTime = Date.now() * 0.015; // Slower oscillation
-                const shimmer = Math.sin(shimmerTime + i * 0.5) * Math.cos(shimmerTime * 0.7);
-                glitchOffset = glitchPoint.intensity * shimmer * 0.5; // Can go in or out, very subtle
-            }
-            
-            // Combine all deformations - simpler, more selective
-            const totalDeformation = 1 + baseExpansion + undulation + breathPulse + glitchOffset;
-            
-            const newDistance = distance * Math.max(0.8, totalDeformation); // Never shrink below 80%
-            
-            deformed.push({
-                x: center.x + Math.cos(angle) * newDistance,
-                y: center.y + Math.sin(angle) * newDistance
-            });
-        }
-        
-        return deformed;
+        // Delegate to AudioDeformer module
+        return this.audioDeformer.applyAudioDeformation(points);
     }
     
     /**
@@ -830,6 +464,10 @@ class ShapeMorpher {
         if (now - this.lastAudioUpdate > this.audioUpdateInterval) {
             this.audioDeformation = Math.max(-1, Math.min(1, value));
             this.lastAudioUpdate = now;
+            // CRITICAL: Also update the AudioDeformer module!
+            if (this.audioDeformer) {
+                this.audioDeformer.setAudioDeformation(Math.abs(this.audioDeformation)); // Pass absolute value
+            }
         }
     }
     
@@ -842,6 +480,10 @@ class ShapeMorpher {
         if (now - this.lastVocalUpdate > this.audioUpdateInterval) {
             this.vocalEnergy = Math.max(0, Math.min(1, value));
             this.lastVocalUpdate = now;
+            // Also update the AudioDeformer module
+            if (this.audioDeformer) {
+                this.audioDeformer.setVocalEnergy(this.vocalEnergy);
+            }
         }
     }
     
@@ -957,6 +599,7 @@ class ShapeMorpher {
         
         const currentShadow = currentDef?.shadow || { type: 'none' };
         const targetShadow = targetDef?.shadow || null;
+        
         
         // If not transitioning, return current shadow
         if (!this.isTransitioning || !targetShadow) {
@@ -1300,140 +943,28 @@ class ShapeMorpher {
     }
     
     /**
-     * Detect time signature from onset patterns
+     * Detect time signature from onset patterns - delegated to MusicDetector
      */
     detectTimeSignature() {
-        // Need at least a detected BPM and some onset data
-        const minOnsets = this.forceFastDetection ? 6 : 12;
-        if (this.detectedBPM === 0 || this.onsetStrengths.length < minOnsets) {
-            return;
-        }
+        // Set fast detection mode if needed
+        this.musicDetector.forceFastDetection = this.forceFastDetection;
         
-        // If already locked, don't change unless we're in fast mode (just reset)
-        if (this.timeSignatureLocked && !this.forceFastDetection) {
-            return;
-        }
+        // Delegate to MusicDetector
+        const timeSignature = this.musicDetector.detectTimeSignature();
         
-        const beatInterval = 60000 / this.detectedBPM;
+        // Update local references for compatibility
+        this.detectedTimeSignature = this.musicDetector.detectedTimeSignature;
+        this.timeSignatureConfidence = this.musicDetector.timeSignatureConfidence;
+        this.timeSignatureLocked = this.musicDetector.timeSignatureLocked;
         
-        // Only test the most common measure length first (4 beats)
-        // We'll be conservative and mostly detect 4/4 unless very clear pattern
-        const measureLength = 4;
-        const beatBins = new Array(measureLength).fill(0).map(() => ({
-            strength: 0,
-            bassWeight: 0,
-            count: 0
-        }));
-        
-        // Align recent onsets to a 4-beat grid
-        const recentOnsets = this.onsetStrengths.slice(-Math.min(20, this.onsetStrengths.length));
-        if (recentOnsets.length === 0) return;
-        const startTime = recentOnsets[0].time;
-        
-        for (let onset of recentOnsets) {
-            const timeSinceStart = onset.time - startTime;
-            const beatPosition = (timeSinceStart / beatInterval) % measureLength;
-            const binIndex = Math.round(beatPosition) % measureLength;
-            
-            beatBins[binIndex].strength += onset.strength;
-            beatBins[binIndex].bassWeight += onset.bassWeight;
-            beatBins[binIndex].count++;
-        }
-        
-        // Normalize bins
-        let maxStrength = 0;
-        for (let bin of beatBins) {
-            if (bin.count > 0) {
-                bin.strength /= bin.count;
-                bin.bassWeight /= bin.count;
-                maxStrength = Math.max(maxStrength, bin.strength + bin.bassWeight);
-            }
-        }
-        
-        // Default to 4/4 for most music
-        let detectedSig = '4/4';
-        
-        // Only detect 3/4 if we have a VERY clear waltz pattern
-        // (strong-weak-weak with no emphasis on beat 4)
-        if (beatBins[0].strength > beatBins[1].strength * 2 &&
-            beatBins[0].strength > beatBins[2].strength * 2 &&
-            beatBins[3].count < beatBins[0].count * 0.5) {
-            // Might be 3/4, but need more confidence
-            const waltzConfidence = this.testWaltzPattern(recentOnsets, beatInterval);
-            if (waltzConfidence > 0.8) {
-                detectedSig = '3/4';
-            }
-        }
-        
-        // Add to history
-        this.timeSignatureHistory.push(detectedSig);
-        if (this.timeSignatureHistory.length > 3) {
-            this.timeSignatureHistory.shift();
-        }
-        
-        // Lock faster - only need 2 readings in fast mode, 3 normally
-        const minReadings = this.forceFastDetection ? 2 : 3;
-        if (this.timeSignatureHistory.length >= minReadings) {
-            const counts = {};
-            for (let sig of this.timeSignatureHistory) {
-                counts[sig] = (counts[sig] || 0) + 1;
-            }
-            
-            // Find most common
-            let mostCommon = '4/4';
-            let maxCount = 0;
-            for (let [sig, count] of Object.entries(counts)) {
-                if (count > maxCount) {
-                    maxCount = count;
-                    mostCommon = sig;
-                }
-            }
-            
-            // Lock if we have agreement (at least 2 out of 3)
-            if (maxCount >= 2) {
-                this.detectedTimeSignature = mostCommon;
-                this.timeSignatureLocked = true;
-                this.timeSignatureConfidence = maxCount / 3;
-                
-                // Update rhythm engine if available
-                if (window.rhythmIntegration && window.rhythmIntegration.setTimeSignature) {
-                    window.rhythmIntegration.setTimeSignature(this.detectedTimeSignature);
-                }
-                
-                console.log(`🎼 Time signature locked: ${this.detectedTimeSignature} (confidence: ${Math.round(this.timeSignatureConfidence * 100)}%)`);
-                
-                // Also directly update UI in case rhythmIntegration doesn't
-                const timeSigDisplay = document.getElementById('time-sig-display');
-                if (timeSigDisplay) {
-                    timeSigDisplay.textContent = this.detectedTimeSignature;
-                }
-            }
-        }
+        return timeSignature;
     }
     
     /**
-     * Test specifically for 3/4 waltz pattern
+     * Test specifically for 3/4 waltz pattern - delegated to MusicDetector
      */
     testWaltzPattern(onsets, beatInterval) {
-        // Look for groups of 3 beats with strong-weak-weak pattern
-        let waltzGroups = 0;
-        let totalGroups = 0;
-        
-        for (let i = 0; i < onsets.length - 2; i += 3) {
-            if (i + 2 < onsets.length) {
-                totalGroups++;
-                const first = onsets[i].strength + onsets[i].bassWeight;
-                const second = onsets[i + 1].strength + onsets[i + 1].bassWeight;
-                const third = onsets[i + 2].strength + onsets[i + 2].bassWeight;
-                
-                // Check for strong-weak-weak pattern
-                if (first > second * 1.5 && first > third * 1.5) {
-                    waltzGroups++;
-                }
-            }
-        }
-        
-        return totalGroups > 0 ? waltzGroups / totalGroups : 0;
+        return this.musicDetector.testWaltzPattern(onsets, beatInterval);
     }
     
     
@@ -1470,7 +1001,6 @@ class ShapeMorpher {
             timeSigDisplay.textContent = '—';
         }
         
-        console.log('🔄 Music detection reset - fast detection mode enabled');
     }
     
     /**

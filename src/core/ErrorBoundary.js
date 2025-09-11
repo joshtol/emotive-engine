@@ -145,9 +145,7 @@ class ErrorBoundary {
 
         // Log to console with appropriate level based on frequency
         if (count < 3) {
-            console.error(`[EmotiveMascot:${context}]`, error.message);
         } else if (count === 3) {
-            console.warn(`[EmotiveMascot:${context}] Suppressing further errors (${count} occurrences)`);
         }
     }
 

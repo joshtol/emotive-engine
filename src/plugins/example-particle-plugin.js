@@ -74,7 +74,6 @@ class CustomParticlePlugin {
         // Register our custom behaviors with the modular system
         this.registerBehaviors();
         
-        console.log(`[${this.name}] Initialized with behaviors:`, this.registeredBehaviors);
     }
     
     /**
@@ -274,7 +273,6 @@ class CustomParticlePlugin {
                     this.mascot.particleSystem.currentBehavior = behaviorName;
                     // Clear existing particles to apply new behavior
                     this.mascot.particleSystem.particles = [];
-                    console.log(`[${this.name}] Switched to behavior: ${behaviorName}`);
                     return true;
                 }
                 return false;
@@ -319,7 +317,6 @@ class CustomParticlePlugin {
         }
         
         this.initialized = false;
-        console.log(`[${this.name}] Plugin destroyed, behaviors unregistered`);
     }
     
     /**

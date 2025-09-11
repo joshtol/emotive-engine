@@ -139,11 +139,7 @@ export class DegradationManager {
         this.enhancementHistory = [];
         this.capabilityTests = new Map();
         
-        console.log('DegradationManager initialized:', {
-            level: this.getCurrentLevel().name,
-            availableFeatures: this.availableFeatures,
-            browserCapabilities: browserCompatibility.capabilities
-        });
+        // DegradationManager initialized
     }
 
     /**
@@ -203,7 +199,7 @@ export class DegradationManager {
             this.checkPerformance();
         }, 1000); // Check every second
         
-        console.log('Performance monitoring started');
+        // Performance monitoring started
     }
 
     /**
@@ -223,7 +219,7 @@ export class DegradationManager {
             this.recoveryTimeout = null;
         }
         
-        console.log('Performance monitoring stopped');
+        // Performance monitoring stopped
     }
 
     /**
@@ -322,7 +318,7 @@ export class DegradationManager {
             this.recoveryTimeout = null;
         }, this.config.recoveryDelay);
         
-        console.log(`Recovery scheduled in ${this.config.recoveryDelay}ms`);
+        // Recovery scheduled
     }
 
     /**
@@ -335,7 +331,7 @@ export class DegradationManager {
         this.consecutiveGoodFrames = 0;
         
         const level = this.getCurrentLevel();
-        console.log(`Performance recovery applied: ${level.name} (${level.description})`);
+        // Performance recovery applied
         
         // Emit recovery event
         this.emit('recoveryApplied', {
@@ -355,13 +351,13 @@ export class DegradationManager {
         if (typeof level === 'string') {
             targetLevel = this.degradationLevels.findIndex(l => l.name === level);
             if (targetLevel === -1) {
-                console.warn(`Unknown degradation level: ${level}`);
+                // Unknown degradation level
                 return false;
             }
         } else if (typeof level === 'number') {
             targetLevel = Math.max(0, Math.min(this.degradationLevels.length - 1, level));
         } else {
-            console.warn('Invalid degradation level type');
+            // Invalid degradation level type
             return false;
         }
         
@@ -369,7 +365,7 @@ export class DegradationManager {
         this.currentLevel = targetLevel;
         
         const levelInfo = this.getCurrentLevel();
-        console.log(`Degradation level manually set: ${levelInfo.name}`);
+        // Degradation level manually set
         
         // Emit level change event
         this.emit('levelChanged', {
@@ -498,7 +494,7 @@ export class DegradationManager {
             this.recoveryTimeout = null;
         }
         
-        console.log('DegradationManager reset to optimal level');
+        // DegradationManager reset to optimal level
         
         this.emit('reset', {
             level: this.getCurrentLevel().name
@@ -588,10 +584,7 @@ export class DegradationManager {
 
         this.disabledFeatures.delete(feature);
         
-        console.log(`Feature manually enabled: ${feature}`, {
-            feature,
-            disabledFeatures: Array.from(this.disabledFeatures)
-        });
+        // Feature manually enabled
 
         this.emit('featureEnabled', { feature, manual: true });
         return ErrorResponse.success({ feature, enabled: true });
@@ -612,7 +605,7 @@ export class DegradationManager {
 
         if (level === null) {
             this.manualOverride = null;
-            console.log('Manual override removed');
+            // Manual override removed
             this.emit('manualOverrideRemoved', {});
             return ErrorResponse.success({ override: null });
         }
@@ -620,9 +613,7 @@ export class DegradationManager {
         const setResult = this.setLevel(level);
         if (setResult) {
             this.manualOverride = this.currentLevel;
-            console.log('Manual override set:', {
-                level: this.getCurrentLevel().name
-            });
+            // Manual override set
             this.emit('manualOverrideSet', { level: this.getCurrentLevel().name });
             return ErrorResponse.success({ override: this.getCurrentLevel().name });
         }
@@ -666,7 +657,7 @@ export class DegradationManager {
 
             this.capabilityTests.set(feature, testResult);
             
-            console.log(`Capability test completed: ${feature}`, testResult);
+            // Capability test completed
 
             return ErrorResponse.success(testResult);
         } catch (error) {
@@ -748,10 +739,7 @@ export class DegradationManager {
             enhancements: [...enhancements]
         });
 
-        console.log('Progressive enhancement applied:', {
-            enhancements,
-            level: currentLevel.name
-        });
+        // Progressive enhancement applied
 
         this.emit('progressiveEnhancementApplied', { enhancements });
         return ErrorResponse.success({ enhancements });
@@ -904,7 +892,7 @@ export class DegradationManager {
         this.onEvent = null;
         this.manualOverride = null;
         
-        console.log('DegradationManager destroyed');
+        // DegradationManager destroyed
     }
 }
 

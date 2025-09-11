@@ -34,7 +34,6 @@ const pluginGestures = new Map();
 export function registerPluginGesture(name, gestureDef) {
     // Ensure gesture has required properties
     if (!gestureDef.apply && !gestureDef.type) {
-        console.warn(`Plugin gesture '${name}' missing required apply() function or type property`);
         return false;
     }
     
@@ -51,7 +50,6 @@ export function registerPluginGesture(name, gestureDef) {
     pluginGestures.set(name, gestureDef);
     
     if (typeof window !== 'undefined' && window.DEBUG_GESTURES) {
-        console.log(`✅ Registered plugin gesture: ${name}`);
     }
     
     return true;
@@ -66,7 +64,6 @@ export function unregisterPluginGesture(name) {
         pluginGestures.delete(name);
         
         if (typeof window !== 'undefined' && window.DEBUG_GESTURES) {
-            console.log(`❌ Unregistered plugin gesture: ${name}`);
         }
         
         return true;

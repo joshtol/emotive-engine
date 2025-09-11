@@ -7,6 +7,63 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [2.4.0] - 2025-01-11
+
+### 🔧 Production Readiness & NPM Package Preparation
+
+#### Code Cleanup
+- **Removed** all console.log statements (126 total) for production deployment
+- **Fixed** syntax errors from incomplete console statement removal
+- **Fixed** drop shadow rendering issue causing core dimming
+- **Fixed** orbital gesture to keep core stationary (particle-only effect)
+
+#### Bug Fixes
+- **Fixed** bass sensitivity in web audio - removed fallback code triggering on every beat
+- **Fixed** rhythm sync BPM detection jumping - tightened tolerances to 3%
+- **Fixed** gesture animations (glow/flash/flicker) not triggering independently
+- **Fixed** flash gesture to emanate outward in wave pattern (less seizure-inducing)
+- **Fixed** core dimming issue by removing drop shadow overlay
+
+#### NPM Package Plan
+- **Planned** Public API wrapper (EmotiveMascotPublic.js) with safe methods only:
+  - Animation control (play, pause, stop)
+  - Gesture/emotion triggers with timestamps
+  - Audio loading and analysis
+  - Timeline recording/playback
+  - Frame export for video generation
+  - Quality settings for mobile
+  
+- **Planned** Timeline System for animation recording:
+  - Record user interactions with timestamps
+  - Export/import animation sequences as JSON
+  - Seek/scrub functionality
+  - Synchronize with audio playback
+
+- **Planned** Security measures:
+  - Hide internal implementation (ShapeMorpher, AudioDeformer)
+  - Private modules for core algorithms
+  - Non-enumerable internal methods
+  - Bundled & minified distribution
+
+- **Planned** Package structure:
+  ```
+  package.json (private: true)
+  src/
+    EmotiveMascotPublic.js  (public API)
+    EmotiveMascot.js         (internal)
+    core/                    (internal modules)
+  dist/
+    emotive-engine.min.js    (bundled & minified)
+    emotive-engine.d.ts      (TypeScript definitions)
+  ```
+
+### 🎯 Next Steps
+- Implement public API wrapper
+- Add timeline recording system
+- Create build process with Webpack/Rollup
+- Generate TypeScript definitions
+- Prepare for private NPM publication on GitHub
+
 ## [2.3.0] - 2025-01-10
 
 ### 🎵 Advanced Audio-Reactive Visualization System

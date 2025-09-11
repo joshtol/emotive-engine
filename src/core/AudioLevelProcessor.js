@@ -169,7 +169,6 @@ export class AudioLevelProcessor {
                 });
             }
             
-            console.log('AudioLevelProcessor: Initialized successfully');
             return true;
             
         } catch (error) {
@@ -195,7 +194,6 @@ export class AudioLevelProcessor {
             this.analyser = null;
             this.dataArray = null;
             
-            console.log('AudioLevelProcessor: Cleaned up successfully');
             
         } catch (error) {
             this.emitError('Error during AudioLevelProcessor cleanup', error);
@@ -308,7 +306,6 @@ export class AudioLevelProcessor {
                 minimumLevel: this.config.minimumSpikeLevel
             });
             
-            console.log(`AudioLevelProcessor: Volume spike detected - ${(this.currentLevel * 100).toFixed(1)}% (${this.config.spikeThreshold}x increase)`);
         }
     }
 
@@ -317,7 +314,6 @@ export class AudioLevelProcessor {
      */
     clearHistory() {
         this.levelHistory = [];
-        console.log('AudioLevelProcessor: Audio level history cleared');
     }
 
     /**
@@ -431,7 +427,6 @@ export class AudioLevelProcessor {
             }
         }
         
-        console.log('AudioLevelProcessor: Configuration updated', newConfig);
     }
 
     /**
@@ -481,7 +476,6 @@ export class AudioLevelProcessor {
                     history: this.getLevelHistory()
                 });
             } catch (error) {
-                console.warn('AudioLevelProcessor: Error in level update callback:', error);
             }
         }
     }
@@ -495,7 +489,6 @@ export class AudioLevelProcessor {
             try {
                 this.callbacks.volumeSpike(spikeData);
             } catch (error) {
-                console.warn('AudioLevelProcessor: Error in volume spike callback:', error);
             }
         }
     }
@@ -506,7 +499,6 @@ export class AudioLevelProcessor {
      * @param {Error} error - Original error object
      */
     emitError(message, error) {
-        console.warn(`AudioLevelProcessor: ${message}`, error);
         
         if (this.callbacks.error) {
             try {
@@ -516,7 +508,6 @@ export class AudioLevelProcessor {
                     timestamp: performance.now()
                 });
             } catch (callbackError) {
-                console.warn('AudioLevelProcessor: Error in error callback:', callbackError);
             }
         }
     }

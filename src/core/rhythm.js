@@ -395,7 +395,6 @@ class RhythmEngine {
      */
     setPattern(patternName) {
         if (!this.patterns.has(patternName)) {
-            console.warn(`Unknown rhythm pattern: ${patternName}`);
             return;
         }
         
@@ -461,7 +460,6 @@ class RhythmEngine {
     syncToAudio(audioContext, audioSource) {
         this.audioSync = { context: audioContext, source: audioSource };
         // Future: Implement beat detection and tempo extraction
-        console.log('Audio sync registered - beat detection not yet implemented');
     }
     
     /**

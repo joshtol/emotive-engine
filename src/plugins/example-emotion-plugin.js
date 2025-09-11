@@ -125,7 +125,6 @@ class CustomEmotionPlugin {
         // Register emotions with the plugin adapter
         this.registerEmotions();
         
-        console.log(`[${this.name}] Initialized with custom emotions:`, Object.keys(this.emotions));
     }
     
     /**
@@ -136,7 +135,6 @@ class CustomEmotionPlugin {
         // Import the emotion plugin adapter
         const emotionModule = this.mascot.Emotions || window.Emotions;
         if (!emotionModule || !emotionModule.pluginAdapter) {
-            console.warn(`[${this.name}] Emotion plugin adapter not found`);
             return;
         }
         
@@ -347,7 +345,6 @@ class CustomEmotionPlugin {
         }
         
         this.initialized = false;
-        console.log(`[${this.name}] Plugin destroyed`);
     }
     
     /**

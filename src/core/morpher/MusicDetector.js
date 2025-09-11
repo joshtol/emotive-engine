@@ -24,12 +24,20 @@ export class MusicDetector {
         
         // Time signature detection
         this.timeSignature = '4/4';
+        this.detectedTimeSignature = null;
+        this.timeSignatureConfidence = 0;
+        this.timeSignatureHistory = [];
+        this.timeSignatureLocked = false;
         this.downbeatPhase = 0;
         this.measureLength = 4;
+        this.measureStartTime = 0;
         
         // Music state
         this.isMusicalContent = false;
         this.musicalityScore = 0;
+        
+        // Fast detection mode
+        this.forceFastDetection = false;
     }
 
     /**
@@ -58,11 +66,10 @@ export class MusicDetector {
             const variance = recentBPMs.reduce((sum, bpm) => sum + Math.pow(bpm - avgRecent, 2), 0) / recentBPMs.length;
             
             // Lock faster with tighter variance requirement
-            if (variance < 10) { // Less than ~3 BPM standard deviation
+            if (variance < 5) { // Less than ~2 BPM standard deviation - much tighter
                 this.fundamentalBPM = Math.round(avgRecent);
                 this.tempoLocked = true;
                 this.bpmConfidence = 1.0;
-                console.log(`🔒 Tempo locked at ${this.fundamentalBPM} BPM`);
             }
         }
         
@@ -82,7 +89,6 @@ export class MusicDetector {
                 if (this.bpmConfidence < 0.3 && bestCandidate.strength > 0.8) {
                     this.fundamentalBPM = candidateBPM;
                     this.bpmConfidence = 0.5;
-                    console.log(`🔄 Tempo updated to ${this.fundamentalBPM} BPM (confidence was low)`);
                 } else {
                     // Stick with fundamental
                     finalBPM = this.fundamentalBPM;
@@ -100,7 +106,7 @@ export class MusicDetector {
         if (this.detectedBPM === 0) {
             this.detectedBPM = finalBPM;
         } else {
-            const maxChange = this.tempoLocked ? 1 : 5;
+            const maxChange = this.tempoLocked ? 1 : 2; // Reduced from 5 to 2 for stability
             const diff = finalBPM - this.detectedBPM;
             if (Math.abs(diff) <= maxChange) {
                 this.detectedBPM = finalBPM;
@@ -170,7 +176,7 @@ export class MusicDetector {
         let currentCluster = [sorted[0]];
         
         for (let i = 1; i < sorted.length; i++) {
-            const tolerance = currentCluster[0] * 0.08; // 8% tolerance
+            const tolerance = currentCluster[0] * 0.03; // 3% tolerance - tighter for stable BPM
             if (sorted[i] - currentCluster[0] <= tolerance) {
                 currentCluster.push(sorted[i]);
             } else {
@@ -223,27 +229,150 @@ export class MusicDetector {
      * @returns {string} Detected time signature
      */
     detectTimeSignature() {
-        // Implementation will be moved from ShapeMorpher
-        return this.timeSignature;
+        // Need at least a detected BPM and some onset data
+        const minOnsets = this.forceFastDetection ? 6 : 12;
+        if (this.detectedBPM === 0 || this.onsetStrengths.length < minOnsets) {
+            return this.timeSignature;
+        }
+        
+        // If already locked, don't change unless we're in fast mode (just reset)
+        if (this.timeSignatureLocked && !this.forceFastDetection) {
+            return this.detectedTimeSignature || this.timeSignature;
+        }
+        
+        const beatInterval = 60000 / this.detectedBPM;
+        
+        // Only test the most common measure length first (4 beats)
+        // We'll be conservative and mostly detect 4/4 unless very clear pattern
+        const measureLength = 4;
+        const beatBins = new Array(measureLength).fill(0).map(() => ({
+            strength: 0,
+            bassWeight: 0,
+            count: 0
+        }));
+        
+        // Align recent onsets to a 4-beat grid
+        const recentOnsets = this.onsetStrengths.slice(-Math.min(20, this.onsetStrengths.length));
+        if (recentOnsets.length === 0) return this.timeSignature;
+        const startTime = recentOnsets[0].time;
+        
+        for (let onset of recentOnsets) {
+            const timeSinceStart = onset.time - startTime;
+            const beatPosition = (timeSinceStart / beatInterval) % measureLength;
+            const binIndex = Math.round(beatPosition) % measureLength;
+            
+            beatBins[binIndex].strength += onset.strength;
+            beatBins[binIndex].bassWeight += onset.bassWeight || 0;
+            beatBins[binIndex].count++;
+        }
+        
+        // Normalize bins
+        let maxStrength = 0;
+        for (let bin of beatBins) {
+            if (bin.count > 0) {
+                bin.strength /= bin.count;
+                bin.bassWeight /= bin.count;
+                maxStrength = Math.max(maxStrength, bin.strength + bin.bassWeight);
+            }
+        }
+        
+        // Default to 4/4 for most music
+        let detectedSig = '4/4';
+        
+        // Only detect 3/4 if we have a VERY clear waltz pattern
+        // (strong-weak-weak with no emphasis on beat 4)
+        if (beatBins[0].strength > beatBins[1].strength * 2 &&
+            beatBins[0].strength > beatBins[2].strength * 2 &&
+            beatBins[3].count < beatBins[0].count * 0.5) {
+            // Might be 3/4, but need more confidence
+            const waltzConfidence = this.testWaltzPattern(recentOnsets, beatInterval);
+            if (waltzConfidence > 0.8) {
+                detectedSig = '3/4';
+            }
+        }
+        
+        // Add to history
+        this.timeSignatureHistory.push(detectedSig);
+        if (this.timeSignatureHistory.length > 3) {
+            this.timeSignatureHistory.shift();
+        }
+        
+        // Lock faster - only need 2 readings in fast mode, 3 normally
+        const minReadings = this.forceFastDetection ? 2 : 3;
+        if (this.timeSignatureHistory.length >= minReadings) {
+            const counts = {};
+            for (let sig of this.timeSignatureHistory) {
+                counts[sig] = (counts[sig] || 0) + 1;
+            }
+            
+            // Find most common
+            let mostCommon = '4/4';
+            let maxCount = 0;
+            for (let [sig, count] of Object.entries(counts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    mostCommon = sig;
+                }
+            }
+            
+            // Lock if we have agreement (at least 2 out of 3)
+            if (maxCount >= 2) {
+                this.detectedTimeSignature = mostCommon;
+                this.timeSignatureLocked = true;
+                this.timeSignatureConfidence = maxCount / 3;
+                
+                // Update rhythm engine if available
+                if (window.rhythmIntegration && window.rhythmIntegration.setTimeSignature) {
+                    window.rhythmIntegration.setTimeSignature(this.detectedTimeSignature);
+                }
+                
+                
+                // Also directly update UI in case rhythmIntegration doesn't
+                const timeSigDisplay = document.getElementById('time-sig-display');
+                if (timeSigDisplay) {
+                    timeSigDisplay.textContent = this.detectedTimeSignature;
+                }
+            }
+        }
+        
+        return this.detectedTimeSignature || this.timeSignature;
     }
 
     /**
      * Test for waltz pattern (3/4 time)
      * @param {Array} onsets - Onset times and strengths
      * @param {number} beatInterval - Beat interval in ms
-     * @returns {boolean} True if waltz pattern detected
+     * @returns {number} Confidence score (0-1) for waltz pattern
      */
     testWaltzPattern(onsets, beatInterval) {
-        // Implementation will be moved from ShapeMorpher
-        return false;
+        // Look for groups of 3 beats with strong-weak-weak pattern
+        let waltzGroups = 0;
+        let totalGroups = 0;
+        
+        for (let i = 0; i < onsets.length - 2; i += 3) {
+            if (i + 2 < onsets.length) {
+                totalGroups++;
+                const first = onsets[i].strength + (onsets[i].bassWeight || 0);
+                const second = onsets[i + 1].strength + (onsets[i + 1].bassWeight || 0);
+                const third = onsets[i + 2].strength + (onsets[i + 2].bassWeight || 0);
+                
+                // Check for strong-weak-weak pattern
+                if (first > second * 1.5 && first > third * 1.5) {
+                    waltzGroups++;
+                }
+            }
+        }
+        
+        return totalGroups > 0 ? waltzGroups / totalGroups : 0;
     }
 
     /**
      * Add onset event for analysis
      * @param {number} time - Onset time
      * @param {number} strength - Onset strength
+     * @param {number} bassWeight - Optional bass weight for downbeat detection
      */
-    addOnset(time, strength) {
+    addOnset(time, strength, bassWeight = 0) {
         if (this.lastOnsetTime > 0) {
             const interval = time - this.lastOnsetTime;
             // Filter reasonable intervals (60-220 BPM range)
@@ -255,7 +384,7 @@ export class MusicDetector {
             }
         }
         
-        this.onsetStrengths.push({ time, strength });
+        this.onsetStrengths.push({ time, strength, bassWeight });
         if (this.onsetStrengths.length > 40) {
             this.onsetStrengths.shift();
         }
@@ -285,8 +414,16 @@ export class MusicDetector {
         this.lastOnsetTime = 0;
         this.detectedBPM = 0;
         this.bpmConfidence = 0;
+        this.bpmHistory = [];
+        this.tempoLocked = false;
+        this.fundamentalBPM = 0;
         this.timeSignature = '4/4';
+        this.detectedTimeSignature = null;
+        this.timeSignatureConfidence = 0;
+        this.timeSignatureHistory = [];
+        this.timeSignatureLocked = false;
         this.isMusicalContent = false;
+        this.forceFastDetection = false;
     }
 
     /**

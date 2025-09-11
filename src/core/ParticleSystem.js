@@ -320,7 +320,6 @@ class ParticleSystem {
     spawnSingleParticle(behavior, centerX, centerY) {
         // Hard limit check to prevent memory leaks
         if (this.particles.length >= this.absoluteMaxParticles) {
-            console.warn(`Particle limit reached: ${this.particles.length}`);
             return;
         }
         
@@ -348,7 +347,6 @@ class ParticleSystem {
         // Debug logging disabled to prevent console spam
         // Only uncomment for debugging particle spawning issues
         // if (this.particleCount <= 3) {
-        //     console.log(`Spawned particle #${this.particleCount} at (${spawnPos.x.toFixed(0)}, ${spawnPos.y.toFixed(0)}) with behavior: ${behavior}`);
         // }
     }
 
@@ -506,7 +504,6 @@ class ParticleSystem {
             const leaked = this.totalParticlesCreated - this.totalParticlesDestroyed;
             // Only warn if leak is significant and growing
             if (leaked > 200 && leaked > this.lastLeakedCount + 50) {
-                console.warn(`Potential memory leak: ${leaked} particles unaccounted. Active: ${this.particles.length}, Pool: ${this.pool.length}`);
                 this.lastLeakedCount = leaked;
             }
             this.lastMemoryCheck = Date.now();
@@ -771,7 +768,6 @@ class ParticleSystem {
      * Clears all particles and returns them to the pool
      */
     clear() {
-        // console.log(`[ParticleSystem.clear] Clearing ${this.particles.length} particles. Pool: ${this.pool.length}`);
         this.stateChangeCount++;
         
         // Return all particles to pool but avoid duplicates
@@ -804,7 +800,6 @@ class ParticleSystem {
             this.pool.splice(this.poolSize, excess);
         }
         
-        // console.log(`[ParticleSystem.clear] After clear - Particles: ${this.particles.length}, Pool: ${this.pool.length}, Created total: ${this.totalParticlesCreated}`);
     }
 
     /**

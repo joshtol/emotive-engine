@@ -82,7 +82,6 @@ class FizzyParticlePlugin {
         // Register the fizzy behavior with the modular system
         this.registerFizzyBehavior();
         
-        console.log(`[${this.name}] Initialized - Ready to add carbonation!`);
     }
     
     /**
@@ -204,7 +203,6 @@ class FizzyParticlePlugin {
                         this.mascot.particleSystem.currentBehavior = behaviorName;
                         // Clear existing particles to apply new behavior
                         this.mascot.particleSystem.particles = [];
-                        console.log(`[ParticleSystem] Switched to behavior: ${behaviorName}`);
                         return true;
                     }
                     return false;
@@ -219,14 +217,12 @@ class FizzyParticlePlugin {
      */
     activate() {
         if (!this.mascot) {
-            console.error(`[${this.name}] Cannot activate - plugin not initialized`);
             return;
         }
         
         if (this.mascot.particleSystem && this.mascot.particleSystem.setBehavior) {
             this.mascot.particleSystem.setBehavior('fizzy');
             this.active = true;
-            console.log(`[${this.name}] Fizzy particles ACTIVATED! 🍾`);
         }
     }
     
@@ -243,7 +239,6 @@ class FizzyParticlePlugin {
             }
         }
         this.active = false;
-        console.log(`[${this.name}] Fizzy particles deactivated`);
     }
     
     /**
@@ -278,7 +273,6 @@ class FizzyParticlePlugin {
         
         this.deactivate();
         this.mascot = null;
-        console.log(`[${this.name}] Plugin destroyed`);
     }
     
     /**

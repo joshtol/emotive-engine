@@ -55,7 +55,6 @@ export function applyGestureMotion(particle, dt, motion, progress, centerX, cent
     const gesture = getGesture(motion.type);
     
     if (!gesture) {
-        console.warn(`[GestureMotion] Unknown gesture type: ${motion.type}`);
         return;
     }
     

@@ -112,7 +112,6 @@ export function initializeBehavior(particle, behaviorName) {
     }
     // Fallback to ambient if behavior not found
     if (behaviorName !== 'ambient') {
-        console.warn(`Behavior '${behaviorName}' not found, using 'ambient'`);
         return initializeBehavior(particle, 'ambient');
     }
     return false;
@@ -173,7 +172,6 @@ if (typeof window !== 'undefined' && window.DEBUG_PARTICLES) {
         list: listBehaviors,
         get: getBehavior
     };
-    console.log('🎯 Particle Behaviors Loaded:', listBehaviors());
 }
 
 // Export plugin adapter for external use

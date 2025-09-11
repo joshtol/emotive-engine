@@ -135,7 +135,6 @@ class PerformanceMonitor {
         // Start memory monitoring
         this.startMemoryMonitoring();
         
-        console.log('PerformanceMonitor initialized');
     }
 
     /**
@@ -339,14 +338,12 @@ class PerformanceMonitor {
                 if (this.stableFrameCount > 5 && !this.dormantMode) {
                     this.dormantMode = true;
                     this.checkInterval = 60; // Check less frequently when stable
-                    console.log('PerformanceMonitor: Entering dormant mode (stable performance)');
                 }
             } else {
                 this.stableFrameCount = 0;
                 if (this.dormantMode) {
                     this.dormantMode = false;
                     this.checkInterval = 30; // Resume normal checking
-                    console.log('PerformanceMonitor: Exiting dormant mode');
                 }
             }
             */
@@ -892,7 +889,6 @@ class PerformanceMonitor {
         if (results.length > 0) {
             this.performanceDegradation = true;
             
-            console.warn(`Performance: ${fps} FPS (min: ${minFPS})`)
             this.emit('performanceDegradation', {
                 fps,
                 targetFPS: this.config.targetFPS,
@@ -943,7 +939,6 @@ class PerformanceMonitor {
         if (results.length > 0) {
             this.performanceDegradation = false;
             
-            console.log(`Performance recovered (${fps} FPS >= ${goodFPS}). Reverted optimizations:`, results);
             this.emit('performanceRecovery', {
                 fps,
                 targetFPS: this.config.targetFPS,
@@ -1062,7 +1057,6 @@ class PerformanceMonitor {
         }
         
         if (now - this.lastMemoryWarning > 5000) {
-            console.warn(`Memory pressure detected: ${this.metrics.memoryUsage.toFixed(1)}MB > ${this.config.maxMemoryMB}MB`);
             this.lastMemoryWarning = now;
             
             // Force garbage collection if available
@@ -1095,9 +1089,7 @@ class PerformanceMonitor {
         if (window.gc && typeof window.gc === 'function') {
             try {
                 window.gc();
-                console.log('Forced garbage collection');
             } catch (error) {
-                console.warn('Failed to force garbage collection:', error);
             }
         }
     }
@@ -1284,7 +1276,6 @@ class PerformanceMonitor {
         this.config.goodFPS = Math.max(50, fps * 0.8);
         this.config.maxFrameTime = 1000 / Math.max(30, fps * 0.5);
         
-        console.log(`PerformanceMonitor target FPS set to ${fps}`);
         this.emit('targetFPSChanged', { targetFPS: fps });
     }
 
@@ -1313,7 +1304,6 @@ class PerformanceMonitor {
         this.appliedOptimizations.clear();
         this.memoryHistory = [];
         
-        console.log('PerformanceMonitor destroyed');
     }
 }
 

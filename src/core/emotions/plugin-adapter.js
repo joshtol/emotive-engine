@@ -34,7 +34,6 @@ const pluginEmotions = new Map();
 export function registerPluginEmotion(name, emotionDef) {
     // Ensure emotion has required properties
     if (!emotionDef.color) {
-        console.warn(`Plugin emotion '${name}' missing required color property`);
         return false;
     }
     
@@ -63,7 +62,6 @@ export function registerPluginEmotion(name, emotionDef) {
     pluginEmotions.set(name, emotionDef);
     
     if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
-        console.log(`✅ Registered plugin emotion: ${name}`);
     }
     
     return true;
@@ -78,7 +76,6 @@ export function unregisterPluginEmotion(name) {
         pluginEmotions.delete(name);
         
         if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
-            console.log(`❌ Unregistered plugin emotion: ${name}`);
         }
         
         return true;

@@ -31,17 +31,14 @@ const pluginBehaviors = new Map();
  */
 export function registerPluginBehavior(name, behaviorDef) {
     if (pluginBehaviors.has(name)) {
-        console.warn(`[PluginAdapter] Behavior '${name}' already exists, overwriting...`);
     }
     
     // Validate behavior definition
     if (!behaviorDef.initialize || typeof behaviorDef.initialize !== 'function') {
-        console.error(`[PluginAdapter] Behavior '${name}' missing initialize function`);
         return false;
     }
     
     if (!behaviorDef.update || typeof behaviorDef.update !== 'function') {
-        console.error(`[PluginAdapter] Behavior '${name}' missing update function`);
         return false;
     }
     
@@ -55,7 +52,6 @@ export function registerPluginBehavior(name, behaviorDef) {
         isPlugin: true
     });
     
-    console.log(`[PluginAdapter] Registered behavior '${name}'`);
     return true;
 }
 
@@ -67,7 +63,6 @@ export function registerPluginBehavior(name, behaviorDef) {
 export function unregisterPluginBehavior(name) {
     if (pluginBehaviors.has(name)) {
         pluginBehaviors.delete(name);
-        console.log(`[PluginAdapter] Unregistered behavior '${name}'`);
         return true;
     }
     return false;

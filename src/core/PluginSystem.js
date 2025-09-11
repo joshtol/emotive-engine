@@ -102,7 +102,7 @@ export class PluginSystem {
             this.sandbox = this.createSandbox();
         }
         
-        console.log('PluginSystem initialized');
+        // PluginSystem initialized
     }
     
     /**
@@ -241,9 +241,9 @@ export class PluginSystem {
             
             // Limited console
             console: {
-                log: (...args) => console.log('[Plugin]', ...args),
-                warn: (...args) => console.warn('[Plugin]', ...args),
-                error: (...args) => console.error('[Plugin]', ...args)
+                log: (...args) => null,
+                warn: (...args) => null,
+                error: (...args) => null
             },
             
             // No access to window, document, or other globals
@@ -268,13 +268,13 @@ export class PluginSystem {
      */
     async registerPlugin(plugin) {
         if (!this.config.enablePlugins) {
-            console.warn('Plugins are disabled');
+            // Plugins are disabled
             return false;
         }
         
         // Check plugin limit
         if (this.plugins.size >= this.config.maxPlugins) {
-            console.error(`Maximum plugin limit (${this.config.maxPlugins}) reached`);
+            // Maximum plugin limit reached
             return false;
         }
         
@@ -282,7 +282,7 @@ export class PluginSystem {
         if (this.config.validatePlugins) {
             const validation = this.validatePlugin(plugin);
             if (!validation.valid) {
-                console.error(`Plugin validation failed: ${validation.errors.join(', ')}`);
+                // Plugin validation failed
                 return false;
             }
         }
@@ -290,14 +290,14 @@ export class PluginSystem {
         // Check for conflicts
         const conflicts = this.checkConflicts(plugin);
         if (conflicts.length > 0 && !this.config.allowOverrides) {
-            console.error(`Plugin conflicts detected: ${conflicts.join(', ')}`);
+            // Plugin conflicts detected
             return false;
         }
         
         // Resolve dependencies
         const dependencies = await this.resolveDependencies(plugin);
         if (!dependencies.resolved) {
-            console.error(`Plugin dependencies not met: ${dependencies.missing.join(', ')}`);
+            // Plugin dependencies not met
             return false;
         }
         
@@ -331,7 +331,7 @@ export class PluginSystem {
                 });
             }
             
-            console.log(`Plugin registered: ${plugin.name} v${plugin.version}`);
+            // Plugin registered
             
             // Emit registration event
             this.emitPluginEvent('pluginRegistered', {
@@ -343,7 +343,7 @@ export class PluginSystem {
             return true;
             
         } catch (error) {
-            console.error(`Failed to register plugin ${plugin.name}:`, error);
+            // Failed to register plugin
             return false;
         } finally {
             this.loadingPlugins.delete(plugin.name);
@@ -540,7 +540,7 @@ export class PluginSystem {
             
             return result !== false;
         } catch (error) {
-            console.error(`Plugin ${plugin.name} initialization error:`, error);
+            // Plugin initialization error
             return false;
         }
     }
@@ -553,14 +553,14 @@ export class PluginSystem {
     async unregisterPlugin(pluginName) {
         const plugin = this.plugins.get(pluginName);
         if (!plugin) {
-            console.warn(`Plugin ${pluginName} not found`);
+            // Plugin not found
             return false;
         }
         
         // Check for dependent plugins
         const dependents = this.getDependentPlugins(pluginName);
         if (dependents.length > 0) {
-            console.error(`Cannot unregister ${pluginName}: Required by ${dependents.join(', ')}`);
+            // Cannot unregister plugin - required by dependents
             return false;
         }
         
@@ -587,14 +587,14 @@ export class PluginSystem {
                 });
             });
             
-            console.log(`Plugin unregistered: ${pluginName}`);
+            // Plugin unregistered
             
             // Emit unregistration event
             this.emitPluginEvent('pluginUnregistered', { name: pluginName });
             
             return true;
         } catch (error) {
-            console.error(`Failed to unregister plugin ${pluginName}:`, error);
+            // Failed to unregister plugin
             return false;
         }
     }
@@ -650,7 +650,7 @@ export class PluginSystem {
                 const result = await hook.handler(data);
                 results.push({ pluginName: hook.pluginName, result });
             } catch (error) {
-                console.error(`Hook error in ${hook.pluginName}:`, error);
+                // Hook error in plugin
             }
         }
         
@@ -715,7 +715,7 @@ export class PluginSystem {
         // Check dependents
         const dependents = this.getDependentPlugins(pluginName);
         if (dependents.length > 0) {
-            console.warn(`Disabling ${pluginName} will affect: ${dependents.join(', ')}`);
+            // Disabling plugin will affect dependents
         }
         
         this.pluginStates.set(pluginName, 'disabled');
@@ -757,7 +757,7 @@ export class PluginSystem {
      * @param {...*} args - Log arguments
      */
     logFromPlugin(pluginName, ...args) {
-        console.log(`[${pluginName}]`, ...args);
+        // Plugin log message
     }
     
     /**
@@ -766,7 +766,7 @@ export class PluginSystem {
      * @param {...*} args - Error arguments
      */
     errorFromPlugin(pluginName, ...args) {
-        console.error(`[${pluginName}]`, ...args);
+        // Plugin error message
     }
     
     /**
@@ -860,7 +860,7 @@ export class PluginSystem {
         this.hooks.clear();
         this.conflicts.clear();
         
-        console.log('PluginSystem destroyed');
+        // PluginSystem destroyed
     }
 }
 

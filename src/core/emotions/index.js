@@ -66,7 +66,6 @@ const emotionAliases = {
  */
 export function registerEmotion(emotionModule) {
     if (!emotionModule.name) {
-        console.error('Emotion module missing name:', emotionModule);
         return;
     }
     emotionRegistry.set(emotionModule.name, emotionModule);
@@ -104,7 +103,6 @@ export function getEmotion(emotionName) {
 export function getEmotionVisualParams(emotionName) {
     const emotion = getEmotion(emotionName);
     if (!emotion) {
-        console.warn(`Unknown emotion: ${emotionName}, using neutral`);
         return getEmotion('neutral').visual;
     }
     
@@ -247,7 +245,6 @@ if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
         get: getEmotion,
         has: hasEmotion
     };
-    console.log('💗 Emotions Loaded:', listEmotions());
 }
 
 // Export plugin adapter for external use

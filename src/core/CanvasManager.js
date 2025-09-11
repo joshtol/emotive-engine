@@ -111,12 +111,6 @@ class CanvasManager {
         this.centerX = this.width / 2;
         this.centerY = this.height / 2;
         
-        // console.log('CanvasManager resize:', {
-        //     hasExplicitSize,
-        //     cssWidth: this.width,
-        //     cssHeight: this.height,
-        //     actualWidth: this.canvas.width,
-        //     actualHeight: this.canvas.height,
         //     dpr: this.dpr,
         //     center: { x: this.centerX, y: this.centerY }
         // });
@@ -126,7 +120,6 @@ class CanvasManager {
             try {
                 callback(this.width, this.height, this.dpr);
             } catch (error) {
-                console.error('Error in resize callback:', error);
             }
         });
     }

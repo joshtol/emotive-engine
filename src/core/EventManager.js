@@ -58,7 +58,7 @@ class EventManager {
         this.cleanup = this.cleanup.bind(this);
         
         if (this.enableDebugging) {
-            console.log('EventManager initialized with debugging enabled');
+            // EventManager initialized with debugging enabled
         }
     }
 
@@ -70,20 +70,20 @@ class EventManager {
      */
     on(event, callback) {
         if (this.isDestroyed) {
-            console.warn('EventManager: Cannot add listener to destroyed EventManager');
+            // Cannot add listener to destroyed EventManager
             return false;
         }
 
         // Validate inputs
         const validation = this.validateEvent(event, callback);
         if (!validation.isValid) {
-            console.warn(`EventManager: ${validation.error}`);
+            // Validation error
             return false;
         }
 
         // Check listener limits
         if (this.totalListenerCount >= this.maxListeners) {
-            console.warn(`EventManager: Maximum listener limit (${this.maxListeners}) reached`);
+            // Maximum listener limit reached
             return false;
         }
 
@@ -114,7 +114,7 @@ class EventManager {
 
         // Debugging
         if (this.enableDebugging) {
-            console.log(`EventManager: Added listener for '${event}' (${listeners.length} total)`);
+            // Added listener
         }
 
         // Emit internal event for monitoring
@@ -135,7 +135,7 @@ class EventManager {
      */
     off(event, callback) {
         if (this.isDestroyed) {
-            console.warn('EventManager: Cannot remove listener from destroyed EventManager');
+            // Cannot remove listener from destroyed EventManager
             return false;
         }
 
@@ -169,7 +169,7 @@ class EventManager {
 
         // Debugging
         if (this.enableDebugging) {
-            console.log(`EventManager: Removed listener for '${event}' (${listeners.length} remaining)`);
+            // Removed listener
         }
 
         // Emit internal event for monitoring
@@ -190,7 +190,7 @@ class EventManager {
      */
     once(event, callback) {
         if (this.isDestroyed) {
-            console.warn('EventManager: Cannot add once listener to destroyed EventManager');
+            // Cannot add once listener to destroyed EventManager
             return false;
         }
 
@@ -211,7 +211,7 @@ class EventManager {
         const success = this.on(event, onceWrapper);
 
         if (this.enableDebugging && success) {
-            console.log(`EventManager: Added once listener for '${event}'`);
+            // Added once listener
         }
 
         return success;
@@ -246,7 +246,7 @@ class EventManager {
                 callback(data);
                 successCount++;
             } catch (error) {
-                console.error(`EventManager: Error in listener for '${event}':`, error);
+                // Error in listener
                 
                 // Emit error event for monitoring
                 this.emitInternal('listenerError', {
@@ -259,7 +259,7 @@ class EventManager {
 
         // Debugging
         if (this.enableDebugging) {
-            console.log(`EventManager: Emitted '${event}' to ${successCount}/${listeners.length} listeners`);
+            // Emitted event to listeners
         }
 
         return successCount;
@@ -289,7 +289,7 @@ class EventManager {
             this.totalListenerCount = 0;
 
             if (this.enableDebugging) {
-                console.log(`EventManager: Cleared all event listeners (${removedCount} total)`);
+                // Cleared all event listeners
             }
         } else if (this.listeners.has(event)) {
             // Clear listeners for specific event
@@ -306,7 +306,7 @@ class EventManager {
             this.totalListenerCount -= removedCount;
 
             if (this.enableDebugging) {
-                console.log(`EventManager: Cleared ${removedCount} listeners for event '${event}'`);
+                // Cleared listeners for event
             }
         }
 
@@ -393,7 +393,7 @@ class EventManager {
      */
     checkMemoryUsage() {
         if (this.totalListenerCount > this.memoryWarningThreshold) {
-            console.warn(`EventManager: High listener count detected (${this.totalListenerCount}/${this.maxListeners})`);
+            // High listener count detected
             
             this.emitInternal('memoryWarning', {
                 totalListeners: this.totalListenerCount,
@@ -488,7 +488,7 @@ class EventManager {
         this.totalListenerCount = 0;
 
         if (this.enableDebugging) {
-            console.log(`EventManager: Cleanup completed, removed ${totalRemoved} listeners`);
+            // EventManager cleanup completed
         }
     }
 
@@ -504,7 +504,7 @@ class EventManager {
         this.isDestroyed = true;
 
         if (this.enableDebugging) {
-            console.log('EventManager: Destroyed');
+            // EventManager destroyed
         }
     }
 

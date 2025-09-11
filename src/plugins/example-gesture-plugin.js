@@ -99,7 +99,6 @@ class CustomGesturePlugin {
         // Register gestures with the plugin adapter
         this.registerGestures();
         
-        console.log(`[${this.name}] Initialized with gestures:`, Object.keys(this.gestures));
     }
     
     /**
@@ -110,7 +109,6 @@ class CustomGesturePlugin {
         // Import the gesture plugin adapter
         const gestureModule = this.mascot.Gestures || window.Gestures;
         if (!gestureModule || !gestureModule.pluginAdapter) {
-            console.warn(`[${this.name}] Gesture plugin adapter not found`);
             return;
         }
         
@@ -200,7 +198,6 @@ class CustomGesturePlugin {
         // Store in active animations
         this.activeAnimations.set(gestureName, animation);
         
-        console.log(`[${this.name}] Started gesture: ${gestureName}`);
     }
     
     /**
@@ -437,7 +434,6 @@ class CustomGesturePlugin {
      * @private
      */
     onGestureComplete(gestureName) {
-        console.log(`[${this.name}] Gesture completed: ${gestureName}`);
         
         // Reset any modified states
         if (this.mascot.renderer?.state) {
@@ -513,7 +509,6 @@ class CustomGesturePlugin {
         }
         
         this.initialized = false;
-        console.log(`[${this.name}] Plugin destroyed`);
     }
     
     /**

@@ -55,7 +55,6 @@ class RhythmIntegration {
         this.adapter.onBeat(this.handleBeat.bind(this));
         this.adapter.onBar(this.handleBar.bind(this));
         
-        console.log('🎵 Rhythm Integration initialized');
     }
     
     /**
@@ -71,7 +70,6 @@ class RhythmIntegration {
             
             // Auto-start rhythm engine if not running
             if (!rhythmEngine.isRunning) {
-                console.log(`🎵 Auto-starting rhythm engine at ${newBPM} BPM`);
                 
                 // Update UI before starting
                 const bpmSlider = document.getElementById('bpm-slider');
@@ -105,7 +103,6 @@ class RhythmIntegration {
             // If running, always update BPM regardless of whether it changed
             // This ensures new tracks get their correct BPM
             rhythmEngine.setBPM(newBPM);
-            // console.log(`🎵 Rhythm sync updated to ${newBPM} BPM`);
             
             // Update UI to show new BPM
             const bpmSlider = document.getElementById('bpm-slider');
@@ -134,7 +131,6 @@ class RhythmIntegration {
             originalConfig: config
         });
         
-        console.log(`🎵 Registered rhythm config for ${key}`);
     }
     
     /**
@@ -344,7 +340,6 @@ class RhythmIntegration {
         if (pattern) rhythmEngine.setPattern(pattern);
         rhythmEngine.start();
         this.enabled = true;
-        console.log('[RhythmIntegration] Started with BPM:', bpm, 'Pattern:', pattern);
     }
     
     /**
@@ -353,7 +348,6 @@ class RhythmIntegration {
     stop() {
         rhythmEngine.stop();
         this.enabled = false;
-        console.log('[RhythmIntegration] Stopped');
     }
     
     /**
@@ -375,7 +369,6 @@ class RhythmIntegration {
      */
     setTimeSignature(signature) {
         this.timeSignature = signature;
-        console.log(`🎼 Rhythm Integration: Time signature set to ${signature}`);
         
         // Update UI if available
         const timeSigDisplay = document.getElementById('time-sig-display');

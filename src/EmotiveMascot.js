@@ -51,7 +51,6 @@ import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
 import EventManager from './core/EventManager.js';
-// import DegradationManager from './core/DegradationManager.js'; // REMOVED
 import AccessibilityManager from './core/AccessibilityManager.js';
 import MobileOptimization from './core/MobileOptimization.js';
 import PluginSystem from './core/PluginSystem.js';
@@ -134,7 +133,7 @@ class EmotiveMascot {
         // Set up canvas context recovery
         this.contextRecovery = new CanvasContextRecovery(this.canvas);
         this.contextRecovery.onRecovery((context) => {
-            console.log('Canvas context recovered, reinitializing renderer');
+            // Canvas context recovered, reinitializing renderer
             if (this.renderer) {
                 this.renderer.handleContextRecovery(context);
             }
@@ -258,7 +257,7 @@ class EmotiveMascot {
                 targetFPS: this.config.targetFPS
             });
         } catch (error) {
-            console.error('Failed to initialize AnimationController:', error);
+            // Failed to initialize AnimationController
             // Fallback: create a minimal animation controller interface
             this.animationController = {
                 isAnimating: () => this.isRunning,
@@ -300,9 +299,9 @@ class EmotiveMascot {
             this.soundSystem.initialize().then(success => {
                 if (success) {
                     this.soundSystem.setMasterVolume(this.config.masterVolume);
-                    console.log('Sound system initialized successfully');
+                    // Sound system initialized successfully
                 } else {
-                    console.log('Sound system initialization failed, continuing without audio');
+                    // Sound system initialization failed, continuing without audio
                 }
             });
         }
@@ -373,12 +372,7 @@ class EmotiveMascot {
         });
         
         // Log browser compatibility information
-        console.log('EmotiveMascot initialized successfully', {
-            browser: browserCompatibility.browser,
-            capabilities: capabilities,
-            appliedPolyfills: browserCompatibility.appliedPolyfills,
-            degradationEnabled: !!this.degradationManager
-        });
+        // EmotiveMascot initialized successfully
         
         // Complete initialization profiling
         if (this.debugMode) {
@@ -484,7 +478,7 @@ class EmotiveMascot {
                         gestureTriggered: true
                     });
                     
-                    console.log(`Volume spike detected: ${(spikeData.level * 100).toFixed(1)}% (${spikeData.spikeRatio.toFixed(1)}x increase) - triggered pulse gesture`);
+                    // Volume spike detected - triggered pulse gesture
                 } else {
                     // Emit volume spike event without gesture trigger
                     this.emit('volumeSpike', {
@@ -497,7 +491,7 @@ class EmotiveMascot {
         
         // Handle audio processing errors
         this.audioLevelProcessor.onError((errorData) => {
-            console.warn('AudioLevelProcessor error:', errorData.message);
+            // AudioLevelProcessor error
             this.emit('audioProcessingError', errorData);
         });
     }
@@ -522,11 +516,11 @@ class EmotiveMascot {
     express(gesture) {
         return this.errorBoundary.wrap(() => {
             if (!gesture) {
-                console.warn('No gesture provided to express()');
+                // No gesture provided to express()
                 return this;
             }
             
-            // console.log('Express called with gesture:', gesture);
+            // Express called with gesture
             
             // First check if this is a modular gesture
             // TODO: Re-enable once gestureController methods are moved
@@ -534,7 +528,7 @@ class EmotiveMascot {
             //     const hasGesture = this.gestureController.hasGesture(gesture);
             //     if (hasGesture) {
             //         this.gestureController.triggerGesture(gesture);
-            //         console.log(`Triggered ${gesture} via gesture controller`);
+            //         Triggered gesture via gesture controller
             //         
             //         // Play gesture sound effect if available
             //         if (this.soundSystem.isAvailable()) {
@@ -584,7 +578,7 @@ class EmotiveMascot {
             const methodName = rendererMethods[gesture];
             if (methodName && this.renderer && this.renderer[methodName]) {
                 this.renderer[methodName]();
-                console.log(`Triggered ${gesture} directly in renderer`);
+                // Triggered gesture directly in renderer
                 
                 // Play gesture sound effect if available
                 if (this.soundSystem.isAvailable()) {
@@ -612,7 +606,7 @@ class EmotiveMascot {
                     progress: 0
                 };
                 
-                console.log(`Executed ${gesture} through particle system`);
+                // Executed gesture through particle system
                 
                 // Play gesture sound effect if available
                 if (this.soundSystem.isAvailable()) {
@@ -636,7 +630,7 @@ class EmotiveMascot {
      */
     chain(...gestures) {
         // Gesture chaining not implemented in new system yet
-        console.warn('Gesture chaining not available in current version');
+        // Gesture chaining not available in current version
         // Execute first gesture if provided
         if (gestures.length > 0) {
             this.express(gestures[0]);
@@ -656,12 +650,12 @@ class EmotiveMascot {
             }
             
             if (!this.config.enableAudio) {
-                console.warn('Audio is disabled, cannot start speech reactivity');
+                // Audio is disabled, cannot start speech reactivity
                 return this;
             }
             
             if (this.speaking) {
-                console.warn('Speech reactivity is already active');
+                // Speech reactivity is already active
                 return this;
             }
             
@@ -669,7 +663,7 @@ class EmotiveMascot {
             const success = this.audioLevelProcessor.initialize(audioContext);
             
             if (!success) {
-                console.warn('Failed to initialize audio level processor');
+                // Failed to initialize audio level processor
                 return this;
             }
             
@@ -686,7 +680,7 @@ class EmotiveMascot {
                 mascot: this
             });
             
-            console.log('Speech reactivity started - connect audio source to analyser');
+            // Speech reactivity started - connect audio source to analyser
             return this;
         }, 'speech-start', this)();
     }
@@ -710,12 +704,12 @@ class EmotiveMascot {
     speak(text, options = {}) {
         return this.errorBoundary.wrap(() => {
             if (!this.tts.available) {
-                console.warn('Text-to-Speech is not available in this browser');
+                // Text-to-Speech is not available in this browser
                 return this;
             }
             
             if (!text || typeof text !== 'string') {
-                console.warn('Invalid text provided to speak()');
+                // Invalid text provided to speak()
                 return this;
             }
             
@@ -754,7 +748,7 @@ class EmotiveMascot {
                 // Emit TTS start event
                 this.emit('ttsStarted', { text, options });
                 
-                console.log('TTS started:', text);
+                // TTS started
             };
             
             utterance.onend = () => {
@@ -767,14 +761,14 @@ class EmotiveMascot {
                 // Emit TTS end event
                 this.emit('ttsEnded', { text });
                 
-                console.log('TTS ended');
+                // TTS ended
             };
             
             utterance.onerror = (error) => {
                 this.tts.speaking = false;
                 this.tts.currentUtterance = null;
                 
-                console.error('TTS error:', error);
+                // TTS error
                 this.emit('ttsError', { error, text });
             };
             
@@ -817,7 +811,7 @@ class EmotiveMascot {
                 // Emit TTS stopped event
                 this.emit('ttsStopped');
                 
-                console.log('TTS stopped by user');
+                // TTS stopped by user
             }
             
             return this;
@@ -831,7 +825,7 @@ class EmotiveMascot {
     startRecording() {
         return this.errorBoundary.wrap(() => {
             if (this.recording) {
-                console.log('Already recording');
+                // Already recording
                 return this;
             }
             
@@ -845,7 +839,7 @@ class EmotiveMascot {
             // Emit recording started event
             this.emit('recordingStarted');
             
-            console.log('Recording started');
+            // Recording started
             return this;
         }, 'recording-start', this)();
     }
@@ -857,7 +851,7 @@ class EmotiveMascot {
     stopRecording() {
         return this.errorBoundary.wrap(() => {
             if (!this.recording) {
-                console.log('Not currently recording');
+                // Not currently recording
                 return this;
             }
             
@@ -871,7 +865,7 @@ class EmotiveMascot {
             // Emit recording stopped event
             this.emit('recordingStopped');
             
-            console.log('Recording stopped');
+            // Recording stopped
             return this;
         }, 'recording-stop', this)();
     }
@@ -883,12 +877,12 @@ class EmotiveMascot {
     sleep() {
         return this.errorBoundary.wrap(async () => {
             if (this.sleeping) {
-                console.log('Already sleeping');
+                // Already sleeping
                 return this;
             }
             
             // Sleep entry animation sequence
-            console.log('Starting sleep sequence...');
+            // Starting sleep sequence...
             
             // First: Yawn
             this.express('yawn');
@@ -914,7 +908,7 @@ class EmotiveMascot {
             // Emit sleep event
             this.emit('sleep');
             
-            console.log('Mascot entered sleep state');
+            // Mascot entered sleep state
             return this;
         }, 'sleep', this)();
     }
@@ -926,7 +920,7 @@ class EmotiveMascot {
     wake() {
         return this.errorBoundary.wrap(async () => {
             if (!this.sleeping) {
-                console.log('Not currently sleeping');
+                // Not currently sleeping
                 return this;
             }
             
@@ -944,7 +938,7 @@ class EmotiveMascot {
             }
             
             // Wake animation sequence
-            console.log('Starting wake sequence...');
+            // Starting wake sequence...
             
             // First: Stretch
             this.express('stretch');
@@ -961,7 +955,7 @@ class EmotiveMascot {
             // Emit wake event
             this.emit('wake');
             
-            console.log('Mascot fully awake');
+            // Mascot fully awake
             return this;
         }, 'wake', this)();
     }
@@ -1229,7 +1223,7 @@ class EmotiveMascot {
         return this.errorBoundary.wrap(() => {
             const success = this.eventManager.on(event, callback);
             if (!success) {
-                console.warn(`Failed to add event listener for '${event}'`);
+                // Failed to add event listener
             }
             return this;
         }, 'event-listener-add', this)();
@@ -1258,7 +1252,7 @@ class EmotiveMascot {
         return this.errorBoundary.wrap(() => {
             const success = this.eventManager.once(event, callback);
             if (!success) {
-                console.warn(`Failed to add once event listener for '${event}'`);
+                // Failed to add once event listener
             }
             return this;
         }, 'event-listener-once', this)();
@@ -1273,7 +1267,7 @@ class EmotiveMascot {
         return this.errorBoundary.wrap(() => {
             const removedCount = this.eventManager.removeAllListeners(event);
             if (removedCount > 0) {
-                console.log(`Cleared ${removedCount} event listeners${event ? ` for '${event}'` : ''}`);
+                // Cleared event listeners
             }
             return this;
         }, 'event-listeners-clear', this)();
@@ -1351,7 +1345,7 @@ class EmotiveMascot {
      */
     setDegradationLevel(level) {
         if (!this.degradationManager) {
-            console.warn('Degradation manager is not enabled');
+            // Degradation manager is not enabled
             return false;
         }
         
@@ -1697,7 +1691,7 @@ class EmotiveMascot {
             // if (!this._particleDebugCounter) this._particleDebugCounter = 0;
             // this._particleDebugCounter++;
             // if (this._particleDebugCounter % 120 === 0) {  // Log every 2 seconds at 60fps
-            //     console.log('Particle status:', {
+            //     Particle status:
             //         behavior: particleBehavior,
             //         rate: particleRate,
             //         emotion: renderState.emotion,
@@ -1977,19 +1971,19 @@ class EmotiveMascot {
     connectAudioSource(audioSource) {
         return this.errorBoundary.wrap(() => {
             if (!this.audioAnalyser) {
-                console.warn('Speech reactivity not started. Call startSpeaking() first.');
+                // Speech reactivity not started. Call startSpeaking() first.
                 return this;
             }
             
             if (!audioSource || typeof audioSource.connect !== 'function') {
-                console.warn('Invalid audio source provided to connectAudioSource()');
+                // Invalid audio source provided to connectAudioSource()
                 return this;
             }
             
             // Connect the audio source to our analyser
             audioSource.connect(this.audioAnalyser);
             
-            console.log('Audio source connected to speech analyser');
+            // Audio source connected to speech analyser
             this.emit('audioSourceConnected', { audioSource });
             
             return this;
@@ -2022,7 +2016,7 @@ class EmotiveMascot {
     pause() {
         return this.errorBoundary.wrap(() => {
             if (!this.animationController.isAnimating()) {
-                console.warn('EmotiveMascot is not running');
+                // EmotiveMascot is not running
                 return this;
             }
             
@@ -2036,7 +2030,7 @@ class EmotiveMascot {
             }
             
             this.emit('paused');
-            console.log('EmotiveMascot paused');
+            // EmotiveMascot paused
             return this;
         }, 'pause', this)();
     }
@@ -2048,7 +2042,7 @@ class EmotiveMascot {
     resume() {
         return this.errorBoundary.wrap(() => {
             if (this.animationController.isAnimating()) {
-                console.warn('EmotiveMascot is already running');
+                // EmotiveMascot is already running
                 return this;
             }
             
@@ -2064,7 +2058,7 @@ class EmotiveMascot {
             // }
             
             this.emit('resumed');
-            console.log('EmotiveMascot resumed');
+            // EmotiveMascot resumed
             return this;
         }, 'resume', this)();
     }
@@ -2087,7 +2081,7 @@ class EmotiveMascot {
         this.config.targetFPS = clampedFPS;
         this.animationController.setTargetFPS(clampedFPS);
         
-        console.log(`Target FPS set to ${clampedFPS}`);
+        // Target FPS set
         this.emit('targetFPSChanged', { targetFPS: clampedFPS });
         
         return this;
@@ -2114,11 +2108,11 @@ class EmotiveMascot {
             const newMax = Math.max(5, Math.floor(currentMax * 0.5));
             this.particleSystem.setMaxParticles(newMax);
             
-            console.log(`Forced performance degradation: ${currentMax} -> ${newMax} particles`);
+            // Forced performance degradation
         } else if (!enabled && metrics.performanceDegradation) {
             this.particleSystem.setMaxParticles(this.config.maxParticles);
             
-            console.log(`Disabled performance degradation: restored to ${this.config.maxParticles} particles`);
+            // Disabled performance degradation
         }
         
         return this;
@@ -2151,9 +2145,9 @@ class EmotiveMascot {
             
             if (this.audioAnalyser) {
                 this.audioAnalyser.smoothingTimeConstant = clampedSmoothing;
-                console.log(`Audio smoothing set to ${clampedSmoothing}`);
+                // Audio smoothing set
             } else {
-                console.warn('No audio analyser available. Start speech reactivity first.');
+                // No audio analyser available. Start speech reactivity first.
             }
             
             return this;
@@ -2229,9 +2223,9 @@ class EmotiveMascot {
         this.config.showFPS = !!enabled;
         
         if (enabled) {
-            console.log('Debug mode enabled - performance and state info will be displayed');
+            // Debug mode enabled - performance and state info will be displayed
         } else {
-            console.log('Debug mode disabled');
+            // Debug mode disabled
         }
         
         return this;
@@ -2324,7 +2318,7 @@ class EmotiveMascot {
     speak(text, options = {}) {
         // Check if speech synthesis is available
         if (!window.speechSynthesis) {
-            console.warn('Speech synthesis not available in this browser');
+            // Speech synthesis not available in this browser
             return null;
         }
         
@@ -2340,19 +2334,19 @@ class EmotiveMascot {
         
         // Set up event handlers for animation sync
         utterance.onstart = () => {
-            console.log('TTS: Starting speech');
+            // TTS: Starting speech
             this.setTTSSpeaking(true);
             this.emit('tts:start', { text });
         };
         
         utterance.onend = () => {
-            console.log('TTS: Speech ended');
+            // TTS: Speech ended
             this.setTTSSpeaking(false);
             this.emit('tts:end');
         };
         
         utterance.onerror = (event) => {
-            console.error('TTS: Speech error', event);
+            // TTS: Speech error
             this.setTTSSpeaking(false);
             this.emit('tts:error', { error: event });
         };
@@ -2421,7 +2415,7 @@ class EmotiveMascot {
      * @param {number} dpr - Device pixel ratio
      */
     handleResize(width, height, dpr) {
-        console.log('EmotiveMascot handleResize:', { width, height, dpr });
+        // EmotiveMascot handleResize
         
         // Force a re-initialization of the offscreen canvas in renderer
         if (this.renderer && this.renderer.initOffscreenCanvas) {
@@ -2457,7 +2451,7 @@ class EmotiveMascot {
     morphTo(shape, config = {}) {
         return this.errorBoundary.wrap(() => {
             if (!this.shapeMorpher) {
-                console.warn('ShapeMorpher not initialized');
+                // ShapeMorpher not initialized
                 return this;
             }
             
@@ -2472,7 +2466,7 @@ class EmotiveMascot {
             // Emit event
             this.emit('shapeMorphStarted', { from: this.shapeMorpher.currentShape, to: shape });
             
-            console.log(`Morphing from ${this.shapeMorpher.currentShape} to ${shape}`);
+            // Morphing to new shape
             return this;
         }, 'morphTo', this)();
     }
@@ -2590,7 +2584,7 @@ class EmotiveMascot {
             // Clear error boundary
             this.errorBoundary.clearErrors();
             
-            console.log('EmotiveMascot destroyed');
+            // EmotiveMascot destroyed
         }, 'destruction')();
     }
     
@@ -2604,7 +2598,7 @@ class EmotiveMascot {
         const lastWarning = this.warningTimestamps[key] || 0;
         
         if (now - lastWarning > this.warningThrottle) {
-            console.warn(message);
+            // Warning message throttled
             this.warningTimestamps[key] = now;
         }
     }

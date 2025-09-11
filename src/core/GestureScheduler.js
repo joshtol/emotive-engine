@@ -75,7 +75,6 @@ class GestureScheduler {
     requestGesture(gestureName, options = {}) {
         const gesture = getGesture(gestureName);
         if (!gesture) {
-            console.warn(`[GestureScheduler] Unknown gesture: ${gestureName}`);
             return null;
         }
         
@@ -94,7 +93,6 @@ class GestureScheduler {
             const currentQueue = this.gestureQueues.get(gestureName) || [];
             
             if (currentQueue.length >= queueLimit) {
-                console.log(`[GestureScheduler] Queue limit reached for ${gestureName}`);
                 return null; // Don't queue more
             }
             
@@ -212,7 +210,6 @@ class GestureScheduler {
         
         // Default to immediate if no valid time info
         if (!timeInfo || typeof timeInfo.nextBeatIn === 'undefined') {
-            console.warn('[GestureScheduler] No valid time info, using immediate timing', timeInfo);
             return startTime + 100; // Small delay to avoid issues
         }
         

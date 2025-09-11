@@ -97,7 +97,7 @@ export class SoundSystem {
       // Check for Web Audio API support
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (!AudioContextClass) {
-        console.warn('SoundSystem: Web Audio API not supported, continuing without audio');
+        // SoundSystem: Web Audio API not supported, continuing without audio
         return false;
       }
 
@@ -110,7 +110,7 @@ export class SoundSystem {
       // Handle suspended context (required by browser autoplay policies)
       if (this.context.state === 'suspended') {
         // Will be resumed on first user interaction
-        console.log('SoundSystem: AudioContext suspended, will resume on user interaction');
+        // SoundSystem: AudioContext suspended, will resume on user interaction
       }
 
       // Create master gain node with default volume
@@ -126,11 +126,11 @@ export class SoundSystem {
       this.isEnabled = true;
       this.isInitialized = true;
       
-      console.log('SoundSystem: Successfully initialized Web Audio API');
+      // SoundSystem: Successfully initialized Web Audio API
       return true;
 
     } catch (error) {
-      console.warn('SoundSystem: Failed to initialize Web Audio API:', error.message);
+      // SoundSystem: Failed to initialize Web Audio API
       this.isEnabled = false;
       return false;
     }
@@ -197,11 +197,11 @@ export class SoundSystem {
     if (enabled && this.harmonicSystem) {
       // Stop simple ambient tone when switching to harmonic mode
       this.stopAmbientTone();
-      console.log('SoundSystem: Switched to harmonic music mode');
+      // SoundSystem: Switched to harmonic music mode
     } else if (!enabled && this.harmonicSystem) {
       // Stop harmonic system when switching back
       this.harmonicSystem.stopHarmony();
-      console.log('SoundSystem: Switched to simple sound mode');
+      // SoundSystem: Switched to simple sound mode
     }
   }
   
@@ -264,9 +264,9 @@ export class SoundSystem {
         this.context.close();
       }
 
-      console.log('SoundSystem: Cleaned up audio resources');
+      // SoundSystem: Cleaned up audio resources
     } catch (error) {
-      console.warn('SoundSystem: Error during cleanup:', error.message);
+      // SoundSystem: Error during cleanup
     } finally {
       // Always reset state regardless of errors
       this.context = null;
@@ -305,7 +305,7 @@ export class SoundSystem {
 
     const toneConfig = this.getEmotionalTone(emotion);
     if (!toneConfig) {
-      console.warn(`SoundSystem: Unknown emotion "${emotion}", cannot set ambient tone`);
+      // SoundSystem: Unknown emotion, cannot set ambient tone
       return;
     }
 
@@ -346,10 +346,10 @@ export class SoundSystem {
       this.currentOscillator = oscillator;
       this.currentGain = gainNode;
 
-      console.log(`SoundSystem: Started ambient tone for "${emotion}" (${toneConfig.frequency}Hz ${toneConfig.waveform})`);
+      // SoundSystem: Started ambient tone
 
     } catch (error) {
-      console.warn('SoundSystem: Failed to set ambient tone:', error.message);
+      // SoundSystem: Failed to set ambient tone
     }
   }
 
@@ -378,10 +378,10 @@ export class SoundSystem {
       this.currentOscillator = null;
       this.currentGain = null;
 
-      console.log('SoundSystem: Stopped ambient tone');
+      // SoundSystem: Stopped ambient tone
 
     } catch (error) {
-      console.warn('SoundSystem: Failed to stop ambient tone:', error.message);
+      // SoundSystem: Failed to stop ambient tone
     }
   }
 
@@ -405,7 +405,7 @@ export class SoundSystem {
       
       this.currentGain.gain.exponentialRampToValueAtTime(targetVolume, currentTime + 0.1);
     } catch (error) {
-      console.warn('SoundSystem: Failed to update ambient volume:', error.message);
+      // SoundSystem: Failed to update ambient volume
     }
   }
 
@@ -464,10 +464,10 @@ export class SoundSystem {
       oscillator.start(currentTime);
       oscillator.stop(currentTime + duration);
 
-      console.log(`SoundSystem: Playing gesture sound "${gestureId}" (${duration * 1000}ms)`);
+      // SoundSystem: Playing gesture sound
 
     } catch (error) {
-      console.warn('SoundSystem: Failed to play gesture sound:', error.message);
+      // SoundSystem: Failed to play gesture sound
     }
   }
 
@@ -894,7 +894,7 @@ export class SoundSystem {
       // Reduce audio quality for performance
       // Lower sample rate if possible
       if (this.audioContext.sampleRate > 22050) {
-        console.log('Audio quality reduced for performance');
+        // Audio quality reduced for performance
       }
       // Reduce active oscillators
       this.maxOscillators = 2;
@@ -922,7 +922,7 @@ export class SoundSystem {
     const lastWarning = this.warningTimestamps[key] || 0;
     
     if (now - lastWarning > this.warningThrottle) {
-      console.warn(`SoundSystem: ${message}`);
+      // SoundSystem warning
       this.warningTimestamps[key] = now;
     }
   }

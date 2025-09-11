@@ -107,7 +107,6 @@ export class StateCoordinator {
             // Emit emotion change event
             this.mascot.emit('emotionChanged', { emotion: mappedEmotion, undertone, duration });
             
-            // console.log(`Emotion set to: ${mappedEmotion}${undertone ? ` (${undertone})` : ''}`);
         }
         
         this.currentEmotion = mappedEmotion;

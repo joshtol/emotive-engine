@@ -54,7 +54,6 @@ export function registerShape(name, shapeModule) {
         effectRenderers.set(name, shapeModule.render);
     }
     
-    console.log(`Shape registered: ${name}`, shapeModule.category || 'uncategorized');
 }
 
 /**
@@ -75,7 +74,6 @@ export function getShape(name) {
 export function generateShape(name, numPoints = 64) {
     const shape = shapeRegistry.get(name);
     if (!shape) {
-        console.warn(`Shape ${name} not found, using circle`);
         return generateCirclePoints(numPoints);
     }
     
@@ -149,39 +147,58 @@ function generateCirclePoints(numPoints) {
  */
 export async function loadShapes() {
     try {
-        // Load astronomical shapes
-        const sun = await import('./astronomical/sun.js');
-        const moon = await import('./astronomical/moon.js');
-        const lunar = await import('./astronomical/lunar.js');
+        // Import shape definitions
+        const { SHAPE_DEFINITIONS } = await import('./shapeDefinitions.js');
         
-        registerShape('sun', sun.default);
-        registerShape('moon', moon.default);
-        registerShape('lunar', lunar.default);
+        // Register each shape from definitions
+        for (const [name, definition] of Object.entries(SHAPE_DEFINITIONS)) {
+            // Create shape module from definition
+            const shapeModule = {
+                name: name,
+                category: getShapeCategory(name),
+                points: definition.points,
+                shadow: definition.shadow || { type: 'none' },
+                render: definition.customRenderer || null, // Note: using 'render' property for effectRenderers
+                transitions: definition.transitions || {},
+                generate: (numPoints) => {
+                    // If shape has its own generate function, use it
+                    if (definition.generate) {
+                        return definition.generate(numPoints);
+                    }
+                    // Otherwise return pre-generated points
+                    return definition.points || generateCirclePoints(numPoints);
+                }
+            };
+            
+            registerShape(name, shapeModule);
+        }
         
-        // Load geometric shapes
-        const circle = await import('./geometric/circle.js');
-        const square = await import('./geometric/square.js');
-        const triangle = await import('./geometric/triangle.js');
-        const star = await import('./geometric/star.js');
-        
-        registerShape('circle', circle.default);
-        registerShape('square', square.default);
-        registerShape('triangle', triangle.default);
-        registerShape('star', star.default);
-        
-        // Load organic shapes
-        const heart = await import('./organic/heart.js');
-        const suspicion = await import('./organic/suspicion.js');
-        
-        registerShape('heart', heart.default);
-        registerShape('suspicion', suspicion.default);
-        
-        console.log('All shapes loaded successfully');
         return true;
     } catch (error) {
-        console.error('Error loading shapes:', error);
+        // Fallback - register basic shapes
+        registerBasicShapes();
         return false;
     }
+}
+
+// Helper to determine shape category
+function getShapeCategory(name) {
+    if (['sun', 'moon', 'lunar'].includes(name)) return 'astronomical';
+    if (['circle', 'square', 'triangle', 'star'].includes(name)) return 'geometric';
+    if (['heart', 'suspicion'].includes(name)) return 'organic';
+    return 'basic';
+}
+
+// Fallback basic shape registration
+function registerBasicShapes() {
+    // At minimum, register circle as fallback
+    registerShape('circle', {
+        name: 'circle',
+        category: 'geometric',
+        points: generateCirclePoints(64),
+        shadow: { type: 'none' },
+        generate: generateCirclePoints
+    });
 }
 
 /**

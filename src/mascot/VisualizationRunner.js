@@ -26,7 +26,6 @@ export class VisualizationRunner {
      */
     start() {
         if (this.mascot.animationController.isAnimating()) {
-            console.warn('EmotiveMascot is already running');
             return this.mascot;
         }
         
@@ -82,7 +81,6 @@ export class VisualizationRunner {
             
             // Emit start event
             this.mascot.emit('started');
-            console.log('EmotiveMascot started');
         }
         
         return this.mascot;
@@ -94,7 +92,6 @@ export class VisualizationRunner {
      */
     stop() {
         if (!this.mascot.animationController.isAnimating()) {
-            console.warn('EmotiveMascot is not running');
             return this.mascot;
         }
         
@@ -117,7 +114,6 @@ export class VisualizationRunner {
             
             // Emit stop event
             this.mascot.emit('stopped');
-            console.log('EmotiveMascot stopped');
         }
         
         return this.mascot;

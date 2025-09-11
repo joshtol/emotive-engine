@@ -95,6 +95,10 @@ import musicalDuration from './MusicalDuration.js';
 import { GestureAnimator } from './renderer/GestureAnimator.js';
 import { ColorUtilities } from './renderer/ColorUtilities.js';
 import { SpecialEffects } from './renderer/SpecialEffects.js';
+import { EyeRenderer } from './renderer/EyeRenderer.js';
+import { BreathingAnimator } from './renderer/BreathingAnimator.js';
+import { GlowRenderer } from './renderer/GlowRenderer.js';
+import { CoreRenderer } from './renderer/CoreRenderer.js';
 
 class EmotiveRenderer {
     constructor(canvasManager, options = {}) {
@@ -102,16 +106,22 @@ class EmotiveRenderer {
         this.ctx = canvasManager.getContext();
         
         if (!this.ctx) {
-            console.error('EmotiveRenderer: No context from canvasManager!');
         }
         
         // Gesture compositor for emotion/undertone modulation
         this.gestureCompositor = new GestureCompositor();
         
+        // Initialize current undertone
+        this.currentUndertone = null;
+        
         // Initialize modular components
         this.gestureAnimator = new GestureAnimator(this);
         this.colorUtilities = new ColorUtilities();
         this.specialEffects = new SpecialEffects(this);
+        this.eyeRenderer = new EyeRenderer(this);
+        this.breathingAnimator = new BreathingAnimator(this);
+        this.glowRenderer = new GlowRenderer(this);
+        this.coreRenderer = new CoreRenderer(this);
         
         // Configuration - matching original Emotive proportions
         this.config = {
@@ -171,9 +181,9 @@ class EmotiveRenderer {
             particleSpeedMult: 1.0
         };
         
-        // Animation state
-        this.breathingPhase = 0;
-        this.blinkTimer = 0;
+        // Animation state (now delegated to modules)
+        // Breathing is handled by BreathingAnimator
+        // Blinking is handled by EyeRenderer
         
         // Track animation frame IDs to prevent memory leaks
         this.animationFrameIds = {
@@ -192,7 +202,6 @@ class EmotiveRenderer {
         // Cache for expensive gradients
         this.glowCache = new Map();
         this.maxCacheSize = 10;
-        this.nextBlinkTime = this.getRandomBlinkTime();
         
         // Gesture animations
         this.gestureAnimations = {
@@ -552,7 +561,6 @@ class EmotiveRenderer {
         // Performance
         this.lastFrameTime = 0;
         
-        console.log('EmotiveRenderer initialized with classic style');
     }
     
     /**
@@ -578,7 +586,6 @@ class EmotiveRenderer {
         });
         
         if (!this.offscreenCtx) {
-            console.error('Failed to create offscreen context!');
         }
         
         // Match dimensions
@@ -666,14 +673,15 @@ class EmotiveRenderer {
             glowMultiplier = gestureTransform.glowIntensity || 1;
         }
         
-        // Apply gesture animations (these modify the values directly)
-        const gestureTransforms = this.applyGestureAnimations();
+        // Apply gesture animations (delegate to GestureAnimator)
+        const gestureTransforms = this.gestureAnimator.applyGestureAnimations();
         if (gestureTransforms) {
             centerX += gestureTransforms.offsetX || 0;
             centerY += gestureTransforms.offsetY || 0;
             scaleMultiplier *= gestureTransforms.scale || 1;
             rotationAngle += (gestureTransforms.rotation || 0) * Math.PI / 180;
-            glowMultiplier *= gestureTransforms.glow || 1;
+            // DON'T MULTIPLY - just use the glow value directly to prevent accumulation
+            glowMultiplier = gestureTransforms.glow || 1;
         }
         
         // Apply zen levitation - lazy floating when in zen state
@@ -726,8 +734,10 @@ class EmotiveRenderer {
             // Zen uses full breath depth regardless of breathRate
             const effectiveBreathDepth = this.state.emotion === 'zen' ? this.state.breathDepth : 
                                          this.state.breathDepth * this.state.breathRate;
-            coreBreathFactor = 1 + Math.sin(this.breathingPhase) * effectiveBreathDepth;
-            glowBreathFactor = 1 - Math.sin(this.breathingPhase) * effectiveBreathDepth * 0.5; // Glow breathes opposite, less pronounced
+            // Get breathing scale from BreathingAnimator
+            const breathingScale = this.breathingAnimator.getBreathingScale();
+            coreBreathFactor = breathingScale;
+            glowBreathFactor = 1 - (breathingScale - 1) * 0.5; // Glow breathes opposite, less pronounced
         }
         
         // Add nervous glow pulse if needed
@@ -746,14 +756,16 @@ class EmotiveRenderer {
         const undertoneSizeMult = this.state.sizeMultiplier || 1.0;
         
         let coreRadius = baseRadius * emotionSizeMult * coreBreathFactor * scaleMultiplier * sleepScaleMod * undertoneSizeMult;
-        let glowRadius = baseRadius * this.config.glowMultiplier * glowBreathFactor * this.state.glowIntensity * glowMultiplier * scaleMultiplier * sleepScaleMod * undertoneSizeMult;  // Breathes inversely
+        let glowRadius = baseRadius * this.config.glowMultiplier * glowBreathFactor * this.state.glowIntensity * scaleMultiplier * sleepScaleMod * undertoneSizeMult;  // Breathes inversely
+        
+        // Use state glow intensity directly - NO MULTIPLIER to prevent brightness changes
+        const effectiveGlowIntensity = this.state.glowIntensity;
         
         
         // Apply blinking (only when not sleeping or zen)
-        if (this.state.blinking && !this.state.sleeping && this.state.emotion !== 'zen') {
-            const blinkProgress = Math.min(this.blinkTimer / 150, 1);
-            const blinkCurve = Math.sin(blinkProgress * Math.PI);
-            coreRadius *= (1 - blinkCurve * 0.7); // Squish vertically by 70%
+        if (!this.state.sleeping && this.state.emotion !== 'zen') {
+            const blinkScale = this.eyeRenderer.getBlinkScale();
+            coreRadius *= blinkScale; // Apply blink squish
         }
         
         // Apply jitter if needed (anger, fear, or undertone jitter)
@@ -889,11 +901,41 @@ class EmotiveRenderer {
             if (this.state.sleeping || this.state.emotion === 'resting' || isEffectActive('sleeping', this.state)) {
                 this.ctx.save();
                 this.ctx.globalAlpha = glowOpacityMod;
-                this.renderGlow(coreX, coreY, glowRadius);
+                this.glowRenderer.renderGlow(coreX, coreY, glowRadius, { intensity: effectiveGlowIntensity });
                 this.ctx.restore();
             } else {
-                this.renderGlow(coreX, coreY, glowRadius);
+                this.glowRenderer.renderGlow(coreX, coreY, glowRadius, { intensity: effectiveGlowIntensity });
             }
+        }
+        
+        // Render flash wave if present
+        if (gestureTransforms && gestureTransforms.flashWave) {
+            const wave = gestureTransforms.flashWave;
+            const ctx = this.ctx;
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            
+            // Create a ring gradient for the wave
+            const innerR = coreRadius * wave.innerRadius;
+            const outerR = coreRadius * wave.outerRadius;
+            
+            if (outerR > innerR) {
+                const gradient = ctx.createRadialGradient(coreX, coreY, innerR, coreX, coreY, outerR);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                gradient.addColorStop(0.2, `rgba(255, 255, 255, ${wave.intensity * 0.15})`);
+                gradient.addColorStop(0.5, `rgba(255, 255, 255, ${wave.intensity * 0.25})`); // Peak in center
+                gradient.addColorStop(0.8, `rgba(255, 255, 255, ${wave.intensity * 0.15})`);
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(coreX, coreY, outerR, 0, Math.PI * 2);
+                ctx.arc(coreX, coreY, Math.max(0, innerR), 0, Math.PI * 2, true);
+                ctx.fill();
+            }
+            
+            ctx.restore();
         }
         
         // Apply speaking pulse effect
@@ -938,7 +980,36 @@ class EmotiveRenderer {
         }
         
         // Render core (will cover REC if they overlap)
-        this.renderCore(coreX, coreY, coreRadius, deltaTime);
+        // Delegate core rendering to CoreRenderer
+        // First update the shape morpher if available
+        let shapePoints = null;
+        let currentShadow = null;
+        if (this.shapeMorpher) {
+            this.shapeMorpher.update();
+            // Get the canvas points relative to center (0,0) since CoreRenderer will translate
+            shapePoints = this.shapeMorpher.getCanvasPoints(0, 0, coreRadius);
+            currentShadow = this.shapeMorpher.getCurrentShadow();
+        }
+        
+        // Render sun effects BEFORE core (so they appear behind)
+        if (currentShadow && currentShadow.type === 'sun') {
+            this.renderSunEffects(coreX, coreY, coreRadius, currentShadow);
+        }
+        
+        // Drop shadow removed - was causing dimming
+        
+        // Render the core shape
+        this.coreRenderer.renderCore(coreX, coreY, coreRadius, {
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+            shapePoints: shapePoints
+        });
+        
+        // Render moon/lunar shadows AFTER core (as overlays)
+        if (currentShadow && (currentShadow.type === 'crescent' || currentShadow.type === 'lunar')) {
+            this.renderMoonShadow(coreX, coreY, coreRadius, currentShadow, shapePoints);
+        }
         
         // Reset alpha
         if (this.state.sleeping || this.state.emotion === 'resting') {
@@ -965,113 +1036,9 @@ class EmotiveRenderer {
 originalCtx.drawImage(this.offscreenCanvas, 0, 0);
     }
     
-    /**
-     * Render the glowing aura
-     */
-    renderGlow(x, y, radius) {
-        // Safety check for invalid values
-        if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
-            // Only log once per session to avoid spam
-            if (!this._loggedGlowError) {
-                console.error('renderGlow called with invalid values:', { x, y, radius });
-                this._loggedGlowError = true;
-            }
-            return;
-        }
-        
-        // Get canvas dimensions with fallbacks
-        const canvasWidth = this.canvas?.width || 600;
-        const canvasHeight = this.canvas?.height || 600;
-        
-        // Limit radius to prevent clipping at canvas boundaries
-        const maxRadius = Math.min(radius, 
-            x - 10,  // Distance to left edge
-            y - 10,  // Distance to top edge
-            canvasWidth - x - 10,  // Distance to right edge
-            canvasHeight - y - 10  // Distance to bottom edge
-        );
-        const safeRadius = Math.max(50, maxRadius); // Ensure minimum radius
-        
-        // Try to get cached glow or create new one
-        let glowColor = this.state.glowColor;
-        const glowImage = this.getCachedGlow(safeRadius, glowColor);
-        
-        // Draw the cached glow image
-        if (glowImage) {
-            this.ctx.drawImage(glowImage, 
-                x - safeRadius, y - safeRadius,
-                safeRadius * 2, safeRadius * 2);
-        } else {
-            // Fallback to direct rendering if cache fails
-            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, safeRadius);
-            
-            // Create smooth gradient with reasonable stops
-            let color = this.state.glowColor;
-            const stops = 20;
-            for (let i = 0; i <= stops; i++) {
-                const position = i / stops;
-                const opacity = 0.6 * Math.pow(1 - position, 2.2);
-                gradient.addColorStop(position, this.hexToRgba(color, opacity));
-            }
-            
-            // Draw the glow as a circle
-            this.ctx.fillStyle = gradient;
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, safeRadius, 0, Math.PI * 2);
-            this.ctx.fill();
-        }
-    }
+    // renderGlow method removed - now handled by GlowRenderer module
     
-    /**
-     * Get or create cached glow gradient
-     */
-    getCachedGlow(radius, color) {
-        // Round radius to reduce cache variations
-        const roundedRadius = Math.round(radius / 10) * 10;
-        const cacheKey = `${roundedRadius}_${color}`;
-        
-        // Check cache
-        if (this.glowCache.has(cacheKey)) {
-            return this.glowCache.get(cacheKey);
-        }
-        
-        // Create new cached glow
-        const glowCanvas = document.createElement('canvas');
-        const size = roundedRadius * 2;
-        glowCanvas.width = size;
-        glowCanvas.height = size;
-        const glowCtx = glowCanvas.getContext('2d', { alpha: true });
-        
-        // Create gradient in center of canvas
-        const centerX = roundedRadius;
-        const centerY = roundedRadius;
-        const gradient = glowCtx.createRadialGradient(centerX, centerY, 0, centerX, centerY, roundedRadius);
-        
-        // Add gradient stops
-        const stops = 20;
-        for (let i = 0; i <= stops; i++) {
-            const position = i / stops;
-            const opacity = 0.6 * Math.pow(1 - position, 2.2);
-            gradient.addColorStop(position, this.hexToRgba(color, opacity));
-        }
-        
-        // Draw to offscreen canvas
-        glowCtx.fillStyle = gradient;
-        glowCtx.beginPath();
-        glowCtx.arc(centerX, centerY, roundedRadius, 0, Math.PI * 2);
-        glowCtx.fill();
-        
-        // Manage cache size
-        if (this.glowCache.size >= this.maxCacheSize) {
-            // Remove oldest entry
-            const firstKey = this.glowCache.keys().next().value;
-            this.glowCache.delete(firstKey);
-        }
-        
-        // Cache and return
-        this.glowCache.set(cacheKey, glowCanvas);
-        return glowCanvas;
-    }
+    // getCachedGlow method removed - now handled by GlowRenderer module
     
     /**
      * Render recording glow (pulsating red)
@@ -1107,700 +1074,387 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
         this.ctx.fill();
     }
     
+
     /**
-     * Render the white core with eye narrowing effect
+     * Render drop shadow for depth
      */
-    renderCore(x, y, radius, deltaTime = 16.67) {
-        // Safety check for invalid values
-        if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
-            // Only log once per session to avoid spam
-            if (!this._loggedCoreError) {
-                console.error('renderCore called with invalid values:', { x, y, radius });
-                this._loggedCoreError = true;
-            }
-            return;
-        }
+    renderDropShadow(x, y, radius, shapePoints) {
+        const ctx = this.ctx;
         
-        // Get emotion module for custom rendering
-        const emotion = getEmotion(this.state.emotion);
-        
-        // Check if emotion has custom core rendering
-        if (emotion && emotion.renderCore && emotion.renderCore(this.ctx, x, y, radius)) {
-            return; // Custom rendering was done
-        }
-        
-        // Check for zen vortex effect
-        if (isEffectActive('zen-vortex', this.state)) {
-            applyEffect('zen-vortex', this.ctx, { x, y, radius, deltaTime, intensity: 1.0 });
-            return;
-        }
-        
-        this.ctx.save();
-        
-        // Get core parameters from emotion module
-        let coreParams = { scaleX: 1, scaleY: 1, eyeOpenness: 1, eyeExpression: 'neutral' };
-        if (emotion && emotion.getCoreParams) {
-            coreParams = { ...coreParams, ...emotion.getCoreParams(this.state) };
-        }
-        
-        // Apply visual effects that modify eye appearance
-        if (isEffectActive('gaze-narrowing', this.state)) {
-            applyEffect('gaze-narrowing', this.ctx, {
-                gazeIntensity: this.state.gazeIntensity || 0,
-                deltaTime
-            });
-            // Get modified scales from effect
-            const gazeEffect = getEffect('gaze-narrowing');
-            if (gazeEffect) {
-                const gazeScales = gazeEffect.getEyeScales();
-                coreParams.scaleX *= gazeScales.scaleX;
-                coreParams.scaleY *= gazeScales.scaleY;
-            }
-        }
-        
-        let scaleX = coreParams.scaleX;
-        let scaleY = coreParams.scaleY * coreParams.eyeOpenness
-        
-        // Apply sleeping effect
-        if (isEffectActive('sleeping', this.state)) {
-            const sleepEffect = getEffect('sleeping');
-            if (sleepEffect) {
-                scaleY *= sleepEffect.getEyeOpenness();
-                // Draw Z particles
-                applyEffect('sleeping', this.ctx, { x, y, radius, deltaTime });
-            }
-        }
-        
-        // Apply eye animation from gestures (like slow blink)
-        if (this.gestureTransform && this.gestureTransform.eyeOpenness !== undefined) {
-            scaleY *= this.gestureTransform.eyeOpenness;
-        }
-        
-        // Animate squint amount smoothly
-        if (this.state.targetSquintAmount !== undefined) {
-            const squintSpeed = 0.02; // Speed of squint animation
-            if (Math.abs(this.state.squintAmount - this.state.targetSquintAmount) > 0.01) {
-                this.state.squintAmount += (this.state.targetSquintAmount - this.state.squintAmount) * squintSpeed * (deltaTime / 16.67);
-            } else {
-                this.state.squintAmount = this.state.targetSquintAmount;
-            }
-        }
-        
-        // Apply suspicion scanning effect
-        if (isEffectActive('suspicion-scan', this.state)) {
-            applyEffect('suspicion-scan', this.ctx, { x, y, radius, deltaTime });
-            const suspicionEffect = getEffect('suspicion-scan');
-            if (suspicionEffect) {
-                const eyeMods = suspicionEffect.getEyeModifiers();
-                scaleX *= eyeMods.scaleX;
-                scaleY *= eyeMods.scaleY;
-            }
-            
-            // Add slow periodic scanning motion
-            const now = Date.now();
-            const scanInterval = 5000; // Scan every 5 seconds (slower)
-            const scanDuration = 2000;  // Each scan takes 2s (slower)
-            const timeSinceScan = now - this.state.lastScanTime;
-            
-            if (timeSinceScan > scanInterval) {
-                this.state.lastScanTime = now;
-                this.state.scanPhase = 0;
-            }
-            
-            if (this.state.scanPhase < scanDuration) {
-                this.state.scanPhase += deltaTime;
-                const scanProgress = this.state.scanPhase / scanDuration;
-                // Smooth scanning motion - look left, then right, then center
-                let scanOffset = 0;
-                if (scanProgress < 0.4) {
-                    // Slowly look left
-                    const leftProgress = scanProgress / 0.4;
-                    scanOffset = -Math.sin(leftProgress * Math.PI / 2) * this.scaleValue(20); // Max 20 pixels left
-                } else if (scanProgress < 0.8) {
-                    // Slowly look right  
-                    const rightProgress = (scanProgress - 0.4) / 0.4;
-                    scanOffset = -this.scaleValue(20) + Math.sin(rightProgress * Math.PI) * this.scaleValue(40); // From -20 to +20
-                } else {
-                    // Return to center
-                    const centerProgress = (scanProgress - 0.8) / 0.2;
-                    scanOffset = this.scaleValue(20) * (1 - centerProgress); // From +20 back to 0
-                }
-                x += scanOffset;
-            }
-        }
-        
-        // Apply eye arc for Buddha eyes (zen state)
-        let eyeArc = 0;
-        if (this.state.emotionEyeArc !== undefined) {
-            eyeArc = this.state.emotionEyeArc;
-        }
-        
-        // Apply rotation to look at pointer when gaze is active
-        let rotation = 0;
-        const gazeIntensity = this.state.gazeIntensity || 0;
-        if (gazeIntensity > 0.05 && !this.state.gazeLocked) {
-            // Calculate angle to pointer (gazeOffset indicates direction)
-            const angle = Math.atan2(this.state.gazeOffset.y, this.state.gazeOffset.x);
-            rotation = angle + Math.PI / 2;
-        }
-        
-        // Apply transformations
-this.ctx.translate(x, y);
-        if (rotation !== 0) {
-            this.ctx.rotate(rotation);
-        }
-        this.ctx.scale(scaleX, scaleY);
-        
-        // Cache points for reuse - HUGE performance boost
-        let cachedPoints = null;
-        let cachedInnerPoints = null;
-        if (this.shapeMorpher) {
-            // Update shape morpher ONCE
-            this.shapeMorpher.update();
-            // Get points ONCE
-            cachedPoints = this.shapeMorpher.getCanvasPoints(0, 0, radius);
-            cachedInnerPoints = this.shapeMorpher.getCanvasPoints(0, 0, radius * 0.9);
-        }
-        
-        // Draw a fake shadow using gradient (MUCH faster than shadowBlur)
-        // OPTIMIZATION: Skip shadow during rapid animations and audio deformation for better FPS
+        // Skip shadow during rapid animations for better performance
         const isAnimating = this.shapeMorpher && this.shapeMorpher.isTransitioning;
         const hasAudioDeformation = this.shapeMorpher && 
                                    (this.shapeMorpher.audioDeformation > 0.1 || 
                                     this.shapeMorpher.vocalEnergy > 0.1);
         
         if (!hasAudioDeformation && (!isAnimating || this.shapeMorpher.morphProgress > 0.8)) {
-            this.ctx.save();
-            const shadowOffset = this.scaleValue(2);
-            this.ctx.translate(0, shadowOffset);
+            ctx.save();
+            ctx.translate(x, y);
             
-            // OPTIMIZATION: Use simpler shadow for deformed shapes
-            if (cachedPoints && cachedPoints.length > 32) {
+            const shadowOffset = this.scaleValue(2);
+            ctx.translate(0, shadowOffset);
+            
+            // Use simpler shadow for complex deformed shapes
+            if (shapePoints && shapePoints.length > 32) {
                 // Simple dark circle shadow when shape is complex
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-                this.ctx.beginPath();
-                this.ctx.arc(0, 0, radius * 1.05, 0, Math.PI * 2);
-                this.ctx.fill();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+                ctx.beginPath();
+                ctx.arc(0, 0, radius * 1.05, 0, Math.PI * 2);
+                ctx.fill();
             } else {
                 // Shadow gradient - dark center fading to transparent
-                const shadowGradient = this.ctx.createRadialGradient(0, 0, radius * 0.7, 0, 0, radius * 1.2);
+                const shadowGradient = ctx.createRadialGradient(0, 0, radius * 0.7, 0, 0, radius * 1.2);
                 shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
                 shadowGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.1)');
                 shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
                 
-                this.ctx.fillStyle = shadowGradient;
-                this.ctx.beginPath();
-                if (cachedPoints) {
-                    // Scale points for shadow - use fewer points for performance
+                ctx.fillStyle = shadowGradient;
+                ctx.beginPath();
+                if (shapePoints) {
+                    // Scale points for shadow
                     const scale = 1.1;
-                    const step = cachedPoints.length > 20 ? 2 : 1; // Skip every other point if many points
-                    this.ctx.moveTo(cachedPoints[0].x * scale, cachedPoints[0].y * scale);
-                    for (let i = step; i < cachedPoints.length; i += step) {
-                        this.ctx.lineTo(cachedPoints[i].x * scale, cachedPoints[i].y * scale);
+                    const step = shapePoints.length > 20 ? 2 : 1; // Skip points for performance
+                    ctx.moveTo(shapePoints[0].x * scale, shapePoints[0].y * scale);
+                    for (let i = step; i < shapePoints.length; i += step) {
+                        ctx.lineTo(shapePoints[i].x * scale, shapePoints[i].y * scale);
                     }
-                    this.ctx.closePath();
+                    ctx.closePath();
                 } else {
-                    this.ctx.arc(0, 0, radius * 1.1, 0, Math.PI * 2);
+                    ctx.arc(0, 0, radius * 1.1, 0, Math.PI * 2);
                 }
-                this.ctx.fill();
+                ctx.fill();
             }
-            this.ctx.restore();
+            ctx.restore();
+        }
+    }
+    
+    /**
+     * Render sun effects (corona, rays, etc)
+     */
+    renderSunEffects(x, y, radius, shadow) {
+        const ctx = this.ctx;
+        const time = Date.now() / 100;
+        
+        ctx.save();
+        ctx.translate(x, y);
+        
+        // 1. Surface texture - turbulent plasma
+        if (shadow.texture && (shadow.textureOpacity === undefined || shadow.textureOpacity > 0)) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            ctx.globalAlpha = shadow.textureOpacity !== undefined ? shadow.textureOpacity : 1;
+            
+            const offset = time * 0.05 * (shadow.turbulence || 0.3) / 0.3;
+            const textureGradient = ctx.createRadialGradient(
+                Math.sin(offset) * radius * 0.15,
+                Math.cos(offset * 0.7) * radius * 0.15,
+                radius * 0.2,
+                0, 0, radius
+            );
+            textureGradient.addColorStop(0, 'rgba(255, 255, 200, 0)');
+            textureGradient.addColorStop(0.4, 'rgba(255, 200, 100, 0.1)');
+            textureGradient.addColorStop(0.7, 'rgba(255, 150, 50, 0.08)');
+            textureGradient.addColorStop(1, 'rgba(255, 100, 30, 0.05)');
+            
+            ctx.fillStyle = textureGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
         }
         
-        // Draw core with appropriate color (moon gets gray, others white)
-        let coreColor = this.config.coreColor;
-        const isMoon = this.shapeMorpher && this.shapeMorpher.currentShape === 'moon';
-        if (isMoon) {
-            // Use gradient fade instead of blur for better performance
-            const moonGradient = this.ctx.createRadialGradient(0, 0, radius * 0.9, 0, 0, radius);
-            moonGradient.addColorStop(0, '#e8e8e8');
-            moonGradient.addColorStop(0.95, '#e8e8e8');
-            moonGradient.addColorStop(1, '#d0d0d0'); // Slightly darker edge for soft appearance
-            coreColor = moonGradient;
-        }
-        this.ctx.fillStyle = coreColor;
-        this.ctx.beginPath();
-        
-        if (eyeArc !== 0 && scaleY < 0.5) {
-            // For zen state, create a curved eye shape
-            const startAngle = -Math.PI + eyeArc;
-            const endAngle = eyeArc;
-            this.ctx.arc(0, 0, radius, startAngle, endAngle, false);
-            this.ctx.closePath();
-        } else {
-            // Use cached points if available
-            if (cachedPoints) {
-                // Draw the shape using CACHED points
-                this.ctx.moveTo(cachedPoints[0].x, cachedPoints[0].y);
-                for (let i = 1; i < cachedPoints.length; i++) {
-                    this.ctx.lineTo(cachedPoints[i].x, cachedPoints[i].y);
-                }
-                this.ctx.closePath();
-            } else {
-                // Normal circular eye
-                this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            }
-        }
-        this.ctx.fill();
-        
-        // Add inner glow only if needed (skip for performance)
-        let needsInnerGlow = this.state.undertone === 'nervous' || true; // Always show for quality
-        
-        if (needsInnerGlow) {
-            let shimmerAlpha = 1.0;
-            if (this.state.undertone === 'nervous') {
-                // Subtle flickering shimmer
-                shimmerAlpha = 0.95 + Math.sin(Date.now() / 50) * 0.05; // 95-100% opacity flicker
+        // 2. Bright corona layers
+        const coronaOpacity = shadow.coronaOpacity !== undefined ? shadow.coronaOpacity : 1;
+        if (coronaOpacity > 0) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Inner bright glow
+            const innerGlow = ctx.createRadialGradient(0, 0, radius * 0.5, 0, 0, radius * 1.1);
+            innerGlow.addColorStop(0, `rgba(255, 255, 255, ${0.8 * coronaOpacity})`);
+            innerGlow.addColorStop(0.3, `rgba(255, 250, 200, ${0.6 * coronaOpacity})`);
+            innerGlow.addColorStop(0.5, `rgba(255, 200, 100, ${0.4 * coronaOpacity})`);
+            innerGlow.addColorStop(0.7, `rgba(255, 150, 50, ${0.2 * coronaOpacity})`);
+            innerGlow.addColorStop(1, 'rgba(255, 100, 20, 0)');
+            
+            ctx.fillStyle = innerGlow;
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 1.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Outer corona with animation
+            for (let i = 0; i < 2; i++) {
+                const scale = 1.3 + i * 0.4;
+                const opacity = (0.35 - i * 0.15) * coronaOpacity;
+                const wobble = Math.sin(time * 0.1 + i) * 0.05;
+                
+                const coronaGradient = ctx.createRadialGradient(
+                    0, 0, radius * (0.9 + wobble), 
+                    0, 0, radius * (scale + wobble)
+                );
+                coronaGradient.addColorStop(0, 'rgba(255, 255, 200, 0)');
+                coronaGradient.addColorStop(0.4, `rgba(255, 200, 100, ${opacity * 0.5})`);
+                coronaGradient.addColorStop(0.7, `rgba(255, 150, 50, ${opacity})`);
+                coronaGradient.addColorStop(0.9, `rgba(255, 100, 30, ${opacity * 0.5})`);
+                coronaGradient.addColorStop(1, 'rgba(255, 50, 10, 0)');
+                
+                ctx.fillStyle = coronaGradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius * (scale + wobble), 0, Math.PI * 2);
+                ctx.fill();
             }
             
-            // Simplified inner glow - fewer stops
-            const innerGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            innerGradient.addColorStop(0, `rgba(255, 255, 255, ${shimmerAlpha})`);
-            innerGradient.addColorStop(1, `rgba(255, 255, 255, ${0.8 * shimmerAlpha})`);
-            
-            this.ctx.fillStyle = innerGradient;
-        } else {
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.restore();
         }
-        this.ctx.beginPath();
         
-        // Use cached inner points
-        if (cachedInnerPoints) {
-            this.ctx.moveTo(cachedInnerPoints[0].x, cachedInnerPoints[0].y);
-            for (let i = 1; i < cachedInnerPoints.length; i++) {
-                this.ctx.lineTo(cachedInnerPoints[i].x, cachedInnerPoints[i].y);
+        // 3. Optimized ethereal flame pennants - TONS of rays
+        if (shadow.flares) {
+            ctx.save();
+            
+            // Pre-calculate common values
+            const wave1 = Math.sin(time * 0.08);
+            const wave2 = Math.sin(time * 0.12);
+            const wave3 = Math.sin(time * 0.16);
+            
+            // Create single gradient for all flames
+            const grad = ctx.createLinearGradient(0, -radius, 0, -radius * 3);
+            grad.addColorStop(0, 'rgba(255, 255, 230, 0.4)');
+            grad.addColorStop(0.2, 'rgba(255, 220, 150, 0.25)');
+            grad.addColorStop(0.5, 'rgba(255, 180, 80, 0.15)');
+            grad.addColorStop(0.8, 'rgba(255, 120, 40, 0.08)');
+            grad.addColorStop(1, 'rgba(255, 60, 20, 0)');
+            
+            ctx.fillStyle = grad;
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Single path for ALL flames
+            ctx.beginPath();
+            
+            // Helper function for flame shape
+            const addFlame = (angle, length, width, wave) => {
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                const baseX = cos * radius;
+                const baseY = sin * radius;
+                const tipX = cos * (radius + length);
+                const tipY = sin * (radius + length);
+                const perpX = -sin * width * 0.5;
+                const perpY = cos * width * 0.5;
+                const waveOffset = wave * width * 0.3;
+                
+                // Simple triangle with slight curve
+                ctx.moveTo(baseX - perpX, baseY - perpY);
+                ctx.quadraticCurveTo(
+                    (baseX + tipX) * 0.5 + perpX * waveOffset,
+                    (baseY + tipY) * 0.5 + perpY * waveOffset,
+                    tipX, tipY
+                );
+                ctx.quadraticCurveTo(
+                    (baseX + tipX) * 0.5 - perpX * waveOffset,
+                    (baseY + tipY) * 0.5 - perpY * waveOffset,
+                    baseX + perpX, baseY + perpY
+                );
+            };
+            
+            // Layer 1: Long primary rays (8)
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + wave1 * 0.1;
+                const length = radius * (1.8 + Math.sin(time * 0.1 + i * 0.5) * 0.4);
+                const width = radius * 0.18;
+                const wave = Math.sin(time * 0.15 + i);
+                addFlame(angle, length, width, wave);
             }
-            this.ctx.closePath();
-        } else {
-            this.ctx.arc(0, 0, radius * 0.9, 0, Math.PI * 2);
-        }
-        this.ctx.fill();
-        
-        // Apply shape-specific custom rendering
-        if (this.shapeMorpher) {
-            // Get custom renderer from shape module
-            const customRenderer = this.shapeMorpher.getCurrentRenderer();
             
-            // If shape has custom renderer, use it
-            if (customRenderer && typeof customRenderer === 'function') {
-                let shadow = this.shapeMorpher.getCurrentShadow();
-                const progress = this.shapeMorpher.getProgress() || 1;
+            // Layer 2: Medium rays between primaries (12)
+            for (let i = 0; i < 12; i++) {
+                const angle = ((i + 0.5) / 12) * Math.PI * 2 + wave2 * 0.08;
+                const length = radius * (1.2 + Math.sin(time * 0.13 + i * 0.7) * 0.3);
+                const width = radius * 0.12;
+                const wave = Math.sin(time * 0.18 + i * 1.2);
+                addFlame(angle, length, width, wave);
+            }
+            
+            // Layer 3: Short rays filling gaps (15)
+            for (let i = 0; i < 15; i++) {
+                const angle = (i / 15) * Math.PI * 2 + wave3 * 0.05;
+                const length = radius * (0.7 + Math.sin(time * 0.17 + i * 0.9) * 0.25);
+                const width = radius * 0.08;
+                const wave = Math.sin(time * 0.2 + i * 1.5);
+                addFlame(angle, length, width, wave);
+            }
+            
+            // Layer 4: Tiny rays for density (15)
+            for (let i = 0; i < 15; i++) {
+                const angle = ((i + 0.25) / 15) * Math.PI * 2;
+                const length = radius * (0.4 + Math.sin(time * 0.22 + i) * 0.2);
+                const width = radius * 0.06;
+                // Simple triangles for tiny rays
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                const baseX = cos * radius;
+                const baseY = sin * radius;
+                const tipX = cos * (radius + length);
+                const tipY = sin * (radius + length);
+                const perpX = -sin * width * 0.5;
+                const perpY = cos * width * 0.5;
                 
+                ctx.moveTo(baseX - perpX, baseY - perpY);
+                ctx.lineTo(tipX, tipY);
+                ctx.lineTo(baseX + perpX, baseY + perpY);
+            }
+            
+            // Single fill operation for all rays!
+            ctx.fill();
+            ctx.restore();
+        }
+        
+        // 4. Bright rim lighting
+        const rimGradient = ctx.createRadialGradient(0, 0, radius * 0.95, 0, 0, radius * 1.05);
+        rimGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        rimGradient.addColorStop(0.7, 'rgba(255, 255, 200, 0.2)');
+        rimGradient.addColorStop(0.9, 'rgba(255, 200, 100, 0.5)');
+        rimGradient.addColorStop(1, 'rgba(255, 150, 50, 0.3)');
+        
+        ctx.fillStyle = rimGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 1.05, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+    
+    /**
+     * Render moon/lunar shadow overlay
+     */
+    renderMoonShadow(x, y, radius, shadow, shapePoints) {
+        const ctx = this.ctx;
+        
+        ctx.save();
+        ctx.translate(x, y);
+        
+        if (shadow.type === 'crescent') {
+            // Crescent moon - smooth shadow without pixelation
+            
+            // Get morph progress to animate the shadow sliding in
+            let shadowProgress = 1.0; // Default to fully visible
+            let animatedOffset = shadow.offset || 0.7; // Default to the shadow's offset
+            
+            if (this.shapeMorpher) {
+                const morphProgress = this.shapeMorpher.getProgress();
+                const currentShape = this.shapeMorpher.currentShape;
+                const targetShape = this.shapeMorpher.targetShape;
                 
-                // Call the shape module's custom renderer
-                customRenderer(this.ctx, 0, 0, radius, progress, {
-                    shadow: shadow,
-                    time: Date.now() / 100,
-                    shimmerAlpha: shimmerAlpha,
-                    shapeMorpher: this.shapeMorpher
-                });
-            } else {
-                // Standard shadow rendering
-                let shadow = this.shapeMorpher.getCurrentShadow();
-                
-                
-                if (shadow && shadow.type !== 'none') {
-                    this.ctx.save();
-                    
-                    // Sun rendering
-                    if (shadow.type === 'sun') {
-                        const time = Date.now() / 100;
-                        
-                        // Check if we're transitioning from moon to sun
-                        let effectiveProgress = 1.0;
-                        if (this.shapeMorpher) {
-                            const currentShape = this.shapeMorpher.currentShape;
-                            const targetShape = this.shapeMorpher.targetShape;
-                            const morphProgress = this.shapeMorpher.getProgress();
-                            const transitionConfig = this.shapeMorpher.transitionConfig;
-                            
-                            // Moon transitions - delay effects until shadow is gone
-                            if (currentShape === 'moon' && targetShape && morphProgress < 1) {
-                                const shadowSlideRatio = transitionConfig?.shadowSlideRatio || 0.4;
-                                if (morphProgress < shadowSlideRatio) {
-                                    effectiveProgress = 0; // No effects during shadow slide
-                                } else {
-                                    effectiveProgress = (morphProgress - shadowSlideRatio) / (1 - shadowSlideRatio); // Remap remaining progress
-                                }
-                            }
-                        }
-                        
-                        // 1. Surface texture - turbulent plasma (OPTIMIZED)
-                        if (shadow.texture && (shadow.textureOpacity === undefined || shadow.textureOpacity > 0) && effectiveProgress > 0) {
-                            this.ctx.save();
-                            this.ctx.globalCompositeOperation = 'screen';
-                            this.ctx.globalAlpha = (shadow.textureOpacity !== undefined ? shadow.textureOpacity : 1) * effectiveProgress;
-                            
-                            // Single plasma texture instead of 3 layers
-                            const offset = time * 0.05 * (shadow.turbulence || 0.3) / 0.3;
-                            const textureGradient = this.ctx.createRadialGradient(
-                                Math.sin(offset) * radius * 0.15,
-                                Math.cos(offset * 0.7) * radius * 0.15,
-                                radius * 0.2,
-                                0, 0, radius
-                            );
-                            textureGradient.addColorStop(0, 'rgba(255, 255, 200, 0)');
-                            textureGradient.addColorStop(0.4, 'rgba(255, 200, 100, 0.1)');
-                            textureGradient.addColorStop(0.7, 'rgba(255, 150, 50, 0.08)');
-                            textureGradient.addColorStop(1, 'rgba(255, 100, 30, 0.05)');
-                            
-                            this.ctx.fillStyle = textureGradient;
-                            this.ctx.beginPath();
-                            this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                            this.ctx.fill();
-                            
-                            this.ctx.restore();
-                        }
-                        
-                        // 2. Bright corona layers
-                        const coronaOpacity = shadow.coronaOpacity !== undefined ? shadow.coronaOpacity : 1;
-                        if (coronaOpacity > 0) {
-                            this.ctx.save();
-                            this.ctx.globalCompositeOperation = 'screen';
-                            
-                            // Inner bright glow
-                            const innerGlow = this.ctx.createRadialGradient(0, 0, radius * 0.5, 0, 0, radius * 1.1);
-                            innerGlow.addColorStop(0, `rgba(255, 255, 255, ${0.8 * coronaOpacity})`);
-                            innerGlow.addColorStop(0.3, `rgba(255, 250, 200, ${0.6 * coronaOpacity})`);
-                            innerGlow.addColorStop(0.5, `rgba(255, 200, 100, ${0.4 * coronaOpacity})`);
-                            innerGlow.addColorStop(0.7, `rgba(255, 150, 50, ${0.2 * coronaOpacity})`);
-                            innerGlow.addColorStop(1, 'rgba(255, 100, 20, 0)');
-                            
-                            this.ctx.fillStyle = innerGlow;
-                            this.ctx.beginPath();
-                            this.ctx.arc(0, 0, radius * 1.1, 0, Math.PI * 2);
-                            this.ctx.fill();
-                            
-                            // Outer corona with animation (OPTIMIZED - 2 layers instead of 4)
-                            for (let i = 0; i < 2; i++) {
-                                const scale = 1.3 + i * 0.4;
-                                const opacity = (0.35 - i * 0.15) * coronaOpacity;
-                                const wobble = Math.sin(time * 0.1 + i) * 0.05;
-                                
-                                const coronaGradient = this.ctx.createRadialGradient(
-                                    0, 0, radius * (0.9 + wobble), 
-                                    0, 0, radius * (scale + wobble)
-                                );
-                                coronaGradient.addColorStop(0, 'rgba(255, 255, 200, 0)');
-                                coronaGradient.addColorStop(0.4, `rgba(255, 200, 100, ${opacity * 0.5})`);
-                                coronaGradient.addColorStop(0.7, `rgba(255, 150, 50, ${opacity})`);
-                                coronaGradient.addColorStop(0.9, `rgba(255, 100, 30, ${opacity * 0.5})`);
-                                coronaGradient.addColorStop(1, 'rgba(255, 50, 10, 0)');
-                                
-                                this.ctx.fillStyle = coronaGradient;
-                                this.ctx.beginPath();
-                                this.ctx.arc(0, 0, radius * (scale + wobble), 0, Math.PI * 2);
-                                this.ctx.fill();
-                            }
-                            
-                            this.ctx.restore();
-                        }
-                    
-                        // 3. Optimized ethereal flame pennants - TONS of rays
-                        if (shadow.flares) {
-                        this.ctx.save();
-                        
-                        // Pre-calculate common values
-                        const wave1 = Math.sin(time * 0.08);
-                        const wave2 = Math.sin(time * 0.12);
-                        const wave3 = Math.sin(time * 0.16);
-                        
-                        // Create single gradient for all flames
-                        const grad = this.ctx.createLinearGradient(0, -radius, 0, -radius * 3);
-                        grad.addColorStop(0, 'rgba(255, 255, 230, 0.4)');
-                        grad.addColorStop(0.2, 'rgba(255, 220, 150, 0.25)');
-                        grad.addColorStop(0.5, 'rgba(255, 180, 80, 0.15)');
-                        grad.addColorStop(0.8, 'rgba(255, 120, 40, 0.08)');
-                        grad.addColorStop(1, 'rgba(255, 60, 20, 0)');
-                        
-                        this.ctx.fillStyle = grad;
-                        this.ctx.globalCompositeOperation = 'screen';
-                        
-                        // Single path for ALL flames - massive performance boost
-                        this.ctx.beginPath();
-                        
-                        // Helper function for simple flame shape
-                        const addFlame = (angle, length, width, wave) => {
-                            const cos = Math.cos(angle);
-                            const sin = Math.sin(angle);
-                            const baseX = cos * radius;
-                            const baseY = sin * radius;
-                            const tipX = cos * (radius + length);
-                            const tipY = sin * (radius + length);
-                            const perpX = -sin * width * 0.5;
-                            const perpY = cos * width * 0.5;
-                            const waveOffset = wave * width * 0.3;
-                            
-                            // Simple triangle with slight curve
-                            this.ctx.moveTo(baseX - perpX, baseY - perpY);
-                            this.ctx.quadraticCurveTo(
-                                (baseX + tipX) * 0.5 + perpX * waveOffset,
-                                (baseY + tipY) * 0.5 + perpY * waveOffset,
-                                tipX, tipY
-                            );
-                            this.ctx.quadraticCurveTo(
-                                (baseX + tipX) * 0.5 - perpX * waveOffset,
-                                (baseY + tipY) * 0.5 - perpY * waveOffset,
-                                baseX + perpX, baseY + perpY
-                            );
-                        };
-                        
-                        // OPTIMIZED: Reduced ray count for better performance (50 rays instead of 100)
-                        
-                        // Layer 1: Long primary rays (8 instead of 12)
-                        for (let i = 0; i < 8; i++) {
-                            const angle = (i / 8) * Math.PI * 2 + wave1 * 0.1;
-                            const length = radius * (1.8 + Math.sin(time * 0.1 + i * 0.5) * 0.4);
-                            const width = radius * 0.18;
-                            const wave = Math.sin(time * 0.15 + i);
-                            addFlame(angle, length, width, wave);
-                        }
-                        
-                        // Layer 2: Medium rays between primaries (12 instead of 18)
-                        for (let i = 0; i < 12; i++) {
-                            const angle = ((i + 0.5) / 12) * Math.PI * 2 + wave2 * 0.08;
-                            const length = radius * (1.2 + Math.sin(time * 0.13 + i * 0.7) * 0.3);
-                            const width = radius * 0.12;
-                            const wave = Math.sin(time * 0.18 + i * 1.2);
-                            addFlame(angle, length, width, wave);
-                        }
-                        
-                        // Layer 3: Short rays filling gaps (15 instead of 30)
-                        for (let i = 0; i < 15; i++) {
-                            const angle = (i / 15) * Math.PI * 2 + wave3 * 0.05;
-                            const length = radius * (0.7 + Math.sin(time * 0.17 + i * 0.9) * 0.25);
-                            const width = radius * 0.08;
-                            const wave = Math.sin(time * 0.2 + i * 1.5);
-                            addFlame(angle, length, width, wave);
-                        }
-                        
-                        // Layer 4: Tiny rays for density (15 instead of 40)
-                        for (let i = 0; i < 15; i++) {
-                            const angle = ((i + 0.25) / 15) * Math.PI * 2;
-                            const length = radius * (0.4 + Math.sin(time * 0.22 + i) * 0.2);
-                            const width = radius * 0.06;
-                            // Simple triangles for tiny rays
-                            const cos = Math.cos(angle);
-                            const sin = Math.sin(angle);
-                            const baseX = cos * radius;
-                            const baseY = sin * radius;
-                            const tipX = cos * (radius + length);
-                            const tipY = sin * (radius + length);
-                            const perpX = -sin * width * 0.5;
-                            const perpY = cos * width * 0.5;
-                            
-                            this.ctx.moveTo(baseX - perpX, baseY - perpY);
-                            this.ctx.lineTo(tipX, tipY);
-                            this.ctx.lineTo(baseX + perpX, baseY + perpY);
-                        }
-                        
-                            // Single fill operation for all 100 rays!
-                            this.ctx.fill();
-                            this.ctx.restore();
-                        }
-                        
-                        // 4. Bright rim lighting
-                        const rimGradient = this.ctx.createRadialGradient(0, 0, radius * 0.95, 0, 0, radius * 1.05);
-                        rimGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                        rimGradient.addColorStop(0.7, 'rgba(255, 255, 200, 0.2)');
-                        rimGradient.addColorStop(0.9, 'rgba(255, 200, 100, 0.5)');
-                        rimGradient.addColorStop(1, 'rgba(255, 150, 50, 0.3)');
-                        
-                        this.ctx.fillStyle = rimGradient;
-                        this.ctx.beginPath();
-                        this.ctx.arc(0, 0, radius * 1.05, 0, Math.PI * 2);
-                        this.ctx.fill();
-                    }
-                }
-                
-                if (shadow.type === 'crescent') {
-                    // Crescent moon - smooth shadow without pixelation
-                    this.ctx.save();
-                    
-                    // Get morph progress to animate the shadow sliding in
-                    let shadowProgress = 1.0; // Default to fully visible
-                    if (this.shapeMorpher) {
-                        const morphProgress = this.shapeMorpher.getProgress();
-                        const currentShape = this.shapeMorpher.currentShape;
-                        const targetShape = this.shapeMorpher.targetShape;
-                        
-                        // Animate shadow sliding in when morphing TO moon
-                        if (targetShape === 'moon' && morphProgress !== undefined && morphProgress < 1) {
-                            // Shadow slides in from the left
-                            shadowProgress = morphProgress;
-                        }
-                        // FROM MOON TO ANY SHAPE - let ShapeMorpher control the shadow slide
-                        else if (currentShape === 'moon' && targetShape && targetShape !== 'moon' && morphProgress !== undefined && morphProgress < 1) {
-                            // DO NOT INTERFERE - ShapeMorpher handles the shadow slide
-                            shadowProgress = 1.0; // Keep shadow visible, ShapeMorpher controls the animation
-                        }
-                    }
-                    
-                    const baseOffset = shadow.offset || 0.7;
+                // Animate shadow sliding in when morphing TO moon (and shadow.offset is not being controlled)
+                if (targetShape === 'moon' && morphProgress !== undefined && morphProgress < 1 && !shadow.shadowX) {
+                    // Shadow slides in from the left
+                    shadowProgress = morphProgress;
+                    const baseOffset = 0.7;
                     // Animate the offset - starts far left (-2) and slides to final position
-                    const animatedOffset = -2 + (baseOffset + 2) * shadowProgress;
-                    const angleRad = (shadow.angle || -30) * Math.PI / 180;
-                    const offsetX = Math.cos(angleRad) * radius * animatedOffset;
-                    const offsetY = Math.sin(angleRad) * radius * animatedOffset;
-                    
-                    // Enable high quality rendering
-                    this.ctx.imageSmoothingEnabled = true;
-                    this.ctx.imageSmoothingQuality = 'high';
-                    
-                    // Clip to the ACTUAL deformed moon shape using cached points
-                    this.ctx.beginPath();
-                    if (cachedPoints) {
-                        // Use the cached deformed shape for clipping
-                        this.ctx.moveTo(cachedPoints[0].x, cachedPoints[0].y);
-                        for (let i = 1; i < cachedPoints.length; i++) {
-                            this.ctx.lineTo(cachedPoints[i].x, cachedPoints[i].y);
-                        }
-                        this.ctx.closePath();
-                    } else {
-                        // Fallback to circle
-                        this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                    }
-                    this.ctx.clip();
-                    
-                    // Use a single smooth gradient for the entire shadow
-                    const shadowGradient = this.ctx.createRadialGradient(
-                        offsetX, offsetY, radius * 0.9,
-                        offsetX, offsetY, radius * 1.1
-                    );
-                    
-                    // More gradient stops for smoother transition
-                    // Also fade opacity based on shadowProgress for smoother appearance
-                    // Use shadow.coverage if available (from ShapeMorpher during transitions)
-                    const baseCoverage = shadow.coverage !== undefined ? shadow.coverage : 0.85;
-                    const shadowOpacity = Math.min(1, shadowProgress * 1.2) * (baseCoverage / 0.85); // Apply coverage scaling
-                    shadowGradient.addColorStop(0, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.80, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.88, `rgba(0, 0, 0, ${0.98 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.91, `rgba(0, 0, 0, ${0.95 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.93, `rgba(0, 0, 0, ${0.9 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.95, `rgba(0, 0, 0, ${0.8 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.96, `rgba(0, 0, 0, ${0.65 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.97, `rgba(0, 0, 0, ${0.45 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.98, `rgba(0, 0, 0, ${0.25 * shadowOpacity})`);
-                    shadowGradient.addColorStop(0.99, `rgba(0, 0, 0, ${0.1 * shadowOpacity})`);
-                    shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                    
-                    this.ctx.fillStyle = shadowGradient;
-                    this.ctx.beginPath();
-                    this.ctx.arc(offsetX, offsetY, radius * 1.1, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    
-                    this.ctx.restore();
+                    animatedOffset = -2 + (baseOffset + 2) * shadowProgress;
                 }
-                
-                if (shadow.type === 'lunar') {
-                    // Lunar eclipse - diffuse reddish shadow
-                    this.ctx.save();
-                    
-                    // Check for moon-to-lunar transition
-                    let transitionProgress = 1.0;
-                    let fromMoon = false;
-                    if (this.shapeMorpher) {
-                        const morphProgress = this.shapeMorpher.getProgress();
-                        const currentShape = this.shapeMorpher.currentShape;
-                        const targetShape = this.shapeMorpher.targetShape;
-                        
-                        // Special animation when coming FROM moon
-                        if (currentShape === 'moon' && targetShape === 'lunar' && morphProgress !== undefined && morphProgress < 1) {
-                            transitionProgress = morphProgress;
-                            fromMoon = true;
-                        }
-                        // Or when morphing TO lunar from other shapes
-                        else if (targetShape === 'lunar' && currentShape !== 'moon' && morphProgress !== undefined && morphProgress < 1) {
-                            transitionProgress = morphProgress;
-                        }
-                    }
-                    
-                    // Position based on transition
-                    let shadowX = shadow.shadowX !== undefined ? shadow.shadowX * radius : 0;
-                    let shadowY = shadow.shadowY !== undefined ? shadow.shadowY * radius : 0;
-                    
-                    // If transitioning from moon, animate the crescent shadow moving to center
-                    if (fromMoon) {
-                        // Start from crescent position and move to center
-                        const crescentAngle = -30 * Math.PI / 180;
-                        const startX = Math.cos(crescentAngle) * radius * 0.7;
-                        const startY = Math.sin(crescentAngle) * radius * 0.7;
-                        
-                        // Interpolate position
-                        shadowX = startX * (1 - transitionProgress);
-                        shadowY = startY * (1 - transitionProgress);
-                    }
-                    
-                    // Diffusion affects gradient spread - animate this too
-                    const diffusion = fromMoon ? 
-                        transitionProgress : // Start sharp (like crescent), become diffuse
-                        (shadow.diffusion !== undefined ? shadow.diffusion : 1);
-                    const sharpness = 1 - diffusion; // 0 = fully diffuse, 1 = sharp
-                    
-                    // Clip to moon shape
-                    this.ctx.beginPath();
-                    this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                    this.ctx.clip();
-                    
-                    // Penumbra (diffuse outer shadow) - MUCH DARKER
-                    const penumbraRadius = radius * (1.8 - sharpness * 0.5); // Smaller when sharp
-                    const penumbraGradient = this.ctx.createRadialGradient(
-                        shadowX, shadowY, radius * 0.2,
-                        shadowX, shadowY, penumbraRadius
-                    );
-                    
-                    // Animate colors from black (moon) to reddish (lunar)
-                    const baseOpacity = shadow.coverage || 0.9;
-                    const colorTransition = fromMoon ? transitionProgress : 1.0;
-                    
-                    // Interpolate from black to red based on transition
-                    const r1 = Math.floor(10 * colorTransition);
-                    const r2 = Math.floor(20 * colorTransition);
-                    const r3 = Math.floor(40 * colorTransition);
-                    const r4 = Math.floor(60 * colorTransition);
-                    const r5 = Math.floor(80 * colorTransition);
-                    
-                    penumbraGradient.addColorStop(0, `rgba(${r1}, ${Math.floor(r1 * 0.2)}, 0, ${baseOpacity})`);
-                    penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(${r2}, ${Math.floor(r2 * 0.25)}, 0, ${baseOpacity * 0.95})`);
-                    penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(${r3}, ${Math.floor(r3 * 0.25)}, ${Math.floor(r3 * 0.125)}, ${baseOpacity * 0.8})`);
-                    penumbraGradient.addColorStop(0.85, `rgba(${r4}, ${Math.floor(r4 * 0.25)}, ${Math.floor(r4 * 0.167)}, ${baseOpacity * 0.4})`);
-                    penumbraGradient.addColorStop(1, `rgba(${r5}, ${Math.floor(r5 * 0.25)}, ${Math.floor(r5 * 0.188)}, 0)`);
-                    
-                    this.ctx.fillStyle = penumbraGradient;
-                    this.ctx.beginPath();
-                    this.ctx.arc(shadowX, shadowY, penumbraRadius, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    
-                    // Umbra (even darker inner shadow) - only when somewhat sharp
-                    if (sharpness > 0.3) {
-                        const umbraRadius = radius * (0.8 + sharpness * 0.3);
-                        const umbraGradient = this.ctx.createRadialGradient(
-                            shadowX, shadowY, 0,
-                            shadowX, shadowY, umbraRadius
-                        );
-                        
-                        // Even darker - essentially black in the center
-                        umbraGradient.addColorStop(0, `rgba(0, 0, 0, ${baseOpacity})`);  // Pure black
-                        umbraGradient.addColorStop(0.5, `rgba(10, 2, 0, ${baseOpacity * 0.9})`);
-                        umbraGradient.addColorStop(0.8, `rgba(20, 5, 0, ${baseOpacity * 0.5})`);
-                        umbraGradient.addColorStop(1, 'rgba(30, 8, 5, 0)');
-                        
-                        this.ctx.fillStyle = umbraGradient;
-                        this.ctx.beginPath();
-                        this.ctx.arc(shadowX, shadowY, umbraRadius, 0, Math.PI * 2);
-                        this.ctx.fill();
-                    }
-                    
-                    this.ctx.restore();
+                // FROM MOON TO ANY SHAPE - ShapeMorpher is already controlling via shadow.offset
+                // so we just use whatever offset is provided in the shadow object
+            }
+            const angleRad = (shadow.angle || -30) * Math.PI / 180;
+            const offsetX = Math.cos(angleRad) * radius * animatedOffset;
+            const offsetY = Math.sin(angleRad) * radius * animatedOffset;
+            
+            // Enable high quality rendering
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // Clip to the moon shape
+            ctx.beginPath();
+            if (shapePoints) {
+                ctx.moveTo(shapePoints[0].x, shapePoints[0].y);
+                for (let i = 1; i < shapePoints.length; i++) {
+                    ctx.lineTo(shapePoints[i].x, shapePoints[i].y);
                 }
+                ctx.closePath();
+            } else {
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            }
+            ctx.clip();
+            
+            // Use a single smooth gradient for the entire shadow
+            const shadowGradient = ctx.createRadialGradient(
+                offsetX, offsetY, radius * 0.9,
+                offsetX, offsetY, radius * 1.1
+            );
+            
+            // More gradient stops for smoother transition
+            // Also fade opacity based on shadowProgress for smoother appearance
+            const baseCoverage = shadow.coverage !== undefined ? shadow.coverage : 0.85;
+            const shadowOpacity = Math.min(1, shadowProgress * 1.2) * (baseCoverage / 0.85);
+            shadowGradient.addColorStop(0, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.80, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.88, `rgba(0, 0, 0, ${0.98 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.91, `rgba(0, 0, 0, ${0.95 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.93, `rgba(0, 0, 0, ${0.9 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.95, `rgba(0, 0, 0, ${0.8 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.96, `rgba(0, 0, 0, ${0.65 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.97, `rgba(0, 0, 0, ${0.45 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.98, `rgba(0, 0, 0, ${0.25 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.99, `rgba(0, 0, 0, ${0.1 * shadowOpacity})`);
+            shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = shadowGradient;
+            ctx.beginPath();
+            ctx.arc(offsetX, offsetY, radius * 1.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+        } else if (shadow.type === 'lunar') {
+            // Lunar eclipse - diffuse reddish shadow
+            const diffusion = shadow.diffusion !== undefined ? shadow.diffusion : 1;
+            const sharpness = 1 - diffusion;
+            
+            // Clip to moon shape
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.clip();
+            
+            // Penumbra (diffuse outer shadow) - MUCH DARKER
+            const penumbraRadius = radius * (1.8 - sharpness * 0.5);
+            const penumbraGradient = ctx.createRadialGradient(
+                0, 0, radius * 0.2,
+                0, 0, penumbraRadius
+            );
+            
+            const baseOpacity = shadow.coverage || 0.9;
+            
+            penumbraGradient.addColorStop(0, `rgba(10, 2, 0, ${baseOpacity})`);
+            penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(20, 5, 0, ${baseOpacity * 0.95})`);
+            penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(40, 10, 5, ${baseOpacity * 0.8})`);
+            penumbraGradient.addColorStop(0.85, `rgba(60, 15, 10, ${baseOpacity * 0.4})`);
+            penumbraGradient.addColorStop(1, `rgba(80, 20, 15, 0)`);
+            
+            ctx.fillStyle = penumbraGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, penumbraRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Umbra (sharp inner shadow) - only when sharp
+            if (sharpness > 0.3) {
+                const umbraRadius = radius * (0.8 + sharpness * 0.3);
+                const umbraGradient = ctx.createRadialGradient(
+                    0, 0, 0,
+                    0, 0, umbraRadius
+                );
                 
-                this.ctx.restore();
+                umbraGradient.addColorStop(0, `rgba(0, 0, 0, ${baseOpacity})`);
+                umbraGradient.addColorStop(0.5, `rgba(10, 2, 0, ${baseOpacity * 0.9})`);
+                umbraGradient.addColorStop(0.8, `rgba(20, 5, 0, ${baseOpacity * 0.5})`);
+                umbraGradient.addColorStop(1, 'rgba(30, 8, 5, 0)');
+                
+                ctx.fillStyle = umbraGradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, umbraRadius, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
         
-        
-        this.ctx.restore();
+        ctx.restore();
     }
     
     /**
@@ -2020,35 +1674,9 @@ this.ctx.translate(x, y);
      * Render speaking animation rings
      */
     renderSpeakingRings(centerX, centerY, coreRadius, deltaTime) {
-        // Spawn new rings periodically
-        this.ringSpawnTimer += deltaTime;
-        if (this.ringSpawnTimer >= this.ringSpawnInterval && this.speakingRings.length < this.maxRings) {
-            this.speakingRings.push({
-                radius: coreRadius,
-                opacity: 0.8,
-                speed: 0.15 // Expansion speed
-            });
-            this.ringSpawnTimer = 0;
-        }
-        
-        // Update and render existing rings
-        this.speakingRings = this.speakingRings.filter(ring => {
-            // Update ring
-            ring.radius += ring.speed * deltaTime;
-            ring.opacity = Math.max(0, 0.8 * (1 - (ring.radius - coreRadius) / (coreRadius * 2)));
-            
-            // Render ring if visible
-            if (ring.opacity > 0.01) {
-                this.ctx.strokeStyle = this.hexToRgba(this.state.glowColor, ring.opacity);
-                this.ctx.lineWidth = this.scaleValue(2);
-                this.ctx.beginPath();
-                this.ctx.arc(centerX, centerY, ring.radius, 0, Math.PI * 2);
-                this.ctx.stroke();
-                return true;
-            }
-            return false;
-        });
+        return this.specialEffects.renderSpeakingRings(centerX, centerY, coreRadius, deltaTime);
     }
+    
     
     // Recording rings method removed - now using pulsating glow instead
     
@@ -2056,167 +1684,46 @@ this.ctx.translate(x, y);
      * Render recording indicator - stylized REC text only
      */
     renderRecordingIndicator(x, y) {
-        const time = Date.now() / 1000;
-        const pulse = 0.8 + Math.sin(time * 2) * 0.2; // Gentle pulse matching glow
-        
-        this.ctx.save();
-        this.ctx.translate(x, y);
-        
-        // Outer glow for text
-        this.ctx.shadowBlur = this.scaleValue(15);
-        this.ctx.shadowColor = `rgba(255, 0, 0, ${pulse * 0.8})`;
-        
-        // Main REC text - solid red, matching sleep Z size
-        const recSize = this.scaleValue(80); // Match sleep Z average size
-        this.ctx.font = `italic 900 ${recSize}px "Poppins", sans-serif`;
-        this.ctx.fillStyle = `rgba(255, 0, 0, ${pulse})`;
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('REC', 0, 0);
-        
-        // Inner highlight for cell-shading effect
-        this.ctx.shadowBlur = 0;
-        this.ctx.font = `italic 900 ${recSize - 1}px "Poppins", sans-serif`;
-        this.ctx.fillStyle = `rgba(255, 255, 255, ${pulse * 0.3})`;
-        this.ctx.fillText('REC', -0.5, -0.5);
-        
-        this.ctx.restore();
+        return this.specialEffects.renderRecordingIndicator(x, y);
     }
+    
     
     /**
      * Render sleep indicator (Z's) with cell-shaded style and gradient fade
      */
     renderSleepIndicator(x, y, deltaTime) {
-        // Spawn new Z periodically
-        this.ringSpawnTimer += deltaTime;
-        if (this.ringSpawnTimer >= 2000 && this.sleepZ.length < 3) {
-            // Random variations for each Z
-            const weights = ['300', '500', '700', '900'];
-            const randomWeight = weights[Math.floor(Math.random() * weights.length)];
-            const randomCase = Math.random() > 0.5 ? 'Z' : 'z';
-            
-            this.sleepZ.push({
-                x: x + Math.random() * this.scaleValue(30) - this.scaleValue(15),
-                y: y + this.scaleValue(80),  // Much lower origin point
-                size: this.scaleValue((24 + Math.random() * 8) * 3),  // 3x larger
-                opacity: 1.0,
-                speed: -0.025,
-                drift: Math.random() * this.scaleValue(20) - this.scaleValue(10),
-                lifetime: 0,
-                rotation: Math.random() * 30 - 15,
-                text: randomCase,  // Store the random case
-                weight: randomWeight  // Store the random weight
-            });
-            this.ringSpawnTimer = 0;
-        }
-        
-        // Update and render Z's
-        this.sleepZ = this.sleepZ.filter(z => {
-            // Update position and lifetime
-            z.lifetime += deltaTime;
-            z.y += z.speed * deltaTime;
-            z.x += Math.sin(z.lifetime * 0.0008) * z.drift * 0.008;
-            z.rotation += deltaTime * 0.01;
-            
-            // Gradient fade out
-            const fadeStart = 2000;
-            const fadeEnd = 4000;
-            if (z.lifetime < fadeStart) {
-                z.opacity = 1.0;
-            } else if (z.lifetime < fadeEnd) {
-                z.opacity = 1.0 - ((z.lifetime - fadeStart) / (fadeEnd - fadeStart));
-            } else {
-                z.opacity = 0;
-            }
-            
-            if (z.opacity > 0.01) {
-                this.ctx.save();
-                this.ctx.translate(z.x, z.y);
-                this.ctx.rotate(z.rotation * Math.PI / 180);
-                
-                // Cell-shaded style
-                const baseColor = this.state.glowColor || '#4a90e2';
-                
-                // Outer glow
-                this.ctx.shadowBlur = this.scaleValue(15);
-                this.ctx.shadowColor = this.hexToRgba(baseColor, z.opacity * 0.5);
-                
-                // Main Z with gradient
-                const gradient = this.ctx.createLinearGradient(-z.size/2, -z.size/2, z.size/2, z.size/2);
-                gradient.addColorStop(0, this.hexToRgba(baseColor, z.opacity));
-                gradient.addColorStop(0.5, this.hexToRgba('#ffffff', z.opacity * 0.9));
-                gradient.addColorStop(1, this.hexToRgba(baseColor, z.opacity * 0.7));
-                
-                // Use the random weight and italic style
-                this.ctx.font = `italic ${z.weight || '900'} ${z.size}px 'Poppins', sans-serif`;
-                this.ctx.fillStyle = gradient;
-                this.ctx.textAlign = 'center';
-                this.ctx.textBaseline = 'middle';
-                this.ctx.fillText(z.text || 'Z', 0, 0);
-                
-                // Inner highlight with same weight
-                this.ctx.shadowBlur = 0;
-                this.ctx.font = `italic ${z.weight || '900'} ${z.size * 0.9}px 'Poppins', sans-serif`;
-                this.ctx.fillStyle = this.hexToRgba('#ffffff', z.opacity * 0.3);
-                this.ctx.fillText(z.text || 'Z', -1, -1);
-                
-                this.ctx.restore();
-                return true;
-            }
-            return false;
-        });
+        return this.specialEffects.renderSleepIndicator(x, y, deltaTime);
     }
+    
     
     /**
      * Update animation timers
      */
     updateTimers(deltaTime) {
-        // Breathing animation with irregular patterns for certain undertones
-        let breathSpeed = this.config.breathingSpeed;
-        let breathDepthOverride = null;
+        // Update breathing animation via BreathingAnimator
+        this.breathingAnimator.update(deltaTime, this.state.emotion, this.currentUndertone);
         
-        // Special breathing for zen state
+        // Update special breathing modifiers
         if (this.state.emotion === 'zen') {
-            // Super slow, big expansive breaths in zen
-            breathSpeed *= 0.15; // Much slower (about 10 second cycles)
-            breathDepthOverride = 0.2; // Much deeper breaths (20% variation)
+            this.breathingAnimator.setBreathRateMultiplier(0.15);
+            this.breathingAnimator.setBreathDepthMultiplier(2.5);
         } else if (this.state.sleeping) {
-            // Slower breathing when sleeping
-            breathSpeed *= 0.5;
+            this.breathingAnimator.setBreathRateMultiplier(0.5);
+            this.breathingAnimator.setBreathDepthMultiplier(1.2);
+        } else {
+            this.breathingAnimator.setBreathRateMultiplier(1.0);
+            this.breathingAnimator.setBreathDepthMultiplier(1.0);
         }
         
         // Apply irregular breathing for nervous/tired
-        if (this.state.breathIrregular) {
-            // Add occasional hitches and variations
-            const irregularFactor = 1 + Math.sin(Date.now() / 2000) * 0.3 + 
-                                   Math.sin(Date.now() / 700) * 0.2;
-            breathSpeed *= irregularFactor;
-        }
+        this.breathingAnimator.setIrregularBreathing(this.state.breathIrregular);
         
-        this.breathingPhase += (breathSpeed * deltaTime) / 1000;
+        // Update blinking via EyeRenderer
+        this.eyeRenderer.setBlinkingEnabled(this.state.blinkingEnabled && !this.state.sleeping && this.state.emotion !== 'zen');
+        this.eyeRenderer.update(deltaTime);
         
-        // Apply breath depth override if set (for zen)
-        if (breathDepthOverride !== null) {
-            this.state.breathDepth = breathDepthOverride;
-        }
-        
-        // Blinking (only when enabled and not sleeping or in zen)
-        if (this.state.blinkingEnabled && !this.state.sleeping && this.state.emotion !== 'zen') {
-            if (!this.state.blinking) {
-                this.blinkTimer += deltaTime;
-                if (this.blinkTimer >= this.nextBlinkTime) {
-                    this.state.blinking = true;
-                    this.blinkTimer = 0;
-                }
-            } else {
-                this.blinkTimer += deltaTime;
-                if (this.blinkTimer >= 150) { // 150ms blink duration
-                    this.state.blinking = false;
-                    this.blinkTimer = 0;
-                    this.nextBlinkTime = this.getRandomBlinkTime();
-                }
-            }
-        }
+        // Sync blinking state back to our state for compatibility
+        this.state.blinking = this.eyeRenderer.blinking;
         
         // Note: Idle detection is handled by IdleBehavior.js, not here
     }
@@ -2375,11 +1882,6 @@ this.ctx.translate(x, y);
                 if (modifier.glowRadiusMult !== undefined && isFinite(modifier.glowRadiusMult) && isFinite(weight)) {
                     glowMult = 1.0 + (modifier.glowRadiusMult - 1.0) * weight;
                 } else {
-                    console.warn('Invalid weighted modifier values:', {
-                        glowRadiusMult: modifier.glowRadiusMult,
-                        weight: weight,
-                        undertone: undertone
-                    });
                     glowMult = 1.0;
                 }
             } else {
@@ -2529,7 +2031,6 @@ this.ctx.translate(x, y);
         // Animate eye closing, then dimming
         this.animateEyeClose();
         
-        console.log('EmotiveRenderer: Entering sleep mode');
     }
     
     /**
@@ -2609,8 +2110,9 @@ this.ctx.translate(x, y);
         
         // Reset blinking state
         this.state.blinking = false;
-        this.blinkTimer = 0;
-        this.nextBlinkTime = this.getRandomBlinkTime();
+        // Blinking now handled by EyeRenderer
+        this.eyeRenderer.blinking = false;
+        this.eyeRenderer.blinkTimer = 0;
         
         // Animate eye opening
         this.animateEyeOpen();
@@ -2621,7 +2123,6 @@ this.ctx.translate(x, y);
             this.state.coreJitter = false;
         }, 200);
         
-        console.log('EmotiveRenderer: Waking up');
     }
     
     /**
@@ -2898,7 +2399,6 @@ this.ctx.translate(x, y);
      */
     startRecording() {
         this.state.recording = true;
-        console.log('EmotiveRenderer: Recording started');
     }
     
     /**
@@ -2906,15 +2406,11 @@ this.ctx.translate(x, y);
      */
     stopRecording() {
         this.state.recording = false;
-        console.log('EmotiveRenderer: Recording stopped');
     }
     
     /**
      * Get random blink time (2-6 seconds)
      */
-    getRandomBlinkTime() {
-        return 2000 + Math.random() * 4000; // 2-6 seconds normally
-    }
     
     /**
      * Set whether blinking is enabled
@@ -2925,8 +2421,9 @@ this.ctx.translate(x, y);
         if (!enabled) {
             // If disabling blinking, immediately stop any current blink
             this.state.blinking = false;
-            this.blinkTimer = 0;
-            this.nextBlinkTime = this.getRandomBlinkTime();
+            // Reset blinking via EyeRenderer
+            this.eyeRenderer.blinking = false;
+            this.eyeRenderer.blinkTimer = 0;
         }
     }
     
@@ -2982,7 +2479,6 @@ this.ctx.translate(x, y);
      */
     handleContextRecovery(newContext) {
         this.ctx = newContext;
-        console.log('EmotiveRenderer: Context recovered');
     }
     
     /**
@@ -3006,628 +2502,17 @@ this.ctx.translate(x, y);
      * Apply all active gesture animations
      * Returns combined transform object
      */
+    // Gesture animations moved to GestureAnimator module
     applyGestureAnimations() {
-        const now = performance.now();
-        const transform = {
-            offsetX: 0,
-            offsetY: 0,
-            scale: 1,
-            rotation: 0,
-            glow: 1
-        };
-        
-        // Process each gesture animation
-        for (const [gestureName, anim] of Object.entries(this.gestureAnimations)) {
-            if (!anim.active) continue;
-            
-            const elapsed = now - anim.startTime;
-            // Use stored duration or fallback to params duration
-            const duration = anim.duration || (anim.params ? anim.params.duration : 1000);
-            anim.progress = Math.min(elapsed / duration, 1);
-            
-            // Apply easing
-            const easedProgress = this.applyEasing(anim.progress, anim.params.easing);
-            
-            // Apply gesture-specific transformations
-            let gestureTransform = {};
-            switch (gestureName) {
-                case 'bounce':
-                    gestureTransform = this.applyBounce(anim, easedProgress);
-                    break;
-                case 'pulse':
-                    gestureTransform = this.applyPulse(anim, easedProgress);
-                    break;
-                case 'shake':
-                    gestureTransform = this.applyShake(anim, easedProgress);
-                    break;
-                case 'spin':
-                    gestureTransform = this.applySpin(anim, easedProgress);
-                    break;
-                case 'nod':
-                    gestureTransform = this.applyNod(anim, easedProgress);
-                    break;
-                case 'tilt':
-                    gestureTransform = this.applyTilt(anim, easedProgress);
-                    break;
-                case 'expand':
-                    gestureTransform = this.applyExpand(anim, easedProgress);
-                    break;
-                case 'contract':
-                    gestureTransform = this.applyContract(anim, easedProgress);
-                    break;
-                case 'flash':
-                    gestureTransform = this.applyFlash(anim, easedProgress);
-                    break;
-                case 'drift':
-                    gestureTransform = this.applyDrift(anim, easedProgress);
-                    break;
-                case 'stretch':
-                    gestureTransform = this.applyStretch(anim, easedProgress);
-                    break;
-                case 'glow':
-                    gestureTransform = this.applyGlow(anim, easedProgress);
-                    break;
-                case 'flicker':
-                    gestureTransform = this.applyFlicker(anim, easedProgress);
-                    break;
-                case 'vibrate':
-                    gestureTransform = this.applyVibrate(anim, easedProgress);
-                    break;
-                case 'wave':
-                    gestureTransform = this.applyWave(anim, easedProgress);
-                    break;
-                case 'breathe':
-                    gestureTransform = this.applyBreathe(anim, easedProgress);
-                    break;
-                case 'morph':
-                    gestureTransform = this.applyMorph(anim, easedProgress);
-                    break;
-                case 'slowBlink':
-                    gestureTransform = this.applySlowBlink(anim, easedProgress);
-                    break;
-                case 'look':
-                    gestureTransform = this.applyLook(anim, easedProgress);
-                    break;
-                case 'settle':
-                    gestureTransform = this.applySettle(anim, easedProgress);
-                    break;
-                case 'breathIn':
-                    gestureTransform = this.applyBreathIn(anim, easedProgress);
-                    break;
-                case 'breathOut':
-                    gestureTransform = this.applyBreathOut(anim, easedProgress);
-                    break;
-                case 'breathHold':
-                    gestureTransform = this.applyBreathHold(anim, easedProgress);
-                    break;
-                case 'breathHoldEmpty':
-                    gestureTransform = this.applyBreathHoldEmpty(anim, easedProgress);
-                    break;
-                case 'jump':
-                    gestureTransform = this.applyJump(anim, easedProgress);
-                    break;
-                case 'sway':
-                    gestureTransform = this.applySway(anim, easedProgress);
-                    break;
-                case 'float':
-                    gestureTransform = this.applyFloat(anim, easedProgress);
-                    break;
-            }
-            
-            // Combine transforms
-            transform.offsetX += gestureTransform.offsetX || 0;
-            transform.offsetY += gestureTransform.offsetY || 0;
-            transform.scale *= gestureTransform.scale || 1;
-            transform.rotation += gestureTransform.rotation || 0;
-            transform.glow *= gestureTransform.glow || 1;
-            
-            // Check if animation is complete
-            if (anim.progress >= 1) {
-                anim.active = false;
-                console.log(`${gestureName} animation complete`);
-            }
-        }
-        
-        return transform;
+        return this.gestureAnimator.applyGestureAnimations();
     }
-    
+      
     /**
-     * Apply easing function to progress
-     */
-    applyEasing(progress, easing) {
-        switch (easing) {
-            case 'linear':
-                return progress;
-            case 'quad':
-                return progress * progress;
-            case 'cubic':
-                return progress * progress * progress;
-            case 'sine':
-                return Math.sin(progress * Math.PI / 2);
-            case 'back':
-                return progress * progress * (2.7 * progress - 1.7);
-            default:
-                return progress;
-        }
-    }
-    
-    // Individual gesture application methods
-    applyBounce(anim, progress) {
-        const bounce = Math.abs(Math.sin(progress * Math.PI * anim.params.frequency)) * anim.params.amplitude * this.scaleFactor;
-        // Apply effects
-        const multiplier = anim.params.effects && anim.params.effects.includes('gravity') ? 0.6 : 1;
-        return { offsetY: -bounce * multiplier };
-    }
-    
-    applyPulse(anim, progress) {
-        const pulse = Math.sin(progress * Math.PI * anim.params.frequency);
-        return {
-            scale: 1 + pulse * anim.params.scaleAmount,
-            glow: 1 + pulse * anim.params.glowAmount
-        };
-    }
-    
-    applyShake(anim, progress) {
-        // Initialize random direction for this shake if not set
-        if (!anim.randomAngle) {
-            anim.randomAngle = Math.random() * Math.PI * 2; // Random angle in radians
-        }
-        const decay = anim.params.decay ? (1 - progress) : 1;
-        const shake = Math.sin(progress * Math.PI * anim.params.frequency) * anim.params.amplitude * decay * this.scaleFactor;
-        return {
-            offsetX: shake * Math.cos(anim.randomAngle),
-            offsetY: shake * Math.sin(anim.randomAngle)
-        };
-    }
-    
-    applySpin(anim, progress) {
-        // Ensure full rotation even if progress doesn't quite reach 1.0
-        const actualProgress = Math.min(progress * 1.05, 1.0); // Slight overshoot to ensure completion
-        return {
-            rotation: actualProgress * anim.params.rotations * 360,
-            scale: 1 + Math.sin(progress * Math.PI) * anim.params.scaleAmount
-        };
-    }
-    
-    applyNod(anim, progress) {
-        const nod = Math.sin(progress * Math.PI * anim.params.frequency) * anim.params.amplitude * this.scaleFactor;
-        return { offsetY: nod };
-    }
-    
-    applyTilt(anim, progress) {
-        if (!anim.tiltDirection) {
-            // Randomly choose left (-1) or right (1) tilt
-            anim.tiltDirection = Math.random() < 0.5 ? -1 : 1;
-        }
-        const frequency = anim.params.frequency || 2;
-        const angle = (anim.params.angle || 15) * Math.PI / 180; // Convert to radians
-        const tiltProgress = Math.sin(progress * Math.PI * frequency) * anim.tiltDirection;
-        
-        // Apply both rotation and skew to make tilt visible on circular orb
-        return { 
-            rotation: tiltProgress * angle,
-            // Skew the orb slightly to show tilt motion
-            scaleX: 1 + Math.abs(tiltProgress) * 0.1,  // Widen when tilted
-            scaleY: 1 - Math.abs(tiltProgress) * 0.05, // Compress slightly
-            // Move slightly with tilt
-            offsetX: tiltProgress * 10,
-            offsetY: Math.abs(tiltProgress) * -5  // Lift slightly when tilted
-        };
-    }
-    
-    applyExpand(anim, progress) {
-        // Use scaleAmount or scaleTarget (handle both config formats)
-        // Make sure we're expanding, not contracting
-        const targetScale = Math.max(anim.params.scaleAmount || anim.params.scaleTarget || 1.5, 1.0);
-        const easedProgress = Math.sin(progress * Math.PI / 2); // Smooth ease-out
-        const scale = 1 + (targetScale - 1) * easedProgress;
-        return {
-            scale: scale,
-            glow: 1 + Math.abs(anim.params.glowAmount || 0.2) * easedProgress
-        };
-    }
-    
-    applyContract(anim, progress) {
-        // Use scaleAmount or scaleTarget (handle both config formats)
-        const targetScale = anim.params.scaleAmount || anim.params.scaleTarget || 0.7;
-        const easedProgress = Math.sin(progress * Math.PI / 2); // Smooth ease-out
-        const scale = 1 + (targetScale - 1) * easedProgress;
-        return {
-            scale: scale,
-            glow: 1 + (anim.params.glowAmount || -0.2) * easedProgress
-        };
-    }
-    
-    applyFlash(anim, progress) {
-        const flash = Math.sin(progress * Math.PI); // Quick up and down
-        const glowPeak = anim.params.glowPeak || 2.0;  // Default if not defined
-        const scalePeak = anim.params.scalePeak || 1.1; // Default if not defined
-        return {
-            glow: 1 + (glowPeak - 1) * flash,
-            scale: 1 + (scalePeak - 1) * flash
-        };
-    }
-    
-    applyDrift(anim, progress) {
-        // Initialize drift angle when starting (progress near 0)
-        if (progress <= 0.01 && !anim.currentDriftAngle) {
-            // Always pick a random angle for drift
-            anim.currentDriftAngle = Math.random() * Math.PI * 2; // Random direction in radians
-        }
-        
-        const distance = anim.params.distance * Math.sin(progress * Math.PI) * this.scaleFactor;
-        const angle = anim.currentDriftAngle || 0;
-        
-        // Clear the angle when animation completes
-        if (progress >= 0.99) {
-            anim.currentDriftAngle = null;
-        }
-        
-        return {
-            offsetX: Math.cos(angle) * distance,
-            offsetY: Math.sin(angle) * distance
-        };
-    }
-    
-    applyStretch(anim, progress) {
-        const stretch = Math.sin(progress * Math.PI * anim.params.frequency);
-        // Note: We'd need to handle scaleX/scaleY separately for proper stretch
-        // For now, average them
-        const avgScale = (anim.params.scaleX + anim.params.scaleY) / 2;
-        return { scale: 1 + (avgScale - 1) * stretch };
-    }
-    
-    applyGlow(anim, progress) {
-        const glowIntensity = Math.sin(progress * Math.PI); // Fade in and out
-        return {
-            glow: 1 + (anim.params.glowPeak - 1) * glowIntensity
-        };
-    }
-    
-    applyFlicker(anim, progress) {
-        const flickerPhase = Math.floor(progress * anim.params.frequency);
-        const flicker = flickerPhase % 2 === 0 ? 1 : 0.5;
-        return {
-            glow: flicker * (anim.params.maxOpacity - anim.params.minOpacity) + anim.params.minOpacity
-        };
-    }
-    
-    applyVibrate(anim, progress) {
-        // Initialize random vibration pattern if not set
-        if (!anim.vibrateAngles) {
-            anim.vibrateAngles = {
-                x: Math.random() * 2 - 1, // Random factor between -1 and 1
-                y: Math.random() * 2 - 1
-            };
-            // Normalize to unit vector
-            const mag = Math.sqrt(anim.vibrateAngles.x ** 2 + anim.vibrateAngles.y ** 2);
-            anim.vibrateAngles.x /= mag;
-            anim.vibrateAngles.y /= mag;
-        }
-        const vibration = Math.sin(progress * Math.PI * 2 * anim.params.frequency) * anim.params.amplitude * this.scaleFactor;
-        return {
-            offsetX: vibration * anim.vibrateAngles.x,
-            offsetY: vibration * anim.vibrateAngles.y
-        };
-    }
-    
-    applyWave(anim, progress) {
-        // Completely rewritten wave - a graceful, flowing infinity symbol motion
-        const amp = (anim.params.amplitude || 40) * this.scaleFactor;
-        
-        // Create a smooth infinity symbol (∞) pattern
-        // This feels more like a natural greeting wave
-        const t = progress * Math.PI * 2;
-        
-        // Infinity symbol parametric equations
-        // X: figure-8 horizontal motion
-        const infinityX = Math.sin(t) * amp;
-        
-        // Y: gentle vertical bob that rises during the wave
-        // Creates a "lifting" feeling like a real wave hello
-        const liftAmount = -Math.sin(progress * Math.PI) * amp * 0.3; // Lift up during wave
-        const infinityY = Math.sin(t * 2) * amp * 0.2 + liftAmount;
-        
-        // Add a subtle tilt that follows the wave direction
-        // Makes the orb "lean into" the wave
-        const tilt = Math.sin(t) * 5; // ±5 degrees of tilt
-        
-        // Gentle scale pulse for emphasis
-        const scalePulse = 1 + Math.sin(progress * Math.PI * 2) * 0.05; // 5% scale variation
-        
-        // Glow brightens slightly during wave
-        const glowPulse = 1 + Math.sin(progress * Math.PI) * 0.2; // 20% glow increase
-        
-        return {
-            offsetX: infinityX,
-            offsetY: infinityY,
-            rotation: tilt,
-            scale: scalePulse,
-            glow: glowPulse
-        };
-    }
-    
-    applyBreathe(anim, progress) {
-        // Deliberate, mindful breathing animation
-        const params = anim.params;
-        const holdPercent = params.particleMotion?.holdPercent || 0.1;
-        
-        // Create a breathing curve with holds at peaks
-        let breathPhase;
-        if (progress < 0.4) {
-            // Inhale phase (0-40%)
-            breathPhase = Math.sin((progress / 0.4) * Math.PI / 2);
-        } else if (progress < 0.4 + holdPercent) {
-            // Hold at full inhale
-            breathPhase = 1.0;
-        } else if (progress < 0.9) {
-            // Exhale phase  
-            const exhaleProgress = (progress - 0.4 - holdPercent) / (0.5 - holdPercent);
-            breathPhase = Math.cos(exhaleProgress * Math.PI / 2);
-        } else {
-            // Hold at full exhale
-            breathPhase = 0;
-        }
-        
-        // Apply scale changes - expand on inhale
-        const scaleAmount = params.scaleAmount || 0.25;
-        const scale = 1 + breathPhase * scaleAmount;
-        
-        // Apply glow changes - brighten on inhale
-        const glowAmount = params.glowAmount || 0.4;
-        const glow = 1 + breathPhase * glowAmount;
-        
-        // Store breath phase for particle system
-        anim.breathPhase = breathPhase;
-        
-        return {
-            scale: scale,
-            glow: glow,
-            breathPhase: breathPhase // Pass to particles for synchronized motion
-        };
-    }
-    
-    applyMorph(anim, progress) {
-        // Fluid morphing effect
-        const morph = Math.sin(progress * Math.PI * 2);
-        return {
-            scale: 1 + morph * 0.1,
-            rotation: morph * 10
-        };
-    }
-    
-    applySlowBlink(anim, progress) {
-        // Simulate blinking by scaling vertically
-        let scaleY = 1;
-        if (progress < 0.3) {
-            // Closing
-            scaleY = 1 - (progress / 0.3);
-        } else if (progress < 0.5) {
-            // Closed
-            scaleY = 0;
-        } else if (progress < 0.8) {
-            // Opening
-            scaleY = (progress - 0.5) / 0.3;
-        } else {
-            // Open
-            scaleY = 1;
-        }
-        
-        // Since we can't do scaleY separately, dim the orb instead
-        return {
-            glow: scaleY
-        };
-    }
-    
-    applyLook(anim, progress) {
-        // Initialize target position if not set
-        if (!anim.targetX) {
-            const direction = anim.params.lookDirection;
-            const distance = anim.params.lookDistance * 50 * this.scaleFactor; // Convert to pixels and scale
-            
-            switch(direction) {
-                case 'left':
-                    anim.targetX = -distance;
-                    anim.targetY = 0;
-                    break;
-                case 'right':
-                    anim.targetX = distance;
-                    anim.targetY = 0;
-                    break;
-                case 'up':
-                    anim.targetX = 0;
-                    anim.targetY = -distance;
-                    break;
-                case 'down':
-                    anim.targetX = 0;
-                    anim.targetY = distance;
-                    break;
-                default: // random
-                    const angle = Math.random() * Math.PI * 2;
-                    anim.targetX = Math.cos(angle) * distance;
-                    anim.targetY = Math.sin(angle) * distance;
-            }
-        }
-        
-        // Smooth look with hold
-        let lookProgress = progress;
-        if (progress < 0.3) {
-            // Move to target
-            lookProgress = progress / 0.3;
-        } else if (progress < 0.7) {
-            // Hold
-            lookProgress = 1;
-        } else {
-            // Return
-            lookProgress = 1 - (progress - 0.7) / 0.3;
-        }
-        
-        return {
-            offsetX: anim.targetX * lookProgress,
-            offsetY: anim.targetY * lookProgress
-        };
-    }
-    
-    applySettle(anim, progress) {
-        // Damped oscillation
-        const wobble = Math.sin(progress * Math.PI * anim.params.wobbleFreq) * 
-                      Math.exp(-progress * 3) * 20 * this.scaleFactor;
-        return {
-            offsetY: wobble,
-            scale: 1 + wobble * 0.01
-        };
-    }
-    
-    applyBreathIn(anim, progress) {
-        const breathScale = 1 + (anim.params.scaleAmount - 1) * Math.sin(progress * Math.PI / 2);
-        return {
-            scale: breathScale
-        };
-    }
-    
-    applyBreathOut(anim, progress) {
-        const breathScale = 1 - (1 - anim.params.scaleAmount) * Math.sin(progress * Math.PI / 2);
-        return {
-            scale: breathScale
-        };
-    }
-    
-    applyBreathHold(anim, progress) {
-        // Hold at expanded state
-        return {
-            scale: anim.params.scaleAmount
-        };
-    }
-    
-    applyBreathHoldEmpty(anim, progress) {
-        // Hold at contracted state
-        return {
-            scale: anim.params.scaleAmount
-        };
-    }
-    
-    applyJump(anim, progress) {
-        let yOffset = 0;
-        let scale = 1;
-        
-        if (progress < 0.2) {
-            // Squash phase
-            const squashProgress = progress / 0.2;
-            scale = 1 - (1 - anim.params.squashAmount) * squashProgress;
-        } else if (progress < 0.7) {
-            // Jump phase
-            const jumpProgress = (progress - 0.2) / 0.5;
-            const jumpCurve = Math.sin(jumpProgress * Math.PI);
-            yOffset = -anim.params.jumpHeight * jumpCurve * this.scaleFactor;
-            scale = anim.params.squashAmount + 
-                   (anim.params.stretchAmount - anim.params.squashAmount) * jumpCurve;
-        } else {
-            // Landing phase
-            const landProgress = (progress - 0.7) / 0.3;
-            scale = anim.params.stretchAmount - 
-                   (anim.params.stretchAmount - 1) * landProgress;
-        }
-        
-        return {
-            offsetY: yOffset,
-            scale: scale
-        };
-    }
-    
-    applySway(anim, progress) {
-        // Gentle pendulum-like swaying motion for the core
-        const swayAmplitude = (anim.params?.amplitude || 30) * this.scaleFactor;
-        const swayFrequency = anim.params?.frequency || 1;
-        
-        // Sway side to side with a gentle ease
-        const swayX = Math.sin(progress * Math.PI * 2 * swayFrequency) * swayAmplitude;
-        
-        // Slight vertical bob for realism
-        const bobY = Math.sin(progress * Math.PI * 4 * swayFrequency) * swayAmplitude * 0.1;
-        
-        // Slight rotation to match the sway
-        const rotation = Math.sin(progress * Math.PI * 2 * swayFrequency) * 5; // 5 degrees max
-        
-        return {
-            offsetX: swayX,
-            offsetY: bobY,
-            rotation: rotation
-        };
-    }
-    
-    applyFloat(anim, progress) {
-        // Ethereal floating motion with both vertical and horizontal drift
-        const floatAmplitude = (anim.params?.amplitude || 20) * this.scaleFactor;
-        const floatSpeed = anim.params?.speed || 1;
-        
-        // Primary vertical float with sine wave
-        const floatY = Math.sin(progress * Math.PI * 2 * floatSpeed) * floatAmplitude;
-        
-        // Secondary horizontal drift for natural movement
-        const driftX = Math.sin(progress * Math.PI * 3 * floatSpeed) * floatAmplitude * 0.3;
-        
-        // Slight scale pulsation for breathing effect
-        const scalePulse = 1 + Math.sin(progress * Math.PI * 4 * floatSpeed) * 0.02;
-        
-        return {
-            offsetX: driftX,
-            offsetY: floatY,
-            scale: scalePulse
-        };
-    }
-    
-    /**
-     * Start a gesture animation
+     * Start a gesture animation - delegates to GestureAnimator
      */
     startGesture(gestureName) {
-        console.log(`EmotiveRenderer: Starting ${gestureName} animation`);
-        
-        // Get the gesture configuration
-        const gesture = getGesture(gestureName);
-        
-        // Get composed parameters based on current emotion and undertone
-        const params = this.gestureCompositor.compose(
-            gestureName,
-            this.state.emotion,
-            this.currentUndertone
-        );
-        
-        // Calculate duration from gesture config
-        let duration = 1000; // Default fallback
-        if (gesture && gesture.config) {
-            if (gesture.config.musicalDuration) {
-                // Use musical duration system
-                duration = musicalDuration.toMilliseconds(gesture.config.musicalDuration);
-            } else if (gesture.config.duration) {
-                // Use fixed duration
-                duration = gesture.config.duration;
-            }
-        }
-        
-        // Set up the animation
-        const anim = this.gestureAnimations[gestureName];
-        if (anim) {
-            anim.active = true;
-            anim.startTime = performance.now();
-            anim.progress = 0;
-            anim.params = params;
-            anim.duration = duration; // Store calculated duration
-            
-            // Reset random values for gestures that use them
-            if (gestureName === 'shake') {
-                anim.randomAngle = undefined; // Will be regenerated
-            } else if (gestureName === 'drift') {
-                anim.startX = undefined;
-                anim.startY = undefined;
-                anim.currentDriftAngle = undefined; // Reset the angle for new random direction
-            } else if (gestureName === 'tilt') {
-                anim.tiltDirection = undefined; // Reset for new random direction
-            } else if (gestureName === 'vibrate') {
-                anim.vibrateAngles = undefined;
-            }
-            
-            console.log(`${gestureName} params:`, params);
-        }
+        // Simply delegate to GestureAnimator
+        return this.gestureAnimator.startGesture(gestureName);
     }
     
     /**
@@ -3635,60 +2520,8 @@ this.ctx.translate(x, y);
      * @returns {Object|null} Current gesture with particleMotion and progress, or null
      */
     getCurrentGesture() {
-        // Priority: Find override gestures first (like orbital, hula), then other gestures
-        const overrideGestures = ['orbital', 'hula', 'wave', 'spin', 'morph'];
-        
-        // Check override gestures first
-        for (const gestureName of overrideGestures) {
-            const anim = this.gestureAnimations[gestureName];
-            if (anim && anim.active) {
-                // Get the actual gesture configuration
-                const gesture = getGesture(gestureName);
-                
-                // Use the gesture's config for particleMotion, or create one from gesture type
-                const particleMotion = gesture?.config?.particleMotion || {
-                    type: gestureName,  // This ensures the modular gesture system will find it
-                    strength: anim.params?.strength || 1.0
-                };
-                
-                const gestureInfo = {
-                    name: gestureName,
-                    particleMotion: particleMotion,
-                    progress: anim.progress || 0,
-                    params: anim.params
-                };
-                
-                return gestureInfo;
-            }
-        }
-        
-        // Then check all other gestures
-        for (const [gestureName, anim] of Object.entries(this.gestureAnimations)) {
-            if (anim.active) {
-                // Get the actual gesture configuration
-                const gesture = getGesture(gestureName);
-                
-                // Use the gesture's config for particleMotion, or params if available
-                const particleMotion = gesture?.config?.particleMotion || 
-                                      anim.params?.particleMotion || 
-                                      { type: gestureName, strength: anim.params?.strength || 1.0 };
-                
-                const gestureInfo = {
-                    name: gestureName,
-                    particleMotion: particleMotion,
-                    progress: anim.progress || 0,
-                    params: anim.params
-                };
-                
-                // Include breathPhase for breathe gesture
-                if (gestureName === 'breathe' && anim.breathPhase !== undefined) {
-                    gestureInfo.breathPhase = anim.breathPhase;
-                }
-                
-                return gestureInfo;
-            }
-        }
-        return null;
+        // Delegate to GestureAnimator to get current gesture
+        return this.gestureAnimator.getCurrentGesture();
     }
     
     // Individual start methods for each gesture - delegate to GestureAnimator
@@ -3721,24 +2554,18 @@ this.ctx.translate(x, y);
     startJump() { this.gestureAnimator.startJump(); }
     
     /**
-     * Stop all active gestures
+     * Stop all active gestures - delegates to GestureAnimator
      */
     stopAllGestures() {
-        // Reset all gesture animations
-        Object.keys(this.gestureAnimations).forEach(key => {
-            this.gestureAnimations[key].active = false;
-            this.gestureAnimations[key].startTime = 0;
-            this.gestureAnimations[key].progress = 0;
-            this.gestureAnimations[key].params = null;
-        });
+        this.gestureAnimator.stopAllGestures();
         this.currentGesture = null;
     }
     
     /**
-     * Check if any gesture is active
+     * Check if any gesture is active - delegates to GestureAnimator
      */
     isGestureActive() {
-        return Object.values(this.gestureAnimations).some(anim => anim.active);
+        return Object.values(this.gestureAnimator.gestureAnimations).some(anim => anim.active);
     }
     
     /**

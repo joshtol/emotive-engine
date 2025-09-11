@@ -53,7 +53,7 @@ class ModuleLoader {
         }
         
         // If given a string pattern without glob support, warn and return empty
-        console.warn(`ModuleLoader: import.meta.glob not available and no manual modules provided`);
+        // ModuleLoader: import.meta.glob not available and no manual modules provided
         return registry;
     }
     
@@ -70,12 +70,12 @@ class ModuleLoader {
                     const mod = module.default || module;
                     
                     if (!mod) {
-                        console.warn(`Empty module at ${path}`);
+                        // Empty module
                         continue;
                     }
                     
                     if (validator && !validator(mod, path)) {
-                        console.warn(`Invalid module structure at ${path}:`, mod);
+                        // Invalid module structure
                         continue;
                     }
                     
@@ -87,14 +87,14 @@ class ModuleLoader {
                     registry[mod.name] = mod;
                     
                 } catch (error) {
-                    console.error(`Failed to load module at ${path}:`, error);
+                    // Failed to load module
                 }
             }
             
             return registry;
             
         } catch (error) {
-            console.error(`Failed to load modules matching ${pattern}:`, error);
+            // Failed to load modules matching pattern
             return registry;
         }
     }
@@ -111,19 +111,19 @@ class ModuleLoader {
                 if (!mod) continue;
                 
                 if (validator && !validator(mod, 'manual')) {
-                    console.warn(`Invalid module structure:`, mod);
+                    // Invalid module structure
                     continue;
                 }
                 
                 if (!mod.name) {
-                    console.warn('Module missing name:', mod);
+                    // Module missing name
                     continue;
                 }
                 
                 registry[mod.name] = mod;
                 
             } catch (error) {
-                console.error(`Failed to load module:`, error);
+                // Failed to load module
             }
         }
         
@@ -154,7 +154,7 @@ class ModuleLoader {
         return (module, path) => {
             for (const field of requiredFields) {
                 if (!(field in module)) {
-                    console.warn(`${typeName} at ${path} missing required field: ${field}`);
+                    // Module missing required field
                     return false;
                 }
             }
@@ -176,7 +176,7 @@ class ModuleLoader {
                 if (reloadCallback) {
                     reloadCallback(registry);
                 }
-                console.log(`🔄 Hot reloaded modules for ${pattern}`);
+                // Hot reloaded modules
             });
         }
     }

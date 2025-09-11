@@ -188,7 +188,6 @@ export function applyGesture(particle, gestureName, progress, motion, dt, center
     const gesture = getGesture(gestureName);
     
     if (!gesture) {
-        console.warn(`Gesture '${gestureName}' not found`);
         return false;
     }
     
@@ -251,7 +250,6 @@ if (typeof window !== 'undefined' && window.DEBUG_GESTURES) {
         isBlending: isBlendingGesture,
         isOverride: isOverrideGesture
     };
-    console.log('🎭 Gestures Loaded:', listGestures());
 }
 
 // Export plugin adapter for external use

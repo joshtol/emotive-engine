@@ -54,7 +54,6 @@ export class AudioAnalyzer {
             
             return true;
         } catch (error) {
-            console.error('Failed to initialize audio context:', error);
             return false;
         }
     }
@@ -65,7 +64,6 @@ export class AudioAnalyzer {
      */
     connectAudioElement(audioElement) {
         if (!this.audioContext) {
-            console.error('Audio context not initialized');
             return;
         }
         
@@ -97,13 +95,11 @@ export class AudioAnalyzer {
         } catch (error) {
             // If already connected, just restart analysis
             if (error.message && error.message.includes('already been used')) {
-                console.log('Audio element already connected, restarting analysis');
                 this.source = this.elementSource;  // Use existing source
                 this.connectedElement = audioElement;
                 this.isAnalyzing = true;
                 this.analyze();
             } else {
-                console.error('Failed to connect audio element:', error);
             }
         }
     }
@@ -113,7 +109,6 @@ export class AudioAnalyzer {
      */
     async connectMicrophone() {
         if (!this.audioContext) {
-            console.error('Audio context not initialized');
             return;
         }
         
@@ -163,7 +158,6 @@ export class AudioAnalyzer {
             
             return stream; // Return stream for cleanup
         } catch (error) {
-            console.error('Failed to access microphone:', error);
             return null;
         }
     }

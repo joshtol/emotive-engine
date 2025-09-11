@@ -23,7 +23,6 @@ export class AudioHandler {
      */
     async connectMicrophone() {
         if (!this.mascot.audioAnalyzer) {
-            console.warn('AudioAnalyzer not initialized');
             return this.mascot;
         }
         
@@ -76,7 +75,6 @@ export class AudioHandler {
                 this.mascot.renderer.audioAnalyzer = this.mascot.audioAnalyzer;
             }
             
-            console.log('Microphone connected for vocal visualization');
         }
         
         return this.mascot;
@@ -113,7 +111,6 @@ export class AudioHandler {
             this.mascot.shapeMorpher.glitchPoints = [];
         }
         
-        console.log('Audio disconnected');
         return this.mascot;
     }
 
@@ -124,7 +121,6 @@ export class AudioHandler {
      */
     async connectAudio(audioElement) {
         if (!this.mascot.audioAnalyzer) {
-            console.warn('AudioAnalyzer not initialized');
             return this.mascot;
         }
         
@@ -173,7 +169,6 @@ export class AudioHandler {
             this.mascot.renderer.audioAnalyzer = this.mascot.audioAnalyzer;
         }
         
-        console.log('Audio connected for vocal visualization');
         return this.mascot;
     }
 
@@ -183,7 +178,6 @@ export class AudioHandler {
      */
     stopSpeaking() {
         if (!this.mascot.speaking) {
-            console.warn('Speech reactivity is not active');
             return this.mascot;
         }
         
@@ -205,7 +199,6 @@ export class AudioHandler {
             returnToBaseTime: 500
         });
         
-        console.log('Speech reactivity stopped - returning to base emotional state');
         return this.mascot;
     }
 

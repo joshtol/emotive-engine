@@ -28,7 +28,6 @@ const effectRegistry = new Map();
  */
 export function registerEffect(effectModule) {
     if (!effectModule.name) {
-        console.error('Effect module missing name:', effectModule);
         return;
     }
     effectRegistry.set(effectModule.name, effectModule);

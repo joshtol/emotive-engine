@@ -117,7 +117,6 @@ class AnimationController {
         // Reference to parent EmotiveMascot for audio level updates
         this.parentMascot = null;
         
-        console.log('AnimationController initialized');
     }
 
     /**
@@ -146,7 +145,6 @@ class AnimationController {
             this.performanceMonitor.setSubsystems(this.subsystems);
         }
         
-        console.log('AnimationController subsystems configured');
     }
 
     /**
@@ -186,7 +184,6 @@ class AnimationController {
     start() {
         return this.errorBoundary.wrap(() => {
             if (this.isRunning) {
-                console.warn('AnimationController is already running');
                 return false;
             }
 
@@ -209,7 +206,6 @@ class AnimationController {
             // Emit start event
             this.emit('animationStarted', { targetFPS: this.targetFPS });
             
-            console.log(`AnimationController started (target: ${this.targetFPS} FPS)`);
             return true;
         }, 'animation-start')();
     }
@@ -221,7 +217,6 @@ class AnimationController {
     stop() {
         return this.errorBoundary.wrap(() => {
             if (!this.isRunning) {
-                console.warn('AnimationController is not running');
                 return false;
             }
             
@@ -253,7 +248,6 @@ class AnimationController {
             // Emit stop event
             this.emit('animationStopped');
             
-            console.log('AnimationController stopped');
             return true;
         }, 'animation-stop')();
     }
@@ -488,7 +482,6 @@ class AnimationController {
         this.subsystems = {};
         this.eventCallback = null;
         
-        console.log('AnimationController destroyed');
     }
 }
 
