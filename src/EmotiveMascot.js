@@ -553,6 +553,15 @@ class EmotiveMascot {
                 'drift': 'startDrift',
                 'stretch': 'startStretch',
                 'glow': 'startGlow',
+                'sparkle': 'startSparkle',
+                'shimmer': 'startShimmer',
+                'wiggle': 'startWiggle',
+                'groove': 'startGroove',
+                'point': 'startPoint',
+                'lean': 'startLean',
+                'reach': 'startReach',
+                'headBob': 'startHeadBob',
+                'orbit': 'startOrbit',
                 'flicker': 'startFlicker',
                 'vibrate': 'startVibrate',
                 'wave': 'startWave',
@@ -1762,17 +1771,18 @@ class EmotiveMascot {
             // Update particles with orb position, gesture motion, and modifier
             this.particleSystem.update(deltaTime, orbX, orbY, gestureMotion, gestureProgress, particleModifier);
             
-            // Gesture transforms now handled internally by renderer
-            const gestureTransform = null;
+            // Get gesture transform from renderer
+            const gestureTransform = this.renderer.gestureAnimator ? 
+                this.renderer.gestureAnimator.applyGestureAnimations() : null;
             
             // Render BACKGROUND particles (behind orb)
-            this.particleSystem.renderBackground(this.canvasManager.getContext(), emotionParams.glowColor);
+            this.particleSystem.renderBackground(this.canvasManager.getContext(), emotionParams.glowColor, gestureTransform);
             
             // Render the Emotive orb in the MIDDLE layer
             this.renderer.render(renderState, deltaTime, gestureTransform);
             
             // Render FOREGROUND particles (in front of orb) 
-            this.particleSystem.renderForeground(this.canvasManager.getContext(), emotionParams.glowColor);
+            this.particleSystem.renderForeground(this.canvasManager.getContext(), emotionParams.glowColor, gestureTransform);
             
             // Draw debug information if enabled
             if (this.config.showFPS || this.config.showDebug) {

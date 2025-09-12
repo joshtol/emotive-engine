@@ -7,6 +7,26 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [2.5.0] - 2025-01-11
+
+### ✨ Visual Effects & Polish
+
+#### New Features
+- **Added** Chromatic aberration effect on impact gestures (bounce, shake, pulse, flash, jump, slam, spin, flicker)
+  - Subtle red/cyan color separation creating a "glitch" effect
+  - CSS-based animation for smooth performance
+  - Intensity varies by gesture type (flash/jump = 100%, shake = 90%, bounce = 80%, etc.)
+  - Quick 300-500ms duration for tasteful impact enhancement
+  
+- **Renamed** Sparkle effect to Flicker (creates falling star particles)
+- **Added** New Sparkle effect with firefly-like glow particles
+- **Improved** Star particle shape from 4-pointed to 5-pointed with better proportions
+
+#### Technical Improvements
+- **Refactored** Special effects to use CSS animations on visible canvas element
+- **Fixed** Canvas element targeting for post-processing effects
+- **Optimized** Effect update loop with proper fade timing
+
 ## [2.4.0] - 2025-01-11
 
 ### 🔧 Production Readiness & NPM Package Preparation

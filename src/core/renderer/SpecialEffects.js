@@ -8,6 +8,7 @@ export class SpecialEffects {
         this.renderer = renderer;
         this.ctx = renderer.ctx;
         this.canvas = renderer.canvas;
+        console.log('[SpecialEffects] Canvas element:', this.canvas);
         
         // Effect states
         this.recordingActive = false;
@@ -23,6 +24,18 @@ export class SpecialEffects {
         
         // Sleep Z's
         this.sleepZ = [];
+        
+        // Sparkle particles
+        this.sparkles = [];
+        
+        // Chromatic aberration effect
+        this.chromaticAberration = {
+            active: false,
+            intensity: 0,
+            targetIntensity: 0,
+            fadeSpeed: 0.01, // Very slow fade for testing
+            maxOffset: 30 // Much larger offset for testing
+        };
         
         // Helper method references
         this.scaleValue = (value) => renderer.scaleValue(value);
@@ -257,10 +270,246 @@ export class SpecialEffects {
     }
 
     /**
+     * Create a sparkle particle
+     */
+    createSparkle(x, y, options = {}) {
+        this.sparkles.push({
+            x,
+            y,
+            vx: options.velocity?.x || 0,
+            vy: options.velocity?.y || 0,
+            size: options.size || 3,
+            color: options.color || 'hsl(50, 100%, 70%)',
+            lifetime: options.lifetime || 1000,
+            maxLifetime: options.lifetime || 1000,
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: (Math.random() - 0.5) * 0.2
+        });
+    }
+    
+    /**
+     * Render all sparkles
+     */
+    renderSparkles() {
+        const ctx = this.ctx;
+        
+        this.sparkles.forEach(sparkle => {
+            const progress = 1 - (sparkle.lifetime / sparkle.maxLifetime);
+            const opacity = 1 - progress; // Fade out over time
+            
+            ctx.save();
+            ctx.translate(sparkle.x, sparkle.y);
+            ctx.rotate(sparkle.rotation);
+            
+            // Draw sparkle as a star shape
+            const size = this.scaleValue(sparkle.size * (1 - progress * 0.5));
+            
+            // Draw a 5-pointed star with smoother interior angles
+            ctx.beginPath();
+            const points = 5;
+            const outerRadius = size;
+            const innerRadius = size * 0.38; // Golden ratio-ish for smoother interior angles
+            
+            for (let i = 0; i < points * 2; i++) {
+                const angle = (i * Math.PI / points) - Math.PI / 2; // Start from top
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                
+                if (i === 0) {
+                    ctx.moveTo(
+                        Math.cos(angle) * radius,
+                        Math.sin(angle) * radius
+                    );
+                } else {
+                    ctx.lineTo(
+                        Math.cos(angle) * radius,
+                        Math.sin(angle) * radius
+                    );
+                }
+            }
+            ctx.closePath();
+            
+            // Add glow effect
+            ctx.shadowBlur = this.scaleValue(10);
+            ctx.shadowColor = sparkle.color;
+            
+            ctx.fillStyle = sparkle.color.replace('70%', `${70 + progress * 30}%`).replace(')', `, ${opacity})`).replace('hsl', 'hsla');
+            ctx.fill();
+            
+            ctx.restore();
+        });
+    }
+    
+    /**
+     * Trigger chromatic aberration effect
+     * @param {number} intensity - Effect intensity (0-1)
+     */
+    triggerChromaticAberration(intensity = 0.8) {
+        this.chromaticAberration.active = true;
+        this.chromaticAberration.targetIntensity = Math.min(1, intensity);
+        this.chromaticAberration.intensity = this.chromaticAberration.targetIntensity;
+        
+        // Get the actual visible canvas from the document
+        const visibleCanvas = document.getElementById('emotive-canvas') || 
+                            document.querySelector('canvas') || 
+                            this.canvas;
+        
+        console.log('[Chromatic] Visible canvas element:', visibleCanvas);
+        console.log('[Chromatic] Canvas ID:', visibleCanvas?.id);
+        
+        if (visibleCanvas) {
+            // Remove any existing animation
+            visibleCanvas.style.animation = 'none';
+            
+            // Force reflow to reset animation
+            void visibleCanvas.offsetHeight;
+            
+            // Add CSS styles if not already present
+            if (!document.getElementById('chromatic-styles')) {
+                const style = document.createElement('style');
+                style.id = 'chromatic-styles';
+                style.textContent = `
+                    @keyframes chromaticGlitch {
+                        0% {
+                            filter: none;
+                            transform: translateX(0);
+                        }
+                        15% {
+                            filter: drop-shadow(-2px 0 0 rgba(255,0,0,0.7)) drop-shadow(2px 0 0 rgba(0,255,255,0.7));
+                            transform: translateX(-0.5px);
+                        }
+                        30% {
+                            filter: drop-shadow(-3px 0 0 rgba(255,0,0,0.8)) drop-shadow(3px 0 0 rgba(0,255,255,0.8));
+                            transform: translateX(0.5px);
+                        }
+                        45% {
+                            filter: drop-shadow(-2px 0 0 rgba(255,0,0,0.6)) drop-shadow(2px 0 0 rgba(0,255,255,0.6));
+                            transform: translateX(-0.3px);
+                        }
+                        60% {
+                            filter: drop-shadow(-1px 0 0 rgba(255,0,0,0.4)) drop-shadow(1px 0 0 rgba(0,255,255,0.4));
+                            transform: translateX(0.2px);
+                        }
+                        100% {
+                            filter: none;
+                            transform: translateX(0);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Apply animation - shorter duration (300-500ms based on intensity)
+            visibleCanvas.style.animation = `chromaticGlitch ${300 + 200 * intensity}ms ease-out`;
+        }
+    }
+    
+    /**
+     * Apply chromatic aberration effect to canvas
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {HTMLCanvasElement} sourceCanvas - Source canvas to apply effect to
+     */
+    applyChromaticAberration(ctx, sourceCanvas) {
+        if (!this.chromaticAberration.active || this.chromaticAberration.intensity <= 0) {
+            return;
+        }
+        
+        const intensity = this.chromaticAberration.intensity;
+        const offset = this.scaleValue(this.chromaticAberration.maxOffset * intensity);
+        
+        // Store current composite operation
+        const prevComposite = ctx.globalCompositeOperation;
+        
+        // Clear the canvas first
+        ctx.save();
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        
+        // Draw red channel (shifted left)
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.filter = 'url(#red-channel)'; // Will use CSS filter fallback
+        ctx.drawImage(sourceCanvas, -offset, 0);
+        
+        // Draw green channel (center)
+        ctx.globalCompositeOperation = 'screen';
+        ctx.filter = 'url(#green-channel)';
+        ctx.drawImage(sourceCanvas, 0, 0);
+        
+        // Draw blue channel (shifted right)
+        ctx.globalCompositeOperation = 'screen';
+        ctx.filter = 'url(#blue-channel)';
+        ctx.drawImage(sourceCanvas, offset, 0);
+        
+        // Reset
+        ctx.filter = 'none';
+        ctx.globalCompositeOperation = prevComposite;
+        ctx.restore();
+    }
+    
+    /**
+     * Simple chromatic aberration using multiple draws
+     * (Fallback method that doesn't require filters)
+     */
+    applyChromaticAberrationSimple(ctx, centerX, centerY, radius, drawFunction) {
+        if (!this.chromaticAberration.active || this.chromaticAberration.intensity <= 0) {
+            drawFunction();
+            return;
+        }
+        
+        const intensity = this.chromaticAberration.intensity;
+        const offset = this.scaleValue(this.chromaticAberration.maxOffset * intensity);
+        
+        ctx.save();
+        
+        // Draw red channel (shifted left)
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.translate(-offset, 0);
+        ctx.globalAlpha = 0.33;
+        ctx.fillStyle = '#ff0000';
+        ctx.filter = 'brightness(3)';
+        drawFunction();
+        ctx.translate(offset, 0);
+        
+        // Draw green channel (center)
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.33;
+        ctx.fillStyle = '#00ff00';
+        drawFunction();
+        
+        // Draw blue channel (shifted right)
+        ctx.translate(offset, 0);
+        ctx.globalAlpha = 0.33;
+        ctx.fillStyle = '#0000ff';
+        drawFunction();
+        
+        ctx.restore();
+    }
+    
+    /**
      * Update all active effects
      */
     update(deltaTime) {
-        // Update effect animations
+        // Update sparkles
+        this.sparkles = this.sparkles.filter(sparkle => {
+            sparkle.x += sparkle.vx;
+            sparkle.y += sparkle.vy;
+            sparkle.rotation += sparkle.rotationSpeed;
+            sparkle.lifetime -= deltaTime;
+            sparkle.vy += 0.1; // Gravity
+            
+            return sparkle.lifetime > 0;
+        });
+        
+        // Update chromatic aberration fade
+        if (this.chromaticAberration.active) {
+            // Fade out the effect
+            this.chromaticAberration.intensity -= this.chromaticAberration.fadeSpeed;
+            
+            if (this.chromaticAberration.intensity <= 0) {
+                this.chromaticAberration.intensity = 0;
+                this.chromaticAberration.active = false;
+                this.chromaticAberration.targetIntensity = 0;
+                console.log('[CSS Chromatic] Effect completed');
+            }
+        }
     }
 }
 

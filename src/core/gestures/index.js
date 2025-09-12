@@ -71,6 +71,48 @@ import glow from './effects/glow.js';
 import peek from './effects/peek.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ PLACEHOLDER GESTURES FOR NEW ANIMATIONS
+// └─────────────────────────────────────────────────────────────────────────────────────
+// These are handled by GestureAnimator but need registry entries for rhythm system
+const createPlaceholderGesture = (name, emoji = '✨') => ({
+    name,
+    emoji,
+    type: 'blending', // Use blending type so they don't interfere
+    description: `${name} animation`,
+    config: {
+        duration: 1000,
+        particleMotion: null // No particle motion
+    },
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',
+        timingSync: 'nextBeat',
+        interruptible: true,
+        priority: 3,
+        blendable: true,
+        crossfadePoint: 'anyBeat',
+        maxQueue: 3
+    },
+    apply: (particle, progress, params) => {
+        // No-op - handled by GestureAnimator
+        return false;
+    },
+    blend: (particle, progress, params) => {
+        // No-op - handled by GestureAnimator
+        return false;
+    }
+});
+
+const sparkle = createPlaceholderGesture('sparkle', '✨');
+const shimmer = createPlaceholderGesture('shimmer', '🌟');
+const wiggle = createPlaceholderGesture('wiggle', '〰️');
+const groove = createPlaceholderGesture('groove', '🎵');
+const point = createPlaceholderGesture('point', '👉');
+const lean = createPlaceholderGesture('lean', '↗️');
+const reach = createPlaceholderGesture('reach', '🤚');
+const headBob = createPlaceholderGesture('headBob', '🎧');
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ GESTURE COLLECTIONS
 // └─────────────────────────────────────────────────────────────────────────────────────
 const MOTION_GESTURES = [
@@ -83,7 +125,16 @@ const MOTION_GESTURES = [
     twitch,
     sway,
     float,
-    jitter
+    jitter,
+    // New gestures
+    sparkle,
+    shimmer,
+    wiggle,
+    groove,
+    point,
+    lean,
+    reach,
+    headBob
 ];
 
 const TRANSFORM_GESTURES = [

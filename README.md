@@ -621,6 +621,28 @@ mascot.setEmotion('anger', { undertone: 'subdued' });
 mascot.setEmotion('neutral', { undertone: 'confused' });
 ```
 
+### Special Effects (v2.5.0)
+
+The engine includes advanced visual effects that enhance impact and expressiveness:
+
+#### Chromatic Aberration
+Impact gestures trigger a subtle "glitch" effect with red/cyan color separation:
+- **Automatic Triggering**: Activates on bounce, shake, pulse, flash, jump, slam, spin, and flicker
+- **Variable Intensity**: Different gestures have different intensities (flash/jump at 100%, bounce at 80%)
+- **CSS Animation**: Smooth performance using CSS transforms and filters
+- **Quick Duration**: 300-500ms tasteful enhancement that doesn't distract
+
+#### Particle Effects
+- **Flicker**: Creates falling star particles that drift and fade
+- **Sparkle**: Firefly-like glowing particles with natural movement
+- **5-pointed Stars**: Improved star shape with better interior angle proportions
+
+#### Other Effects
+- **Recording Indicator**: Pulsing red "REC" text with glow
+- **Sleep Mode**: Floating Z's with gradient effects
+- **Speaking Rings**: Expanding circular waves during speech
+- **Zen Mode**: Purple meditative glow with breathing sync
+
 ## 🛠️ Development
 
 ### Prerequisites

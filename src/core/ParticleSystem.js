@@ -548,14 +548,15 @@ class ParticleSystem {
      * Renders all particles to the canvas context
      * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
      * @param {string} emotionColor - Color to use for particle rendering
+     * @param {Object} gestureTransform - Optional gesture transform data
      */
-    render(ctx, emotionColor = '#ffffff') {
+    render(ctx, emotionColor = '#ffffff', gestureTransform = null) {
         if (this.errorBoundary) {
             return this.errorBoundary.wrap(() => {
-                this._render(ctx, emotionColor);
+                this._render(ctx, emotionColor, gestureTransform);
             }, 'particle-render')();
         } else {
-            this._render(ctx, emotionColor);
+            this._render(ctx, emotionColor, gestureTransform);
         }
     }
     
@@ -570,13 +571,13 @@ class ParticleSystem {
      * - ~92% of particles render in background (z < 0)
      * - Particles scale from 80% to 100% size based on z-depth
      */
-    renderBackground(ctx, emotionColor = '#ffffff') {
+    renderBackground(ctx, emotionColor = '#ffffff', gestureTransform = null) {
         if (this.errorBoundary) {
             return this.errorBoundary.wrap(() => {
-                this._renderLayer(ctx, emotionColor, false); // false = background (z < 0)
+                this._renderLayer(ctx, emotionColor, false, gestureTransform); // false = background (z < 0)
             }, 'particle-render-bg')();
         } else {
-            this._renderLayer(ctx, emotionColor, false);
+            this._renderLayer(ctx, emotionColor, false, gestureTransform);
         }
     }
     
@@ -592,13 +593,13 @@ class ParticleSystem {
      * - Particles scale from 100% to 120% size based on z-depth
      * - Spawn with offset to prevent visual stacking
      */
-    renderForeground(ctx, emotionColor = '#ffffff') {
+    renderForeground(ctx, emotionColor = '#ffffff', gestureTransform = null) {
         if (this.errorBoundary) {
             return this.errorBoundary.wrap(() => {
-                this._renderLayer(ctx, emotionColor, true); // true = foreground (z >= 0)
+                this._renderLayer(ctx, emotionColor, true, gestureTransform); // true = foreground (z >= 0)
             }, 'particle-render-fg')();
         } else {
-            this._renderLayer(ctx, emotionColor, true);
+            this._renderLayer(ctx, emotionColor, true, gestureTransform);
         }
     }
 
@@ -608,7 +609,7 @@ class ParticleSystem {
      * @param {string} emotionColor - Color to use for particle rendering
      * @param {boolean} isForeground - true for foreground (z >= 0), false for background (z < 0)
      */
-    _renderLayer(ctx, emotionColor, isForeground) {
+    _renderLayer(ctx, emotionColor, isForeground, gestureTransform = null) {
         // Sort particles by rendering properties to minimize state changes
         const visibleParticles = [];
         
@@ -648,13 +649,13 @@ class ParticleSystem {
         });
         
         // Actually render the particles
-        this._renderParticles(ctx, visibleParticles, emotionColor);
+        this._renderParticles(ctx, visibleParticles, emotionColor, gestureTransform);
     }
     
     /**
      * Internal render implementation - batch optimized rendering (legacy, renders all)
      */
-    _render(ctx, emotionColor) {
+    _render(ctx, emotionColor, gestureTransform = null) {
         // Sort particles by rendering properties to minimize state changes
         const visibleParticles = [];
         
@@ -695,7 +696,7 @@ class ParticleSystem {
         });
         
         // Actually render the particles
-        this._renderParticles(ctx, visibleParticles, emotionColor);
+        this._renderParticles(ctx, visibleParticles, emotionColor, gestureTransform);
     }
     
     /**
@@ -703,8 +704,9 @@ class ParticleSystem {
      * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
      * @param {Array} visibleParticles - Array of particles to render
      * @param {string} emotionColor - Color to use for particle rendering
+     * @param {Object} gestureTransform - Optional gesture transform data
      */
-    _renderParticles(ctx, visibleParticles, emotionColor) {
+    _renderParticles(ctx, visibleParticles, emotionColor, gestureTransform = null) {
         // Batch render with minimized state changes
         ctx.save();
         let lastFillStyle = null;
@@ -736,25 +738,37 @@ class ParticleSystem {
                 const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
                 const safeSize = Math.max(0.1, depthSize);
                 
-                // Draw glow layers if needed
-                if (particle.hasGlow) {
-                    const glowRadius = Math.max(0.1, safeSize * particle.glowSizeMultiplier);
+                // Apply firefly effect if sparkle gesture is active
+                let fireflyGlow = 1.0;
+                if (gestureTransform && gestureTransform.fireflyEffect) {
+                    // Each particle gets unique phase for async firefly blinking
+                    const particlePhase = (particle.x * 0.01 + particle.y * 0.01 + particle.size * 0.1) % (Math.PI * 2);
+                    const time = gestureTransform.fireflyTime || (Date.now() * 0.001);
+                    const intensity = gestureTransform.particleGlow || 2.0;
                     
-                    // Outer glow
-                    ctx.globalAlpha = particle.opacity * 0.15;
+                    // Create firefly pulse pattern
+                    fireflyGlow = 0.3 + Math.max(0, Math.sin(time * 3 + particlePhase)) * intensity;
+                }
+                
+                // Draw glow layers if needed
+                if (particle.hasGlow || fireflyGlow > 1.0) {
+                    const glowRadius = Math.max(0.1, safeSize * (particle.glowSizeMultiplier || 1.5) * fireflyGlow);
+                    
+                    // Outer glow (enhanced by firefly effect)
+                    ctx.globalAlpha = particle.opacity * 0.15 * fireflyGlow;
                     ctx.beginPath();
                     ctx.arc(particle.x, particle.y, glowRadius, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Inner glow
-                    ctx.globalAlpha = particle.opacity * 0.25;
+                    // Inner glow (enhanced by firefly effect)
+                    ctx.globalAlpha = particle.opacity * 0.25 * fireflyGlow;
                     ctx.beginPath();
                     ctx.arc(particle.x, particle.y, glowRadius * 0.6, 0, Math.PI * 2);
                     ctx.fill();
                 }
                 
-                // Draw core
-                ctx.globalAlpha = particle.opacity * (particle.baseOpacity || 0.5) * 0.6;
+                // Draw core (also brightened by firefly effect)
+                ctx.globalAlpha = particle.opacity * (particle.baseOpacity || 0.5) * 0.6 * Math.min(2.0, fireflyGlow);
                 ctx.beginPath();
                 ctx.arc(particle.x, particle.y, safeSize, 0, Math.PI * 2);
                 ctx.fill();

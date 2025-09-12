@@ -307,8 +307,11 @@ class ShapeMorpher {
      * @param {boolean} skipQueue - Skip processing queued morphs (for force override)
      */
     completeMorph(skipQueue = false) {
-        this.currentShape = this.targetShape;
-        this.currentPoints = [...this.targetPoints];
+        // Only update current shape if we actually have a target
+        if (this.targetShape) {
+            this.currentShape = this.targetShape;
+            this.currentPoints = [...this.targetPoints];
+        }
         this.targetShape = null;
         this.isTransitioning = false;
         this.morphProgress = 0;
@@ -616,7 +619,9 @@ class ShapeMorpher {
      * @returns {Object} Shadow configuration
      */
     getCurrentShadow() {
-        const currentDef = SHAPE_DEFINITIONS[this.currentShape];
+        // Default to circle if currentShape is somehow null/undefined
+        const shapeName = this.currentShape || 'circle';
+        const currentDef = SHAPE_DEFINITIONS[shapeName];
         const targetDef = this.targetShape ? SHAPE_DEFINITIONS[this.targetShape] : null;
         
         const currentShadow = currentDef?.shadow || { type: 'none' };

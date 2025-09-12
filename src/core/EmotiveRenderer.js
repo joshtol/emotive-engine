@@ -1011,7 +1011,13 @@ class EmotiveRenderer {
             shapePoints: shapePoints
         });
         
-        // Render moon/lunar shadows AFTER core (as overlays)
+        // Update and render sparkles BEFORE moon shadow so they don't cover it
+        if (this.specialEffects) {
+            this.specialEffects.update(deltaTime);
+            this.specialEffects.renderSparkles();
+        }
+        
+        // Render moon/lunar shadows AFTER core AND sparkles (as top overlay)
         if (currentShadow && (currentShadow.type === 'crescent' || currentShadow.type === 'lunar')) {
             this.renderMoonShadow(coreX, coreY, coreRadius, currentShadow, shapePoints);
         }
@@ -1034,11 +1040,11 @@ class EmotiveRenderer {
             this.renderSleepIndicator(centerX, centerY - glowRadius - this.scaleValue(20), deltaTime);
         }
         
-        // Restore original context
+        // Restore original context AFTER all rendering is done
         this.ctx = originalCtx;
         
-        // Blit offscreen canvas to main canvas (single draw operation)
-originalCtx.drawImage(this.offscreenCanvas, 0, 0);
+        // Simple blit - chromatic aberration is now handled via CSS filters
+        originalCtx.drawImage(this.offscreenCanvas, 0, 0);
     }
     
     // renderGlow method removed - now handled by GlowRenderer module
@@ -2557,6 +2563,17 @@ originalCtx.drawImage(this.offscreenCanvas, 0, 0);
     startBreathHold() { this.gestureAnimator.startBreathHold(); }
     startBreathHoldEmpty() { this.gestureAnimator.startBreathHoldEmpty(); }
     startJump() { this.gestureAnimator.startJump(); }
+    startSway() { this.gestureAnimator.startSway(); }
+    startFloat() { this.gestureAnimator.startFloat(); }
+    startSparkle() { this.gestureAnimator.startSparkle(); }
+    startShimmer() { this.gestureAnimator.startShimmer(); }
+    startWiggle() { this.gestureAnimator.startWiggle(); }
+    startGroove() { this.gestureAnimator.startGroove(); }
+    startPoint() { this.gestureAnimator.startPoint(); }
+    startLean() { this.gestureAnimator.startLean(); }
+    startReach() { this.gestureAnimator.startReach(); }
+    startHeadBob() { this.gestureAnimator.startHeadBob(); }
+    startOrbit() { this.gestureAnimator.startOrbit(); }
     
     /**
      * Stop all active gestures - delegates to GestureAnimator
