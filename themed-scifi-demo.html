@@ -3358,19 +3358,41 @@
         
         // Footer is now static, no animations needed
         
-        // Jaunty scroll-based hiding of system controls (mobile only)
+        // Jaunty scroll-based hiding of system controls (mobile phones only, NOT tablets)
         function initSystemControlsAnimation() {
             const systemControls = document.querySelector('.system-controls');
             
-            // Check if we're on mobile/tablet portrait (not desktop or landscape)
+            // Detect if device is tablet/iPad
+            function isTablet() {
+                const userAgent = navigator.userAgent.toLowerCase();
+                const isIPad = /ipad/.test(userAgent) || 
+                              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                const isAndroidTablet = /android/.test(userAgent) && !/mobile/.test(userAgent);
+                const screenWidth = window.innerWidth;
+                const screenHeight = window.innerHeight;
+                const minDimension = Math.min(screenWidth, screenHeight);
+                const maxDimension = Math.max(screenWidth, screenHeight);
+                
+                // Consider it a tablet if it's an iPad, Android tablet, or has tablet-like dimensions
+                return isIPad || isAndroidTablet || minDimension >= 600;
+            }
+            
+            // Exit early if tablet - no hiding animation for tablets
+            if (isTablet()) {
+                // Ensure controls are always visible on tablets
+                if (systemControls) {
+                    systemControls.classList.remove('hidden', 'retracting', 'extending');
+                }
+                return; // Don't set up any scroll listeners
+            }
+            
+            // Check if we're on mobile phone portrait (not tablet, not desktop, not landscape)
             function isMobileView() {
+                if (isTablet()) return false; // Never treat tablets as mobile
+                
                 const isPortrait = window.innerHeight > window.innerWidth;
-                const isSmallScreen = window.innerWidth <= 768;
-                // Check if it's an iPad
-                const isIPad = (navigator.userAgent.match(/iPad/i) || 
-                               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
-                // Don't apply mobile view behavior to iPads
-                return isPortrait && isSmallScreen && !isIPad;
+                const isSmallScreen = window.innerWidth <= 480; // Stricter mobile width
+                return isPortrait && isSmallScreen;
             }
             
             // Ensure system controls are visible on desktop/landscape
@@ -3458,11 +3480,28 @@
             let resizeVisibilityTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeVisibilityTimeout);
-                resizeVisibilityTimeout = setTimeout(updateSystemControlsVisibility, 150);
+                resizeVisibilityTimeout = setTimeout(() => {
+                    // Re-check if tablet on resize
+                    if (isTablet()) {
+                        // Ensure controls stay visible on tablets
+                        if (systemControls) {
+                            systemControls.classList.remove('hidden', 'retracting', 'extending');
+                        }
+                        return;
+                    }
+                    updateSystemControlsVisibility();
+                }, 150);
             }, { passive: true });
             
             // Initialize on load
-            updateSystemControlsVisibility();
+            if (isTablet()) {
+                // Ensure controls are visible on tablets from the start
+                if (systemControls) {
+                    systemControls.classList.remove('hidden', 'retracting', 'extending');
+                }
+            } else {
+                updateSystemControlsVisibility();
+            }
         }
         
         let lastFPSValue = -1;
