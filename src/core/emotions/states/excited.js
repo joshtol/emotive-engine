@@ -15,9 +15,9 @@ export default {
     visual: {
         glowColor: '#FF1493',       // Vibrant magenta energy
         glowIntensity: 1.3,         // Bright, energetic aura
-        particleRate: 15,           // Rapid particle emission
-        minParticles: 5,            // Constant energetic presence
-        maxParticles: 20,           // Abundant enthusiasm display
+        particleRate: 25,           // Increased emission frequency (was 15)
+        minParticles: 8,            // More constant particles (was 5)
+        maxParticles: 30,           // More maximum particles (was 20)
         particleBehavior: 'burst',  // Explosive particle behavior
         breathRate: 2.0,            // Quick, excited breathing
         breathDepth: 0.14,          // Deep, energized breaths

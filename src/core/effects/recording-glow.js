@@ -18,15 +18,15 @@ export default {
     // Configuration
     config: {
         color: '#FF0000',
-        pulseSpeed: 0.05,
-        minIntensity: 0.3,
-        maxIntensity: 0.7,
-        radiusMultiplier: 1.5,
+        pulseSpeed: 0.08,
+        minIntensity: 0.6,
+        maxIntensity: 1.0,
+        radiusMultiplier: 2.0,
         gradientStops: [
-            { position: 0, opacity: 0.7 },
-            { position: 0.3, opacity: 0.5 },
-            { position: 0.6, opacity: 0.3 },
-            { position: 0.85, opacity: 0.1 },
+            { position: 0, opacity: 1.0 },
+            { position: 0.3, opacity: 0.7 },
+            { position: 0.6, opacity: 0.4 },
+            { position: 0.85, opacity: 0.2 },
             { position: 1, opacity: 0 }
         ]
     },
@@ -34,7 +34,7 @@ export default {
     // State for animation
     state: {
         pulsePhase: 0,
-        intensity: 0
+        intensity: 0.8  // Start with visible intensity
     },
     
     /**
@@ -52,9 +52,9 @@ export default {
      * @param {Object} params - Effect parameters
      */
     apply: function(ctx, params) {
-        const { x, y, radius, deltaTime = 16.67 } = params;
+        const { deltaTime = 16.67 } = params;
         
-        // Update pulse animation
+        // Update pulse animation for the indicator only
         this.state.pulsePhase += this.config.pulseSpeed * (deltaTime / 16.67);
         
         // Calculate pulsating intensity
@@ -62,41 +62,9 @@ export default {
         this.state.intensity = this.config.minIntensity + 
             (this.config.maxIntensity - this.config.minIntensity) * pulse;
         
-        // Calculate glow radius
-        const glowRadius = radius * this.config.radiusMultiplier;
-        
-        // Ensure radius doesn't exceed canvas bounds
-        const canvas = ctx.canvas;
-        const maxRadius = Math.min(
-            glowRadius,
-            x - 10,
-            y - 10,
-            canvas.width - x - 10,
-            canvas.height - y - 10
-        );
-        const safeRadius = Math.max(50, maxRadius);
-        
-        // Create radial gradient
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, safeRadius);
-        
-        // Add gradient stops with pulsating intensity
-        for (const stop of this.config.gradientStops) {
-            gradient.addColorStop(
-                stop.position,
-                this.hexToRgba(this.config.color, stop.opacity * this.state.intensity)
-            );
-        }
-        
-        // Draw the recording glow
-        ctx.save();
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(x, y, safeRadius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        
-        // Don't draw indicator here - it will be covered by the orb
-        // The indicator should be drawn AFTER the core in a separate call
+        // Don't draw any glow on the mascot - only update the animation state
+        // The REC indicator will be drawn separately in drawRecordingIndicator
+        return true; // Return true to indicate effect was applied
     },
     
     /**
@@ -107,28 +75,30 @@ export default {
         
         // Dynamic text size
         const baseSize = Math.min(canvasWidth, canvasHeight);
-        const textSize = Math.floor(baseSize * 0.05);  // 5% of smallest dimension
+        const textSize = Math.floor(baseSize * 0.08);  // 8% of smallest dimension (bigger)
         
-        // Position near the orb (upper-left of center)
-        const centerX = canvasWidth / 2;
-        const centerY = canvasHeight / 2;
-        const offsetDistance = baseSize * 0.15;  // 15% away from center
+        // Position in upper-left corner with padding
+        const x = textSize * 1.5;
+        const y = textSize * 1.5;
         
-        const x = centerX - offsetDistance;
-        const y = centerY - offsetDistance;
-        
-        // Draw "REC" text
+        // Draw red recording dot
+        const dotRadius = textSize * 0.3;
         ctx.fillStyle = this.hexToRgba('#FF0000', this.state.intensity);
-        ctx.font = `bold ${textSize}px 'Arial', sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        ctx.fillText('REC', x, y);
+        ctx.beginPath();
+        ctx.arc(x - textSize, y, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
         
         // Add white outline for visibility
-        ctx.strokeStyle = this.hexToRgba('#FFFFFF', this.state.intensity * 0.5);
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = this.hexToRgba('#FFFFFF', this.state.intensity * 0.8);
+        ctx.lineWidth = 3;
+        ctx.font = `bold ${textSize}px 'Arial', sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
         ctx.strokeText('REC', x, y);
+        
+        // Draw "REC" text on top
+        ctx.fillStyle = this.hexToRgba('#FF0000', this.state.intensity);
+        ctx.fillText('REC', x, y);
         
         ctx.restore();
     },

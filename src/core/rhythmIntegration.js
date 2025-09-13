@@ -348,6 +348,9 @@ class RhythmIntegration {
     stop() {
         rhythmEngine.stop();
         this.enabled = false;
+        // Unlock BPM when stopping
+        this.bpmLocked = false;
+        this.lockedBPM = null;
     }
     
     /**
@@ -362,6 +365,20 @@ class RhythmIntegration {
      */
     setBPM(bpm) {
         rhythmEngine.setBPM(bpm);
+        // Update the locked BPM if manually changed
+        if (this.bpmLocked) {
+            this.lockedBPM = bpm;
+            console.log('🔒 BPM manually updated to:', bpm);
+        }
+    }
+    
+    /**
+     * Resample BPM - unlocks detection for one update
+     */
+    resampleBPM() {
+        console.log('🔓 Unlocking BPM for resampling');
+        this.bpmLocked = false;
+        this.lockedBPM = null;
     }
     
     /**

@@ -177,8 +177,10 @@ class EmotiveRenderer {
             breathDepthMult: 1.0,
             breathIrregular: false,
             particleRateMult: 1.0,
-            particleBehaviorOverride: null,
-            particleSpeedMult: 1.0
+            // Core rotation for record player effect
+            coreRotation: 0,        // Current rotation angle in radians
+            currentBPM: 0,          // Current BPM (0 = no rotation)
+            lastRotationTime: performance.now()  // Track time for rotation calculation
         };
         
         // Animation state (now delegated to modules)
@@ -470,11 +472,6 @@ class EmotiveRenderer {
                 breathRateMult: 1.1,  // Slightly faster
                 breathDepthMult: 0.9, // Slightly shallower
                 breathIrregular: true, // Occasional catch in rhythm
-                // Particles - keep emotion behavior, add flutter
-                particleRateMult: 1.1, // 10% more particles
-                particleBehavior: null, // Don't override emotion behavior
-                particleSpeedMult: 1.1, // 10% faster
-                particleWobble: true    // Add subtle wobble to paths
             },
             confident: {
                 // Color - warmer, vibrant
@@ -490,11 +487,6 @@ class EmotiveRenderer {
                 breathRateMult: 0.95, // Slightly slower, controlled
                 breathDepthMult: 1.1, // Fuller breaths
                 breathIrregular: false,
-                // Particles
-                particleRateMult: 1.1,
-                particleBehavior: null, // Keep emotion behavior
-                particleSpeedMult: 1.0,
-                particleBurst: true   // Occasional triumphant spurts
             },
             tired: {
                 // Color - slightly cooler, less saturated
@@ -510,11 +502,6 @@ class EmotiveRenderer {
                 breathRateMult: 0.8,  // Slower
                 breathDepthMult: 1.2, // Deeper breaths
                 breathIrregular: false,
-                // Particles
-                particleRateMult: 0.7, // Fewer particles
-                particleBehavior: null, // Keep emotion behavior
-                particleSpeedMult: 0.8,
-                particleSlowdown: true // Occasional near-stops
             },
             intense: {
                 // Color - high contrast, saturated
@@ -530,11 +517,6 @@ class EmotiveRenderer {
                 breathRateMult: 1.2,  // Faster but controlled
                 breathDepthMult: 0.9, // Shallower, focused breaths
                 breathIrregular: false,
-                // Particles
-                particleRateMult: 1.5, // More particles
-                particleBehavior: null, // Keep emotion behavior
-                particleSpeedMult: 1.2,
-                particleSpiral: true   // Brief tight spirals
             },
             subdued: {
                 // Color - slightly muted
@@ -550,11 +532,6 @@ class EmotiveRenderer {
                 breathRateMult: 0.9,  // Slightly slower
                 breathDepthMult: 0.9, // Slightly shallow
                 breathIrregular: false,
-                // Particles
-                particleRateMult: 0.8, // Fewer particles
-                particleBehavior: null, // Keep emotion behavior
-                particleSpeedMult: 0.9,
-                particlePullInward: true // Brief inward pulls
             }
         };
         
@@ -960,24 +937,7 @@ class EmotiveRenderer {
             this.ctx.save(); // Save before we restore rotation
         }
         
-        // Temporarily restore rotation context to draw indicator without spin
-        if (rotationAngle !== 0) {
-            this.ctx.restore(); // Restore to pre-rotation state
-        }
-        
-        // Draw recording indicator (can be covered by orb)
-        if (isEffectActive('recording-glow', this.state)) {
-            const recordingEffect = getEffect('recording-glow');
-            if (recordingEffect && recordingEffect.drawRecordingIndicator) {
-                // Pass canvas dimensions for fixed positioning
-                recordingEffect.drawRecordingIndicator(this.ctx, logicalWidth, logicalHeight);
-            }
-        }
-        
-        // Re-apply rotation if needed for core rendering
-        if (rotationAngle !== 0) {
-            this.ctx.restore(); // Go back to rotated state for core
-        }
+        // Recording indicator will be drawn after all transforms are restored
         
         // Apply sleep opacity to core
         if (this.state.sleeping || this.state.emotion === 'resting') {
@@ -997,17 +957,40 @@ class EmotiveRenderer {
         }
         
         // Render sun effects BEFORE core (so they appear behind)
-        if (currentShadow && currentShadow.type === 'sun') {
+        let renderingSunEffects = false;
+        if (currentShadow && (currentShadow.type === 'sun' || currentShadow.type === 'solar-hybrid')) {
             this.renderSunEffects(coreX, coreY, coreRadius, currentShadow);
+            renderingSunEffects = true;
         }
         
         // Drop shadow removed - was causing dimming
         
-        // Render the core shape
+        // Update core rotation based on BPM (like a record player)
+        // Only rotate if BPM is greater than 0 (rhythm is active)
+        if (this.state.currentBPM > 0) {
+            const now = performance.now();
+            const deltaRotationTime = (now - this.state.lastRotationTime) / 1000; // Convert to seconds
+            this.state.lastRotationTime = now;
+            
+            // Calculate rotation speed: BPM / 60 = rotations per second * 2PI = radians per second
+            // Divide by 60 to make it even slower (3x slower than /20)
+            const radiansPerSecond = (this.state.currentBPM / 60) * Math.PI * 2 / 60;
+            this.state.coreRotation += radiansPerSecond * deltaRotationTime;
+        } else {
+            // Reset timestamp when not rotating
+            this.state.lastRotationTime = performance.now();
+        }
+        
+        // Keep rotation within 0-2PI range
+        if (this.state.coreRotation > Math.PI * 2) {
+            this.state.coreRotation -= Math.PI * 2;
+        }
+        
+        // Render the core shape with rotation
         this.coreRenderer.renderCore(coreX, coreY, coreRadius, {
             scaleX: 1,
             scaleY: 1,
-            rotation: 0,
+            rotation: this.state.coreRotation,
             shapePoints: shapePoints
         });
         
@@ -1017,9 +1000,83 @@ class EmotiveRenderer {
             this.specialEffects.renderSparkles();
         }
         
+        // Check if we're dealing with solar transitions
+        const currentShape = this.shapeMorpher ? this.shapeMorpher.currentShape : null;
+        const targetShape = this.shapeMorpher ? this.shapeMorpher.targetShape : null;
+        const isTransitioningToSolar = this.shapeMorpher && targetShape === 'solar' && this.shapeMorpher.isTransitioning;
+        const isTransitioningFromSolar = this.shapeMorpher && currentShape === 'solar' && this.shapeMorpher.isTransitioning;
+        const isAtSolar = currentShadow && currentShadow.type === 'solar-hybrid';
+        
+        // Check specific transition directions
+        const isSolarToMoon = this.shapeMorpher && this.shapeMorpher.isTransitioning &&
+            currentShape === 'solar' && targetShape === 'moon';
+        const isMoonToSolar = this.shapeMorpher && this.shapeMorpher.isTransitioning &&
+            currentShape === 'moon' && targetShape === 'solar';
+        
         // Render moon/lunar shadows AFTER core AND sparkles (as top overlay)
-        if (currentShadow && (currentShadow.type === 'crescent' || currentShadow.type === 'lunar')) {
+        // Always render moon shadow EXCEPT when transitioning FROM moon TO solar
+        if (currentShadow && (currentShadow.type === 'crescent' || currentShadow.type === 'lunar') && 
+            !isMoonToSolar) {
             this.renderMoonShadow(coreX, coreY, coreRadius, currentShadow, shapePoints);
+        }
+        
+        // For solar-hybrid, render lunar overlay on top of sun
+        // Skip when transitioning FROM solar TO moon (let moon's shadow handle it)
+        if (((isAtSolar && currentShadow.lunarOverlay) || isTransitioningToSolar || isTransitioningFromSolar) && 
+            !isSolarToMoon) {
+            // Use the lunar overlay from solar definition
+            const lunarShadow = (isAtSolar && currentShadow.lunarOverlay) ? currentShadow.lunarOverlay : {
+                type: 'lunar',
+                coverage: 1.0,
+                color: 'rgba(0, 0, 0, 1.0)',
+                progression: 'center'
+            };
+            
+            // Calculate shadow offset for Bailey's Beads
+            let shadowOffsetX = 0;
+            let shadowOffsetY = 0;
+            let morphProgress = 0;
+            
+            if (this.shapeMorpher) {
+                morphProgress = this.shapeMorpher.getProgress();
+                const currentShape = this.shapeMorpher.currentShape;
+                const targetShape = this.shapeMorpher.targetShape;
+                const fromLunar = currentShape === 'lunar' || currentShape === 'eclipse';
+                const toLunar = targetShape === 'lunar' || targetShape === 'eclipse';
+                
+                const slideDistance = coreRadius * 2.5;
+                
+                if (isTransitioningToSolar && morphProgress < 1) {
+                    // Shadow sliding in from bottom-left
+                    shadowOffsetX = -slideDistance * (1 - morphProgress);
+                    shadowOffsetY = slideDistance * (1 - morphProgress);
+                } else if (isTransitioningFromSolar && morphProgress < 1) {
+                    // Shadow sliding out to top-right
+                    shadowOffsetX = slideDistance * morphProgress;
+                    shadowOffsetY = -slideDistance * morphProgress;
+                }
+            }
+            
+            // Render the shadow
+            this.renderMoonShadow(coreX, coreY, coreRadius, lunarShadow, shapePoints, true);
+            
+            // Render Bailey's Beads during transitions
+            // Show beads when transitioning TO solar (which will have rays) or FROM solar (which had rays)
+            // But only if we're actually rendering or about to render sun effects
+            const willHaveSunEffects = isTransitioningToSolar || renderingSunEffects;
+            
+            if ((isTransitioningToSolar || isTransitioningFromSolar) && willHaveSunEffects) {
+                this.renderBaileysBeads(coreX, coreY, coreRadius, shadowOffsetX, shadowOffsetY, morphProgress, isTransitioningToSolar, true);
+                
+                // Trigger chromatic aberration when shadow is near center
+                const shadowNearCenter = Math.abs(shadowOffsetX) < 30 && Math.abs(shadowOffsetY) < 30;
+                if (shadowNearCenter && this.specialEffects) {
+                    // Stronger aberration as shadow gets closer to center
+                    const distance = Math.sqrt(shadowOffsetX * shadowOffsetX + shadowOffsetY * shadowOffsetY);
+                    const intensity = Math.max(0.1, 0.5 * (1 - distance / 30));
+                    this.specialEffects.triggerChromaticAberration(intensity);
+                }
+            }
         }
         
         // Reset alpha
@@ -1045,6 +1102,21 @@ class EmotiveRenderer {
         
         // Simple blit - chromatic aberration is now handled via CSS filters
         originalCtx.drawImage(this.offscreenCanvas, 0, 0);
+        
+        // Draw recording indicator on TOP of everything, with no transforms
+        if (isEffectActive('recording-glow', this.state)) {
+            console.log('Recording active, state:', this.state.recording);
+            const recordingEffect = getEffect('recording-glow');
+            if (recordingEffect && recordingEffect.drawRecordingIndicator) {
+                console.log('Calling drawRecordingIndicator');
+                // Use original context to draw on top of the blitted image
+                recordingEffect.drawRecordingIndicator(originalCtx, this.canvas.width, this.canvas.height);
+            } else {
+                console.log('No drawRecordingIndicator method found');
+            }
+        } else {
+            console.log('Recording not active, state:', this.state.recording);
+        }
     }
     
     // renderGlow method removed - now handled by GlowRenderer module
@@ -1336,9 +1408,138 @@ class EmotiveRenderer {
     }
     
     /**
-     * Render moon/lunar shadow overlay
+     * Render Bailey's Beads for solar eclipse
      */
-    renderMoonShadow(x, y, radius, shadow, shapePoints) {
+    renderBaileysBeads(x, y, radius, shadowOffsetX, shadowOffsetY, morphProgress, isTransitioningToSolar, hasSunRays) {
+        const ctx = this.ctx;
+        
+        // NEVER show beads if there are no sun rays visible
+        if (!hasSunRays) {
+            this._beadStartTime = null;
+            return;
+        }
+        
+        // Check if this is a lunar-solar transition (shadow stays centered)
+        const isLunarSolarTransition = Math.abs(shadowOffsetX) < 1 && Math.abs(shadowOffsetY) < 1;
+        
+        // Show beads when shadow is approaching center OR for lunar-solar transitions
+        // Different thresholds for entering vs leaving
+        const threshold = isTransitioningToSolar ? 30 : 15; // Disappear faster when leaving
+        const shadowNearCenter = Math.abs(shadowOffsetX) < threshold && Math.abs(shadowOffsetY) < threshold;
+        
+        if (!shadowNearCenter && !isLunarSolarTransition) {
+            // Reset when not near center (unless it's lunar-solar)
+            this._beadStartTime = null;
+            return;
+        }
+        
+        // Generate different beads for entering vs leaving
+        const beadKey = isTransitioningToSolar ? 'entering' : 'leaving';
+        
+        // Check if we need to generate new beads (first time shadow centers for this transition)
+        if (!this._beadStartTime) {
+            const beadCount = Math.floor(Math.random() * 4) + 1; // 1-4 beads
+            
+            this._currentBeads = [];
+            
+            // Create beads with random order
+            const angles = [];
+            for (let i = 0; i < beadCount; i++) {
+                angles.push(Math.random() * Math.PI * 2);
+            }
+            
+            // Shuffle the order they'll appear
+            const order = Array.from({length: beadCount}, (_, i) => i);
+            for (let i = order.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [order[i], order[j]] = [order[j], order[i]];
+            }
+            
+            for (let i = 0; i < beadCount; i++) {
+                this._currentBeads.push({
+                    angle: angles[i],
+                    size: 3 + Math.random() * 5, // Random size 3-8
+                    order: order[i], // Order in sequence
+                    delay: order[i] * 200 // 200ms between each bead
+                });
+            }
+            
+            this._beadStartTime = Date.now();
+        }
+        
+        const elapsedTime = Date.now() - this._beadStartTime;
+        
+        // Render the beads as chromatic lens flares (one at a time)
+        const beads = this._currentBeads || [];
+        
+        beads.forEach(bead => {
+            // Check if this bead should be visible yet
+            if (elapsedTime < bead.delay) return;
+            
+            // Calculate fade in (300ms fade)
+            const beadAge = elapsedTime - bead.delay;
+            const fadeInDuration = 300;
+            const opacity = Math.min(1, beadAge / fadeInDuration);
+            
+            // Calculate bead position on the edge of the sun (not shadow)
+            const beadX = x + Math.cos(bead.angle) * radius;
+            const beadY = y + Math.sin(bead.angle) * radius;
+            
+            ctx.save();
+            ctx.translate(beadX, beadY);
+            ctx.globalAlpha = opacity;
+            
+            // Draw chromatic aberration lens flare
+            const size = this.scaleValue(bead.size);
+            
+            // Chromatic layers - RGB separated for aberration effect
+            const colors = [
+                { color: `rgba(255, 100, 100, ${0.6 * opacity})`, offset: -2 },  // Red
+                { color: `rgba(100, 255, 100, ${0.6 * opacity})`, offset: 0 },   // Green  
+                { color: `rgba(100, 100, 255, ${0.6 * opacity})`, offset: 2 }    // Blue
+            ];
+            
+            ctx.globalCompositeOperation = 'screen';
+            
+            colors.forEach(({ color, offset }) => {
+                // Create radial gradient for each color channel
+                const gradient = ctx.createRadialGradient(
+                    offset, offset, 0,
+                    offset, offset, size * 2
+                );
+                
+                gradient.addColorStop(0, color);
+                gradient.addColorStop(0.2, color.replace(`${0.6 * opacity}`, `${0.4 * opacity}`));
+                gradient.addColorStop(0.5, color.replace(`${0.6 * opacity}`, `${0.2 * opacity}`));
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(offset, offset, size * 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Add bright white core
+            ctx.globalCompositeOperation = 'lighter';
+            const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+            coreGradient.addColorStop(0.3, `rgba(255, 255, 255, ${0.5 * opacity})`);
+            coreGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = coreGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        });
+    }
+    
+    /**
+     * Render moon/lunar shadow overlay
+     * @param {boolean} isSolarOverlay - True if this is being called for solar eclipse effect
+     */
+    renderMoonShadow(x, y, radius, shadow, shapePoints, isSolarOverlay = false) {
         const ctx = this.ctx;
         
         ctx.save();
@@ -1420,10 +1621,52 @@ class EmotiveRenderer {
             const diffusion = shadow.diffusion !== undefined ? shadow.diffusion : 1;
             const sharpness = 1 - diffusion;
             
-            // Clip to moon shape
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.clip();
+            // Get morph progress to animate the shadow sliding in for solar
+            let shadowOffsetX = 0;
+            let shadowOffsetY = 0;
+            
+            if (this.shapeMorpher) {
+                const morphProgress = this.shapeMorpher.getProgress();
+                const currentShape = this.shapeMorpher.currentShape;
+                const targetShape = this.shapeMorpher.targetShape;
+                
+                // Don't skip animation for moon-solar transitions anymore
+                
+                // Animate shadow sliding in when morphing TO solar (for solar overlay)
+                if (isSolarOverlay && targetShape === 'solar' && morphProgress !== undefined && morphProgress < 1) {
+                    // Shadow slides in from bottom-left
+                    const slideDistance = radius * 2.5;
+                    // Start from bottom-left, move to center
+                    shadowOffsetX = -slideDistance * (1 - morphProgress);
+                    shadowOffsetY = slideDistance * (1 - morphProgress);
+                }
+                // Animate shadow sliding out when morphing FROM solar
+                else if (isSolarOverlay && currentShape === 'solar' && targetShape !== 'solar' && targetShape !== null && morphProgress !== undefined && morphProgress < 1) {
+                    // Shadow slides out to top-right
+                    const slideDistance = radius * 2.5;
+                    // Move from center to top-right
+                    shadowOffsetX = slideDistance * morphProgress;
+                    shadowOffsetY = -slideDistance * morphProgress;
+                }
+            }
+            
+            // Apply translation for shadow animation
+            ctx.translate(shadowOffsetX, shadowOffsetY);
+            
+            // For solar overlay, clip to the sun's core area only (not the corona)
+            if (isSolarOverlay) {
+                // Clip to a circle at the shadow's position that only covers the core
+                ctx.save();
+                ctx.beginPath();
+                // Create a clipping region that's the intersection of the sun and the shadow
+                ctx.arc(-shadowOffsetX, -shadowOffsetY, radius, 0, Math.PI * 2); // Sun position (inverse of shadow offset)
+                ctx.clip();
+            } else {
+                // Regular lunar clipping
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.clip();
+            }
             
             // Penumbra (diffuse outer shadow) - MUCH DARKER
             const penumbraRadius = radius * (1.8 - sharpness * 0.5);
@@ -1434,11 +1677,22 @@ class EmotiveRenderer {
             
             const baseOpacity = shadow.coverage || 0.9;
             
-            penumbraGradient.addColorStop(0, `rgba(10, 2, 0, ${baseOpacity})`);
-            penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(20, 5, 0, ${baseOpacity * 0.95})`);
-            penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(40, 10, 5, ${baseOpacity * 0.8})`);
-            penumbraGradient.addColorStop(0.85, `rgba(60, 15, 10, ${baseOpacity * 0.4})`);
-            penumbraGradient.addColorStop(1, `rgba(80, 20, 15, 0)`);
+            // Use custom color if specified (for solar eclipse), otherwise use default lunar red
+            if (shadow.color && shadow.color.includes('0, 0, 0')) {
+                // Black shadow for solar eclipse
+                penumbraGradient.addColorStop(0, `rgba(0, 0, 0, ${baseOpacity})`);
+                penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(0, 0, 0, ${baseOpacity * 0.95})`);
+                penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(0, 0, 0, ${baseOpacity * 0.8})`);
+                penumbraGradient.addColorStop(0.85, `rgba(0, 0, 0, ${baseOpacity * 0.4})`);
+                penumbraGradient.addColorStop(1, `rgba(0, 0, 0, 0)`);
+            } else {
+                // Default reddish lunar eclipse colors
+                penumbraGradient.addColorStop(0, `rgba(10, 2, 0, ${baseOpacity})`);
+                penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(20, 5, 0, ${baseOpacity * 0.95})`);
+                penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(40, 10, 5, ${baseOpacity * 0.8})`);
+                penumbraGradient.addColorStop(0.85, `rgba(60, 15, 10, ${baseOpacity * 0.4})`);
+                penumbraGradient.addColorStop(1, `rgba(80, 20, 15, 0)`);
+            }
             
             ctx.fillStyle = penumbraGradient;
             ctx.beginPath();
@@ -1453,16 +1707,29 @@ class EmotiveRenderer {
                     0, 0, umbraRadius
                 );
                 
-                umbraGradient.addColorStop(0, `rgba(0, 0, 0, ${baseOpacity})`);
-                umbraGradient.addColorStop(0.5, `rgba(10, 2, 0, ${baseOpacity * 0.9})`);
-                umbraGradient.addColorStop(0.8, `rgba(20, 5, 0, ${baseOpacity * 0.5})`);
-                umbraGradient.addColorStop(1, 'rgba(30, 8, 5, 0)');
+                // Use black for solar eclipse, reddish for lunar
+                if (shadow.color && shadow.color.includes('0, 0, 0')) {
+                    umbraGradient.addColorStop(0, `rgba(0, 0, 0, ${baseOpacity})`);
+                    umbraGradient.addColorStop(0.5, `rgba(0, 0, 0, ${baseOpacity * 0.9})`);
+                    umbraGradient.addColorStop(0.8, `rgba(0, 0, 0, ${baseOpacity * 0.5})`);
+                    umbraGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                } else {
+                    umbraGradient.addColorStop(0, `rgba(0, 0, 0, ${baseOpacity})`);
+                    umbraGradient.addColorStop(0.5, `rgba(10, 2, 0, ${baseOpacity * 0.9})`);
+                    umbraGradient.addColorStop(0.8, `rgba(20, 5, 0, ${baseOpacity * 0.5})`);
+                    umbraGradient.addColorStop(1, 'rgba(30, 8, 5, 0)');
+                }
                 
                 ctx.fillStyle = umbraGradient;
                 ctx.beginPath();
                 ctx.arc(0, 0, umbraRadius, 0, Math.PI * 2);
                 ctx.fill();
             }
+        }
+        
+        // Restore extra save for solar overlay clipping
+        if (isSolarOverlay) {
+            ctx.restore();
         }
         
         ctx.restore();
@@ -1757,9 +2024,7 @@ class EmotiveRenderer {
             this.state.breathRateMult = 1.0 + ((undertone.breathRateMult || 1.0) - 1.0) * weight;
             this.state.breathDepthMult = 1.0 + ((undertone.breathDepthMult || 1.0) - 1.0) * weight;
             this.state.breathIrregular = weight > 0.5 ? (undertone.breathIrregular || false) : false;
-            this.state.particleRateMult = 1.0 + ((undertone.particleRateMult || 1.0) - 1.0) * weight;
-            this.state.particleBehaviorOverride = weight > 0.5 ? undertone.particleBehavior : null;
-            this.state.particleSpeedMult = 1.0 + ((undertone.particleSpeedMult || 1.0) - 1.0) * weight;
+            this.state.particleRateMult = 1.0;
             return;
         }
         
@@ -1774,8 +2039,6 @@ class EmotiveRenderer {
             this.state.breathDepthMult = 1.0;
             this.state.breathIrregular = false;
             this.state.particleRateMult = 1.0;
-            this.state.particleBehaviorOverride = null;
-            this.state.particleSpeedMult = 1.0;
             return;
         }
         
@@ -1788,10 +2051,8 @@ class EmotiveRenderer {
         this.state.glowRadiusMult = modifier.glowRadiusMult;
         this.state.breathRateMult = modifier.breathRateMult;
         this.state.breathDepthMult = modifier.breathDepthMult;
-        this.state.breathIrregular = modifier.breathIrregular;
-        this.state.particleRateMult = modifier.particleRateMult;
-        this.state.particleBehaviorOverride = modifier.particleBehavior;
-        this.state.particleSpeedMult = modifier.particleSpeedMult;
+        this.state.breathIrregular = modifier.breathIrregular || false;
+        this.state.particleRateMult = 1.0;
     }
     
     /**
@@ -1847,12 +2108,45 @@ class EmotiveRenderer {
     }
     
     /**
+     * Update just the undertone without resetting emotion
+     */
+    updateUndertone(undertone) {
+        // Clear glow cache when undertone changes (colors will change)
+        if (this.state.undertone !== undertone) {
+            this.glowCache.clear();
+        }
+        
+        // Store undertone for color processing
+        this.state.undertone = undertone;
+        this.currentUndertone = undertone;
+        
+        // Get weighted undertone modifier from state machine if available
+        const weightedModifier = this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers ? 
+                                this.stateMachine.getWeightedUndertoneModifiers() : null;
+        
+        // Apply all undertone modifiers (visual, breathing only - no particles)
+        this.applyUndertoneModifiers(weightedModifier || undertone);
+        
+        // Update colors with the new undertone
+        if (this.state.emotion) {
+            const emotionConfig = getEmotion(this.state.emotion);
+            if (emotionConfig) {
+                const baseColor = emotionConfig.glowColor || this.config.defaultGlowColor;
+                const targetColor = this.applyUndertoneToColor(baseColor, weightedModifier || undertone);
+                
+                // Start color transition to new undertone color (faster for responsiveness)
+                this.startColorTransition(targetColor, 200); // 200ms transition
+            }
+        }
+    }
+    
+    /**
      * Set emotional state
      */
     setEmotionalState(emotion, properties, undertone = null) {
         
-        // Clear glow cache when emotion changes (colors will change)
-        if (this.state.emotion !== emotion) {
+        // Clear glow cache when emotion or undertone changes (colors will change)
+        if (this.state.emotion !== emotion || this.state.undertone !== undertone) {
             this.glowCache.clear();
         }
         
@@ -1957,6 +2251,16 @@ class EmotiveRenderer {
         this.state.coreJitter = properties.coreJitter || (modifier && modifier.jitterAmount > 0);
         this.state.emotionEyeOpenness = properties.eyeOpenness;
         this.state.emotionEyeArc = properties.eyeArc;
+    }
+    
+    /**
+     * Set BPM for core rotation
+     * @param {number} bpm - Beats per minute
+     */
+    setBPM(bpm) {
+        if (typeof bpm === 'number' && bpm >= 0) {
+            this.state.currentBPM = bpm;
+        }
     }
     
     /**
@@ -2565,6 +2869,9 @@ class EmotiveRenderer {
     startJump() { this.gestureAnimator.startJump(); }
     startSway() { this.gestureAnimator.startSway(); }
     startFloat() { this.gestureAnimator.startFloat(); }
+    startRain() { this.gestureAnimator.startRain(); }
+    startRunningMan() { this.gestureAnimator.startRunningMan(); }
+    startCharleston() { this.gestureAnimator.startCharleston(); }
     startSparkle() { this.gestureAnimator.startSparkle(); }
     startShimmer() { this.gestureAnimator.startShimmer(); }
     startWiggle() { this.gestureAnimator.startWiggle(); }

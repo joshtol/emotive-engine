@@ -153,14 +153,18 @@ class Particle {
         if (gestureIsOverriding) {
             // Gesture completely controls particle - skip normal behavior
             this.applyGestureMotion(gestureMotion, gestureProgress, dt, centerX, centerY);
+        } else if (this.gestureBehavior === 'falling') {
+            // Rain gesture is active - use falling behavior instead of normal behavior
+            updateBehavior(this, 'falling', dt, centerX, centerY);
+        } else if (this.gestureBehavior === 'radiant') {
+            // Shimmer gesture is active - use radiant behavior for shimmering effect
+            updateBehavior(this, 'radiant', dt, centerX, centerY);
         } else {
             // Normal behavior update
             updateBehavior(this, this.behavior, dt, centerX, centerY);
             
-            // Apply undertone modifications if present
-            if (undertoneModifier) {
-                this.applyUndertoneModifier(dt, undertoneModifier);
-            }
+            // Don't apply undertone modifications to particle motion
+            // Undertones only affect color saturation and core behaviors
             
             // Apply non-overriding gesture motion if present
             if (gestureMotion && gestureProgress > 0) {
@@ -231,51 +235,15 @@ class Particle {
 
 
     /**
-     * Apply undertone modifications to particle behavior
+     * DEPRECATED - Undertones no longer affect particle motion
+     * Kept for compatibility but does nothing
      * @param {number} dt - Normalized delta time
      * @param {Object} modifier - Undertone modifier settings
      */
     applyUndertoneModifier(dt, modifier) {
-        if (!modifier) return;
-        
-        const weight = modifier.weight !== undefined ? modifier.weight : 1.0;
-        
-        // Speed modification
-        if (modifier.particleSpeedMult && modifier.particleSpeedMult !== 1.0) {
-            if (!this.undertoneData) {
-                this.undertoneData = {
-                    baseVx: this.vx,
-                    baseVy: this.vy,
-                    lastSpeedMult: 1.0
-                };
-            }
-            
-            const speedMult = 1.0 + (modifier.particleSpeedMult - 1.0) * weight;
-            this.vx = this.undertoneData.baseVx * speedMult;
-            this.vy = this.undertoneData.baseVy * speedMult;
-            
-            if (Math.abs(speedMult - this.undertoneData.lastSpeedMult) > 0.5) {
-                this.undertoneData.baseVx = this.vx / speedMult;
-                this.undertoneData.baseVy = this.vy / speedMult;
-            }
-            this.undertoneData.lastSpeedMult = speedMult;
-        } else if (this.undertoneData) {
-            this.vx = this.undertoneData.baseVx;
-            this.vy = this.undertoneData.baseVy;
-            this.undertoneData = null;
-        }
-        
-        // Size modification
-        if (modifier.particleSizeMult) {
-            const sizeMult = 1.0 + (modifier.particleSizeMult - 1.0) * weight;
-            this.size = this.baseSize * sizeMult;
-        }
-        
-        // Opacity modification
-        if (modifier.particleOpacityMult) {
-            const opacityMult = 1.0 + (modifier.particleOpacityMult - 1.0) * weight;
-            this.opacity *= opacityMult;
-        }
+        // Undertones no longer affect particles
+        // They only affect color saturation and core behaviors
+        return;
     }
 
     /**

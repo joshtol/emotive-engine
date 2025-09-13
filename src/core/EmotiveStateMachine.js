@@ -684,8 +684,8 @@ class EmotiveStateMachine {
             if (this.state.undertone) {
                 const mod = this.getUndertoneModifier(this.state.undertone);
                 if (mod) {
-                    // Return full modifier with weight of 1.0 (fully applied)
-                    return { ...mod, weight: 1.0 };
+                    // Return full modifier with weight of 1.0 (fully applied) and type
+                    return { ...mod, weight: 1.0, type: this.state.undertone };
                 }
             }
             return null;
@@ -695,8 +695,8 @@ class EmotiveStateMachine {
         if (transition.target) {
             const targetMod = this.getUndertoneModifier(transition.target);
             if (targetMod) {
-                // Return target modifier with transition weight
-                return { ...targetMod, weight: transition.targetWeight };
+                // Return target modifier with transition weight and type
+                return { ...targetMod, weight: transition.targetWeight, type: transition.target };
             }
         }
         
@@ -704,7 +704,7 @@ class EmotiveStateMachine {
         if (transition.current && transition.currentWeight > 0) {
             const currentMod = this.getUndertoneModifier(transition.current);
             if (currentMod) {
-                return { ...currentMod, weight: transition.currentWeight };
+                return { ...currentMod, weight: transition.currentWeight, type: transition.current };
             }
         }
         

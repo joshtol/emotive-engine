@@ -117,6 +117,7 @@ function generateSun(numPoints, numRays = 12) {
     return generateCircle(numPoints);
 }
 
+
 /**
  * Generate suspicion shape (sly grin)
  */
@@ -311,6 +312,25 @@ export const SHAPE_DEFINITIONS = {
     triangle: {
         points: generateTriangle(64),
         shadow: { type: 'none' }
+    },
+    solar: {
+        points: generateSun(64, 12),
+        shadow: {
+            type: 'solar-hybrid',
+            // Sun properties (rendered first)
+            corona: true,
+            intensity: 1.5,
+            flares: true,
+            texture: true,
+            turbulence: 0.3,
+            // Lunar shadow overlay (rendered on top) - BLACK for solar eclipse
+            lunarOverlay: {
+                type: 'lunar',
+                coverage: 1.0,  // Full coverage for total eclipse
+                color: 'rgba(0, 0, 0, 1.0)',  // Pure black shadow
+                progression: 'center'
+            }
+        }
     }
 };
 

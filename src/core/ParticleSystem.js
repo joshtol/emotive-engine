@@ -150,6 +150,11 @@ class ParticleSystem {
         // Set the emotion for behavior customization
         particle.emotion = this.currentEmotion;
         
+        // Apply gesture behavior if active (e.g., doppler for rain)
+        if (this.gestureBehavior) {
+            particle.gestureBehavior = this.gestureBehavior;
+        }
+        
         return particle;
     }
 
@@ -230,6 +235,21 @@ class ParticleSystem {
     _spawn(behavior, emotion, particleRate, centerX, centerY, deltaTime, count, minParticles = 0, maxParticles = 10, emotionColors = null, undertone = null) {
         // Store emotion for particle initialization
         this.currentEmotion = emotion;
+        
+        // Debug logging for excited emotion
+        if (emotion === 'excited' && !this._excitedDebugLogged) {
+            console.log('[ParticleSystem] Excited emotion spawn:', {
+                behavior,
+                emotion,
+                particleRate,
+                minParticles,
+                maxParticles,
+                emotionColors,
+                currentParticleCount: this.particles.length
+            });
+            this._excitedDebugLogged = true;
+            setTimeout(() => { this._excitedDebugLogged = false; }, 5000); // Reset after 5 seconds
+        }
         
         // Store base colors and undertone separately to ensure consistent application
         this.baseEmotionColors = emotionColors;
@@ -529,6 +549,27 @@ class ParticleSystem {
     }
 
     /**
+     * Set a temporary gesture behavior for particles
+     * @param {string} behaviorName - Name of the behavior (e.g., 'doppler')
+     * @param {boolean} active - Whether the behavior is active
+     */
+    setGestureBehavior(behaviorName, active) {
+        this.gestureBehavior = active ? behaviorName : null;
+        
+        // Apply gesture behavior to existing particles
+        if (active) {
+            this.particles.forEach(particle => {
+                particle.gestureBehavior = behaviorName;
+            });
+        } else {
+            // Clear gesture behavior from particles
+            this.particles.forEach(particle => {
+                particle.gestureBehavior = null;
+            });
+        }
+    }
+
+    /**
      * Removes a particle at the specified index
      * @param {number} index - Index of particle to remove
      */
@@ -748,6 +789,60 @@ class ParticleSystem {
                     
                     // Create firefly pulse pattern
                     fireflyGlow = 0.3 + Math.max(0, Math.sin(time * 3 + particlePhase)) * intensity;
+                }
+                
+                // Apply flicker effect if flicker gesture is active (now does particle shimmer)
+                if (gestureTransform && gestureTransform.flickerEffect) {
+                    // Each particle shimmers with a wave pattern
+                    const particlePhase = (particle.x * 0.02 + particle.y * 0.02) % (Math.PI * 2);
+                    const time = gestureTransform.flickerTime || (Date.now() * 0.001);
+                    const intensity = gestureTransform.particleGlow || 2.0;
+                    
+                    // Create shimmer wave pattern - faster oscillation
+                    fireflyGlow = 0.5 + Math.sin(time * 12 + particlePhase) * intensity * 0.5;
+                }
+                
+                // Apply shimmer effect if shimmer gesture is active (subtle glow)
+                if (gestureTransform && gestureTransform.shimmerEffect) {
+                    // Each particle gets a subtle brightness variation based on distance from center
+                    const dx = particle.x - (ctx.canvas.width / 2);
+                    const dy = particle.y - (ctx.canvas.height / 2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const normalizedDistance = distance / 200; // Normalize to reasonable range
+                    
+                    const time = gestureTransform.shimmerTime || (Date.now() * 0.001);
+                    const wave = gestureTransform.shimmerWave || 0;
+                    const intensity = gestureTransform.particleGlow || 1.2;
+                    
+                    // Subtle traveling wave from center outward
+                    const travelingWave = Math.sin(time * 3 - normalizedDistance + wave);
+                    
+                    // Very subtle glow modulation
+                    fireflyGlow = 1 + travelingWave * 0.15 * intensity;
+                }
+                
+                // Apply glow effect if glow gesture is active (radiant burst)
+                if (gestureTransform && gestureTransform.glowEffect) {
+                    const envelope = gestureTransform.glowEnvelope || 0;
+                    const progress = gestureTransform.glowProgress || 0;
+                    const intensity = gestureTransform.particleGlow || 2.0;
+                    
+                    // Particles brighten based on distance - closer particles glow first
+                    const dx = particle.x - (ctx.canvas.width / 2);
+                    const dy = particle.y - (ctx.canvas.height / 2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const normalizedDistance = distance / 300;
+                    
+                    // Glow radiates outward
+                    const radiateDelay = Math.min(normalizedDistance * 0.3, 0.5);
+                    const localProgress = Math.max(0, (progress - radiateDelay) / (1 - radiateDelay));
+                    const localEnvelope = Math.sin(localProgress * Math.PI);
+                    
+                    // Strong glow effect - needs to be > 1.0 to trigger glow rendering
+                    fireflyGlow = 1 + localEnvelope * intensity * 2; // Doubled intensity for visible glow
+                    // Use safeSize modification instead, which is local to this render frame
+                    const glowSizeBoost = 1 + localEnvelope * 0.2;
+                    safeSize = safeSize * glowSizeBoost;
                 }
                 
                 // Draw glow layers if needed

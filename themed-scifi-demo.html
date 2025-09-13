@@ -437,19 +437,19 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 12px;
-            padding: 8px 16px;
-            height: 44px;
-            background: var(--system-bar-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid var(--system-bar-border);
+            gap: 8px;
+            padding: 10px;
+            height: auto;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
             flex-shrink: 0;
             position: relative;
             transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
                         opacity 0.4s ease-out;
             transform-origin: bottom center;
-            z-index: 90; /* Below the display container */
+            z-index: 90;
         }
         
         .system-controls.hidden {
@@ -498,115 +498,187 @@
         
         .system-controls-group {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             align-items: center;
         }
         
         .system-controls-divider {
             width: 1px;
             height: 24px;
-            background: var(--border-color);
-            opacity: 0.3;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0 8px;
         }
         
         
         .system-controls .sci-fi-btn {
-            width: 42px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             padding: 0;
-            font-size: 1.3rem;
-            font-weight: 500;
-            border: 1px solid transparent;
+            font-size: 1.1rem;
+            border: none;
             border-radius: 6px;
-            background: var(--system-btn-bg);
-            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.6);
+            color: rgba(255, 255, 255, 0.4);
             position: relative;
             overflow: hidden;
             cursor: pointer;
-            outline: none;
-            box-shadow: none;
+            outline: 2px solid transparent;
+            outline-offset: -2px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;
         }
         
         /* Hover - subtle border appears */
         .system-controls .sci-fi-btn:hover {
-            background: var(--system-btn-hover);
-            color: var(--accent-primary);
-            border: 1px solid var(--accent-primary);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.7);
+            outline-color: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
         }
         
-        /* Active state - full border frame */
+        /* Active state - subtle glow */
         .system-controls .sci-fi-btn.active {
-            background: #000;
-            color: #999;
-            border: 1px solid var(--accent-primary);
-            opacity: 0.5;
+            background: rgba(0, 255, 255, 0.15);
+            color: rgba(0, 255, 255, 0.9);
+            outline-color: rgba(0, 255, 255, 0.3);
         }
         
-        /* Recording button - red border when recording */
+        /* Recording button - subtle red when recording */
         .system-controls .sci-fi-btn.recording {
-            background: #200;
-            color: #888;
-            border: 1px solid #400;
-            border-radius: 2px;
+            background: rgba(255, 0, 0, 0.15);
+            color: rgba(255, 100, 100, 0.9);
+            outline-color: rgba(255, 0, 0, 0.3);
+            animation: pulse-recording 2s infinite;
+        }
+        
+        @keyframes pulse-recording {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
         
         /* Master dice button special styling */
         .system-controls .sci-fi-btn.master-dice {
-            background: linear-gradient(135deg, #111, #222);
-            border: 1px solid transparent;
+            background: rgba(0, 0, 0, 0.6);
+            color: rgba(255, 255, 255, 0.4);
         }
         
         .system-controls .sci-fi-btn.master-dice:hover {
-            background: linear-gradient(135deg, #222, #333);
-            border: 1px solid var(--accent-primary);
-            opacity: 0.9;
+            background: rgba(150, 100, 255, 0.1);
+            color: rgba(150, 100, 255, 0.8);
+            outline-color: rgba(150, 100, 255, 0.2);
         }
         
-        /* Light theme specific overrides for system controls */
-        /* Light theme system controls - improved visibility */
+        /* Light theme specific overrides */
+        
+        /* Light theme morph bar */
+        .light .shape-controls-hero {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .light .shape-controls-hero .shape-btn {
+            background: rgba(0, 0, 0, 0.03);
+            color: rgba(0, 0, 0, 0.6);
+            outline-color: transparent;
+        }
+        
+        .light .shape-controls-hero .shape-btn:hover {
+            background: rgba(0, 122, 204, 0.08);
+            outline-color: rgba(0, 122, 204, 0.2);
+            color: rgba(0, 122, 204, 0.9);
+            transform: scale(1.05);
+        }
+        
+        .light .shape-controls-hero .shape-btn.active {
+            background: rgba(0, 122, 204, 0.12);
+            outline-color: rgba(0, 122, 204, 0.4);
+            color: #007acc;
+            box-shadow: 0 0 12px rgba(0, 122, 204, 0.2), inset 0 0 6px rgba(0, 122, 204, 0.1);
+        }
+        
+        .light .shape-controls-hero .dice-btn {
+            background: rgba(0, 0, 0, 0.03);
+            color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .light .shape-controls-hero .dice-btn:hover {
+            background: rgba(150, 100, 255, 0.08);
+            outline-color: rgba(150, 100, 255, 0.2);
+            color: rgba(150, 100, 255, 0.9);
+        }
+        
+        /* Light theme system controls */
         .light .system-controls {
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .light .system-controls-divider {
+            background: rgba(0, 0, 0, 0.08);
         }
         
         .light .system-controls .sci-fi-btn {
-            background: #ffffff;
-            color: #555;
-            border: 1px solid rgba(0, 0, 0, 0.12);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        
-        .light .system-controls .sci-fi-btn.master-dice {
-            background: linear-gradient(135deg, #007acc, #0099ff);
-            color: #ffffff;
-            border: 1px solid #006bb3;
-            box-shadow: 0 2px 4px rgba(0, 122, 204, 0.2);
+            background: rgba(0, 0, 0, 0.03);
+            color: rgba(0, 0, 0, 0.5);
+            outline-color: transparent;
         }
         
         .light .system-controls .sci-fi-btn:hover {
-            background: linear-gradient(135deg, #f8f8f8, #ffffff);
-            color: #007acc;
-            border: 1px solid #007acc;
-            box-shadow: 0 2px 6px rgba(0, 122, 204, 0.15);
-            transform: translateY(-2px);
+            background: rgba(0, 122, 204, 0.08);
+            outline-color: rgba(0, 122, 204, 0.2);
+            color: rgba(0, 122, 204, 0.9);
+            transform: scale(1.05);
         }
         
         .light .system-controls .sci-fi-btn.active {
-            background: #007acc;
-            color: #ffffff;
-            border: 1px solid #0099ff;
-            box-shadow: 0 2px 8px rgba(0, 122, 204, 0.25),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            background: rgba(0, 122, 204, 0.12);
+            outline-color: rgba(0, 122, 204, 0.3);
+            color: #007acc;
+        }
+        
+        .light .system-controls .sci-fi-btn.recording {
+            background: rgba(255, 0, 0, 0.1);
+            outline-color: rgba(255, 0, 0, 0.3);
+            color: rgba(200, 0, 0, 0.8);
+        }
+        
+        .light .system-controls .sci-fi-btn.master-dice {
+            background: rgba(0, 0, 0, 0.03);
+            color: rgba(0, 0, 0, 0.5);
         }
         
         .light .system-controls .sci-fi-btn.master-dice:hover {
-            background: linear-gradient(135deg, #0099ff, #00bbff);
-            transform: translateY(-2px) rotate(5deg);
+            background: rgba(150, 100, 255, 0.08);
+            outline-color: rgba(150, 100, 255, 0.2);
+            color: rgba(150, 100, 255, 0.9);
+        }
+        
+        /* Light theme BPM modifier buttons */
+        .light .bpm-modifier-btn {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            color: rgba(0, 0, 0, 0.5);
+            font-weight: 600;
+        }
+        
+        .light .bpm-modifier-btn:hover {
+            background: rgba(0, 122, 204, 0.08);
+            border-color: rgba(0, 122, 204, 0.3);
+            color: rgba(0, 122, 204, 0.9);
+            transform: scale(1.05);
+        }
+        
+        .light .bpm-modifier-btn.active {
+            background: rgba(0, 122, 204, 0.15);
+            border-color: #007acc;
+            color: #007acc;
+            box-shadow: 0 0 8px rgba(0, 122, 204, 0.15), inset 0 0 6px rgba(0, 122, 204, 0.08);
+            font-weight: 700;
         }
         
         /* Simple icon styling */
@@ -633,6 +705,16 @@
             margin-bottom: 10px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 5px;
+        }
+        
+        /* Left menu: dice on the right */
+        .left-menu .section-header {
+            flex-direction: row;
+        }
+        
+        /* Right menu: dice on the left */
+        .right-menu .section-header {
+            flex-direction: row-reverse;
         }
         .control-section h3 {
             color: var(--accent-primary); 
@@ -805,6 +887,11 @@
             font-weight: 600;
         }
         
+        /* Right menu: align Dance and Overlayable titles to the right */
+        .right-menu .gesture-group-title {
+            text-align: right;
+        }
+        
         .gesture-group .column-dice {
             position: absolute;
             top: 5px;
@@ -826,6 +913,18 @@
         
         .gesture-group .column-dice:hover {
             transform: rotate(180deg) scale(1.2);
+        }
+        
+        /* Right menu: column dice on left */
+        .right-menu .gesture-group .column-dice {
+            left: 5px;
+            right: auto;
+        }
+        
+        /* Left menu: column dice on right (default) */
+        .left-menu .gesture-group .column-dice {
+            right: 5px;
+            left: auto;
         }
         
         .gesture-group .btn-group {
@@ -971,7 +1070,7 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         .fps-display { 
-            z-index: 200; 
+            z-index: 50; /* Below emotion buttons (z-index: 100) */
             position: absolute; 
             bottom: 60px; 
             right: 25px;
@@ -1342,7 +1441,7 @@
                 top: 76px; /* Start below hero bar */
                 left: 0;
                 right: 0;
-                bottom: 0;
+                bottom: 0; /* Extend to bottom, footer overlays */
                 flex-direction: row;
                 padding: 0;
                 gap: 0;
@@ -1372,14 +1471,19 @@
                 box-sizing: border-box;
                 border: 1px solid var(--border-color); /* Add border for visual separation */
             }
+            
+            .controls-right {
+                padding-bottom: 45px; /* Space for footer */
+            }
             .display-and-controls {
-                height: 100%; /* Fill container height */
+                position: relative;
+                height: calc(100% - 45px); /* Account for footer overlay */
                 width: 100%;
-                max-width: 800px;
+                max-width: 900px; /* Increased to accommodate side panels */
                 display: flex;
-                flex-direction: column;
-                justify-content: flex-start; /* Start from top */
-                align-items: center;
+                flex-direction: row; /* Horizontal layout for desktop */
+                justify-content: center;
+                align-items: stretch;
                 box-sizing: border-box;
                 padding: 0; /* No padding anywhere */
                 margin: 0;
@@ -1483,6 +1587,153 @@
             text-shadow: 0 0 15px #007acc; /* blue glow */
             animation: none !important; /* disable the animation */
         }
+        
+        /* Emotion button emoji styling */
+        .emotion-btn {
+            font-size: 1.8rem !important; /* Double size for emojis */
+            line-height: 1.2 !important;
+            padding: 8px !important;
+        }
+        
+        /* Hide number input spinners */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        /* Rhythm slider styling */
+        .rhythm-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 4px var(--accent-glow);
+            transition: all 0.2s;
+        }
+        
+        .rhythm-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+        
+        .rhythm-slider::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 4px var(--accent-glow);
+            transition: all 0.2s;
+        }
+        
+        .rhythm-slider::-moz-range-thumb:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+        
+        /* Rhythm button active state */
+        .rhythm-btn.active {
+            border-color: var(--accent-glow) !important;
+            box-shadow: 0 0 20px var(--accent-primary), inset 0 0 10px rgba(var(--accent-rgb, 0,229,255), 0.3);
+        }
+        
+        /* Beat pulse animation */
+        @keyframes beatPulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        
+        /* Simple rotation for orbital indicator */
+        @keyframes simpleRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Emotion panels on sides of display */
+        .emotion-panel {
+            display: none; /* Hidden on mobile by default */
+        }
+        
+        @media (min-width: 1025px) {
+            .display-and-controls {
+                flex-direction: row !important;
+                align-items: stretch !important;
+                position: relative;
+            }
+            
+            .emotion-panel {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                padding: 12px 0;
+                justify-content: center;
+                background: transparent;
+                border: none;
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 100;
+            }
+            
+            .emotion-panel-left {
+                left: -27px; /* Position 2/3 toward frame, 1/3 toward menu (80px * 1/3 = 27px) */
+            }
+            
+            .emotion-panel-right {
+                right: -27px; /* Position 2/3 toward frame, 1/3 toward menu (80px * 1/3 = 27px) */
+            }
+            
+            .display-container {
+                order: 2;
+                flex: 1;
+            }
+            
+            .system-controls {
+                order: 4;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+            }
+            
+            .emotion-panel .emotion-btn {
+                width: 80px;
+                height: 80px;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.9rem !important;
+                border-radius: 50%;
+                background: transparent;
+                outline: none;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border: none;
+                cursor: pointer;
+                color: var(--text-primary);
+                box-shadow: none;
+            }
+            
+            .emotion-panel .emotion-btn:hover {
+                transform: translateY(-2px) scale(1.1);
+                filter: brightness(1.2);
+            }
+            
+            .emotion-panel .emotion-btn.active {
+                transform: scale(1.15);
+                filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6));
+            }
+        }
         @keyframes rotate { 
             from { transform: translate(-50%, -50%) rotate(0deg); } 
             to { transform: translate(-50%, -50%) rotate(360deg); } 
@@ -1499,6 +1750,49 @@
         #audio-player::-webkit-media-controls-panel {
             background: transparent;
         }
+        
+        /* Audio Visualizer Visibility */
+        #audio-viz-section {
+            display: none; /* Hidden by default on mobile portrait */
+        }
+        
+        /* Show on landscape and desktop */
+        @media (orientation: landscape), (min-width: 769px) {
+            #audio-viz-section {
+                display: block !important; /* Always visible in landscape/desktop */
+            }
+        }
+        
+        /* BPM Modifier Buttons */
+        .bpm-modifier-btn {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 36px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .bpm-modifier-btn:hover {
+            background: rgba(0, 229, 255, 0.1);
+            border-color: rgba(0, 229, 255, 0.3);
+            color: var(--text-primary);
+            transform: scale(1.05);
+        }
+        
+        .bpm-modifier-btn.active {
+            background: rgba(0, 229, 255, 0.15);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.2), inset 0 0 8px rgba(0, 229, 255, 0.1);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="night">
@@ -1506,14 +1800,15 @@
     <!-- Shape Controls Hero Bar -->
     <div class="shape-controls-hero">
         <div class="shape-controls">
-            <button class="sci-fi-btn shape-btn active" data-shape="circle">○</button>
             <button class="sci-fi-btn shape-btn" data-shape="heart">♥</button>
+            <button class="sci-fi-btn shape-btn" data-shape="triangle">△</button>
+            <button class="sci-fi-btn shape-btn" data-shape="square">□</button>
+            <button class="sci-fi-btn shape-btn active" data-shape="circle">○</button>
             <button class="sci-fi-btn shape-btn" data-shape="star">★</button>
             <button class="sci-fi-btn shape-btn" data-shape="sun">☀</button>
+            <button class="sci-fi-btn shape-btn" data-shape="solar">☉</button>
             <button class="sci-fi-btn shape-btn" data-shape="moon">☾</button>
             <button class="sci-fi-btn shape-btn" data-shape="lunar">●</button>
-            <button class="sci-fi-btn shape-btn" data-shape="square">□</button>
-            <button class="sci-fi-btn shape-btn" data-shape="triangle">△</button>
             <button class="dice-btn" id="randomize-shape-btn" aria-label="Random shape" title="🎲">🎲</button>
         </div>
     </div>
@@ -1521,38 +1816,50 @@
     <div class="hero-spacer"></div>
     <main class="main-layout" role="main">
         
-        <nav class="controls-left" role="navigation" aria-label="Emotion controls">
-            <div class="control-section">
-                <div class="section-header">
-                    <h3>Emotion Matrix</h3>
-                    <button class="dice-btn" id="randomize-btn" aria-label="Random emotion" title="Random emotion">🎲</button>
-                </div>
-                <div class="btn-group" role="group" aria-label="Emotion selection">
-                    <button class="sci-fi-btn emotion-btn active" data-emotion="neutral" aria-label="Set emotion to neutral" aria-pressed="true">Neutral</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="joy" aria-label="Set emotion to joy" aria-pressed="false">Joy</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="sadness" aria-label="Set emotion to sadness" aria-pressed="false">Sadness</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="anger" aria-label="Set emotion to anger" aria-pressed="false">Anger</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="fear" aria-label="Set emotion to fear" aria-pressed="false">Fear</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="surprise" aria-label="Set emotion to surprise" aria-pressed="false">Surprise</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="disgust" aria-label="Set emotion to disgust" aria-pressed="false">Disgust</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="love" aria-label="Set emotion to love" aria-pressed="false">Love</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="excited" aria-label="Set emotion to excited" aria-pressed="false">Excited</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Set emotion to euphoria" aria-pressed="false">Euphoria</button>
-                    <button class="sci-fi-btn emotion-btn" data-emotion="glitch" aria-label="Set emotion to glitch" aria-pressed="false">Glitch</button>
-                </div>
-            </div>
+        <nav class="controls-left left-menu" role="navigation" aria-label="Emotion controls">
             <div class="control-section">
                 <div class="section-header">
                     <h3>Undertone Modifier</h3>
-                    <button class="dice-btn" id="randomize-undertone-btn" aria-label="Random undertone" title="Random undertone">🎲</button>
                 </div>
-                <div class="btn-group" role="group" aria-label="Undertone modifier selection">
-                    <button class="sci-fi-btn undertone-btn" data-undertone="subdued" aria-label="Set undertone to subdued" aria-pressed="false">Subdued</button>
-                    <button class="sci-fi-btn undertone-btn" data-undertone="tired" aria-label="Set undertone to tired" aria-pressed="false">Tired</button>
-                    <button class="sci-fi-btn undertone-btn active" data-undertone="" aria-label="Clear undertone" aria-pressed="true">Clear</button>
-                    <button class="sci-fi-btn undertone-btn" data-undertone="nervous" aria-label="Set undertone to nervous" aria-pressed="false">Nervous</button>
-                    <button class="sci-fi-btn undertone-btn" data-undertone="confident" aria-label="Set undertone to confident" aria-pressed="false">Confident</button>
-                    <button class="sci-fi-btn undertone-btn" data-undertone="intense" aria-label="Set undertone to intense" aria-pressed="false">Intense</button>
+                <div class="undertone-slider-container" style="display: flex; align-items: center; gap: 10px; padding: 10px 0;">
+                    <span style="color: var(--text-secondary); font-size: 0.75rem; min-width: 60px;">SUBDUED</span>
+                    <input type="range" id="undertone-slider" min="-100" max="100" value="0" step="1" class="rhythm-slider" style="flex: 1;">
+                    <span style="color: var(--text-secondary); font-size: 0.75rem; min-width: 60px; text-align: right;">INTENSE</span>
+                </div>
+                <div style="text-align: center; padding: 5px 0;">
+                    <span id="undertone-value" style="color: var(--accent-primary); font-size: 0.85rem; text-transform: uppercase; transition: all 0.3s ease;">CLEAR</span>
+                </div>
+            </div>
+            
+            <!-- Chain Combos Section -->
+            <div class="control-section">
+                <div class="section-header">
+                    <h3>Chain Combos</h3>
+                    <button class="dice-btn" id="randomize-chain-btn" aria-label="Random chain" title="🎲">🎲</button>
+                </div>
+                <div class="btn-group chain-group" role="group" aria-label="Chain combinations">
+                    <button class="sci-fi-btn chain-btn" data-chain="buildup">Build</button>
+                    <button class="sci-fi-btn chain-btn" data-chain="cascade">Cascade</button>
+                    <button class="sci-fi-btn chain-btn" data-chain="celebrate">Celebrate</button>
+                    <button class="sci-fi-btn chain-btn" data-chain="smooth">Smooth</button>
+                    <button class="sci-fi-btn chain-btn" data-chain="chaos">Chaos</button>
+                    <button class="sci-fi-btn chain-btn" data-chain="custom">Custom</button>
+                </div>
+            </div>
+            
+            <!-- Glow Effects -->
+            <div class="control-section">
+                <div class="section-header">
+                    <h3>Glow Effects</h3>
+                    <button class="dice-btn" id="randomize-glow-btn" aria-label="Random glow" title="🎲">🎲</button>
+                </div>
+                <div class="btn-group" role="group" aria-label="Glow animations">
+                    <button class="sci-fi-btn gesture-btn" data-gesture="sparkle">Sparkle</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="pulse">Pulse</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="glow">Glow</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="flash">Flash</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="shimmer">Shimmer</button>
+                    <button class="sci-fi-btn gesture-btn" data-gesture="flicker">Flicker</button>
                 </div>
             </div>
             
@@ -1560,6 +1867,16 @@
 
         <div class="center-container">
             <div class="display-and-controls">
+                <!-- Left emotion panel (positive) -->
+                <div class="emotion-panel emotion-panel-left">
+                    <button class="sci-fi-btn emotion-btn active" data-emotion="neutral" aria-label="Neutral" title="Neutral">😐</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="calm" aria-label="Calm" title="Calm">😌</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="joy" aria-label="Joy" title="Joy">😊</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="excited" aria-label="Excited" title="Excited">🤩</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="love" aria-label="Love" title="Love">🥰</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Euphoria" title="Euphoria">✨</button>
+                </div>
+                
                 <div id="display-container" class="display-container">
                     <div class="display-content">
                         <canvas id="emotive-canvas"></canvas>
@@ -1589,44 +1906,76 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Right emotion panel (negative) -->
+                <div class="emotion-panel emotion-panel-right">
+                    <button class="sci-fi-btn emotion-btn" data-emotion="surprise" aria-label="Surprise" title="Surprise">😲</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="fear" aria-label="Fear" title="Fear">😨</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="disgust" aria-label="Disgust" title="Disgust">🤢</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="sadness" aria-label="Sadness" title="Sadness">😢</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="anger" aria-label="Anger" title="Anger">😠</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="glitch" aria-label="Glitch" title="Glitch">👾</button>
+                </div>
+                
                 <div class="system-controls" role="group" aria-label="System controls">
                     <div class="system-controls-group">
-                        <button class="sci-fi-btn audio-icon-btn" id="load-audio-btn" title="Load Audio File" aria-label="Load audio file">📁</button>
-                        <button class="sci-fi-btn audio-icon-btn" id="load-song-btn" title="Play Electric Glow" aria-label="Play Electric Glow">⚡</button>
-                        <button class="sci-fi-btn audio-icon-btn" id="mic-btn" title="Use Microphone" aria-label="Use microphone">🎤</button>
+                        <button class="sci-fi-btn audio-icon-btn" id="load-audio-btn" aria-label="Load audio file">▶</button>
+                        <button class="sci-fi-btn audio-icon-btn" id="load-song-btn" aria-label="Play demo song">♪</button>
+                        <button class="sci-fi-btn audio-icon-btn" id="mic-btn" aria-label="Use microphone">◉</button>
                     </div>
                     <div class="system-controls-divider"></div>
                     <div class="system-controls-group">
-                        <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">👁</button>
-                        <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">📊</button>
-                        <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">🔴</button>
-                        <button class="sci-fi-btn master-dice" id="randomize-all-btn" aria-label="Randomize everything" aria-pressed="false">🎰</button>
+                        <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">◐</button>
+                        <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">▣</button>
+                        <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">●</button>
+                        <button class="sci-fi-btn master-dice" id="randomize-all-btn" aria-label="Randomize everything" aria-pressed="false">⟳</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <aside class="controls-right" role="complementary" aria-label="Gesture controls">
-            <div class="control-section">
-                <h3>Rhythm Sync Module</h3>
-                <div class="rhythm-controls">
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                        <button class="sci-fi-btn" id="rhythm-toggle" style="flex: 1;">
-                            <span id="rhythm-status">▶ START</span>
-                        </button>
-                        <div id="beat-indicator" style="width: 30px; height: 30px; border: 1px solid var(--border-color); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <div id="beat-dot" style="width: 10px; height: 10px; background: var(--accent-primary); border-radius: 50%; transition: all 0.1s;"></div>
-                        </div>
+        <aside class="controls-right right-menu" role="complementary" aria-label="Gesture controls">
+            <div class="control-section rhythm-section" style="padding: 8px 10px;">
+                <div class="rhythm-controls" style="display: flex; align-items: center; gap: 8px;">
+                    <!-- Clean beat indicator -->
+                    <div id="beat-indicator" style="width: 20px; height: 20px; position: relative; display: flex; align-items: center; justify-content: center;">
+                        <!-- Outer ring -->
+                        <div style="position: absolute; width: 100%; height: 100%; border: 1px solid var(--accent-primary); border-radius: 50%; opacity: 0.2;"></div>
+                        <!-- Middle ring that pulses -->
+                        <div style="position: absolute; width: 70%; height: 70%; border: 1px solid var(--accent-primary); border-radius: 50%; opacity: 0.3;"></div>
+                        <!-- Center pulse -->
+                        <div id="beat-dot" style="width: 6px; height: 6px; background: var(--accent-primary); border-radius: 50%; box-shadow: 0 0 10px var(--accent-glow); z-index: 1;"></div>
                     </div>
-                    <div style="margin-bottom: 10px;">
-                        <label style="color: var(--text-secondary); font-size: 0.7rem; display: block; margin-bottom: 5px;">BPM: <span id="bpm-value">120</span></label>
-                        <input type="range" id="bpm-slider" min="60" max="220" value="120" style="width: 100%; accent-color: var(--accent-primary);">
-                    </div>
+                    
+                    <h3 style="color: var(--text-secondary); font-size: 0.65rem; margin: 0; opacity: 0.6;">RHYTHM</h3>
+                    
+                    <!-- Minimal spacer -->
+                    <div style="flex: 0.2;"></div>
+                    
+                    <!-- Slider -->
+                    <input type="range" id="bpm-slider" min="60" max="360" value="120" class="rhythm-slider" style="width: 80px; height: 2px; background: linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 100%); border-radius: 1px; outline: none; -webkit-appearance: none; margin-right: 8px;">
+                    
+                    <!-- BPM value -->
+                    <input type="number" id="bpm-value" value="120" min="60" max="360" style="width: 36px; background: transparent; border: 1px solid rgba(var(--accent-rgb, 0,229,255), 0.3); color: var(--accent-primary); font-family: monospace; font-size: 0.8rem; text-align: center; padding: 2px 0; border-radius: 2px; outline: none; margin-right: 8px;">
+                    
+                    <!-- Play button styled like sound toggle -->
+                    <button class="sci-fi-btn" id="rhythm-toggle" style="padding: 4px; width: auto; height: auto; font-size: 0.8rem; background: transparent; border: 1px solid var(--accent-primary); color: var(--accent-primary); display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.3s ease;">
+                        <span id="rhythm-status" style="display: block; width: 16px; height: 16px; text-align: center; line-height: 16px;">▶</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- BPM Modifier Controls -->
+            <div class="control-section" id="bpm-modifier-section" style="padding: 6px 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div class="bpm-modifier-controls" style="display: flex; gap: 4px; justify-content: center;">
+                    <button class="bpm-modifier-btn" data-modifier="0.5" id="bpm-half">½×</button>
+                    <button class="bpm-modifier-btn active" data-modifier="1" id="bpm-regular">1×</button>
+                    <button class="bpm-modifier-btn" data-modifier="2" id="bpm-double">2×</button>
                 </div>
             </div>
             
             <!-- Audio Visualizer Section -->
-            <div class="control-section" id="audio-viz-section" style="display: none;">
+            <div class="control-section" id="audio-viz-section">
                 <div class="section-header">
                     <h3>Audio Visualizer</h3>
                 </div>
@@ -1685,22 +2034,6 @@
                     </button>
                 </div>
                 
-                <!-- Chain Combos Section -->
-                <div class="control-section" style="margin-top: 15px;">
-                    <div class="section-header">
-                        <h3>Chain Combos</h3>
-                        <button class="dice-btn column-dice" id="randomize-chain-btn" aria-label="Random chain" title="🎲">🎲</button>
-                    </div>
-                    <div class="btn-group chain-group" role="group" aria-label="Chain combinations">
-                        <button class="sci-fi-btn chain-btn" data-chain="buildup">Build</button>
-                        <button class="sci-fi-btn chain-btn" data-chain="cascade">Cascade</button>
-                        <button class="sci-fi-btn chain-btn" data-chain="celebrate">Celebrate</button>
-                        <button class="sci-fi-btn chain-btn" data-chain="smooth">Smooth</button>
-                        <button class="sci-fi-btn chain-btn" data-chain="chaos">Chaos</button>
-                        <button class="sci-fi-btn chain-btn" data-chain="custom">Custom</button>
-                    </div>
-                </div>
-                
                 <div class="gesture-categories">
                     <!-- Dance Gestures -->
                     <div class="gesture-group">
@@ -1722,7 +2055,7 @@
                     <!-- Overlayable Gestures -->
                     <div class="gesture-group">
                         <h4 class="gesture-group-title">Overlayable</h4>
-                        <button class="dice-btn column-dice" id="randomize-gesture-btn" aria-label="Random gesture" title="🎲">🎲</button>
+                        <button class="dice-btn column-dice" id="randomize-overlayable-btn" aria-label="Random overlayable" title="🎲">🎲</button>
                         <div class="btn-group" role="group" aria-label="Overlayable animations">
                             <button class="sci-fi-btn gesture-btn" data-gesture="wave">Wave</button>
                             <button class="sci-fi-btn gesture-btn" data-gesture="point">Point</button>
@@ -1733,20 +2066,9 @@
                             <button class="sci-fi-btn gesture-btn" data-gesture="reach">Reach</button>
                             <button class="sci-fi-btn gesture-btn" data-gesture="breathe">Breathe</button>
                             <button class="sci-fi-btn gesture-btn" data-gesture="float">Float</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Glow Effects -->
-                    <div class="gesture-group">
-                        <h4 class="gesture-group-title">Glow</h4>
-                        <button class="dice-btn column-dice" id="randomize-glow-btn" aria-label="Random glow" title="🎲">🎲</button>
-                        <div class="btn-group" role="group" aria-label="Glow animations">
-                            <button class="sci-fi-btn gesture-btn" data-gesture="sparkle">Sparkle</button>
-                            <button class="sci-fi-btn gesture-btn" data-gesture="pulse">Pulse</button>
-                            <button class="sci-fi-btn gesture-btn" data-gesture="glow">Glow</button>
-                            <button class="sci-fi-btn gesture-btn" data-gesture="flash">Flash</button>
-                            <button class="sci-fi-btn gesture-btn" data-gesture="shimmer">Shimmer</button>
-                            <button class="sci-fi-btn gesture-btn" data-gesture="flicker">Flicker</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="rain">Rain</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="runningman">RunMan</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="charleston">Charles</button>
                         </div>
                     </div>
                 </div>
@@ -1944,6 +2266,8 @@
             
             mascot.start();
             
+            // Don't set initial BPM - rotation only happens when rhythm is active
+            
             // Initialize spectrum visualizer bars
             const spectrumViz = document.getElementById('spectrum-viz');
             const numBars = 16; // Reduced for cleaner look
@@ -1962,8 +2286,18 @@
                 spectrumViz.appendChild(bar);
             }
             
+            // Audio visualizer state
+            let audioVizActive = false;
+            let audioVizAnimationId = null;
+            
             // Initialize audio visualizer update loop
             function updateAudioViz() {
+                // Only update if audio is actually playing
+                if (!audioVizActive) {
+                    audioVizAnimationId = null;
+                    return;
+                }
+                
                 if (mascot && mascot.shapeMorpher) {
                     const morpher = mascot.shapeMorpher;
                     
@@ -2007,9 +2341,29 @@
                     }
                 }
                 
-                requestAnimationFrame(updateAudioViz);
+                audioVizAnimationId = requestAnimationFrame(updateAudioViz);
             }
-            updateAudioViz();
+            
+            // Start/stop audio visualizer based on audio state
+            function startAudioViz() {
+                if (!audioVizActive) {
+                    audioVizActive = true;
+                    updateAudioViz();
+                }
+            }
+            
+            function stopAudioViz() {
+                audioVizActive = false;
+                if (audioVizAnimationId) {
+                    cancelAnimationFrame(audioVizAnimationId);
+                    audioVizAnimationId = null;
+                }
+                // Reset bars to minimum height
+                const bars = spectrumViz.querySelectorAll('.spectrum-bar');
+                bars.forEach(bar => {
+                    bar.style.height = '2%';
+                });
+            }
             
             // Load and initialize rhythm modules
             await loadRhythmModules();
@@ -2020,16 +2374,9 @@
             // Make rhythmIntegration globally accessible for BPM updates
             window.rhythmIntegration = rhythmIntegration;
             
-            // Also update UI when rhythm auto-starts
-            const originalStart = rhythmIntegration.start.bind(rhythmIntegration);
-            rhythmIntegration.start = function(bpm, pattern) {
-                originalStart(bpm, pattern);
-                window.rhythmActive = true;
-                const rhythmStatus = document.getElementById('rhythm-status');
-                if (rhythmStatus) {
-                    rhythmStatus.textContent = '■ STOP';
-                }
-            };
+            // Initialize BPM Modifier early
+            let currentBPMModifier = 1.0; // Default to regular (1x)
+            window.currentBPMModifier = currentBPMModifier;
             
             // Initialize gesture scheduler
             gestureScheduler = new GestureScheduler(mascot);
@@ -2376,6 +2723,24 @@
                     
                     const chain = chains[chainType];
                     if (chain && mascot) {
+                        // 10% chance to trigger a shape morph with the chain
+                        if (Math.random() < 0.1) {
+                            // Get all available shapes
+                            const shapes = Array.from(document.querySelectorAll('.shape-btn')).map(b => b.dataset.shape);
+                            const currentShape = document.querySelector('.shape-btn.active')?.dataset.shape;
+                            const availableShapes = shapes.filter(s => s !== currentShape);
+                            
+                            if (availableShapes.length > 0) {
+                                // Pick a random shape and morph to it
+                                const randomShape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
+                                
+                                // Trigger the morph slightly before the chain starts for better effect
+                                setTimeout(() => {
+                                    document.querySelector(`.shape-btn[data-shape="${randomShape}"]`).click();
+                                }, 0);
+                            }
+                        }
+                        
                         // Execute chain with delays for layering effect
                         chain.forEach(item => {
                             setTimeout(() => {
@@ -2394,24 +2759,79 @@
                 });
             });
 
-            document.querySelectorAll('.undertone-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    currentUndertone = btn.dataset.undertone;
-                    mascot.setEmotion(currentEmotion, currentUndertone || undefined);
-                    document.querySelectorAll('.undertone-btn').forEach(b => {
-                        b.classList.remove('active');
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    btn.classList.add('active');
-                    btn.setAttribute('aria-pressed', 'true');
-                    updateDisplay();
-                });
+            // Undertone slider with smooth transitions
+            const undertoneSlider = document.getElementById('undertone-slider');
+            const undertoneValue = document.getElementById('undertone-value');
+            let undertoneDebounceTimer = null;
+            let lastUndertone = '';
+            
+            // Function to get undertone from value
+            function getUndertoneFromValue(value) {
+                let undertone = '';
+                let displayText = 'CLEAR';
+                
+                if (value < -66) {
+                    undertone = 'subdued';
+                    displayText = 'SUBDUED';
+                } else if (value < -33) {
+                    undertone = 'tired';
+                    displayText = 'TIRED';
+                } else if (value < -10) {
+                    undertone = 'nervous';
+                    displayText = 'NERVOUS';
+                } else if (value > 66) {
+                    undertone = 'intense';
+                    displayText = 'INTENSE';
+                } else if (value > 33) {
+                    undertone = 'confident';
+                    displayText = 'CONFIDENT';
+                } else if (value > 10) {
+                    undertone = 'energetic';
+                    displayText = 'ENERGETIC';
+                } else {
+                    undertone = '';
+                    displayText = 'CLEAR';
+                }
+                
+                return { undertone, displayText };
+            }
+            
+            // Update display immediately, but debounce mascot updates
+            undertoneSlider.addEventListener('input', () => {
+                const value = parseInt(undertoneSlider.value);
+                const { undertone, displayText } = getUndertoneFromValue(value);
+                
+                // Update display text immediately for responsiveness
+                undertoneValue.textContent = displayText;
+                
+                // Only update mascot when undertone actually changes
+                if (undertone !== lastUndertone) {
+                    lastUndertone = undertone;
+                    currentUndertone = undertone;
+                    
+                    // Clear any pending update
+                    if (undertoneDebounceTimer) {
+                        clearTimeout(undertoneDebounceTimer);
+                    }
+                    
+                    // Debounce the mascot update for smoothness
+                    undertoneDebounceTimer = setTimeout(() => {
+                        // Use updateUndertone to prevent glow multiplication
+                        if (mascot.updateUndertone) {
+                            mascot.updateUndertone(currentUndertone || null);
+                        } else {
+                            // Fallback to setEmotion if direct method not available
+                            mascot.setEmotion(currentEmotion, currentUndertone || undefined);
+                        }
+                        updateDisplay();
+                    }, 50); // Small delay for smooth transitions
+                }
             });
 
             document.getElementById('fps-toggle').addEventListener('click', function() {
                 showingFPS = !showingFPS;
                 document.getElementById('fps-display').classList.toggle('active', showingFPS);
-                this.innerHTML = showingFPS ? '📊 Hide FPS' : '📊 FPS';
+                // Keep icon only, no text
                 this.classList.toggle('active', showingFPS);
                 this.setAttribute('aria-pressed', showingFPS ? 'true' : 'false');
                 
@@ -2425,7 +2845,7 @@
             let blinkingEnabled = true;
             document.getElementById('blinking-toggle').addEventListener('click', function() {
                 blinkingEnabled = !blinkingEnabled;
-                this.innerHTML = blinkingEnabled ? '👁 Blinking' : '👁‍🗨 No Blink';
+                // Keep icon only, no text
                 this.classList.toggle('active', blinkingEnabled);
                 this.setAttribute('aria-pressed', blinkingEnabled ? 'true' : 'false');
                 
@@ -2450,12 +2870,17 @@
                         shapeMorpher.resetMusicDetection();
                         console.log('🔄 Resampling BPM and time signature...');
                         
+                        // Unlock BPM in rhythm integration for resampling
+                        if (rhythmIntegration.resampleBPM) {
+                            rhythmIntegration.resampleBPM();
+                        }
+                        
                         // Clear the manual stop flag so auto-detection can work
                         window.rhythmManuallyStoppedForCurrentAudio = false;
                         
                         // The BPM detection will auto-start rhythm when ready
                         // For now, show pending state
-                        document.getElementById('rhythm-status').textContent = '⏳ DETECTING...';
+                        document.getElementById('rhythm-status').textContent = '⏳';
                         this.classList.add('pending');
                         
                         // Fallback: start with slider value if no BPM detected after 2 seconds
@@ -2464,9 +2889,13 @@
                                 console.log('⏰ Timeout - starting with default BPM');
                                 rhythmIntegration.start(parseInt(bpm), pattern);
                                 window.rhythmActive = true;
-                                document.getElementById('rhythm-status').textContent = '■ STOP';
+                                document.getElementById('rhythm-status').textContent = '⏸';
                                 this.classList.remove('pending');
                                 this.classList.add('active');
+                                // Update mascot core rotation
+                                if (mascot && mascot.setBPM) {
+                                    mascot.setBPM(parseInt(bpm));
+                                }
                             }
                         }, 2000);
                     } else {
@@ -2474,17 +2903,26 @@
                         rhythmIntegration.start(parseInt(bpm), pattern);
                         window.rhythmActive = true;
                         window.rhythmManuallyStoppedForCurrentAudio = false;
-                        document.getElementById('rhythm-status').textContent = '■ STOP';
+                        document.getElementById('rhythm-status').textContent = '⏸';
                         this.classList.add('active');
+                        // Update mascot core rotation
+                        if (mascot && mascot.setBPM) {
+                            mascot.setBPM(parseInt(bpm));
+                        }
                     }
                 } else {
                     // Stopping rhythm
                     rhythmIntegration.stop();
                     window.rhythmActive = false;
                     window.rhythmManuallyStoppedForCurrentAudio = true;
-                    document.getElementById('rhythm-status').textContent = '▶ START';
+                    document.getElementById('rhythm-status').textContent = '▶';
                     this.classList.remove('active');
                     this.classList.remove('pending');
+                    
+                    // Stop core rotation
+                    if (mascot && mascot.setBPM) {
+                        mascot.setBPM(0);
+                    }
                     
                     // Also stop any pending detection
                     if (mascot?.shapeMorpher) {
@@ -2494,81 +2932,228 @@
                 }
             });
             
-            document.getElementById('bpm-slider').addEventListener('input', function(e) {
+            // Sync slider and input field
+            const bpmSlider = document.getElementById('bpm-slider');
+            const bpmInput = document.getElementById('bpm-value');
+            
+            bpmSlider.addEventListener('input', function(e) {
                 const bpm = parseInt(e.target.value);
-                document.getElementById('bpm-value').textContent = bpm;
+                bpmInput.value = bpm;
+                // Only update mascot core rotation when rhythm is active
                 if (window.rhythmActive) {
+                    if (mascot && mascot.setBPM) {
+                        mascot.setBPM(bpm);
+                    }
+                    rhythmIntegration.setBPM(bpm);
+                }
+            });
+            
+            bpmInput.addEventListener('input', function(e) {
+                let bpm = parseInt(e.target.value);
+                if (isNaN(bpm)) bpm = 120;
+                if (bpm < 60) bpm = 60;
+                if (bpm > 360) bpm = 360;
+                e.target.value = bpm;
+                bpmSlider.value = bpm;
+                
+                // Update slider visual
+                const percent = ((bpm - 60) / (360 - 60)) * 100;
+                bpmSlider.style.background = `linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) ${percent}%, rgba(255,255,255,0.1) ${percent}%, rgba(255,255,255,0.1) 100%)`;
+                
+                // Only update mascot core rotation when rhythm is active
+                if (window.rhythmActive) {
+                    if (mascot && mascot.setBPM) {
+                        mascot.setBPM(bpm);
+                    }
                     rhythmIntegration.setBPM(bpm);
                 }
             });
             
             // Pattern select removed - using default pattern
             
+            // BPM Modifier Logic
+            currentBPMModifier = window.currentBPMModifier || 1.0; // Use existing or default
+            
+            // Helper function to apply BPM modifier
+            function applyBPMModifier(baseBPM) {
+                const modifiedBPM = Math.round(baseBPM * currentBPMModifier);
+                // Clamp to valid range
+                return Math.max(60, Math.min(360, modifiedBPM));
+            }
+            
+            // Override rhythmIntegration.start to apply modifier
+            const originalRhythmStart = rhythmIntegration.start.bind(rhythmIntegration);
+            rhythmIntegration.start = function(bpm, pattern) {
+                const modifiedBPM = applyBPMModifier(bpm);
+                console.log(`🎵 BPM Modifier: ${bpm} × ${currentBPMModifier} = ${modifiedBPM}`);
+                
+                // Update UI to show modified BPM
+                document.getElementById('bpm-value').value = modifiedBPM;
+                document.getElementById('bpm-slider').value = modifiedBPM;
+                const percent = ((modifiedBPM - 60) / (360 - 60)) * 100;
+                document.getElementById('bpm-slider').style.background = `linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) ${percent}%, rgba(255,255,255,0.1) ${percent}%, rgba(255,255,255,0.1) 100%)`;
+                
+                // Call original with modified BPM
+                originalRhythmStart(modifiedBPM, pattern);
+                window.rhythmActive = true;
+                
+                // Update mascot
+                if (mascot && mascot.setBPM) {
+                    mascot.setBPM(modifiedBPM);
+                }
+                
+                // Update UI
+                const rhythmStatus = document.getElementById('rhythm-status');
+                if (rhythmStatus) {
+                    rhythmStatus.textContent = '⏸';
+                }
+                const rhythmToggle = document.getElementById('rhythm-toggle');
+                if (rhythmToggle) {
+                    rhythmToggle.classList.add('active');
+                    rhythmToggle.classList.remove('pending');
+                }
+            };
+            
+            // BPM Modifier button handlers
+            document.querySelectorAll('.bpm-modifier-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active state
+                    document.querySelectorAll('.bpm-modifier-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Get the modifier value
+                    const modifier = parseFloat(this.dataset.modifier);
+                    const previousModifier = currentBPMModifier;
+                    currentBPMModifier = modifier;
+                    window.currentBPMModifier = modifier;
+                    
+                    // If rhythm is active, update it with the new modifier
+                    if (window.rhythmActive) {
+                        // Get the base BPM (reverse the previous modifier)
+                        const currentBPM = parseInt(document.getElementById('bpm-value').value);
+                        const baseBPM = Math.round(currentBPM / previousModifier);
+                        
+                        // Stop and restart with new modifier
+                        rhythmIntegration.stop();
+                        window.rhythmActive = false;
+                        
+                        // Small delay to ensure clean restart
+                        setTimeout(() => {
+                            rhythmIntegration.start(baseBPM, 'straight');
+                        }, 100);
+                    }
+                });
+            });
+            
             document.getElementById('record-btn').addEventListener('click', function() {
                 isRecording = !isRecording;
-                this.innerHTML = isRecording ? '⏹ Stop' : '🔴 Record';
+                this.innerHTML = isRecording ? '◼' : '●'; // Square for stop, circle for record
                 this.classList.toggle('active', isRecording);
+                this.classList.toggle('recording', isRecording);
                 this.setAttribute('aria-pressed', isRecording ? 'true' : 'false');
                 if (isRecording) mascot.startRecording(); else mascot.stopRecording();
             });
 
             
-            // Random emotion dice
-            document.getElementById('randomize-btn').addEventListener('click', () => {
+            // Random emotion dice - function for reuse
+            function randomizeEmotion() {
                 const emotions = Array.from(document.querySelectorAll('.emotion-btn')).map(b => b.dataset.emotion);
-                const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+                const currentEmotion = document.querySelector('.emotion-btn.active')?.dataset.emotion;
+                const availableEmotions = emotions.filter(e => e !== currentEmotion);
+                if (availableEmotions.length === 0) return; // All are the same somehow
+                const randomEmotion = availableEmotions[Math.floor(Math.random() * availableEmotions.length)];
                 document.querySelector(`.emotion-btn[data-emotion="${randomEmotion}"]`).click();
-            });
+            }
             
-            // Random undertone dice
-            document.getElementById('randomize-undertone-btn').addEventListener('click', () => {
-                const undertones = Array.from(document.querySelectorAll('.undertone-btn')).map(b => b.dataset.undertone);
-                const randomUndertone = undertones[Math.floor(Math.random() * undertones.length)];
-                document.querySelector(`.undertone-btn[data-undertone="${randomUndertone}"]`).click();
-            });
+            // Check if randomize button exists (might be removed in some layouts)
+            const randomizeBtn = document.getElementById('randomize-btn');
+            if (randomizeBtn) {
+                randomizeBtn.addEventListener('click', randomizeEmotion);
+            }
+            
+            // Random undertone - now using slider
+            function randomizeUndertone() {
+                const randomValue = Math.floor(Math.random() * 201) - 100; // -100 to 100
+                undertoneSlider.value = randomValue;
+                undertoneSlider.dispatchEvent(new Event('input'));
+            }
             
             // Random shape dice
             document.getElementById('randomize-shape-btn').addEventListener('click', () => {
                 const shapes = Array.from(document.querySelectorAll('.shape-btn')).map(b => b.dataset.shape);
-                const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+                const currentShape = document.querySelector('.shape-btn.active')?.dataset.shape;
+                const availableShapes = shapes.filter(s => s !== currentShape);
+                if (availableShapes.length === 0) return;
+                const randomShape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
                 document.querySelector(`.shape-btn[data-shape="${randomShape}"]`).click();
             });
             
-            // Random gesture dice
+            // Random main gesture dice (all gestures)
             document.getElementById('randomize-gesture-btn').addEventListener('click', () => {
-                const overlayableGestures = ['wave', 'point', 'nod', 'shake', 'lean', 'tilt', 'reach', 'breathe', 'float'];
-                const randomGesture = overlayableGestures[Math.floor(Math.random() * overlayableGestures.length)];
+                const allGestures = Array.from(document.querySelectorAll('.gesture-btn')).map(b => b.dataset.gesture);
+                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
+                const availableGestures = allGestures.filter(g => !activeGestures.includes(g));
+                if (availableGestures.length === 0) return;
+                const randomGesture = availableGestures[Math.floor(Math.random() * availableGestures.length)];
+                document.querySelector(`.gesture-btn[data-gesture="${randomGesture}"]`).click();
+            });
+            
+            // Random overlayable gesture dice  
+            document.getElementById('randomize-overlayable-btn').addEventListener('click', () => {
+                const overlayableGestures = ['wave', 'point', 'nod', 'shake', 'lean', 'tilt', 'reach', 'breathe', 'float', 'rain', 'runningman', 'charleston'];
+                // Get currently active gesture if any
+                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
+                const availableGestures = overlayableGestures.filter(g => !activeGestures.includes(g));
+                if (availableGestures.length === 0) return;
+                const randomGesture = availableGestures[Math.floor(Math.random() * availableGestures.length)];
                 document.querySelector(`.gesture-btn[data-gesture="${randomGesture}"]`).click();
             });
             
             // Random dance dice
             document.getElementById('randomize-dance-btn').addEventListener('click', () => {
                 const danceGestures = ['bounce', 'sway', 'headBob', 'wiggle', 'spin', 'hula', 'orbit', 'groove', 'jump'];
-                const randomDance = danceGestures[Math.floor(Math.random() * danceGestures.length)];
+                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
+                const availableDances = danceGestures.filter(g => !activeGestures.includes(g));
+                if (availableDances.length === 0) return;
+                const randomDance = availableDances[Math.floor(Math.random() * availableDances.length)];
                 document.querySelector(`.gesture-btn[data-gesture="${randomDance}"]`).click();
             });
             
             // Random chain dice
             document.getElementById('randomize-chain-btn').addEventListener('click', () => {
                 const chains = Array.from(document.querySelectorAll('.chain-btn')).map(b => b.dataset.chain);
-                const randomChain = chains[Math.floor(Math.random() * chains.length)];
+                const currentChain = document.querySelector('.chain-btn.active')?.dataset.chain;
+                const availableChains = chains.filter(c => c !== currentChain);
+                if (availableChains.length === 0) return;
+                const randomChain = availableChains[Math.floor(Math.random() * availableChains.length)];
                 document.querySelector(`.chain-btn[data-chain="${randomChain}"]`).click();
             });
             
             // Random glow dice
             document.getElementById('randomize-glow-btn').addEventListener('click', () => {
                 const glowGestures = ['sparkle', 'pulse', 'glow', 'flash', 'shimmer', 'flicker'];
-                const randomGlow = glowGestures[Math.floor(Math.random() * glowGestures.length)];
+                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
+                const availableGlows = glowGestures.filter(g => !activeGestures.includes(g));
+                if (availableGlows.length === 0) return;
+                const randomGlow = availableGlows[Math.floor(Math.random() * availableGlows.length)];
                 document.querySelector(`.gesture-btn[data-gesture="${randomGlow}"]`).click();
             });
             
             // Master dice - roll everything!
             document.getElementById('randomize-all-btn').addEventListener('click', () => {
-                // Trigger all individual dice with a slight delay for visual effect
-                document.getElementById('randomize-btn').click();
-                setTimeout(() => document.getElementById('randomize-undertone-btn').click(), 100);
-                setTimeout(() => document.getElementById('randomize-shape-btn').click(), 200);
-                setTimeout(() => document.getElementById('randomize-gesture-btn').click(), 300);
+                // Roll emotion and undertone (no dice buttons for these)
+                randomizeEmotion();
+                setTimeout(() => randomizeUndertone(), 100);
+                
+                // Find and trigger ALL dice buttons on the page
+                const allDiceButtons = Array.from(document.querySelectorAll('.dice-btn'));
+                
+                // Trigger each dice with a slight delay for visual cascade effect
+                allDiceButtons.forEach((btn, index) => {
+                    setTimeout(() => {
+                        btn.click();
+                    }, (index + 2) * 100); // Start at index+2 since emotion/undertone go first
+                });
             });
             
             // Shape morphing controls
@@ -2582,9 +3167,17 @@
                         document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
                         
+                        // Get current shape for transition detection
+                        const currentShape = mascot.shapeMorpher ? mascot.shapeMorpher.currentShape : null;
+                        
+                        // Faster transitions between lunar and solar
+                        const isLunarSolarTransition = 
+                            (currentShape === 'lunar' && shape === 'solar') ||
+                            (currentShape === 'solar' && shape === 'lunar');
+                        
                         // Morph to new shape
                         mascot.morphTo(shape, {
-                            duration: window.rhythmActive ? 'bar' : 1000, // Musical time if rhythm active
+                            duration: window.rhythmActive ? 'bar' : (isLunarSolarTransition ? 500 : 1000), // Faster for lunar-solar
                             mode: mode,
                             onBeat: window.rhythmActive
                         });
@@ -2622,14 +3215,18 @@
                 if (mascot) {
                     mascot.disconnectAudio();
                 }
-                // Hide audio visualizer when audio ends
-                if (!micActive) {
+                // Hide audio visualizer when audio ends (only on mobile portrait)
+                if (!micActive && window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
                     document.getElementById('audio-viz-section').style.display = 'none';
                 }
             });
             
+            // Play button - plays Electric Glow track
             document.getElementById('load-audio-btn').addEventListener('click', () => {
-                audioFile.click();
+                audioPlayer.src = 'assets/Electric Glow (Remix).wav';
+                document.getElementById('audio-player-container').style.display = 'block';
+                document.getElementById('audio-viz-section').style.display = 'block';
+                audioPlayer.play();
             });
             
             audioFile.addEventListener('change', (e) => {
@@ -2642,11 +3239,9 @@
                 }
             });
             
-            // Load Electric Glow button
+            // Music note button - opens file explorer
             document.getElementById('load-song-btn').addEventListener('click', () => {
-                audioPlayer.src = 'assets/Electric Glow (Remix).wav';
-                document.getElementById('audio-player-container').style.display = 'block';
-                document.getElementById('audio-viz-section').style.display = 'block';
+                audioFile.click();
             });
             
             document.getElementById('mic-btn').addEventListener('click', async () => {
@@ -2678,12 +3273,14 @@
                     if (mascot) {
                         mascot.disconnectAudio();
                         micActive = false;
+                        // Stop audio visualizer when mic is disconnected
+                        stopAudioViz();
                         const micBtn = document.getElementById('mic-btn');
                         micBtn.textContent = '🎤';
                         micBtn.title = 'Use Microphone';
                         micBtn.classList.remove('active');
-                        // Hide audio visualizer when mic is disconnected
-                        if (!audioPlayer.src) {
+                        // Hide audio visualizer when mic is disconnected (only on mobile portrait)
+                        if (!audioPlayer.src && window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
                             document.getElementById('audio-viz-section').style.display = 'none';
                         }
                         console.log('Microphone disconnected');
@@ -2779,16 +3376,24 @@
                 lastKnownScrollPosition = scrollTop;
             }
             
-            // Near-instant scroll handler with minimal debounce
+            // Throttled scroll handler for better performance
+            let scrollTicking = false;
             window.addEventListener('scroll', () => {
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(handleScroll, 10); // Much faster response
+                if (!scrollTicking) {
+                    scrollTicking = true;
+                    requestAnimationFrame(() => {
+                        handleScroll();
+                        scrollTicking = false;
+                    });
+                }
             }, { passive: true });
             
-            // Handle window resize to update visibility
+            // Handle window resize to update visibility (debounced)
+            let resizeVisibilityTimeout;
             window.addEventListener('resize', () => {
-                updateSystemControlsVisibility();
-            });
+                clearTimeout(resizeVisibilityTimeout);
+                resizeVisibilityTimeout = setTimeout(updateSystemControlsVisibility, 150);
+            }, { passive: true });
             
             // Initialize on load
             updateSystemControlsVisibility();

@@ -507,6 +507,37 @@ class EmotiveMascot {
             return this.stateCoordinator.setEmotion(emotion, options);
         }, 'emotion-setting', this)();
     }
+    
+    /**
+     * Update the undertone without resetting emotion
+     * @param {string|null} undertone - The undertone to apply (subdued, tired, nervous, energetic, confident, intense, or null)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    updateUndertone(undertone) {
+        return this.errorBoundary.wrap(() => {
+            // Update state machine's undertone
+            this.stateMachine.applyUndertoneModifier(undertone);
+            // Update renderer's undertone without resetting emotion
+            if (this.renderer && this.renderer.updateUndertone) {
+                this.renderer.updateUndertone(undertone);
+            }
+            return this;
+        }, 'undertone-update', this)();
+    }
+    
+    /**
+     * Set BPM for core rotation (record player effect)
+     * @param {number} bpm - Beats per minute
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setBPM(bpm) {
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer && this.renderer.setBPM) {
+                this.renderer.setBPM(bpm);
+            }
+            return this;
+        }, 'bpm-update', this)();
+    }
 
     /**
      * Executes a single gesture
@@ -578,7 +609,10 @@ class EmotiveMascot {
                 'breathOut': 'startBreathOut',
                 'breathHold': 'startBreathHold',
                 'breathHoldEmpty': 'startBreathHoldEmpty',
-                'jump': 'startJump'
+                'jump': 'startJump',
+                'rain': 'startRain',
+                'runningman': 'startRunningMan',
+                'charleston': 'startCharleston'
                 // Note: burst, peek, hold, scan, twitch, jitter, float 
                 // are handled by the gesture system below
             };

@@ -92,7 +92,7 @@ export class ColorUtilities {
             }
         }
 
-        return { h: h * 360, s, l };
+        return { h: h * 360, s: s * 100, l: l * 100 }; // Convert s and l to percentages
     }
 
     /**
@@ -141,10 +141,17 @@ export class ColorUtilities {
         
         // Saturation adjustments by undertone
         const saturationModifiers = {
-            'upbeat': 1.2,    // +20% saturation
-            'mellow': 0.8,    // -20% saturation  
-            'tired': 0.8,     // -20% saturation
-            'subdued': 0.5    // -50% saturation
+            // Positive undertones (higher saturation)
+            'intense': 1.5,      // +50% saturation (very vivid)
+            'confident': 1.3,    // +30% saturation (bold)
+            'energetic': 1.2,    // +20% saturation (vibrant)
+            'upbeat': 1.2,       // +20% saturation
+            // Neutral/slightly nervous
+            'nervous': 1.15,     // +15% saturation (slightly heightened)
+            // Negative undertones (lower saturation)
+            'mellow': 0.8,       // -20% saturation  
+            'tired': 0.8,        // -20% saturation (washed out)
+            'subdued': 0.5       // -50% saturation (ghostly)
         };
         
         const modifier = saturationModifiers[undertone] || 1.0;

@@ -39,6 +39,13 @@
  */
 export class FeatureDetection {
     constructor() {
+        // Cache detection results to avoid repeated expensive checks
+        if (FeatureDetection._cachedFeatures) {
+            this.features = FeatureDetection._cachedFeatures;
+            this.capabilities = FeatureDetection._cachedCapabilities;
+            return;
+        }
+        
         this.features = {
             webAudio: this.detectWebAudio(),
             canvas2d: this.detectCanvas2D(),
@@ -51,6 +58,10 @@ export class FeatureDetection {
         };
         
         this.capabilities = this.assessCapabilities();
+        
+        // Cache results for future instantiations
+        FeatureDetection._cachedFeatures = this.features;
+        FeatureDetection._cachedCapabilities = this.capabilities;
     }
 
     /**
@@ -107,9 +118,8 @@ export class FeatureDetection {
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (!AudioContextClass) return false;
             
-            // Try to create a context to verify it actually works
-            const testContext = new AudioContextClass();
-            testContext.close();
+            // Don't create a test context - just check if the class exists
+            // Creating contexts is expensive and has limits
             return true;
         } catch (e) {
             return false;
@@ -490,9 +500,20 @@ export class CanvasContextRecovery {
  */
 export class BrowserOptimizations {
     constructor() {
+        // Cache browser detection
+        if (BrowserOptimizations._cachedBrowser) {
+            this.browser = BrowserOptimizations._cachedBrowser;
+            this.optimizations = BrowserOptimizations._cachedOptimizations;
+            return;
+        }
+        
         this.browser = this.detectBrowser();
         this.optimizations = new Map();
         this.setupOptimizations();
+        
+        // Cache for future instances
+        BrowserOptimizations._cachedBrowser = this.browser;
+        BrowserOptimizations._cachedOptimizations = this.optimizations;
     }
 
     /**
@@ -621,7 +642,14 @@ export class BrowserOptimizations {
  * Initialize all polyfills and compatibility features
  * @returns {Object} Initialization results
  */
+let _initializationCache = null;
+
 export function initializeBrowserCompatibility() {
+    // Return cached result if already initialized
+    if (_initializationCache) {
+        return _initializationCache;
+    }
+    
     const featureDetection = new FeatureDetection();
     const polyfillManager = new PolyfillManager();
     const browserOptimizations = new BrowserOptimizations();
@@ -652,7 +680,8 @@ export function initializeBrowserCompatibility() {
         }
     }
 
-    return {
+    // Cache the result
+    _initializationCache = {
         featureDetection,
         polyfillManager,
         browserOptimizations,
@@ -660,7 +689,19 @@ export function initializeBrowserCompatibility() {
         capabilities: featureDetection.getCapabilities(),
         browser: browserOptimizations.getBrowser()
     };
+    
+    return _initializationCache;
 }
 
-// Export singleton instance for convenience
-export const browserCompatibility = initializeBrowserCompatibility();
+// Create singleton instance lazily
+let _browserCompatibilityInstance = null;
+
+export function getBrowserCompatibility() {
+    if (!_browserCompatibilityInstance) {
+        _browserCompatibilityInstance = initializeBrowserCompatibility();
+    }
+    return _browserCompatibilityInstance;
+}
+
+// Export getter for backward compatibility
+export const browserCompatibility = getBrowserCompatibility();

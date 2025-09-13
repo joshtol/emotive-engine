@@ -69,6 +69,8 @@ import contract from './effects/contract.js';
 import flash from './effects/flash.js';
 import glow from './effects/glow.js';
 import peek from './effects/peek.js';
+import runningman from './effects/runningman.js';
+import charleston from './effects/charleston.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ PLACEHOLDER GESTURES FOR NEW ANIMATIONS
@@ -104,13 +106,67 @@ const createPlaceholderGesture = (name, emoji = '✨') => ({
 });
 
 const sparkle = createPlaceholderGesture('sparkle', '✨');
-const shimmer = createPlaceholderGesture('shimmer', '🌟');
+
+// Shimmer gesture - makes particles shimmer with wave effect
+const shimmer = {
+    name: 'shimmer',
+    emoji: '🌟',
+    type: 'particle',  // Particle type to affect particle behavior
+    description: 'Shimmer effect with sparkling particles',
+    config: {
+        duration: 2000,  // 2 seconds of shimmer
+        particleMotion: 'radiant'  // Use radiant behavior for shimmering effect
+    },
+    rhythm: {
+        enabled: true,
+        syncType: 'beat',
+        intensity: 0.8
+    },
+    override: (particle, progress, params) => {
+        // Shimmer makes particles sparkle with wave effect
+        particle.shimmerEffect = true;
+        particle.shimmerProgress = progress;
+        return true;
+    },
+    blend: (particle, progress, params) => {
+        // Blend with other gestures
+        return false;
+    }
+};
 const wiggle = createPlaceholderGesture('wiggle', '〰️');
 const groove = createPlaceholderGesture('groove', '🎵');
 const point = createPlaceholderGesture('point', '👉');
 const lean = createPlaceholderGesture('lean', '↗️');
 const reach = createPlaceholderGesture('reach', '🤚');
 const headBob = createPlaceholderGesture('headBob', '🎧');
+
+// Rain gesture - applies doppler effect to particles
+const rain = {
+    name: 'rain',
+    emoji: '🌧️',
+    type: 'particle',  // Particle type to affect particle behavior
+    description: 'Rain effect with falling particles',
+    config: {
+        duration: 3000,  // 3 seconds of rain
+        particleMotion: 'falling'  // Use the falling particle behavior
+    },
+    rhythm: {
+        enabled: true,
+        syncType: 'off-beat',
+        intensity: 0.8
+    },
+    apply: (particle, progress, params) => {
+        // The doppler behavior is handled by the particle system
+        // This just marks particles as being affected by rain
+        particle.rainEffect = true;
+        particle.rainProgress = progress;
+        return true;
+    },
+    blend: (particle, progress, params) => {
+        // Blend with other gestures
+        return false;
+    }
+};
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ GESTURE COLLECTIONS
@@ -134,7 +190,8 @@ const MOTION_GESTURES = [
     point,
     lean,
     reach,
-    headBob
+    headBob,
+    rain
 ];
 
 const TRANSFORM_GESTURES = [
@@ -162,7 +219,9 @@ const EFFECT_GESTURES = [
     contract,
     flash,
     glow,
-    peek
+    peek,
+    runningman,
+    charleston
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────

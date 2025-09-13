@@ -237,8 +237,10 @@ class RhythmEngine {
         // Emit continuous update
         this.emit('update', this.getTimeInfo());
         
-        // Continue loop
-        requestAnimationFrame(() => this.update());
+        // Continue loop only if still playing
+        if (this.isPlaying) {
+            requestAnimationFrame(() => this.update());
+        }
     }
     
     /**
@@ -371,7 +373,7 @@ class RhythmEngine {
      * Set BPM (beats per minute)
      */
     setBPM(bpm) {
-        this.bpm = Math.max(20, Math.min(300, bpm));
+        this.bpm = Math.max(20, Math.min(360, bpm));
         this.beatDuration = 60000 / this.bpm;
         this.barDuration = this.beatDuration * this.timeSignature[0];
         

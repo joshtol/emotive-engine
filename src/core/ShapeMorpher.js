@@ -449,7 +449,75 @@ class ShapeMorpher {
             // Interpolate based on mode - use visualProgress for smooth rendering
             const progress = this.visualProgress;
             let x, y;
-            if (this.morphMode === 'spiral') {
+            
+            // RADIAL MORPH: These shapes radiate from/to center
+            const radialShapes = ['heart', 'square', 'circle', 'star', 'triangle'];
+            const currentIsRadial = radialShapes.includes(this.currentShape);
+            const targetIsRadial = radialShapes.includes(this.targetShape);
+            const needsRadialMorph = currentIsRadial || targetIsRadial;
+            
+            if (needsRadialMorph) {
+                // RADIATE FROM/TO CENTER
+                const cx = 0.5, cy = 0.5;
+                
+                // Calculate radial interpolation
+                if (targetIsRadial && !currentIsRadial) {
+                    // Morphing TO a radial shape - expand from center
+                    // Start at center, expand to target position
+                    const targetDx = target.x - cx;
+                    const targetDy = target.y - cy;
+                    
+                    // Ease the expansion with a smooth curve
+                    const expandProgress = this.applyEasing(progress);
+                    
+                    // Start from center point for first half, then expand outward
+                    if (progress < 0.3) {
+                        // Gather at center
+                        const gatherProgress = progress / 0.3;
+                        x = current.x + (cx - current.x) * gatherProgress;
+                        y = current.y + (cy - current.y) * gatherProgress;
+                    } else {
+                        // Expand from center to target
+                        const expandPhase = (progress - 0.3) / 0.7;
+                        x = cx + targetDx * expandPhase;
+                        y = cy + targetDy * expandPhase;
+                    }
+                } else if (currentIsRadial && !targetIsRadial) {
+                    // Morphing FROM a radial shape - collapse to center then expand to target
+                    const currentDx = current.x - cx;
+                    const currentDy = current.y - cy;
+                    
+                    if (progress < 0.5) {
+                        // Collapse to center
+                        const collapseProgress = progress / 0.5;
+                        x = current.x - currentDx * collapseProgress;
+                        y = current.y - currentDy * collapseProgress;
+                    } else {
+                        // Expand from center to target
+                        const expandProgress = (progress - 0.5) / 0.5;
+                        x = cx + (target.x - cx) * expandProgress;
+                        y = cy + (target.y - cy) * expandProgress;
+                    }
+                } else {
+                    // Both are radial shapes - morph through center
+                    const currentDx = current.x - cx;
+                    const currentDy = current.y - cy;
+                    const targetDx = target.x - cx;
+                    const targetDy = target.y - cy;
+                    
+                    if (progress < 0.5) {
+                        // Collapse current shape to center
+                        const collapseProgress = progress / 0.5;
+                        x = current.x - currentDx * collapseProgress;
+                        y = current.y - currentDy * collapseProgress;
+                    } else {
+                        // Expand from center to target shape
+                        const expandProgress = (progress - 0.5) / 0.5;
+                        x = cx + targetDx * expandProgress;
+                        y = cy + targetDy * expandProgress;
+                    }
+                }
+            } else if (this.morphMode === 'spiral') {
                 // Spiral interpolation
                 const angle = progress * Math.PI * 2;
                 const spiral = Math.sin(angle + i * 0.2) * 0.02 * (1 - Math.abs(progress - 0.5) * 2);
@@ -1005,6 +1073,9 @@ class ShapeMorpher {
         // Reset music detector
         this.musicDetector.reset();
         
+        // Set fast detection on the music detector
+        this.musicDetector.forceFastDetection = true;
+        
         // Reset local references
         this.onsetThreshold = 0;
         this.detectedBPM = 0;
@@ -1014,6 +1085,9 @@ class ShapeMorpher {
         this.onsetStrengths = [];
         this.detectedTimeSignature = null;
         this.timeSignatureConfidence = 0;
+        
+        // Force immediate resampling on next update
+        this.musicDetector.lastBPMCalculation = 0;
         this.measureStartTime = 0;
         this.timeSignatureHistory = [];
         this.timeSignatureLocked = false;

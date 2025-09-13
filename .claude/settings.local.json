@@ -136,6 +136,10 @@
           {
             "type": "command",
             "command": "NO STUBS - FULL IMPLEMENTATION ALWAYS - MODULAR SYSTEM"
+          },
+          {
+            "type": "command",
+            "command": "Don't ever try to open the demo."
           }
         ]
       }
