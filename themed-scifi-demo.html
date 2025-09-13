@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>EMOTIVE A.I. Core - Neural Interface</title>
     <link rel="icon" type="image/svg+xml" href="assets/emotive-engine-icon.svg">
     <!-- External dependencies removed for performance -->
@@ -1294,6 +1294,8 @@
             body { 
                 overflow: hidden;
                 padding: 0;
+                padding-top: env(safe-area-inset-top, 0);
+                padding-bottom: env(safe-area-inset-bottom, 0);
             }
             
             .hero-spacer {
@@ -1309,12 +1311,14 @@
                 margin-top: 0;
                 z-index: 999;
                 padding: 6px 15px;
+                padding-bottom: calc(6px + env(safe-area-inset-bottom, 0));
                 font-size: 0.6rem;
                 background: rgba(0, 0, 0, 0.9);
             }
             
             .shape-controls-hero .shape-controls {
                 padding: 6px 15px;
+                padding-top: calc(6px + env(safe-area-inset-top, 0));
             }
             
             .shape-controls-hero .shape-btn {
@@ -1330,10 +1334,10 @@
             }
             .main-layout {
                 position: absolute;
-                top: 58px; /* Start below hero bar */
-                left: 0;
-                right: 0;
-                bottom: 0;
+                top: calc(58px + env(safe-area-inset-top, 0)); /* Account for safe area */
+                left: env(safe-area-inset-left, 0);
+                right: env(safe-area-inset-right, 0);
+                bottom: calc(32px + env(safe-area-inset-bottom, 0)); /* Account for footer + safe area */
                 flex-direction: row;
                 padding: 0;
                 gap: 0;
@@ -1361,6 +1365,8 @@
                 overflow-x: hidden;
                 background-color: var(--panel-bg);
                 border: 1px solid var(--border-color); /* Visual separation */
+                padding-top: 10px;
+                padding-bottom: 10px;
             }
             .display-and-controls {
                 height: 100%; /* Fill container */
@@ -1415,6 +1421,30 @@
         }
         
 
+        /* iPad Specific Fixes */
+        @media only screen 
+        and (min-device-width: 768px) 
+        and (max-device-width: 1024px) {
+            .shape-controls-hero {
+                padding-top: env(safe-area-inset-top, 0);
+            }
+            
+            .main-layout {
+                top: calc(76px + env(safe-area-inset-top, 0));
+                bottom: calc(45px + env(safe-area-inset-bottom, 0));
+            }
+            
+            .controls-left, .controls-right {
+                padding-top: 15px;
+                padding-bottom: 15px;
+                height: 100%;
+            }
+            
+            .legal-footer {
+                padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+            }
+        }
+
         /* 7. Desktop Layout Overrides */
         @media (min-width: 1025px) {
             body { 
@@ -1464,16 +1494,14 @@
                 order: 0;
                 width: var(--control-width);
                 flex-shrink: 0;
-                height: 100%;
+                height: calc(100% - 45px); /* Account for footer */
                 overflow-y: auto;
                 overflow-x: hidden;
                 background-color: var(--panel-bg);
                 box-sizing: border-box;
                 border: 1px solid var(--border-color); /* Add border for visual separation */
-            }
-            
-            .controls-right {
-                padding-bottom: 45px; /* Space for footer */
+                padding-top: 10px;
+                padding-bottom: 10px;
             }
             .display-and-controls {
                 position: relative;
