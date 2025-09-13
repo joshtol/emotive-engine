@@ -22,11 +22,11 @@ export class AudioAnalyzer {
         this.dataArray = null;
         this.isAnalyzing = false;
         this.connectedElement = null;
-        this.microphoneStream = null;
+        this.gainNode = null;  // Store gain node for cleanup
         
         // Frequency band configuration
         this.frequencyBands = 32;
-        this.smoothingFactor = 0.8; // Smoothing for visual stability
+        this.smoothingFactor = 0.3; // Lower smoothing for better responsiveness
         
         // Vocal detection
         this.vocalRange = { min: 80, max: 1000 }; // Hz - typical vocal range
@@ -47,7 +47,7 @@ export class AudioAnalyzer {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 2048; // Good balance of frequency/time resolution
-            this.analyser.smoothingTimeConstant = this.smoothingFactor;
+            this.analyser.smoothingTimeConstant = 0.5; // Moderate smoothing
             
             const bufferLength = this.analyser.frequencyBinCount;
             this.dataArray = new Uint8Array(bufferLength);
@@ -65,18 +65,6 @@ export class AudioAnalyzer {
     connectAudioElement(audioElement) {
         if (!this.audioContext) {
             return;
-        }
-        
-        // Clean up microphone if it was connected
-        if (this.microphoneStream) {
-            this.microphoneStream.getTracks().forEach(track => track.stop());
-            this.microphoneStream = null;
-            if (this.source) {
-                try {
-                    this.source.disconnect();
-                } catch (e) {}
-                this.source = null;
-            }
         }
         
         try {
@@ -104,63 +92,6 @@ export class AudioAnalyzer {
         }
     }
     
-    /**
-     * Connect microphone for real-time analysis
-     */
-    async connectMicrophone() {
-        if (!this.audioContext) {
-            return;
-        }
-        
-        // Resume audio context if suspended
-        if (this.audioContext.state === 'suspended') {
-            await this.audioContext.resume();
-        }
-        
-        // Clean up any existing microphone connection
-        if (this.microphoneStream) {
-            this.microphoneStream.getTracks().forEach(track => track.stop());
-            this.microphoneStream = null;
-        }
-        
-        // Disconnect element source from analyser if it exists
-        if (this.elementSource) {
-            try {
-                this.elementSource.disconnect(this.analyser);
-                // Keep connection to destination for audio passthrough
-            } catch (e) {}
-        }
-        
-        // Disconnect old microphone source if it exists
-        if (this.source && this.source !== this.elementSource) {
-            try {
-                this.source.disconnect();
-            } catch (e) {}
-            this.source = null;
-        }
-        
-        // Clear any audio element connection
-        this.connectedElement = null;
-        
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
-            this.source = this.audioContext.createMediaStreamSource(stream);
-            this.source.connect(this.analyser);
-            this.isAnalyzing = true;
-            
-            // Store stream for cleanup
-            this.microphoneStream = stream;
-            this.connectedElement = null; // Clear any audio element connection
-            
-            // Start analysis loop
-            this.analyze();
-            
-            return stream; // Return stream for cleanup
-        } catch (error) {
-            return null;
-        }
-    }
     
     /**
      * Main analysis loop
@@ -170,17 +101,31 @@ export class AudioAnalyzer {
         
         requestAnimationFrame(() => this.analyze());
         
-        // Throttle audio processing to ~20fps (every 3 frames at 60fps)
-        if (!this.frameCounter) this.frameCounter = 0;
-        this.frameCounter++;
-        
-        // Only process every 3rd frame
-        if (this.frameCounter % 3 !== 0) {
-            return; // Skip processing but keep RAF loop running
-        }
-        
         // Get frequency data
         this.analyser.getByteFrequencyData(this.dataArray);
+        
+        // Also try time domain data to see if mic is working
+        const timeData = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteTimeDomainData(timeData);
+        
+        // Debug: Check both frequency and time domain
+        if (!this._debugLogged) {
+            const freqMax = Math.max(...this.dataArray);
+            const timeMax = Math.max(...timeData);
+            const timeMin = Math.min(...timeData);
+            
+            if (freqMax > 0 || (timeMax !== 128 || timeMin !== 128)) {
+                console.log('AudioAnalyzer: Got audio data! Freq max:', freqMax, 'Time range:', timeMin, '-', timeMax);
+                this._debugLogged = true;
+            } else {
+                // Log every 60 frames (1 second at 60fps)
+                if (!this._debugCounter) this._debugCounter = 0;
+                this._debugCounter++;
+                if (this._debugCounter % 60 === 0) {
+                    console.log('AudioAnalyzer: No data. Freq all zeros, Time at 128 (silence)');
+                }
+            }
+        }
         
         // Calculate overall amplitude
         let sum = 0;
@@ -305,18 +250,11 @@ export class AudioAnalyzer {
     stop() {
         this.isAnalyzing = false;
         
-        // Only disconnect microphone sources, not audio elements
-        if (this.microphoneStream) {
-            if (this.source && this.source !== this.elementSource) {
-                try {
-                    this.source.disconnect();
-                } catch (e) {
-                    // Ignore disconnect errors
-                }
-                this.source = null;
-            }
-            this.microphoneStream.getTracks().forEach(track => track.stop());
-            this.microphoneStream = null;
+        if (this.gainNode) {
+            try {
+                this.gainNode.disconnect();
+            } catch (e) {}
+            this.gainNode = null;
         }
         
         // Reconnect element source to analyser if it was disconnected

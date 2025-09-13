@@ -223,6 +223,25 @@ class ShapeMorpher {
      * @param {number} deltaTime - Time since last update (can be from RAF timestamp)
      */
     update(deltaTime) {
+        // Always update frequency data from audio analyzer if available
+        if (this.audioAnalyzer && this.audioAnalyzer.isAnalyzing) {
+            const audioData = this.audioAnalyzer.getShapeMorpherData();
+            if (audioData && audioData.frequencies) {
+                // Copy frequency data for visualization
+                let hasNonZero = false;
+                for (let i = 0; i < Math.min(audioData.frequencies.length, this.frequencyData.length); i++) {
+                    this.frequencyData[i] = audioData.frequencies[i];
+                    if (audioData.frequencies[i] > 0) hasNonZero = true;
+                }
+                // Log once if we start getting data
+                if (hasNonZero && !this._loggedAudioData) {
+                    console.log('ShapeMorpher: Receiving audio frequency data');
+                    this._loggedAudioData = true;
+                }
+            }
+        }
+        
+        // Return early if not transitioning
         if (!this.isTransitioning || !this.targetShape) return;
         
         // Calculate progress based on total elapsed time

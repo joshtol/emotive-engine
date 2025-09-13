@@ -2528,16 +2528,6 @@ class EmotiveMascot {
     }
     
     /**
-     * Connect microphone for real-time vocal visualization
-     * @returns {EmotiveMascot} This instance for chaining
-     */
-    async connectMicrophone() {
-        return this.errorBoundary.wrap(async () => {
-            return await this.audioHandler.connectMicrophone();
-        }, 'connectMicrophone', this)();
-    }
-    
-    /**
      * Disconnect audio analysis
      * @returns {EmotiveMascot} This instance for chaining
      */

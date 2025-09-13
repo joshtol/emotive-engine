@@ -255,42 +255,6 @@ class EmotiveMascotPublic {
     }
     
     /**
-     * Connect microphone for audio input
-     * @returns {Promise<void>}
-     */
-    async connectMicrophone() {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
-        try {
-            // Get microphone stream
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
-            // Connect to audio handler if available
-            if (this._engine.audioHandler) {
-                await this._engine.audioHandler.connectMicrophone();
-            }
-            
-            return Promise.resolve();
-        } catch (error) {
-            console.error('Microphone connection failed:', error);
-            throw error;
-        }
-    }
-    
-    /**
-     * Disconnect microphone
-     */
-    disconnectMicrophone() {
-        const engine = this._getReal();
-        if (!engine) return;
-        
-        if (this._engine.audioHandler) {
-            this._engine.audioHandler.disconnectMicrophone();
-        }
-    }
-    
-    /**
      * Connect audio element for visualization
      * @param {HTMLAudioElement} audioElement - Audio element to connect
      */

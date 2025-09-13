@@ -1102,17 +1102,11 @@ class EmotiveRenderer {
         
         // Draw recording indicator on TOP of everything, with no transforms
         if (isEffectActive('recording-glow', this.state)) {
-            console.log('Recording active, state:', this.state.recording);
             const recordingEffect = getEffect('recording-glow');
             if (recordingEffect && recordingEffect.drawRecordingIndicator) {
-                console.log('Calling drawRecordingIndicator');
                 // Use original context to draw on top of the blitted image
                 recordingEffect.drawRecordingIndicator(originalCtx, this.canvas.width, this.canvas.height);
-            } else {
-                console.log('No drawRecordingIndicator method found');
             }
-        } else {
-            console.log('Recording not active, state:', this.state.recording);
         }
     }
     

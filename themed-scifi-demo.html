@@ -1921,7 +1921,6 @@
                     <div class="system-controls-group">
                         <button class="sci-fi-btn audio-icon-btn" id="load-audio-btn" aria-label="Load audio file">▶</button>
                         <button class="sci-fi-btn audio-icon-btn" id="load-song-btn" aria-label="Play demo song">♪</button>
-                        <button class="sci-fi-btn audio-icon-btn" id="mic-btn" aria-label="Use microphone">◉</button>
                     </div>
                     <div class="system-controls-divider"></div>
                     <div class="system-controls-group">
@@ -2286,15 +2285,15 @@
                 spectrumViz.appendChild(bar);
             }
             
-            // Audio visualizer state
-            let audioVizActive = false;
-            let audioVizAnimationId = null;
+            // Audio visualizer state - moved to global scope for event listeners
+            window.audioVizActive = false;
+            window.audioVizAnimationId = null;
             
-            // Initialize audio visualizer update loop
-            function updateAudioViz() {
+            // Initialize audio visualizer update loop - make globally accessible
+            window.updateAudioViz = function() {
                 // Only update if audio is actually playing
-                if (!audioVizActive) {
-                    audioVizAnimationId = null;
+                if (!window.audioVizActive) {
+                    window.audioVizAnimationId = null;
                     return;
                 }
                 
@@ -2303,6 +2302,15 @@
                     
                     // Update spectrum bars
                     if (morpher.frequencyData && morpher.frequencyData.length > 0) {
+                        // Check if we have any non-zero data (only log once)
+                        const hasData = morpher.frequencyData.some(v => v > 0);
+                        if (!hasData && !window.vizDataWarned) {
+                            console.log('Warning: Histogram has no data. Check console for AudioAnalyzer messages.');
+                            window.vizDataWarned = true;
+                        } else if (hasData && window.vizDataWarned) {
+                            console.log('Histogram now receiving data!');
+                            window.vizDataWarned = false;
+                        }
                         const bars = spectrumViz.querySelectorAll('.spectrum-bar');
                         const bandsPerBar = Math.floor(morpher.frequencyData.length / numBars);
                         
@@ -2341,22 +2349,22 @@
                     }
                 }
                 
-                audioVizAnimationId = requestAnimationFrame(updateAudioViz);
+                window.audioVizAnimationId = requestAnimationFrame(window.updateAudioViz);
             }
             
-            // Start/stop audio visualizer based on audio state
-            function startAudioViz() {
-                if (!audioVizActive) {
-                    audioVizActive = true;
-                    updateAudioViz();
+            // Start/stop audio visualizer based on audio state - make globally accessible
+            window.startAudioViz = function() {
+                if (!window.audioVizActive) {
+                    window.audioVizActive = true;
+                    window.updateAudioViz();
                 }
             }
             
-            function stopAudioViz() {
-                audioVizActive = false;
-                if (audioVizAnimationId) {
-                    cancelAnimationFrame(audioVizAnimationId);
-                    audioVizAnimationId = null;
+            window.stopAudioViz = function() {
+                window.audioVizActive = false;
+                if (window.audioVizAnimationId) {
+                    cancelAnimationFrame(window.audioVizAnimationId);
+                    window.audioVizAnimationId = null;
                 }
                 // Reset bars to minimum height
                 const bars = spectrumViz.querySelectorAll('.spectrum-bar');
@@ -3188,7 +3196,6 @@
             // Audio controls
             const audioFile = document.getElementById('audio-file');
             const audioPlayer = document.getElementById('audio-player');
-            let micActive = false;
             
             // Set up audio player event listeners once
             audioPlayer.addEventListener('play', async () => {
@@ -3205,18 +3212,21 @@
                         await mascot.audioAnalyzer.resume();
                     }
                     mascot.connectAudio(audioPlayer);
+                    window.startAudioViz(); // Start the audio visualization
                 }
             });
             
             audioPlayer.addEventListener('pause', () => {
+                window.stopAudioViz(); // Stop visualization when paused
             });
             
             audioPlayer.addEventListener('ended', () => {
                 if (mascot) {
                     mascot.disconnectAudio();
                 }
+                window.stopAudioViz(); // Stop the audio visualization
                 // Hide audio visualizer when audio ends (only on mobile portrait)
-                if (!micActive && window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
+                if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
                     document.getElementById('audio-viz-section').style.display = 'none';
                 }
             });
@@ -3244,49 +3254,6 @@
                 audioFile.click();
             });
             
-            document.getElementById('mic-btn').addEventListener('click', async () => {
-                if (!micActive) {
-                    try {
-                        if (!mascot) {
-                            console.error('Mascot not initialized');
-                            alert('Engine not initialized. Please wait for the page to fully load.');
-                            return;
-                        }
-                        
-                        console.log('Attempting to connect microphone...');
-                        await mascot.connectMicrophone();
-                        micActive = true;
-                        const micBtn = document.getElementById('mic-btn');
-                        micBtn.textContent = '🔴';
-                        micBtn.title = 'Stop Recording';
-                        micBtn.classList.add('active');
-                        // Show audio visualizer when mic is active
-                        document.getElementById('audio-viz-section').style.display = 'block';
-                        // Reset manual stop flag when switching to microphone
-                        window.rhythmManuallyStoppedForCurrentAudio = false;
-                        console.log('Microphone connected successfully');
-                    } catch (error) {
-                        console.error('Microphone error:', error);
-                        alert('Microphone access failed: ' + error.message);
-                    }
-                } else {
-                    if (mascot) {
-                        mascot.disconnectAudio();
-                        micActive = false;
-                        // Stop audio visualizer when mic is disconnected
-                        stopAudioViz();
-                        const micBtn = document.getElementById('mic-btn');
-                        micBtn.textContent = '🎤';
-                        micBtn.title = 'Use Microphone';
-                        micBtn.classList.remove('active');
-                        // Hide audio visualizer when mic is disconnected (only on mobile portrait)
-                        if (!audioPlayer.src && window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
-                            document.getElementById('audio-viz-section').style.display = 'none';
-                        }
-                        console.log('Microphone disconnected');
-                    }
-                }
-            });
         }
 
         function updateDisplay() {
