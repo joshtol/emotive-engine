@@ -858,11 +858,14 @@ class EmotiveRenderer {
         const coreX = centerX + this.state.gazeOffset.x + jitterX;
         const coreY = centerY + this.state.gazeOffset.y + jitterY;
         
+        // Calculate total rotation (including both gesture and BPM rotation)
+        const totalRotation = rotationAngle + this.state.coreRotation;
+        
         // Apply rotation if present
-        if (rotationAngle !== 0) {
+        if (totalRotation !== 0) {
             this.ctx.save();
             this.ctx.translate(coreX, coreY);
-            this.ctx.rotate(rotationAngle);
+            this.ctx.rotate(totalRotation);
             this.ctx.translate(-coreX, -coreY);
         }
         
@@ -931,12 +934,6 @@ class EmotiveRenderer {
             });
         }
         
-        // Draw recording indicator BEFORE core (so orb can cover it)
-        // But OUTSIDE rotation context so it doesn't spin
-        if (rotationAngle !== 0) {
-            this.ctx.save(); // Save before we restore rotation
-        }
-        
         // Recording indicator will be drawn after all transforms are restored
         
         // Apply sleep opacity to core
@@ -986,11 +983,11 @@ class EmotiveRenderer {
             this.state.coreRotation -= Math.PI * 2;
         }
         
-        // Render the core shape with rotation
+        // Render the core shape (rotation already applied to canvas)
         this.coreRenderer.renderCore(coreX, coreY, coreRadius, {
             scaleX: 1,
             scaleY: 1,
-            rotation: this.state.coreRotation,
+            rotation: 0,
             shapePoints: shapePoints
         });
         
@@ -1085,7 +1082,7 @@ class EmotiveRenderer {
         }
         
         // Restore context if rotated
-        if (rotationAngle !== 0) {
+        if (totalRotation !== 0) {
             this.ctx.restore();
         }
         
