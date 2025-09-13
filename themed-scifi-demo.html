@@ -1488,9 +1488,26 @@
                     padding-bottom: calc(60px + env(safe-area-inset-bottom, 0));
                 }
                 
-                /* System controls positioning */
+                /* System controls positioning - Always visible on iPad */
                 .system-controls {
-                    margin-bottom: calc(60px + env(safe-area-inset-bottom, 0));
+                    position: relative !important;
+                    margin-bottom: 0;
+                    margin-top: auto;
+                    transform: translateY(0) !important;
+                    opacity: 1 !important;
+                    pointer-events: auto !important;
+                    animation: none !important;
+                    display: flex !important;
+                    visibility: visible !important;
+                }
+                
+                .system-controls.hidden,
+                .system-controls.retracting,
+                .system-controls.extending {
+                    transform: translateY(0) !important;
+                    opacity: 1 !important;
+                    pointer-events: auto !important;
+                    animation: none !important;
                 }
             }
         }
@@ -3349,7 +3366,11 @@
             function isMobileView() {
                 const isPortrait = window.innerHeight > window.innerWidth;
                 const isSmallScreen = window.innerWidth <= 768;
-                return isPortrait && isSmallScreen;
+                // Check if it's an iPad
+                const isIPad = (navigator.userAgent.match(/iPad/i) || 
+                               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+                // Don't apply mobile view behavior to iPads
+                return isPortrait && isSmallScreen && !isIPad;
             }
             
             // Ensure system controls are visible on desktop/landscape
