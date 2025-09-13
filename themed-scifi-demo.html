@@ -89,7 +89,17 @@
 
         /* 1. Base Reset & Typography */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; }
+        html { 
+            width: 100%; 
+            height: 100%;
+            height: -webkit-fill-available; /* iOS fix */
+        }
+        body { 
+            width: 100%; 
+            height: 100%;
+            min-height: 100vh;
+            min-height: -webkit-fill-available; /* iOS fix */
+        }
         
         /* Footer Styling - Subtle single line that pushes content */
         .legal-footer {
@@ -1295,7 +1305,9 @@
                 overflow: hidden;
                 padding: 0;
                 padding-top: env(safe-area-inset-top, 0);
-                padding-bottom: env(safe-area-inset-bottom, 0);
+                padding-left: env(safe-area-inset-left, 0);
+                padding-right: env(safe-area-inset-right, 0);
+                padding-bottom: 0; /* Footer handles bottom */
             }
             
             .hero-spacer {
@@ -1306,12 +1318,12 @@
             .legal-footer {
                 position: fixed;
                 bottom: 0;
-                left: 0;
-                right: 0;
+                left: env(safe-area-inset-left, 0);
+                right: env(safe-area-inset-right, 0);
                 margin-top: 0;
                 z-index: 999;
                 padding: 6px 15px;
-                padding-bottom: calc(6px + env(safe-area-inset-bottom, 0));
+                padding-bottom: max(6px, env(safe-area-inset-bottom, 0));
                 font-size: 0.6rem;
                 background: rgba(0, 0, 0, 0.9);
             }
@@ -1360,13 +1372,15 @@
                 order: 0;
                 width: 180px;
                 flex-shrink: 0;
-                height: 100%;
+                height: calc(100% - env(safe-area-inset-bottom, 0));
+                max-height: calc(100vh - 58px - 32px - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
                 overflow-y: auto;
                 overflow-x: hidden;
                 background-color: var(--panel-bg);
                 border: 1px solid var(--border-color); /* Visual separation */
                 padding-top: 10px;
-                padding-bottom: 10px;
+                padding-bottom: calc(40px + env(safe-area-inset-bottom, 0));
+                box-sizing: border-box;
             }
             .display-and-controls {
                 height: 100%; /* Fill container */
@@ -1421,27 +1435,63 @@
         }
         
 
-        /* iPad Specific Fixes */
-        @media only screen 
-        and (min-device-width: 768px) 
-        and (max-device-width: 1024px) {
-            .shape-controls-hero {
-                padding-top: env(safe-area-inset-top, 0);
-            }
-            
-            .main-layout {
-                top: calc(76px + env(safe-area-inset-top, 0));
-                bottom: calc(45px + env(safe-area-inset-bottom, 0));
-            }
-            
-            .controls-left, .controls-right {
-                padding-top: 15px;
-                padding-bottom: 15px;
-                height: 100%;
-            }
-            
-            .legal-footer {
-                padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+        /* iPad Specific Fixes - Both orientations */
+        @supports (padding: env(safe-area-inset-top)) {
+            @media only screen 
+            and (min-device-width: 768px) 
+            and (max-device-width: 1366px) {
+                body {
+                    padding-left: env(safe-area-inset-left, 0);
+                    padding-right: env(safe-area-inset-right, 0);
+                }
+                
+                .shape-controls-hero {
+                    top: env(safe-area-inset-top, 0);
+                    left: env(safe-area-inset-left, 0);
+                    right: env(safe-area-inset-right, 0);
+                    padding-top: max(6px, env(safe-area-inset-top, 0));
+                }
+                
+                .main-layout {
+                    position: fixed !important;
+                    top: calc(76px + env(safe-area-inset-top, 0));
+                    left: env(safe-area-inset-left, 0);
+                    right: env(safe-area-inset-right, 0);
+                    bottom: 0; /* Let it extend to bottom */
+                    height: calc(100vh - 76px - env(safe-area-inset-top, 0));
+                }
+                
+                .controls-left, .controls-right {
+                    padding-top: 15px;
+                    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)); /* Extra space for footer */
+                    max-height: calc(100vh - 76px - 60px - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+                    box-sizing: border-box;
+                }
+                
+                .legal-footer {
+                    position: fixed;
+                    bottom: 0;
+                    left: env(safe-area-inset-left, 0);
+                    right: env(safe-area-inset-right, 0);
+                    padding-bottom: max(12px, env(safe-area-inset-bottom, 0));
+                    z-index: 1000; /* Ensure it's above content */
+                }
+                
+                .center-container {
+                    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0));
+                }
+                
+                .display-and-controls {
+                    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0));
+                }
+                
+                /* System controls positioning */
+                .system-controls {
+                    margin-bottom: calc(60px + env(safe-area-inset-bottom, 0));
+                }
             }
         }
 
