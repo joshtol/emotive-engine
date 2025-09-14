@@ -124,7 +124,7 @@ export default {
             particle.vx += Math.cos(angle) * burstStrength * 2 * dt;
             particle.vy += Math.sin(angle) * burstStrength * 2 * dt;
         }
-        
+
         // Apply velocity decay for natural deceleration
         particle.vx *= (1 - config.particleMotion.decay * 0.1);
         particle.vy *= (1 - config.particleMotion.decay * 0.1);

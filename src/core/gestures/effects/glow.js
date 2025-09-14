@@ -2,147 +2,206 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Glow Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Glow gesture - sustained luminous effect
+ * @fileoverview Glow gesture - based on pulse but focused on luminosity without movement
  * @author Emotive Engine Team
  * @module gestures/effects/glow
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a pure luminous glow effect without particle movement.
+ * ║ This is a BLENDING gesture that only modifies brightness/glow.
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *      Dim            Bright           Dim
+ *    · · · ·         ✨ ✨ ✨         · · · ·
+ *    · · ⭐ · ·   →  ✨ 🌟 ✨    →   · · ⭐ · ·
+ *    · · · ·         ✨ ✨ ✨         · · · ·
+ *
+ * USED BY:
+ * - Emphasis effects
+ * - Magic/mystical states
+ * - Energy charging
  */
 
+/**
+ * Glow gesture configuration and implementation
+ */
 export default {
     name: 'glow',
     emoji: '✨',
-    type: 'blending',
-    description: 'Sustained glowing effect',
-    
+    type: 'blending', // Adds to existing motion
+    description: 'Pure luminous glow without movement',
+
     // Default configuration
     config: {
-        duration: 1500,      // Animation duration
-        glowAmount: 1.5,     // Sustained brightness level
-        glowPeak: 2.0,       // Maximum glow intensity
-        easing: 'sine',      // Smooth curve type
-        strength: 0.3,       // Overall effect intensity
+        duration: 1500,      // Animation duration (longer than pulse for sustained glow)
+        amplitude: 0,        // NO expansion distance (removed from pulse)
+        frequency: 1,        // Number of glow pulses
+        holdPeak: 0.3,       // Peak glow hold time (longer for sustained effect)
+        easing: 'sine',      // Animation curve type
+        scaleAmount: 0.1,    // Very subtle orb scale variation (reduced from pulse)
+        glowAmount: 0.8,     // Strong orb glow intensity change (increased from pulse)
+        strength: 0,         // NO particle motion strength (removed from pulse)
+        direction: 'none',   // No movement direction
         // Particle motion configuration for AnimationController
         particleMotion: {
-            type: 'pulse',
-            strength: 0.3,       // Gentle radial force
-            direction: 'outward', // Expansion direction
-            gentle: true         // Soft movement mode
+            type: 'glow',
+            strength: 0,     // No particle movement
+            direction: 'none',
+            frequency: 1
         }
     },
-    
-    // Rhythm configuration - sustained luminosity following musical phrases
+
+    // Rhythm configuration - glow pulses with musical phrases
     rhythm: {
         enabled: true,
-        syncMode: 'phrase',  // Long, sustained glow following musical phrases
-        
-        // Glow intensity responds to harmonic content
-        intensitySync: {
-            onPhrase: 2.5,        // Strong glow during musical phrases
-            offPhrase: 1.2,       // Gentle glow between phrases
-            curve: 'sustained'    // Smooth transitions, no sharp changes
+        syncMode: 'phrase',  // Glow on musical phrases
+
+        // Glow strength syncs to dynamics
+        amplitudeSync: {
+            onBeat: 2.0,      // Strong glow on beat
+            offBeat: 1.2,     // Sustained glow off beat
+            curve: 'smooth'   // Smooth transitions
         },
-        
-        // Duration extends with phrase length
-        durationSync: {
+
+        // Frequency locks to phrase length
+        frequencySync: {
             mode: 'phrase',
-            minBeats: 4,          // Minimum 4-beat glow
-            maxBeats: 16,         // Maximum full phrase glow
-            sustain: true         // Maintain glow through phrase
+            subdivision: 'bar'
         },
-        
-        // Gentle response to harmonic changes
-        harmonicResponse: {
+
+        // Duration in musical time
+        durationSync: {
+            mode: 'bars',
+            bars: 2           // Glow over 2 bars
+        },
+
+        // Stronger glow on accents
+        accentResponse: {
             enabled: true,
-            multiplier: 1.8,      // Moderate brightness increase
-            type: 'brightness'    // Affects glow intensity
+            multiplier: 2.5   // Bright glow on accent
         },
-        
-        // Style variations for different music types
+
+        // Pattern-specific glow styles
         patternOverrides: {
             'ambient': {
-                // Ethereal, floating glow
-                intensitySync: { onPhrase: 2.8, offPhrase: 1.5, curve: 'ethereal' },
-                durationSync: { minBeats: 8, maxBeats: 32 }
-            },
-            'classical': {
-                // Expressive, dynamic glow
-                intensitySync: { onPhrase: 2.2, offPhrase: 0.8 },
-                harmonicResponse: { multiplier: 2.2 }
+                // Ethereal sustained glow
+                amplitudeSync: { onBeat: 2.5, offBeat: 1.8 },
+                durationSync: { bars: 4 }
             },
             'electronic': {
-                // Precise, controlled glow
-                intensitySync: { onPhrase: 2.6, offPhrase: 1.0, curve: 'precise' },
-                durationSync: { minBeats: 2, maxBeats: 8 }
-            }
-        },
-        
-        // Musical dynamics
-        dynamics: {
-            forte: {
-                // Brilliant, radiant glow
-                intensitySync: { 
-                    onPhrase: { multiplier: 1.8 },
-                    offPhrase: { multiplier: 1.4 }
-                },
-                harmonicResponse: { multiplier: 2.5 }
-            },
-            piano: {
-                // Soft, gentle luminosity
-                intensitySync: { 
-                    onPhrase: { multiplier: 0.7 },
-                    offPhrase: { multiplier: 0.5 }
-                },
-                harmonicResponse: { multiplier: 1.3 }
+                // Pulsing neon glow
+                amplitudeSync: { onBeat: 3.0, offBeat: 0.5, curve: 'sharp' },
+                frequencySync: { subdivision: 'quarter' }
             }
         }
     },
-    
-    initialize: function(particle, motion) {
+
+    /**
+     * Initialize gesture data for a particle
+     * @param {Particle} particle - The particle to initialize
+     * @param {Object} motion - Gesture motion configuration
+     * @param {number} centerX - Orb center X
+     * @param {number} centerY - Orb center Y
+     */
+    initialize: function(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
+
+        // Store initial state (no position data needed for glow)
         particle.gestureData.glow = {
-            originalOpacity: particle.opacity,
-            originalGlow: particle.glowSizeMultiplier || 0,
+            startOpacity: particle.opacity,
+            startGlow: particle.glowSizeMultiplier || 0,
             initialized: true
         };
     },
-    
+
+    /**
+     * Apply glow effect to particle (no motion, just luminosity)
+     * @param {Particle} particle - The particle to animate
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @param {number} dt - Delta time
+     * @param {number} centerX - Orb center X
+     * @param {number} centerY - Orb center Y
+     */
     apply: function(particle, progress, motion, dt, centerX, centerY) {
+        // Initialize on first frame
         if (!particle.gestureData?.glow?.initialized) {
-            this.initialize(particle, motion);
+            this.initialize(particle, motion, centerX, centerY);
         }
-        
+
         const data = particle.gestureData.glow;
         const config = { ...this.config, ...motion };
-        const strength = config.strength || 1.0;
-        
-        // Calculate smooth glow intensity using sine wave curve
-        const glowIntensity = Math.sin(progress * Math.PI) * config.glowPeak;
-        
-        // Apply glow
-        particle.opacity = Math.min(1, data.originalOpacity * (1 + glowIntensity * strength * 0.5));
-        particle.hasGlow = true;
-        particle.glowSizeMultiplier = data.originalGlow + glowIntensity * strength;
-        
-        // Gentle radial drift
-        const angle = Math.atan2(particle.y - centerY, particle.x - centerX);
-        const driftStrength = Math.sin(progress * Math.PI) * strength * 0.1;
-        particle.vx += Math.cos(angle) * driftStrength * dt;
-        particle.vy += Math.sin(angle) * driftStrength * dt;
-        
-        // Apply damping for smooth motion
-        particle.vx *= 0.98;
-        particle.vy *= 0.98;
+
+        // Apply easing
+        const easeProgress = this.easeInOutSine(progress);
+
+        // Calculate glow pulse with peak hold
+        let glowValue;
+        let frequency = config.frequency;
+        let glowAmount = config.glowAmount;
+
+        // Apply rhythm modulation if present
+        if (motion.rhythmModulation) {
+            glowAmount *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+            glowAmount *= (motion.rhythmModulation.accentMultiplier || 1);
+            if (motion.rhythmModulation.frequencyMultiplier) {
+                frequency *= motion.rhythmModulation.frequencyMultiplier;
+            }
+        }
+
+        const rawPulse = (easeProgress * frequency * 2) % 2;
+
+        if (config.holdPeak > 0 && rawPulse > (1 - config.holdPeak) && rawPulse < (1 + config.holdPeak)) {
+            // Hold at peak glow
+            glowValue = 1;
+        } else {
+            // Normal sine wave for glow
+            glowValue = Math.sin(easeProgress * Math.PI * 2 * frequency);
+        }
+
+        // NO PARTICLE MOVEMENT - just glow effects
+        // Unlike pulse, we don't calculate target positions or apply velocity
+
+        // Apply glow fade effect at the end
+        let glowMultiplier = 1;
+        if (progress > 0.9) {
+            const fadeFactor = 1 - ((progress - 0.9) * 10);
+            glowMultiplier = (0.5 + fadeFactor * 0.5);
+        }
+
+        // Modify particle glow properties (if your system supports it)
+        // This is where the actual glow effect happens
+        // Note: The actual visual implementation depends on your renderer
+        // Set glow intensity directly, don't multiply to prevent accumulation
+        particle.glowIntensity = 1 + glowValue * glowAmount * glowMultiplier;
     },
-    
+
+    /**
+     * Clean up gesture data when complete
+     * @param {Particle} particle - The particle to clean up
+     */
     cleanup: function(particle) {
         if (particle.gestureData?.glow) {
-            particle.opacity = particle.gestureData.glow.originalOpacity;
-            particle.glowSizeMultiplier = particle.gestureData.glow.originalGlow;
+            // Reset any glow properties
+            particle.glowIntensity = 1;
             delete particle.gestureData.glow;
         }
+    },
+
+    /**
+     * Sine easing for smooth glow transitions
+     * @param {number} t - Progress (0-1)
+     * @returns {number} Eased value
+     */
+    easeInOutSine: function(t) {
+        return -(Math.cos(Math.PI * t) - 1) / 2;
     }
 };

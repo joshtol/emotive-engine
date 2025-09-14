@@ -7,6 +7,38 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [2.6.0] - 2025-01-14
+
+### 🎯 Rotation & Braking System Overhaul
+
+#### Major Changes
+- **CONVERTED** entire rotation system from radians to degrees for simplicity
+  - Renderer now uses degrees internally (0-360°)
+  - Velocity is measured in degrees per frame (not radians per second)
+  - All angle calculations simplified to match standard animation practices
+
+#### Braking System Rewrite
+- **REDESIGNED** RotationBrake class for smooth, predictable deceleration
+  - Time-based easing using quartic ease-out function (1 - (1-t)^4)
+  - Dynamic duration calculation: `(angleToTravel / |velocity|) * DURATION_FACTOR * 5`
+  - Brake runs within renderer's animation loop (no separate RAF)
+  - Automatic target calculation to nearest upright (0°/360°) position
+  - Smooth anticipatory deceleration that visually "seeks" the target
+
+#### Demo Improvements
+- **UPDATED** rotation slider to use -10 to 10 range (matches velocity units)
+- **ADDED** gradient background to rotation slider (blue CCW → green CW)
+- **ENHANCED** slider thumb with gradient, shadows, and hover effects
+- **SIMPLIFIED** brake button to single-click only (removed double-click)
+- **FIXED** slider immediately resets to 0 when brake is pressed
+
+#### Technical Details
+- **REMOVED** 200+ lines of complex physics calculations
+- **REPLACED** with ~100 lines of simple, working code
+- **ELIMINATED** unit conversion bugs between radians/degrees
+- **FIXED** race conditions between brake and renderer updates
+- **IMPROVED** performance with single animation loop
+
 ## [2.5.0] - 2025-01-11
 
 ### ✨ Visual Effects & Polish

@@ -288,15 +288,6 @@ export class GestureAnimator {
                 case 'charleston':
                     gestureTransform = this.applyCharleston(anim, easedProgress);
                     break;
-                case 'glow':
-                    gestureTransform = this.applyGlow(anim, easedProgress);
-                    break;
-                case 'flash':
-                    gestureTransform = this.applyFlash(anim, easedProgress);
-                    break;
-                case 'flicker':
-                    gestureTransform = this.applyFlicker(anim, easedProgress);
-                    break;
                 case 'sparkle':
                     gestureTransform = this.applySparkle(anim, easedProgress);
                     break;
@@ -331,7 +322,8 @@ export class GestureAnimator {
             transform.offsetY += gestureTransform.offsetY || 0;
             transform.scale *= gestureTransform.scale || 1;
             transform.rotation += gestureTransform.rotation || 0;
-            transform.glow *= gestureTransform.glow || 1;
+            // Use MAX for glow instead of multiplying to prevent accumulation
+            transform.glow = Math.max(transform.glow, gestureTransform.glow || 1);
             
             // Pass flash wave data if present
             if (gestureTransform.flashWave) {
@@ -415,7 +407,7 @@ export class GestureAnimator {
      */
     getCurrentGesture() {
         // Priority: Find override gestures first (like orbital, hula), then other gestures
-        const overrideGestures = ['orbital', 'hula', 'wave', 'spin', 'morph'];
+        const overrideGestures = ['orbital', 'hula', 'wave', 'spin'];
         
         // Check override gestures first
         for (const gestureName of overrideGestures) {
@@ -617,36 +609,14 @@ export class GestureAnimator {
     }
     
     applyGlow(anim, progress) {
-        // Glow effect - radiant burst that affects orb and particles
-        // Like a star brightening, particles get energized
-        
-        const intensity = anim.params?.intensity || 2.0;
-        const speed = anim.params?.speed || 1.0;
-        
-        // Smooth crescendo and decrescendo
-        const envelope = Math.sin(progress * Math.PI);
-        
-        // Main glow pulse for the orb
-        const orbGlow = 1 + envelope * intensity;
-        
-        // Slight expansion during glow
-        const scaleEffect = 1 + envelope * 0.08;
-        
-        // Time for particle effects
-        const time = Date.now() * 0.001;
-        
-        // Particle glow builds up and radiates outward
-        const particleIntensity = envelope * (intensity + 0.5);
-        
+        // Glow effect - pure luminosity like pulse but without movement
+        // Copy of pulse logic but focused only on glow
+
+        const glowPulse = Math.sin(progress * Math.PI * anim.params.frequency);
+
         return {
-            glow: orbGlow,
-            scale: scaleEffect,
-            // Particle-specific data
-            particleGlow: particleIntensity,
-            glowTime: time,
-            glowProgress: progress,
-            glowEnvelope: envelope,
-            glowEffect: true // Flag to enable glow effect on particles
+            scale: 1 + glowPulse * (anim.params.scaleAmount || 0.1), // Very subtle scale like new glow config
+            glow: 1 + glowPulse * (anim.params.glowAmount || 0.8)    // Strong glow like new glow config
         };
     }
     

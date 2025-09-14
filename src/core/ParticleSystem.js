@@ -826,23 +826,41 @@ class ParticleSystem {
                     const envelope = gestureTransform.glowEnvelope || 0;
                     const progress = gestureTransform.glowProgress || 0;
                     const intensity = gestureTransform.particleGlow || 2.0;
-                    
+
                     // Particles brighten based on distance - closer particles glow first
                     const dx = particle.x - (ctx.canvas.width / 2);
                     const dy = particle.y - (ctx.canvas.height / 2);
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     const normalizedDistance = distance / 300;
-                    
+
                     // Glow radiates outward
                     const radiateDelay = Math.min(normalizedDistance * 0.3, 0.5);
                     const localProgress = Math.max(0, (progress - radiateDelay) / (1 - radiateDelay));
                     const localEnvelope = Math.sin(localProgress * Math.PI);
-                    
-                    // Strong glow effect - needs to be > 1.0 to trigger glow rendering
-                    fireflyGlow = 1 + localEnvelope * intensity * 2; // Doubled intensity for visible glow
-                    // Use safeSize modification instead, which is local to this render frame
-                    const glowSizeBoost = 1 + localEnvelope * 0.2;
+
+                    // ACTUALLY MAKE PARTICLES GLOW by temporarily setting glow properties
+                    // Store original values if not already stored
+                    if (!particle._originalGlow) {
+                        particle._originalGlow = {
+                            hasGlow: particle.hasGlow,
+                            glowSizeMultiplier: particle.glowSizeMultiplier || 0
+                        };
+                    }
+
+                    // Enable glow and set a large multiplier for visibility
+                    particle.hasGlow = true;
+                    particle.glowSizeMultiplier = Math.max(3.0, particle._originalGlow.glowSizeMultiplier) + localEnvelope * intensity * 3;
+
+                    // Also boost particle size slightly
+                    const glowSizeBoost = 1 + localEnvelope * 0.3;
                     safeSize = safeSize * glowSizeBoost;
+
+                    // Cleanup flag - restore original values when effect ends
+                    if (progress >= 0.99 && particle._originalGlow) {
+                        particle.hasGlow = particle._originalGlow.hasGlow;
+                        particle.glowSizeMultiplier = particle._originalGlow.glowSizeMultiplier;
+                        delete particle._originalGlow;
+                    }
                 }
                 
                 // Draw glow layers if needed

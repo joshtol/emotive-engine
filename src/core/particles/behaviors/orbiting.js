@@ -146,25 +146,32 @@ export function initializeOrbiting(particle) {
  */
 export function updateOrbiting(particle, dt, centerX, centerY) {
     const data = particle.behaviorData;
-    
+
     // Slow romantic rotation around the orb
     data.angle += data.angularVelocity * dt;
-    
+
     // Gentle swaying motion
     const swayOffset = Math.sin(data.angle * data.swaySpeed) * data.swayAmount;
-    
+
     // Radius changes for breathing effect
     const radiusPulse = Math.sin(data.angle * 1.5) * 6;
-    const currentRadius = data.baseRadius + radiusPulse + swayOffset * 0.2;
-    
-    // Calculate orbital position
-    particle.x = centerX + Math.cos(data.angle) * currentRadius;
-    particle.y = centerY + Math.sin(data.angle) * currentRadius;
-    
+
+    // Use data.radius if it exists (can be modified by gestures), otherwise use baseRadius
+    const currentRadius = (data.radius || data.baseRadius) + radiusPulse + swayOffset * 0.2;
+
+    // Calculate desired orbital position
+    const targetX = centerX + Math.cos(data.angle) * currentRadius;
+    const targetY = centerY + Math.sin(data.angle) * currentRadius;
+
     // Add gentle vertical floating (like fireflies)
     data.floatOffset += data.floatSpeed * dt * 0.001;
     const verticalFloat = Math.sin(data.floatOffset) * data.floatAmount;
-    particle.y += verticalFloat;
+
+    // Smoothly move towards target position instead of directly setting it
+    // This allows gestures to temporarily offset particles
+    const smoothingFactor = 0.1; // How quickly particles return to orbit
+    particle.vx = (targetX - particle.x) * smoothingFactor;
+    particle.vy = (targetY + verticalFloat - particle.y) * smoothingFactor;
     
     // Update individual fade phase
     particle.fadePhase += particle.fadeSpeed * dt * 0.001;

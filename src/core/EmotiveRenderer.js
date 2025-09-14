@@ -99,6 +99,7 @@ import { EyeRenderer } from './renderer/EyeRenderer.js';
 import { BreathingAnimator } from './renderer/BreathingAnimator.js';
 import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
+import { RotationBrake } from './animation/RotationBrake.js';
 
 class EmotiveRenderer {
     constructor(canvasManager, options = {}) {
@@ -122,7 +123,8 @@ class EmotiveRenderer {
         this.breathingAnimator = new BreathingAnimator(this);
         this.glowRenderer = new GlowRenderer(this);
         this.coreRenderer = new CoreRenderer(this);
-        
+        this.rotationBrake = new RotationBrake(this);
+
         // Configuration - matching original Emotive proportions
         this.config = {
             coreColor: options.coreColor || '#FFFFFF',
@@ -159,6 +161,8 @@ class EmotiveRenderer {
             gazeOffset: { x: 0, y: 0 },
             gazeIntensity: 0,
             gazeLocked: false,
+            gazeTrackingEnabled: false,  // Whether to track mouse/touch
+            gazeTarget: { x: 0, y: 0 },  // Target position for gaze (-1 to 1)
             zenVortexIntensity: 1.0,  // Adjustable whirlpool intensity for zen
             // Suspicion state
             squintAmount: 0,         // 0-1, how much the eye is narrowed
@@ -177,10 +181,10 @@ class EmotiveRenderer {
             breathDepthMult: 1.0,
             breathIrregular: false,
             particleRateMult: 1.0,
-            // Core rotation for record player effect
-            coreRotation: 0,        // Current rotation angle in radians
-            currentBPM: 0,          // Current BPM (0 = no rotation)
-            lastRotationTime: performance.now()  // Track time for rotation calculation
+            // Manual rotation control (not BPM-locked)
+            manualRotation: 0,        // Current rotation angle in DEGREES
+            rotationSpeed: 0,         // Rotation speed in DEGREES per frame (like velocity in demo)
+            lastRotationUpdate: performance.now()
         };
         
         // Animation state (now delegated to modules)
@@ -200,6 +204,9 @@ class EmotiveRenderer {
         this.offscreenCanvas = null;
         this.offscreenCtx = null;
         this.initOffscreenCanvas();
+
+        // Store canvas reference for gaze tracking
+        this.canvas = canvasManager.canvas;
         
         // Cache for expensive gradients
         this.glowCache = new Map();
@@ -624,9 +631,18 @@ class EmotiveRenderer {
         // Update animation timers
         this.updateTimers(deltaTime);
         
-        // Update gaze offset if provided
-        if (state.gazeOffset) {
-            this.setGazeOffset(state.gazeOffset);
+        // Update gaze offset
+        if (this.state.gazeTrackingEnabled) {
+            // When gaze tracking is enabled, follow mouse/touch
+            const smoothing = 0.15;
+            const maxOffset = 50; // Maximum pixels the orb can move
+            this.state.gazeOffset.x += (this.state.gazeTarget.x * maxOffset - this.state.gazeOffset.x) * smoothing;
+            this.state.gazeOffset.y += (this.state.gazeTarget.y * maxOffset - this.state.gazeOffset.y) * smoothing;
+        } else {
+            // When gaze tracking is disabled, return to center
+            const smoothing = 0.1;
+            this.state.gazeOffset.x += (0 - this.state.gazeOffset.x) * smoothing;
+            this.state.gazeOffset.y += (0 - this.state.gazeOffset.y) * smoothing;
         }
         
         // Calculate dimensions - using logical size for proper scaling
@@ -738,10 +754,10 @@ class EmotiveRenderer {
         const undertoneSizeMult = this.state.sizeMultiplier || 1.0;
         
         let coreRadius = baseRadius * emotionSizeMult * coreBreathFactor * scaleMultiplier * sleepScaleMod * undertoneSizeMult;
-        let glowRadius = baseRadius * this.config.glowMultiplier * glowBreathFactor * this.state.glowIntensity * scaleMultiplier * sleepScaleMod * undertoneSizeMult;  // Breathes inversely
-        
-        // Use state glow intensity directly - NO MULTIPLIER to prevent brightness changes
-        const effectiveGlowIntensity = this.state.glowIntensity;
+        let glowRadius = baseRadius * this.config.glowMultiplier * glowBreathFactor * this.state.glowIntensity * scaleMultiplier * sleepScaleMod * undertoneSizeMult * glowMultiplier;  // Apply gesture glow multiplier
+
+        // Use state glow intensity directly multiplied by gesture glow
+        const effectiveGlowIntensity = this.state.glowIntensity * glowMultiplier;
         
         
         // Apply blinking (only when not sleeping or zen)
@@ -858,9 +874,25 @@ class EmotiveRenderer {
         const coreX = centerX + this.state.gazeOffset.x + jitterX;
         const coreY = centerY + this.state.gazeOffset.y + jitterY;
         
-        // Calculate total rotation (including both gesture and BPM rotation)
-        const totalRotation = rotationAngle + this.state.coreRotation;
-        
+        // Check if brake is active and update rotation accordingly
+        const now = performance.now();
+
+        if (this.rotationBrake && this.rotationBrake.isBraking()) {
+            // Brake is active - let it control rotation
+            const brakeUpdate = this.rotationBrake.updateBrake(now);
+            if (brakeUpdate) {
+                this.state.manualRotation = brakeUpdate.rotation;
+                this.state.rotationSpeed = brakeUpdate.complete ? 0 : brakeUpdate.speed;
+            }
+        } else if (this.state.rotationSpeed !== 0) {
+            // Normal rotation update - just add velocity each frame (DEGREES)
+            this.state.manualRotation += this.state.rotationSpeed;
+        }
+
+        // Calculate total rotation (gestures + manual rotation)
+        // Convert manual rotation from degrees to radians for rendering
+        const totalRotation = rotationAngle + (this.state.manualRotation * Math.PI / 180);
+
         // Apply rotation if present
         if (totalRotation !== 0) {
             this.ctx.save();
@@ -964,30 +996,15 @@ class EmotiveRenderer {
         
         // Update core rotation based on BPM (like a record player)
         // Only rotate if BPM is greater than 0 (rhythm is active)
-        if (this.state.currentBPM > 0) {
-            const now = performance.now();
-            const deltaRotationTime = (now - this.state.lastRotationTime) / 1000; // Convert to seconds
-            this.state.lastRotationTime = now;
-            
-            // Calculate rotation speed: BPM / 60 = rotations per second * 2PI = radians per second
-            // Divide by 60 to make it even slower (3x slower than /20)
-            const radiansPerSecond = (this.state.currentBPM / 60) * Math.PI * 2 / 60;
-            this.state.coreRotation += radiansPerSecond * deltaRotationTime;
-        } else {
-            // Reset timestamp when not rotating
-            this.state.lastRotationTime = performance.now();
-        }
+        // Shapes that should NOT rotate: moon, heart
         
-        // Keep rotation within 0-2PI range
-        if (this.state.coreRotation > Math.PI * 2) {
-            this.state.coreRotation -= Math.PI * 2;
-        }
-        
-        // Render the core shape (rotation already applied to canvas)
+        // Render the core shape with rotation
+        // Note: We already applied rotation to the canvas, but CoreRenderer does its own transform
+        // So we need to pass the rotation value to it
         this.coreRenderer.renderCore(coreX, coreY, coreRadius, {
             scaleX: 1,
             scaleY: 1,
-            rotation: 0,
+            rotation: totalRotation,
             shapePoints: shapePoints
         });
         
@@ -1014,7 +1031,8 @@ class EmotiveRenderer {
         // Always render moon shadow EXCEPT when transitioning FROM moon TO solar
         if (currentShadow && (currentShadow.type === 'crescent' || currentShadow.type === 'lunar') && 
             !isMoonToSolar) {
-            this.renderMoonShadow(coreX, coreY, coreRadius, currentShadow, shapePoints);
+            // Shadow is rendered in the already-rotated coordinate space
+            this.renderMoonShadow(coreX, coreY, coreRadius, currentShadow, shapePoints, false, 0);
         }
         
         // For solar-hybrid, render lunar overlay on top of sun
@@ -1529,12 +1547,15 @@ class EmotiveRenderer {
     /**
      * Render moon/lunar shadow overlay
      * @param {boolean} isSolarOverlay - True if this is being called for solar eclipse effect
+     * @param {number} rotation - Rotation angle to apply
      */
-    renderMoonShadow(x, y, radius, shadow, shapePoints, isSolarOverlay = false) {
+    renderMoonShadow(x, y, radius, shadow, shapePoints, isSolarOverlay = false, rotation = 0) {
         const ctx = this.ctx;
         
         ctx.save();
         ctx.translate(x, y);
+        
+        // Don't apply rotation - we're already in rotated coordinate space
         
         if (shadow.type === 'crescent') {
             // Crescent moon - smooth shadow without pixelation
@@ -1559,6 +1580,7 @@ class EmotiveRenderer {
                 // FROM MOON TO ANY SHAPE - ShapeMorpher is already controlling via shadow.offset
                 // so we just use whatever offset is provided in the shadow object
             }
+            // Calculate shadow offset - shadow rotates with the moon
             const angleRad = (shadow.angle || -30) * Math.PI / 180;
             const offsetX = Math.cos(angleRad) * radius * animatedOffset;
             const offsetY = Math.sin(angleRad) * radius * animatedOffset;
@@ -1604,6 +1626,7 @@ class EmotiveRenderer {
             
             ctx.fillStyle = shadowGradient;
             ctx.beginPath();
+            // Always use a circular shadow - crescent effect only works with circles
             ctx.arc(offsetX, offsetY, radius * 1.1, 0, Math.PI * 2);
             ctx.fill();
             
@@ -2245,13 +2268,29 @@ class EmotiveRenderer {
     }
     
     /**
-     * Set BPM for core rotation
+     * Set BPM for rhythm features
      * @param {number} bpm - Beats per minute
      */
     setBPM(bpm) {
-        if (typeof bpm === 'number' && bpm >= 0) {
-            this.state.currentBPM = bpm;
-        }
+        // BPM-locked rotation has been removed
+        // This method is kept for other rhythm-related features
+    }
+
+    /**
+     * Set manual rotation speed
+     * @param {number} speed - Rotation speed in degrees per frame (like velocity)
+     */
+    setRotationSpeed(speed) {
+        // Direct degrees per frame, no conversion needed
+        this.state.rotationSpeed = speed;
+    }
+
+    /**
+     * Set manual rotation angle directly (for scratching)
+     * @param {number} angle - Rotation angle in DEGREES
+     */
+    setRotationAngle(angle) {
+        this.state.manualRotation = angle;
     }
     
     /**
@@ -2732,7 +2771,86 @@ class EmotiveRenderer {
             this.eyeRenderer.blinkTimer = 0;
         }
     }
-    
+
+    /**
+     * Set gaze tracking enabled state
+     * @param {boolean} enabled - Whether gaze tracking should be enabled
+     */
+    setGazeTracking(enabled) {
+        this.state.gazeTrackingEnabled = enabled;
+        if (enabled) {
+            // Start tracking mouse/touch position
+            if (!this.gazeTrackingInitialized) {
+                this.initGazeTracking();
+            }
+        } else {
+            // Reset gaze to center when disabled
+            this.state.gazeTarget = { x: 0, y: 0 };
+        }
+    }
+
+    /**
+     * Initialize gaze tracking event listeners
+     */
+    initGazeTracking() {
+        // Always set up listeners once
+        if (this.gazeTrackingInitialized) return;
+
+        this.handleMouseMove = (e) => {
+            if (!this.state.gazeTrackingEnabled) return;
+
+            const rect = this.canvas.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const x = e.clientX - rect.left - centerX;
+            const y = e.clientY - rect.top - centerY;
+
+            // Normalize to -1 to 1 range
+            this.state.gazeTarget = {
+                x: x / centerX,
+                y: y / centerY
+            };
+        };
+
+        this.handleTouchMove = (e) => {
+            if (!this.state.gazeTrackingEnabled) return;
+
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                const rect = this.canvas.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const x = touch.clientX - rect.left - centerX;
+                const y = touch.clientY - rect.top - centerY;
+
+                // Normalize to -1 to 1 range
+                this.state.gazeTarget = {
+                    x: x / centerX,
+                    y: y / centerY
+                };
+            }
+        };
+
+        document.addEventListener('mousemove', this.handleMouseMove);
+        document.addEventListener('touchmove', this.handleTouchMove);
+        this.gazeTrackingInitialized = true;
+    }
+
+    /**
+     * Clean up gaze tracking event listeners
+     */
+    cleanupGazeTracking() {
+        if (!this.gazeTrackingInitialized) return;
+
+        if (this.handleMouseMove) {
+            document.removeEventListener('mousemove', this.handleMouseMove);
+        }
+        if (this.handleTouchMove) {
+            document.removeEventListener('touchmove', this.handleTouchMove);
+        }
+        this.gazeTrackingInitialized = false;
+    }
+
     /**
      * Convert hex to rgba
      */

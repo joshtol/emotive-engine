@@ -540,6 +540,48 @@ class EmotiveMascot {
     }
 
     /**
+     * Set manual rotation speed for the shape
+     * @param {number} speed - Rotation speed (-1 to 1, negative for reverse)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setRotationSpeed(speed) {
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer && this.renderer.setRotationSpeed) {
+                this.renderer.setRotationSpeed(speed);
+            }
+            return this;
+        }, 'rotation-speed-update', this)();
+    }
+
+    /**
+     * Set manual rotation angle directly (for scratching)
+     * @param {number} angle - Rotation angle in radians
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setRotationAngle(angle) {
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer && this.renderer.setRotationAngle) {
+                this.renderer.setRotationAngle(angle);
+            }
+            return this;
+        }, 'rotation-angle-update', this)();
+    }
+
+    /**
+     * Enable or disable gaze tracking
+     * @param {boolean} enabled - Whether to enable gaze tracking
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setGazeTracking(enabled) {
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer && this.renderer.setGazeTracking) {
+                this.renderer.setGazeTracking(enabled);
+            }
+            return this;
+        }, 'gaze-tracking-update', this)();
+    }
+
+    /**
      * Executes a single gesture
      * @param {string} gesture - The gesture to execute
      * @returns {EmotiveMascot} This instance for chaining

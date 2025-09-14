@@ -185,6 +185,7 @@ class ShapeMorpher {
         this.isTransitioning = true;
         this.morphProgress = 0;
         this.visualProgress = 0; // Reset visual progress
+
         
         // Configure timing - use transition config duration if available
         if (options.duration === 'bar' || options.duration === 'beat') {
@@ -299,11 +300,11 @@ class ShapeMorpher {
         
         // Apply easing
         this.morphProgress = this.applyEasing(progress);
-        
+
         // Smooth visual progress for ultra-smooth rendering
         // Heavy smoothing: 80% of previous frame, 20% of new
         this.visualProgress = this.visualProgress * 0.8 + this.morphProgress * 0.2;
-        
+
         // Snap to final value when very close to avoid infinite approach
         if (Math.abs(this.visualProgress - this.morphProgress) < 0.001) {
             this.visualProgress = this.morphProgress;
@@ -470,7 +471,7 @@ class ShapeMorpher {
             let x, y;
             
             // RADIAL MORPH: These shapes radiate from/to center
-            const radialShapes = ['heart', 'square', 'circle', 'star', 'triangle'];
+            const radialShapes = ['square', 'circle', 'star', 'triangle'];
             const currentIsRadial = radialShapes.includes(this.currentShape);
             const targetIsRadial = radialShapes.includes(this.targetShape);
             const needsRadialMorph = currentIsRadial || targetIsRadial;

@@ -494,15 +494,31 @@ class Particle {
             if (this.hasGlow && this.glowSizeMultiplier > 0) {
                 const glowSize = safeSize * this.glowSizeMultiplier;
                 const glowGradient = ctx.createRadialGradient(renderX, renderY, safeSize * 0.5, renderX, renderY, glowSize);
-                
-                glowGradient.addColorStop(0, this.getCachedColor(particleColor, this.opacity * 0.15));
-                glowGradient.addColorStop(0.5, this.getCachedColor(particleColor, this.opacity * 0.08));
+
+                // Make glow visible even when particles are subdued
+                // Use a minimum opacity for glow to ensure visibility
+                const minGlowOpacity = 0.3; // Minimum glow visibility
+                const particleOpacity = Math.max(minGlowOpacity, this.opacity);
+
+                // Scale glow intensity based on glowSizeMultiplier
+                // Higher multiplier = more intense glow (especially for gesture effects)
+                const glowIntensity = Math.min(1.0, this.glowSizeMultiplier / 3); // More aggressive scaling
+
+                // Create bright, visible glow with minimum opacity thresholds
+                glowGradient.addColorStop(0, this.getCachedColor(particleColor, Math.max(0.5, particleOpacity * 0.8) * glowIntensity));
+                glowGradient.addColorStop(0.25, this.getCachedColor(particleColor, Math.max(0.3, particleOpacity * 0.6) * glowIntensity));
+                glowGradient.addColorStop(0.5, this.getCachedColor(particleColor, Math.max(0.2, particleOpacity * 0.4) * glowIntensity));
+                glowGradient.addColorStop(0.75, this.getCachedColor(particleColor, Math.max(0.1, particleOpacity * 0.2) * glowIntensity));
                 glowGradient.addColorStop(1, this.getCachedColor(particleColor, 0));
-                
+
+                // Use additive blending for brighter glow effect
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
                 ctx.fillStyle = glowGradient;
                 ctx.beginPath();
                 ctx.arc(renderX, renderY, glowSize, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.restore();
             }
         }
         

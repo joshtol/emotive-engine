@@ -36,7 +36,7 @@ You must obtain a **Commercial License** if you use the Emotive Engine in any **
 - Monetized media (e.g., YouTube with ads, TikTok sponsorships, streaming overlays tied to revenue).  
 - Any use by a company, brand, nonprofit, government body, or institution.  
 
-📧 To inquire about a Commercial License, contact: **licensing@emotiveengine.dev**  
+📧 To inquire about a Commercial License, contact: **licensing@emotiveengine.com**  
 
 Commercial licensing tiers (Indie / Startup / Enterprise) are available to scale with project size and usage.
 
