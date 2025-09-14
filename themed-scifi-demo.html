@@ -1894,11 +1894,11 @@
                 display: flex;
             }
             .center-container {
-                order: 0;
-                position: relative;
-                flex: 1;
-                min-width: 0;
-                height: 100%;
+                position: absolute;
+                top: 98px; /* Start below hero bar (58px) + rotation bar (40px) */
+                left: 180px; /* Start after left menu */
+                right: 180px; /* End before right menu */
+                bottom: 32px; /* Stop at footer */
                 display: flex;
                 align-items: center; /* Center vertically */
                 justify-content: center; /* Center horizontally */
@@ -1906,11 +1906,10 @@
                 margin: 0; /* ZERO margin */
             }
             .controls-left, .controls-right {
-                order: 0;
+                position: fixed;
+                top: 58px; /* Start right below landscape hero bar */
+                bottom: 32px; /* Stop at footer */
                 width: 180px;
-                flex-shrink: 0;
-                height: 100%;
-                max-height: calc(100vh - 98px - 32px); /* Account for hero + rotation + footer */
                 overflow-y: auto;
                 overflow-x: hidden;
                 background-color: var(--panel-bg);
@@ -1918,6 +1917,13 @@
                 padding-top: 10px;
                 padding-bottom: 40px;
                 box-sizing: border-box;
+                z-index: 997; /* Below rotation bar */
+            }
+            .controls-left {
+                left: 0;
+            }
+            .controls-right {
+                right: 0;
             }
             .display-and-controls {
                 height: 100%; /* Fill container */
@@ -2005,11 +2011,11 @@
                 display: flex;
             }
             .center-container {
-                order: 0;
-                position: relative;
-                flex: 1;
-                min-width: 0;
-                height: 100%;
+                position: absolute;
+                top: 126px; /* Start below hero bar (76px) + rotation bar (50px) */
+                left: var(--control-width); /* Start after left menu */
+                right: var(--control-width); /* End before right menu */
+                bottom: 45px; /* Stop at footer */
                 display: flex;
                 align-items: flex-start; /* Start from top */
                 justify-content: center;
@@ -2017,10 +2023,10 @@
                 margin: 0; /* ZERO margin */
             }
             .controls-left, .controls-right {
-                order: 0;
+                position: fixed;
+                top: 76px; /* Start right below hero bar */
+                bottom: 45px; /* Stop at footer */
                 width: var(--control-width);
-                flex-shrink: 0;
-                height: calc(100% - 95px); /* Account for footer (45px) + rotation bar (50px) */
                 overflow-y: auto;
                 overflow-x: hidden;
                 background-color: var(--panel-bg);
@@ -2028,6 +2034,13 @@
                 border: 1px solid var(--border-color); /* Add border for visual separation */
                 padding-top: 10px;
                 padding-bottom: 10px;
+                z-index: 997; /* Below rotation bar */
+            }
+            .controls-left {
+                left: 0;
+            }
+            .controls-right {
+                right: 0;
             }
             .display-and-controls {
                 position: relative;
@@ -2623,7 +2636,7 @@
     <div class="rotation-control-bar">
         <div class="rotation-control-content">
             <div class="rotation-left-section">
-                <span class="rotation-label-left">CCW</span>
+                <span class="rotation-label-left" style="font-size: 1.2rem;">↺</span>
             </div>
             <div class="rotation-center-section">
                 <div class="rotation-slider-wrapper">
@@ -2632,7 +2645,7 @@
                 </div>
             </div>
             <div class="rotation-right-section">
-                <span class="rotation-label-right">CW</span>
+                <span class="rotation-label-right" style="font-size: 1.2rem;">↻</span>
             </div>
         </div>
     </div>
