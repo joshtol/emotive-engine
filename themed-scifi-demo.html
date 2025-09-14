@@ -286,17 +286,21 @@
         /* Mobile portrait - full width */
         @media (orientation: portrait) and (max-width: 480px) {
             .rotation-control-bar {
+                top: 58px; /* Below smaller mobile hero bar */
                 left: 0;
                 right: 0;
                 width: 100%;
+                height: 40px; /* Smaller in mobile */
             }
         }
 
         /* Landscape mode adjustment */
         @media (orientation: landscape) and (max-height: 900px) {
             .rotation-control-bar {
+                top: 58px; /* Below smaller landscape hero bar */
                 left: 180px; /* Match landscape menu width */
                 right: 180px;
+                height: 40px; /* Smaller in landscape */
             }
         }
 
@@ -649,11 +653,11 @@
             }
             
             .hero-spacer {
-                height: 58px; /* Smaller hero bar in portrait/mobile */
+                height: 98px; /* Hero bar (58px) + rotation bar (40px) in portrait/mobile */
             }
             
             .main-layout {
-                min-height: calc(100vh - 58px);
+                min-height: calc(100vh - 98px); /* Account for hero + rotation bar */
             }
             
             .center-container {
@@ -1879,7 +1883,7 @@
             }
             .main-layout {
                 position: absolute;
-                top: 58px; /* Simple fixed position */
+                top: 98px; /* Below hero bar (58px) + rotation bar (40px) */
                 left: 0;
                 right: 0;
                 bottom: 32px; /* Account for footer */
@@ -1906,7 +1910,7 @@
                 width: 180px;
                 flex-shrink: 0;
                 height: 100%;
-                max-height: calc(100vh - 58px - 32px);
+                max-height: calc(100vh - 98px - 32px); /* Account for hero + rotation + footer */
                 overflow-y: auto;
                 overflow-x: hidden;
                 background-color: var(--panel-bg);
@@ -1990,7 +1994,7 @@
             }
             .main-layout {
                 position: absolute;
-                top: 76px; /* Start below hero bar */
+                top: 126px; /* Start below hero bar (76px) + rotation bar (50px) */
                 left: 0;
                 right: 0;
                 bottom: 0; /* Extend to bottom, footer overlays */
@@ -2016,7 +2020,7 @@
                 order: 0;
                 width: var(--control-width);
                 flex-shrink: 0;
-                height: calc(100% - 45px); /* Account for footer */
+                height: calc(100% - 95px); /* Account for footer (45px) + rotation bar (50px) */
                 overflow-y: auto;
                 overflow-x: hidden;
                 background-color: var(--panel-bg);
@@ -2027,7 +2031,7 @@
             }
             .display-and-controls {
                 position: relative;
-                height: calc(100% - 45px); /* Account for footer overlay */
+                height: calc(100% - 95px); /* Account for footer overlay (45px) + rotation bar (50px) */
                 width: 100%;
                 max-width: 900px; /* Increased to accommodate side panels */
                 display: flex;
