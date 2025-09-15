@@ -709,6 +709,10 @@
             pointer-events: none; /* Don't block clicks */
         }
         .system-controls {
+            position: fixed; /* Fixed positioning to stick to bottom */
+            bottom: 45px; /* Position above footer */
+            left: 0;
+            right: 0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -721,7 +725,6 @@
             /* -webkit-backdrop-filter: blur(12px); */
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             flex-shrink: 0;
-            position: relative;
             z-index: 2000; /* Ensure system controls are above everything */
             pointer-events: auto !important; /* Force system controls to be clickable */
             transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
@@ -2058,7 +2061,7 @@
                 top: 0;
                 left: 0;
                 right: 0;
-                bottom: 0;
+                bottom: 45px; /* Stop at system controls */
                 width: 100%;
                 height: 100%;
                 display: flex;
@@ -2135,7 +2138,7 @@
                 top: 126px; /* Start below hero bar (76px) + rotation bar (50px) */
                 left: 0;
                 right: 0;
-                bottom: 0; /* Extend to bottom, footer overlays */
+                bottom: 90px; /* Stop before system controls (45px footer + 45px for controls) */
                 flex-direction: row;
                 padding: 0;
                 gap: 0;
@@ -2179,7 +2182,7 @@
                 top: 0;
                 left: 0;
                 right: 0;
-                bottom: 0;
+                bottom: 45px; /* Stop at system controls */
                 width: 100%;
                 height: 100%;
                 display: flex;
@@ -2653,14 +2656,7 @@
                 flex: 1;
             }
             
-            .system-controls {
-                order: 4;
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-            }
+            /* System controls positioning handled by base styles */
             
             .emotion-panel .emotion-btn {
                 width: 80px;
@@ -2927,20 +2923,21 @@
                 <span class="fps-value" id="fps-value">0</span>
                 <span class="fps-label">FPS</span>
             </div>
-            <!-- System controls at same level as displays for clickability -->
-            <div class="system-controls" role="group" aria-label="System controls">
-                <div class="system-controls-group">
-                    <button class="sci-fi-btn audio-icon-btn" id="load-audio-btn" aria-label="Load audio file">▶</button>
-                    <button class="sci-fi-btn audio-icon-btn" id="load-song-btn" aria-label="Play demo song">♪</button>
-                </div>
-                <div class="system-controls-divider"></div>
-                <div class="system-controls-group">
-                    <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">👁</button>
-                    <button class="sci-fi-btn" id="gaze-toggle" aria-label="Toggle gaze tracking" aria-pressed="false">👀</button>
-                    <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">▣</button>
-                    <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">●</button>
-                    <button class="sci-fi-btn master-dice" id="randomize-all-btn" aria-label="Randomize everything" aria-pressed="false">⟳</button>
-                </div>
+        </div>
+
+        <!-- System controls moved completely outside center-container -->
+        <div class="system-controls" role="group" aria-label="System controls">
+            <div class="system-controls-group">
+                <button class="sci-fi-btn audio-icon-btn" id="load-audio-btn" aria-label="Load audio file">▶</button>
+                <button class="sci-fi-btn audio-icon-btn" id="load-song-btn" aria-label="Play demo song">♪</button>
+            </div>
+            <div class="system-controls-divider"></div>
+            <div class="system-controls-group">
+                <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">👁</button>
+                <button class="sci-fi-btn" id="gaze-toggle" aria-label="Toggle gaze tracking" aria-pressed="false">👀</button>
+                <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">▣</button>
+                <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">●</button>
+                <button class="sci-fi-btn master-dice" id="randomize-all-btn" aria-label="Randomize everything" aria-pressed="false">⟳</button>
             </div>
         </div>
 
