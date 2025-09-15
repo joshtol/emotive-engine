@@ -4385,16 +4385,21 @@
 
             // Start scratching
             function startScratch(e) {
-                // Check if click is on system controls (bottom area)
+                // Get click position
                 const rect = canvas.getBoundingClientRect();
                 const clickY = e.type.startsWith('touch') ?
                     e.touches[0].clientY - rect.top :
                     e.clientY - rect.top;
 
-                // System controls are at the bottom ~60px of the canvas
-                const systemControlsHeight = 60;
-                if (clickY > rect.height - systemControlsHeight) {
-                    // Click is in system controls area, don't start rotation
+                // Define safe rotation zone:
+                // - Top exclusion: 120px (logo/theme area + some padding)
+                // - Bottom exclusion: 60px (system controls)
+                const topExclusionHeight = 120;
+                const bottomExclusionHeight = 60;
+
+                // Check if click is outside the safe rotation zone
+                if (clickY < topExclusionHeight || clickY > rect.height - bottomExclusionHeight) {
+                    // Click is in UI area, don't start rotation
                     return;
                 }
 
