@@ -113,7 +113,8 @@ class EmotiveMascot {
                 coreSizeDivisor: 12,      // Core radius = canvas_size / 12 (original Emotive)
                 glowMultiplier: 2.5,      // Glow radius = core * 2.5 (original Emotive)
                 defaultGlowColor: '#14B8A6'
-            }
+            },
+            topOffset: 0  // Vertical offset to shift mascot upward (in pixels)
         };
         
         this.config = { ...defaults, ...config };
@@ -1696,7 +1697,7 @@ class EmotiveMascot {
                     const gazeState = this.gazeTracker.getState();
                     const mousePos = this.gazeTracker.mousePos;
                     const centerX = this.canvasManager.width / 2;
-                    const centerY = this.canvasManager.height / 2;
+                    const centerY = this.canvasManager.height / 2 - this.config.topOffset;
                     
                     // Calculate distance from mouse to center
                     const distance = Math.sqrt(
@@ -1722,15 +1723,15 @@ class EmotiveMascot {
             
             // Always use center for particle spawning (not gaze-adjusted position)
             const orbX = this.canvasManager.width / 2;
-            let orbY = this.canvasManager.height / 2;
-            
+            let orbY = this.canvasManager.height / 2 - this.config.topOffset;
+
             // Spawn new particles based on emotion at ORB position
             // Get min/max from state machine
             const stateProps = this.stateMachine.getCurrentEmotionalProperties();
-            
+
             // Apply vertical offset for certain emotions (like excited for exclamation mark)
             if (stateProps.verticalOffset) {
-                orbY = this.canvasManager.height / 2 + (this.canvasManager.height * stateProps.verticalOffset);
+                orbY = (this.canvasManager.height / 2 - this.config.topOffset) + (this.canvasManager.height * stateProps.verticalOffset);
             }
             
             // Apply undertone modifiers to particle behavior
