@@ -4403,9 +4403,8 @@
                 );
 
                 // Define rotation zone as a circle around the mascot
-                // Radius should be large enough to cover the mascot and some area around it
-                // but not so large that it interferes with UI elements
-                const rotationRadius = Math.min(rect.width, rect.height) * 0.35; // 35% of smallest dimension
+                // Very small area - max 1/3 of the animation frame width
+                const rotationRadius = rect.width / 6; // Half of 1/3 width = 1/6 width for radius
 
                 // Check if click is outside the rotation circle
                 if (distance > rotationRadius) {
