@@ -2854,20 +2854,7 @@
                     <button class="sci-fi-btn emotion-btn" data-emotion="glitch" aria-label="Glitch" title="Glitch">👾</button>
                 </div>
                 
-                <div class="system-controls" role="group" aria-label="System controls">
-                    <div class="system-controls-group">
-                        <button class="sci-fi-btn audio-icon-btn" id="load-audio-btn" aria-label="Load audio file">▶</button>
-                        <button class="sci-fi-btn audio-icon-btn" id="load-song-btn" aria-label="Play demo song">♪</button>
-                    </div>
-                    <div class="system-controls-divider"></div>
-                    <div class="system-controls-group">
-                        <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">👁</button>
-                        <button class="sci-fi-btn" id="gaze-toggle" aria-label="Toggle gaze tracking" aria-pressed="false">👀</button>
-                        <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">▣</button>
-                        <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">●</button>
-                        <button class="sci-fi-btn master-dice" id="randomize-all-btn" aria-label="Randomize everything" aria-pressed="false">⟳</button>
-                    </div>
-                </div>
+                <!-- System controls moved outside for proper clickability -->
             </div>
             <!-- Displays positioned at highest level -->
             <div class="holo-element info-display">
@@ -2877,6 +2864,21 @@
             <div class="fps-display" id="fps-display">
                 <span class="fps-value" id="fps-value">0</span>
                 <span class="fps-label">FPS</span>
+            </div>
+            <!-- System controls at same level as displays for clickability -->
+            <div class="system-controls" role="group" aria-label="System controls">
+                <div class="system-controls-group">
+                    <button class="sci-fi-btn audio-icon-btn" id="load-audio-btn" aria-label="Load audio file">▶</button>
+                    <button class="sci-fi-btn audio-icon-btn" id="load-song-btn" aria-label="Play demo song">♪</button>
+                </div>
+                <div class="system-controls-divider"></div>
+                <div class="system-controls-group">
+                    <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">👁</button>
+                    <button class="sci-fi-btn" id="gaze-toggle" aria-label="Toggle gaze tracking" aria-pressed="false">👀</button>
+                    <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">▣</button>
+                    <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">●</button>
+                    <button class="sci-fi-btn master-dice" id="randomize-all-btn" aria-label="Randomize everything" aria-pressed="false">⟳</button>
+                </div>
             </div>
         </div>
 
