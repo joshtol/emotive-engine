@@ -1637,8 +1637,8 @@
             animation-duration: 15s; 
         }
         .info-display {
-            position: fixed !important; /* Break out of container z-index context */
-            z-index: 2100; /* Above system controls */
+            position: absolute;
+            z-index: 9999; /* Highest z-index */
             bottom: 25px;
             left: 25px;
             font-family: 'Chakra Petch', sans-serif;
@@ -1676,8 +1676,8 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         .fps-display {
-            position: fixed !important; /* Break out of container z-index context */
-            z-index: 2100; /* Above system controls */
+            position: absolute;
+            z-index: 9999; /* Highest z-index */
             bottom: 60px;
             right: 25px;
             font-family: 'Chakra Petch', sans-serif;
