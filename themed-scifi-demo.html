@@ -625,6 +625,29 @@
         /* Mobile portrait only - not tablets */
         @media (orientation: portrait) and (max-width: 480px) {
             /* Removed aspect ratio constraint to fill available space */
+
+            /* Adjust corner brackets for mobile portrait */
+            .display-and-controls .corner-bracket {
+                position: absolute; /* Use absolute on mobile */
+            }
+            .top-left, .top-right {
+                top: 0; /* Reset to container-relative positioning */
+            }
+            .top-left {
+                left: 0;
+            }
+            .top-right {
+                right: 0;
+            }
+            .bottom-left, .bottom-right {
+                bottom: 0; /* Reset to container-relative positioning */
+            }
+            .bottom-left {
+                left: 0;
+            }
+            .bottom-right {
+                right: 0;
+            }
             
             /* Hero bar responsive adjustments */
             .shape-controls-hero .shape-controls {
@@ -1542,23 +1565,39 @@
         /* 5. Holo Effects & Decorations */
         .holo-element { position: absolute; pointer-events: none; }
         .corner-bracket { z-index: 50; width: 40px; height: 40px; }
-        .corner-bracket::before, .corner-bracket::after { 
-            content: ''; 
-            position: absolute; 
-            background-color: var(--accent-primary); 
-            animation: subtle-glow 4s infinite ease-in-out; 
+        .corner-bracket::before, .corner-bracket::after {
+            content: '';
+            position: absolute;
+            background-color: var(--accent-primary);
+            animation: subtle-glow 4s infinite ease-in-out;
         }
-        .top-left { top: 0; left: 0; } 
-        .top-left::before { height: 4px; width: 100%; } 
+        /* Position corners relative to display-and-controls container */
+        .display-and-controls .corner-bracket {
+            position: fixed;
+        }
+        .top-left {
+            top: 126px; /* Position at top of center container (below hero+rotation) */
+            left: var(--control-width);
+        }
+        .top-left::before { height: 4px; width: 100%; }
         .top-left::after { width: 4px; height: 100%; }
-        .top-right { top: 0; right: 0; } 
-        .top-right::before { height: 4px; width: 100%; } 
+        .top-right {
+            top: 126px; /* Position at top of center container (below hero+rotation) */
+            right: var(--control-width);
+        }
+        .top-right::before { height: 4px; width: 100%; }
         .top-right::after { width: 4px; height: 100%; right: 0; }
-        .bottom-left { bottom: 0; left: 0; } 
-        .bottom-left::before { height: 4px; width: 100%; bottom: 0; } 
+        .bottom-left {
+            bottom: 45px; /* Position at bottom (above footer) */
+            left: var(--control-width);
+        }
+        .bottom-left::before { height: 4px; width: 100%; bottom: 0; }
         .bottom-left::after { width: 4px; height: 100%; }
-        .bottom-right { bottom: 0; right: 0; } 
-        .bottom-right::before { height: 4px; width: 100%; bottom: 0; } 
+        .bottom-right {
+            bottom: 45px; /* Position at bottom (above footer) */
+            right: var(--control-width);
+        }
+        .bottom-right::before { height: 4px; width: 100%; bottom: 0; }
         .bottom-right::after { width: 4px; height: 100%; right: 0; }
         .holo-circle { 
             z-index: 5; 
@@ -1840,6 +1879,24 @@
 
         /* 6. Landscape Mode (includes tablets) */
         @media (orientation: landscape) and (max-height: 900px) {
+            /* Adjust corner brackets for landscape */
+            .top-left, .top-right {
+                top: 98px; /* Position at top of center container (below hero+rotation in landscape) */
+            }
+            .top-left {
+                left: 180px; /* Landscape menu width */
+            }
+            .top-right {
+                right: 180px; /* Landscape menu width */
+            }
+            .bottom-left {
+                bottom: 32px; /* Position at bottom (above footer in landscape) */
+                left: 180px;
+            }
+            .bottom-right {
+                bottom: 32px; /* Position at bottom (above footer in landscape) */
+                right: 180px;
+            }
             body { 
                 overflow: hidden;
                 padding: 0;
