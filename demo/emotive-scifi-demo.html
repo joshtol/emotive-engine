@@ -1,0 +1,2360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMOTIVE A.I. Core - Neural Interface</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/emotive-engine-icon.svg">
+    <!-- Google Fonts for Poppins and Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="emotive-scifi-styles-complete.css">
+</head>
+<body class="night">
+    <a href="#display-container" class="skip-nav">Skip to main content</a>
+    <!-- Shape Controls Hero Bar -->
+    <div class="shape-controls-hero">
+        <div class="shape-controls">
+            <button class="sci-fi-btn shape-btn" data-shape="heart">♥</button>
+            <button class="sci-fi-btn shape-btn" data-shape="triangle">△</button>
+            <button class="sci-fi-btn shape-btn" data-shape="square">□</button>
+            <button class="sci-fi-btn shape-btn active" data-shape="circle">○</button>
+            <button class="sci-fi-btn shape-btn" data-shape="star">★</button>
+            <button class="sci-fi-btn shape-btn" data-shape="sun">☀</button>
+            <button class="sci-fi-btn shape-btn" data-shape="solar">☉</button>
+            <button class="sci-fi-btn shape-btn" data-shape="moon">☾</button>
+            <button class="sci-fi-btn shape-btn" data-shape="lunar">●</button>
+            <button class="dice-btn" id="randomize-shape-btn" aria-label="Random shape" title="🎲">🎲</button>
+        </div>
+    </div>
+
+    <!-- Full-width rotation control bar -->
+    <div class="rotation-control-bar">
+        <div class="rotation-control-content">
+            <div class="rotation-left-section">
+                <span class="rotation-label-left rotation-icon">↺</span>
+            </div>
+            <div class="rotation-center-section">
+                <div class="rotation-slider-wrapper">
+                    <input type="range" id="rotation-slider-full" min="-10" max="10" value="0" step="0.1" class="rotation-slider-full">
+                    <div class="center-indicator"></div>
+                </div>
+            </div>
+            <div class="rotation-right-section">
+                <span class="rotation-label-right rotation-icon">↻</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-spacer"></div>
+    <main class="main-layout" role="main">
+        
+        <nav class="controls-left left-menu" role="navigation" aria-label="Emotion controls">
+            <!-- Audio Visualizer Section -->
+            <div class="control-section" id="audio-viz-section">
+                <div class="section-header">
+                    <h3 class="text-center">Audio Visualizer</h3>
+                </div>
+                <div id="audio-viz" class="audio-viz-container">
+                    <!-- Animated background effect -->
+                    <div class="glow-bg-effect"></div>
+
+                    <!-- Audio player overlay (top-right safe zone) -->
+                    <div style="
+                        position: absolute;
+                        top: var(--pos-edge-md);
+                        right: var(--pos-edge-md);
+                        width: 220px;
+                        height: 32px;
+                        z-index: var(--z-menu);
+                        display: none;
+                    " id="audio-player-container">
+                        <audio id="audio-player" controls style="
+                            width: var(--size-full);
+                            height: var(--size-full);
+                            border: none !important;
+                            outline: none !important;
+                            background: var(--bg-transparent);
+                            display: block;
+                            margin: 0;
+                            padding: 0;
+                        "></audio>
+                    </div>
+
+                    <!-- Frequency spectrum visualizer -->
+                    <div id="spectrum-viz" class="spectrum-viz">
+                        <!-- Bars will be dynamically created -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden file input -->
+            <input type="file" id="audio-file" accept="audio/*" class="hidden">
+            <div class="control-section undertone-section">
+                <div class="undertone-group">
+                    <div class="section-header">
+                        <h3 class="text-center">UNDERTONE MODIFIER</h3>
+                    </div>
+                    <div class="undertone-controls-container">
+                        <div class="undertone-slider-container">
+                        <div class="flex-between mb-8">
+                            <span class="undertone-label">SUBDUED</span>
+                            <span class="undertone-label">INTENSE</span>
+                        </div>
+                        <input type="range" id="undertone-slider" min="-3" max="3" value="0" step="1" class="rhythm-slider">
+                    </div>
+                    <div class="text-center p-3-0">
+                        <span id="undertone-value" class="undertone-value">CLEAR</span>
+                    </div>
+                    </div> <!-- Close undertone-controls-container -->
+                </div>
+            </div>
+
+
+            <!-- Chain Combos Section -->
+            <div class="control-section">
+                <div class="combo-categories">
+                    <div class="combo-group">
+                        <div class="section-header">
+                            <button class="dice-btn mr-10" id="randomize-chain-btn" aria-label="Random chain" title="🎲">🎲</button>
+                            <h3 class="section-title">CHAIN COMBOS</h3>
+                        </div>
+                        <div class="combo-controls-container">
+                            <!-- Animated background effect -->
+                            <div class="glow-bg-effect"></div>
+                        <div class="btn-group chain-group" role="group" aria-label="Chain combinations">
+                            <button class="sci-fi-btn chain-btn" data-chain="buildup">Build</button>
+                            <button class="sci-fi-btn chain-btn" data-chain="cascade">Cascade</button>
+                            <button class="sci-fi-btn chain-btn" data-chain="celebrate">Celebrate</button>
+                            <button class="sci-fi-btn chain-btn" data-chain="smooth">Smooth</button>
+                            <button class="sci-fi-btn chain-btn" data-chain="chaos">Chaos</button>
+                            <button class="sci-fi-btn chain-btn" data-chain="custom">Custom</button>
+                        </div>
+                        </div> <!-- Close combo-controls-container -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Glow Effects -->
+            <div class="control-section">
+                <div class="glow-categories">
+                    <div class="glow-group">
+                        <div class="section-header">
+                            <button class="dice-btn mr-10" id="randomize-glow-btn" aria-label="Random glow" title="🎲">🎲</button>
+                            <h3 class="section-title">GLOW EFFECTS</h3>
+                        </div>
+                        <div class="glow-controls-container">
+                            <!-- Animated background effect -->
+                            <div class="glow-bg-effect"></div>
+                        <div class="btn-group" role="group" aria-label="Glow animations">
+                            <button class="sci-fi-btn gesture-btn" data-gesture="sparkle">Sparkle</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="pulse">Pulse</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="glow">Glow</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="flash">Flash</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="shimmer">Shimmer</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="flicker">Flicker</button>
+                        </div>
+                        </div> <!-- Close glow-controls-container -->
+                    </div>
+                </div>
+            </div>
+
+        </nav>
+
+        <div class="center-container">
+            <div class="display-and-controls">
+                <!-- Left emotion panel (positive) -->
+                <div class="emotion-panel emotion-panel-left">
+                    <button class="sci-fi-btn emotion-btn active" data-emotion="neutral" aria-label="Neutral" title="Neutral">😐</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="calm" aria-label="Calm" title="Calm">😌</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="joy" aria-label="Joy" title="Joy">😊</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="excited" aria-label="Excited" title="Excited">🤩</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="love" aria-label="Love" title="Love">🥰</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Euphoria" title="Euphoria">✨</button>
+                </div>
+                
+                <div id="display-container" class="display-container">
+                    <div class="display-content">
+                        <canvas id="emotive-canvas"></canvas>
+                        <div class="logo-watermark">
+                            <img id="logo-image" class="logo-image" src="../assets/emotive-engine-full-BW.svg" alt="Emotive Engine">
+                        </div>
+                        <!-- HUD Tooltip -->
+                        <div id="hud-tooltip" class="hud-tooltip"></div>
+                        <!-- Theme Switcher -->
+                        <div class="theme-switcher border-none" id="theme-switcher">
+                            <svg class="theme-icon" id="theme-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <!-- Icon path will be replaced dynamically -->
+                                <path d="" fill-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="holo-element corner-bracket top-left"></div>
+                        <div class="holo-element corner-bracket top-right"></div>
+                        <div class="holo-element corner-bracket bottom-left"></div>
+                        <div class="holo-element corner-bracket bottom-right"></div>
+                        <div class="holo-element holo-circle circle-1"></div>
+                        <div class="holo-element holo-circle circle-2"></div>
+                    </div>
+                </div>
+                
+                <!-- Right emotion panel (negative) -->
+                <div class="emotion-panel emotion-panel-right">
+                    <button class="sci-fi-btn emotion-btn" data-emotion="surprise" aria-label="Surprise" title="Surprise">😲</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="fear" aria-label="Fear" title="Fear">😨</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="disgust" aria-label="Disgust" title="Disgust">🤢</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="sadness" aria-label="Sadness" title="Sadness">😢</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="anger" aria-label="Anger" title="Anger">😠</button>
+                    <button class="sci-fi-btn emotion-btn" data-emotion="glitch" aria-label="Glitch" title="Glitch">👾</button>
+                </div>
+                
+                <!-- System controls moved outside for proper clickability -->
+            </div>
+            <!-- Displays positioned at highest level -->
+            <div class="holo-element info-display">
+                <div class="status-text" id="emotion-display">EMOTION: NEUTRAL</div>
+                <div class="undertone-text" id="undertone-display">STABLE</div>
+            </div>
+            <div class="fps-display" id="fps-display">
+                <span class="fps-value" id="fps-value">0</span>
+                <span class="fps-label">FPS</span>
+            </div>
+        </div>
+
+        <!-- System controls moved completely outside center-container -->
+        <div class="system-controls" role="group" aria-label="System controls">
+            <div class="system-controls-group">
+                <button class="sci-fi-btn audio-icon-btn" id="load-audio-btn" aria-label="Play demo song">▶</button>
+                <button class="sci-fi-btn audio-icon-btn" id="load-song-btn" aria-label="Load audio file">♪</button>
+            </div>
+            <div class="system-controls-divider"></div>
+            <div class="system-controls-group">
+                <button class="sci-fi-btn active" id="blinking-toggle" aria-label="Toggle blinking" aria-pressed="true">👁</button>
+                <button class="sci-fi-btn" id="gaze-toggle" aria-label="Toggle gaze tracking" aria-pressed="false">👀</button>
+                <button class="sci-fi-btn" id="fps-toggle" aria-label="Toggle FPS display" aria-pressed="false">▣</button>
+                <button class="sci-fi-btn" id="record-btn" aria-label="Toggle audio recording" aria-pressed="false">●</button>
+                <button class="sci-fi-btn master-dice" id="randomize-all-btn" aria-label="Randomize everything" aria-pressed="false">⟳</button>
+            </div>
+        </div>
+
+        <aside class="controls-right right-menu" role="complementary" aria-label="Gesture controls">
+            <!-- Rhythm Sync Section -->
+            <div class="control-section">
+                <div class="rhythm-group">
+                    <div class="section-header">
+                        <h3 class="section-title">RHYTHM SYNC</h3>
+                    </div>
+                    <div class="rhythm-controls-container">
+                        <!-- Animated background effect -->
+                        <div class="glow-bg-effect"></div>
+
+                        <!-- Main rhythm controls -->
+                        <div class="rhythm-controls">
+                        <!-- Beat indicator -->
+                        <div id="beat-indicator" class="beat-indicator">
+                            <div class="beat-ring-outer"></div>
+                            <div class="beat-ring-inner"></div>
+                            <div id="beat-dot" class="beat-dot"></div>
+                        </div>
+
+                        <!-- BPM slider -->
+                        <input type="range" id="bpm-slider" min="60" max="360" value="120" class="rhythm-slider flex-1">
+
+                        <!-- BPM value input -->
+                        <input type="number" id="bpm-value" class="bpm-input" value="120" min="60" max="360">
+
+                        <!-- Play/pause button -->
+                        <button class="rhythm-toggle-btn" id="rhythm-toggle" aria-label="Toggle rhythm">
+                            <span id="rhythm-status" class="rhythm-status">▶</span>
+                        </button>
+                    </div>
+
+                    <!-- BPM modifier buttons -->
+                    <div class="bpm-modifier-controls">
+                        <button class="sci-fi-btn bpm-modifier-btn" data-modifier="0.5" id="bpm-half">½×</button>
+                        <button class="sci-fi-btn bpm-modifier-btn active" data-modifier="1" id="bpm-regular">1×</button>
+                        <button class="sci-fi-btn bpm-modifier-btn" data-modifier="2" id="bpm-double">2×</button>
+                    </div>
+                    </div> <!-- Close rhythm-controls-container -->
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-header position-relative">
+                    <button class="dice-btn mr-10" id="randomize-gesture-btn" aria-label="Random gesture" title="Random gesture">🎲</button>
+                    <h3 class="section-title">GESTURE PROTOCOL</h3>
+                    <button class="sound-toggle ml-10" id="sound-toggle" aria-label="Toggle sound" title="Toggle sound" aria-pressed="false">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <g class="sound-on hidden">
+                                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                            </g>
+                            <g class="sound-off">
+                                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                                <line x1="23" y1="9" x2="17" y2="15"/>
+                                <line x1="17" y1="9" x2="23" y2="15"/>
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="gesture-categories">
+                    <!-- Dance Gestures -->
+                    <div class="gesture-group">
+                        <div class="section-header">
+                            <button class="dice-btn mr-10" id="randomize-dance-btn" aria-label="Random dance" title="🎲">🎲</button>
+                            <h3 class="section-title">DANCE</h3>
+                        </div>
+                        <div class="dance-controls-container">
+                            <!-- Animated background effect -->
+                            <div class="glow-bg-effect"></div>
+                            <div class="btn-group" role="group" aria-label="Dance animations">
+                            <button class="sci-fi-btn gesture-btn" data-gesture="bounce">Bounce</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="sway">Sway</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="headBob">HeadBob</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="wiggle">Wiggle</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="spin">Spin</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="hula">Hula</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="orbit">Orbit</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="groove">Groove</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="jump">Jump</button>
+                        </div>
+                        </div> <!-- Close dance-controls-container -->
+                    </div>
+
+                    <!-- Overlayable Gestures -->
+                    <div class="gesture-group">
+                        <div class="section-header">
+                            <button class="dice-btn mr-10" id="randomize-overlayable-btn" aria-label="Random overlayable" title="🎲">🎲</button>
+                            <h3 class="section-title">OVERLAYABLE</h3>
+                        </div>
+                        <div class="overlayable-controls-container">
+                            <!-- Animated background effect -->
+                            <div class="glow-bg-effect"></div>
+                            <div class="btn-group" role="group" aria-label="Overlayable animations">
+                            <button class="sci-fi-btn gesture-btn" data-gesture="wave">Wave</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="point">Point</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="nod">Nod</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="shake">Shake</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="lean">Lean</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="tilt">Tilt</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="reach">Reach</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="breathe">Breathe</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="float">Float</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="rain">Rain</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="runningman">RunMan</button>
+                            <button class="sci-fi-btn gesture-btn" data-gesture="charleston">Charles</button>
+                        </div>
+                        </div> <!-- Close overlayable-controls-container -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+    
+    <!-- Footer with trademark and copyright -->
+    <footer class="legal-footer">
+        <div class="footer-content">
+            <span class="trademark">emotive ENGINE™</span>
+            <span class="separator">•</span>
+            <span class="copyright">© 2025 Joshua Tollette</span>
+            <span class="separator">•</span>
+            <a href="#" class="footer-link">License</a>
+        </div>
+    </footer>
+
+    <script type="module">
+        // Performance optimization: Use dynamic import for faster initial load
+        let EmotiveEngine;
+        let mascot;
+        let currentEmotion = 'neutral';
+        let currentUndertone = '';
+        let showingFPS = false;
+        let isRecording = false;
+        let currentTheme = 'night';
+        let soundEnabled = false;
+        
+        // Load EmotiveEngine asynchronously
+        const loadEngine = async () => {
+            const module = await import('../src/EmotiveMascot.js');
+            EmotiveEngine = module.default;
+            return EmotiveEngine;
+        };
+        
+        // Load rhythm and gesture modules
+        let rhythmIntegration, rhythmEngine, GestureScheduler, FPSCounter;
+        let gestureScheduler, fpsCounter;
+        // Make rhythmActive global so rhythmIntegration can update it
+        window.rhythmActive = false;
+        
+        // Rhythm presets for different music genres
+        const rhythmPresets = {
+            ambient: {
+                bpm: 72,
+                pattern: '4/4',
+                gestures: ['breathe', 'float', 'drift']
+            },
+            electronic: {
+                bpm: 128,
+                pattern: '4/4',
+                gestures: ['pulse', 'flash', 'vibrate']
+            },
+            jazz: {
+                bpm: 96,
+                pattern: '4/4',
+                gestures: ['sway', 'bounce', 'tilt']
+            },
+            dnb: {
+                bpm: 174,
+                pattern: '4/4',
+                gestures: ['shake', 'jitter', 'twitch']
+            }
+        };
+        
+        const loadRhythmModules = async () => {
+            const [rhythmIntegrationModule, rhythmModule, gestureModule, fpsModule] = await Promise.all([
+                import('../src/core/rhythmIntegration.js'),
+                import('../src/core/rhythm.js'),
+                import('../src/core/GestureScheduler.js'),
+                import('../src/utils/FPSCounter.js')
+            ]);
+            rhythmIntegration = rhythmIntegrationModule.default;
+            rhythmEngine = rhythmModule.rhythmEngine;
+            GestureScheduler = gestureModule.default;
+            FPSCounter = fpsModule.default;
+        };
+
+        // Theme management
+        const themes = ['light', 'dark', 'night'];
+        const themeIcons = {
+            // Sun icon for light theme - larger starburst with eclipse-matching center hole
+            'light': 'M 12 0 L 9.5 6.5 A 5.5 5.5 0 0 1 14.5 6.5 L 12 0 z M 2 2 L 6.5 9.5 A 5.5 5.5 0 0 1 9.5 6.5 L 2 2 z M 0 12 L 6.5 14.5 A 5.5 5.5 0 0 1 6.5 9.5 L 0 12 z M 2 22 L 9.5 17.5 A 5.5 5.5 0 0 1 6.5 14.5 L 2 22 z M 12 24 L 14.5 17.5 A 5.5 5.5 0 0 1 9.5 17.5 L 12 24 z M 22 22 L 17.5 14.5 A 5.5 5.5 0 0 1 14.5 17.5 L 22 22 z M 24 12 L 17.5 9.5 A 5.5 5.5 0 0 1 17.5 14.5 L 24 12 z M 22 2 L 14.5 6.5 A 5.5 5.5 0 0 1 17.5 9.5 L 22 2 z',
+            // Moon icon for dark theme - crescent using negative space
+            'dark': 'M 12 3 C 7.03 3 3 7.03 3 12 C 3 16.97 7.03 21 12 21 C 16.97 21 21 16.97 21 12 C 21 11.34 20.91 10.7 20.75 10.09 C 19.84 10.67 18.75 11 17.57 11 C 14.48 11 12 8.52 12 5.43 C 12 4.25 12.33 3.16 12.91 2.25 C 12.61 3.09 12 3 12 3 z',
+            // Eclipse icon for night theme - sun with moon overlay
+            'night': 'M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 z M 15 4.5 C 18.04 4.5 20.5 6.96 20.5 10 C 20.5 13.04 18.04 15.5 15 15.5 C 11.96 15.5 9.5 13.04 9.5 10 C 9.5 6.96 11.96 4.5 15 4.5 z'
+        };
+        const iconColors = {
+            'light': '#007acc',  /* blue - light theme CAN have blue */
+            'dark': '#00e5ff',   /* cyan - dark theme CAN have blue */
+            'night': '#CC6633'   /* burnt orange/copper - night theme NO blues */
+        };
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            const path = icon.querySelector('path');
+            path.setAttribute('d', themeIcons[theme]);
+            path.setAttribute('fill-rule', 'evenodd');
+            icon.style.color = iconColors[theme];
+        }
+
+        function cycleTheme() {
+            const currentIndex = themes.indexOf(currentTheme);
+            currentTheme = themes[(currentIndex + 1) % themes.length];
+            
+            // Remove all theme classes and apply new one
+            document.body.classList.remove(...themes);
+            document.body.classList.add(currentTheme);
+            
+            // Update icon
+            updateThemeIcon(currentTheme);
+            
+            // Update logo filter to match theme with subtle tint
+            const logo = document.getElementById('logo-image');
+            if (logo) {
+                switch(currentTheme) {
+                    case 'light':
+                        // Subtle blue tint for light theme
+                        logo.style.filter = 'brightness(0) sepia(1) saturate(5) hue-rotate(190deg) brightness(0.4)';
+                        break;
+                    case 'night':
+                        // Subtle orange tint for night theme  
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(15deg) brightness(0.9)';
+                        break;
+                    case 'dark':
+                    default:
+                        // Subtle cyan tint for dark theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(150deg) brightness(0.95)';
+                        break;
+                }
+            }
+            
+            // Save preference
+            localStorage.setItem('emotive-theme', currentTheme);
+        }
+
+        async function init() {
+            // Load saved theme
+            const savedTheme = localStorage.getItem('emotive-theme') || 'night';
+            currentTheme = savedTheme;
+            document.body.classList.remove(...themes);
+            document.body.classList.add(currentTheme);
+            updateThemeIcon(currentTheme);
+            
+            // Set initial logo filter based on theme with subtle tint
+            const logo = document.getElementById('logo-image');
+            if (logo) {
+                switch(currentTheme) {
+                    case 'light':
+                        // Subtle blue tint for light theme
+                        logo.style.filter = 'brightness(0) sepia(1) saturate(5) hue-rotate(190deg) brightness(0.4)';
+                        break;
+                    case 'night':
+                        // Subtle orange tint for night theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(15deg) brightness(0.9)';
+                        break;
+                    case 'dark':
+                    default:
+                        // Subtle cyan tint for dark theme
+                        logo.style.filter = 'brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(150deg) brightness(0.95)';
+                        break;
+                }
+            }
+
+            // Load engine dynamically for better performance
+            await loadEngine();
+            
+            mascot = new EmotiveEngine({
+                canvasId: 'emotive-canvas',
+                startingEmotion: 'neutral',
+                emotionalResponsiveness: 0.8,
+                particleIntensity: 1.0,
+                glowIntensity: 0.8,
+                audioEnabled: true,  // Initialize audio system
+                showFPS: false,
+                debugMode: false,
+                renderMode: 'default',
+                maxParticles: 100,
+                topOffset: 0  // No offset needed after fixing CSS gap
+            });
+            
+            // Initialize audio analyzer
+            if (mascot.audioAnalyzer) {
+                await mascot.audioAnalyzer.init();
+            }
+            
+            // After mascot is created, disable sound until user enables it
+            setTimeout(() => {
+                if (mascot.soundSystem) {
+                    mascot.soundSystem.isEnabled = false;
+                }
+            }, 100);
+            
+            mascot.start();
+            
+            // Don't set initial BPM - rotation only happens when rhythm is active
+            
+            // Initialize spectrum visualizer bars
+            const spectrumViz = document.getElementById('spectrum-viz');
+            const numBars = 16; // Reduced for cleaner look
+            for (let i = 0; i < numBars; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'spectrum-bar';
+                bar.style.cssText = `
+                    flex: 1;
+                    background: linear-gradient(180deg, var(--accent-glow), var(--accent-primary));
+                    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+                    transition: height 0.15s ease-out;
+                    opacity: var(--opacity-80);
+                    min-height: 2px;
+                    height: 2px;
+                `;
+                spectrumViz.appendChild(bar);
+            }
+            
+            // Audio visualizer state - moved to global scope for event listeners
+            window.audioVizActive = false;
+            window.audioVizAnimationId = null;
+            
+            // Initialize audio visualizer update loop - make globally accessible
+            window.updateAudioViz = function() {
+                // Only update if audio is actually playing
+                if (!window.audioVizActive) {
+                    window.audioVizAnimationId = null;
+                    return;
+                }
+                
+                if (mascot && mascot.shapeMorpher) {
+                    const morpher = mascot.shapeMorpher;
+                    
+                    // Update spectrum bars
+                    if (morpher.frequencyData && morpher.frequencyData.length > 0) {
+                        // Check if we have any non-zero data (only log once)
+                        const hasData = morpher.frequencyData.some(v => v > 0);
+                        if (!hasData && !window.vizDataWarned) {
+                            console.log('Warning: Histogram has no data. Check console for AudioAnalyzer messages.');
+                            window.vizDataWarned = true;
+                        } else if (hasData && window.vizDataWarned) {
+                            console.log('Histogram now receiving data!');
+                            window.vizDataWarned = false;
+                        }
+                        const bars = spectrumViz.querySelectorAll('.spectrum-bar');
+                        const bandsPerBar = Math.floor(morpher.frequencyData.length / numBars);
+                        
+                        bars.forEach((bar, i) => {
+                            // Average the energy for bands that map to this bar
+                            let energy = 0;
+                            let count = 0;
+                            for (let j = 0; j < bandsPerBar; j++) {
+                                const bandIndex = i * bandsPerBar + j;
+                                if (bandIndex < morpher.frequencyData.length) {
+                                    energy += morpher.frequencyData[bandIndex] || 0;
+                                    count++;
+                                }
+                            }
+                            energy = count > 0 ? energy / count : 0;
+                            
+                            // Apply logarithmic scaling for better visual response
+                            const height = Math.pow(energy, 0.7) * 100;
+                            bar.style.height = `${Math.max(2, Math.min(100, height))}%`;
+                            
+                            // Color variation based on frequency range
+                            if (i < 2) {
+                                // Bass frequencies - use primary accent
+                                bar.style.opacity = '1';
+                                bar.style.filter = 'hue-rotate(0deg)';
+                            } else if (i >= 6 && i <= 10) {
+                                // Mid frequencies (vocals) - use secondary accent  
+                                bar.style.opacity = '0.9';
+                                bar.style.filter = 'hue-rotate(60deg)';
+                            } else {
+                                // High frequencies
+                                bar.style.opacity = '0.7';
+                                bar.style.filter = 'hue-rotate(120deg)';
+                            }
+                        });
+                    }
+                }
+                
+                window.audioVizAnimationId = requestAnimationFrame(window.updateAudioViz);
+            }
+            
+            // Start/stop audio visualizer based on audio state - make globally accessible
+            window.startAudioViz = function() {
+                if (!window.audioVizActive) {
+                    window.audioVizActive = true;
+                    window.updateAudioViz();
+                }
+            }
+            
+            window.stopAudioViz = function() {
+                window.audioVizActive = false;
+                if (window.audioVizAnimationId) {
+                    cancelAnimationFrame(window.audioVizAnimationId);
+                    window.audioVizAnimationId = null;
+                }
+                // Reset bars to minimum height
+                const bars = spectrumViz.querySelectorAll('.spectrum-bar');
+                bars.forEach(bar => {
+                    bar.style.height = '2%';
+                });
+            }
+            
+            // Load and initialize rhythm modules
+            await loadRhythmModules();
+            
+            // Initialize rhythm system
+            rhythmIntegration.initialize();
+            
+            // Make rhythmIntegration globally accessible for BPM updates
+            window.rhythmIntegration = rhythmIntegration;
+            
+            // Initialize BPM Modifier early
+            let currentBPMModifier = 1.0; // Default to regular (1x)
+            window.currentBPMModifier = currentBPMModifier;
+            
+            // Initialize gesture scheduler
+            gestureScheduler = new GestureScheduler(mascot);
+            
+            // Setup scheduler callbacks for visual feedback
+            gestureScheduler.onGestureQueued = (item) => {
+                const btn = document.querySelector(`.gesture-btn[data-gesture="${item.gestureName}"]`);
+                if (btn) {
+                    btn.classList.add('gesture-pending');
+                }
+            };
+            
+            gestureScheduler.onGestureTriggered = (item) => {
+                const btn = document.querySelector(`.gesture-btn[data-gesture="${item.gestureName}"]`);
+                if (btn) {
+                    btn.classList.remove('gesture-pending');
+                    btn.classList.add('gesture-triggered');
+                    setTimeout(() => btn.classList.remove('gesture-triggered'), 200);
+                }
+            };
+            
+            // Setup beat indicator
+            rhythmEngine.on('beat', (beatInfo) => {
+                if (window.rhythmActive) {
+                    const beatDot = document.getElementById('beat-dot');
+                    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary');
+                    const glowColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-glow');
+                    
+                    beatDot.style.width = '20px';
+                    beatDot.style.height = '20px';
+                    beatDot.style.background = accentColor;
+                    beatDot.style.boxShadow = `0 0 20px ${glowColor}`;
+                    
+                    setTimeout(() => {
+                        beatDot.style.width = '10px';
+                        beatDot.style.height = '10px';
+                        beatDot.style.background = accentColor;
+                        beatDot.style.boxShadow = 'none';
+                    }, 100);
+                }
+            });
+            
+            // Initialize FPS counter
+            fpsCounter = new FPSCounter();
+            
+            // Start FPS tracking animation loop
+            function updateFPS() {
+                const fps = fpsCounter.update();
+                if (showingFPS) {
+                    document.getElementById('fps-value').textContent = fps;
+                }
+                requestAnimationFrame(updateFPS);
+            }
+            updateFPS();
+            
+            setupEventHandlers();
+            updateDisplay();
+            // initSystemControlsAnimation(); // Disabled - system controls always visible
+            
+            // Handle orientation changes - blur both sides of transition
+            let previousOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            let isTransitioning = false;
+            
+            const handleOrientationChange = () => {
+                const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+                
+                if (currentOrientation !== previousOrientation && !isTransitioning) {
+                    isTransitioning = true;
+                    
+                    // Heavy blur on current frame
+                    document.body.style.filter = 'blur(30px)';
+                    
+                    // Wait for blur, then switch with new view pre-blurred
+                    setTimeout(() => {
+                        previousOrientation = currentOrientation;
+                        
+                        // Clear particles while blurred
+                        if (mascot && mascot.particleSystem) {
+                            mascot.particleSystem.particles = [];
+                        }
+                        
+                        // Force canvas resize to prevent orb squishing
+                        if (mascot && mascot.canvasManager) {
+                            // Wait a frame for layout to settle
+                            requestAnimationFrame(() => {
+                                // Force full canvas reset
+                                const canvas = mascot.canvasManager.canvas;
+                                
+                                // Clear any inline dimensions
+                                canvas.style.width = '';
+                                canvas.style.height = '';
+                                
+                                // Let CSS reflow
+                                const rect = canvas.getBoundingClientRect();
+                                
+                                // Reset the canvas internal dimensions
+                                mascot.canvasManager.dpr = window.devicePixelRatio || 1;
+                                mascot.canvasManager.width = rect.width;
+                                mascot.canvasManager.height = rect.height;
+                                mascot.canvasManager.canvas.width = rect.width * mascot.canvasManager.dpr;
+                                mascot.canvasManager.canvas.height = rect.height * mascot.canvasManager.dpr;
+                                mascot.canvasManager.centerX = rect.width / 2;
+                                mascot.canvasManager.centerY = rect.height / 2;
+                                
+                                // Reset context scaling
+                                mascot.canvasManager.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                                mascot.canvasManager.ctx.scale(mascot.canvasManager.dpr, mascot.canvasManager.dpr);
+                                
+                                // Update renderer's scale factor
+                                if (mascot.renderer) {
+                                    const canvasSize = Math.min(rect.width || 400, rect.height || 400);
+                                    mascot.renderer.scaleFactor = (canvasSize / 400) * (mascot.renderer.config.baseScale || 1.0);
+                                    
+                                    // Force offscreen canvas update
+                                    if (mascot.renderer.offscreenCanvas) {
+                                        mascot.renderer.offscreenCanvas.width = rect.width;
+                                        mascot.renderer.offscreenCanvas.height = rect.height;
+                                    }
+                                    
+                                    // Clear caches
+                                    if (mascot.renderer.glowCache) {
+                                        mascot.renderer.glowCache.clear();
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Keep blur for incoming view
+                        document.body.style.filter = 'blur(25px)';
+                        
+                        // Then quickly unblur to reveal new layout
+                        setTimeout(() => {
+                            document.body.style.filter = '';
+                            isTransitioning = false;
+                            
+                            // Double-check canvas dimensions after transition
+                            if (mascot && mascot.canvasManager) {
+                                // Wait two frames to ensure complete layout settlement
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        const canvas = mascot.canvasManager.canvas;
+                                        canvas.style.width = '';
+                                        canvas.style.height = '';
+                                        
+                                        const rect = canvas.getBoundingClientRect();
+                                        
+                                        mascot.canvasManager.dpr = window.devicePixelRatio || 1;
+                                        mascot.canvasManager.width = rect.width;
+                                        mascot.canvasManager.height = rect.height;
+                                        mascot.canvasManager.canvas.width = rect.width * mascot.canvasManager.dpr;
+                                        mascot.canvasManager.canvas.height = rect.height * mascot.canvasManager.dpr;
+                                        mascot.canvasManager.centerX = rect.width / 2;
+                                        mascot.canvasManager.centerY = rect.height / 2;
+                                        
+                                        mascot.canvasManager.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                                        mascot.canvasManager.ctx.scale(mascot.canvasManager.dpr, mascot.canvasManager.dpr);
+                                        
+                                        if (mascot.renderer) {
+                                            const canvasSize = Math.min(rect.width || 400, rect.height || 400);
+                                            mascot.renderer.scaleFactor = (canvasSize / 400) * (mascot.renderer.config.baseScale || 1.0);
+                                            
+                                            if (mascot.renderer.offscreenCanvas) {
+                                                mascot.renderer.offscreenCanvas.width = rect.width;
+                                                mascot.renderer.offscreenCanvas.height = rect.height;
+                                            }
+                                            
+                                            if (mascot.renderer.glowCache) {
+                                                mascot.renderer.glowCache.clear();
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+                        }, 50);
+                    }, 150);
+                }
+            };
+            
+            // Single debounced resize handler
+            let resizeTimeout;
+            let blurApplied = false;
+            
+            window.addEventListener('resize', () => {
+                const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+                
+                // Only apply blur once when orientation actually changes
+                if (currentOrientation !== previousOrientation && !isTransitioning && !blurApplied) {
+                    document.body.style.filter = 'blur(30px)';
+                    blurApplied = true;
+                }
+                
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    handleOrientationChange();
+                    blurApplied = false; // Reset for next orientation change
+                }, 100);
+            });
+            
+            if ('orientation' in window) {
+                window.addEventListener('orientationchange', () => {
+                    if (!isTransitioning) {
+                        // Apply heavy blur immediately
+                        document.body.style.filter = 'blur(30px)';
+                        setTimeout(handleOrientationChange, 100);
+                    }
+                });
+            }
+        }
+
+        function setupEventHandlers() {
+            // Theme switcher
+            document.getElementById('theme-switcher').addEventListener('click', cycleTheme);
+            
+            // Sound toggle
+            const soundToggle = document.getElementById('sound-toggle');
+            const soundOn = soundToggle.querySelector('.sound-on');
+            const soundOff = soundToggle.querySelector('.sound-off');
+            
+            // Function to update button appearance based on state
+            const updateSoundButton = (enabled) => {
+                if (enabled) {
+                    soundToggle.classList.add('active');
+                    soundOn.style.display = 'block';
+                    soundOff.style.display = 'none';
+                    soundToggle.setAttribute('aria-pressed', 'true');
+                } else {
+                    soundToggle.classList.remove('active');
+                    soundOn.style.display = 'none';
+                    soundOff.style.display = 'block';
+                    soundToggle.setAttribute('aria-pressed', 'false');
+                }
+            };
+            
+            // Initialize button to show disabled state
+            updateSoundButton(false);
+            
+            soundToggle.addEventListener('click', () => {
+                if (!mascot || !mascot.soundSystem) return;
+                
+                // Toggle the sound state
+                soundEnabled = !soundEnabled;
+                
+                // Update mascot configuration and sound system
+                mascot.config.enableAudio = soundEnabled;
+                mascot.soundSystem.isEnabled = soundEnabled;
+                
+                // Update button appearance
+                updateSoundButton(soundEnabled);
+                
+                if (!soundEnabled && mascot.soundSystem.isAvailable()) {
+                    // Stop any playing ambient tones when disabling
+                    mascot.soundSystem.stopAmbientTone(200);
+                }
+                
+                console.log('Sound', soundEnabled ? 'enabled' : 'disabled');
+            });
+
+            document.querySelectorAll('.emotion-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentEmotion = btn.dataset.emotion;
+                    mascot.setEmotion(currentEmotion, currentUndertone || undefined);
+                    
+                    document.querySelectorAll('.emotion-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
+                    updateDisplay();
+                });
+            });
+
+            document.querySelectorAll('.gesture-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const gestureName = btn.dataset.gesture;
+                    
+                    // Special handling for morph gesture - morph core to random shape
+                    if (gestureName === 'morph' && mascot) {
+                        const shapes = ['heart', 'star', 'sun', 'moon', 'lunar', 'solar', 'square', 'triangle'];
+                        const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+                        mascot.morphTo(randomShape, {
+                            duration: window.rhythmActive ? 'bar' : 1000,
+                            mode: 'core-only',
+                            onBeat: window.rhythmActive
+                        });
+                        
+                        // Update visual feedback
+                        document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+                        const shapeBtn = document.querySelector(`.shape-btn[data-shape="${randomShape}"]`);
+                        if (shapeBtn) shapeBtn.classList.add('active');
+                    } else if (window.rhythmActive && gestureScheduler) {
+                        gestureScheduler.requestGesture(gestureName);
+                    } else {
+                        mascot.express(gestureName);
+                    }
+                });
+            });
+            
+            // Chain button functionality
+            document.querySelectorAll('.chain-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const chainType = btn.dataset.chain;
+                    
+                    // Define chains - these stack with z-index layering
+                    const chains = {
+                        buildup: [
+                            { gesture: 'bounce', delay: 0 },
+                            { gesture: 'sway', delay: 100 },
+                            { gesture: 'glow', delay: 200 },
+                            { gesture: 'sparkle', delay: 500 }
+                        ],
+                        cascade: [
+                            { gesture: 'wave', delay: 0 },
+                            { gesture: 'pulse', delay: 100 },
+                            { gesture: 'shimmer', delay: 200 }
+                        ],
+                        celebrate: [
+                            { gesture: 'spin', delay: 0 },
+                            { gesture: 'bounce', delay: 100 },
+                            { gesture: 'sparkle', delay: 200 },
+                            { gesture: 'flash', delay: 400 }
+                        ],
+                        smooth: [
+                            { gesture: 'sway', delay: 0 },
+                            { gesture: 'wave', delay: 100 },
+                            { gesture: 'glow', delay: 200 },
+                            { gesture: 'point', delay: 400 }
+                        ],
+                        chaos: [
+                            { gesture: 'wiggle', delay: 0 },
+                            { gesture: 'shake', delay: 50 },
+                            { gesture: 'spin', delay: 100 },
+                            { gesture: 'flash', delay: 150 },
+                            { gesture: 'sparkle', delay: 200 }
+                        ],
+                        custom: [
+                            { gesture: 'lean', delay: 0 },
+                            { gesture: 'reach', delay: 150 },
+                            { gesture: 'groove', delay: 300 },
+                            { gesture: 'shimmer', delay: 450 },
+                            { gesture: 'orbit', delay: 600 }
+                        ]
+                    };
+                    
+                    const chain = chains[chainType];
+                    if (chain && mascot) {
+                        // 10% chance to trigger a shape morph with the chain
+                        if (Math.random() < 0.1) {
+                            // Get all available shapes
+                            const shapes = Array.from(document.querySelectorAll('.shape-btn')).map(b => b.dataset.shape);
+                            const currentShape = document.querySelector('.shape-btn.active')?.dataset.shape;
+                            const availableShapes = shapes.filter(s => s !== currentShape);
+                            
+                            if (availableShapes.length > 0) {
+                                // Pick a random shape and morph to it
+                                const randomShape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
+                                
+                                // Trigger the morph slightly before the chain starts for better effect
+                                setTimeout(() => {
+                                    document.querySelector(`.shape-btn[data-shape="${randomShape}"]`).click();
+                                }, 0);
+                            }
+                        }
+                        
+                        // Execute chain with delays for layering effect
+                        chain.forEach(item => {
+                            setTimeout(() => {
+                                if (window.rhythmActive && gestureScheduler) {
+                                    gestureScheduler.requestGesture(item.gesture);
+                                } else {
+                                    mascot.express(item.gesture);
+                                }
+                            }, item.delay);
+                        });
+                        
+                        // Visual feedback
+                        btn.style.animation = 'none';
+                        setTimeout(() => btn.style.animation = '', 10);
+                    }
+                });
+            });
+
+            // Undertone slider with smooth transitions
+            const undertoneSlider = document.getElementById('undertone-slider');
+            const undertoneValue = document.getElementById('undertone-value');
+            let undertoneDebounceTimer = null;
+            let lastUndertone = '';
+            
+            // Function to get undertone from discrete slider value (-3 to 3)
+            function getUndertoneFromValue(value) {
+                let undertone = '';
+                let displayText = 'CLEAR';
+
+                switch(value) {
+                    case -3:
+                        undertone = 'subdued';
+                        displayText = 'SUBDUED';
+                        break;
+                    case -2:
+                        undertone = 'tired';
+                        displayText = 'TIRED';
+                        break;
+                    case -1:
+                        undertone = 'nervous';
+                        displayText = 'NERVOUS';
+                        break;
+                    case 0:
+                        undertone = '';
+                        displayText = 'CLEAR';
+                        break;
+                    case 1:
+                        undertone = 'energetic';
+                        displayText = 'ENERGETIC';
+                        break;
+                    case 2:
+                        undertone = 'confident';
+                        displayText = 'CONFIDENT';
+                        break;
+                    case 3:
+                        undertone = 'intense';
+                        displayText = 'INTENSE';
+                        break;
+                    default:
+                        undertone = '';
+                        displayText = 'CLEAR';
+                }
+
+                return { undertone, displayText };
+            }
+            
+            // Initialize undertone slider background
+            updateSliderBackground(undertoneSlider);
+
+            // Update display immediately, but debounce mascot updates
+            undertoneSlider.addEventListener('input', () => {
+                const value = parseInt(undertoneSlider.value);
+                const { undertone, displayText } = getUndertoneFromValue(value);
+
+                // Update slider visual
+                updateSliderBackground(undertoneSlider);
+
+                // Update display text immediately for responsiveness
+                undertoneValue.textContent = displayText;
+
+                // Only update mascot when undertone actually changes
+                if (undertone !== lastUndertone) {
+                    lastUndertone = undertone;
+                    currentUndertone = undertone;
+                    
+                    // Clear any pending update
+                    if (undertoneDebounceTimer) {
+                        clearTimeout(undertoneDebounceTimer);
+                    }
+                    
+                    // Debounce the mascot update for smoothness
+                    undertoneDebounceTimer = setTimeout(() => {
+                        // Use updateUndertone to prevent glow multiplication
+                        if (mascot.updateUndertone) {
+                            mascot.updateUndertone(currentUndertone || null);
+                        } else {
+                            // Fallback to setEmotion if direct method not available
+                            mascot.setEmotion(currentEmotion, currentUndertone || undefined);
+                        }
+                        updateDisplay();
+                    }, 50); // Small delay for smooth transitions
+                }
+            });
+
+            document.getElementById('fps-toggle').addEventListener('click', function() {
+                showingFPS = !showingFPS;
+                document.getElementById('fps-display').classList.toggle('active', showingFPS);
+                // Keep icon only, no text
+                this.classList.toggle('active', showingFPS);
+                this.setAttribute('aria-pressed', showingFPS ? 'true' : 'false');
+                
+                // Start or stop FPS updates
+                if (showingFPS) {
+                    updateFPS();
+                }
+            });
+            
+            // Blinking toggle
+            let blinkingEnabled = true;
+            document.getElementById('blinking-toggle').addEventListener('click', function() {
+                blinkingEnabled = !blinkingEnabled;
+                // Keep icon only, no text
+                this.classList.toggle('active', blinkingEnabled);
+                this.setAttribute('aria-pressed', blinkingEnabled ? 'true' : 'false');
+
+                // Set blinking on the renderer (which actually controls the blinking)
+                if (mascot && mascot.renderer) {
+                    mascot.renderer.setBlinkingEnabled(blinkingEnabled);
+                }
+            });
+
+            // Gaze tracker toggle
+            let gazeTrackingEnabled = false;
+            document.getElementById('gaze-toggle').addEventListener('click', function() {
+                gazeTrackingEnabled = !gazeTrackingEnabled;
+                this.classList.toggle('active', gazeTrackingEnabled);
+                this.setAttribute('aria-pressed', gazeTrackingEnabled ? 'true' : 'false');
+
+                // Set gaze tracking on the mascot
+                if (mascot) {
+                    mascot.setGazeTracking(gazeTrackingEnabled);
+                }
+            });
+            
+            // Rhythm controls
+            document.getElementById('rhythm-toggle').addEventListener('click', function() {
+                const bpm = document.getElementById('bpm-slider').value;
+                const pattern = 'straight'; // Default pattern
+                
+                if (!window.rhythmActive) {
+                    // Starting rhythm
+                    const shapeMorpher = mascot?.shapeMorpher;
+                    
+                    // If audio is playing, reset detection to get fresh BPM
+                    if (shapeMorpher && audioPlayer && !audioPlayer.paused) {
+                        // Reset detection for fresh readings
+                        shapeMorpher.resetMusicDetection();
+                        console.log('🔄 Resampling BPM and time signature...');
+                        
+                        // Unlock BPM in rhythm integration for resampling
+                        if (rhythmIntegration.resampleBPM) {
+                            rhythmIntegration.resampleBPM();
+                        }
+                        
+                        // Clear the manual stop flag so auto-detection can work
+                        window.rhythmManuallyStoppedForCurrentAudio = false;
+                        
+                        // The BPM detection will auto-start rhythm when ready
+                        // For now, show pending state
+                        document.getElementById('rhythm-status').textContent = '⏳';
+                        this.classList.add('pending');
+                        
+                        // Fallback: start with slider value if no BPM detected after 2 seconds
+                        setTimeout(() => {
+                            if (!window.rhythmActive) {
+                                console.log('⏰ Timeout - starting with default BPM');
+                                rhythmIntegration.start(parseInt(bpm), pattern);
+                                window.rhythmActive = true;
+                                document.getElementById('rhythm-status').textContent = '⏸';
+                                this.classList.remove('pending');
+                                this.classList.add('active');
+                                // Update mascot core rotation
+                                if (mascot && mascot.setBPM) {
+                                    mascot.setBPM(parseInt(bpm));
+                                }
+                            }
+                        }, 2000);
+                    } else {
+                        // No audio playing, use slider value immediately
+                        rhythmIntegration.start(parseInt(bpm), pattern);
+                        window.rhythmActive = true;
+                        window.rhythmManuallyStoppedForCurrentAudio = false;
+                        document.getElementById('rhythm-status').textContent = '⏸';
+                        this.classList.add('active');
+                        // Update mascot core rotation
+                        if (mascot && mascot.setBPM) {
+                            mascot.setBPM(parseInt(bpm));
+                        }
+                    }
+                } else {
+                    // Stopping rhythm
+                    rhythmIntegration.stop();
+                    window.rhythmActive = false;
+                    window.rhythmManuallyStoppedForCurrentAudio = true;
+                    document.getElementById('rhythm-status').textContent = '▶';
+                    this.classList.remove('active');
+                    this.classList.remove('pending');
+                    
+                    // Stop core rotation
+                    if (mascot && mascot.setBPM) {
+                        mascot.setBPM(0);
+                    }
+                    
+                    // Also stop any pending detection
+                    if (mascot?.shapeMorpher) {
+                        // Don't reset, just mark as manually stopped
+                        console.log('🛑 Rhythm sync stopped');
+                    }
+                }
+            });
+            
+            // Function to update slider background based on value
+            function updateSliderBackground(slider) {
+                if (!slider) return; // Guard against null slider
+
+                const min = parseFloat(slider.min);
+                const max = parseFloat(slider.max);
+                const value = parseFloat(slider.value);
+                const percent = ((value - min) / (max - min)) * 100;
+
+                // Set CSS variable for gradient
+                slider.style.setProperty('--value', percent + '%');
+            }
+
+            // Sync slider and input field
+            const bpmSlider = document.getElementById('bpm-slider');
+            const bpmInput = document.getElementById('bpm-value');
+
+            // Initialize BPM slider background
+            updateSliderBackground(bpmSlider);
+
+            bpmSlider.addEventListener('input', function(e) {
+                const bpm = parseInt(e.target.value);
+                bpmInput.value = bpm;
+                updateSliderBackground(e.target);
+                // Only update mascot core rotation when rhythm is active
+                if (window.rhythmActive) {
+                    if (mascot && mascot.setBPM) {
+                        mascot.setBPM(bpm);
+                    }
+                    rhythmIntegration.setBPM(bpm);
+                }
+            });
+            
+            bpmInput.addEventListener('input', function(e) {
+                let bpm = parseInt(e.target.value);
+                if (isNaN(bpm)) bpm = 120;
+                if (bpm < 60) bpm = 60;
+                if (bpm > 360) bpm = 360;
+                e.target.value = bpm;
+                bpmSlider.value = bpm;
+
+                // Update slider visual
+                updateSliderBackground(bpmSlider);
+
+                // Only update mascot core rotation when rhythm is active
+                if (window.rhythmActive) {
+                    if (mascot && mascot.setBPM) {
+                        mascot.setBPM(bpm);
+                    }
+                    rhythmIntegration.setBPM(bpm);
+                }
+            });
+            
+            // Pattern select removed - using default pattern
+            
+            // BPM Modifier Logic
+            currentBPMModifier = window.currentBPMModifier || 1.0; // Use existing or default
+            
+            // Helper function to apply BPM modifier
+            function applyBPMModifier(baseBPM) {
+                const modifiedBPM = Math.round(baseBPM * currentBPMModifier);
+                // Clamp to valid range
+                return Math.max(60, Math.min(360, modifiedBPM));
+            }
+            
+            // Override rhythmIntegration.start to apply modifier
+            const originalRhythmStart = rhythmIntegration.start.bind(rhythmIntegration);
+            rhythmIntegration.start = function(bpm, pattern) {
+                const modifiedBPM = applyBPMModifier(bpm);
+                console.log(`🎵 BPM Modifier: ${bpm} × ${currentBPMModifier} = ${modifiedBPM}`);
+                
+                // Update UI to show modified BPM
+                document.getElementById('bpm-value').value = modifiedBPM;
+                document.getElementById('bpm-slider').value = modifiedBPM;
+                const percent = ((modifiedBPM - 60) / (360 - 60)) * 100;
+                document.getElementById('bpm-slider').style.background = `linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) ${percent}%, rgba(255,255,255,0.1) ${percent}%, rgba(255,255,255,0.1) 100%)`;
+                
+                // Call original with modified BPM
+                originalRhythmStart(modifiedBPM, pattern);
+                window.rhythmActive = true;
+                
+                // Update mascot
+                if (mascot && mascot.setBPM) {
+                    mascot.setBPM(modifiedBPM);
+                }
+                
+                // Update UI
+                const rhythmStatus = document.getElementById('rhythm-status');
+                if (rhythmStatus) {
+                    rhythmStatus.textContent = '⏸';
+                }
+                const rhythmToggle = document.getElementById('rhythm-toggle');
+                if (rhythmToggle) {
+                    rhythmToggle.classList.add('active');
+                    rhythmToggle.classList.remove('pending');
+                }
+            };
+            
+            // BPM Modifier button handlers
+            document.querySelectorAll('.bpm-modifier-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active state
+                    document.querySelectorAll('.bpm-modifier-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Get the modifier value
+                    const modifier = parseFloat(this.dataset.modifier);
+                    const previousModifier = currentBPMModifier;
+                    currentBPMModifier = modifier;
+                    window.currentBPMModifier = modifier;
+                    
+                    // If rhythm is active, update it with the new modifier
+                    if (window.rhythmActive) {
+                        // Get the base BPM (reverse the previous modifier)
+                        const currentBPM = parseInt(document.getElementById('bpm-value').value);
+                        const baseBPM = Math.round(currentBPM / previousModifier);
+                        
+                        // Stop and restart with new modifier
+                        rhythmIntegration.stop();
+                        window.rhythmActive = false;
+                        
+                        // Small delay to ensure clean restart
+                        setTimeout(() => {
+                            rhythmIntegration.start(baseBPM, 'straight');
+                        }, 100);
+                    }
+                });
+            });
+            
+            document.getElementById('record-btn').addEventListener('click', function() {
+                isRecording = !isRecording;
+                this.innerHTML = isRecording ? '◼' : '●'; // Square for stop, circle for record
+                this.classList.toggle('active', isRecording);
+                this.classList.toggle('recording', isRecording);
+                this.setAttribute('aria-pressed', isRecording ? 'true' : 'false');
+                if (isRecording) mascot.startRecording(); else mascot.stopRecording();
+            });
+
+            
+            // Random emotion dice - function for reuse
+            function randomizeEmotion() {
+                const emotions = Array.from(document.querySelectorAll('.emotion-btn')).map(b => b.dataset.emotion);
+                const currentEmotion = document.querySelector('.emotion-btn.active')?.dataset.emotion;
+                const availableEmotions = emotions.filter(e => e !== currentEmotion);
+                if (availableEmotions.length === 0) return; // All are the same somehow
+                const randomEmotion = availableEmotions[Math.floor(Math.random() * availableEmotions.length)];
+                document.querySelector(`.emotion-btn[data-emotion="${randomEmotion}"]`).click();
+            }
+            
+            // Check if randomize button exists (might be removed in some layouts)
+            const randomizeBtn = document.getElementById('randomize-btn');
+            if (randomizeBtn) {
+                randomizeBtn.addEventListener('click', randomizeEmotion);
+            }
+            
+            // Random undertone - now using discrete slider values
+            function randomizeUndertone() {
+                const randomValue = Math.floor(Math.random() * 7) - 3; // -3 to 3
+                undertoneSlider.value = randomValue;
+                updateSliderBackground(undertoneSlider);
+                undertoneSlider.dispatchEvent(new Event('input'));
+            }
+            
+            // Random shape dice
+            document.getElementById('randomize-shape-btn').addEventListener('click', () => {
+                const shapes = Array.from(document.querySelectorAll('.shape-btn')).map(b => b.dataset.shape);
+                const currentShape = document.querySelector('.shape-btn.active')?.dataset.shape;
+                const availableShapes = shapes.filter(s => s !== currentShape);
+                if (availableShapes.length === 0) return;
+                const randomShape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
+                document.querySelector(`.shape-btn[data-shape="${randomShape}"]`).click();
+            });
+            
+            // Random main gesture dice (all gestures)
+            document.getElementById('randomize-gesture-btn').addEventListener('click', () => {
+                const allGestures = Array.from(document.querySelectorAll('.gesture-btn')).map(b => b.dataset.gesture);
+                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
+                const availableGestures = allGestures.filter(g => !activeGestures.includes(g));
+                if (availableGestures.length === 0) return;
+                const randomGesture = availableGestures[Math.floor(Math.random() * availableGestures.length)];
+                document.querySelector(`.gesture-btn[data-gesture="${randomGesture}"]`).click();
+            });
+            
+            // Random overlayable gesture dice  
+            document.getElementById('randomize-overlayable-btn').addEventListener('click', () => {
+                const overlayableGestures = ['wave', 'point', 'nod', 'shake', 'lean', 'tilt', 'reach', 'breathe', 'float', 'rain', 'runningman', 'charleston'];
+                // Get currently active gesture if any
+                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
+                const availableGestures = overlayableGestures.filter(g => !activeGestures.includes(g));
+                if (availableGestures.length === 0) return;
+                const randomGesture = availableGestures[Math.floor(Math.random() * availableGestures.length)];
+                document.querySelector(`.gesture-btn[data-gesture="${randomGesture}"]`).click();
+            });
+            
+            // Random dance dice
+            document.getElementById('randomize-dance-btn').addEventListener('click', () => {
+                const danceGestures = ['bounce', 'sway', 'headBob', 'wiggle', 'spin', 'hula', 'orbit', 'groove', 'jump'];
+                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
+                const availableDances = danceGestures.filter(g => !activeGestures.includes(g));
+                if (availableDances.length === 0) return;
+                const randomDance = availableDances[Math.floor(Math.random() * availableDances.length)];
+                document.querySelector(`.gesture-btn[data-gesture="${randomDance}"]`).click();
+            });
+            
+            // Random chain dice
+            document.getElementById('randomize-chain-btn').addEventListener('click', () => {
+                const chains = Array.from(document.querySelectorAll('.chain-btn')).map(b => b.dataset.chain);
+                const currentChain = document.querySelector('.chain-btn.active')?.dataset.chain;
+                const availableChains = chains.filter(c => c !== currentChain);
+                if (availableChains.length === 0) return;
+                const randomChain = availableChains[Math.floor(Math.random() * availableChains.length)];
+                document.querySelector(`.chain-btn[data-chain="${randomChain}"]`).click();
+            });
+            
+            // Random glow dice
+            document.getElementById('randomize-glow-btn').addEventListener('click', () => {
+                const glowGestures = ['sparkle', 'pulse', 'glow', 'flash', 'shimmer', 'flicker'];
+                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
+                const availableGlows = glowGestures.filter(g => !activeGestures.includes(g));
+                if (availableGlows.length === 0) return;
+                const randomGlow = availableGlows[Math.floor(Math.random() * availableGlows.length)];
+                document.querySelector(`.gesture-btn[data-gesture="${randomGlow}"]`).click();
+            });
+            
+            // Master dice - roll everything!
+            document.getElementById('randomize-all-btn').addEventListener('click', () => {
+                // Roll emotion and undertone (no dice buttons for these)
+                randomizeEmotion();
+                setTimeout(() => randomizeUndertone(), 100);
+                
+                // Find and trigger ALL dice buttons on the page
+                const allDiceButtons = Array.from(document.querySelectorAll('.dice-btn'));
+                
+                // Trigger each dice with a slight delay for visual cascade effect
+                allDiceButtons.forEach((btn, index) => {
+                    setTimeout(() => {
+                        btn.click();
+                    }, (index + 2) * 100); // Start at index+2 since emotion/undertone go first
+                });
+            });
+
+            // Master Rotation Slider
+            const rotationSlider = document.getElementById('rotation-slider-full');
+            const rotationValue = document.getElementById('rotation-value');
+            const rotationIndicatorDot = document.getElementById('rotation-indicator');
+            const rotationStopBtn = document.getElementById('rotation-stop');
+            let rotationDecelerationInterval = null;
+
+            function setRotationSpeed(value) {
+                const velocity = parseInt(value); // Direct velocity in degrees per frame
+
+                // Update speed display
+                if (rotationValue) {
+                    rotationValue.textContent = velocity;
+                }
+
+                // Update rotation indicator
+                if (rotationIndicatorDot) {
+                    if (velocity === 0) {
+                        rotationIndicatorDot.style.animation = 'none';
+                    } else if (velocity < 0) {
+                        // CCW rotation
+                        const duration = Math.max(0.5, 20 / Math.abs(velocity));
+                        rotationIndicatorDot.style.animation = `rotate-ccw ${duration}s linear infinite`;
+                    } else {
+                        // CW rotation
+                        const duration = Math.max(0.5, 20 / Math.abs(velocity));
+                        rotationIndicatorDot.style.animation = `rotate-cw ${duration}s linear infinite`;
+                    }
+                }
+
+                // Update slider background
+                updateSliderBackground(rotationSlider);
+
+                // Set rotation speed in DEGREES per frame
+                if (mascot && mascot.setRotationSpeed) {
+                    mascot.setRotationSpeed(velocity);
+                }
+            }
+
+            if (rotationSlider) {
+                rotationSlider.addEventListener('input', () => {
+                    // Clear any ongoing deceleration
+                    if (rotationDecelerationInterval) {
+                        clearInterval(rotationDecelerationInterval);
+                        rotationDecelerationInterval = null;
+                    }
+
+                    // Cancel any braking when slider is moved
+                    if (mascot && mascot.renderer && mascot.renderer.rotationBrake) {
+                        mascot.renderer.rotationBrake.stop();
+                    }
+
+                    const value = parseInt(rotationSlider.value);
+                    setRotationSpeed(value);
+                });
+
+                // Initialize rotation slider background
+                updateSliderBackground(rotationSlider);
+            }
+
+            // Stop button with smooth deceleration using RotationBrake system
+            if (rotationStopBtn) {
+                rotationStopBtn.addEventListener('click', async () => {
+                    // Check if mascot and renderer exist
+                    if (!mascot || !mascot.renderer || !mascot.renderer.rotationBrake) {
+                        console.warn('RotationBrake not available');
+                        return;
+                    }
+
+                    // Do nothing if not moving or already braking
+                    const currentSpeed = mascot.renderer.state.rotationSpeed || 0;
+                    if (Math.abs(currentSpeed) < 0.001 || mascot.renderer.rotationBrake.isBraking()) {
+                        return;
+                    }
+
+                    // Add visual feedback
+                    rotationStopBtn.classList.add('braking');
+
+                    // Reset slider immediately for visual feedback
+                    rotationSlider.value = 0;
+                    if (rotationValue) {
+                        rotationValue.textContent = '0';
+                    }
+
+                    // Start braking to upright position
+                    await mascot.renderer.rotationBrake.brakeToUpright({
+                        onProgress: (progress, speed, angle) => {
+                            // Update rotation indicator based on virtual speed
+                            if (rotationIndicatorDot) {
+                                if (Math.abs(speed) < 0.1) {
+                                    rotationIndicatorDot.style.animation = 'none';
+                                } else {
+                                    const duration = Math.max(0.5, 2 / Math.abs(speed / (Math.PI * 2)));
+                                    if (speed > 0) {
+                                        rotationIndicatorDot.style.animation = `rotate-cw ${duration}s linear infinite`;
+                                    } else {
+                                        rotationIndicatorDot.style.animation = `rotate-ccw ${duration}s linear infinite`;
+                                    }
+                                }
+                            }
+                        },
+                        onComplete: () => {
+                            // Ensure everything is reset
+                            if (rotationIndicatorDot) {
+                                rotationIndicatorDot.style.animation = 'none';
+                            }
+                            rotationStopBtn.classList.remove('braking');
+                        }
+                    })
+                });
+            }
+
+            // Full-width rotation slider controls
+            const rotationSliderFull = document.getElementById('rotation-slider-full');
+            const rotationBrakeBtn = document.getElementById('rotation-brake-btn');
+            let isDragging = false;
+            let lastPointerTime = 0;
+
+            if (rotationSliderFull) {
+                // Helper function to check if click is on thumb
+                function isOnThumb(e) {
+                    const rect = rotationSliderFull.getBoundingClientRect();
+                    const sliderWidth = rect.width;
+                    const sliderValue = parseFloat(rotationSliderFull.value);
+                    const sliderMin = parseFloat(rotationSliderFull.min);
+                    const sliderMax = parseFloat(rotationSliderFull.max);
+
+                    // Calculate thumb center position
+                    const thumbCenterX = rect.left + (sliderWidth * ((sliderValue - sliderMin) / (sliderMax - sliderMin)));
+                    const clickX = e.clientX || (e.touches && e.touches[0].clientX);
+
+                    // Check if click is within thumb area (85px from center since thumb is 160px wide)
+                    return Math.abs(clickX - thumbCenterX) <= 85;
+                }
+
+                // Unified pointer events for mouse and touch
+                rotationSliderFull.addEventListener('pointerdown', (e) => {
+                    lastPointerTime = Date.now();
+                    if (isOnThumb(e)) {
+                        isDragging = true;
+                    }
+                });
+
+                rotationSliderFull.addEventListener('pointermove', (e) => {
+                    if (isDragging) {
+                        // Cancel any braking when dragging
+                        if (mascot && mascot.renderer && mascot.renderer.rotationBrake) {
+                            mascot.renderer.rotationBrake.stop();
+                        }
+                    }
+                });
+
+                rotationSliderFull.addEventListener('pointerup', (e) => {
+                    const timeSinceDown = Date.now() - lastPointerTime;
+
+                    // If it was a quick tap on the thumb and not dragging
+                    if (isOnThumb(e) && timeSinceDown < 200 && !isDragging) {
+                        // Brake to upright
+                        rotationSliderFull.value = 0;
+                        setRotationSpeed(0);
+
+                        if (mascot && mascot.renderer && mascot.renderer.rotationBrake) {
+                            mascot.renderer.rotationBrake.brakeToUpright({
+                                onProgress: (progress, virtualSpeed) => {
+                                    // Update slider to show virtual speed during braking
+                                    const sign = mascot.renderer.state.rotationSpeed > 0 ? 1 : -1;
+                                    rotationSliderFull.value = virtualSpeed * sign;
+                                },
+                                onComplete: () => {
+                                    rotationSliderFull.value = 0;
+                                    rotationBrakeBtn.classList.remove('braking');
+                                }
+                            });
+                            rotationBrakeBtn.classList.add('braking');
+                        }
+                    }
+
+                    isDragging = false;
+                });
+
+                // Handle input changes
+                rotationSliderFull.addEventListener('input', (e) => {
+                    const value = parseFloat(rotationSliderFull.value);
+                    setRotationSpeed(value);
+                });
+
+                // Brake button
+                if (rotationBrakeBtn) {
+                    rotationBrakeBtn.addEventListener('click', () => {
+                        rotationSliderFull.value = 0;
+                        setRotationSpeed(0);
+
+                        if (mascot && mascot.renderer && mascot.renderer.rotationBrake) {
+                            mascot.renderer.rotationBrake.brakeToUpright({
+                                onProgress: (progress, virtualSpeed) => {
+                                    // Update slider to show virtual speed during braking
+                                    const sign = mascot.renderer.state.rotationSpeed > 0 ? 1 : -1;
+                                    rotationSliderFull.value = virtualSpeed * sign;
+                                },
+                                onComplete: () => {
+                                    rotationSliderFull.value = 0;
+                                    rotationBrakeBtn.classList.remove('braking');
+                                }
+                            });
+                            rotationBrakeBtn.classList.add('braking');
+                        }
+                    });
+                }
+            }
+
+            // DJ Scratch Controls
+            const canvas = document.getElementById('emotive-canvas');
+            let scratching = false;
+            let lastAngle = 0;
+            let currentAngle = 0;
+            let angularVelocity = 0;
+            let momentum = 0;
+            let animationFrame = null;
+            let hasShownScratchTutorial = false;
+
+            // Helper to get angle from center to mouse position
+            function getAngleFromCenter(e, rect) {
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const x = (e.clientX || e.touches[0].clientX) - rect.left - centerX;
+                const y = (e.clientY || e.touches[0].clientY) - rect.top - centerY;
+                return Math.atan2(y, x);
+            }
+
+            // Start scratching
+            function startScratch(e) {
+                // Get click position and canvas dimensions
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.type.startsWith('touch') ?
+                    e.touches[0].clientX - rect.left :
+                    e.clientX - rect.left;
+                const clickY = e.type.startsWith('touch') ?
+                    e.touches[0].clientY - rect.top :
+                    e.clientY - rect.top;
+
+                // Calculate distance from center of canvas (mascot position)
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const distance = Math.sqrt(
+                    Math.pow(clickX - centerX, 2) +
+                    Math.pow(clickY - centerY, 2)
+                );
+
+                // Define rotation zone as a circle around the mascot
+                // Very small area - max 1/3 of the animation frame width
+                const rotationRadius = rect.width / 6; // Half of 1/3 width = 1/6 width for radius
+
+                // Check if click is outside the rotation circle
+                if (distance > rotationRadius) {
+                    // Click is outside rotation area, don't start rotation
+                    return;
+                }
+
+                e.preventDefault();
+
+                // Show tutorial on first interaction
+                if (!hasShownScratchTutorial) {
+                    showScratchTutorial();
+                }
+
+                scratching = true;
+                lastAngle = getAngleFromCenter(e, rect);
+                currentAngle = lastAngle;
+                angularVelocity = 0;
+
+                // Stop any momentum animation
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                    animationFrame = null;
+                }
+
+                // Add visual indicator and ensure pointer events stay on
+                canvas.style.cursor = 'grabbing';
+                canvas.style.pointerEvents = 'auto';
+            }
+
+            // Update scratch
+            function updateScratch(e) {
+                if (!scratching) return;
+                e.preventDefault();
+
+                const rect = canvas.getBoundingClientRect();
+                currentAngle = getAngleFromCenter(e, rect);
+
+                // Calculate angular change
+                let deltaAngle = currentAngle - lastAngle;
+
+                // Handle wrap-around
+                if (deltaAngle > Math.PI) {
+                    deltaAngle -= Math.PI * 2;
+                } else if (deltaAngle < -Math.PI) {
+                    deltaAngle += Math.PI * 2;
+                }
+
+                // Calculate angular velocity (radians per frame)
+                angularVelocity = deltaAngle * 0.8 + angularVelocity * 0.2; // Smooth it
+
+                // Apply direct rotation
+                if (mascot) {
+                    const currentRotation = mascot.renderer ? mascot.renderer.state.manualRotation : 0;
+                    mascot.setRotationAngle(currentRotation + deltaAngle);
+                }
+
+                lastAngle = currentAngle;
+            }
+
+            // End scratch
+            function endScratch() {
+                if (!scratching) return;
+                scratching = false;
+
+                // Reset cursor based on current mouse position
+                const rect = canvas.getBoundingClientRect();
+                if (e.type.startsWith('touch')) {
+                    canvas.style.cursor = 'default';
+                } else {
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const distance = Math.sqrt(
+                        Math.pow(mouseX - centerX, 2) +
+                        Math.pow(mouseY - centerY, 2)
+                    );
+                    const rotationRadius = rect.width / 6;
+                    canvas.style.cursor = distance <= rotationRadius ? 'grab' : 'default';
+                }
+
+                // Transfer angular velocity to momentum
+                momentum = angularVelocity * 20; // Scale up for momentum effect
+
+                // Start momentum animation
+                animateMomentum();
+            }
+
+            // Momentum animation
+            function animateMomentum() {
+                if (Math.abs(momentum) < 0.001) {
+                    momentum = 0;
+                    return;
+                }
+
+                // Apply friction
+                momentum *= 0.95;
+
+                // Apply momentum to rotation
+                if (mascot) {
+                    mascot.setRotationSpeed(momentum);
+                }
+
+                animationFrame = requestAnimationFrame(animateMomentum);
+            }
+
+            // Rotation tutorial indicator
+            let rotationIndicator = null;
+
+            function showScratchTutorial() {
+                if (hasShownScratchTutorial || rotationIndicator) return;
+                hasShownScratchTutorial = true;
+
+                rotationIndicator = document.createElement('div');
+                rotationIndicator.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: var(--size-full);
+                    height: var(--size-full);
+                    pointer-events: none;
+                    z-index: var(--z-header);
+                `;
+
+                // Create tutorial message
+                const tutorialText = document.createElement('div');
+                tutorialText.style.cssText = `
+                    position: absolute;
+                    top: 25%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    color: var(--accent-primary);
+                    font-family: var(--font-heading);
+                    font-size: var(--text-lg);
+                    font-weight: var(--font-bold);
+                    text-transform: uppercase;
+                    letter-spacing: var(--spacing-letter-widest);
+                    text-align: center;
+                    padding: var(--spacing-md) var(--spacing-xl);
+                    border: var(--border-accent);
+                    background: var(--bg-black-80);
+                    box-shadow: 0 0 30px var(--accent-glow), inset 0 0 20px rgba(0, 255, 255, 0.1);
+                    opacity: 0;
+                    animation: tutorial-cta-pulse 0.8s ease-out forwards;
+                `;
+                tutorialText.innerHTML = '<span style="font-size: var(--text-xl);">DRAG TO SPIN</span>';
+                rotationIndicator.appendChild(tutorialText);
+
+                // Create just one arrow at the top
+                const arrow = document.createElement('img');
+                arrow.className = 'rotation-arrow';
+                arrow.src = '../assets/spin-arrows.svg';
+
+                // Position at top of circle
+                const angle = -Math.PI / 2; // Top position (-90 degrees)
+                const radiusPercent = 48;
+                const x = 50 + radiusPercent * Math.cos(angle); // Should be 50 (center x)
+                const y = 50 + radiusPercent * Math.sin(angle); // Should be 2 (top)
+
+                arrow.style.cssText = `
+                    position: absolute;
+                    top: ${y}%;
+                    left: ${x}%;
+                    transform: translate(-50%, -50%) scale(0);
+                    width: 180px;
+                    height: 45px;
+                    filter: brightness(0) invert(1);
+                    opacity: 0;
+                    pointer-events: none;
+                    animation: arrow-pulse-in 0.6s ease-out forwards;
+                `;
+
+                rotationIndicator.appendChild(arrow);
+
+                // Add CSS animations
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes arrow-pulse-in {
+                        0% {
+                            transform: translate(-50%, -50%) scale(0);
+                            opacity: 0;
+                        }
+                        50% {
+                            transform: translate(-50%, -50%) scale(1.5);
+                            opacity: 1;
+                        }
+                        100% {
+                            transform: translate(-50%, -50%) scale(1);
+                            opacity: var(--opacity-80);
+                        }
+                    }
+                    @keyframes tutorial-cta-pulse {
+                        0% {
+                            opacity: 0;
+                            transform: translateX(-50%) scale(0.8);
+                        }
+                        50% {
+                            opacity: 1;
+                            transform: translateX(-50%) scale(1.05);
+                        }
+                        75% {
+                            transform: translateX(-50%) scale(0.98);
+                        }
+                        100% {
+                            opacity: 1;
+                            transform: translateX(-50%) scale(1);
+                        }
+                    }
+                    @keyframes tutorial-fade-out {
+                        from {
+                            opacity: 1;
+                            transform: translateX(-50%) scale(1);
+                        }
+                        to {
+                            opacity: 0;
+                            transform: translateX(-50%) scale(0.9);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                canvas.parentElement.appendChild(rotationIndicator);
+
+                // Start slow rotation animation
+                let rotationAngle = 0;
+                const rotateInterval = setInterval(() => {
+                    rotationAngle += 0.5;
+                    rotationIndicator.style.transform = `rotate(${rotationAngle}deg)`;
+                }, 16);
+
+                // Start fade out after 1.5 seconds (halfway through rotation)
+                setTimeout(() => {
+                    // Gradual fade out while still rotating
+                    const arrows = rotationIndicator.querySelectorAll('.rotation-arrow');
+                    arrows.forEach(arrow => {
+                        // First ensure the arrow is visible
+                        arrow.style.animation = 'none';
+                        arrow.style.opacity = '0.8';  // Set to current visible state
+                        arrow.style.transform = 'translate(-50%, -50%) scale(1)';  // Maintain scale
+
+                        // Then apply transition and fade
+                        setTimeout(() => {
+                            arrow.style.transition = 'opacity 1s ease-out';
+                            arrow.style.opacity = '0';
+                        }, 50);
+                    });
+
+                    tutorialText.style.animation = 'none';
+                    tutorialText.style.opacity = '1';
+                    setTimeout(() => {
+                        tutorialText.style.transition = 'opacity 1s ease-out';
+                        tutorialText.style.opacity = '0';
+                    }, 50);
+                }, 1500);
+
+                // Stop rotation and remove after 3 seconds total
+                setTimeout(() => {
+                    clearInterval(rotateInterval);
+
+                    // Remove element
+                    if (rotationIndicator && rotationIndicator.parentElement) {
+                        rotationIndicator.parentElement.removeChild(rotationIndicator);
+                        rotationIndicator = null;
+                    }
+                }, 3000);
+            }
+
+            // HUD Tooltip System
+            const hudTooltip = document.getElementById('hud-tooltip');
+            let tooltipTimeout = null;
+
+            const tooltipTexts = {
+                'load-audio-btn': 'Play Demo Song',
+                'load-song-btn': 'Load Audio File',
+                'blinking-toggle': 'Toggle Blinking',
+                'gaze-toggle': 'Toggle Gaze Tracking',
+                'fps-toggle': 'Show FPS Counter',
+                'record-btn': 'Record Audio',
+                'randomize-all-btn': 'Randomize Everything'
+            };
+
+            function showTooltip(text, activated = false) {
+                clearTimeout(tooltipTimeout);
+                hudTooltip.textContent = text;
+                hudTooltip.classList.add('visible');
+
+                if (activated) {
+                    hudTooltip.classList.add('activated');
+                    // Remove activation animation after 300ms
+                    setTimeout(() => {
+                        hudTooltip.classList.remove('activated');
+                    }, 300);
+                    // Start fading out after 1.5 seconds
+                    tooltipTimeout = setTimeout(() => {
+                        hudTooltip.classList.remove('visible');
+                    }, 1500);
+                }
+            }
+
+            function hideTooltip() {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = setTimeout(() => {
+                    hudTooltip.classList.remove('visible');
+                    hudTooltip.classList.remove('activated');
+                }, 100);
+            }
+
+            // Add tooltip handlers to system control buttons
+            document.querySelectorAll('.system-controls .sci-fi-btn').forEach(btn => {
+                const tooltipText = tooltipTexts[btn.id] || btn.getAttribute('aria-label') || '';
+
+                btn.addEventListener('mouseenter', () => {
+                    if (tooltipText) {
+                        showTooltip(tooltipText);
+                    }
+                });
+
+                btn.addEventListener('mouseleave', () => {
+                    hideTooltip();
+                });
+
+                // Show activated animation on click
+                btn.addEventListener('click', () => {
+                    if (tooltipText) {
+                        const isActive = btn.classList.contains('active');
+                        const statusText = btn.id === 'blinking-toggle' ?
+                            (isActive ? 'Blinking Enabled' : 'Blinking Disabled') :
+                            btn.id === 'gaze-toggle' ?
+                            (isActive ? 'Gaze Tracking On' : 'Gaze Tracking Off') :
+                            btn.id === 'fps-toggle' ?
+                            (isActive ? 'FPS Display On' : 'FPS Display Off') :
+                            btn.id === 'record-btn' ?
+                            (isActive ? 'Recording Started' : 'Recording Stopped') :
+                            tooltipText;
+
+                        showTooltip(statusText, true);
+                    }
+                });
+            });
+
+            // Add event listeners
+            // Remove default grab cursor - will be set dynamically on hover
+            canvas.style.cursor = 'default';
+
+            // Function to check if point is in rotation area
+            function isInRotationArea(x, y, rect) {
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const distance = Math.sqrt(
+                    Math.pow(x - centerX, 2) +
+                    Math.pow(y - centerY, 2)
+                );
+                const rotationRadius = rect.width / 6;
+                return distance <= rotationRadius;
+            }
+
+            // Add mousemove to update cursor and pointer-events based on position
+            document.addEventListener('mousemove', (e) => {
+                if (scratching) return; // Don't change while dragging
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                // Check if mouse is over canvas at all
+                if (mouseX >= 0 && mouseX <= rect.width && mouseY >= 0 && mouseY <= rect.height) {
+                    if (isInRotationArea(mouseX, mouseY, rect)) {
+                        // Enable pointer events and show grab cursor in rotation area
+                        canvas.style.pointerEvents = 'auto';
+                        canvas.style.cursor = 'grab';
+                    } else {
+                        // Disable pointer events outside rotation area
+                        canvas.style.pointerEvents = 'none';
+                        canvas.style.cursor = 'default';
+                    }
+                } else {
+                    // Mouse is outside canvas
+                    canvas.style.pointerEvents = 'none';
+                    canvas.style.cursor = 'default';
+                }
+            });
+
+            // Mouse events
+            canvas.addEventListener('mousedown', startScratch);
+            document.addEventListener('mousemove', updateScratch);
+            document.addEventListener('mouseup', endScratch);
+
+            // Touch events
+            canvas.addEventListener('touchstart', startScratch);
+            document.addEventListener('touchmove', updateScratch);
+            document.addEventListener('touchend', endScratch);
+
+            // Shape morphing controls
+            document.querySelectorAll('.shape-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const shape = btn.dataset.shape;
+                    const mode = 'hybrid'; // Default to hybrid mode
+                    
+                    if (mascot) {
+                        // Visual feedback
+                        document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        
+                        // Get current shape for transition detection
+                        const currentShape = mascot.shapeMorpher ? mascot.shapeMorpher.currentShape : null;
+                        
+                        // Faster transitions between lunar and solar
+                        const isLunarSolarTransition = 
+                            (currentShape === 'lunar' && shape === 'solar') ||
+                            (currentShape === 'solar' && shape === 'lunar');
+                        
+                        // Morph to new shape
+                        mascot.morphTo(shape, {
+                            duration: window.rhythmActive ? 'bar' : (isLunarSolarTransition ? 500 : 1000), // Faster for lunar-solar
+                            mode: mode,
+                            onBeat: window.rhythmActive
+                        });
+                    }
+                });
+            });
+            
+            // Audio controls
+            const audioFile = document.getElementById('audio-file');
+            const audioPlayer = document.getElementById('audio-player');
+            
+            // Set up audio player event listeners once
+            audioPlayer.addEventListener('play', async () => {
+                if (mascot) {
+                    // Reset music detection when audio starts playing
+                    if (mascot.shapeMorpher) {
+                        mascot.shapeMorpher.resetMusicDetection();
+                        // Clear the manual stop flag so rhythm can auto-start
+                        window.rhythmManuallyStoppedForCurrentAudio = false;
+                    }
+                    
+                    // Resume audio context if suspended
+                    if (mascot.audioAnalyzer && mascot.audioAnalyzer.audioContext) {
+                        await mascot.audioAnalyzer.resume();
+                    }
+                    mascot.connectAudio(audioPlayer);
+                    window.startAudioViz(); // Start the audio visualization
+                }
+            });
+            
+            audioPlayer.addEventListener('pause', () => {
+                window.stopAudioViz(); // Stop visualization when paused
+            });
+            
+            audioPlayer.addEventListener('ended', () => {
+                if (mascot) {
+                    mascot.disconnectAudio();
+                }
+                window.stopAudioViz(); // Stop the audio visualization
+                // Hide audio visualizer when audio ends (only on mobile portrait)
+                if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
+                    document.getElementById('audio-viz-section').style.display = 'none';
+                }
+            });
+            
+            // Play button - plays Electric Glow track
+            document.getElementById('load-audio-btn').addEventListener('click', () => {
+                audioPlayer.src = '../assets/Electric Glow (Remix).wav';
+                document.getElementById('audio-player-container').style.display = 'block';
+                document.getElementById('audio-viz-section').style.display = 'block';
+                audioPlayer.play();
+            });
+            
+            audioFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    audioPlayer.src = url;
+                    document.getElementById('audio-player-container').style.display = 'block';
+                    document.getElementById('audio-viz-section').style.display = 'block';
+                }
+            });
+            
+            // Music note button - opens file explorer
+            document.getElementById('load-song-btn').addEventListener('click', () => {
+                audioFile.click();
+            });
+            
+        }
+
+        function updateDisplay() {
+            document.getElementById('emotion-display').textContent = `EMOTION: ${currentEmotion.toUpperCase()}`;
+            document.getElementById('undertone-display').textContent = currentUndertone.toUpperCase() || 'STABLE';
+        }
+        
+        // Footer is now static, no animations needed
+        
+        // REMOVED - System controls always visible
+        function initSystemControlsAnimation() {
+            // Disabled - system controls no longer hide
+            return;
+            const systemControls = document.querySelector('.system-controls');
+            
+            // Check if we're on mobile phone portrait (small screens only)
+            function isMobileView() {
+                const isPortrait = window.innerHeight > window.innerWidth;
+                const isSmallScreen = window.innerWidth <= 480; // Only phones
+                return isPortrait && isSmallScreen;
+            }
+            
+            // Ensure system controls are visible on desktop/landscape
+            function updateSystemControlsVisibility() {
+                if (!isMobileView()) {
+                    // Always show on desktop/landscape
+                    systemControls.classList.remove('hidden', 'retracting', 'extending');
+                } else {
+                    // Apply scroll behavior on mobile
+                    handleScroll();
+                }
+            }
+            
+            let isAnimating = false;
+            let scrollTimeout;
+            let lastKnownScrollPosition = 0;
+            
+            function handleScroll() {
+                // Only apply scroll behavior on mobile
+                if (!isMobileView()) {
+                    systemControls.classList.remove('hidden', 'retracting', 'extending');
+                    return;
+                }
+                
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                
+                // Prevent animation conflicts
+                if (isAnimating) return;
+                
+                // Hide when scrolled down past threshold - trigger IMMEDIATELY
+                if (scrollTop > 5 && !systemControls.classList.contains('hidden') && !systemControls.classList.contains('retracting')) {
+                    isAnimating = true;
+                    systemControls.classList.remove('extending');
+                    systemControls.classList.add('retracting');
+                    
+                    setTimeout(() => {
+                        systemControls.classList.add('hidden');
+                        systemControls.classList.remove('retracting');
+                        isAnimating = false;
+                    }, 300); // Match the faster animation
+                    
+                    // Play pneumatic retraction sound if sound is enabled
+                    if (mascot && mascot.soundSystem && mascot.soundSystem.isEnabled) {
+                        // Smooth hiss then mechanical clunk
+                        mascot.soundSystem.playTone(180, 0.03, 150); // Smooth pneumatic hiss
+                        setTimeout(() => mascot.soundSystem.playTone(120, 0.08, 30), 550); // Deep thunk at end
+                    }
+                } 
+                // Only show when scrolled all the way back to top
+                else if (scrollTop <= 10 && systemControls.classList.contains('hidden') && !systemControls.classList.contains('extending')) {
+                    isAnimating = true;
+                    systemControls.classList.remove('hidden');
+                    systemControls.classList.remove('retracting');
+                    systemControls.classList.add('extending');
+                    
+                    setTimeout(() => {
+                        systemControls.classList.remove('extending');
+                        isAnimating = false;
+                    }, 600);
+                    
+                    // Play pneumatic extension sound if sound is enabled
+                    if (mascot && mascot.soundSystem && mascot.soundSystem.isEnabled) {
+                        // Smooth release then mechanical lock
+                        mascot.soundSystem.playTone(150, 0.03, 200); // Smooth air release
+                        setTimeout(() => mascot.soundSystem.playTone(100, 0.08, 30), 540); // Deep thunk lock
+                    }
+                }
+                
+                lastKnownScrollPosition = scrollTop;
+            }
+            
+            // Throttled scroll handler for better performance
+            let scrollTicking = false;
+            window.addEventListener('scroll', () => {
+                if (!scrollTicking) {
+                    scrollTicking = true;
+                    requestAnimationFrame(() => {
+                        handleScroll();
+                        scrollTicking = false;
+                    });
+                }
+            }, { passive: true });
+            
+            // Handle window resize to update visibility (debounced)
+            let resizeVisibilityTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeVisibilityTimeout);
+                resizeVisibilityTimeout = setTimeout(updateSystemControlsVisibility, 150);
+            }, { passive: true });
+            
+            // Initialize on load
+            updateSystemControlsVisibility();
+        }
+        
+        let lastFPSValue = -1;
+        function updateFPS() {
+            if (!showingFPS || !mascot) return;
+            
+            const metrics = mascot.getPerformanceMetrics();
+            const fps = Math.round(metrics.fps || 0);
+            
+            // Only update DOM if value changed
+            if (fps !== lastFPSValue) {
+                document.getElementById('fps-value').textContent = fps;
+                lastFPSValue = fps;
+            }
+            
+            // Continue updating while showing FPS
+            requestAnimationFrame(updateFPS);
+        }
+
+        init().catch(console.error);
+    </script>
+</body>
+</html>
