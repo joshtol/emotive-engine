@@ -104,8 +104,6 @@
             --pos-hero: 76px;
             --pos-hero-mobile: 58px;
             --pos-content-top: 70px;
-            --pos-hero-rotation: 126px;
-            --pos-hero-rotation-mobile: 98px;
             --pos-controls-bottom: 140px;
             --pos-edge-sm: 5px;
             --pos-edge-md: 10px;
@@ -409,12 +407,12 @@
 
         /* Theme Switcher */
         .theme-switcher {
-            position: absolute;
-            top: var(--pos-content-top);
-            right: var(--spacing-xl);
+            position: fixed;
+            top: calc(var(--pos-hero) + 65px);
+            right: calc(var(--control-width) + 35px);
             z-index: var(--z-overlay);
-            width: var(--size-icon-base);
-            height: var(--size-icon-base);
+            width: 42px;
+            height: 42px;
             cursor: pointer;
             pointer-events: auto; /* Ensure theme switcher is clickable */
             transition: transform var(--transition-slow);
@@ -428,10 +426,10 @@
         }
 
         .theme-icon {
-            width: var(--size-icon-md);
-            height: var(--size-icon-md);
+            width: 38px;
+            height: 38px;
             transition: transform var(--transition-slow);
-            opacity: var(--opacity-33);
+            opacity: 0.25;
         }
 
         .theme-switcher:hover .theme-icon {
@@ -459,273 +457,46 @@
 
         /* Hero spacer to push content below fixed hero bar */
         .hero-spacer {
-            height: var(--pos-hero-rotation); /* 76px hero + 50px rotation bar */
+            height: var(--pos-hero); /* Just hero bar height now */
             flex-shrink: 0;
-        }
-
-        /* Rotation control bar - only spans center area */
-        .rotation-control-bar {
-            position: fixed;
-            top: var(--pos-hero); /* Right below hero bar */
-            left: var(--control-width); /* Start after left menu */
-            right: var(--control-width); /* End before right menu */
-            width: auto;
-            height: var(--size-bar-height);
-            background: var(--color-black-95);
-            backdrop-filter: var(--blur-medium);
-            -webkit-backdrop-filter: var(--blur-medium);
-            z-index: var(--z-modal);
-            /* Removed borders for cleaner look */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Mobile portrait - full width */
-        @media (orientation: portrait) and (max-width: 480px) {
-            .rotation-control-bar {
-                top: var(--pos-hero-mobile); /* Below smaller mobile hero bar */
-                left: 0;
-                right: 0;
-                width: var(--size-full);
-                height: var(--size-bar-mobile); /* Smaller in mobile */
-            }
-        }
-
-        /* Landscape mode adjustment */
-        @media (orientation: landscape) and (max-height: 900px) {
-            .rotation-control-bar {
-                top: var(--pos-hero-mobile); /* Below smaller landscape hero bar */
-                left: var(--pos-menu-landscape); /* Match landscape menu width */
-                right: var(--pos-menu-landscape);
-                height: var(--size-bar-mobile); /* Smaller in landscape */
-            }
-        }
-
-        .rotation-control-content {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            width: 100%;
-            padding: 0;
-            position: relative;
-        }
-
-        .rotation-left-section {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            padding-right: var(--spacing-xl);
-        }
-
-        .rotation-center-section {
-            width: min(900px, 100vw - 40px); /* Match animation frame width */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 20px;
-        }
-
-        .rotation-right-section {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            gap: calc(var(--spacing-lg) - 1px);
-            padding-left: var(--spacing-xl);
-        }
-
-        .rotation-label-left,
-        .rotation-label-right {
-            color: var(--text-secondary);
-            font-size: var(--text-sm);
-            font-weight: var(--font-semibold);
-            text-transform: uppercase;
-            letter-spacing: var(--spacing-letter-wide);
-            min-width: var(--size-min-button);
-        }
-
-        .rotation-label-left {
-            text-align: right;
-        }
-
-        .rotation-slider-wrapper {
-            width: 100%;
-            position: relative;
-            padding: 15px 0; /* Increase padding to ensure full thumb is clickable */
-            overflow: visible;
-            z-index: var(--z-menu);
-        }
-
-        .rotation-slider-full {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: var(--size-thumb); /* Increase height to match thumb */
-            background: transparent;
-            outline: none;
-            position: relative;
-            margin: 0;
-            padding: 0;
-            cursor: pointer;
-            will-change: transform;
-            transform: translateZ(0); /* Force GPU acceleration */
-        }
-
-        /* Slider track */
-        .rotation-slider-full::-webkit-slider-runnable-track {
-            width: 100%;
-            height: var(--size-track);
-            cursor: pointer;
-            background: linear-gradient(to right,
-                #ef4444 0%,     /* Red for CCW */
-                #ef4444 45%,
-                #666666 45%,        /* Gray center zone */
-                #666666 55%,
-                #4ade80 55%,     /* Green for CW */
-                #4ade80 100%);
-            border-radius: var(--radius-md);
-            box-shadow: inset 0 2px 4px var(--shadow-dark),
-                        inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-            margin-top: var(--spacing-md); /* Center track vertically in the 30px height */
-        }
-
-        .rotation-slider-full::-moz-range-track {
-            width: 100%;
-            height: var(--size-track);
-            cursor: pointer;
-            background: linear-gradient(to right,
-                #ef4444 0%,
-                #ef4444 45%,
-                #666666 45%,
-                #666666 55%,
-                #4ade80 55%,
-                #4ade80 100%);
-            border-radius: var(--radius-md);
-            box-shadow: inset 0 2px 4px var(--shadow-dark),
-                        inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        /* Slider thumb - Extra wide for easy clicking */
-        .rotation-slider-full::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: var(--size-thumb-wide); /* Extra wide thumb */
-            height: var(--size-thumb);
-            border-radius: var(--radius-xl);
-            cursor: grab;
-            margin-top: -10px; /* Center thumb on track */
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.4),
-                inset 0 1px 2px rgba(255, 255, 255, 0.3);
-            transition: all var(--transition-fast);
-        }
-
-        .rotation-slider-full::-moz-range-thumb {
-            width: var(--size-thumb-wide);
-            height: var(--size-thumb);
-            border-radius: var(--radius-xl);
-            cursor: grab;
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.4),
-                inset 0 1px 2px rgba(255, 255, 255, 0.3);
-            transition: all var(--transition-fast);
-        }
-
-        .rotation-slider-full:active::-webkit-slider-thumb {
-            cursor: grabbing;
-            transform: scale(0.98); /* Consistent active scale */
-            box-shadow:
-                0 1px 4px rgba(0, 0, 0, 0.5),
-                inset 0 1px 2px rgba(255, 255, 255, 0.2);
-        }
-
-        .rotation-slider-full:active::-moz-range-thumb {
-            cursor: grabbing;
-            transform: scale(0.98); /* Consistent active scale */
-            box-shadow:
-                0 1px 4px rgba(0, 0, 0, 0.5),
-                inset 0 1px 2px rgba(255, 255, 255, 0.2);
-        }
-
-        /* Center indicator line */
-        .center-indicator {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: var(--size-divider);
-            background: rgba(255, 255, 255, var(--opacity-strong));
-            pointer-events: none;
-            transform: translateX(-50%);
-            z-index: var(--z-base);
-        }
-
-        /* Brake button */
-        .rotation-brake-btn {
-            padding: var(--spacing-base) var(--spacing-lg);
-            background: var(--gradient-red-dark);
-            color: white;
-            border: 2px solid var(--color-red-border);
-            border-radius: var(--radius-md);
-            font-weight: var(--font-bold);
-            font-size: var(--text-sm);
-            text-transform: uppercase;
-            letter-spacing: var(--spacing-letter-wide);
-            cursor: pointer;
-            transition: all var(--transition-base);
-            box-shadow: 0 2px 4px var(--shadow-medium);
-        }
-
-        .rotation-brake-btn:hover {
-            background: var(--gradient-red);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Keep unique */
-        }
-
-        .rotation-brake-btn:active {
-            transform: translateY(0);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .rotation-brake-btn.braking {
-            background: var(--gradient-amber);
-            border-color: var(--color-accent-amber);
-            animation: pulse-brake 1s infinite; /* Keep specific animation timing */
-        }
-
-        @keyframes pulse-brake {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
         }
 
         /* Shape Controls Hero Bar */
         .shape-controls-hero {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            background: var(--color-black-95);
+            bottom: var(--pos-footer);
+            left: var(--control-width);
+            right: var(--control-width);
+            width: auto;
+            background: rgba(0, 0, 0, 0.3);
             backdrop-filter: var(--blur-medium);
             -webkit-backdrop-filter: var(--blur-medium);
-            z-index: var(--z-header);
-            box-shadow: 0 2px 20px var(--shadow-dark);
+            z-index: 50;
+            box-shadow: 0 -2px 20px var(--shadow-dark);
+            pointer-events: auto;
         }
         
         .shape-controls-hero .shape-controls {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-            gap: calc(var(--spacing-md) + 2px);
-            padding: var(--spacing-md) var(--spacing-xl);
+            gap: min(calc(var(--spacing-md) + 2px), 1.5vw);
+            padding: var(--spacing-md) max(var(--spacing-md), 2vw);
             width: 100%;
             border-radius: 0;
+            pointer-events: auto;
+            position: relative;
+            z-index: 1;
         }
         
         .shape-controls-hero .shape-btn {
-            width: var(--size-icon-xl);
-            height: var(--size-icon-xl);
-            font-size: var(--text-2xl);
+            width: min(60px, 8vw);
+            height: min(60px, 8vw);
+            min-width: 40px;
+            min-height: 40px;
+            aspect-ratio: 1 / 1;
+            font-size: clamp(1.2rem, 2.5vw, calc(var(--text-2xl) * 1.2));
             border-radius: var(--radius-lg);
             background: var(--bg-black-60);
             transition: all var(--transition-smooth);
@@ -735,6 +506,12 @@
             padding: 0;
             margin: 0;
             box-sizing: border-box;
+            position: relative;
+            z-index: 2;
+            pointer-events: auto;
+            cursor: pointer;
+            flex-shrink: 1;
+            flex-grow: 0;
         }
         
         .shape-controls-hero .shape-btn:hover {
@@ -749,14 +526,102 @@
         }
         
         .shape-controls-hero .dice-btn {
-            width: var(--size-icon-xl);
-            height: var(--size-icon-xl);
-            font-size: var(--text-2xl-plus-2);
+            width: min(60px, 8vw);
+            height: min(60px, 8vw);
+            min-width: 40px;
+            min-height: 40px;
+            aspect-ratio: 1 / 1;
+            font-size: clamp(1.3rem, 2.7vw, calc(var(--text-2xl) * 1.3));
             border: none;
             outline: none;
             background: transparent;
+            position: relative;
+            z-index: 2;
+            pointer-events: auto;
+            cursor: pointer;
+            flex-shrink: 1;
         }
         
+
+        /* Move side menus below animation frame on mobile */
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .controls-left,
+            .controls-right {
+                position: relative;
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+                order: 2; /* Move below center container */
+            }
+
+            .center-container {
+                order: 1; /* Display frame first */
+                height: 60vh; /* Fixed height for animation frame */
+                min-height: 400px;
+            }
+
+            .display-and-controls {
+                height: 100%;
+            }
+
+            .display-container {
+                height: 100%;
+            }
+
+            /* Fix system controls positioning on mobile */
+            .system-controls {
+                left: 0 !important;
+                right: 0 !important;
+                width: 100%;
+                padding: var(--spacing-sm);
+                gap: var(--spacing-xs);
+                overflow-x: auto;
+                justify-content: flex-start;
+            }
+
+            .system-controls .sci-fi-btn {
+                min-width: 36px;
+                width: 36px;
+                height: 36px;
+                font-size: var(--text-base);
+            }
+
+            /* Stack control sections horizontally on mobile */
+            .controls-left,
+            .controls-right {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: var(--spacing-md);
+                gap: var(--spacing-md);
+            }
+
+            .control-section {
+                flex: 1 1 45%; /* Two columns on mobile */
+                min-width: 280px;
+            }
+        }
+
+        /* Even more adjustment for very narrow viewports */
+        @media (max-width: 600px) {
+            .info-display {
+                bottom: 200px !important; /* Push up even more */
+                left: 20px !important;
+                right: 20px !important;
+            }
+
+            .fps-display {
+                bottom: 240px !important; /* Push up even more */
+                right: 20px !important;
+            }
+        }
+
         /* 2. Main Layout Structure (Mobile First) */
         body {
             position: relative;
@@ -777,16 +642,23 @@
             top: 0; /* NO OFFSET */
             z-index: var(--z-overlay);
             transform-origin: center center;
+            pointer-events: none;
         }
         .controls-left {
             order: 2;
-            background-color: var(--panel-bg);
+            background: linear-gradient(180deg,
+                rgba(0, 0, 0, 0.2) 0%,
+                rgba(0, 0, 0, 0.4) 100%);
             transform-origin: left center;
+            z-index: 20; /* Higher than system bar (10) */
         }
         .controls-right {
             order: 3;
-            background-color: var(--panel-bg);
+            background: linear-gradient(180deg,
+                rgba(0, 0, 0, 0.2) 0%,
+                rgba(0, 0, 0, 0.4) 100%);
             transform-origin: right center;
+            z-index: 20; /* Higher than system bar (10) */
         }
 
         /* 3. Central Display Unit */
@@ -794,6 +666,7 @@
             display: flex;
             flex-direction: column;
             pointer-events: none; /* Don't block clicks */
+            position: relative; /* Create positioning context for corner brackets */
         }
         .display-container {
             width: 100%;
@@ -805,7 +678,11 @@
             display: flex;
             align-items: stretch;
             justify-content: stretch;
-            pointer-events: auto; /* Container can receive events */
+            pointer-events: none; /* Don't block clicks */
+        }
+
+        .display-container canvas {
+            pointer-events: auto; /* But canvas can receive events */
         }
         
         #emotive-canvas {
@@ -819,7 +696,14 @@
             .system-controls {
                 left: 0;
                 right: 0;
-                bottom: var(--pos-footer); /* Keep above footer */
+                top: 0; /* At top on mobile */
+            }
+
+            /* Shape controls hero full width on mobile */
+            .shape-controls-hero {
+                left: 0;
+                right: 0;
+                bottom: var(--pos-footer);
             }
 
             /* Adjust corner brackets for mobile portrait */
@@ -850,13 +734,18 @@
                 padding: var(--spacing-base) var(--spacing-md);
                 gap: calc(var(--spacing-sm) * 1.5);
             }
-            
+
             .shape-controls-hero .shape-btn {
                 width: var(--size-icon-lg);
                 height: var(--size-icon-lg);
+                min-width: var(--size-icon-lg);
+                min-height: var(--size-icon-lg);
+                max-width: var(--size-icon-lg);
+                max-height: var(--size-icon-lg);
+                aspect-ratio: 1 / 1;
                 font-size: var(--text-xl-plus-1);
             }
-            
+
             .shape-controls-hero .dice-btn {
                 width: var(--size-icon-lg);
                 height: var(--size-icon-lg);
@@ -868,11 +757,11 @@
             }
             
             .hero-spacer {
-                height: var(--pos-hero-rotation-mobile); /* Hero bar (58px) + rotation bar (40px) in portrait/mobile */
+                height: var(--pos-hero-mobile); /* Hero bar (58px) in portrait/mobile */
             }
             
             .main-layout {
-                min-height: calc(100vh - var(--pos-hero-rotation-mobile)); /* Account for hero + rotation bar */
+                min-height: calc(100vh - var(--pos-hero-mobile)); /* Account for hero bar */
             }
             
             .center-container {
@@ -902,22 +791,22 @@
             pointer-events: none; /* Don't block clicks */
         }
         .system-controls {
-            position: fixed; /* Fixed positioning to stick to bottom */
-            bottom: var(--pos-footer); /* Position above footer */
-            left: var(--control-width); /* Start after left menu */
-            right: var(--control-width); /* End before right menu */
+            position: fixed; /* Fixed positioning to stick to top */
+            top: calc(var(--pos-hero) - 1px); /* Slightly overlap with corner top edge */
+            left: var(--control-width) !important; /* Align with display container */
+            right: var(--control-width) !important; /* Align with display container */
             display: flex;
             justify-content: center;
             align-items: center;
             gap: var(--spacing-base);
             padding: var(--spacing-md);
             height: auto;
-            /* Removed backdrop-filter for true transparency */
-            /* backdrop-filter: blur(12px); */
-            /* -webkit-backdrop-filter: blur(12px); */
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.7); /* Match morph bar transparency */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             flex-shrink: 0;
-            z-index: var(--z-system); /* Ensure system controls are above everything */
+            z-index: var(--z-menu); /* Much lower z-index so corners are definitely on top */
             pointer-events: auto !important; /* Force system controls to be clickable */
             transition: transform var(--transition-spring),
                         opacity 0.4s ease-out;
@@ -1019,75 +908,36 @@
             background: rgba(150, 100, 255, 0.1);
             color: rgba(150, 100, 255, 0.8);
         }
-        
-        /* Light theme rotation bar */
-        .light .rotation-control-bar {
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .light .rotation-slider-full::-webkit-slider-runnable-track {
-            background: linear-gradient(to right,
-                #dc2626 0%,     /* Lighter red for CCW */
-                #f87171 20%,
-                #64748b 45%,    /* Light gray center */
-                #cbd5e1 50%,    /* Light gray center */
-                #64748b 55%,    /* Light gray center */
-                #60a5fa 80%,    /* Light blue */
-                #2563eb 100%);  /* Blue for CW */
-        }
-
-        .light .rotation-slider-full::-moz-range-track {
-            background: linear-gradient(to right,
-                #dc2626 0%,
-                #f87171 20%,
-                #64748b 45%,
-                #cbd5e1 50%,
-                #64748b 55%,
-                #60a5fa 80%,
-                #2563eb 100%);
-        }
-
-        .light .rotation-slider-full::-webkit-slider-thumb {
-            box-shadow:
-                0 2px 6px rgba(0, 0, 0, 0.15),
-                inset 0 1px 3px rgba(255, 255, 255, 0.9);
-        }
-
-        .light .rotation-slider-full::-moz-range-thumb {
-            box-shadow:
-                0 2px 6px rgba(0, 0, 0, 0.15),
-                inset 0 1px 3px rgba(255, 255, 255, 0.9);
-        }
-
-        .light .rotation-label-left,
-        .light .rotation-label-right {
-            color: var(--accent-primary);
-        }
 
         /* Light theme specific overrides */
         
         /* Light theme morph bar */
         .light .shape-controls-hero {
-            background: rgba(255, 255, 255, 0.95);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: var(--shadow-lg);
+            background: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
         }
-        
+
         .light .shape-controls-hero .shape-btn {
-            color: rgba(0, 0, 0, 0.6);
+            background: rgba(255, 255, 255, 0.9);
+            color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        
+
         .light .shape-controls-hero .shape-btn:hover {
-            background: rgba(0, 122, 204, 0.08);
+            background: rgba(0, 122, 204, 0.1);
             color: rgba(0, 122, 204, 0.9);
+            border-color: rgba(0, 122, 204, 0.3);
             transform: scale(1.05); /* Consistent hover scale */
+            box-shadow: 0 2px 6px rgba(0, 122, 204, 0.2);
         }
-        
+
         .light .shape-controls-hero .shape-btn.active {
-            background: rgba(0, 122, 204, 0.12);
-            color: var(--accent-primary);
-            box-shadow: 0 0 12px rgba(0, 122, 204, 0.2), inset 0 0 6px rgba(0, 122, 204, 0.1);
+            background: rgba(0, 122, 204, 0.15);
+            color: #0066cc;
+            border-color: rgba(0, 122, 204, 0.4);
+            box-shadow: 0 0 12px rgba(0, 122, 204, 0.3), inset 0 0 6px rgba(0, 122, 204, 0.1);
         }
         
         .light .shape-controls-hero .dice-btn {
@@ -1108,8 +958,8 @@
 
         .light .system-controls {
             background: rgba(255, 255, 255, 0.3); /* Semi-transparent white */
-            border-top: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
         
         .light .system-controls-divider {
@@ -1306,19 +1156,50 @@
             padding-bottom: calc(var(--spacing-sm) + 1px);
         }
         
-        /* Left menu: dice on the left, headings on the right */
-        .left-menu .section-header {
-            flex-direction: row-reverse;
-            justify-content: space-between;
+        /* Center-aligned headers (no dice) */
+        .section-header.center-header {
+            justify-content: center;
         }
 
-        .left-menu .section-header h3 {
+        .section-header.center-header h3 {
+            text-align: center;
+        }
+
+        /* Left menu with left dice, right-aligned text */
+        .left-menu .section-header.left-dice {
+            flex-direction: row;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .left-menu .section-header.left-dice h3 {
             text-align: right;
             flex: 1;
+            padding-right: 15px;
+            margin-right: 0;
         }
-        
-        /* Right menu: dice on the right */
-        .right-menu .section-header {
+
+        .left-menu .section-header.left-dice .dice-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Right menu with left-aligned headers */
+        .right-menu .section-header.left-align {
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+        .right-menu .section-header.left-align h3 {
+            text-align: left;
+            flex: 1;
+            padding-left: 15px;
+        }
+
+        /* Default: Right menu with dice on right */
+        .right-menu .section-header:not(.left-align) {
             flex-direction: row;
         }
         .control-section h3 {
@@ -1337,6 +1218,31 @@
         .night .section-header {
             border-bottom-color: rgba(255, 138, 101, 0.2);
         }
+
+        /* Theme-specific menu gradients */
+        /* Light theme - subtle blue gradient */
+        .light .controls-left,
+        .light .controls-right {
+            background: linear-gradient(180deg,
+                rgba(240, 248, 255, 0.95) 0%,
+                rgba(200, 220, 240, 0.98) 100%);
+        }
+
+        /* Dark/default theme - cyan gradient */
+        .dark .controls-left,
+        .dark .controls-right {
+            background: linear-gradient(180deg,
+                rgba(0, 20, 30, 0.8) 0%,
+                rgba(0, 40, 60, 0.95) 100%);
+        }
+
+        /* Night theme - warm orange gradient */
+        .night .controls-left,
+        .night .controls-right {
+            background: linear-gradient(180deg,
+                rgba(30, 15, 5, 0.8) 0%,
+                rgba(50, 25, 10, 0.95) 100%);
+        }
         .dice-btn {
             font-size: calc(var(--text-xl) + 0.3rem);
             cursor: pointer;
@@ -1353,9 +1259,31 @@
             align-items: center;
             justify-content: center;
         }
+
+        /* Position dice button in right menu to the far right */
+        .right-menu .dice-btn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .right-menu .section-header {
+            position: relative;
+            padding-right: 45px; /* Make room for dice button */
+        }
         .dice-btn:hover {
             transform: rotate(180deg) scale(1.2);
             opacity: 1;
+        }
+
+        /* Fix hover state for absolutely positioned dice buttons */
+        .right-menu .dice-btn:hover {
+            transform: translateY(-50%) rotate(180deg) scale(1.2);
+        }
+
+        .left-menu .section-header.left-dice .dice-btn:hover {
+            transform: translateY(-50%) rotate(180deg) scale(1.2);
         }
         .dice-btn:active {
             transform: rotate(360deg);
@@ -1575,7 +1503,7 @@
 
         /* Undertone section styling */
         .undertone-section {
-            padding: 0 !important;
+            padding: var(--spacing-base) !important;
             margin-bottom: calc(var(--spacing-lg) - 1px) !important;
         }
 
@@ -1583,6 +1511,14 @@
             padding: 0;
             border-radius: 0;
             position: relative;
+        }
+
+        /* Fix undertone header to match other sections */
+        .undertone-section .section-header {
+            margin-left: 0;
+            margin-right: 0;
+            padding-left: 0;
+            padding-right: 0;
         }
 
         .light .undertone-group {
@@ -1792,7 +1728,7 @@
         /* 5. Holo Effects & Decorations */
         .holo-element { position: absolute; pointer-events: none; }
         .corner-bracket {
-            z-index: var(--z-header);
+            z-index: var(--z-max); /* Highest z-index for blue arrows */
             width: var(--size-btn-base);
             height: var(--size-btn-base);
             pointer-events: none; /* Ensure they don't block interactions */
@@ -1805,30 +1741,30 @@
         }
         /* Position corners relative to display-and-controls container */
         .display-and-controls .corner-bracket {
-            position: fixed;
-            z-index: var(--z-header) !important; /* Force above rotation bar */
+            position: absolute;
+            z-index: var(--z-max) !important; /* Highest z-index for blue arrows */
         }
         .top-left {
-            top: var(--pos-hero-rotation); /* Align with main-layout top position */
-            left: var(--control-width);
+            top: 0;
+            left: 0;
         }
         .top-left::before { height: var(--size-corner); width: 100%; }
         .top-left::after { width: var(--size-corner); height: var(--size-full); }
         .top-right {
-            top: var(--pos-hero-rotation); /* Align with main-layout top position */
-            right: var(--control-width);
+            top: 0;
+            right: 0;
         }
         .top-right::before { height: var(--size-corner); width: 100%; }
         .top-right::after { width: var(--size-corner); height: var(--size-full); right: 0; }
         .bottom-left {
-            bottom: var(--pos-footer); /* Position at bottom (above footer) */
-            left: var(--control-width);
+            bottom: 0;
+            left: 0;
         }
         .bottom-left::before { height: var(--size-corner); width: 100%; bottom: 0; }
         .bottom-left::after { width: var(--size-corner); height: var(--size-full); }
         .bottom-right {
-            bottom: var(--pos-footer); /* Position at bottom (above footer) */
-            right: var(--control-width);
+            bottom: 0;
+            right: 0;
         }
         .bottom-right::before { height: var(--size-corner); width: 100%; bottom: 0; }
         .bottom-right::after { width: var(--size-corner); height: var(--size-full); right: 0; }
@@ -1856,15 +1792,19 @@
         .info-display {
             position: absolute;
             z-index: var(--z-max); /* Highest z-index */
-            bottom: var(--pos-info-bottom); /* Use 60px for better positioning */
-            left: var(--pos-edge-lg);
+            bottom: 120px; /* Move up from 60px */
+            left: 80px; /* Move inward from 25px */
+            right: 80px; /* Add right positioning for better centering */
             font-family: var(--font-primary);
             font-size: var(--text-md);
-            width: calc(100% - 50px);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            pointer-events: auto; /* Make visible */
+            pointer-events: none; /* Don't block clicks */
+        }
+
+        .info-display > * {
+            pointer-events: auto; /* But allow clicks on children */
         }
         .info-display > .status-text { 
             animation: subtle-glow-cyan var(--anim-glow); 
@@ -1894,8 +1834,8 @@
         .fps-display {
             position: absolute;
             z-index: var(--z-max); /* Highest z-index */
-            bottom: calc(var(--pos-info-bottom) + 40px); /* Move up 40px higher */
-            right: var(--pos-edge-lg);
+            bottom: 160px; /* Move up to stay above info-display */
+            right: 80px; /* Move inward to match info-display */
             font-family: var(--font-primary);
             font-size: var(--text-sm);
             color: var(--accent-primary);
@@ -2110,26 +2050,34 @@
             background: black;
         }
 
+        /* Tablet-specific adjustments */
+        @media (min-width: 481px) and (max-width: 1024px) {
+            .shape-controls-hero .shape-btn {
+                width: 50px;
+                height: 50px;
+                min-width: 50px;
+                min-height: 50px;
+                max-width: 50px;
+                max-height: 50px;
+                aspect-ratio: 1 / 1;
+                font-size: var(--text-xl-plus-2);
+            }
+
+            .shape-controls-hero .dice-btn {
+                width: 50px;
+                height: 50px;
+                font-size: var(--text-xl-plus-3);
+            }
+
+            .shape-controls-hero .shape-controls {
+                gap: var(--spacing-md);
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+        }
+
         /* 6. Landscape Mode (includes tablets) */
         @media (orientation: landscape) and (max-height: 900px) {
-            /* Adjust corner brackets for landscape */
-            .top-left, .top-right {
-                top: 58px; /* Position at top of center container in landscape */
-            }
-            .top-left {
-                left: 180px; /* Landscape menu width */
-            }
-            .top-right {
-                right: var(--pos-menu-landscape); /* Landscape menu width */
-            }
-            .bottom-left {
-                bottom: 32px; /* Position at bottom (above footer in landscape) */
-                left: 180px;
-            }
-            .bottom-right {
-                bottom: 32px; /* Position at bottom (above footer in landscape) */
-                right: var(--pos-menu-landscape);
-            }
+            /* Corner brackets already positioned correctly via absolute positioning */
             body { 
                 overflow: hidden;
                 padding: 0;
@@ -2159,6 +2107,11 @@
             .shape-controls-hero .shape-btn {
                 width: var(--size-btn-base);
                 height: var(--size-btn-base);
+                min-width: var(--size-btn-base);
+                min-height: var(--size-btn-base);
+                max-width: var(--size-btn-base);
+                max-height: var(--size-btn-base);
+                aspect-ratio: 1 / 1;
                 font-size: var(--text-xl);
             }
             
@@ -2169,7 +2122,7 @@
             }
             .main-layout {
                 position: absolute;
-                top: 98px; /* Below hero bar (58px) + rotation bar (40px) */
+                top: 58px; /* Below hero bar (58px) */
                 left: 0;
                 right: 0;
                 bottom: 32px; /* Account for footer */
@@ -2203,13 +2156,15 @@
                 padding-top: var(--spacing-md);
                 padding-bottom: calc(var(--spacing-xl) * 2);
                 box-sizing: border-box;
-                z-index: var(--z-menu); /* Base layer for menus */
+                z-index: 20; /* Higher than system bar (10) */
             }
             .controls-left {
                 left: 0;
+                z-index: 20; /* Higher than system bar (10) */
             }
             .controls-right {
                 right: 0;
+                z-index: 20; /* Higher than system bar (10) */
             }
             .display-and-controls {
                 position: absolute;
@@ -2293,7 +2248,7 @@
             }
             .main-layout {
                 position: absolute;
-                top: 126px; /* Start below hero bar (76px) + rotation bar (50px) */
+                top: 76px; /* Start below hero bar (76px) */
                 left: 0;
                 right: 0;
                 bottom: 90px; /* Stop before system controls (45px footer + 45px for controls) */
@@ -2321,19 +2276,22 @@
                 bottom: 45px; /* Stop at footer */
                 width: var(--control-width);
                 overflow-y: auto;
+                z-index: 20; /* Higher than system bar (10) */
                 overflow-x: hidden;
                 background-color: var(--panel-bg);
                 box-sizing: border-box;
                 border: none; /* Add border for visual separation */
                 padding-top: var(--spacing-md);
                 padding-bottom: var(--spacing-md);
-                z-index: var(--z-menu); /* Base layer for menus */
+                z-index: 20; /* Higher than system bar (10) */
             }
             .controls-left {
                 left: 0;
+                z-index: 20; /* Higher than system bar (10) */
             }
             .controls-right {
                 right: 0;
+                z-index: 20; /* Higher than system bar (10) */
             }
             .display-and-controls {
                 position: absolute;
@@ -2761,16 +2719,16 @@
         }
 
         .logo-watermark {
-            position: absolute;
-            top: var(--pos-content-top);
-            left: var(--spacing-xl);
+            position: fixed;
+            top: calc(var(--pos-hero) + 65px);
+            left: calc(var(--control-width) + 35px);
             z-index: var(--z-overlay);
-            opacity: var(--opacity-33);
+            opacity: 0.25;
             pointer-events: none;
         }
 
         .logo-image {
-            height: var(--size-btn-base);
+            height: 44px;
             filter: brightness(0) invert(1);
             pointer-events: auto;
         }
@@ -2780,10 +2738,6 @@
             font-size: var(--text-sm-plus);
             text-transform: uppercase;
             transition: all var(--transition-slow);
-        }
-
-        .rotation-icon {
-            font-size: var(--text-lg);
         }
 
         .text-center {
@@ -3156,98 +3110,69 @@
                 opacity: 1;
             }
         }
-
-        /* Rotation slider styles */
-        #rotation-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            outline: none;
-            transition: opacity var(--transition-base);
-            background: linear-gradient(to right,
-                #60a5fa 0%,     /* Blue for counter-clockwise */
-                #374151 48%,    /* Dark gray approaching center */
-                #1f2937 50%,    /* Darkest at center */
-                #374151 52%,    /* Dark gray leaving center */
-                #4ade80 100%);  /* Green for clockwise */
-        }
-
-        #rotation-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: var(--size-badge);
-            border-radius: 50%;
-            background: linear-gradient(135deg, #00ffcc, #00d4aa);
-            cursor: pointer;
-            box-shadow: var(--shadow-md),
-                       0 0 20px rgba(0, 255, 204, 0.4);
-            transition: all var(--transition-base);
-            border: 2px solid rgba(0, 255, 204, 0.3);
-        }
-
-        #rotation-slider::-moz-range-thumb {
-            width: 24px;
-            height: var(--size-badge);
-            border-radius: 50%;
-            background: linear-gradient(135deg, #00ffcc, #00d4aa);
-            cursor: pointer;
-            box-shadow: var(--shadow-md),
-                       0 0 20px rgba(0, 255, 204, 0.4);
-            transition: all var(--transition-base);
-            border: 2px solid rgba(0, 255, 204, 0.3);
-        }
-
-        #rotation-slider:hover::-webkit-slider-thumb {
-            transform: scale(1.15) translateY(-2px);
-            box-shadow: var(--shadow-2xl),
-                       0 0 30px rgba(0, 255, 204, 0.6);
-        }
-
-        #rotation-slider:hover::-moz-range-thumb {
-            transform: scale(1.15) translateY(-2px);
-            box-shadow: var(--shadow-2xl),
-                       0 0 30px rgba(0, 255, 204, 0.6);
-        }
-
-        #rotation-slider:active::-webkit-slider-thumb {
-            transform: scale(1.1) translateY(0);
-        }
-
-        #rotation-slider:active::-moz-range-thumb {
-            transform: scale(1.1) translateY(0);
-        }
-        
         /* Emotion panels on sides of display */
         .emotion-panel {
             display: none; /* Hidden on mobile by default */
             pointer-events: auto; /* Emotion panels can be clicked */
+            z-index: var(--z-max) !important; /* Highest z-index - always on top */
         }
-        
-        @media (min-width: 1025px) {
-            .display-and-controls {
-                flex-direction: row !important;
-                align-items: stretch !important;
-                position: relative;
-            }
-            
+
+        /* Show emotion panels when there's space (after menus move) */
+        @media (min-width: 769px) {
             .emotion-panel {
                 display: flex;
                 flex-direction: column;
                 gap: calc(var(--spacing-md) + 2px);
                 padding: 12px 0;
                 justify-content: center;
-                        position: absolute;
+                align-items: center;
+                position: absolute;
                 top: 50%;
                 transform: translateY(-50%);
-                z-index: var(--z-overlay);
+                z-index: var(--z-max) !important; /* Ensure stays on top */
+            }
+
+            .emotion-panel-left {
+                left: 10px;
+            }
+
+            .emotion-panel-right {
+                right: 10px;
+            }
+
+            .emotion-panel .emotion-btn {
+                width: 60px;
+                height: 60px;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (min-width: 1025px) {
+
+            /* Add dice padding at desktop breakpoint */
+            .left-menu .section-header.left-dice .dice-btn {
+                left: 35px;
+            }
+
+            .right-menu .dice-btn {
+                right: 35px;
+            }
+
+            .display-and-controls {
+                flex-direction: row !important;
+                align-items: stretch !important;
+                position: relative;
             }
             
+            /* Keep emotion panels from 769px media query but adjust positions */
             .emotion-panel-left {
                 left: -27px; /* Position 2/3 toward frame, 1/3 toward menu (80px * 1/3 = 27px) */
             }
-            
+
             .emotion-panel-right {
                 right: -27px; /* Position 2/3 toward frame, 1/3 toward menu (80px * 1/3 = 27px) */
             }
@@ -3273,7 +3198,7 @@
                 background: transparent;
                 outline: none;
                 transition: all var(--transition-smooth);
-                    cursor: pointer;
+                cursor: pointer;
                 color: var(--text-primary);
                 box-shadow: none;
             }
@@ -3282,7 +3207,7 @@
                 transform: translateY(-2px) scale(1.1);
                 filter: brightness(1.2);
             }
-            
+
             .emotion-panel .emotion-btn.active {
                 transform: scale(1.15);
                 filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6));

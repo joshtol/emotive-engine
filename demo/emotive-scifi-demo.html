@@ -10,8 +10,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="emotive-scifi-styles-complete.css">
+    <link rel="stylesheet" href="header.css">
 </head>
 <body class="night">
+    <!-- Header -->
+    <header class="page-header">
+        <div class="header-content">
+            <img id="logo-image" class="header-logo" src="../assets/emotive-engine-full-BW.svg" alt="Emotive Engine">
+            <div class="header-title">NEURAL INTERFACE</div>
+        </div>
+    </header>
     <a href="#display-container" class="skip-nav">Skip to main content</a>
     <!-- Shape Controls Hero Bar -->
     <div class="shape-controls-hero">
@@ -29,23 +37,6 @@
         </div>
     </div>
 
-    <!-- Full-width rotation control bar -->
-    <div class="rotation-control-bar">
-        <div class="rotation-control-content">
-            <div class="rotation-left-section">
-                <span class="rotation-label-left rotation-icon">↺</span>
-            </div>
-            <div class="rotation-center-section">
-                <div class="rotation-slider-wrapper">
-                    <input type="range" id="rotation-slider-full" min="-10" max="10" value="0" step="0.1" class="rotation-slider-full">
-                    <div class="center-indicator"></div>
-                </div>
-            </div>
-            <div class="rotation-right-section">
-                <span class="rotation-label-right rotation-icon">↻</span>
-            </div>
-        </div>
-    </div>
 
     <div class="hero-spacer"></div>
     <main class="main-layout" role="main">
@@ -53,8 +44,8 @@
         <nav class="controls-left left-menu" role="navigation" aria-label="Emotion controls">
             <!-- Audio Visualizer Section -->
             <div class="control-section" id="audio-viz-section">
-                <div class="section-header">
-                    <h3 class="text-center">Audio Visualizer</h3>
+                <div class="section-header center-header">
+                    <h3 class="section-title">AUDIO VISUALIZER</h3>
                 </div>
                 <div id="audio-viz" class="audio-viz-container">
                     <!-- Animated background effect -->
@@ -91,33 +82,13 @@
 
             <!-- Hidden file input -->
             <input type="file" id="audio-file" accept="audio/*" class="hidden">
-            <div class="control-section undertone-section">
-                <div class="undertone-group">
-                    <div class="section-header">
-                        <h3 class="text-center">UNDERTONE MODIFIER</h3>
-                    </div>
-                    <div class="undertone-controls-container">
-                        <div class="undertone-slider-container">
-                        <div class="flex-between mb-8">
-                            <span class="undertone-label">SUBDUED</span>
-                            <span class="undertone-label">INTENSE</span>
-                        </div>
-                        <input type="range" id="undertone-slider" min="-3" max="3" value="0" step="1" class="rhythm-slider">
-                    </div>
-                    <div class="text-center p-3-0">
-                        <span id="undertone-value" class="undertone-value">CLEAR</span>
-                    </div>
-                    </div> <!-- Close undertone-controls-container -->
-                </div>
-            </div>
-
 
             <!-- Chain Combos Section -->
             <div class="control-section">
                 <div class="combo-categories">
                     <div class="combo-group">
-                        <div class="section-header">
-                            <button class="dice-btn mr-10" id="randomize-chain-btn" aria-label="Random chain" title="🎲">🎲</button>
+                        <div class="section-header left-dice">
+                            <button class="dice-btn" id="randomize-chain-btn" aria-label="Random chain" title="🎲">🎲</button>
                             <h3 class="section-title">CHAIN COMBOS</h3>
                         </div>
                         <div class="combo-controls-container">
@@ -140,8 +111,8 @@
             <div class="control-section">
                 <div class="glow-categories">
                     <div class="glow-group">
-                        <div class="section-header">
-                            <button class="dice-btn mr-10" id="randomize-glow-btn" aria-label="Random glow" title="🎲">🎲</button>
+                        <div class="section-header left-dice">
+                            <button class="dice-btn" id="randomize-glow-btn" aria-label="Random glow" title="🎲">🎲</button>
                             <h3 class="section-title">GLOW EFFECTS</h3>
                         </div>
                         <div class="glow-controls-container">
@@ -157,6 +128,27 @@
                         </div>
                         </div> <!-- Close glow-controls-container -->
                     </div>
+                </div>
+            </div>
+
+            <!-- Undertone Modifier Section -->
+            <div class="control-section undertone-section">
+                <div class="undertone-group">
+                    <div class="section-header center-header">
+                        <h3 class="section-title">UNDERTONE MODIFIER</h3>
+                    </div>
+                    <div class="undertone-controls-container">
+                        <div class="undertone-slider-container">
+                        <div class="flex-between mb-8">
+                            <span class="undertone-label">SUBDUED</span>
+                            <span class="undertone-label">INTENSE</span>
+                        </div>
+                        <input type="range" id="undertone-slider" min="-3" max="3" value="0" step="1" class="rhythm-slider">
+                    </div>
+                    <div class="text-center p-3-0">
+                        <span id="undertone-value" class="undertone-value">CLEAR</span>
+                    </div>
+                    </div> <!-- Close undertone-controls-container -->
                 </div>
             </div>
 
@@ -177,9 +169,6 @@
                 <div id="display-container" class="display-container">
                     <div class="display-content">
                         <canvas id="emotive-canvas"></canvas>
-                        <div class="logo-watermark">
-                            <img id="logo-image" class="logo-image" src="../assets/emotive-engine-full-BW.svg" alt="Emotive Engine">
-                        </div>
                         <!-- HUD Tooltip -->
                         <div id="hud-tooltip" class="hud-tooltip"></div>
                         <!-- Theme Switcher -->
@@ -280,28 +269,10 @@
             </div>
             
             <div class="control-section">
-                <div class="section-header position-relative">
-                    <button class="dice-btn mr-10" id="randomize-gesture-btn" aria-label="Random gesture" title="Random gesture">🎲</button>
-                    <h3 class="section-title">GESTURE PROTOCOL</h3>
-                    <button class="sound-toggle ml-10" id="sound-toggle" aria-label="Toggle sound" title="Toggle sound" aria-pressed="false">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <g class="sound-on hidden">
-                                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                            </g>
-                            <g class="sound-off">
-                                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-                                <line x1="23" y1="9" x2="17" y2="15"/>
-                                <line x1="17" y1="9" x2="23" y2="15"/>
-                            </g>
-                        </svg>
-                    </button>
-                </div>
-                
                 <div class="gesture-categories">
                     <!-- Dance Gestures -->
                     <div class="gesture-group">
-                        <div class="section-header">
+                        <div class="section-header left-align">
                             <button class="dice-btn mr-10" id="randomize-dance-btn" aria-label="Random dance" title="🎲">🎲</button>
                             <h3 class="section-title">DANCE</h3>
                         </div>
@@ -324,7 +295,7 @@
 
                     <!-- Overlayable Gestures -->
                     <div class="gesture-group">
-                        <div class="section-header">
+                        <div class="section-header left-align">
                             <button class="dice-btn mr-10" id="randomize-overlayable-btn" aria-label="Random overlayable" title="🎲">🎲</button>
                             <h3 class="section-title">OVERLAYABLE</h3>
                         </div>
@@ -360,7 +331,7 @@
             <span class="separator">•</span>
             <span class="copyright">© 2025 Joshua Tollette</span>
             <span class="separator">•</span>
-            <a href="#" class="footer-link">License</a>
+            <a href="../LICENSE.md" class="footer-link">License</a>
         </div>
     </footer>
 
@@ -875,50 +846,6 @@
         function setupEventHandlers() {
             // Theme switcher
             document.getElementById('theme-switcher').addEventListener('click', cycleTheme);
-            
-            // Sound toggle
-            const soundToggle = document.getElementById('sound-toggle');
-            const soundOn = soundToggle.querySelector('.sound-on');
-            const soundOff = soundToggle.querySelector('.sound-off');
-            
-            // Function to update button appearance based on state
-            const updateSoundButton = (enabled) => {
-                if (enabled) {
-                    soundToggle.classList.add('active');
-                    soundOn.style.display = 'block';
-                    soundOff.style.display = 'none';
-                    soundToggle.setAttribute('aria-pressed', 'true');
-                } else {
-                    soundToggle.classList.remove('active');
-                    soundOn.style.display = 'none';
-                    soundOff.style.display = 'block';
-                    soundToggle.setAttribute('aria-pressed', 'false');
-                }
-            };
-            
-            // Initialize button to show disabled state
-            updateSoundButton(false);
-            
-            soundToggle.addEventListener('click', () => {
-                if (!mascot || !mascot.soundSystem) return;
-                
-                // Toggle the sound state
-                soundEnabled = !soundEnabled;
-                
-                // Update mascot configuration and sound system
-                mascot.config.enableAudio = soundEnabled;
-                mascot.soundSystem.isEnabled = soundEnabled;
-                
-                // Update button appearance
-                updateSoundButton(soundEnabled);
-                
-                if (!soundEnabled && mascot.soundSystem.isAvailable()) {
-                    // Stop any playing ambient tones when disabling
-                    mascot.soundSystem.stopAmbientTone(200);
-                }
-                
-                console.log('Sound', soundEnabled ? 'enabled' : 'disabled');
-            });
 
             document.querySelectorAll('.emotion-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1421,15 +1348,6 @@
                 document.querySelector(`.shape-btn[data-shape="${randomShape}"]`).click();
             });
             
-            // Random main gesture dice (all gestures)
-            document.getElementById('randomize-gesture-btn').addEventListener('click', () => {
-                const allGestures = Array.from(document.querySelectorAll('.gesture-btn')).map(b => b.dataset.gesture);
-                const activeGestures = Array.from(document.querySelectorAll('.gesture-btn.active')).map(b => b.dataset.gesture);
-                const availableGestures = allGestures.filter(g => !activeGestures.includes(g));
-                if (availableGestures.length === 0) return;
-                const randomGesture = availableGestures[Math.floor(Math.random() * availableGestures.length)];
-                document.querySelector(`.gesture-btn[data-gesture="${randomGesture}"]`).click();
-            });
             
             // Random overlayable gesture dice  
             document.getElementById('randomize-overlayable-btn').addEventListener('click', () => {
@@ -1488,216 +1406,6 @@
                     }, (index + 2) * 100); // Start at index+2 since emotion/undertone go first
                 });
             });
-
-            // Master Rotation Slider
-            const rotationSlider = document.getElementById('rotation-slider-full');
-            const rotationValue = document.getElementById('rotation-value');
-            const rotationIndicatorDot = document.getElementById('rotation-indicator');
-            const rotationStopBtn = document.getElementById('rotation-stop');
-            let rotationDecelerationInterval = null;
-
-            function setRotationSpeed(value) {
-                const velocity = parseInt(value); // Direct velocity in degrees per frame
-
-                // Update speed display
-                if (rotationValue) {
-                    rotationValue.textContent = velocity;
-                }
-
-                // Update rotation indicator
-                if (rotationIndicatorDot) {
-                    if (velocity === 0) {
-                        rotationIndicatorDot.style.animation = 'none';
-                    } else if (velocity < 0) {
-                        // CCW rotation
-                        const duration = Math.max(0.5, 20 / Math.abs(velocity));
-                        rotationIndicatorDot.style.animation = `rotate-ccw ${duration}s linear infinite`;
-                    } else {
-                        // CW rotation
-                        const duration = Math.max(0.5, 20 / Math.abs(velocity));
-                        rotationIndicatorDot.style.animation = `rotate-cw ${duration}s linear infinite`;
-                    }
-                }
-
-                // Update slider background
-                updateSliderBackground(rotationSlider);
-
-                // Set rotation speed in DEGREES per frame
-                if (mascot && mascot.setRotationSpeed) {
-                    mascot.setRotationSpeed(velocity);
-                }
-            }
-
-            if (rotationSlider) {
-                rotationSlider.addEventListener('input', () => {
-                    // Clear any ongoing deceleration
-                    if (rotationDecelerationInterval) {
-                        clearInterval(rotationDecelerationInterval);
-                        rotationDecelerationInterval = null;
-                    }
-
-                    // Cancel any braking when slider is moved
-                    if (mascot && mascot.renderer && mascot.renderer.rotationBrake) {
-                        mascot.renderer.rotationBrake.stop();
-                    }
-
-                    const value = parseInt(rotationSlider.value);
-                    setRotationSpeed(value);
-                });
-
-                // Initialize rotation slider background
-                updateSliderBackground(rotationSlider);
-            }
-
-            // Stop button with smooth deceleration using RotationBrake system
-            if (rotationStopBtn) {
-                rotationStopBtn.addEventListener('click', async () => {
-                    // Check if mascot and renderer exist
-                    if (!mascot || !mascot.renderer || !mascot.renderer.rotationBrake) {
-                        console.warn('RotationBrake not available');
-                        return;
-                    }
-
-                    // Do nothing if not moving or already braking
-                    const currentSpeed = mascot.renderer.state.rotationSpeed || 0;
-                    if (Math.abs(currentSpeed) < 0.001 || mascot.renderer.rotationBrake.isBraking()) {
-                        return;
-                    }
-
-                    // Add visual feedback
-                    rotationStopBtn.classList.add('braking');
-
-                    // Reset slider immediately for visual feedback
-                    rotationSlider.value = 0;
-                    if (rotationValue) {
-                        rotationValue.textContent = '0';
-                    }
-
-                    // Start braking to upright position
-                    await mascot.renderer.rotationBrake.brakeToUpright({
-                        onProgress: (progress, speed, angle) => {
-                            // Update rotation indicator based on virtual speed
-                            if (rotationIndicatorDot) {
-                                if (Math.abs(speed) < 0.1) {
-                                    rotationIndicatorDot.style.animation = 'none';
-                                } else {
-                                    const duration = Math.max(0.5, 2 / Math.abs(speed / (Math.PI * 2)));
-                                    if (speed > 0) {
-                                        rotationIndicatorDot.style.animation = `rotate-cw ${duration}s linear infinite`;
-                                    } else {
-                                        rotationIndicatorDot.style.animation = `rotate-ccw ${duration}s linear infinite`;
-                                    }
-                                }
-                            }
-                        },
-                        onComplete: () => {
-                            // Ensure everything is reset
-                            if (rotationIndicatorDot) {
-                                rotationIndicatorDot.style.animation = 'none';
-                            }
-                            rotationStopBtn.classList.remove('braking');
-                        }
-                    })
-                });
-            }
-
-            // Full-width rotation slider controls
-            const rotationSliderFull = document.getElementById('rotation-slider-full');
-            const rotationBrakeBtn = document.getElementById('rotation-brake-btn');
-            let isDragging = false;
-            let lastPointerTime = 0;
-
-            if (rotationSliderFull) {
-                // Helper function to check if click is on thumb
-                function isOnThumb(e) {
-                    const rect = rotationSliderFull.getBoundingClientRect();
-                    const sliderWidth = rect.width;
-                    const sliderValue = parseFloat(rotationSliderFull.value);
-                    const sliderMin = parseFloat(rotationSliderFull.min);
-                    const sliderMax = parseFloat(rotationSliderFull.max);
-
-                    // Calculate thumb center position
-                    const thumbCenterX = rect.left + (sliderWidth * ((sliderValue - sliderMin) / (sliderMax - sliderMin)));
-                    const clickX = e.clientX || (e.touches && e.touches[0].clientX);
-
-                    // Check if click is within thumb area (85px from center since thumb is 160px wide)
-                    return Math.abs(clickX - thumbCenterX) <= 85;
-                }
-
-                // Unified pointer events for mouse and touch
-                rotationSliderFull.addEventListener('pointerdown', (e) => {
-                    lastPointerTime = Date.now();
-                    if (isOnThumb(e)) {
-                        isDragging = true;
-                    }
-                });
-
-                rotationSliderFull.addEventListener('pointermove', (e) => {
-                    if (isDragging) {
-                        // Cancel any braking when dragging
-                        if (mascot && mascot.renderer && mascot.renderer.rotationBrake) {
-                            mascot.renderer.rotationBrake.stop();
-                        }
-                    }
-                });
-
-                rotationSliderFull.addEventListener('pointerup', (e) => {
-                    const timeSinceDown = Date.now() - lastPointerTime;
-
-                    // If it was a quick tap on the thumb and not dragging
-                    if (isOnThumb(e) && timeSinceDown < 200 && !isDragging) {
-                        // Brake to upright
-                        rotationSliderFull.value = 0;
-                        setRotationSpeed(0);
-
-                        if (mascot && mascot.renderer && mascot.renderer.rotationBrake) {
-                            mascot.renderer.rotationBrake.brakeToUpright({
-                                onProgress: (progress, virtualSpeed) => {
-                                    // Update slider to show virtual speed during braking
-                                    const sign = mascot.renderer.state.rotationSpeed > 0 ? 1 : -1;
-                                    rotationSliderFull.value = virtualSpeed * sign;
-                                },
-                                onComplete: () => {
-                                    rotationSliderFull.value = 0;
-                                    rotationBrakeBtn.classList.remove('braking');
-                                }
-                            });
-                            rotationBrakeBtn.classList.add('braking');
-                        }
-                    }
-
-                    isDragging = false;
-                });
-
-                // Handle input changes
-                rotationSliderFull.addEventListener('input', (e) => {
-                    const value = parseFloat(rotationSliderFull.value);
-                    setRotationSpeed(value);
-                });
-
-                // Brake button
-                if (rotationBrakeBtn) {
-                    rotationBrakeBtn.addEventListener('click', () => {
-                        rotationSliderFull.value = 0;
-                        setRotationSpeed(0);
-
-                        if (mascot && mascot.renderer && mascot.renderer.rotationBrake) {
-                            mascot.renderer.rotationBrake.brakeToUpright({
-                                onProgress: (progress, virtualSpeed) => {
-                                    // Update slider to show virtual speed during braking
-                                    const sign = mascot.renderer.state.rotationSpeed > 0 ? 1 : -1;
-                                    rotationSliderFull.value = virtualSpeed * sign;
-                                },
-                                onComplete: () => {
-                                    rotationSliderFull.value = 0;
-                                    rotationBrakeBtn.classList.remove('braking');
-                                }
-                            });
-                            rotationBrakeBtn.classList.add('braking');
-                        }
-                    });
-                }
-            }
 
             // DJ Scratch Controls
             const canvas = document.getElementById('emotive-canvas');
