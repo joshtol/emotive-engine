@@ -4468,7 +4468,23 @@
             function endScratch() {
                 if (!scratching) return;
                 scratching = false;
-                canvas.style.cursor = 'grab';
+
+                // Reset cursor based on current mouse position
+                const rect = canvas.getBoundingClientRect();
+                if (e.type.startsWith('touch')) {
+                    canvas.style.cursor = 'default';
+                } else {
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const distance = Math.sqrt(
+                        Math.pow(mouseX - centerX, 2) +
+                        Math.pow(mouseY - centerY, 2)
+                    );
+                    const rotationRadius = rect.width / 6;
+                    canvas.style.cursor = distance <= rotationRadius ? 'grab' : 'default';
+                }
 
                 // Transfer angular velocity to momentum
                 momentum = angularVelocity * 20; // Scale up for momentum effect
@@ -4730,7 +4746,27 @@
             });
 
             // Add event listeners
-            canvas.style.cursor = 'grab';
+            // Remove default grab cursor - will be set dynamically on hover
+            canvas.style.cursor = 'default';
+
+            // Add mousemove to update cursor based on position
+            canvas.addEventListener('mousemove', (e) => {
+                if (scratching) return; // Don't change cursor while dragging
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const distance = Math.sqrt(
+                    Math.pow(mouseX - centerX, 2) +
+                    Math.pow(mouseY - centerY, 2)
+                );
+                const rotationRadius = rect.width / 6;
+
+                // Show grab cursor only when hovering over rotation area
+                canvas.style.cursor = distance <= rotationRadius ? 'grab' : 'default';
+            });
 
             // Mouse events
             canvas.addEventListener('mousedown', startScratch);
