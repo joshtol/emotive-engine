@@ -715,9 +715,10 @@
             gap: 8px;
             padding: 10px;
             height: auto;
-            background: rgba(0, 0, 0, 0.5); /* More translucent */
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.3); /* Semi-transparent black */
+            /* Removed backdrop-filter for true transparency */
+            /* backdrop-filter: blur(12px); */
+            /* -webkit-backdrop-filter: blur(12px); */
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             flex-shrink: 0;
             position: relative;
@@ -728,11 +729,8 @@
             transform-origin: bottom center;
         }
         
-        .system-controls.hidden {
-            transform: translateY(-60px); /* Slide up behind the frame */
-            opacity: 0.95;
-            pointer-events: none;
-        }
+        /* Removed hidden state - system controls always visible */
+        /* .system-controls.hidden - REMOVED */
         
         /* Add mechanical settling animation */
         @keyframes pneumatic-extend {
@@ -747,13 +745,9 @@
             100% { transform: translateY(-60px); }
         }
         
-        .system-controls.extending {
-            animation: pneumatic-extend 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-        }
-        
-        .system-controls.retracting {
-            animation: pneumatic-retract 0.3s cubic-bezier(0.4, 0.0, 1, 1) forwards; /* Fast escape! */
-        }
+        /* Removed extending/retracting animations - system controls always visible */
+        /* .system-controls.extending - REMOVED */
+        /* .system-controls.retracting - REMOVED */
         
         /* Pneumatic shadow effect - now on top */
         .system-controls::before {
@@ -793,7 +787,7 @@
             font-size: 1.1rem;
             border: none;
             border-radius: 6px;
-            background: rgba(0, 0, 0, 0.2); /* More translucent buttons */
+            background: rgba(0, 0, 0, 0.1); /* Nearly transparent buttons */
             color: rgba(255, 255, 255, 0.4);
             position: relative;
             overflow: hidden;
@@ -891,7 +885,7 @@
         
         /* Light theme system controls */
         .light .system-controls {
-            background: rgba(255, 255, 255, 0.5); /* More translucent */
+            background: rgba(255, 255, 255, 0.3); /* Semi-transparent white */
             border-top: 1px solid rgba(0, 0, 0, 0.08);
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
         }
@@ -968,7 +962,7 @@
         /* HUD Tooltip */
         .hud-tooltip {
             position: absolute;
-            bottom: 20px;
+            bottom: 140px; /* Moved up 3 button heights (40px × 3 = 120px) */
             left: 50%;
             transform: translateX(-50%);
             padding: 8px 16px;
@@ -3392,7 +3386,7 @@
             
             setupEventHandlers();
             updateDisplay();
-            initSystemControlsAnimation();
+            // initSystemControlsAnimation(); // Disabled - system controls always visible
             
             // Handle orientation changes - blur both sides of transition
             let previousOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
@@ -4902,8 +4896,10 @@
         
         // Footer is now static, no animations needed
         
-        // Jaunty scroll-based hiding of system controls (mobile phones only)
+        // REMOVED - System controls always visible
         function initSystemControlsAnimation() {
+            // Disabled - system controls no longer hide
+            return;
             const systemControls = document.querySelector('.system-controls');
             
             // Check if we're on mobile phone portrait (small screens only)
