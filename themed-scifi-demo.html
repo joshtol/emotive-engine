@@ -4385,21 +4385,31 @@
 
             // Start scratching
             function startScratch(e) {
-                // Get click position
+                // Get click position and canvas dimensions
                 const rect = canvas.getBoundingClientRect();
+                const clickX = e.type.startsWith('touch') ?
+                    e.touches[0].clientX - rect.left :
+                    e.clientX - rect.left;
                 const clickY = e.type.startsWith('touch') ?
                     e.touches[0].clientY - rect.top :
                     e.clientY - rect.top;
 
-                // Define safe rotation zone:
-                // - Top exclusion: 120px (logo/theme area + some padding)
-                // - Bottom exclusion: 60px (system controls)
-                const topExclusionHeight = 120;
-                const bottomExclusionHeight = 60;
+                // Calculate distance from center of canvas (mascot position)
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const distance = Math.sqrt(
+                    Math.pow(clickX - centerX, 2) +
+                    Math.pow(clickY - centerY, 2)
+                );
 
-                // Check if click is outside the safe rotation zone
-                if (clickY < topExclusionHeight || clickY > rect.height - bottomExclusionHeight) {
-                    // Click is in UI area, don't start rotation
+                // Define rotation zone as a circle around the mascot
+                // Radius should be large enough to cover the mascot and some area around it
+                // but not so large that it interferes with UI elements
+                const rotationRadius = Math.min(rect.width, rect.height) * 0.35; // 35% of smallest dimension
+
+                // Check if click is outside the rotation circle
+                if (distance > rotationRadius) {
+                    // Click is outside rotation area, don't start rotation
                     return;
                 }
 
