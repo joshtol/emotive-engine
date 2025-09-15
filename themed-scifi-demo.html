@@ -1637,15 +1637,17 @@
             animation-duration: 15s; 
         }
         .info-display {
-            z-index: 2100; /* Above system controls */ 
-            bottom: 25px; 
-            left: 25px; 
-            font-family: 'Chakra Petch', sans-serif; 
-            font-size: 1rem; 
-            width: calc(100% - 50px); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+            position: fixed !important; /* Break out of container z-index context */
+            z-index: 2100; /* Above system controls */
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1rem;
+            width: calc(100% - 50px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto; /* Make visible */
         }
         .info-display > .status-text { 
             animation: subtle-glow-cyan 4s infinite ease-in-out; 
@@ -1674,20 +1676,21 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         .fps-display {
+            position: fixed !important; /* Break out of container z-index context */
             z-index: 2100; /* Above system controls */
-            position: absolute; 
-            bottom: 60px; 
+            bottom: 60px;
             right: 25px;
-            font-family: 'Chakra Petch', sans-serif; 
-            font-size: 0.75rem; 
-            color: var(--accent-primary); 
-            background: rgba(0, 0, 0, 0.6); 
-            border: 1px solid var(--border-color); 
-            padding: 8px 12px; 
-            border-radius: 4px; 
-            display: none; 
-            text-align: right; 
-            line-height: 1.4; 
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: none;
+            text-align: right;
+            line-height: 1.4;
+            pointer-events: auto; /* Make visible */
         }
         .fps-display.active { display: block; } 
         .fps-display .fps-value { font-size: 1.2rem; font-weight: bold; }
