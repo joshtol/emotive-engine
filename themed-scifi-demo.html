@@ -720,6 +720,7 @@
             flex-shrink: 0;
             position: relative;
             z-index: 500; /* Ensure system controls are above canvas */
+            pointer-events: auto !important; /* Force system controls to be clickable */
             transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
                         opacity 0.4s ease-out;
             transform-origin: bottom center;
@@ -3192,7 +3193,7 @@
                 debugMode: false,
                 renderMode: 'default',
                 maxParticles: 100,
-                topOffset: 140  // Shift mascot up to align with top of visible frame
+                topOffset: 0  // No offset needed after fixing CSS gap
             });
             
             // Initialize audio analyzer
@@ -4384,6 +4385,19 @@
 
             // Start scratching
             function startScratch(e) {
+                // Check if click is on system controls (bottom area)
+                const rect = canvas.getBoundingClientRect();
+                const clickY = e.type.startsWith('touch') ?
+                    e.touches[0].clientY - rect.top :
+                    e.clientY - rect.top;
+
+                // System controls are at the bottom ~60px of the canvas
+                const systemControlsHeight = 60;
+                if (clickY > rect.height - systemControlsHeight) {
+                    // Click is in system controls area, don't start rotation
+                    return;
+                }
+
                 e.preventDefault();
 
                 // Show tutorial on first interaction
@@ -4391,7 +4405,6 @@
                     showScratchTutorial();
                 }
 
-                const rect = canvas.getBoundingClientRect();
                 scratching = true;
                 lastAngle = getAngleFromCenter(e, rect);
                 currentAngle = lastAngle;
