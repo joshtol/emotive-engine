@@ -2163,7 +2163,7 @@
             height: 100%;
             top: 0;
             left: 0;
-            pointer-events: auto; /* Canvas needs to receive rotation events */
+            pointer-events: none; /* Disable all pointer events by default */
         }
         @keyframes pulse { 
             0%, 100% { 
@@ -4430,8 +4430,9 @@
                     animationFrame = null;
                 }
 
-                // Add visual indicator
+                // Add visual indicator and ensure pointer events stay on
                 canvas.style.cursor = 'grabbing';
+                canvas.style.pointerEvents = 'auto';
             }
 
             // Update scratch
@@ -4749,23 +4750,42 @@
             // Remove default grab cursor - will be set dynamically on hover
             canvas.style.cursor = 'default';
 
-            // Add mousemove to update cursor based on position
-            canvas.addEventListener('mousemove', (e) => {
-                if (scratching) return; // Don't change cursor while dragging
+            // Function to check if point is in rotation area
+            function isInRotationArea(x, y, rect) {
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const distance = Math.sqrt(
+                    Math.pow(x - centerX, 2) +
+                    Math.pow(y - centerY, 2)
+                );
+                const rotationRadius = rect.width / 6;
+                return distance <= rotationRadius;
+            }
+
+            // Add mousemove to update cursor and pointer-events based on position
+            document.addEventListener('mousemove', (e) => {
+                if (scratching) return; // Don't change while dragging
 
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const distance = Math.sqrt(
-                    Math.pow(mouseX - centerX, 2) +
-                    Math.pow(mouseY - centerY, 2)
-                );
-                const rotationRadius = rect.width / 6;
 
-                // Show grab cursor only when hovering over rotation area
-                canvas.style.cursor = distance <= rotationRadius ? 'grab' : 'default';
+                // Check if mouse is over canvas at all
+                if (mouseX >= 0 && mouseX <= rect.width && mouseY >= 0 && mouseY <= rect.height) {
+                    if (isInRotationArea(mouseX, mouseY, rect)) {
+                        // Enable pointer events and show grab cursor in rotation area
+                        canvas.style.pointerEvents = 'auto';
+                        canvas.style.cursor = 'grab';
+                    } else {
+                        // Disable pointer events outside rotation area
+                        canvas.style.pointerEvents = 'none';
+                        canvas.style.cursor = 'default';
+                    }
+                } else {
+                    // Mouse is outside canvas
+                    canvas.style.pointerEvents = 'none';
+                    canvas.style.cursor = 'default';
+                }
             });
 
             // Mouse events
