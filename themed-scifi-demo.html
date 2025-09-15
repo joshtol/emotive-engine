@@ -612,7 +612,7 @@
         }
         .display-container {
             width: 100%;
-            aspect-ratio: 1 / 1;
+            flex: 1; /* Fill available vertical space */
             position: relative;
             background: rgba(10, 14, 26, 0.25);
             min-height: 0;
@@ -624,11 +624,7 @@
         }
         /* Mobile portrait only - not tablets */
         @media (orientation: portrait) and (max-width: 480px) {
-            .display-container::before {
-                content: "";
-                display: block;
-                padding-top: 100%; /* Forces 1:1 Aspect Ratio using the width */
-            }
+            /* Removed aspect ratio constraint to fill available space */
             
             /* Hero bar responsive adjustments */
             .shape-controls-hero .shape-controls {
@@ -1926,21 +1922,25 @@
                 right: 0;
             }
             .display-and-controls {
-                height: 100%; /* Fill container */
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
                 width: 100%;
+                height: 100%;
                 display: flex;
                 flex-direction: column;
-                justify-content: center; /* Center vertically */
-                align-items: center; /* Center horizontally */
+                justify-content: stretch;
+                align-items: stretch;
                 padding: 0; /* No padding */
                 margin: 0;
             }
             .display-container {
+                flex: 1; /* Take up all available space */
                 width: 100%;
-                max-width: 100vh; /* Full viewport height for width */
-                max-height: calc(100% - 45px); /* Account for system controls only */
-                aspect-ratio: 1 / 1;
-                margin: 0 auto; /* Center horizontally only */
+                position: relative;
+                margin: 0;
             }
             /* Hide the ::before pseudo-element in landscape */
             .display-container::before {
@@ -1952,7 +1952,7 @@
                 font-size: 0.7rem;
                 padding: 4px 10px;
                 flex-shrink: 0;
-                margin-top: 5px;
+                margin-top: 0; /* No gap between display and controls */
             }
             .system-controls .sci-fi-btn {
                 padding: 5px 8px;
@@ -2043,23 +2043,26 @@
                 right: 0;
             }
             .display-and-controls {
-                position: relative;
-                height: calc(100% - 95px); /* Account for footer overlay (45px) + rotation bar (50px) */
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
                 width: 100%;
-                max-width: 900px; /* Increased to accommodate side panels */
+                height: 100%;
                 display: flex;
-                flex-direction: row; /* Horizontal layout for desktop */
-                justify-content: center;
+                flex-direction: column; /* Stack vertically */
+                justify-content: stretch;
                 align-items: stretch;
                 box-sizing: border-box;
                 padding: 0; /* No padding anywhere */
                 margin: 0;
             }
             .display-container {
+                flex: 1; /* Take up all available space */
                 width: 100%;
-                max-height: calc(100% - 60px); /* Account for system controls only */
-                aspect-ratio: 1 / 1;
-                margin: 0 auto; /* Center horizontally only */
+                position: relative;
+                margin: 0;
             }
             /* Hide the ::before pseudo-element in desktop */
             .display-container::before {
