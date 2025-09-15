@@ -609,6 +609,7 @@
         .display-and-controls {
             display: flex;
             flex-direction: column;
+            pointer-events: none; /* Don't block clicks */
         }
         .display-container {
             width: 100%;
@@ -620,6 +621,7 @@
             display: flex;
             align-items: stretch;
             justify-content: stretch;
+            pointer-events: auto; /* Container can receive events */
         }
         
         #emotive-canvas {
@@ -2553,6 +2555,7 @@
         /* Emotion panels on sides of display */
         .emotion-panel {
             display: none; /* Hidden on mobile by default */
+            pointer-events: auto; /* Emotion panels can be clicked */
         }
         
         @media (min-width: 1025px) {

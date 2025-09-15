@@ -149,8 +149,11 @@ class EmotiveMascot {
         this.stateMachine = new EmotiveStateMachine(this.errorBoundary);
         this.particleSystem = new ParticleSystem(this.config.maxParticles, this.errorBoundary);
         
-        // Always use EmotiveRenderer
-        this.renderer = new EmotiveRenderer(this.canvasManager, this.config.classicConfig || {});
+        // Always use EmotiveRenderer, pass full config including topOffset
+        this.renderer = new EmotiveRenderer(this.canvasManager, {
+            ...this.config.classicConfig,
+            topOffset: this.config.topOffset || 0
+        });
         
         // Initialize shape morphing and audio analysis early
         this.shapeMorpher = new ShapeMorpher();

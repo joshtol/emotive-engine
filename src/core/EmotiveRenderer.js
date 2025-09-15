@@ -135,7 +135,8 @@ class EmotiveRenderer {
             breathingDepth: options.breathingDepth || 0.08,  // 8% size variation for visible breathing
             renderingStyle: options.renderingStyle || 'classic',
             baseScale: options.baseScale || 1.0,  // Global scale multiplier for entire system
-            referenceSize: 400  // Reference canvas size for scale calculations
+            referenceSize: 400,  // Reference canvas size for scale calculations
+            topOffset: options.topOffset || 0  // Vertical offset to align with layout
         };
         
         // Initialize scaleFactor based on current canvas size
@@ -648,11 +649,11 @@ class EmotiveRenderer {
         // Calculate dimensions - using logical size for proper scaling
         const canvasSize = Math.min(logicalWidth, logicalHeight);
         let centerX = logicalWidth / 2;
-        let centerY = logicalHeight / 2;
+        let centerY = logicalHeight / 2 - this.config.topOffset;
         
         // Apply vertical offset for certain emotions (like excited for exclamation mark)
         if (state.properties && state.properties.verticalOffset) {
-            centerY = logicalHeight / 2 + (logicalHeight * state.properties.verticalOffset);
+            centerY = (logicalHeight / 2 - this.config.topOffset) + (logicalHeight * state.properties.verticalOffset);
         }
         
         // Calculate global scale factor based on canvas size and baseScale config
@@ -2325,7 +2326,7 @@ class EmotiveRenderer {
         const logicalWidth = this.canvasManager.width;
         const logicalHeight = this.canvasManager.height;
         const centerX = logicalWidth / 2;
-        const centerY = logicalHeight / 2;
+        const centerY = logicalHeight / 2 - this.config.topOffset;
         
         return {
             x: centerX + this.state.gazeOffset.x,
