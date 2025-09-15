@@ -617,6 +617,9 @@
             background: rgba(10, 14, 26, 0.25);
             min-height: 0;
             z-index: 95;
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
         }
         
         #emotive-canvas {
@@ -1970,7 +1973,7 @@
                 padding-top: 10px;
                 padding-bottom: 40px;
                 box-sizing: border-box;
-                z-index: 997; /* Below rotation bar */
+                z-index: 10; /* Base layer for menus */
             }
             .controls-left {
                 left: 0;
@@ -1988,7 +1991,7 @@
                 height: 100%;
                 display: flex;
                 flex-direction: column;
-                justify-content: stretch;
+                justify-content: flex-start; /* Start from top - NO GAP */
                 align-items: stretch;
                 padding: 0; /* No padding */
                 margin: 0;
@@ -2091,7 +2094,7 @@
                 border: 1px solid var(--border-color); /* Add border for visual separation */
                 padding-top: 10px;
                 padding-bottom: 10px;
-                z-index: 997; /* Below rotation bar */
+                z-index: 10; /* Base layer for menus */
             }
             .controls-left {
                 left: 0;
@@ -2109,7 +2112,7 @@
                 height: 100%;
                 display: flex;
                 flex-direction: column; /* Stack vertically */
-                justify-content: stretch;
+                justify-content: flex-start; /* Start from top - NO GAP */
                 align-items: stretch;
                 box-sizing: border-box;
                 padding: 0; /* No padding anywhere */
