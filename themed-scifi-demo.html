@@ -783,7 +783,10 @@
         .system-controls .sci-fi-btn {
             width: 40px;
             height: 40px;
+            min-width: 40px;
+            min-height: 40px;
             padding: 0;
+            margin: 0;
             font-size: 1.1rem;
             border: none;
             border-radius: 6px;
@@ -799,6 +802,7 @@
             justify-content: center;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: none;
+            box-sizing: border-box; /* Ensure consistent sizing */
             pointer-events: auto; /* Ensure buttons are clickable */
             z-index: 2001; /* Above the parent container */
         }
@@ -843,6 +847,64 @@
             outline-color: rgba(150, 100, 255, 0.2);
         }
         
+        /* Light theme rotation bar */
+        .light .rotation-control-bar {
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(0, 122, 204, 0.2);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .light .rotation-slider-full::-webkit-slider-runnable-track {
+            background: linear-gradient(to right,
+                #dc2626 0%,     /* Lighter red for CCW */
+                #f87171 20%,
+                #64748b 45%,    /* Light gray center */
+                #cbd5e1 50%,    /* Light gray center */
+                #64748b 55%,    /* Light gray center */
+                #60a5fa 80%,    /* Light blue */
+                #2563eb 100%);  /* Blue for CW */
+            border: 1px solid rgba(0, 122, 204, 0.2);
+        }
+
+        .light .rotation-slider-full::-moz-range-track {
+            background: linear-gradient(to right,
+                #dc2626 0%,
+                #f87171 20%,
+                #64748b 45%,
+                #cbd5e1 50%,
+                #64748b 55%,
+                #60a5fa 80%,
+                #2563eb 100%);
+            border: 1px solid rgba(0, 122, 204, 0.2);
+        }
+
+        .light .rotation-slider-full::-webkit-slider-thumb {
+            background: radial-gradient(ellipse at center,
+                rgba(255, 255, 255, 1) 0%,
+                rgba(240, 240, 240, 0.95) 50%,
+                rgba(200, 200, 200, 0.9) 100%);
+            border: 2px solid rgba(0, 122, 204, 0.5);
+            box-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.15),
+                inset 0 1px 3px rgba(255, 255, 255, 0.9);
+        }
+
+        .light .rotation-slider-full::-moz-range-thumb {
+            background: radial-gradient(ellipse at center,
+                rgba(255, 255, 255, 1) 0%,
+                rgba(240, 240, 240, 0.95) 50%,
+                rgba(200, 200, 200, 0.9) 100%);
+            border: 2px solid rgba(0, 122, 204, 0.5);
+            box-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.15),
+                inset 0 1px 3px rgba(255, 255, 255, 0.9);
+        }
+
+        .light .rotation-label-left,
+        .light .rotation-label-right {
+            color: #007acc;
+        }
+
         /* Light theme specific overrides */
         
         /* Light theme morph bar */
