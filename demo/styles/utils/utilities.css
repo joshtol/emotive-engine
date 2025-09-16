@@ -1,0 +1,122 @@
+/**
+ * Utility Styles
+ * Helper classes and browser-specific resets
+ */
+
+/* Input Number Spinners - Hide */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Custom Scrollbars for Control Panels */
+.controls-left::-webkit-scrollbar,
+.controls-right::-webkit-scrollbar {
+    width: 8px;
+}
+
+.controls-left::-webkit-scrollbar-track,
+.controls-right::-webkit-scrollbar-track {
+    background: var(--button-bg);
+}
+
+.controls-left::-webkit-scrollbar-thumb,
+.controls-right::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: var(--radius-base);
+}
+
+.controls-left::-webkit-scrollbar-thumb:hover,
+.controls-right::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* Firefox Scrollbar Support */
+.controls-left,
+.controls-right {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--button-bg);
+}
+
+/* Selection Highlighting */
+::selection {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+::-moz-selection {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+/* Focus Visible - Keyboard Navigation */
+*:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* Remove focus for mouse users */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Prevent Text Selection on UI Elements */
+.sci-fi-btn,
+.dice-btn,
+.shape-btn,
+.emotion-btn,
+.section-header,
+.system-controls {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Image Rendering */
+img {
+    max-width: 100%;
+    height: auto;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* SVG Icons */
+svg {
+    fill: currentColor;
+    width: 1em;
+    height: 1em;
+}
+
+/* Accessibility - Screen Reader Only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Print Styles */
+@media print {
+    .no-print,
+    .system-controls,
+    .theme-switcher,
+    .test-status {
+        display: none !important;
+    }
+}

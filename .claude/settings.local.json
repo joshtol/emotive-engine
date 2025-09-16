@@ -123,7 +123,8 @@
       "Bash(start http://localhost:8080/public-api-demo.html)",
       "Bash(npx rollup:*)",
       "Bash(npm install:*)",
-      "Bash(start http://localhost:8080/themed-scifi-instrument.html)"
+      "Bash(start http://localhost:8080/themed-scifi-instrument.html)",
+      "Read(//c/Users/raven/OneDrive/Pictures/Screenshots/**)"
     ],
     "deny": [],
     "ask": []

@@ -9,10 +9,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="emotive-scifi-styles-complete.css">
-    <link rel="stylesheet" href="header.css">
+    <!-- Modular CSS System -->
+    <link rel="stylesheet" href="emotive-scifi-modular.css">
+    <!-- Note: header.css is now included in the modular system -->
 </head>
-<body class="night">
+<body class="dark">
     <!-- Header -->
     <header class="page-header">
         <div class="header-content">
@@ -21,22 +22,6 @@
         </div>
     </header>
     <a href="#display-container" class="skip-nav">Skip to main content</a>
-    <!-- Shape Controls Hero Bar -->
-    <div class="shape-controls-hero">
-        <div class="shape-controls">
-            <button class="sci-fi-btn shape-btn" data-shape="heart">♥</button>
-            <button class="sci-fi-btn shape-btn" data-shape="triangle">△</button>
-            <button class="sci-fi-btn shape-btn" data-shape="square">□</button>
-            <button class="sci-fi-btn shape-btn active" data-shape="circle">○</button>
-            <button class="sci-fi-btn shape-btn" data-shape="star">★</button>
-            <button class="sci-fi-btn shape-btn" data-shape="sun">☀</button>
-            <button class="sci-fi-btn shape-btn" data-shape="solar">☉</button>
-            <button class="sci-fi-btn shape-btn" data-shape="moon">☾</button>
-            <button class="sci-fi-btn shape-btn" data-shape="lunar">●</button>
-            <button class="dice-btn" id="randomize-shape-btn" aria-label="Random shape" title="🎲">🎲</button>
-        </div>
-    </div>
-
 
     <div class="hero-spacer"></div>
     <main class="main-layout" role="main">
@@ -52,25 +37,8 @@
                     <div class="glow-bg-effect"></div>
 
                     <!-- Audio player overlay (top-right safe zone) -->
-                    <div style="
-                        position: absolute;
-                        top: var(--pos-edge-md);
-                        right: var(--pos-edge-md);
-                        width: 220px;
-                        height: 32px;
-                        z-index: var(--z-menu);
-                        display: none;
-                    " id="audio-player-container">
-                        <audio id="audio-player" controls style="
-                            width: var(--size-full);
-                            height: var(--size-full);
-                            border: none !important;
-                            outline: none !important;
-                            background: var(--bg-transparent);
-                            display: block;
-                            margin: 0;
-                            padding: 0;
-                        "></audio>
+                    <div class="audio-player-container" id="audio-player-container">
+                        <audio id="audio-player" controls class="audio-player"></audio>
                     </div>
 
                     <!-- Frequency spectrum visualizer -->
@@ -165,7 +133,7 @@
                     <button class="sci-fi-btn emotion-btn" data-emotion="love" aria-label="Love" title="Love">🥰</button>
                     <button class="sci-fi-btn emotion-btn" data-emotion="euphoria" aria-label="Euphoria" title="Euphoria">✨</button>
                 </div>
-                
+
                 <div id="display-container" class="display-container">
                     <div class="display-content">
                         <canvas id="emotive-canvas"></canvas>
@@ -186,7 +154,7 @@
                         <div class="holo-element holo-circle circle-2"></div>
                     </div>
                 </div>
-                
+
                 <!-- Right emotion panel (negative) -->
                 <div class="emotion-panel emotion-panel-right">
                     <button class="sci-fi-btn emotion-btn" data-emotion="surprise" aria-label="Surprise" title="Surprise">😲</button>
@@ -196,7 +164,7 @@
                     <button class="sci-fi-btn emotion-btn" data-emotion="anger" aria-label="Anger" title="Anger">😠</button>
                     <button class="sci-fi-btn emotion-btn" data-emotion="glitch" aria-label="Glitch" title="Glitch">👾</button>
                 </div>
-                
+
                 <!-- System controls moved outside for proper clickability -->
             </div>
             <!-- Displays positioned at highest level -->
@@ -207,6 +175,21 @@
             <div class="fps-display" id="fps-display">
                 <span class="fps-value" id="fps-value">0</span>
                 <span class="fps-label">FPS</span>
+            </div>
+            <!-- Shape Controls Hero Bar -->
+            <div class="shape-controls-hero">
+                <div class="shape-controls">
+                    <button class="sci-fi-btn shape-btn" data-shape="heart">♥</button>
+                    <button class="sci-fi-btn shape-btn" data-shape="triangle">△</button>
+                    <button class="sci-fi-btn shape-btn" data-shape="square">□</button>
+                    <button class="sci-fi-btn shape-btn active" data-shape="circle">○</button>
+                    <button class="sci-fi-btn shape-btn" data-shape="star">★</button>
+                    <button class="sci-fi-btn shape-btn" data-shape="sun">☀</button>
+                    <button class="sci-fi-btn shape-btn" data-shape="solar">☉</button>
+                    <button class="sci-fi-btn shape-btn" data-shape="moon">☾</button>
+                    <button class="sci-fi-btn shape-btn" data-shape="lunar">●</button>
+                    <button class="dice-btn" id="randomize-shape-btn" aria-label="Random shape" title="🎲">🎲</button>
+                </div>
             </div>
         </div>
 
@@ -323,7 +306,7 @@
         </aside>
 
     </main>
-    
+
     <!-- Footer with trademark and copyright -->
     <footer class="legal-footer">
         <div class="footer-content">
@@ -658,21 +641,14 @@
             // Setup beat indicator
             rhythmEngine.on('beat', (beatInfo) => {
                 if (window.rhythmActive) {
-                    const beatDot = document.getElementById('beat-dot');
-                    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary');
-                    const glowColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-glow');
-                    
-                    beatDot.style.width = '20px';
-                    beatDot.style.height = '20px';
-                    beatDot.style.background = accentColor;
-                    beatDot.style.boxShadow = `0 0 20px ${glowColor}`;
-                    
+                    const beatIndicator = document.getElementById('beat-indicator');
+                    // Use CSS animation instead of inline styles
+                    beatIndicator.classList.add('pulsing');
+
+                    // Remove class after animation completes
                     setTimeout(() => {
-                        beatDot.style.width = '10px';
-                        beatDot.style.height = '10px';
-                        beatDot.style.background = accentColor;
-                        beatDot.style.boxShadow = 'none';
-                    }, 100);
+                        beatIndicator.classList.remove('pulsing');
+                    }, 600);
                 }
             });
             
@@ -936,27 +912,39 @@
                     
                     const chain = chains[chainType];
                     if (chain && mascot) {
+                        // Don't add persistent active state - chain buttons are just triggers
+                        document.querySelectorAll('.chain-btn').forEach(b => b.classList.remove('active'));
+
                         // 10% chance to trigger a shape morph with the chain
                         if (Math.random() < 0.1) {
                             // Get all available shapes
                             const shapes = Array.from(document.querySelectorAll('.shape-btn')).map(b => b.dataset.shape);
                             const currentShape = document.querySelector('.shape-btn.active')?.dataset.shape;
                             const availableShapes = shapes.filter(s => s !== currentShape);
-                            
+
                             if (availableShapes.length > 0) {
                                 // Pick a random shape and morph to it
                                 const randomShape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
-                                
+
                                 // Trigger the morph slightly before the chain starts for better effect
                                 setTimeout(() => {
                                     document.querySelector(`.shape-btn[data-shape="${randomShape}"]`).click();
                                 }, 0);
                             }
                         }
-                        
+
                         // Execute chain with delays for layering effect
-                        chain.forEach(item => {
+                        let maxDelay = 0;
+                        chain.forEach((item, index) => {
+                            maxDelay = Math.max(maxDelay, item.delay);
                             setTimeout(() => {
+                                // Highlight gesture buttons as they activate in the chain
+                                const gestureBtn = document.querySelector(`.gesture-btn[data-gesture="${item.gesture}"]`);
+                                if (gestureBtn) {
+                                    gestureBtn.classList.add('active');
+                                    setTimeout(() => gestureBtn.classList.remove('active'), 500);
+                                }
+
                                 if (window.rhythmActive && gestureScheduler) {
                                     gestureScheduler.requestGesture(item.gesture);
                                 } else {
@@ -964,10 +952,10 @@
                                 }
                             }, item.delay);
                         });
-                        
-                        // Visual feedback
-                        btn.style.animation = 'none';
-                        setTimeout(() => btn.style.animation = '', 10);
+
+                        // Visual feedback - quick flash only
+                        btn.classList.add('pulsing');
+                        setTimeout(() => btn.classList.remove('pulsing'), 300);
                     }
                 });
             });
@@ -1177,15 +1165,8 @@
             
             // Function to update slider background based on value
             function updateSliderBackground(slider) {
-                if (!slider) return; // Guard against null slider
-
-                const min = parseFloat(slider.min);
-                const max = parseFloat(slider.max);
-                const value = parseFloat(slider.value);
-                const percent = ((value - min) / (max - min)) * 100;
-
-                // Set CSS variable for gradient
-                slider.style.setProperty('--value', percent + '%');
+                // Removed inline style setting - let CSS handle the slider appearance
+                // This prevents layout shifts from dynamic style changes
             }
 
             // Sync slider and input field
@@ -1249,8 +1230,7 @@
                 // Update UI to show modified BPM
                 document.getElementById('bpm-value').value = modifiedBPM;
                 document.getElementById('bpm-slider').value = modifiedBPM;
-                const percent = ((modifiedBPM - 60) / (360 - 60)) * 100;
-                document.getElementById('bpm-slider').style.background = `linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) ${percent}%, rgba(255,255,255,0.1) ${percent}%, rgba(255,255,255,0.1) 100%)`;
+                // Don't set inline styles - let CSS handle the background
                 
                 // Call original with modified BPM
                 originalRhythmStart(modifiedBPM, pattern);
@@ -1594,7 +1574,7 @@
                     opacity: 0;
                     animation: tutorial-cta-pulse 0.8s ease-out forwards;
                 `;
-                tutorialText.innerHTML = '<span style="font-size: var(--text-xl);">DRAG TO SPIN</span>';
+                tutorialText.innerHTML = '<span class="tutorial-text-large">DRAG TO SPIN</span>';
                 rotationIndicator.appendChild(tutorialText);
 
                 // Create just one arrow at the top

@@ -1,0 +1,37 @@
+/**
+ * Dark Theme Styles
+ * Dark theme variable overrides - includes cyan/blue accents
+ */
+
+.dark {
+    /* Core Colors */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2a2a2a;
+    --bg-grid: rgba(255, 255, 255, 0.05);
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --accent-primary: #00e5ff;
+    --accent-glow: #00ccff;
+    --border-color: rgba(0, 229, 255, 0.3);
+
+    /* Component Backgrounds */
+    --panel-bg: transparent;
+    --button-bg: rgba(0, 0, 0, 0.4);
+    --button-hover: rgba(0, 229, 255, 0.1);
+    --canvas-bg: rgba(0, 0, 0, 0.3);
+    --system-bar-bg: rgba(0, 0, 0, 0.7);
+    --system-bar-border: transparent;
+    --system-btn-bg: rgba(0, 0, 0, 0.5);
+    --system-btn-hover: rgba(0, 229, 255, 0.1);
+
+    /* Shadow Colors */
+    --shadow-light: rgba(255, 255, 255, 0.03);
+    --shadow-medium: rgba(0, 0, 0, 0.3);
+    --shadow-dark: rgba(0, 0, 0, 0.5);
+
+    /* Special Colors */
+    --color-white-70: rgba(255, 255, 255, 0.4);
+    --color-white-90: rgba(255, 255, 255, 0.7);
+    --color-black-95: rgba(0, 0, 0, 0.95);
+    --color-accent-amber: #fbbf24;
+}

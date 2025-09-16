@@ -1,0 +1,322 @@
+/**
+ * Controls Component Styles
+ * Control panels, system controls, and control sections
+ */
+
+/* Control Sections */
+.control-section {
+    padding: var(--spacing-md);
+    margin-bottom: calc(var(--spacing-lg) - 1px);
+    border: none;
+    border-radius: var(--radius-lg);
+    position: relative;
+    z-index: 1;
+}
+
+/* First control section reduced top padding */
+.controls-left .control-section:first-child,
+.controls-right .control-section:first-child {
+    padding-top: calc(var(--spacing-sm) + 1px);
+    margin-top: calc(var(--spacing-sm) + 1px);
+}
+
+.control-section h3 {
+    color: var(--accent-primary);
+    font-size: var(--text-base);
+    font-family: var(--font-heading);
+    font-weight: var(--font-medium);
+    text-transform: uppercase;
+    letter-spacing: var(--spacing-letter-wider);
+    margin: 0;
+}
+
+/* Night theme headings */
+.night .control-section h3 {
+    color: var(--color-orange-bright);
+}
+
+/* Theme-specific menu gradients */
+.light .controls-left,
+.light .controls-right {
+    background: linear-gradient(180deg,
+        rgba(240, 248, 255, 0.95) 0%,
+        rgba(200, 220, 240, 0.98) 100%);
+}
+
+.dark .controls-left,
+.dark .controls-right {
+    background: linear-gradient(180deg,
+        rgba(0, 20, 30, 0.8) 0%,
+        rgba(0, 40, 60, 0.95) 100%);
+}
+
+.night .controls-left,
+.night .controls-right {
+    background: linear-gradient(180deg,
+        rgba(30, 15, 5, 0.8) 0%,
+        rgba(50, 25, 10, 0.95) 100%);
+}
+
+/* System Controls */
+.system-controls {
+    position: fixed;
+    top: calc(var(--pos-hero) - 1px);
+    left: var(--control-width) !important;
+    right: var(--control-width) !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-base);
+    padding: var(--spacing-md);
+    height: auto;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+    z-index: var(--z-menu);
+    pointer-events: auto !important;
+    transition: transform var(--transition-spring), opacity 0.4s ease-out;
+    transform-origin: bottom center;
+}
+
+.system-controls-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.system-controls-divider {
+    width: 1px;
+    height: var(--size-badge);
+    background: rgba(255, 255, 255, var(--opacity-light));
+    margin: 0 var(--spacing-base);
+}
+
+/* System Control Buttons */
+.system-controls .sci-fi-btn {
+    width: var(--size-btn-base);
+    height: var(--size-btn-base);
+    min-width: var(--size-min-button);
+    min-height: var(--size-btn-base);
+    padding: 0;
+    margin: 0;
+    font-size: var(--text-md-plus-1);
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, var(--opacity-light));
+    color: var(--color-white-70);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-smooth);
+    box-shadow: none;
+    box-sizing: border-box;
+    pointer-events: auto;
+    z-index: calc(var(--z-system) + 1);
+}
+
+.system-controls .sci-fi-btn:hover {
+    background: rgba(255, 255, 255, var(--opacity-subtle));
+    color: var(--color-white-90);
+    transform: scale(1.05);
+}
+
+.system-controls .sci-fi-btn.active {
+    background: rgba(0, 255, 255, var(--opacity-soft));
+    color: rgba(0, 255, 255, var(--opacity-solid));
+}
+
+.system-controls .sci-fi-btn.recording {
+    background: rgba(255, 0, 0, 0.15);
+    color: rgba(255, 100, 100, 0.9);
+    animation: pulse-recording var(--anim-pulse);
+}
+
+@keyframes pulse-recording {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.system-controls .sci-fi-btn.master-dice {
+    background: var(--bg-black-60);
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.system-controls .sci-fi-btn.master-dice:hover {
+    background: rgba(150, 100, 255, 0.1);
+    color: rgba(150, 100, 255, 0.8);
+}
+
+.system-controls .sci-fi-btn span {
+    display: inline-block;
+    margin-right: var(--spacing-sm);
+}
+
+/* Light Theme System Controls */
+.light .system-controls {
+    background: rgba(255, 255, 255, 0.3);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.light .system-controls .sci-fi-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.light .system-controls .sci-fi-btn:hover {
+    background: rgba(0, 122, 204, 0.08);
+    color: rgba(0, 122, 204, 0.9);
+    transform: scale(1.05);
+}
+
+.light .system-controls .sci-fi-btn.active {
+    background: rgba(0, 122, 204, 0.12);
+    color: var(--accent-primary);
+}
+
+.light .system-controls .sci-fi-btn.recording {
+    background: rgba(255, 0, 0, 0.1);
+    color: rgba(200, 0, 0, 0.8);
+}
+
+.light .system-controls .sci-fi-btn.master-dice {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.light .system-controls .sci-fi-btn.master-dice:hover {
+    background: rgba(150, 100, 255, 0.08);
+    color: rgba(150, 100, 255, 0.9);
+}
+
+/* HUD Tooltip */
+.hud-tooltip {
+    position: absolute;
+    bottom: var(--pos-controls-bottom);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: var(--spacing-base) var(--spacing-lg);
+    background: var(--bg-black-90);
+    border: 1px solid var(--accent-primary);
+    color: var(--accent-primary);
+    font-size: var(--text-sm);
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    letter-spacing: var(--spacing-letter-wide);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--anim-fade);
+    z-index: calc(var(--z-header) + 100);
+    white-space: nowrap;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+}
+
+.hud-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--accent-glow) 50%,
+        transparent 100%);
+    opacity: 0;
+    animation: none;
+}
+
+.hud-tooltip.visible {
+    opacity: 1;
+}
+
+.hud-tooltip.activated {
+    animation: tooltip-activate var(--transition-slow) ease-out;
+}
+
+@keyframes tooltip-activate {
+    0% {
+        transform: translateX(-50%) scale(1);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.1);
+        box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+    }
+    100% {
+        transform: translateX(-50%) scale(1);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    }
+}
+
+/* Light theme tooltip */
+.light .hud-tooltip {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--accent-primary);
+    box-shadow: 0 0 20px rgba(0, 122, 204, 0.2);
+}
+
+/* Theme-specific animations */
+.night .hud-tooltip.activated,
+.sunset .hud-tooltip.activated {
+    animation: tooltip-activate-warm var(--transition-slow) ease-out;
+}
+
+@keyframes tooltip-activate-warm {
+    0% {
+        transform: translateX(-50%) scale(1);
+        box-shadow: 0 0 20px rgba(204, 102, 51, 0.2);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.1);
+        box-shadow: 0 0 40px rgba(204, 102, 51, 0.6);
+    }
+    100% {
+        transform: translateX(-50%) scale(1);
+        box-shadow: 0 0 20px rgba(204, 102, 51, 0.2);
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .control-section {
+        padding: 4px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .system-controls {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100%;
+        padding: var(--spacing-sm);
+        gap: var(--spacing-xs);
+    }
+}
+
+/* Landscape Styles */
+@media (orientation: landscape) and (max-height: 900px) {
+    .system-controls {
+        position: fixed;
+        bottom: 32px;
+        left: var(--pos-menu-landscape);
+        right: var(--pos-menu-landscape);
+        height: var(--size-btn-base);
+        font-size: var(--text-sm);
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 1025px) {
+    .controls-left::-webkit-scrollbar,
+    .controls-right::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .controls-left::-webkit-scrollbar-track,
+    .controls-right::-webkit-scrollbar-track {
+        background: var(--button-bg);
+    }
+}

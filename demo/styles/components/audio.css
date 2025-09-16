@@ -1,0 +1,648 @@
+/**
+ * Audio Component Styles
+ * Audio player, rhythm controls, and BPM modifiers
+ */
+
+/* Audio Player Container */
+#audio-player-container {
+    background: var(--bg-black-60) !important;
+    backdrop-filter: blur(20px) saturate(1.8) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+
+/* Audio Player */
+#audio-player {
+    color-scheme: dark;
+    border: none !important;
+    outline: none !important;
+}
+
+#audio-player::-webkit-media-controls-enclosure {
+    border: none !important;
+    outline: none !important;
+}
+
+#audio-player::-webkit-media-controls-panel {
+    border: none !important;
+    outline: none !important;
+}
+
+#audio-player::-webkit-media-controls-current-time-display,
+#audio-player::-webkit-media-controls-time-remaining-display {
+    color: var(--text-primary);
+}
+
+/* Audio Visualizer Container */
+.audio-viz-container {
+    background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6));
+    padding: var(--spacing-md);
+    border: 2px dashed rgba(0, 229, 255, 0.15);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    min-height: 100px;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0, 229, 255, 0.02) 10px,
+        rgba(0, 229, 255, 0.02) 20px
+    );
+}
+
+#audio-viz-section {
+    display: none;
+}
+
+/* Audio Visualizer Bars */
+#audio-viz {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 100px;
+    gap: 2px;
+}
+
+.audio-bar {
+    flex: 1;
+    background: linear-gradient(to top, var(--accent-primary), var(--accent-glow));
+    border-radius: 2px 2px 0 0;
+    transition: height 0.1s ease;
+    min-height: 2px;
+    opacity: 0.9;
+}
+
+/* Spectrum Visualizer */
+.spectrum-viz {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    height: 60px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 3px;
+    z-index: 10;
+}
+
+.spectrum-viz > div {
+    flex: 1;
+    background: linear-gradient(to top,
+        var(--accent-primary),
+        var(--accent-glow),
+        rgba(0, 229, 255, 0.2));
+    border-radius: 2px 2px 0 0;
+    transition: height 0.05s ease-out;
+    min-height: 2px;
+    max-width: 20px;
+    opacity: 0.9;
+    box-shadow: 0 0 5px var(--accent-glow);
+}
+
+/* Rhythm Controls */
+.rhythm-group {
+    padding: 0;
+    border-radius: 0;
+    position: relative;
+    box-sizing: border-box;
+    /* Isolate from parent animations */
+    isolation: isolate;
+    contain: layout style;
+}
+
+.rhythm-controls-container {
+    padding: var(--spacing-md);
+    border: 2px dotted rgba(0, 255, 128, 0.12);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    box-shadow: none;
+    /* Prevent animation inheritance */
+    animation: none !important;
+    transform: none !important;
+}
+
+.rhythm-controls {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing-sm) * 1.5);
+    margin-bottom: var(--spacing-md);
+    /* Prevent flex items from shifting */
+    width: 100%;
+    position: relative;
+}
+
+.rhythm-group-title {
+    font-size: var(--text-base);
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    letter-spacing: var(--spacing-letter-wider);
+    margin: 0 0 var(--spacing-md) 0;
+    text-align: center;
+    font-weight: var(--font-normal);
+}
+
+.rhythm-toggle-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--accent-primary);
+    color: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-slow);
+}
+
+.rhythm-toggle-btn:hover {
+    background: var(--button-hover);
+    transform: scale(1.05);
+}
+
+.rhythm-toggle-btn.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+.rhythm-btn.active {
+    border-color: var(--accent-glow) !important;
+    box-shadow: 0 0 20px var(--accent-primary), inset 0 0 10px rgba(var(--accent-rgb, 0,229,255), 0.3);
+}
+
+/* Flex utility for slider */
+.flex-1 {
+    flex: 1 1 auto;
+}
+
+/* Rhythm Slider Base */
+.rhythm-slider {
+    width: 100% !important;
+    height: 6px !important;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent !important;
+    outline: none;
+    cursor: pointer;
+    margin: 15px 0 !important;
+    position: relative !important;
+    /* Prevent any animations or transforms from affecting layout */
+    transform: none !important;
+    animation: none !important;
+    /* Override any inline styles */
+    --value: 50% !important;
+    will-change: auto !important;
+}
+
+/* When slider is in rhythm controls, lock its size */
+.rhythm-controls .rhythm-slider {
+    flex: 1 1 200px !important;
+    min-width: 150px !important;
+    max-width: 100% !important;
+}
+
+/* Dark Theme (Default) - Cyan */
+.rhythm-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 229, 255, 0.15);
+    border-radius: 3px;
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.rhythm-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle, var(--accent-glow), var(--accent-primary));
+    border: 2px solid var(--accent-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -7px;
+    box-shadow:
+        0 0 10px var(--accent-glow),
+        0 2px 4px rgba(0, 0, 0, 0.5);
+    transition: box-shadow var(--transition-base), background var(--transition-base);
+    /* Prevent any size changes or animations */
+    transform: none !important;
+    animation: none !important;
+}
+
+.rhythm-slider::-webkit-slider-thumb:hover {
+    box-shadow:
+        0 0 15px var(--accent-glow),
+        0 0 25px var(--accent-primary),
+        0 2px 6px rgba(0, 0, 0, 0.5);
+    background: radial-gradient(circle, var(--accent-primary), var(--accent-glow));
+}
+
+/* Firefox Support */
+.rhythm-slider::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 229, 255, 0.15);
+    border-radius: 3px;
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.rhythm-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle, var(--accent-glow), var(--accent-primary));
+    border: 2px solid var(--accent-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow:
+        0 0 10px var(--accent-glow),
+        0 2px 4px rgba(0, 0, 0, 0.5);
+    transition: box-shadow var(--transition-base), background var(--transition-base);
+    /* Prevent any size changes or animations */
+    transform: none !important;
+    animation: none !important;
+}
+
+.rhythm-slider::-moz-range-thumb:hover {
+    box-shadow:
+        0 0 15px var(--accent-glow),
+        0 0 25px var(--accent-primary),
+        0 2px 6px rgba(0, 0, 0, 0.5);
+    background: radial-gradient(circle, var(--accent-primary), var(--accent-glow));
+}
+
+.rhythm-status {
+    font-size: var(--text-base-plus);
+}
+
+/* Beat Indicator - Minimal Black Style */
+.beat-indicator {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    flex-shrink: 0;
+    /* Prevent size changes */
+    contain: size layout style;
+    /* Dark background */
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.beat-ring-outer,
+.beat-ring-inner {
+    display: none; /* Remove rings for minimal look */
+}
+
+.beat-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    pointer-events: none;
+    transform-origin: center center;
+    transition: none;
+}
+
+/* Pulse animation - subtle glow */
+.beat-indicator.pulsing {
+    animation: blackoutPulse 0.15s ease-out;
+}
+
+.beat-indicator.pulsing .beat-dot {
+    animation: dotFlash 0.15s ease-out;
+}
+
+@keyframes blackoutPulse {
+    0% {
+        background: rgba(0, 0, 0, 0.7);
+        box-shadow: none;
+    }
+    50% {
+        background: rgba(0, 0, 0, 0.5);
+        box-shadow:
+            inset 0 0 10px var(--accent-primary),
+            0 0 15px rgba(0, 0, 0, 0.8);
+    }
+    100% {
+        background: rgba(0, 0, 0, 0.7);
+        box-shadow: none;
+    }
+}
+
+@keyframes dotFlash {
+    0% {
+        background: rgba(255, 255, 255, 0.2);
+        width: 8px;
+        height: 8px;
+    }
+    50% {
+        background: var(--accent-primary);
+        width: 12px;
+        height: 12px;
+        box-shadow: 0 0 8px var(--accent-glow);
+    }
+    100% {
+        background: rgba(255, 255, 255, 0.2);
+        width: 8px;
+        height: 8px;
+    }
+}
+
+/* BPM Controls */
+.bpm-input {
+    width: var(--size-icon-lg);
+    background: transparent;
+    border: none;
+    color: var(--accent-primary);
+    font-family: var(--font-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-light);
+    text-align: center;
+    padding: calc(var(--spacing-xs) + 1px) var(--spacing-xs);
+    outline: none;
+    flex-shrink: 0;
+}
+
+.bpm-modifier-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+}
+
+/* Theme Variations */
+.dark #audio-player-container {
+    background: rgba(17, 25, 40, 0.7) !important;
+    backdrop-filter: blur(20px) saturate(1.8) !important;
+}
+
+.light #audio-player-container {
+    background: rgba(50, 50, 50, 0.8) !important;
+}
+
+.light #audio-player {
+    color-scheme: light;
+}
+
+.light #audio-player::-webkit-media-controls-panel {
+    color: white;
+}
+
+.light #audio-player::-webkit-media-controls-current-time-display,
+.light #audio-player::-webkit-media-controls-time-remaining-display {
+    color: black !important;
+    text-shadow: none !important;
+}
+
+.light .rhythm-group-title {
+    color: var(--accent-primary);
+}
+
+/* Light Theme Beat Indicator */
+.light .beat-indicator {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.light .beat-dot {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Light Theme - Blue */
+.light .rhythm-slider::-webkit-slider-runnable-track {
+    background: rgba(0, 122, 204, 0.1);
+    border: 1px solid rgba(0, 122, 204, 0.25);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.light .rhythm-slider::-webkit-slider-thumb {
+    background: radial-gradient(circle, #4da6ff, #007acc);
+    border: 2px solid #007acc;
+    box-shadow:
+        0 0 8px rgba(0, 122, 204, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.light .rhythm-slider::-webkit-slider-thumb:hover {
+    box-shadow:
+        0 0 12px rgba(0, 122, 204, 0.7),
+        0 0 20px #007acc,
+        0 2px 6px rgba(0, 0, 0, 0.3);
+    background: radial-gradient(circle, #007acc, #4da6ff);
+}
+
+.light .rhythm-slider::-moz-range-track {
+    background: rgba(0, 122, 204, 0.1);
+    border: 1px solid rgba(0, 122, 204, 0.25);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.light .rhythm-slider::-moz-range-thumb {
+    background: radial-gradient(circle, #4da6ff, #007acc);
+    border: 2px solid #007acc;
+    box-shadow:
+        0 0 8px rgba(0, 122, 204, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.light .rhythm-slider::-moz-range-thumb:hover {
+    box-shadow:
+        0 0 12px rgba(0, 122, 204, 0.7),
+        0 0 20px #007acc,
+        0 2px 6px rgba(0, 0, 0, 0.3);
+    background: radial-gradient(circle, #007acc, #4da6ff);
+}
+
+/* Night Theme */
+.night #audio-player-container,
+.sunset #audio-player-container {
+    background: rgba(204, 102, 51, 0.4) !important;
+    backdrop-filter: blur(20px) saturate(1.5) !important;
+}
+
+.night #audio-player,
+.sunset #audio-player {
+    filter: brightness(1.2) contrast(1.1) hue-rotate(30deg) saturate(1.2);
+}
+
+.night .audio-viz-container {
+    border: 2px dashed rgba(255, 138, 101, 0.15);
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 138, 101, 0.01) 10px,
+        rgba(255, 138, 101, 0.01) 20px
+    );
+}
+
+.night .rhythm-controls-container {
+    border: 2px dotted rgba(255, 200, 100, 0.12);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+}
+
+/* Night Theme Beat Indicator */
+.night .beat-indicator {
+    background: rgba(20, 10, 0, 0.8);
+    border: 1px solid rgba(255, 138, 101, 0.2);
+}
+
+.night .beat-dot {
+    background: rgba(255, 138, 101, 0.25);
+}
+
+/* Night Theme - Orange */
+.night .rhythm-slider::-webkit-slider-runnable-track {
+    background: rgba(255, 138, 101, 0.15);
+    border: 1px solid rgba(255, 138, 101, 0.3);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.night .rhythm-slider::-webkit-slider-thumb {
+    background: radial-gradient(circle, #ffb380, #ff8a65);
+    border: 2px solid #ff8a65;
+    box-shadow:
+        0 0 10px rgba(255, 138, 101, 0.6),
+        0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.night .rhythm-slider::-webkit-slider-thumb:hover {
+    box-shadow:
+        0 0 15px rgba(255, 138, 101, 0.8),
+        0 0 25px #ff8a65,
+        0 2px 6px rgba(0, 0, 0, 0.5);
+    background: radial-gradient(circle, #ff8a65, #ffb380);
+}
+
+.night .rhythm-slider::-moz-range-track {
+    background: rgba(255, 138, 101, 0.15);
+    border: 1px solid rgba(255, 138, 101, 0.3);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.night .rhythm-slider::-moz-range-thumb {
+    background: radial-gradient(circle, #ffb380, #ff8a65);
+    border: 2px solid #ff8a65;
+    box-shadow:
+        0 0 10px rgba(255, 138, 101, 0.6),
+        0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.night .rhythm-slider::-moz-range-thumb:hover {
+    box-shadow:
+        0 0 15px rgba(255, 138, 101, 0.8),
+        0 0 25px #ff8a65,
+        0 2px 6px rgba(0, 0, 0, 0.5);
+    background: radial-gradient(circle, #ff8a65, #ffb380);
+}
+
+/* Other Theme Glasses */
+.blue #audio-player-container {
+    background: rgba(0, 122, 204, 0.3) !important;
+    backdrop-filter: blur(20px) saturate(1.8) !important;
+}
+
+.purple #audio-player-container {
+    background: rgba(139, 92, 246, 0.3) !important;
+    backdrop-filter: blur(20px) saturate(1.8) !important;
+}
+
+.ocean #audio-player-container {
+    background: rgba(6, 182, 212, 0.3) !important;
+    backdrop-filter: blur(20px) saturate(1.8) !important;
+}
+
+.neon #audio-player-container {
+    background: rgba(255, 0, 255, 0.3) !important;
+    backdrop-filter: blur(20px) saturate(2) !important;
+}
+
+.forest #audio-player-container {
+    background: rgba(34, 197, 94, 0.3) !important;
+    backdrop-filter: blur(20px) saturate(1.8) !important;
+}
+
+.terminal #audio-player-container {
+    background: rgba(0, 255, 0, 0.2) !important;
+    backdrop-filter: blur(20px) saturate(1.5) !important;
+}
+
+.synthwave #audio-player-container {
+    background: linear-gradient(135deg, rgba(255, 0, 128, 0.3), rgba(0, 255, 255, 0.3)) !important;
+    backdrop-filter: blur(20px) saturate(2) !important;
+}
+
+.monochrome #audio-player-container {
+    background: rgba(128, 128, 128, 0.4) !important;
+    backdrop-filter: blur(20px) grayscale(1) !important;
+}
+
+.high-contrast #audio-player-container {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: none !important;
+}
+
+.high-contrast #audio-player {
+    filter: brightness(1.5) contrast(1.3);
+}
+
+.dark #audio-player,
+.blue #audio-player,
+.purple #audio-player,
+.ocean #audio-player,
+.neon #audio-player,
+.forest #audio-player,
+.terminal #audio-player,
+.synthwave #audio-player,
+.monochrome #audio-player {
+    filter: brightness(1.2) contrast(1.1);
+}
+
+
+/* Audio Player Container */
+.audio-player-container {
+    position: absolute;
+    top: var(--pos-edge-md);
+    right: var(--pos-edge-md);
+    width: 220px;
+    height: 32px;
+    z-index: var(--z-menu);
+    display: none;
+}
+
+.audio-player {
+    width: var(--size-full);
+    height: var(--size-full);
+    border: none !important;
+    outline: none !important;
+    background: var(--bg-transparent);
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+/* Tutorial Text */
+.tutorial-text-large {
+    font-size: var(--text-xl);
+}
+
+/* Media Queries */
+@media (orientation: landscape), (min-width: 769px) {
+    #audio-viz-section {
+        display: block;
+    }
+}

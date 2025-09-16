@@ -1,4 +1,9 @@
-/* Header Styles for Demo */
+/**
+ * Page Header Component
+ * Demo-specific page header styles
+ */
+
+/* Page Header */
 .page-header {
     position: fixed;
     top: 0;
@@ -85,4 +90,23 @@
 
 .light .header-nav-item:hover {
     color: rgba(0, 0, 0, 0.9);
+}
+
+/* Mobile responsive styles (from header.css in modular system) */
+@media (max-width: 768px) {
+    .page-header {
+        height: 38px !important;
+    }
+
+    .header-logo {
+        width: 70px !important;
+    }
+
+    .header-title {
+        font-size: 7px !important;
+    }
+
+    .header-nav-item {
+        font-size: 6.5px !important;
+    }
 }

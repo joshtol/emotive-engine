@@ -1,0 +1,101 @@
+/**
+ * Light Theme Styles
+ * Light theme variable overrides - includes blue accents
+ */
+
+.light {
+    /* Core Colors */
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-grid: rgba(0, 0, 0, 0.05);
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --accent-primary: #007acc;
+    --accent-glow: #0099ff;
+    --border-color: rgba(0, 122, 204, 0.3);
+
+    /* Component Backgrounds */
+    --panel-bg: transparent;
+    --button-bg: rgba(255, 255, 255, 0.8);
+    --button-hover: rgba(0, 122, 204, 0.1);
+    --canvas-bg: rgba(242, 241, 241, 0.3);
+    --canvas-backdrop: rgba(255, 255, 255, 0.1);
+    --system-bar-bg: rgba(255, 255, 255, 0.95);
+    --system-bar-border: rgba(0, 122, 204, 0.2);
+    --system-btn-bg: rgba(245, 245, 245, 0.9);
+    --system-btn-hover: rgba(0, 122, 204, 0.15);
+
+    /* Opacity Variations */
+    --opacity-subtle: 0.05;
+    --opacity-light: 0.1;
+    --opacity-soft: 0.15;
+    --opacity-medium: 0.3;
+    --opacity-strong: 0.5;
+    --opacity-heavy: 0.7;
+    --opacity-solid: 0.9;
+    --opacity-full: 0.95;
+
+    /* Shadow Colors */
+    --shadow-light: rgba(0, 0, 0, 0.03);
+    --shadow-medium: rgba(0, 0, 0, 0.3);
+    --shadow-dark: rgba(0, 0, 0, 0.5);
+
+    /* Box Shadow Patterns */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-base: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 2px 10px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 2px 20px rgba(0, 0, 0, 0.5);
+    --shadow-2xl: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+
+    /* Border Styles */
+    --border-thin: 1px solid var(--border-color);
+    --border-medium: 2px solid var(--border-color);
+    --border-accent: 2px solid var(--accent-primary);
+    --border-subtle: 1px solid rgba(0, 122, 204, 0.2);
+    --border-strong: 2px solid rgba(0, 122, 204, 0.5);
+    --border-light: 1px solid rgba(0, 0, 0, 0.12);
+
+    /* Special Colors */
+    --color-white-70: rgba(255, 255, 255, 0.7);
+    --color-white-90: rgba(255, 255, 255, 0.9);
+    --color-black-95: rgba(0, 0, 0, 0.95);
+    --color-accent-amber: #fbbf24;
+    --color-red-border: #dc2626;
+    --color-orange-bright: #FF8A65;
+    --color-orange-pale: #FFD4B8;
+    --color-green-bright: #00ff64;
+    --color-white-warm: #FFF5F0;
+    --color-white-pure: #FEFEFE;
+
+    /* Background Patterns */
+    --bg-transparent: transparent;
+    --bg-black-03: rgba(0, 0, 0, 0.03);
+    --bg-black-04: rgba(0, 0, 0, 0.04);
+    --bg-black-08: rgba(0, 0, 0, 0.08);
+    --bg-black-10: rgba(0, 0, 0, 0.1);
+    --bg-black-15: rgba(0, 0, 0, 0.15);
+    --bg-black-30: rgba(0, 0, 0, 0.3);
+    --bg-black-40: rgba(0, 0, 0, 0.4);
+    --bg-black-60: rgba(0, 0, 0, 0.6);
+    --bg-black-80: rgba(0, 0, 0, 0.8);
+    --bg-black-90: rgba(0, 0, 0, 0.9);
+
+    /* Additional Opacity Values */
+    --opacity-20: 0.2;
+    --opacity-33: 0.33;
+    --opacity-60: 0.6;
+    --opacity-80: 0.8;
+
+    /* Shadow Patterns */
+    --shadow-glow-sm: 0 0 8px;
+    --shadow-glow-md: 0 0 12px;
+    --shadow-glow-lg: 0 0 20px;
+    --shadow-glow-xl: 0 0 40px;
+    --shadow-inset-sm: inset 0 0 6px;
+    --shadow-inset-md: inset 0 0 10px;
+    --shadow-depth-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-depth-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+    --shadow-depth-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
+}

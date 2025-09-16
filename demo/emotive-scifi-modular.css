@@ -1,0 +1,32 @@
+/**
+ * Emotive Sci-Fi Theme - Modular CSS
+ * This file imports all the modular CSS components in the correct order
+ * Dependencies flow from core → components → themes → utilities
+ */
+
+/* 1. Core Styles - Foundation that everything depends on */
+@import url('styles/core/variables.css');     /* CSS custom properties and design tokens */
+@import url('styles/core/reset.css');         /* Reset and base typography */
+@import url('styles/core/layout.css');        /* Main layout structure */
+@import url('styles/core/animations.css');    /* Keyframe animations */
+
+/* 2. Component Styles - Individual UI components */
+@import url('styles/components/header.css');  /* Page header and navigation */
+@import url('styles/components/display.css'); /* Central display unit */
+@import url('styles/components/controls.css'); /* Control panels and sections */
+@import url('styles/components/buttons.css');  /* All button styles */
+@import url('styles/components/emotions.css'); /* Emotion panels */
+@import url('styles/components/audio.css');    /* Audio visualizer and controls */
+@import url('styles/components/effects.css');  /* Holo effects and decorations */
+@import url('styles/components/footer.css');   /* Footer styles */
+
+/* 3. Theme Styles - Color schemes and theme-specific overrides */
+@import url('styles/themes/light.css');       /* Light theme */
+@import url('styles/themes/dark.css');        /* Dark theme */
+@import url('styles/themes/night.css');       /* Night/warm theme */
+
+/* 4. Utility Styles - Helper classes and browser-specific resets */
+@import url('styles/utils/utilities.css');
+
+/* 5. Responsive Styles - Mobile and tablet overrides */
+/* @import url('styles/core/responsive.css'); */ /* Add when ready for responsive design */
