@@ -3,6 +3,8 @@
  * @module core/morpher/MusicDetector
  */
 
+import { AgentBPMDetector } from './AgentBPMDetector.js';
+
 export class MusicDetector {
     constructor() {
         // Beat detection state
@@ -10,18 +12,22 @@ export class MusicDetector {
         this.onsetStrengths = [];
         this.lastOnsetTime = 0;
         this.onsetThreshold = 0.3;
-        
+
         // BPM detection
         this.detectedBPM = 0;
         this.bpmConfidence = 0;
         this.lastBPMCalculation = 0;
         this.bpmCalculationInterval = 2000; // Recalculate every 2 seconds
-        
+
         // BPM tracking
         this.bpmHistory = [];
         this.tempoLocked = false;
         this.fundamentalBPM = 0;
-        
+
+        // Agent-based detector for fast convergence
+        this.agentDetector = new AgentBPMDetector();
+        this.useAgentDetection = true; // Flag to enable/disable
+
         // Time signature detection
         this.timeSignature = '4/4';
         this.detectedTimeSignature = null;
@@ -31,11 +37,11 @@ export class MusicDetector {
         this.downbeatPhase = 0;
         this.measureLength = 4;
         this.measureStartTime = 0;
-        
+
         // Music state
         this.isMusicalContent = false;
         this.musicalityScore = 0;
-        
+
         // Fast detection mode
         this.forceFastDetection = false;
     }
@@ -45,6 +51,38 @@ export class MusicDetector {
      * @returns {number} Detected BPM
      */
     calculateBPM() {
+        // Try agent detector first for faster results
+        if (this.useAgentDetection) {
+            const agentStatus = this.agentDetector.getStatus();
+            if (agentStatus.locked && agentStatus.confidence > 0.6) { // Lower threshold
+                // Use agent's locked BPM
+                this.detectedBPM = agentStatus.bpm;
+                this.bpmConfidence = agentStatus.confidence;
+                this.tempoLocked = true;
+                this.fundamentalBPM = agentStatus.bpm;
+
+                // Update history
+                this.bpmHistory.push(this.detectedBPM);
+                if (this.bpmHistory.length > 10) {
+                    this.bpmHistory.shift();
+                }
+
+                return this.detectedBPM;
+            } else if (agentStatus.bpm > 0 && agentStatus.confidence > 0.4) { // Lower threshold
+                // Use agent's estimate if somewhat confident
+                this.detectedBPM = agentStatus.bpm;
+                this.bpmConfidence = agentStatus.confidence;
+
+                // Also mark as tempo locked if confidence is decent
+                if (agentStatus.confidence > 0.6) {
+                    this.tempoLocked = true;
+                }
+
+                return this.detectedBPM;
+            }
+        }
+
+        // Fall back to original method if agent not ready
         if (this.onsetIntervals.length < 4) return this.detectedBPM;
         
         // Use appropriate window size based on available data
@@ -373,6 +411,11 @@ export class MusicDetector {
      * @param {number} bassWeight - Optional bass weight for downbeat detection
      */
     addOnset(time, strength, bassWeight = 0) {
+        // Feed to agent detector for fast convergence
+        if (this.useAgentDetection) {
+            this.agentDetector.processPeak(strength, time);
+        }
+
         if (this.lastOnsetTime > 0) {
             const interval = time - this.lastOnsetTime;
             // Filter reasonable intervals (60-220 BPM range)
@@ -383,12 +426,12 @@ export class MusicDetector {
                 }
             }
         }
-        
+
         this.onsetStrengths.push({ time, strength, bassWeight });
         if (this.onsetStrengths.length > 40) {
             this.onsetStrengths.shift();
         }
-        
+
         this.lastOnsetTime = time;
     }
 
@@ -403,6 +446,22 @@ export class MusicDetector {
             this.detectTimeSignature();
             this.lastBPMCalculation = now;
         }
+    }
+
+    /**
+     * Get recommended subdivision for current BPM
+     */
+    getRecommendedSubdivision() {
+        if (this.useAgentDetection) {
+            return this.agentDetector.getSubdivision();
+        }
+
+        // Fallback logic based on BPM ranges - prefer lower subdivisions
+        if (this.detectedBPM < 60) return 2;     // Double for very slow
+        if (this.detectedBPM < 80) return 1;     // Normal for slow
+        if (this.detectedBPM > 180) return 0.5;  // Half for very fast
+        if (this.detectedBPM > 140) return 0.5;  // Half for fast
+        return 1; // Normal for mid-range (80-140)
     }
 
     /**
@@ -421,6 +480,11 @@ export class MusicDetector {
         this.detectedTimeSignature = null;
         this.timeSignatureConfidence = 0;
         this.timeSignatureHistory = [];
+
+        // Reset agent detector
+        if (this.agentDetector) {
+            this.agentDetector.reset();
+        }
         this.timeSignatureLocked = false;
         this.isMusicalContent = false;
         this.forceFastDetection = false;

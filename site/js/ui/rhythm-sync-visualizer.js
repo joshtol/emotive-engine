@@ -343,6 +343,16 @@ class RhythmSyncVisualizer {
                 // Only auto-start if tempo is locked and we have valid BPM
                 if (tempoLocked && hasFrequencyData && hasBPM) {
                     console.log('RhythmSyncVisualizer: Tempo locked with music activity, auto-starting');
+
+                    // Auto-set subdivision based on BPM
+                    if (detector.getRecommendedSubdivision) {
+                        const recommendedSub = detector.getRecommendedSubdivision();
+                        if (recommendedSub !== this.state.subdivision) {
+                            console.log(`Auto-setting subdivision to ${recommendedSub}× based on BPM ${detector.detectedBPM}`);
+                            this.setSubdivision(recommendedSub);
+                        }
+                    }
+
                     this.start();
                     // Don't return here, let the update loop continue
                 }
