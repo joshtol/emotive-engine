@@ -124,7 +124,8 @@
       "Bash(npx rollup:*)",
       "Bash(npm install:*)",
       "Bash(start http://localhost:8080/themed-scifi-instrument.html)",
-      "Read(//c/Users/raven/OneDrive/Pictures/Screenshots/**)"
+      "Read(//c/Users/raven/OneDrive/Pictures/Screenshots/**)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

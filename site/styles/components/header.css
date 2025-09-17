@@ -1,0 +1,203 @@
+/**
+ * Header Component Styles
+ * Page headers, section headers, and titles
+ */
+
+/* Page Header */
+.page-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 76px; /* Match --pos-hero height */
+    background: #000000;
+    z-index: 10; /* Below corner brackets and system bar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Light theme header */
+.light .page-header {
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-title {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Light theme title */
+.light .header-title {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.header-logo {
+    width: 140px;
+    height: auto;
+    opacity: 0.9;
+    transition: filter 0.3s ease;
+}
+
+/* Dark theme logo (cyan tint) */
+.dark .header-logo {
+    filter: brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(150deg) brightness(0.95);
+}
+
+/* Night theme logo (orange tint) */
+.night .header-logo {
+    filter: brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(15deg) brightness(0.9);
+}
+
+/* Light theme logo (blue tint) */
+.light .header-logo {
+    filter: brightness(0) sepia(1) saturate(5) hue-rotate(190deg) brightness(0.4);
+}
+
+.header-nav {
+    display: flex;
+    gap: 30px;
+}
+
+.header-nav-item {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.3s ease;
+}
+
+.header-nav-item:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Light theme nav items */
+.light .header-nav-item {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.light .header-nav-item:hover {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-xs);
+}
+
+/* Center-aligned headers */
+.section-header.center-header {
+    justify-content: center;
+}
+
+.section-header.center-header h3 {
+    text-align: center;
+}
+
+/* Night theme section header */
+.night .section-header {
+    border-bottom: 1px solid rgba(204, 102, 51, 0.3);
+}
+
+/* Right menu section header */
+.right-menu .section-header {
+    justify-content: space-between;
+}
+
+.right-menu .section-header h3 {
+    text-align: left;
+}
+
+/* Left menu headers */
+.left-menu .section-header.left-align {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-end;
+    position: relative;
+}
+
+.left-menu .section-header.left-align h3 {
+    text-align: right;
+    flex: 1;
+}
+
+/* Right menu headers */
+.right-menu .section-header.left-align {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: relative;
+}
+
+.right-menu .section-header.left-align h3 {
+    text-align: left;
+    flex: 1;
+}
+
+/* Undertone section header */
+.undertone-section .section-header {
+    border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+/* Header Typography */
+.section-header h2,
+.section-header h3 {
+    font-family: var(--font-heading);
+    font-size: var(--text-md);
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: var(--spacing-letter-wider);
+    margin: 0;
+    font-weight: var(--font-light);
+    line-height: 1.2;
+    padding: 2px 0;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .page-header {
+        height: 38px !important;
+    }
+
+    .header-logo {
+        width: 70px !important;
+    }
+
+    .header-title {
+        font-size: 7px !important;
+    }
+
+    .header-nav-item {
+        font-size: 6.5px !important;
+    }
+
+    .section-header {
+        padding: 4px 8px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .section-header h2 {
+        font-size: 11px !important;
+        letter-spacing: 0.5px !important;
+    }
+}

@@ -71,15 +71,7 @@ class RhythmIntegration {
             // Auto-start rhythm engine if not running
             if (!rhythmEngine.isRunning) {
                 
-                // Update UI before starting
-                const bpmSlider = document.getElementById('bpm-slider');
-                if (bpmSlider) {
-                    bpmSlider.value = newBPM;
-                }
-                const bpmValue = document.getElementById('bpm-value');
-                if (bpmValue) {
-                    bpmValue.textContent = newBPM;
-                }
+                // BPM is now shown visually through the beat histogram bars
                 
                 // Update rhythm toggle button state
                 const rhythmToggle = document.getElementById('rhythm-toggle');
@@ -88,7 +80,7 @@ class RhythmIntegration {
                     rhythmToggle.classList.add('active');
                     const rhythmStatus = document.getElementById('rhythm-status');
                     if (rhythmStatus) {
-                        rhythmStatus.textContent = '■ STOP';
+                        rhythmStatus.textContent = '⏸';
                     }
                     // Update the global rhythmActive flag if it exists
                     if (typeof window.rhythmActive !== 'undefined') {
@@ -104,15 +96,7 @@ class RhythmIntegration {
             // This ensures new tracks get their correct BPM
             rhythmEngine.setBPM(newBPM);
             
-            // Update UI to show new BPM
-            const bpmSlider = document.getElementById('bpm-slider');
-            if (bpmSlider) {
-                bpmSlider.value = newBPM;
-            }
-            const bpmValue = document.getElementById('bpm-value');
-            if (bpmValue) {
-                bpmValue.textContent = newBPM;
-            }
+            // BPM is now shown visually through the beat histogram bars
         }
     }
     

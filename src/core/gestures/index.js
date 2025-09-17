@@ -51,6 +51,7 @@ import tilt from './transforms/tilt.js';
 import orbital from './transforms/orbital.js';
 import hula from './transforms/hula.js';
 import scan from './transforms/scan.js';
+import twist from './transforms/twist.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT EFFECT GESTURES (Visual effects)
@@ -202,7 +203,8 @@ const TRANSFORM_GESTURES = [
     tilt,
     orbital,
     hula,
-    scan
+    scan,
+    twist
 ];
 
 const EFFECT_GESTURES = [

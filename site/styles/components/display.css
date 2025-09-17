@@ -1,0 +1,393 @@
+/**
+ * Display Component Styles
+ * Central display area, canvas container, and theme switcher
+ */
+
+/* Display and Controls Container */
+.display-and-controls {
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    position: relative;
+}
+
+/* Display Container */
+.display-container {
+    width: 100%;
+    flex: 1;
+    position: relative;
+    background: rgba(10, 14, 26, 0.25);
+    min-height: 0;
+    z-index: calc(var(--z-overlay) + 1); /* Above shape controls */
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    pointer-events: none;
+}
+
+.display-container canvas {
+    pointer-events: auto;
+}
+
+/* Display Content */
+.display-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: var(--size-full);
+    overflow: hidden;
+    background: var(--canvas-bg);
+    pointer-events: none;
+}
+
+/* Corner Brackets */
+.display-and-controls .corner-bracket {
+    position: absolute;
+    z-index: var(--z-max) !important;
+}
+
+/* Canvas Elements */
+#emotive-canvas {
+    display: block;
+    position: absolute;
+    z-index: var(--z-menu);
+    width: 100%;
+    height: var(--size-full);
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+/* Theme Switcher */
+.theme-switcher {
+    /* Reset button styles */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+
+    position: fixed;
+    top: calc(var(--pos-hero) + 20px);
+    right: calc(var(--control-width) + 65px);
+    z-index: var(--z-overlay);
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all var(--transition-slow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Translucent background */
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.theme-switcher:hover {
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.3);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.theme-switcher:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+.theme-switcher:focus,
+.theme-switcher:focus-visible {
+    outline: none;
+    box-shadow: none;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Override any focus states */
+.theme-switcher:focus:not(:hover) {
+    transform: scale(1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.theme-switcher.switching {
+    animation: themeSwitchPulse 0.6s ease;
+    pointer-events: none;
+}
+
+@keyframes themeSwitchPulse {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.2) rotate(180deg); }
+    50% { transform: scale(0.8) rotate(360deg); }
+    75% { transform: scale(1.1) rotate(360deg); }
+    100% { transform: scale(1) rotate(360deg); }
+}
+
+/* Theme icon states */
+.theme-switcher .theme-icon {
+    pointer-events: none;
+    user-select: none;
+}
+
+.theme-icon {
+    width: 24px;
+    height: 24px;
+    transition: all var(--transition-base);
+    opacity: 0.7;
+}
+
+.theme-switcher:hover .theme-icon {
+    filter: drop-shadow(0 0 6px var(--accent-glow));
+    opacity: 1;
+}
+
+/* Light theme adjustments */
+.light .theme-switcher {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .theme-switcher:hover {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: var(--accent-primary);
+}
+
+/* Night theme adjustments */
+.night .theme-switcher {
+    background: rgba(20, 10, 0, 0.2);
+    border-color: rgba(255, 138, 101, 0.1);
+}
+
+.night .theme-switcher:hover {
+    background: rgba(20, 10, 0, 0.3);
+    border-color: var(--accent-primary);
+}
+
+.top-left {
+    top: 0;
+    left: 0;
+}
+
+.top-left::before {
+    height: var(--size-corner);
+    width: 100%;
+}
+
+.top-left::after {
+    width: var(--size-corner);
+    height: var(--size-full);
+}
+
+.top-right {
+    top: 0;
+    right: 0;
+}
+
+.bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+.bottom-right {
+    bottom: 0;
+    right: 0;
+}
+
+/* Light Theme Display */
+.light .display-container {
+    background: var(--bg-black-15);
+}
+
+/* Shape Controls Hero Positioning */
+.shape-controls-hero {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--pos-shape-controls);
+    z-index: var(--z-overlay); /* Above display container */
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .display-and-controls {
+        height: 100%;
+    }
+
+    .display-container {
+        height: 100%;
+    }
+
+    .display-content .indicator {
+        font-size: 9px !important;
+    }
+
+    /* Shape controls in display container */
+    .display-container .shape-controls-hero,
+    .display-and-controls .shape-controls-hero {
+        position: fixed !important;
+        bottom: auto !important;
+        top: calc(38px + 50vh - 50px) !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        z-index: 100;
+    }
+}
+
+/* Portrait Mobile Only */
+@media (orientation: portrait) and (max-width: 480px) {
+    .display-and-controls .corner-bracket {
+        position: absolute;
+    }
+
+    .top-left, .top-right {
+        top: 0;
+    }
+
+    .top-left {
+        left: 0;
+    }
+
+    .top-right {
+        right: 0;
+    }
+}
+
+/* Medium screens (tablets, small desktops) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .display-and-controls {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: var(--pos-footer); /* Stop at footer */
+        width: var(--size-full);
+        height: var(--size-full);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        padding: 0;
+        margin: 0;
+    }
+
+    .display-container {
+        flex: 1;
+        width: var(--size-full);
+        position: relative;
+        margin: 0;
+    }
+
+    .shape-controls-hero {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: var(--pos-shape-controls);
+        z-index: var(--z-overlay);
+    }
+}
+
+/* Landscape Styles */
+@media (orientation: landscape) and (max-height: 900px) {
+    .display-and-controls {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: var(--pos-footer); /* Stop at footer */
+        width: var(--size-full);
+        height: var(--size-full);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        padding: 0;
+        margin: 0;
+    }
+
+    .display-container {
+        flex: 1;
+        width: var(--size-full);
+        position: relative;
+        margin: 0;
+    }
+
+    .display-container::before {
+        display: none;
+    }
+
+    .shape-controls-hero {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: var(--pos-shape-controls);
+        z-index: var(--z-overlay);
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 1025px) {
+    .display-and-controls {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: var(--pos-footer); /* Stop at footer */
+        width: var(--size-full);
+        height: var(--size-full);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        padding: 0;
+        margin: 0;
+    }
+
+    .display-container {
+        flex: 1;
+        width: var(--size-full);
+        position: relative;
+        margin: 0;
+    }
+
+    .display-container::before {
+        display: none;
+    }
+
+    .shape-controls-hero {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: var(--pos-shape-controls);
+        z-index: var(--z-overlay);
+    }
+}
+
+/* Ultra-wide Styles */
+@media (min-width: 1921px) {
+    .display-and-controls {
+        flex-direction: row !important;
+        align-items: stretch !important;
+        position: relative;
+    }
+
+    .display-container {
+        order: 2;
+        flex: 1;
+    }
+}
