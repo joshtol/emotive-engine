@@ -138,27 +138,24 @@
     padding: 0 var(--spacing-xs);
 }
 
-/* Beat Indicators */
+/* Beat Indicators - optimized for performance */
 .rhythm-beat-indicator {
     flex: 1;
     max-width: calc(100% / 8);
     height: 100%;
-    background: linear-gradient(180deg,
-        rgba(0, 229, 255, 0.1) 0%,
-        rgba(0, 229, 255, 0.05) 100%);
+    background: rgba(0, 229, 255, 0.08);
     border: 1px solid rgba(0, 229, 255, 0.2);
     border-radius: var(--radius-sm);
     position: relative;
     transform-origin: center;
-    /* Remove transition for instant response */
+    will-change: transform;
+    /* Use simple background instead of gradient */
 }
 
 .rhythm-beat-indicator.active {
-    background: linear-gradient(180deg,
-        rgba(0, 229, 255, 0.4) 0%,
-        rgba(0, 229, 255, 0.2) 100%);
+    background: rgba(0, 229, 255, 0.3);
     border-color: var(--accent-primary);
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+    /* Removed box-shadow to reduce paint overhead */
 }
 
 .rhythm-beat-indicator.pulse {
@@ -168,24 +165,12 @@
 @keyframes beat-pulse {
     0% {
         transform: scale(1);
-        background: linear-gradient(180deg,
-            rgba(0, 229, 255, 0.4) 0%,
-            rgba(0, 229, 255, 0.2) 100%);
-        border-color: var(--accent-primary);
     }
     50% {
         transform: scale(1.1);
-        background: linear-gradient(180deg,
-            rgba(0, 229, 255, 0.6) 0%,
-            rgba(0, 229, 255, 0.3) 100%);
-        border-color: var(--accent-primary);
     }
     100% {
         transform: scale(1);
-        background: linear-gradient(180deg,
-            rgba(0, 229, 255, 0.4) 0%,
-            rgba(0, 229, 255, 0.2) 100%);
-        border-color: var(--accent-primary);
     }
 }
 
@@ -223,18 +208,13 @@
 }
 
 .light .rhythm-beat-indicator {
-    background: linear-gradient(180deg,
-        rgba(0, 0, 0, 0.05) 0%,
-        rgba(0, 0, 0, 0.02) 100%);
+    background: rgba(0, 0, 0, 0.04);
     border-color: rgba(0, 0, 0, 0.1);
 }
 
 .light .rhythm-beat-indicator.active {
-    background: linear-gradient(180deg,
-        rgba(0, 0, 0, 0.2) 0%,
-        rgba(0, 0, 0, 0.1) 100%);
+    background: rgba(0, 0, 0, 0.15);
     border-color: var(--text-primary);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
 }
 
 /* Night Theme */
@@ -257,18 +237,13 @@
 }
 
 .night .rhythm-beat-indicator {
-    background: linear-gradient(180deg,
-        rgba(255, 150, 50, 0.1) 0%,
-        rgba(255, 150, 50, 0.05) 100%);
+    background: rgba(255, 150, 50, 0.08);
     border-color: rgba(255, 150, 50, 0.2);
 }
 
 .night .rhythm-beat-indicator.active {
-    background: linear-gradient(180deg,
-        rgba(255, 150, 50, 0.4) 0%,
-        rgba(255, 150, 50, 0.2) 100%);
+    background: rgba(255, 150, 50, 0.3);
     border-color: var(--color-orange-bright);
-    box-shadow: 0 0 20px rgba(255, 150, 50, 0.5);
 }
 
 /* Mobile Responsive */
