@@ -43,7 +43,9 @@ class GestureController {
             lastGesture: null,
             gestureQueue: [],
             isProcessingQueue: false,
-            currentBeatActive: false
+            currentBeatActive: false,
+            beatSyncEnabled: false,
+            nextBeatProcessing: false
         };
 
         // Button elements
@@ -134,7 +136,10 @@ class GestureController {
         }
 
         // Check if rhythm sync is active and we need beat sync
-        if (this.isRhythmSyncActive() && this.config.requireBeatSync) {
+        const rhythmActive = this.isRhythmSyncActive();
+        console.log(`Gesture triggered: ${gestureName}, Rhythm Active: ${rhythmActive}, Require Beat Sync: ${this.config.requireBeatSync}`);
+
+        if (rhythmActive && this.config.requireBeatSync) {
             // Queue the gesture instead of immediate execution
             this.queueGesture(gestureName, buttonElement);
         } else if (window.rhythmActive && this.gestureScheduler) {
@@ -197,7 +202,14 @@ class GestureController {
      * Process queued gestures on beat
      */
     processGestureQueue() {
-        if (this.state.gestureQueue.length === 0 || this.state.isProcessingQueue) {
+        // Don't process if queue is empty
+        if (this.state.gestureQueue.length === 0) {
+            this.state.nextBeatProcessing = false;
+            return;
+        }
+
+        // Don't process if already processing
+        if (this.state.isProcessingQueue) {
             return;
         }
 
@@ -228,6 +240,11 @@ class GestureController {
         }
 
         this.state.isProcessingQueue = false;
+
+        // If there are more gestures, mark for next beat
+        if (this.state.gestureQueue.length > 0) {
+            this.state.nextBeatProcessing = true;
+        }
     }
 
     /**
@@ -245,7 +262,12 @@ class GestureController {
      * Check if rhythm sync is active
      */
     isRhythmSyncActive() {
-        return this.rhythmSyncVisualizer?.state?.active || false;
+        // Check if rhythm sync visualizer exists and is active
+        if (window.rhythmSyncVisualizer) {
+            const state = window.rhythmSyncVisualizer.getState?.();
+            return state?.active && state?.lockedBPM > 0;
+        }
+        return false;
     }
 
     /**
@@ -253,7 +275,13 @@ class GestureController {
      */
     onBeatActive() {
         this.state.currentBeatActive = true;
-        this.processGestureQueue();
+        console.log(`Beat active! Queue length: ${this.state.gestureQueue.length}, Processing: ${this.state.isProcessingQueue}`);
+
+        // Only process queue if we have gestures waiting
+        if (this.state.gestureQueue.length > 0 && !this.state.isProcessingQueue) {
+            console.log('Processing gesture on beat');
+            this.processGestureQueue();
+        }
     }
 
     /**

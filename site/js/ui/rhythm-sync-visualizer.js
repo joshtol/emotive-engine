@@ -158,8 +158,8 @@ class RhythmSyncVisualizer {
         });
 
         // Single buttons - BPM fine control with hold-to-repeat
-        this.setupBPMButton(this.leftSingleButton, -1);
-        this.setupBPMButton(this.rightSingleButton, 1);
+        this.setupBPMButton(this.leftSingleButton, -1);  // Left decreases BPM (slows down)
+        this.setupBPMButton(this.rightSingleButton, 1);  // Right increases BPM (speeds up)
     }
 
     /**
