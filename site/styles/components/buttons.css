@@ -235,7 +235,7 @@
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all var(--transition-smooth);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -250,14 +250,29 @@
 }
 
 .shape-controls-hero .shape-btn:hover {
-    background: rgba(var(--accent-rgb, 0, 229, 255), 0.1);
-    transform: translateY(-2px) scale(1.05);
+    background: linear-gradient(135deg,
+        rgba(var(--accent-rgb, 0, 229, 255), 0.15) 0%,
+        rgba(var(--accent-rgb, 0, 229, 255), 0.08) 100%);
+    transform: translateY(-2px) scale(1.08);
+    box-shadow:
+        0 4px 12px rgba(var(--accent-rgb, 0, 229, 255), 0.3),
+        0 0 20px rgba(var(--accent-rgb, 0, 229, 255), 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-color: rgba(var(--accent-rgb, 0, 229, 255), 0.4);
 }
 
 .shape-controls-hero .shape-btn.active {
-    background: var(--gradient-cyan);
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.6), inset 0 0 10px rgba(0, 255, 255, 0.2);
+    background: linear-gradient(135deg,
+        rgba(var(--accent-rgb, 0, 229, 255), 0.4) 0%,
+        rgba(var(--accent-rgb, 0, 229, 255), 0.25) 100%);
+    box-shadow:
+        0 0 25px rgba(var(--accent-rgb, 0, 229, 255), 0.5),
+        0 2px 8px rgba(var(--accent-rgb, 0, 229, 255), 0.3),
+        inset 0 0 15px rgba(var(--accent-rgb, 0, 229, 255), 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
     transform: scale(1.05);
+    border-color: rgba(var(--accent-rgb, 0, 229, 255), 0.6);
+    color: var(--accent-primary);
 }
 
     width: 60px;
@@ -286,32 +301,67 @@
 }
 
 /* Light Theme Shape Controls */
-.light .shape-controls-hero {
-    background: rgba(255, 255, 255, 0.8);
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+.light .shape-controls-hero,
+body.light .shape-controls-hero,
+.light .display-container .shape-controls-hero,
+.light div.shape-controls-hero {
+    background: rgba(255, 255, 255, 0.7) !important;
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    background-image: none !important;
+    border-top: 1px solid rgba(240, 240, 240, 0.3) !important;
+    box-shadow:
+        0 -1px 3px rgba(0, 0, 0, 0.01),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Extra specificity for light theme */
+body.light .display-and-controls .display-container .shape-controls-hero {
+    background: rgba(255, 255, 255, 0.7) !important;
+    background-color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .light .shape-controls-hero .shape-btn {
-    background: rgba(255, 255, 255, 0.9);
-    color: rgba(0, 0, 0, 0.7);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.98) 0%,
+        rgba(252, 252, 253, 0.95) 100%);
+    color: rgba(55, 60, 70, 0.75);
+    border: 1px solid rgba(220, 220, 225, 0.35);
+    box-shadow:
+        0 2px 3px rgba(0, 0, 0, 0.03),
+        0 1px 2px rgba(0, 0, 0, 0.02),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .light .shape-controls-hero .shape-btn:hover {
-    background: rgba(0, 122, 204, 0.1);
-    color: rgba(0, 122, 204, 0.9);
-    border-color: rgba(0, 122, 204, 0.3);
-    transform: scale(1.05);
-    box-shadow: 0 2px 6px rgba(0, 122, 204, 0.2);
+    background: linear-gradient(135deg,
+        rgba(245, 247, 250, 1) 0%,
+        rgba(235, 240, 245, 1) 100%);
+    color: rgba(30, 35, 45, 0.95);
+    border-color: rgba(180, 190, 200, 0.6);
+    transform: translateY(-2px) scale(1.08);
+    box-shadow:
+        0 6px 16px rgba(0, 20, 40, 0.12),
+        0 2px 6px rgba(0, 20, 40, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        inset 0 -1px 0 rgba(220, 225, 230, 0.3);
+    transition: all 0.15s ease-out;
 }
 
 .light .shape-controls-hero .shape-btn.active {
-    background: rgba(0, 122, 204, 0.15);
-    color: #0066cc;
-    border-color: rgba(0, 122, 204, 0.4);
-    box-shadow: 0 0 12px rgba(0, 122, 204, 0.3), inset 0 0 6px rgba(0, 122, 204, 0.1);
+    background: linear-gradient(135deg,
+        rgba(70, 130, 200, 0.95) 0%,
+        rgba(50, 110, 180, 0.92) 100%);
+    color: rgba(255, 255, 255, 0.98);
+    border-color: rgba(70, 130, 200, 0.6);
+    transform: scale(1.05);
+    box-shadow:
+        0 0 20px rgba(70, 130, 200, 0.35),
+        0 4px 12px rgba(50, 110, 180, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(40, 90, 160, 0.2);
+    transition: all 0.2s ease-out;
 }
 
     background: rgba(255, 255, 255, 0.9);
@@ -324,6 +374,57 @@
     color: var(--accent-primary);
     border-color: rgba(0, 122, 204, 0.3);
     transform: translateY(-2px) scale(1.05) rotate(180deg);
+}
+
+/* Night/Warm Theme Shape Controls */
+.night .shape-controls-hero {
+    background: rgba(30, 20, 10, 0.8) !important;
+    border-top: 1px solid rgba(255, 150, 50, 0.2) !important;
+    box-shadow:
+        0 -2px 16px rgba(255, 100, 0, 0.1),
+        0 -1px 8px rgba(255, 150, 50, 0.05),
+        inset 0 1px 0 rgba(255, 200, 100, 0.1) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.night .shape-controls-hero .shape-btn {
+    background: linear-gradient(135deg,
+        rgba(40, 25, 15, 0.9) 0%,
+        rgba(30, 20, 10, 0.85) 100%);
+    color: rgba(255, 200, 150, 0.8);
+    border: 1px solid rgba(255, 150, 50, 0.25);
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 200, 100, 0.1);
+}
+
+.night .shape-controls-hero .shape-btn:hover {
+    background: linear-gradient(135deg,
+        rgba(255, 150, 50, 0.2) 0%,
+        rgba(255, 120, 30, 0.15) 100%);
+    color: rgba(255, 200, 100, 0.95);
+    border-color: rgba(255, 150, 50, 0.5);
+    transform: translateY(-2px) scale(1.08);
+    box-shadow:
+        0 6px 20px rgba(255, 120, 30, 0.25),
+        0 2px 8px rgba(255, 150, 50, 0.15),
+        inset 0 1px 0 rgba(255, 220, 150, 0.2),
+        inset 0 -1px 0 rgba(200, 100, 30, 0.1);
+}
+
+.night .shape-controls-hero .shape-btn.active {
+    background: linear-gradient(135deg,
+        rgba(255, 140, 40, 0.9) 0%,
+        rgba(255, 100, 20, 0.85) 100%);
+    color: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 150, 50, 0.6);
+    transform: scale(1.05);
+    box-shadow:
+        0 0 25px rgba(255, 140, 40, 0.4),
+        0 4px 12px rgba(255, 100, 20, 0.3),
+        inset 0 1px 0 rgba(255, 220, 150, 0.3),
+        inset 0 -1px 0 rgba(200, 80, 20, 0.2);
 }
 
 /* Emotion Buttons */

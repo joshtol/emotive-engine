@@ -89,12 +89,6 @@ class RhythmSyncVisualizer {
         leftDoubleButton.title = 'Slow Down (Subdivision)';
         leftDoubleButton.innerHTML = '<img src="assets/double-chevron.svg" alt="Slow Down" />';
 
-        // Create left single speed button (decrease BPM)
-        const leftSingleButton = document.createElement('button');
-        leftSingleButton.className = 'rhythm-speed-btn rhythm-speed-single rhythm-speed-left';
-        leftSingleButton.title = 'Decrease BPM';
-        leftSingleButton.innerHTML = '<img src="assets/chevron.svg" alt="Decrease BPM" />';
-
         // Create beat indicators section
         const beatsContainer = document.createElement('div');
         beatsContainer.className = 'rhythm-beats-container';
@@ -116,31 +110,21 @@ class RhythmSyncVisualizer {
             this.beatIndicators.push(indicator);
         }
 
-        // Create right single speed button (increase BPM)
-        const rightSingleButton = document.createElement('button');
-        rightSingleButton.className = 'rhythm-speed-btn rhythm-speed-single rhythm-speed-right';
-        rightSingleButton.title = 'Increase BPM';
-        rightSingleButton.innerHTML = '<img src="assets/chevron.svg" alt="Increase BPM" />';
-
         // Create right double speed button (speed up subdivision)
         const rightDoubleButton = document.createElement('button');
         rightDoubleButton.className = 'rhythm-speed-btn rhythm-speed-double rhythm-speed-right';
         rightDoubleButton.title = 'Speed Up (Subdivision)';
         rightDoubleButton.innerHTML = '<img src="assets/double-chevron.svg" alt="Speed Up" />';
 
-        // Assemble structure with buttons on sides
+        // Assemble structure with only double buttons
         wrapper.appendChild(leftDoubleButton);
-        wrapper.appendChild(leftSingleButton);
         wrapper.appendChild(beatsContainer);
-        wrapper.appendChild(rightSingleButton);
         wrapper.appendChild(rightDoubleButton);
         this.container.appendChild(wrapper);
 
         // Store references
         this.beatsContainer = beatsContainer;
         this.leftDoubleButton = leftDoubleButton;
-        this.leftSingleButton = leftSingleButton;
-        this.rightSingleButton = rightSingleButton;
         this.rightDoubleButton = rightDoubleButton;
     }
 
@@ -156,73 +140,6 @@ class RhythmSyncVisualizer {
         this.rightDoubleButton.addEventListener('click', () => {
             this.cycleSubdivision('up');
         });
-
-        // Single buttons - BPM fine control with hold-to-repeat
-        this.setupBPMButton(this.leftSingleButton, -1);  // Left decreases BPM (slows down)
-        this.setupBPMButton(this.rightSingleButton, 1);  // Right increases BPM (speeds up)
-    }
-
-    /**
-     * Set up BPM adjustment button with hold-to-repeat
-     */
-    setupBPMButton(button, direction) {
-        let holdInterval = null;
-        let isPressed = false;
-
-        // Simple click handler
-        const handleClick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            // Only adjust on click if we weren't holding
-            if (!isPressed) {
-                this.adjustManualBPM(direction);
-            }
-        };
-
-        // Start holding
-        const startHold = (e) => {
-            e.preventDefault();
-            if (isPressed) return;
-
-            isPressed = true;
-
-            // First adjustment immediately
-            this.adjustManualBPM(direction);
-
-            // Then repeat every 100ms (10 per second)
-            holdInterval = setInterval(() => {
-                this.adjustManualBPM(direction);
-            }, 100);
-        };
-
-        // Stop holding
-        const stopHold = (e) => {
-            if (e) e.preventDefault();
-
-            isPressed = false;
-
-            if (holdInterval) {
-                clearInterval(holdInterval);
-                holdInterval = null;
-            }
-        };
-
-        // Click event
-        button.addEventListener('click', handleClick);
-
-        // Mouse events for desktop
-        button.addEventListener('mousedown', startHold);
-        button.addEventListener('mouseup', stopHold);
-        button.addEventListener('mouseleave', stopHold);
-
-        // Touch events for mobile
-        button.addEventListener('touchstart', startHold);
-        button.addEventListener('touchend', stopHold);
-        button.addEventListener('touchcancel', stopHold);
-
-        // Prevent context menu
-        button.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
     /**
@@ -462,34 +379,6 @@ class RhythmSyncVisualizer {
 
         // Move to next beat
         this.state.beatIndex = (this.state.beatIndex + 1) % this.config.numBeats;
-    }
-
-    /**
-     * Adjust manual BPM
-     */
-    adjustManualBPM(direction) {
-        // If not in manual mode yet, start with current BPM
-        if (!this.state.isManualMode) {
-            this.state.manualBPM = this.state.lockedBPM || this.state.currentBPM || 120;
-            this.state.isManualMode = true;
-            console.log('Entering manual BPM mode with BPM:', this.state.manualBPM);
-        }
-
-        // Adjust BPM by 1
-        const newBPM = this.state.manualBPM + direction;
-
-        // Clamp to limits
-        if (newBPM >= this.config.minBPM && newBPM <= this.config.maxBPM) {
-            this.state.manualBPM = newBPM;
-            this.state.lockedBPM = newBPM; // Override locked BPM
-
-            // Update immediately if active
-            if (this.state.active) {
-                this.updateBPM(newBPM);
-            }
-
-            console.log(`Manual BPM adjusted to: ${newBPM}`);
-        }
     }
 
     /**

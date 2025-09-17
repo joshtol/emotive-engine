@@ -25,6 +25,11 @@
     pointer-events: none;
 }
 
+/* Light theme override for display container */
+.light .display-container {
+    background: rgba(250, 251, 252, 0.5);
+}
+
 .display-container canvas {
     pointer-events: auto;
 }

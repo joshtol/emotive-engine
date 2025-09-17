@@ -1,0 +1,13 @@
+
+
+/* OVERRIDE: Force white background for shape bar in light theme */
+.light .shape-controls-hero,
+body.light .shape-controls-hero,
+html.light .shape-controls-hero,
+.light div.shape-controls-hero,
+body.light div.shape-controls-hero {
+    background: white !important;
+    background-color: white !important;
+    background-image: none !important;
+}
+
