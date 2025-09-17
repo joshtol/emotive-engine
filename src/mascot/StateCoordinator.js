@@ -30,7 +30,6 @@ export class StateCoordinator {
         // Map common aliases to actual emotion states
         const emotionMapping = {
             'happy': 'joy',
-            'calm': 'neutral',
             'curious': 'surprise',
             'frustrated': 'anger',
             'sad': 'sadness'

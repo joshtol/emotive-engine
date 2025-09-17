@@ -13,8 +13,8 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#FFAB40',       // Bright orange shock
-        glowIntensity: 1.5,         // Intense, sudden glow
+        glowColor: '#FFD700',       // Bright gold (shining surprise)
+        glowIntensity: 1.8,         // Very intense, sudden flash
         particleRate: 30,           // Rapid burst emission
         minParticles: 0,            // Can start from nothing
         maxParticles: 15,           // Burst of shocked particles
@@ -23,11 +23,13 @@ export default {
         breathDepth: 0.18,          // Large shocked inhale
         coreJitter: false,          // Frozen in surprise
         particleColors: [
-            { color: '#FFAB40', weight: 30 },  // Primary shock orange
-            { color: '#C4A373', weight: 20 },  // Muted surprise tone
-            { color: '#FF9800', weight: 20 },  // Bright startle burst
-            { color: '#FFC773', weight: 15 },  // Light shock highlights
-            { color: '#B3772D', weight: 15 }   // Deep surprise shadows
+            { color: '#FFD700', weight: 25 },  // Gold burst
+            { color: '#FFA500', weight: 20 },  // Orange shock
+            { color: '#FFFF00', weight: 15 },  // Yellow flash
+            { color: '#FF6347', weight: 15 },  // Tomato red excitement
+            { color: '#FFE4B5', weight: 10 },  // Moccasin highlight
+            { color: '#FF4500', weight: 10 },  // OrangeRed pop
+            { color: '#FFFACD', weight: 5 }    // LemonChiffon sparkle
         ]
     },
     

@@ -21,8 +21,8 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#32ACE2',        // Calm blue baseline
-        glowIntensity: 1.0,          // Standard glow presence
+        glowColor: '#00BCD4',        // Cyan baseline (more modern)
+        glowIntensity: 0.9,          // Slightly softer glow
         particleRate: 2,              // Minimal particle generation
         minParticles: 8,             // Baseline particle presence
         maxParticles: 10,            // Limited particle count
@@ -31,11 +31,13 @@ export default {
         breathDepth: 0.08,           // Subtle breath variation
         coreJitter: false,           // Stable, still core
         particleColors: [
-            { color: '#32ACE2', weight: 30 },  // Primary calm blue
-            { color: '#5A92A8', weight: 20 },  // Muted background tone
-            { color: '#00B4FF', weight: 20 },  // Bright accent
-            { color: '#7CC8F2', weight: 15 },  // Soft highlights
-            { color: '#1A5A74', weight: 15 }   // Deep shadow tone
+            { color: '#00BCD4', weight: 25 },  // Primary cyan
+            { color: '#00ACC1', weight: 20 },  // Darker cyan
+            { color: '#26C6DA', weight: 15 },  // Light cyan
+            { color: '#B2EBF2', weight: 15 },  // Pale cyan highlight
+            { color: '#0097A7', weight: 10 },  // Deep cyan shadow
+            { color: '#80DEEA', weight: 10 },  // Cyan light
+            { color: '#E0F7FA', weight: 5 }    // Very pale cyan
         ]
     },
     

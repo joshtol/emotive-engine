@@ -17,8 +17,8 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#4090CE',       // Melancholic blue tone
-        glowIntensity: 0.7,         // Diminished, subdued glow
+        glowColor: '#4169E1',       // Royal blue melancholy
+        glowIntensity: 0.65,        // Dimmer, more subdued glow
         particleRate: 25,           // Steady tear-like emission
         minParticles: 0,            // Can fade to emptiness
         maxParticles: 25,           // Abundant sorrow display
@@ -27,11 +27,13 @@ export default {
         breathDepth: 0.12,          // Deep, sighing breaths
         coreJitter: false,          // Still, heavy core
         particleColors: [
-            { color: '#4090CE', weight: 30 },  // Primary sorrowful blue
-            { color: '#6B97B8', weight: 20 },  // Muted gray-blue
-            { color: '#00A0FF', weight: 20 },  // Sharp tearful accent
-            { color: '#70B8E8', weight: 15 },  // Pale sad highlights
-            { color: '#2A5A86', weight: 15 }   // Deep melancholy shadows
+            { color: '#4169E1', weight: 25 },  // Royal blue sorrow
+            { color: '#1E90FF', weight: 20 },  // Dodger blue tears
+            { color: '#6495ED', weight: 15 },  // Cornflower blue melancholy
+            { color: '#B0C4DE', weight: 15 },  // Light steel blue mist
+            { color: '#191970', weight: 10 },  // Midnight blue depth
+            { color: '#87CEEB', weight: 10 },  // Sky blue glimmer
+            { color: '#2F4F4F', weight: 5 }    // Dark slate gray shadow
         ]
     },
     

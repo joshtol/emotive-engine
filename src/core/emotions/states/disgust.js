@@ -13,9 +13,9 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#84CFC5',       // Sickly cyan-green tone
-        glowIntensity: 0.9,         // Subdued, nauseated glow
-        particleRate: 12,           // Moderate particle generation
+        glowColor: '#9ACD32',       // Sickly yellow-green (YellowGreen)
+        glowIntensity: 1.0,         // Stronger, toxic glow
+        particleRate: 15,           // More particles for nauseating effect
         minParticles: 5,            // Maintain visible repulsion
         maxParticles: 12,           // Controlled rejection display
         particleBehavior: 'repelling', // Particles flee from center
@@ -23,11 +23,13 @@ export default {
         breathDepth: 0.04,          // Shallow, uncomfortable breaths
         coreJitter: false,          // Stable but uneasy core
         particleColors: [
-            { color: '#84CFC5', weight: 30 },  // Primary sickly cyan
-            { color: '#9BB8B3', weight: 20 },  // Muted gray-green
-            { color: '#00FFD9', weight: 20 },  // Sharp nauseating accent
-            { color: '#A8E6DD', weight: 15 },  // Pale queasy highlights
-            { color: '#4A8A80', weight: 15 }   // Deep unsettled undertone
+            { color: '#9ACD32', weight: 25 },  // Yellow-green toxic
+            { color: '#ADFF2F', weight: 20 },  // Bright acid green
+            { color: '#7FFF00', weight: 15 },  // Chartreuse nausea
+            { color: '#BDB76B', weight: 15 },  // Dark khaki sick
+            { color: '#6B8E23', weight: 10 },  // Olive drab decay
+            { color: '#CCFF00', weight: 8 },   // Fluorescent bile
+            { color: '#556B2F', weight: 7 }    // Dark olive shadow
         ]
     },
     

@@ -38,6 +38,7 @@ import resting from './states/resting.js';
 import euphoria from './states/euphoria.js';
 import focused from './states/focused.js';
 import glitch from './states/glitch.js';
+import calm from './states/calm.js';
 
 // Registry to store all registered emotions
 const emotionRegistry = new Map();
@@ -45,7 +46,7 @@ const emotionRegistry = new Map();
 // Emotion aliases for compatibility
 const emotionAliases = {
     'happy': 'joy',
-    'calm': 'neutral',
+    'peaceful': 'calm',
     'curious': 'surprise',
     'frustrated': 'anger',
     'sad': 'sadness'
@@ -53,7 +54,7 @@ const emotionAliases = {
 
 // Register all emotions SYNCHRONOUSLY
 [neutral, joy, sadness, anger, fear, surprise, disgust,
- love, suspicion, excited, resting, euphoria, focused, glitch].forEach(emotion => {
+ love, suspicion, excited, resting, euphoria, focused, glitch, calm].forEach(emotion => {
     if (emotion && emotion.name) {
         emotionRegistry.set(emotion.name, emotion);
     }
@@ -79,19 +80,19 @@ export function registerEmotion(emotionModule) {
 export function getEmotion(emotionName) {
     // Check aliases first
     const resolvedName = emotionAliases[emotionName] || emotionName;
-    
+
     // Check core emotions
     const coreEmotion = emotionRegistry.get(resolvedName);
     if (coreEmotion) {
         return coreEmotion;
     }
-    
+
     // Check plugin emotions
     const pluginEmotion = pluginAdapter.getPluginEmotion(resolvedName);
     if (pluginEmotion) {
         return pluginEmotion;
     }
-    
+
     return null;
 }
 
@@ -105,7 +106,7 @@ export function getEmotionVisualParams(emotionName) {
     if (!emotion) {
         return getEmotion('neutral').visual;
     }
-    
+
     // Make sure visual exists
     if (!emotion.visual) {
         return {};

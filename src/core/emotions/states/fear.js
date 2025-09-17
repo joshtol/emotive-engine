@@ -13,9 +13,9 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#7B68EE',       // Anxious violet tone
-        glowIntensity: 0.8,         // Subdued, uncertain glow
-        particleRate: 12,           // Rapid nervous emission
+        glowColor: '#8A2BE2',       // Dark violet (BlueViolet) - more ominous
+        glowIntensity: 0.9,         // Slightly stronger, pulsing glow
+        particleRate: 18,           // More rapid nervous emission
         minParticles: 4,            // Constant anxious presence
         maxParticles: 16,           // Scattered fearful display
         particleBehavior: 'scattering', // Particles flee outward
@@ -23,11 +23,13 @@ export default {
         breathDepth: 0.06,          // Short, panicked breaths
         coreJitter: true,           // Trembling with anxiety
         particleColors: [
-            { color: '#7B68EE', weight: 30 },  // Primary fearful violet
-            { color: '#9A91C4', weight: 20 },  // Pale anxious lavender
-            { color: '#6A4FFF', weight: 20 },  // Intense panic purple
-            { color: '#A296F3', weight: 15 },  // Light fear highlights
-            { color: '#5445A0', weight: 15 }   // Deep dread shadows
+            { color: '#8A2BE2', weight: 25 },  // Dark violet base
+            { color: '#4B0082', weight: 20 },  // Indigo dread
+            { color: '#9400D3', weight: 15 },  // Dark violet panic
+            { color: '#6B46C1', weight: 15 },  // Deep purple anxiety
+            { color: '#9932CC', weight: 10 },  // Dark orchid fear
+            { color: '#E6E6FA', weight: 8 },   // Pale lavender flash
+            { color: '#301934', weight: 7 }    // Almost black shadow
         ]
     },
     

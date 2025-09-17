@@ -21,21 +21,23 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#FF5252',       // Primary rage color - crimson intensity
-        glowIntensity: 1.4,         // Heightened aura strength
-        particleRate: 15,           // Frequent particle generation for chaos
+        glowColor: '#DC143C',       // Crimson rage - more intense
+        glowIntensity: 1.8,         // Stronger, burning aura
+        particleRate: 20,           // More frequent particle generation for chaos
         minParticles: 3,            // Maintain constant agitation
-        maxParticles: 8,            // Cap for performance while showing intensity
+        maxParticles: 10,           // More particles for intensity
         particleBehavior: 'aggressive', // Erratic, forceful particle movement
         breathRate: 2.2,            // Rapid, agitated breathing rhythm
         breathDepth: 0.15,          // Deep, forceful breath cycles
         coreJitter: true,           // Visual tremor from internal rage
         particleColors: [
-            { color: '#FF5252', weight: 30 },  // Primary bright rage tone
-            { color: '#C47777', weight: 20 },  // Smoldering undertone
-            { color: '#FF0000', weight: 20 },  // Pure intensity accent
-            { color: '#FF7B7B', weight: 15 },  // Hot flash highlights
-            { color: '#B73636', weight: 15 }   // Dark fury shadows
+            { color: '#DC143C', weight: 25 },  // Crimson rage
+            { color: '#FF0000', weight: 20 },  // Pure red fury
+            { color: '#B22222', weight: 15 },  // FireBrick intensity
+            { color: '#FF4500', weight: 15 },  // OrangeRed flames
+            { color: '#8B0000', weight: 10 },  // Dark red depth
+            { color: '#FF6347', weight: 10 },  // Tomato heat
+            { color: '#660000', weight: 5 }    // Nearly black ember
         ]
     },
     

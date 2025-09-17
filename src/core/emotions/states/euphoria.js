@@ -13,9 +13,9 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#FFD700',       // Golden radiance
-        glowIntensity: 1.8,         // Brilliant, transcendent glow
-        particleRate: 3,            // Steady, confident emission
+        glowColor: '#FFB6C1',       // Light pink euphoric glow
+        glowIntensity: 2.0,         // Maximum transcendent radiance
+        particleRate: 35,           // Abundant particle emission
         minParticles: 15,           // Abundant positive energy
         maxParticles: 30,           // Maximum radiant display
         particleBehavior: 'radiant', // Outward radiating particles
@@ -23,11 +23,14 @@ export default {
         breathDepth: 0.25,          // Full, satisfied breaths
         coreJitter: false,          // Stable, confident core
         particleColors: [
-            { color: '#FFD700', weight: 30 },  // Primary golden radiance
-            { color: '#C4B888', weight: 20 },  // Warm champagne glow
-            { color: '#FFFF00', weight: 20 },  // Pure light accent
-            { color: '#FFE57F', weight: 15 },  // Soft golden highlights
-            { color: '#B39A00', weight: 15 }   // Rich golden depth
+            { color: '#FFB6C1', weight: 20 },  // Light pink bliss
+            { color: '#FFD700', weight: 18 },  // Golden joy
+            { color: '#87CEEB', weight: 15 },  // Sky blue serenity
+            { color: '#DDA0DD', weight: 15 },  // Plum transcendence
+            { color: '#98FB98', weight: 12 },  // Pale green harmony
+            { color: '#FFA07A', weight: 10 },  // Light salmon warmth
+            { color: '#E6E6FA', weight: 8 },   // Lavender dream
+            { color: '#FFFFFF', weight: 2 }    // Pure white sparkle
         ]
     },
     

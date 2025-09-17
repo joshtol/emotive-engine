@@ -21,8 +21,8 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#FFD54F',       // Golden yellow happiness
-        glowIntensity: 1.4,         // Bright, cheerful glow
+        glowColor: '#FFEB3B',       // Bright yellow sunshine
+        glowIntensity: 1.6,         // Stronger cheerful glow
         particleRate: 40,           // Abundant celebration particles
         minParticles: 0,            // Can start from stillness
         maxParticles: 40,           // Maximum joyful expression
@@ -31,11 +31,13 @@ export default {
         breathDepth: 0.10,          // Moderate breath variation
         coreJitter: false,          // Stable, confident happiness
         particleColors: [
-            { color: '#FFD54F', weight: 30 },  // Primary golden joy
-            { color: '#C4B888', weight: 20 },  // Muted warm tone
-            { color: '#FFFF00', weight: 20 },  // Electric happiness burst
-            { color: '#FFE082', weight: 15 },  // Soft sunny highlights
-            { color: '#B39C2F', weight: 15 }   // Deep golden warmth
+            { color: '#FFEB3B', weight: 25 },  // Bright sunshine yellow
+            { color: '#FFC107', weight: 20 },  // Amber joy
+            { color: '#FFFF00', weight: 15 },  // Pure yellow burst
+            { color: '#FFD700', weight: 15 },  // Gold celebration
+            { color: '#FFF59D', weight: 10 },  // Pale yellow sparkle
+            { color: '#FF9800', weight: 10 },  // Orange warmth
+            { color: '#FFFDE7', weight: 5 }    // Light cream highlight
         ]
     },
     

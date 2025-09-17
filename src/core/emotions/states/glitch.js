@@ -13,9 +13,9 @@ export default {
     
     // Visual properties
     visual: {
-        primaryColor: '#00FF41',    // Matrix green primary
-        glowColor: '#00FF41',       // Matrix green primary
-        glowIntensity: 2.0,         // Intense, flickering energy
+        primaryColor: '#00FFAA',    // Bright digital cyan-green
+        glowColor: '#00FFAA',       // Bright digital cyan-green
+        glowIntensity: 2.2,         // Intense, flickering energy
         particleRate: 30,           // High rate for glitchy effect
         minParticles: 12,           // Constant digital noise
         maxParticles: 20,           // Maximum chaos
@@ -27,12 +27,14 @@ export default {
         coreSize: 1.1,              // Slightly enlarged core
         eyeOpenness: 1.0,           // Wide open eyes
         particleColors: [
-            { color: '#00FF41', weight: 30 },  // Matrix green
-            { color: '#FF00FF', weight: 25 },  // Magenta glitch
-            { color: '#00FFFF', weight: 20 },  // Cyan corruption
-            { color: '#FFFF00', weight: 10 },  // Yellow artifact
-            { color: '#FF0080', weight: 10 },  // Pink aberration
-            { color: '#FFFFFF', weight: 5 }    // White static
+            { color: '#00FFAA', weight: 25 },  // Bright cyan-green
+            { color: '#FF00AA', weight: 20 },  // Hot magenta
+            { color: '#00FF00', weight: 15 },  // Pure digital green
+            { color: '#FF0099', weight: 15 },  // Neon pink
+            { color: '#00FFFF', weight: 10 },  // Electric cyan
+            { color: '#FFAA00', weight: 8 },   // Digital amber warning
+            { color: '#FF00FF', weight: 5 },   // Pure magenta glitch
+            { color: '#FFFFFF', weight: 2 }    // Rare white static
         ],
         // Glitch-specific properties
         glitchIntensity: 0.8,      // How intense the glitching is
@@ -49,7 +51,7 @@ export default {
         getGlowColor: function() {
             // Occasionally shift to random glitch colors
             if (Math.random() < 0.02) {
-                const glitchColors = ['#FF00FF', '#00FFFF', '#FFFF00', '#00FF41'];
+                const glitchColors = ['#FF00AA', '#00FFFF', '#FF0099', '#00FFAA', '#FFAA00'];
                 return glitchColors[Math.floor(Math.random() * glitchColors.length)];
             }
             return this.glowColor;

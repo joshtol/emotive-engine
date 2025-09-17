@@ -13,8 +13,8 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#FF1493',       // Vibrant magenta energy
-        glowIntensity: 1.3,         // Bright, energetic aura
+        glowColor: '#FF6B35',       // Vibrant orange-red energy
+        glowIntensity: 1.5,         // Stronger energetic aura
         particleRate: 25,           // Increased emission frequency (was 15)
         minParticles: 8,            // More constant particles (was 5)
         maxParticles: 30,           // More maximum particles (was 20)
@@ -23,11 +23,13 @@ export default {
         breathDepth: 0.14,          // Deep, energized breaths
         coreJitter: true,           // Vibrating with enthusiasm
         particleColors: [
-            { color: '#FF1493', weight: 30 },  // Primary vibrant magenta
-            { color: '#C47FA8', weight: 20 },  // Softer pink energy
-            { color: '#FF00FF', weight: 20 },  // Pure excitement burst
-            { color: '#FF69B4', weight: 15 },  // Bright pink highlights
-            { color: '#B3006B', weight: 15 }   // Deep energy undertone
+            { color: '#FF6B35', weight: 25 },  // Vibrant orange energy
+            { color: '#FF1744', weight: 20 },  // Red accent excitement
+            { color: '#FFC107', weight: 15 },  // Amber sparkle
+            { color: '#FF9100', weight: 15 },  // Deep orange burst
+            { color: '#FFEB3B', weight: 10 },  // Yellow flash
+            { color: '#FF5722', weight: 10 },  // Deep orange-red
+            { color: '#FFF59D', weight: 5 }    // Pale yellow highlight
         ]
     },
     

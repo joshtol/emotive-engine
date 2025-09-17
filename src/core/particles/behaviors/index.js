@@ -43,6 +43,7 @@ import surveillance from './surveillance.js';
 import glitchy from './glitchy.js';
 import directed from './directed.js';
 import fizzy from './fizzy.js';
+import zen from './zen.js';
 import pluginAdapter from './plugin-adapter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -67,7 +68,8 @@ const BEHAVIORS = [
     erratic,
     cautious,
     surveillance,
-    glitchy
+    glitchy,
+    zen
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────

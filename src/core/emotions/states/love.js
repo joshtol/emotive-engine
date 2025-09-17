@@ -13,8 +13,8 @@ export default {
     
     // Visual properties
     visual: {
-        glowColor: '#FF69B4',       // Warm pink affection
-        glowIntensity: 1.6,         // Strong, radiant warmth
+        glowColor: '#FF1493',       // Deep passionate pink (DeepPink)
+        glowIntensity: 1.8,         // Strong, radiant warmth
         particleRate: 25,           // Generous particle flow
         minParticles: 10,           // Constant loving presence
         maxParticles: 18,           // Abundant affection display
@@ -23,13 +23,13 @@ export default {
         breathDepth: 0.15,          // Deep, satisfied breaths
         coreJitter: false,          // Stable, secure feeling
         particleColors: [
-            { color: '#FF69B4', weight: 25 },  // Primary warm pink
-            { color: '#FFB6C1', weight: 20 },  // Soft rose blush
-            { color: '#FF1493', weight: 15 },  // Deep passion accent
-            { color: '#FFC0CB', weight: 15 },  // Gentle pink glow
-            { color: '#FFE4E1', weight: 10 },  // Delicate highlights
-            { color: '#FFCCCB', weight: 10 },  // Tender warmth
-            { color: '#C71585', weight: 5 }    // Deep romantic undertone
+            { color: '#FF1493', weight: 30 },  // Deep passionate pink
+            { color: '#FF69B4', weight: 25 },  // Hot pink
+            { color: '#FF007F', weight: 15 },  // Rose red
+            { color: '#FFB6C1', weight: 10 },  // Light pink highlights
+            { color: '#FF45A0', weight: 10 },  // Vibrant magenta
+            { color: '#E91E63', weight: 5 },   // Material pink accent
+            { color: '#FFC0CB', weight: 5 }    // Soft pink glow
         ]
     },
     
