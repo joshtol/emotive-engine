@@ -170,21 +170,22 @@ class RhythmEngine {
      */
     start() {
         if (this.isPlaying) return;
-        
+
         this.isPlaying = true;
+        this.isRunning = true; // Add explicit running flag
         this.startTime = performance.now();
         this.lastBeatTime = this.startTime;
         this.nextBeatTime = this.startTime + this.beatDuration;
         this.currentBeat = 0;
         this.currentBar = 0;
-        
+
         // Emit start event
         this.emit('start', {
             bpm: this.bpm,
             timeSignature: this.timeSignature,
             pattern: this.currentPattern
         });
-        
+
         // Start update loop
         this.update();
     }

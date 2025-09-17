@@ -1,0 +1,319 @@
+/**
+ * Rhythm Sync Visualizer Styles
+ * Percentage-based, theme-aware rhythm visualization
+ */
+
+/* Container */
+.rhythm-sync-visualizer {
+    position: fixed;
+    top: calc(var(--pos-hero) + var(--size-btn-base) + var(--spacing-lg));
+    left: var(--control-width);
+    right: var(--control-width);
+    height: calc(var(--size-btn-base) * 1.5);
+    z-index: calc(var(--z-menu) - 1);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    display: none;
+}
+
+.rhythm-sync-visualizer.visible {
+    opacity: 0.2;
+    transform: translateY(0);
+}
+
+/* Wrapper */
+.rhythm-sync-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    gap: var(--spacing-sm);
+}
+
+/* Speed Control Buttons */
+.rhythm-speed-btn {
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: transform var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Single chevron buttons - closer to beat indicators */
+.rhythm-speed-single {
+    width: calc(var(--size-btn-base) * 1);
+    height: calc(var(--size-btn-base) * 1);
+}
+
+/* Double chevron buttons - on the outside */
+.rhythm-speed-double {
+    width: calc(var(--size-btn-base) * 1.2);
+    height: calc(var(--size-btn-base) * 1.2);
+}
+
+.rhythm-speed-btn:hover {
+    transform: scale(1.1);
+}
+
+.rhythm-speed-btn:active {
+    transform: scale(0.95);
+}
+
+.rhythm-speed-btn img {
+    width: 100%;
+    height: 100%;
+    filter: brightness(0) invert(1);
+    transition: opacity var(--transition-smooth);
+}
+
+/* Single chevrons - more prominent */
+.rhythm-speed-single img {
+    opacity: 0.7;
+}
+
+.rhythm-speed-single:hover img {
+    opacity: 1;
+}
+
+/* Double chevrons - slightly faded */
+.rhythm-speed-double img {
+    opacity: 0.4;
+}
+
+.rhythm-speed-double:hover img {
+    opacity: 0.8;
+}
+
+/* Left buttons - rotate chevrons 180 degrees */
+.rhythm-speed-left img {
+    transform: rotate(180deg);
+}
+
+/* BPM Display */
+.rhythm-bpm-display {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+    padding: 0 var(--spacing-sm);
+    margin-left: var(--spacing-sm);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rhythm-bpm-value {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--accent-primary);
+    min-width: 3ch;
+    text-align: right;
+}
+
+.rhythm-bpm-label {
+    font-size: var(--text-xs);
+    color: var(--color-white-50);
+    text-transform: uppercase;
+    letter-spacing: var(--spacing-letter-wide);
+}
+
+/* Beats Container */
+.rhythm-beats-container {
+    flex: 1;
+    height: 60%;
+    display: flex;
+    gap: calc(var(--spacing-base) * 0.5);
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--spacing-xs);
+}
+
+/* Beat Indicators */
+.rhythm-beat-indicator {
+    flex: 1;
+    max-width: calc(100% / 8);
+    height: 100%;
+    background: linear-gradient(180deg,
+        rgba(0, 229, 255, 0.1) 0%,
+        rgba(0, 229, 255, 0.05) 100%);
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: var(--radius-sm);
+    position: relative;
+    transform-origin: center;
+    /* Remove transition for instant response */
+}
+
+.rhythm-beat-indicator.active {
+    background: linear-gradient(180deg,
+        rgba(0, 229, 255, 0.4) 0%,
+        rgba(0, 229, 255, 0.2) 100%);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+}
+
+.rhythm-beat-indicator.pulse {
+    animation: beat-pulse 0.15s ease-out;
+}
+
+@keyframes beat-pulse {
+    0% {
+        transform: scale(1);
+        background: linear-gradient(180deg,
+            rgba(0, 229, 255, 0.4) 0%,
+            rgba(0, 229, 255, 0.2) 100%);
+        border-color: var(--accent-primary);
+    }
+    50% {
+        transform: scale(1.1);
+        background: linear-gradient(180deg,
+            rgba(0, 229, 255, 0.6) 0%,
+            rgba(0, 229, 255, 0.3) 100%);
+        border-color: var(--accent-primary);
+    }
+    100% {
+        transform: scale(1);
+        background: linear-gradient(180deg,
+            rgba(0, 229, 255, 0.4) 0%,
+            rgba(0, 229, 255, 0.2) 100%);
+        border-color: var(--accent-primary);
+    }
+}
+
+/* Subdivision Indicators */
+.rhythm-subdiv-indicator {
+    position: absolute;
+    right: calc(-1 * var(--spacing-base) * 0.25);
+    top: 40%;
+    width: 2px;
+    height: 20%;
+    background: rgba(0, 229, 255, 0.3);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* Theme Variations */
+
+/* Light Theme */
+.light .rhythm-sync-wrapper {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .rhythm-speed-btn img {
+    filter: none;
+    opacity: 0.4;
+}
+
+.light .rhythm-speed-btn:hover img {
+    opacity: 0.8;
+}
+
+.light .rhythm-bpm-value {
+    color: var(--text-primary);
+}
+
+.light .rhythm-beat-indicator {
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.05) 0%,
+        rgba(0, 0, 0, 0.02) 100%);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .rhythm-beat-indicator.active {
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.2) 0%,
+        rgba(0, 0, 0, 0.1) 100%);
+    border-color: var(--text-primary);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Night Theme */
+.night .rhythm-sync-wrapper {
+    background: rgba(30, 15, 5, 0.8);
+    border-color: rgba(255, 150, 50, 0.2);
+}
+
+.night .rhythm-speed-btn img {
+    filter: brightness(0) saturate(100%) invert(73%) sepia(93%) saturate(441%) hue-rotate(357deg) brightness(102%) contrast(101%);
+    opacity: 0.5;
+}
+
+.night .rhythm-speed-btn:hover img {
+    opacity: 0.9;
+}
+
+.night .rhythm-bpm-value {
+    color: var(--color-orange-bright);
+}
+
+.night .rhythm-beat-indicator {
+    background: linear-gradient(180deg,
+        rgba(255, 150, 50, 0.1) 0%,
+        rgba(255, 150, 50, 0.05) 100%);
+    border-color: rgba(255, 150, 50, 0.2);
+}
+
+.night .rhythm-beat-indicator.active {
+    background: linear-gradient(180deg,
+        rgba(255, 150, 50, 0.4) 0%,
+        rgba(255, 150, 50, 0.2) 100%);
+    border-color: var(--color-orange-bright);
+    box-shadow: 0 0 20px rgba(255, 150, 50, 0.5);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .rhythm-sync-visualizer {
+        left: 0;
+        right: 0;
+        top: calc(var(--pos-hero) + var(--size-btn-base) + var(--spacing-sm));
+        height: calc(var(--size-btn-base) * 1.2);
+    }
+
+    .rhythm-sync-wrapper {
+        padding: 0 var(--spacing-xs);
+        gap: var(--spacing-xs);
+    }
+
+    .rhythm-speed-single {
+        width: calc(var(--size-btn-base) * 0.8);
+        height: calc(var(--size-btn-base) * 0.8);
+    }
+
+    .rhythm-speed-double {
+        width: calc(var(--size-btn-base) * 0.9);
+        height: calc(var(--size-btn-base) * 0.9);
+    }
+
+    .rhythm-bpm-display {
+        padding: 0 var(--spacing-xs);
+        margin-left: var(--spacing-xs);
+    }
+
+    .rhythm-beats-container {
+        gap: calc(var(--spacing-base) * 0.25);
+        padding: 0 var(--spacing-xs);
+    }
+}
+
+/* Landscape */
+@media (orientation: landscape) and (max-height: 600px) {
+    .rhythm-sync-visualizer {
+        top: calc(var(--pos-hero) + var(--spacing-md));
+        height: var(--size-btn-base);
+    }
+
+    .rhythm-beats-container {
+        height: 50%;
+    }
+}

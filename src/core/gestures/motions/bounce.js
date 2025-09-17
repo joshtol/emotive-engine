@@ -43,7 +43,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 800,      // Animation duration
+        duration: 800,      // Legacy fallback
+        musicalDuration: { musical: true, beats: 2 }, // 2 beats
         amplitude: 30,      // Bounce height range
         frequency: 2,       // Number of oscillations
         axis: 'vertical',   // Movement axis: 'vertical' or 'horizontal'

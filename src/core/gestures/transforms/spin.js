@@ -42,7 +42,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 600,          // Animation duration
+        duration: 600,          // Legacy fallback
+        musicalDuration: { musical: true, beats: 1 }, // 1 beat (quarter note)
         rotations: 1,           // Number of full rotations
         direction: 'random',    // 'clockwise', 'counter-clockwise', or 'random'
         radiusMultiplier: 1.0,  // Orbital radius multiplier

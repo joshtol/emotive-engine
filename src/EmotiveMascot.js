@@ -319,6 +319,11 @@ class EmotiveMascot {
         // Initialize rhythm integration
         this.rhythmEnabled = false;
         rhythmIntegration.initialize();
+
+        // Expose rhythmIntegration globally for UI controls
+        if (typeof window !== 'undefined') {
+            window.rhythmIntegration = rhythmIntegration;
+        }
         this.warningThrottle = 5000; // Only show same warning every 5 seconds
         
         // Recording state (listening/capturing)
@@ -590,15 +595,23 @@ class EmotiveMascot {
      * @param {string} gesture - The gesture to execute
      * @returns {EmotiveMascot} This instance for chaining
      */
-    express(gesture) {
+    express(gesture, options = {}) {
         return this.errorBoundary.wrap(() => {
             if (!gesture) {
                 // No gesture provided to express()
                 return this;
             }
-            
+
             // Express called with gesture
-            
+
+            // Route through GestureScheduler when rhythm is active
+            // This ensures gestures are queued to play on beat
+            // Skip if already coming from scheduler to avoid infinite loop
+            if (!options.fromScheduler && window.gestureScheduler && window.rhythmIntegration && window.rhythmIntegration.enabled) {
+                const queueItem = window.gestureScheduler.requestGesture(gesture, options);
+                return this;
+            }
+
             // First check if this is a modular gesture
             // TODO: Re-enable once gestureController methods are moved
             // if (this.gestureController) {
@@ -606,16 +619,16 @@ class EmotiveMascot {
             //     if (hasGesture) {
             //         this.gestureController.triggerGesture(gesture);
             //         Triggered gesture via gesture controller
-            //         
+            //
             //         // Play gesture sound effect if available
             //         if (this.soundSystem.isAvailable()) {
             //             this.soundSystem.playGestureSound(gesture);
             //         }
-            //         
+            //
             //         return this;
             //     }
             // }
-            
+
             // Direct mapping to renderer methods for all gestures
             const rendererMethods = {
                 'bounce': 'startBounce',

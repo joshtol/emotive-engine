@@ -173,23 +173,63 @@ class GestureScheduler {
     
     /**
      * Calculate gesture duration in milliseconds
+     * ALL durations are musical - no arbitrary milliseconds
      * @param {Object} gesture - Gesture configuration
      * @returns {number} Duration in milliseconds
      */
     calculateGestureDuration(gesture) {
-        // Check for musical duration
+        // Always use musical duration, whether rhythm is active or not
+        // This ensures consistency and musical coherence
+
+        // Check for explicit musical duration
         if (gesture.config?.musicalDuration) {
             return musicalDuration.toMilliseconds(gesture.config.musicalDuration);
         }
-        
-        // Check for rhythm duration
-        if (gesture.rhythm?.durationSync?.mode === 'beats') {
-            const beats = gesture.rhythm.durationSync.beats || 2;
-            return musicalDuration.toMilliseconds({ musical: true, beats });
+
+        // Check for rhythm duration config
+        if (gesture.rhythm?.durationSync) {
+            const sync = gesture.rhythm.durationSync;
+            if (sync.mode === 'beats') {
+                return musicalDuration.toMilliseconds({ musical: true, beats: sync.beats || 1 });
+            } else if (sync.mode === 'bars') {
+                return musicalDuration.toMilliseconds({ musical: true, bars: sync.bars || 1 });
+            } else if (sync.subdivision) {
+                return musicalDuration.toMilliseconds({ musical: true, subdivision: sync.subdivision });
+            }
         }
-        
-        // Fall back to fixed duration
-        return gesture.config?.duration || 1000;
+
+        // Default musical durations based on gesture type
+        // These map old millisecond durations to musical equivalents
+        let musicalConfig;
+
+        // Map common durations to musical time
+        // At 120 BPM: 1 beat = 500ms, 2 beats = 1000ms, 4 beats = 2000ms
+        const oldDuration = gesture.config?.duration || gesture.duration || 1000;
+
+        if (oldDuration <= 200) {
+            // Very short: sixteenth note
+            musicalConfig = { musical: true, subdivision: 'sixteenth' };
+        } else if (oldDuration <= 400) {
+            // Short: eighth note
+            musicalConfig = { musical: true, subdivision: 'eighth' };
+        } else if (oldDuration <= 600) {
+            // Medium-short: quarter note (1 beat)
+            musicalConfig = { musical: true, beats: 1 };
+        } else if (oldDuration <= 1000) {
+            // Medium: dotted quarter (1.5 beats)
+            musicalConfig = { musical: true, subdivision: 'dotted-quarter' };
+        } else if (oldDuration <= 1500) {
+            // Medium-long: half note (2 beats)
+            musicalConfig = { musical: true, beats: 2 };
+        } else if (oldDuration <= 2500) {
+            // Long: dotted half (3 beats)
+            musicalConfig = { musical: true, subdivision: 'dotted-half' };
+        } else {
+            // Very long: whole note (4 beats / 1 bar)
+            musicalConfig = { musical: true, bars: 1 };
+        }
+
+        return musicalDuration.toMilliseconds(musicalConfig);
     }
     
     /**
@@ -342,14 +382,23 @@ class GestureScheduler {
         // Check current gesture progress
         const now = performance.now();
         const elapsed = now - this.currentGestureStartTime;
-        const duration = current.config?.duration || 1000;
+        // Use the same duration calculation method as executeGesture
+        const duration = this.calculateGestureDuration(current);
         const progress = elapsed / duration;
         
         // Check interruption rules
         if (current.rhythm?.interruptible === false && progress < 0.8) {
             return 'queue'; // Must wait
         }
-        
+
+        // When rhythm is active, be more conservative about interrupting
+        if (rhythmIntegration.isEnabled()) {
+            // Let gestures complete at least 70% of their duration
+            if (progress < 0.7) {
+                return 'queue';
+            }
+        }
+
         if (progress > 0.9) {
             return 'queue'; // Almost done, just wait
         }
@@ -424,8 +473,9 @@ class GestureScheduler {
             this.currentGestureStartTime = now;
         }
         
-        // Trigger the gesture
-        this.mascot.express(gestureName, options);
+        // Trigger the gesture directly, bypassing rhythm check
+        // Add a flag to prevent circular routing
+        this.mascot.express(gestureName, { ...options, fromScheduler: true });
         
         // Notify UI
         if (this.onGestureTriggered) {
@@ -467,7 +517,27 @@ class GestureScheduler {
      */
     processQueueOnBeat(beatInfo) {
         const now = performance.now();
-        
+
+        // Don't process if we're still executing a gesture that shouldn't be interrupted
+        if (this.currentGesture) {
+            const current = getGesture(this.currentGesture);
+            if (current) {
+                const elapsed = now - this.currentGestureStartTime;
+                const duration = this.calculateGestureDuration(current);
+                const progress = elapsed / duration;
+
+                // Skip beat processing if current gesture is not interruptible and not near completion
+                if (current.rhythm?.interruptible === false && progress < 0.8) {
+                    return;
+                }
+
+                // In rhythm mode, avoid interrupting gestures that are still in progress
+                if (rhythmIntegration.isEnabled() && progress < 0.6) {
+                    return;
+                }
+            }
+        }
+
         // Process items scheduled for this beat
         const toExecute = [];
         this.queue = this.queue.filter(item => {
@@ -477,7 +547,7 @@ class GestureScheduler {
             }
             return true;
         });
-        
+
         // Execute in priority order
         toExecute.forEach(item => this.executeGesture(item));
     }

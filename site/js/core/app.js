@@ -370,6 +370,23 @@ class EmotiveApp {
             window.stopAudioViz = () => this.audioVisualizer.stop();
         }
 
+        // Initialize rhythm sync visualizer
+        if (window.RhythmSyncVisualizer) {
+            this.rhythmSyncVisualizer = new window.RhythmSyncVisualizer('rhythm-sync-container', {
+                numBeats: 8,
+                autoStart: true,
+                showLabels: true
+            });
+
+            // Connect to mascot for BPM data
+            if (this.mascot) {
+                this.rhythmSyncVisualizer.connect(this.mascot);
+            }
+
+            // Make globally accessible
+            window.rhythmSyncVisualizer = this.rhythmSyncVisualizer;
+        }
+
         // Initialize randomizer controller
         if (window.RandomizerController) {
             this.randomizerController = new window.RandomizerController({
@@ -492,9 +509,16 @@ class EmotiveApp {
         // Initialize gesture controller
         if (window.GestureController) {
             this.gestureController = new window.GestureController({
-                triggeredDuration: 200
+                triggeredDuration: 200,
+                maxQueueSize: 4,
+                requireBeatSync: true
             });
             this.gestureController.init(this, this.mascot);
+
+            // Connect rhythm sync visualizer if available
+            if (this.rhythmSyncVisualizer) {
+                this.gestureController.setRhythmSyncVisualizer(this.rhythmSyncVisualizer);
+            }
 
             // Gesture scheduler will be set in initExternalModules
 

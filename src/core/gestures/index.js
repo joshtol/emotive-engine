@@ -83,13 +83,14 @@ const createPlaceholderGesture = (name, emoji = '✨') => ({
     type: 'blending', // Use blending type so they don't interfere
     description: `${name} animation`,
     config: {
-        duration: 1000,
-        particleMotion: null // No particle motion
+        duration: 1000, // Legacy fallback only
+        musicalDuration: { musical: true, beats: 2 } // Default: 2 beats
     },
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         timingSync: 'nextBeat',
+        durationSync: { mode: 'beats', beats: 2 }, // Musical duration
         interruptible: true,
         priority: 3,
         blendable: true,
@@ -115,12 +116,14 @@ const shimmer = {
     type: 'particle',  // Particle type to affect particle behavior
     description: 'Shimmer effect with sparkling particles',
     config: {
-        duration: 2000,  // 2 seconds of shimmer
+        duration: 2000,  // Legacy fallback
+        musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
         particleMotion: 'radiant'  // Use radiant behavior for shimmering effect
     },
     rhythm: {
         enabled: true,
         syncType: 'beat',
+        durationSync: { mode: 'bars', bars: 1 }, // Musical: 1 bar
         intensity: 0.8
     },
     override: (particle, progress, params) => {
@@ -148,12 +151,14 @@ const rain = {
     type: 'particle',  // Particle type to affect particle behavior
     description: 'Rain effect with falling particles',
     config: {
-        duration: 3000,  // 3 seconds of rain
+        duration: 3000,  // Legacy fallback
+        musicalDuration: { musical: true, bars: 2 }, // 2 bars (8 beats)
         particleMotion: 'falling'  // Use the falling particle behavior
     },
     rhythm: {
         enabled: true,
         syncType: 'off-beat',
+        durationSync: { mode: 'bars', bars: 2 }, // Musical: 2 bars
         intensity: 0.8
     },
     apply: (particle, progress, params) => {

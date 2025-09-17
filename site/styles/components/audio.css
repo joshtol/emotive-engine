@@ -100,7 +100,7 @@
     min-height: 2px;
     max-width: 20px;
     opacity: 0.9;
-    box-shadow: 0 0 5px var(--accent-glow);
+    box-shadow: 0 0 1px var(--accent-glow);
 }
 
 

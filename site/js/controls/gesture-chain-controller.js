@@ -160,8 +160,8 @@ class GestureChainController {
             maxDelay = Math.max(maxDelay, item.delay);
 
             const timeout = setTimeout(() => {
-                // Highlight gesture button as it activates
-                this.highlightGestureButton(item.gesture);
+                // Highlight gesture button as it activates with color variation
+                this.highlightGestureButton(item.gesture, index);
 
                 // Execute the gesture
                 this.executeGesture(item.gesture);
@@ -182,15 +182,18 @@ class GestureChainController {
     /**
      * Highlight a gesture button when it activates
      */
-    highlightGestureButton(gesture) {
+    highlightGestureButton(gesture, index = 0) {
         const gestureBtn = document.querySelector(
             `${this.config.gestureButtonSelector}[data-gesture="${gesture}"]`
         );
 
         if (gestureBtn) {
+            // Add chain index for color variation
+            gestureBtn.style.setProperty('--chain-index', index);
             gestureBtn.classList.add(this.config.buttonActiveClass);
             setTimeout(() => {
                 gestureBtn.classList.remove(this.config.buttonActiveClass);
+                gestureBtn.style.removeProperty('--chain-index');
             }, this.config.highlightDuration);
         }
     }

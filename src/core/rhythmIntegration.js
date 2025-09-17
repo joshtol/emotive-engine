@@ -67,28 +67,19 @@ class RhythmIntegration {
             if (window.rhythmManuallyStoppedForCurrentAudio) {
                 return; // Don't auto-update if manually stopped
             }
-            
+
             // Auto-start rhythm engine if not running
             if (!rhythmEngine.isRunning) {
-                
-                // BPM is now shown visually through the beat histogram bars
-                
-                // Update rhythm toggle button state
-                const rhythmToggle = document.getElementById('rhythm-toggle');
-                if (rhythmToggle) {
-                    rhythmToggle.classList.remove('pending'); // Remove pending state
-                    rhythmToggle.classList.add('active');
-                    const rhythmStatus = document.getElementById('rhythm-status');
-                    if (rhythmStatus) {
-                        rhythmStatus.textContent = '⏸';
-                    }
-                    // Update the global rhythmActive flag if it exists
-                    if (typeof window.rhythmActive !== 'undefined') {
-                        window.rhythmActive = true;
-                    }
-                }
-                
+
+                // Auto-start the rhythm engine for gesture sync
                 this.start(newBPM, 'straight');
+
+                // Trigger the rhythm sync visualizer to show BPM
+                if (window.rhythmSyncVisualizer && !window.rhythmSyncVisualizer.state.active) {
+                    console.log('RhythmIntegration: Auto-starting rhythm sync visualizer with BPM:', newBPM);
+                    window.rhythmSyncVisualizer.start();
+                }
+
                 return;
             }
             
