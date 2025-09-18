@@ -598,40 +598,16 @@ class EmotiveRenderer {
      * Main render method
      */
     render(state, deltaTime, gestureTransform = null) {
-        // Use AnimationMixer for all animation blending
-        if (window.mascot?.animationMixer) {
-            const mixerState = window.mascot.animationMixer.update(deltaTime);
-
-            // Use mixer state as the base transform - map to the format renderer expects
-            gestureTransform = {
-                x: mixerState.x,
-                y: mixerState.y,
-                offsetX: mixerState.x,  // Renderer also looks for offsetX
-                offsetY: mixerState.y,  // Renderer also looks for offsetY
-                rotation: mixerState.rotation,
-                scale: mixerState.scale,
-                opacity: mixerState.opacity,
-                glow: mixerState.glow || 1,
-                glowIntensity: mixerState.glow || 1
-            };
+        // Get ambient dance transform and merge with gesture transform
+        const ambientTransform = this.ambientDanceAnimator.getTransform(deltaTime);
+        if (gestureTransform) {
+            // Merge transforms
+            gestureTransform.x = (gestureTransform.x || 0) + (ambientTransform.x || 0);
+            gestureTransform.y = (gestureTransform.y || 0) + (ambientTransform.y || 0);
+            gestureTransform.rotation = (gestureTransform.rotation || 0) + (ambientTransform.rotation || 0);
+            gestureTransform.scale = (gestureTransform.scale || 1) * (ambientTransform.scale || 1);
         } else {
-            // Fallback to old system
-            if (window.mascot?.gestureBlender) {
-                const blendState = window.mascot.gestureBlender.update(deltaTime);
-                this.ambientDanceAnimator.updateBlendState(blendState);
-            }
-
-            // Get ambient dance transform and merge with gesture transform
-            const ambientTransform = this.ambientDanceAnimator.getTransform(deltaTime);
-            if (gestureTransform) {
-                // Merge transforms
-                gestureTransform.x = (gestureTransform.x || 0) + (ambientTransform.x || 0);
-                gestureTransform.y = (gestureTransform.y || 0) + (ambientTransform.y || 0);
-                gestureTransform.rotation = (gestureTransform.rotation || 0) + (ambientTransform.rotation || 0);
-                gestureTransform.scale = (gestureTransform.scale || 1) * (ambientTransform.scale || 1);
-            } else {
-                gestureTransform = ambientTransform;
-            }
+            gestureTransform = ambientTransform;
         }
 
         // Store gestureTransform for use in other methods
@@ -710,19 +686,15 @@ class EmotiveRenderer {
             glowMultiplier = gestureTransform.glowIntensity || 1;
         }
 
-        // Skip old gestureAnimator if AnimationMixer is being used
-        // The AnimationMixer handles all gesture transforms now
-        if (!window.mascot?.animationMixer) {
-            // Only use old system as fallback
-            const gestureTransforms = this.gestureAnimator.applyGestureAnimations();
-            if (gestureTransforms) {
-                centerX += gestureTransforms.offsetX || 0;
-                centerY += gestureTransforms.offsetY || 0;
-                scaleMultiplier *= gestureTransforms.scale || 1;
-                rotationAngle += (gestureTransforms.rotation || 0) * Math.PI / 180;
-                // DON'T MULTIPLY - just use the glow value directly to prevent accumulation
-                glowMultiplier = gestureTransforms.glow || 1;
-            }
+        // Apply gesture animations (delegate to GestureAnimator)
+        const gestureTransforms = this.gestureAnimator.applyGestureAnimations();
+        if (gestureTransforms) {
+            centerX += gestureTransforms.offsetX || 0;
+            centerY += gestureTransforms.offsetY || 0;
+            scaleMultiplier *= gestureTransforms.scale || 1;
+            rotationAngle += (gestureTransforms.rotation || 0) * Math.PI / 180;
+            // DON'T MULTIPLY - just use the glow value directly to prevent accumulation
+            glowMultiplier = gestureTransforms.glow || 1;
         }
         
         // Apply zen levitation - lazy floating when in zen state
@@ -969,7 +941,6 @@ class EmotiveRenderer {
         }
         
         // Render flash wave if present
-        const gestureTransforms = !window.mascot?.animationMixer ? this.gestureAnimator.applyGestureAnimations() : null;
         if (gestureTransforms && gestureTransforms.flashWave) {
             const wave = gestureTransforms.flashWave;
             const ctx = this.ctx;

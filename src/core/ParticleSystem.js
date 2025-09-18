@@ -750,30 +750,6 @@ class ParticleSystem {
     _renderParticles(ctx, visibleParticles, emotionColor, gestureTransform = null) {
         // Batch render with minimized state changes
         ctx.save();
-
-        // Apply gesture transform to move all particles
-        if (gestureTransform) {
-            const centerX = ctx.canvas.width / 2;
-            const centerY = ctx.canvas.height / 2;
-
-            // Translate to center, apply transforms, translate back
-            ctx.translate(centerX, centerY);
-
-            if (gestureTransform.offsetX || gestureTransform.offsetY) {
-                ctx.translate(gestureTransform.offsetX || 0, gestureTransform.offsetY || 0);
-            }
-
-            if (gestureTransform.rotation) {
-                ctx.rotate(gestureTransform.rotation * Math.PI / 180);
-            }
-
-            if (gestureTransform.scale && gestureTransform.scale !== 1) {
-                ctx.scale(gestureTransform.scale, gestureTransform.scale);
-            }
-
-            ctx.translate(-centerX, -centerY);
-        }
-
         let lastFillStyle = null;
         let lastStrokeStyle = null;
         let lastLineWidth = null;
