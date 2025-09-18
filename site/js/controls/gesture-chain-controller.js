@@ -70,11 +70,10 @@ class GestureChainController {
         this.gestureScheduler = null;
         this.app = null;
 
-        // State
+        // State - now tracks multiple active chains
         this.state = {
-            isExecuting: false,
-            currentChain: null,
-            executionTimeouts: []
+            activeChains: new Map(), // Map of chainType -> timeout array
+            executionTimeouts: [] // Legacy, kept for compatibility
         };
     }
 
@@ -114,12 +113,11 @@ class GestureChainController {
             return;
         }
 
-        // Clear any existing chain execution
-        this.clearCurrentExecution();
-
-        // Set state
-        this.state.isExecuting = true;
-        this.state.currentChain = chainType;
+        // Clear only this specific chain if it's already running
+        // This allows re-triggering the same chain while letting others continue
+        if (this.state.activeChains.has(chainType)) {
+            this.clearChain(chainType);
+        }
 
         // Visual feedback for the chain button
         if (buttonElement) {
@@ -132,7 +130,7 @@ class GestureChainController {
         }
 
         // Execute the chain with delays for layering effect
-        this.executeChainSequence(chain);
+        this.executeChainSequence(chain, chainType);
     }
 
     /**
@@ -153,8 +151,9 @@ class GestureChainController {
     /**
      * Execute the chain sequence
      */
-    executeChainSequence(chain) {
+    executeChainSequence(chain, chainType) {
         let maxDelay = 0;
+        const chainTimeouts = [];
 
         chain.forEach((item, index) => {
             maxDelay = Math.max(maxDelay, item.delay);
@@ -163,13 +162,14 @@ class GestureChainController {
                 // Highlight gesture button as it activates with color variation
                 this.highlightGestureButton(item.gesture, index);
 
-                // Execute the gesture with chain layer for AnimationMixer
+                // Execute the gesture with chain layer
                 // Chain gestures stack on top of base movement but below user gestures
                 if (this.mascot && this.mascot.express) {
                     this.mascot.express(item.gesture, {
                         fromChain: true,
                         chainIndex: index,
-                        chainLength: chain.length
+                        chainLength: chain.length,
+                        chainType: chainType
                     });
                 } else {
                     // Fallback to old method
@@ -177,16 +177,19 @@ class GestureChainController {
                 }
             }, item.delay);
 
-            this.state.executionTimeouts.push(timeout);
+            chainTimeouts.push(timeout);
         });
 
-        // Mark execution complete after all gestures are triggered
+        // Mark this chain complete after all gestures are triggered
         const completeTimeout = setTimeout(() => {
-            this.state.isExecuting = false;
-            this.state.currentChain = null;
+            // Remove this chain from active chains
+            this.state.activeChains.delete(chainType);
         }, maxDelay + this.config.highlightDuration);
 
-        this.state.executionTimeouts.push(completeTimeout);
+        chainTimeouts.push(completeTimeout);
+
+        // Store all timeouts for this chain
+        this.state.activeChains.set(chainType, chainTimeouts);
     }
 
     /**
@@ -256,16 +259,36 @@ class GestureChainController {
     }
 
     /**
-     * Clear current chain execution
+     * Clear a specific chain execution
      */
-    clearCurrentExecution() {
-        // Clear all pending timeouts
+    clearChain(chainType) {
+        const timeouts = this.state.activeChains.get(chainType);
+        if (timeouts) {
+            timeouts.forEach(timeout => clearTimeout(timeout));
+            this.state.activeChains.delete(chainType);
+        }
+    }
+
+    /**
+     * Clear all chain executions
+     */
+    clearAllChains() {
+        // Clear all active chains
+        for (const [chainType, timeouts] of this.state.activeChains) {
+            timeouts.forEach(timeout => clearTimeout(timeout));
+        }
+        this.state.activeChains.clear();
+
+        // Legacy cleanup
         this.state.executionTimeouts.forEach(timeout => clearTimeout(timeout));
         this.state.executionTimeouts = [];
+    }
 
-        // Reset state
-        this.state.isExecuting = false;
-        this.state.currentChain = null;
+    /**
+     * Clear current chain execution (legacy compatibility)
+     */
+    clearCurrentExecution() {
+        this.clearAllChains();
     }
 
     /**
@@ -311,10 +334,24 @@ class GestureChainController {
     }
 
     /**
+     * Get active chain names
+     */
+    getActiveChains() {
+        return Array.from(this.state.activeChains.keys());
+    }
+
+    /**
+     * Check if a chain is currently active
+     */
+    isChainActive(chainType) {
+        return this.state.activeChains.has(chainType);
+    }
+
+    /**
      * Clean up
      */
     destroy() {
-        this.clearCurrentExecution();
+        this.clearAllChains();
     }
 }
 
