@@ -2085,18 +2085,32 @@ class EmotiveMascot {
             
             // Update particles with orb position, gesture motion, and modifier
             this.particleSystem.update(deltaTime, orbX, orbY, gestureMotion, gestureProgress, particleModifier);
-            
-            // Get gesture transform from renderer
-            const gestureTransform = this.renderer.gestureAnimator ? 
-                this.renderer.gestureAnimator.applyGestureAnimations() : null;
-            
+
+            // Get gesture transform - prefer AnimationMixer if available
+            let gestureTransform = null;
+            if (this.animationMixer) {
+                // Get the current composite state from AnimationMixer
+                const mixerState = this.animationMixer.compositeState;
+                gestureTransform = {
+                    offsetX: mixerState.x,
+                    offsetY: mixerState.y,
+                    rotation: mixerState.rotation,
+                    scale: mixerState.scale,
+                    opacity: mixerState.opacity,
+                    glow: mixerState.glow || 1
+                };
+            } else if (this.renderer.gestureAnimator) {
+                // Fallback to old system
+                gestureTransform = this.renderer.gestureAnimator.applyGestureAnimations();
+            }
+
             // Render BACKGROUND particles (behind orb)
             this.particleSystem.renderBackground(this.canvasManager.getContext(), emotionParams.glowColor, gestureTransform);
-            
+
             // Render the Emotive orb in the MIDDLE layer
             this.renderer.render(renderState, deltaTime, gestureTransform);
-            
-            // Render FOREGROUND particles (in front of orb) 
+
+            // Render FOREGROUND particles (in front of orb)
             this.particleSystem.renderForeground(this.canvasManager.getContext(), emotionParams.glowColor, gestureTransform);
             
             // Draw debug information if enabled
