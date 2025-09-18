@@ -23,28 +23,40 @@ class AuthUI {
      * Initialize the auth UI
      */
     async init(containerId = 'auth-container') {
-        // Wait for auth manager to initialize
-        await authManager.waitForInit();
+        try {
+            console.log('Auth UI: Starting initialization...');
 
-        // Create UI elements
-        this.createAuthUI(containerId);
+            // Wait for auth manager to initialize
+            await authManager.waitForInit();
+            console.log('Auth UI: Auth manager initialized');
 
-        // Listen for auth state changes
-        authManager.on('authStateChanged', this.updateUI);
+            // Create UI elements
+            this.createAuthUI(containerId);
+            console.log('Auth UI: UI elements created');
 
-        // Initial UI update
-        this.updateUI({
-            user: authManager.getUser(),
-            profile: authManager.getProfile(),
-            isAnonymous: authManager.isUserAnonymous()
-        });
+            // Listen for auth state changes
+            authManager.on('authStateChanged', this.updateUI);
 
-        // Auto sign in anonymously if not signed in
-        if (!authManager.isSignedIn()) {
-            await authManager.signInAnonymously();
+            // Initial UI update
+            this.updateUI({
+                user: authManager.getUser(),
+                profile: authManager.getProfile(),
+                isAnonymous: authManager.isUserAnonymous()
+            });
+            console.log('Auth UI: Initial update complete');
+
+            // Auto sign in anonymously if not signed in
+            if (!authManager.isSignedIn()) {
+                console.log('Auth UI: No user signed in, signing in anonymously...');
+                await authManager.signInAnonymously();
+            }
+
+            this.initialized = true;
+            console.log('Auth UI: Initialization complete');
+        } catch (error) {
+            console.error('Auth UI: Initialization failed:', error);
+            throw error;
         }
-
-        this.initialized = true;
     }
 
     /**
@@ -54,10 +66,15 @@ class AuthUI {
         // Find or create container
         this.container = document.getElementById(containerId);
         if (!this.container) {
+            console.log('Auth UI: Container not found, creating new one');
             this.container = document.createElement('div');
             this.container.id = containerId;
             this.container.className = 'auth-container';
             document.body.appendChild(this.container);
+        } else {
+            console.log('Auth UI: Using existing container');
+            // Ensure the container has the right class
+            this.container.className = 'auth-container';
         }
 
         // Add styles
@@ -200,16 +217,24 @@ class AuthUI {
      * Update UI based on auth state
      */
     updateUI({ user, profile, isAnonymous }) {
-        if (!this.container) return;
+        console.log('Auth UI: Updating UI, user:', user ? 'exists' : 'null', 'anonymous:', isAnonymous);
+
+        if (!this.container) {
+            console.error('Auth UI: Container not found!');
+            return;
+        }
 
         if (user && !isAnonymous) {
             // Signed in with Google
+            console.log('Auth UI: User is signed in with Google');
             this.showSignedIn(user, profile);
         } else if (user && isAnonymous) {
             // Anonymous user
+            console.log('Auth UI: User is anonymous');
             this.showAnonymous();
         } else {
             // Signed out
+            console.log('Auth UI: User is signed out');
             this.showSignedOut();
         }
     }
@@ -249,12 +274,27 @@ class AuthUI {
      * Show anonymous state
      */
     showAnonymous() {
+        console.log('Auth UI: Showing anonymous state');
+
         // Hide other states
         this.signedOutDiv.style.display = 'none';
         this.signedInDiv.style.display = 'none';
 
         // Show anonymous prompt
         this.anonymousPrompt.style.display = 'flex';
+
+        // Make sure container is visible
+        this.container.style.display = 'block';
+
+        // Debug: Add temporary red border to see if container is visible
+        this.container.style.border = '3px solid red';
+        console.log('Auth UI: Anonymous prompt displayed');
+        console.log('Container dimensions:', {
+            width: this.container.offsetWidth,
+            height: this.container.offsetHeight,
+            top: this.container.offsetTop,
+            left: this.container.offsetLeft
+        });
     }
 
     /**
@@ -303,7 +343,7 @@ class AuthUI {
                 position: fixed;
                 top: 10px;
                 right: 10px;
-                z-index: 10000;
+                z-index: 999999;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
 

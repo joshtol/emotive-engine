@@ -352,15 +352,28 @@
 
     <!-- Initialize Firebase Auth -->
     <script type="module">
+        console.log('Loading Firebase auth...');
+
         import authUI from './js/firebase/auth-ui.js';
 
         // Initialize auth UI when DOM is ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                authUI.init('auth-container');
+            document.addEventListener('DOMContentLoaded', async () => {
+                console.log('DOM ready, initializing auth UI...');
+                try {
+                    await authUI.init('auth-container');
+                    console.log('Auth UI initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize auth UI:', error);
+                }
             });
         } else {
-            authUI.init('auth-container');
+            console.log('DOM already loaded, initializing auth UI...');
+            authUI.init('auth-container').then(() => {
+                console.log('Auth UI initialized successfully');
+            }).catch(error => {
+                console.error('Failed to initialize auth UI:', error);
+            });
         }
     </script>
 </body>

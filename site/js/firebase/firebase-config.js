@@ -3,7 +3,8 @@
  * Handles Firebase initialization and exports auth/firestore instances
  */
 
-import { initializeApp } from 'firebase/app';
+// Import Firebase from CDN
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import {
     getAuth,
     signInWithPopup,
@@ -12,7 +13,7 @@ import {
     onAuthStateChanged,
     linkWithPopup,
     signOut
-} from 'firebase/auth';
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import {
     getFirestore,
     doc,
@@ -28,7 +29,7 @@ import {
     getDocs,
     serverTimestamp,
     increment
-} from 'firebase/firestore';
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {

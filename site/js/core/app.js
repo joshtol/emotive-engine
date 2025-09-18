@@ -283,7 +283,7 @@ class EmotiveApp {
             this.engine = await this.moduleLoader.loadEngine();
         } else {
             // Fallback to direct import
-            const module = await import('../../../src/EmotiveMascot.js');
+            const module = await import('../../src/EmotiveMascot.js');
             this.engine = module.default;
         }
         return this.engine;

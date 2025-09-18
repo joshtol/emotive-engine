@@ -1,0 +1,538 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Complete Gesture Motion System
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Complete gesture motion system for particles (from original Particle.js)
+ * @author Emotive Engine Team
+ * @module particles/gestures/applyGestureMotion
+ */
+
+/**
+ * Apply gesture motion to particle - COMPLETE implementation from original
+ * This handles ALL gesture types: jump, morph, stretch, flicker, etc.
+ */
+export function applyGestureMotion(particle, dt, motion, progress, centerX, centerY) {
+    if (!motion || !motion.type) return;
+    
+    // Stop applying gesture at 100% completion
+    if (progress >= 1) return;
+    
+    // Initialize gesture data on first frame
+    if (!particle.gestureData) {
+        particle.gestureData = {
+            originalVx: particle.vx,
+            originalVy: particle.vy,
+            initialX: particle.x,
+            initialY: particle.y,
+            // For orbital motion, calculate starting angle
+            startAngle: Math.atan2(particle.y - centerY, particle.x - centerX),
+            startRadius: Math.sqrt(Math.pow(particle.x - centerX, 2) + Math.pow(particle.y - centerY, 2))
+        };
+    }
+    
+    const strength = (motion.strength || 1.0);
+    const easeProgress = particle.easeInOutCubic(progress);
+    
+    switch (motion.type) {
+        case 'oscillate': {
+            const axis = motion.axis || 'vertical';
+            const frequency = motion.frequency || 1;
+            const phase = motion.phase || 0;
+            const oscillation = Math.sin((easeProgress + phase) * Math.PI * 2 * frequency) * strength;
+            
+            if (axis === 'vertical') {
+                particle.vy += oscillation * 0.5 * dt;
+            } else {
+                particle.vx += oscillation * 0.5 * dt;
+            }
+            
+            if (progress > 0.9) {
+                const dampFactor = 1 - ((progress - 0.9) * 10);
+                particle.vx *= (0.95 + dampFactor * 0.05);
+                particle.vy *= (0.95 + dampFactor * 0.05);
+            }
+            break;
+        }
+        
+        case 'tilt': {
+            // COMPLETE OVERRIDE - Particles come home then tilt with orb
+            const frequency = motion.frequency || 2;
+            const swayAmount = (motion.swayAmount || 40) * particle.scaleFactor;
+            const liftAmount = (motion.liftAmount || 25) * particle.scaleFactor;
+            
+            if (!particle.gestureData.tiltInitialized) {
+                particle.gestureData.tiltInitialized = true;
+                particle.gestureData.startX = particle.x;
+                particle.gestureData.startY = particle.y;
+                const dx = particle.x - centerX;
+                const dy = particle.y - centerY;
+                particle.gestureData.tiltAngle = Math.atan2(dy, dx);
+                particle.gestureData.homeRadius = 30 + Math.random() * 30;
+                particle.gestureData.tiltRole = Math.random();
+            }
+            
+            let targetX, targetY;
+            
+            if (progress < 0.3) {
+                const homeProgress = progress / 0.3;
+                const easedHome = particle.easeInOutCubic(homeProgress);
+                const homeX = centerX + Math.cos(particle.gestureData.tiltAngle) * particle.gestureData.homeRadius;
+                const homeY = centerY + Math.sin(particle.gestureData.tiltAngle) * particle.gestureData.homeRadius;
+                targetX = particle.gestureData.startX + (homeX - particle.gestureData.startX) * easedHome;
+                targetY = particle.gestureData.startY + (homeY - particle.gestureData.startY) * easedHome;
+                const speed = 0.3;
+                particle.x += (targetX - particle.x) * speed;
+                particle.y += (targetY - particle.y) * speed;
+            } else {
+                const tiltPhase = (progress - 0.3) / 0.7;
+                const t = tiltPhase * Math.PI * frequency;
+                const tiltProgress = Math.sin(t);
+                const swayAngle = particle.gestureData.tiltAngle + (tiltProgress * Math.PI * 0.15);
+                const currentRadius = particle.gestureData.homeRadius + Math.abs(tiltProgress) * liftAmount;
+                targetX = centerX + Math.cos(swayAngle) * currentRadius;
+                targetY = centerY + Math.sin(swayAngle) * currentRadius - Math.abs(tiltProgress) * liftAmount * 0.3;
+                const smoothness = 0.15 + particle.gestureData.tiltRole * 0.1;
+                particle.x += (targetX - particle.x) * smoothness;
+                particle.y += (targetY - particle.y) * smoothness;
+            }
+            
+            particle.vx = (targetX - particle.x) * 0.2;
+            particle.vy = (targetY - particle.y) * 0.2;
+            
+            const fadeFactor = progress < 0.3 ? 
+                0.3 + (progress / 0.3) * 0.7 : 
+                0.8 + Math.sin(progress * Math.PI * frequency) * 0.2;
+            particle.opacity = particle.baseOpacity * fadeFactor;
+            
+            if (progress >= 0.99) {
+                particle.gestureData.tiltInitialized = false;
+                particle.vx *= 0.1;
+                particle.vy *= 0.1;
+            }
+            break;
+        }
+        
+        case 'orbital': {
+            // COMPLETE OVERRIDE - Move particle in a perfect circle
+            const rotations = motion.rotations || 1;
+            const targetRadius = particle.gestureData.startRadius || 80;
+            const totalRotation = Math.PI * 2 * rotations;
+            const currentAngle = particle.gestureData.startAngle + (totalRotation * easeProgress);
+            const targetX = centerX + Math.cos(currentAngle) * targetRadius;
+            const targetY = centerY + Math.sin(currentAngle) * targetRadius;
+            
+            particle.x = targetX;
+            particle.y = targetY;
+            
+            if (progress > 0.95) {
+                const fadeOut = (1 - progress) * 20;
+                particle.vx *= fadeOut;
+                particle.vy *= fadeOut;
+            } else {
+                const nextAngle = currentAngle + 0.1;
+                const nextX = centerX + Math.cos(nextAngle) * targetRadius;
+                const nextY = centerY + Math.sin(nextAngle) * targetRadius;
+                particle.vx = (nextX - targetX) * 0.5;
+                particle.vy = (nextY - targetY) * 0.5;
+            }
+            break;
+        }
+        
+        case 'radial': {
+            const direction = motion.direction || 'outward';
+            const dx = particle.x - centerX;
+            const dy = particle.y - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 1) {
+                const normalX = dx / distance;
+                const normalY = dy / distance;
+                const force = direction === 'outward' ? strength : -strength;
+                particle.vx += normalX * force * 0.2 * dt;
+                particle.vy += normalY * force * 0.2 * dt;
+            }
+            break;
+        }
+        
+        case 'jitter': {
+            const frequency = motion.frequency || 10;
+            const decay = motion.decay ? (1 - easeProgress * 0.5) : 1;
+            const jitterStrength = strength * decay;
+            
+            particle.vx += (Math.random() - 0.5) * jitterStrength * dt;
+            particle.vy += (Math.random() - 0.5) * jitterStrength * dt;
+            break;
+        }
+        
+        case 'drift': {
+            // COMPLETE OVERRIDE - Particles come home then drift with orb
+            const distance = (motion.distance || 60) * particle.scaleFactor;
+            
+            if (!particle.gestureData.driftInitialized) {
+                particle.gestureData.driftInitialized = true;
+                particle.gestureData.startX = particle.x;
+                particle.gestureData.startY = particle.y;
+                const dx = particle.x - centerX;
+                const dy = particle.y - centerY;
+                particle.gestureData.driftAngle = Math.atan2(dy, dx);
+                particle.gestureData.homeRadius = 25 + Math.random() * 25;
+                particle.gestureData.angleOffset = (Math.random() - 0.5) * 0.3;
+                particle.gestureData.driftRole = Math.random();
+            }
+            
+            let targetX, targetY;
+            
+            if (progress < 0.25) {
+                const homeProgress = progress / 0.25;
+                const easedHome = particle.easeInOutCubic(homeProgress);
+                const homeX = centerX + Math.cos(particle.gestureData.driftAngle) * particle.gestureData.homeRadius;
+                const homeY = centerY + Math.sin(particle.gestureData.driftAngle) * particle.gestureData.homeRadius;
+                targetX = particle.gestureData.startX + (homeX - particle.gestureData.startX) * easedHome;
+                targetY = particle.gestureData.startY + (homeY - particle.gestureData.startY) * easedHome;
+                const speed = 0.35;
+                particle.x += (targetX - particle.x) * speed;
+                particle.y += (targetY - particle.y) * speed;
+            } else {
+                const driftPhase = (progress - 0.25) / 0.75;
+                const adjustedPhase = Math.max(0, driftPhase - particle.gestureData.driftRole * 0.1);
+                let currentRadius;
+                if (motion.returnToOrigin && adjustedPhase > 0.6) {
+                    const returnPhase = (adjustedPhase - 0.6) / 0.4;
+                    currentRadius = particle.gestureData.homeRadius + 
+                        Math.cos(returnPhase * Math.PI * 0.5) * distance;
+                } else {
+                    const outPhase = Math.min(1, adjustedPhase / 0.6);
+                    currentRadius = particle.gestureData.homeRadius + 
+                        Math.sin(outPhase * Math.PI * 0.5) * distance;
+                }
+                const angle = particle.gestureData.driftAngle + particle.gestureData.angleOffset;
+                targetX = centerX + Math.cos(angle) * currentRadius;
+                targetY = centerY + Math.sin(angle) * currentRadius;
+                const smoothness = 0.12 + particle.gestureData.driftRole * 0.08;
+                particle.x += (targetX - particle.x) * smoothness;
+                particle.y += (targetY - particle.y) * smoothness;
+            }
+            
+            particle.vx = (targetX - particle.x) * 0.25;
+            particle.vy = (targetY - particle.y) * 0.25;
+            
+            const fadeFactor = progress < 0.25 ? 
+                0.3 + (progress / 0.25) * 0.7 : 
+                0.7 + Math.sin((progress - 0.25) * Math.PI / 0.75) * 0.3;
+            particle.opacity = particle.baseOpacity * fadeFactor;
+            
+            if (progress >= 0.99) {
+                particle.gestureData.driftInitialized = false;
+                particle.vx *= 0.1;
+                particle.vy *= 0.1;
+            }
+            break;
+        }
+        
+        case 'directional': {
+            const angle = (motion.angle || 0) * Math.PI / 180;
+            const followGaze = motion.followGaze || false;
+            
+            if (!followGaze) {
+                particle.vx += Math.cos(angle) * strength * 0.3 * dt;
+                particle.vy += Math.sin(angle) * strength * 0.3 * dt;
+            }
+            
+            if (motion.returnToOrigin && progress > 0.5) {
+                const returnProgress = (progress - 0.5) * 2;
+                const dx = particle.gestureData.initialX - particle.x;
+                const dy = particle.gestureData.initialY - particle.y;
+                particle.vx += dx * returnProgress * 0.02 * dt;
+                particle.vy += dy * returnProgress * 0.02 * dt;
+            }
+            break;
+        }
+        
+        case 'breathe': {
+            const breathPhase = motion.breathPhase || 0;
+            
+            if (!particle.gestureData.breatheInitialized) {
+                particle.gestureData.breatheInitialized = true;
+                particle.gestureData.breatheStartX = particle.x;
+                particle.gestureData.breatheStartY = particle.y;
+                const dx = particle.x - centerX;
+                const dy = particle.y - centerY;
+                particle.gestureData.breatheAngle = Math.atan2(dy, dx);
+                particle.gestureData.breatheBaseRadius = Math.sqrt(dx * dx + dy * dy);
+                particle.gestureData.breathePhaseOffset = Math.random() * 0.2 - 0.1;
+            }
+            
+            const referenceRadius = 100 * (particle.scaleFactor || 1);
+            const inhaleRadius = (motion.inhaleRadius || 1.5) * referenceRadius;
+            const exhaleRadius = (motion.exhaleRadius || 0.8) * referenceRadius;
+            const targetRadius = exhaleRadius + (inhaleRadius - exhaleRadius) * breathPhase;
+            
+            const currentDx = particle.x - centerX;
+            const currentDy = particle.y - centerY;
+            const currentRadius = Math.sqrt(currentDx * currentDx + currentDy * currentDy);
+            
+            const radiusDiff = targetRadius - currentRadius;
+            const moveStrength = (motion.strength || 0.8) * 0.05 * dt;
+            
+            if (currentRadius > 0) {
+                const moveX = (currentDx / currentRadius) * radiusDiff * moveStrength;
+                const moveY = (currentDy / currentRadius) * radiusDiff * moveStrength;
+                
+                particle.vx += moveX;
+                particle.vy += moveY;
+                
+                const spiralStrength = 0.002 * dt * motion.strength;
+                const tangentX = -currentDy / currentRadius;
+                const tangentY = currentDx / currentRadius;
+                
+                particle.vx += tangentX * spiralStrength * breathPhase;
+                particle.vy += tangentY * spiralStrength * breathPhase;
+            }
+            
+            particle.vx *= 0.98;
+            particle.vy *= 0.98;
+            break;
+        }
+        
+        case 'wave': {
+            // COMPLETE OVERRIDE - Magical flowing wave with particles tracing infinity symbol
+            const amplitude = (motion.amplitude || 50) * particle.scaleFactor;
+            
+            if (!particle.gestureData.waveInitialized) {
+                particle.gestureData.waveInitialized = true;
+                particle.gestureData.waveStartX = particle.x;
+                particle.gestureData.waveStartY = particle.y;
+                const dx = particle.x - centerX;
+                const dy = particle.y - centerY;
+                particle.gestureData.waveAngle = Math.atan2(dy, dx);
+                particle.gestureData.waveRadius = Math.sqrt(dx * dx + dy * dy);
+                particle.gestureData.waveOffset = Math.random() * Math.PI * 2;
+                particle.gestureData.waveRole = Math.random();
+            }
+            
+            const phaseShift = particle.gestureData.waveRole * 0.3;
+            const t = (easeProgress - phaseShift) * Math.PI * 2;
+            const radiusFactor = 0.5 + (particle.gestureData.waveRadius / 100) * 0.5;
+            const infinityX = Math.sin(t + particle.gestureData.waveOffset) * amplitude * radiusFactor;
+            const infinityY = Math.sin(t * 2 + particle.gestureData.waveOffset) * amplitude * 0.3 * radiusFactor;
+            const lift = -Math.abs(Math.sin(easeProgress * Math.PI)) * 20;
+            const targetX = centerX + infinityX;
+            const targetY = centerY + infinityY + lift;
+            const smoothness = 0.08 + particle.gestureData.waveRole * 0.12;
+            
+            particle.x += (targetX - particle.x) * smoothness;
+            particle.y += (targetY - particle.y) * smoothness;
+            particle.vx = (targetX - particle.x) * 0.3;
+            particle.vy = (targetY - particle.y) * 0.3;
+            
+            const fadeFactor = Math.sin(easeProgress * Math.PI);
+            particle.opacity = particle.baseOpacity * (0.5 + fadeFactor * 0.5);
+            
+            if (progress >= 0.99) {
+                particle.gestureData.waveInitialized = false;
+                particle.gestureData.waveStartX = null;
+                particle.gestureData.waveStartY = null;
+                particle.vx *= 0.1;
+                particle.vy *= 0.1;
+            }
+            break;
+        }
+        
+        case 'burst': {
+            const decay = motion.decay || 0.5;
+            const burstStrength = strength * (1 - easeProgress * decay);
+            const dx = particle.x - centerX;
+            const dy = particle.y - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 1) {
+                particle.vx += (dx / distance) * burstStrength * 2 * dt;
+                particle.vy += (dy / distance) * burstStrength * 2 * dt;
+            }
+            break;
+        }
+        
+        case 'morph': {
+            // COMPLETE OVERRIDE - Form geometric patterns
+            const pattern = motion.pattern || 'circle';
+            
+            if (!particle.gestureData.morphTarget) {
+                const angle = Math.atan2(particle.y - centerY, particle.x - centerX);
+                
+                if (pattern === 'star') {
+                    const points = motion.points || 5;
+                    const armAngle = (Math.PI * 2) / points;
+                    const nearestArm = Math.round(angle / armAngle) * armAngle;
+                    const armIndex = Math.round(angle / armAngle);
+                    const isOuter = armIndex % 2 === 0;
+                    const radius = isOuter ? (80 + Math.random() * 20) : (30 + Math.random() * 10);
+                    
+                    particle.gestureData.morphTarget = {
+                        x: centerX + Math.cos(nearestArm) * radius,
+                        y: centerY + Math.sin(nearestArm) * radius
+                    };
+                } else {
+                    const targetRadius = 60 + Math.random() * 20;
+                    particle.gestureData.morphTarget = {
+                        x: centerX + Math.cos(angle) * targetRadius,
+                        y: centerY + Math.sin(angle) * targetRadius
+                    };
+                }
+            }
+            
+            const targetX = particle.gestureData.initialX + 
+                (particle.gestureData.morphTarget.x - particle.gestureData.initialX) * easeProgress;
+            const targetY = particle.gestureData.initialY + 
+                (particle.gestureData.morphTarget.y - particle.gestureData.initialY) * easeProgress;
+            
+            particle.x = targetX;
+            particle.y = targetY;
+            particle.vx = (targetX - particle.x) * 0.1;
+            particle.vy = (targetY - particle.y) * 0.1;
+            
+            if (progress > 0.9) {
+                const blendFactor = (1 - progress) * 10;
+                particle.vx = particle.vx * blendFactor + particle.gestureData.originalVx * (1 - blendFactor);
+                particle.vy = particle.vy * blendFactor + particle.gestureData.originalVy * (1 - blendFactor);
+            }
+            break;
+        }
+        
+        case 'stretch': {
+            // COMPLETE OVERRIDE - Stretch particles along axes with direct position control
+            const scaleX = motion.scaleX || 1;
+            const scaleY = motion.scaleY || 1;
+            
+            if (!particle.gestureData.stretchStartDX) {
+                particle.gestureData.stretchStartDX = particle.x - centerX;
+                particle.gestureData.stretchStartDY = particle.y - centerY;
+            }
+            
+            const stretchX = 1 + (scaleX - 1) * strength * easeProgress;
+            const stretchY = 1 + (scaleY - 1) * strength * easeProgress;
+            
+            particle.x = centerX + particle.gestureData.stretchStartDX * stretchX;
+            particle.y = centerY + particle.gestureData.stretchStartDY * stretchY;
+            particle.vx = particle.gestureData.stretchStartDX * (scaleX - 1) * strength * 0.1;
+            particle.vy = particle.gestureData.stretchStartDY * (scaleY - 1) * strength * 0.1;
+            
+            if (progress >= 0.99) {
+                particle.gestureData.stretchStartDX = null;
+                particle.gestureData.stretchStartDY = null;
+                particle.vx *= 0.1;
+                particle.vy *= 0.1;
+            }
+            break;
+        }
+        
+        case 'jump': {
+            // Jump motion that completely overrides particle behavior
+            const jumpHeight = (motion.jumpHeight || 80) * particle.scaleFactor;
+            const squash = motion.squash || 0.7;
+            const stretch = motion.stretch || 1.3;
+            
+            if (!particle.jumpStartY) {
+                particle.jumpStartY = particle.y;
+                particle.jumpStartX = particle.x;
+            }
+            
+            if (progress < 0.2) {
+                // Squash phase
+                const squashProgress = progress / 0.2;
+                particle.size = particle.baseSize * (1 - (1 - squash) * squashProgress);
+                particle.y = particle.jumpStartY + squashProgress * 5;
+                particle.vx = 0;
+                particle.vy = 0;
+            } else if (progress < 0.8) {
+                // Jump phase
+                const jumpProgress = (progress - 0.2) / 0.6;
+                const jumpCurve = Math.sin(jumpProgress * Math.PI);
+                particle.y = particle.jumpStartY - jumpCurve * jumpHeight;
+                const driftAmount = (particle.jumpStartX - centerX) * 0.1;
+                particle.x = particle.jumpStartX + jumpCurve * driftAmount;
+                
+                if (jumpProgress < 0.5) {
+                    particle.size = particle.baseSize * (squash + (stretch - squash) * (jumpProgress * 2));
+                } else {
+                    particle.size = particle.baseSize * (stretch - (stretch - 1) * ((jumpProgress - 0.5) * 2));
+                }
+                
+                particle.vx = driftAmount * 0.01;
+                particle.vy = (particle.y - particle.jumpStartY) * 0.01;
+            } else {
+                // Landing phase
+                const landProgress = (progress - 0.8) / 0.2;
+                const bounce = Math.abs(Math.sin(landProgress * Math.PI * 2)) * (1 - landProgress);
+                particle.y = particle.jumpStartY - bounce * 10;
+                particle.size = particle.baseSize * (1 + bounce * 0.1);
+                
+                if (progress >= 0.95) {
+                    particle.jumpStartY = undefined;
+                    particle.jumpStartX = undefined;
+                }
+            }
+            break;
+        }
+        
+        case 'settle': {
+            const decay = motion.decay || 0.9;
+            const wobbleFreq = motion.wobbleFreq || 3;
+            const settleStrength = strength * Math.pow(decay, easeProgress * 10);
+            const wobble = Math.sin(easeProgress * Math.PI * 2 * wobbleFreq) * settleStrength;
+            
+            particle.vx += wobble * 0.3 * dt;
+            particle.vy -= settleStrength * 0.2 * dt;
+            break;
+        }
+        
+        case 'fade': {
+            // This affects opacity rather than movement
+            if (progress < 0.3) {
+                particle.opacity *= (1 - progress / 0.3) * strength;
+            } else if (progress > 0.7) {
+                particle.opacity *= ((progress - 0.7) / 0.3) * strength;
+            } else {
+                particle.opacity *= (1 - strength);
+            }
+            break;
+        }
+        
+        case 'hold': {
+            const slight = motion.slight || false;
+            const tight = motion.tight || false;
+            
+            if (slight) {
+                const breathe = Math.sin(easeProgress * Math.PI * 4) * 0.1;
+                particle.vx *= (1 - strength * 0.5);
+                particle.vy *= (1 - strength * 0.5);
+                particle.vy += breathe * strength * 0.01 * dt;
+            } else if (tight) {
+                particle.vx *= (1 - strength * 0.8);
+                particle.vy *= (1 - strength * 0.8);
+            }
+            break;
+        }
+        
+        case 'flicker': {
+            // Flickering motion and opacity
+            const frequency = motion.frequency || 6;
+            const flicker = Math.random() < (frequency / 10);
+            if (flicker) {
+                particle.opacity *= (0.3 + Math.random() * 0.7);
+                particle.vx += (Math.random() - 0.5) * strength * 0.5 * dt;
+                particle.vy += (Math.random() - 0.5) * strength * 0.5 * dt;
+            }
+            break;
+        }
+    }
+    
+    // Reset gesture data and velocities when gesture completes
+    if (progress >= 1) {
+        particle.vx = 0;
+        particle.vy = 0;
+        particle.gestureData = null;
+    }
+}

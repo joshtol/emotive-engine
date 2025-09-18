@@ -35,11 +35,15 @@ class AuthManager {
      * Initialize authentication state listener
      */
     initAuthListener() {
+        console.log('AuthManager: Setting up auth state listener...');
         onAuthStateChanged(auth, async (user) => {
+            console.log('AuthManager: Auth state changed, user:', user ? user.uid : 'null');
+
             if (user) {
                 // User is signed in
                 this.currentUser = user;
                 this.isAnonymous = user.isAnonymous;
+                console.log('AuthManager: User signed in, anonymous:', this.isAnonymous);
 
                 // Load or create user profile
                 await this.loadUserProfile(user.uid);
@@ -51,6 +55,7 @@ class AuthManager {
                 });
             } else {
                 // User is signed out
+                console.log('AuthManager: No user signed in');
                 this.currentUser = null;
                 this.userProfile = null;
                 this.isAnonymous = false;
@@ -64,6 +69,7 @@ class AuthManager {
 
             this.isInitialized = true;
             this.emit('initialized', true);
+            console.log('AuthManager: Initialization complete');
         });
     }
 
@@ -379,10 +385,11 @@ class AuthManager {
         if (this.isInitialized) return;
 
         return new Promise((resolve) => {
-            const unsubscribe = this.on('initialized', () => {
-                unsubscribe();
+            const handler = () => {
+                this.off('initialized', handler);
                 resolve();
-            });
+            };
+            this.on('initialized', handler);
         });
     }
 }
