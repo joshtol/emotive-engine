@@ -84,6 +84,8 @@
     "webpack-obfuscator": "^3.5.1"
   },
   "dependencies": {
-    "@babel/runtime": "^7.28.4"
+    "@babel/runtime": "^7.28.4",
+    "firebase": "^12.2.1",
+    "firebase-admin": "^13.5.0"
   }
 }

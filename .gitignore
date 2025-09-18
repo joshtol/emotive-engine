@@ -10,3 +10,11 @@ Thumbs.db
 
 # Strategy documents
 DELETEME-STRATEGIES.md
+
+# Firebase service account credentials
+service-account.json
+*-firebase-adminsdk-*.json
+
+# Environment files
+.env
+.env.local

@@ -342,8 +342,26 @@
         - Loading all modules and controllers
         - Error handling and recovery
         - Theme initialization
+        - Firebase authentication
 
         No inline scripts needed - everything is modular!
     -->
+
+    <!-- Auth container will be created by auth-ui.js -->
+    <div id="auth-container"></div>
+
+    <!-- Initialize Firebase Auth -->
+    <script type="module">
+        import authUI from './js/firebase/auth-ui.js';
+
+        // Initialize auth UI when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                authUI.init('auth-container');
+            });
+        } else {
+            authUI.init('auth-container');
+        }
+    </script>
 </body>
 </html>
