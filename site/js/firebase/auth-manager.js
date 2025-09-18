@@ -42,12 +42,26 @@ class AuthManager {
         console.log('AuthManager: Setting up auth state listener...');
 
         // Check for redirect result first
-        getRedirectResult(auth).then((result) => {
+        getRedirectResult(auth).then(async (result) => {
             if (result?.user) {
                 console.log('AuthManager: Sign-in via redirect completed:', result.user.email);
+
+                // If this was an anonymous user linking, we need to update the profile
+                if (result.user && !result.user.isAnonymous) {
+                    await this.updateUserProfile({
+                        displayName: result.user.displayName,
+                        photoURL: result.user.photoURL,
+                        email: result.user.email,
+                        isAnonymous: false
+                    });
+                }
             }
         }).catch((error) => {
-            console.error('AuthManager: Redirect sign-in error:', error);
+            if (error.code === 'auth/credential-already-in-use') {
+                console.log('AuthManager: Credential already in use, likely from linking attempt');
+            } else if (error.code !== 'auth/missing-auth-domain') {
+                console.error('AuthManager: Redirect sign-in error:', error);
+            }
         });
 
         onAuthStateChanged(auth, async (user) => {
@@ -117,29 +131,14 @@ class AuthManager {
                 return await this.linkWithGoogle();
             }
 
-            // Try popup first
-            try {
-                const result = await signInWithPopup(auth, googleProvider);
-                console.log('Signed in with Google (popup):', result.user.email);
-                return {
-                    success: true,
-                    user: result.user
-                };
-            } catch (popupError) {
-                // If popup blocked or failed, try redirect
-                if (popupError.code === 'auth/popup-blocked' ||
-                    popupError.code === 'auth/popup-closed-by-user' ||
-                    popupError.code === 'auth/cancelled-popup-request') {
-                    console.log('Popup blocked/closed, using redirect flow...');
-                    await signInWithRedirect(auth, googleProvider);
-                    // Redirect will happen, no return value needed
-                    return {
-                        success: true,
-                        redirecting: true
-                    };
-                }
-                throw popupError;
-            }
+            // Use popup - most browsers allow it if triggered by user click
+            const result = await signInWithPopup(auth, googleProvider);
+            console.log('Signed in with Google:', result.user.email);
+
+            return {
+                success: true,
+                user: result.user
+            };
         } catch (error) {
             console.error('Google sign-in error:', error);
 
@@ -148,6 +147,18 @@ class AuthManager {
                 return {
                     success: false,
                     error: 'Sign-in cancelled'
+                };
+            } else if (error.code === 'auth/popup-blocked') {
+                // Inform user to allow popups
+                return {
+                    success: false,
+                    error: 'Please allow popups for this site to sign in with Google'
+                };
+            } else if (error.code === 'auth/cancelled-popup-request') {
+                // Another popup is already open
+                return {
+                    success: false,
+                    error: 'Another sign-in window is already open'
                 };
             }
 
@@ -163,44 +174,38 @@ class AuthManager {
      */
     async linkWithGoogle() {
         try {
-            // Try popup first
-            try {
-                const result = await linkWithPopup(this.currentUser, googleProvider);
-                console.log('Linked anonymous account with Google:', result.user.email);
+            const result = await linkWithPopup(this.currentUser, googleProvider);
+            console.log('Linked anonymous account with Google:', result.user.email);
 
-                // Update user profile with Google data
-                await this.updateUserProfile({
-                    displayName: result.user.displayName,
-                    photoURL: result.user.photoURL,
-                    email: result.user.email,
-                    isAnonymous: false
-                });
+            // Update user profile with Google data
+            await this.updateUserProfile({
+                displayName: result.user.displayName,
+                photoURL: result.user.photoURL,
+                email: result.user.email,
+                isAnonymous: false
+            });
 
-                return {
-                    success: true,
-                    user: result.user,
-                    linked: true
-                };
-            } catch (popupError) {
-                // If popup blocked, try redirect
-                if (popupError.code === 'auth/popup-blocked' ||
-                    popupError.code === 'auth/cancelled-popup-request') {
-                    console.log('Popup blocked, using redirect for account linking...');
-                    await linkWithRedirect(this.currentUser, googleProvider);
-                    return {
-                        success: true,
-                        redirecting: true
-                    };
-                }
-                throw popupError;
-            }
+            return {
+                success: true,
+                user: result.user,
+                linked: true
+            };
         } catch (error) {
             console.error('Account linking error:', error);
 
             // Handle credential already in use
             if (error.code === 'auth/credential-already-in-use') {
                 // Sign in with the Google account instead
+                console.log('Credential already in use, signing in instead...');
+                // Sign out anonymous user first
+                await signOut(auth);
+                // Then sign in with Google
                 return await this.signInWithGoogle();
+            } else if (error.code === 'auth/popup-blocked') {
+                return {
+                    success: false,
+                    error: 'Please allow popups for this site to sign in with Google'
+                };
             }
 
             return {

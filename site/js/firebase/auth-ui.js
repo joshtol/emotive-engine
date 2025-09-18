@@ -187,26 +187,60 @@ class AuthUI {
 
                 const result = await authManager.signInWithGoogle();
 
-                if (result.redirecting) {
-                    // Page will redirect, keep loading state
-                    console.log('Redirecting for authentication...');
-                } else if (!result.success) {
-                    // Restore button on error
-                    activeBtn.innerHTML = originalText;
-                    activeBtn.disabled = false;
+                // Always restore button
+                activeBtn.innerHTML = originalText;
+                activeBtn.disabled = false;
 
-                    if (result.error !== 'Sign-in cancelled') {
+                if (!result.success) {
+                    if (result.error && result.error !== 'Sign-in cancelled') {
                         console.error('Sign in failed:', result.error);
+                        // Show error message
+                        this.showErrorMessage(result.error);
                     }
                 } else {
-                    // Successful popup sign-in
-                    activeBtn.innerHTML = originalText;
-                    activeBtn.disabled = false;
+                    console.log('Sign in successful');
                 }
             }
         } catch (error) {
             console.error('Unexpected sign-in error:', error);
+            this.showErrorMessage('An unexpected error occurred. Please try again.');
         }
+    }
+
+    /**
+     * Show error message
+     */
+    showErrorMessage(message) {
+        // Remove any existing error message
+        const existingError = this.container.querySelector('.auth-error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Create error message element
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'auth-error-message';
+        errorDiv.textContent = message;
+        errorDiv.style.cssText = `
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: rgba(255, 50, 50, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 13px;
+            max-width: 300px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: fadeInOut 5s forwards;
+        `;
+
+        this.container.appendChild(errorDiv);
+
+        // Remove after 5 seconds
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
     }
 
     /**
@@ -358,6 +392,13 @@ class AuthUI {
             @keyframes spin {
                 from { transform: rotate(0deg); }
                 to { transform: rotate(360deg); }
+            }
+
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateY(-10px); }
+                10% { opacity: 1; transform: translateY(0); }
+                90% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-10px); }
             }
 
             .auth-container {

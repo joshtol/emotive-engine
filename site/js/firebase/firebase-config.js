@@ -7,6 +7,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import {
     getAuth,
+    setPersistence,
+    browserLocalPersistence,
     signInWithPopup,
     signInWithRedirect,
     getRedirectResult,
@@ -50,6 +52,15 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Set persistence to local (survives browser refresh)
+setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+        console.log('Auth persistence set to LOCAL');
+    })
+    .catch((error) => {
+        console.error('Error setting auth persistence:', error);
+    });
 
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();
