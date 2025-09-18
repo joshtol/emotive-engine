@@ -2107,7 +2107,6 @@ class EmotiveMascot {
                 `Emotion: ${state.emotion}${state.undertone ? ` (${state.undertone})` : ''}`,
                 `Particles: ${particleStats.activeParticles}/${particleStats.maxParticles}`,
                 `Gesture: ${this.currentModularGesture ? this.currentModularGesture.type : 'none'}`,
-                `Queue: 0`,
                 `Speaking: ${this.speaking ? 'yes' : 'no'}`,
                 `Audio Level: ${(this.audioLevel * 100).toFixed(1)}%`
             ];
