@@ -1,0 +1,98 @@
+/**
+ * Groove Selector Styles
+ * Styling for the rhythm groove template selector
+ */
+
+.groove-selector {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: rgba(0, 12, 24, 0.9);
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-primary);
+    backdrop-filter: blur(10px);
+}
+
+.sci-fi-select {
+    background: rgba(0, 20, 40, 0.8);
+    color: var(--text-primary);
+    border: 1px solid var(--accent-secondary);
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.sci-fi-select:hover {
+    background: rgba(0, 30, 60, 0.9);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.sci-fi-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.sci-fi-select option {
+    background: #001428;
+    color: var(--text-primary);
+    padding: 5px;
+}
+
+.sci-fi-select option:hover {
+    background: var(--accent-secondary);
+}
+
+/* Animation when changing groove */
+.sci-fi-select.groove-changing {
+    animation: groove-change-pulse 0.3s ease;
+}
+
+@keyframes groove-change-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+}
+
+/* Label for groove selector */
+.groove-selector::before {
+    content: 'GROOVE';
+    position: absolute;
+    top: -20px;
+    left: 20px;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: var(--accent-primary);
+    opacity: 0.7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .groove-selector {
+        bottom: 100px;
+        padding: 8px 15px;
+    }
+
+    .sci-fi-select {
+        min-width: 120px;
+        font-size: 12px;
+    }
+}

@@ -1,0 +1,146 @@
+/**
+ * Gesture Queue Visual Feedback
+ * Visual indicators for gesture queueing and beat sync
+ */
+
+/* Queued gesture state */
+.gesture-queued {
+    position: relative;
+    opacity: 0.7;
+    animation: queue-pulse 1s ease-in-out infinite;
+}
+
+.gesture-queued::after {
+    content: attr(data-queue-position);
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-primary);
+    color: var(--text-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 10;
+}
+
+/* Queue full feedback */
+.queue-full {
+    animation: queue-full-shake 0.3s ease-in-out;
+    border-color: var(--color-error, #f44336) !important;
+}
+
+/* Cooldown active feedback */
+.cooldown-active {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+    animation: none !important;
+}
+
+.cooldown-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(128, 128, 128, 0.3) 100%
+    );
+    animation: cooldown-sweep 0.3s linear;
+    pointer-events: none;
+}
+
+@keyframes cooldown-sweep {
+    0% {
+        transform: translateY(-100%);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* Gesture triggered animation */
+.gesture-triggered {
+    animation: gesture-trigger-flash 0.2s ease-out;
+    transform: scale(1.1);
+}
+
+/* Animations */
+@keyframes queue-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+@keyframes queue-full-shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes gesture-trigger-flash {
+    0% {
+        background-color: var(--accent-primary);
+        transform: scale(1.2);
+    }
+    100% {
+        background-color: transparent;
+        transform: scale(1);
+    }
+}
+
+/* Beat sync indicator on buttons */
+.gesture-btn.beat-sync-enabled {
+    border-style: dashed;
+    border-color: var(--accent-primary);
+}
+
+/* Visual hint for rhythm mode */
+.rhythm-mode-active .gesture-btn:not(.gesture-queued):hover {
+    cursor: wait;
+    opacity: 0.8;
+}
+
+.rhythm-mode-active .gesture-btn:not(.gesture-queued):hover::before {
+    content: '♪';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Queue position indicators */
+.gesture-btn[data-queue-position="1"]::after {
+    background-color: var(--color-success, #4CAF50);
+    animation: next-in-queue 0.5s ease-in-out infinite;
+}
+
+@keyframes next-in-queue {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}

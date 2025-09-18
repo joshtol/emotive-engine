@@ -44,6 +44,8 @@ class EmotiveApp {
         // Configuration
         this.config = {
             defaultTheme: 'night',
+            debugMode: localStorage.getItem('debugMode') === 'true' || false,
+            logLevel: localStorage.getItem('logLevel') || 'info',
             mascotOptions: {
                 canvasId: 'emotive-canvas',
                 startingEmotion: 'neutral',
@@ -58,6 +60,9 @@ class EmotiveApp {
                 topOffset: 0
             }
         };
+
+        // Logger for app
+        this.logger = null;
     }
 
     /**
@@ -65,7 +70,20 @@ class EmotiveApp {
      */
     async init() {
         try {
-            console.log('Initializing Emotive App...');
+            // Initialize logger first
+            if (window.loggerFactory) {
+                this.logger = window.loggerFactory.getLogger('EmotiveApp');
+
+                // Set debug mode if configured
+                if (this.config.debugMode) {
+                    window.loggerFactory.enableDebugMode();
+                }
+            } else {
+                // Fallback to console if logger not available
+                this.logger = console;
+            }
+
+            this.logger.info('Initializing Emotive App...');
 
             // Initialize global state manager first
             this.initGlobalState();
@@ -91,6 +109,10 @@ class EmotiveApp {
             // Initialize mascot
             await this.initMascot();
 
+            // Initialize external modules BEFORE UI modules
+            // This ensures GestureScheduler is available when controllers are initialized
+            await this.initExternalModules();
+
             // Initialize UI modules
             this.initUIModules();
 
@@ -115,9 +137,6 @@ class EmotiveApp {
             // Initialize legacy compatibility bridge
             this.initLegacyBridge();
 
-            // Initialize external modules (gestures, FPS)
-            await this.initExternalModules();
-
             // Start mascot animation
             if (this.mascot) {
                 this.mascot.start();
@@ -126,11 +145,15 @@ class EmotiveApp {
             // Initial display update
             this.updateDisplay();
 
-            console.log('Emotive App initialized successfully');
+            this.logger.info('Emotive App initialized successfully');
             return this;
 
         } catch (error) {
-            console.error('Failed to initialize Emotive App:', error);
+            if (this.logger) {
+                this.logger.error('Failed to initialize Emotive App:', error);
+            } else {
+                console.error('Failed to initialize Emotive App:', error);
+            }
             throw error;
         }
     }
@@ -511,7 +534,7 @@ class EmotiveApp {
             this.gestureController = new window.GestureController({
                 triggeredDuration: 200,
                 maxQueueSize: 4,
-                requireBeatSync: true
+                requireBeatSync: true  // Beat-synced gestures when rhythm is active
             });
             this.gestureController.init(this, this.mascot);
 

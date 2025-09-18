@@ -4,6 +4,11 @@
  */
 class GestureController {
     constructor(options = {}) {
+        // Logger
+        this.logger = window.loggerFactory ?
+            window.loggerFactory.getLogger('GestureController') :
+            console;
+
         // Configuration
         this.config = {
             // Selectors
@@ -41,11 +46,19 @@ class GestureController {
         this.state = {
             pendingGestures: new Set(),
             lastGesture: null,
+            lastBeatNumber: 0,  // Track which beat we last executed on
             gestureQueue: [],
+            scheduledGestures: {},  // Gestures scheduled by beat subdivision
             isProcessingQueue: false,
             currentBeatActive: false,
+            currentBeatNumber: 0,
+            currentSubdivision: 0,  // 0, 0.25, 0.5, 0.75 for quarter notes
             beatSyncEnabled: false,
-            nextBeatProcessing: false
+            nextBeatProcessing: false,
+            beatsPerGesture: 1,  // How many beats between gestures (musical timing)
+            currentBPM: 120,
+            fillsEnabled: true,
+            intensity: 'moderate'  // sparse, moderate, dense, chaos
         };
 
         // Button elements
@@ -64,6 +77,9 @@ class GestureController {
         this.mascot = mascot || window.mascot;
         this.gestureScheduler = window.gestureScheduler;
         this.shapeMorphController = window.shapeMorphController || app?.shapeMorphController;
+
+        // Get groove templates if available
+        this.grooveTemplates = this.mascot?.grooveTemplates || window.grooveTemplates;
 
         // Get gesture buttons
         this.gestureButtons = Array.from(
@@ -135,20 +151,31 @@ class GestureController {
             return;
         }
 
-        // Check if rhythm sync is active and we need beat sync
+        // Check if rhythm sync is active
         const rhythmActive = this.isRhythmSyncActive();
-        console.log(`Gesture triggered: ${gestureName}, Rhythm Active: ${rhythmActive}, Require Beat Sync: ${this.config.requireBeatSync}`);
 
+        this.logger.debug('Gesture triggered', {
+            gesture: gestureName,
+            rhythmActive,
+            requireBeatSync: this.config.requireBeatSync,
+            currentBeat: this.state.currentBeatNumber,
+            lastBeat: this.state.lastBeatNumber
+        });
+
+        // When rhythm is active, ALL timing is musical
         if (rhythmActive && this.config.requireBeatSync) {
-            // Queue the gesture instead of immediate execution
+            // Queue the gesture for beat-synced execution
             this.queueGesture(gestureName, buttonElement);
         } else if (window.rhythmActive && this.gestureScheduler) {
             // Legacy rhythm scheduler
             this.gestureScheduler.requestGesture(gestureName);
         } else {
-            // Direct gesture execution
+            // Direct execution when no rhythm (no cooldown - let the animation system handle timing)
             if (this.mascot) {
+                this.logger.debug(`Executing gesture directly: ${gestureName}`);
                 this.mascot.express(gestureName);
+            } else {
+                this.logger.error('Mascot not available for gesture:', gestureName);
             }
         }
 
@@ -167,14 +194,25 @@ class GestureController {
     queueGesture(gestureName, buttonElement) {
         // Check queue size
         if (this.state.gestureQueue.length >= this.config.maxQueueSize) {
-            console.log(`Gesture queue full (max ${this.config.maxQueueSize})`);
+            this.logger.debug(`Gesture queue full (max ${this.config.maxQueueSize})`);
+
+            // Visual feedback that queue is full
+            if (buttonElement) {
+                buttonElement.classList.add('queue-full');
+                setTimeout(() => {
+                    buttonElement.classList.remove('queue-full');
+                }, 300);
+            }
             return;
         }
 
-        // Check if gesture is already queued
-        const existingIndex = this.state.gestureQueue.findIndex(item => item.gestureName === gestureName);
-        if (existingIndex !== -1) {
-            console.log(`Gesture ${gestureName} already queued`);
+        // Prevent queueing the same button if it's already queued
+        // Allow different gestures but not spam of the same button
+        const existingFromButton = this.state.gestureQueue.find(
+            item => item.buttonElement === buttonElement && buttonElement !== null
+        );
+        if (existingFromButton) {
+            this.logger.debug(`Button already has a queued gesture`);
             return;
         }
 
@@ -195,7 +233,7 @@ class GestureController {
             buttonElement.dataset.queuePosition = queuePosition;
         }
 
-        console.log(`Queued gesture: ${gestureName} (position ${this.state.gestureQueue.length})`);
+        this.logger.debug(`Queued gesture: ${gestureName} (position ${this.state.gestureQueue.length})`);
     }
 
     /**
@@ -237,6 +275,7 @@ class GestureController {
         // Execute the gesture
         if (this.mascot) {
             this.mascot.express(gestureName);
+            // Timing is now handled by beat numbers, not timestamps
         }
 
         this.state.isProcessingQueue = false;
@@ -265,8 +304,18 @@ class GestureController {
         // Check if rhythm sync visualizer exists and is active
         if (window.rhythmSyncVisualizer) {
             const state = window.rhythmSyncVisualizer.getState?.();
-            return state?.active && state?.lockedBPM > 0;
+            const isActive = state?.active && state?.lockedBPM > 0;
+
+            this.logger.debug('Rhythm sync check', {
+                hasVisualizer: true,
+                state: state,
+                isActive: isActive
+            });
+
+            return isActive;
         }
+
+        this.logger.debug('Rhythm sync check - no visualizer');
         return false;
     }
 
@@ -275,12 +324,140 @@ class GestureController {
      */
     onBeatActive() {
         this.state.currentBeatActive = true;
-        console.log(`Beat active! Queue length: ${this.state.gestureQueue.length}, Processing: ${this.state.isProcessingQueue}`);
+        this.state.currentBeatNumber++;
+        this.state.currentSubdivision = 0; // Reset to downbeat
 
-        // Only process queue if we have gestures waiting
-        if (this.state.gestureQueue.length > 0 && !this.state.isProcessingQueue) {
-            console.log('Processing gesture on beat');
+        // Process main beat gestures
+        this.processSubdivisionBeat(0);
+
+        // Schedule fill patterns if enabled
+        if (this.state.fillsEnabled && this.mascot?.gestureCompatibility) {
+            this.scheduleFillPatterns();
+        }
+    }
+
+    /**
+     * Handle subdivision beat (called for quarter notes)
+     * @param {number} subdivision - 0, 0.25, 0.5, 0.75
+     */
+    onSubdivisionBeat(subdivision) {
+        this.state.currentSubdivision = subdivision;
+        this.processSubdivisionBeat(subdivision);
+    }
+
+    /**
+     * Process gestures for a specific subdivision
+     */
+    processSubdivisionBeat(subdivision) {
+        // Apply groove template if active
+        if (this.grooveTemplates?.currentGroove) {
+            const groove = this.grooveTemplates.currentGroove;
+
+            // Apply swing timing
+            subdivision = this.grooveTemplates.applySwing(groove, subdivision);
+
+            // Get emphasis and velocity for this position
+            const emphasis = this.grooveTemplates.getEmphasis(groove, this.state.currentBeatNumber, subdivision);
+            const velocity = this.grooveTemplates.getVelocity(groove, this.state.currentBeatNumber, subdivision);
+
+            // Only process if there's emphasis at this position
+            if (emphasis > 0.1) {
+                // Get preferred gesture for this groove position
+                const availableGestures = this.getAvailableGestures();
+                const preferredGesture = this.grooveTemplates.getPreferredGesture(
+                    groove,
+                    this.state.currentBeatNumber,
+                    subdivision,
+                    availableGestures
+                );
+
+                // Schedule the preferred gesture if we have one and velocity is high enough
+                if (preferredGesture && velocity > 0.3) {
+                    if (!this.state.scheduledGestures[subdivision]) {
+                        this.state.scheduledGestures[subdivision] = [];
+                    }
+                    this.state.scheduledGestures[subdivision].push({
+                        gesture: preferredGesture,
+                        velocity: velocity
+                    });
+                }
+            }
+        }
+
+        // Check for scheduled gestures at this subdivision
+        const scheduledGestures = this.state.scheduledGestures[subdivision] || [];
+
+        if (scheduledGestures.length > 0) {
+            // Execute scheduled gestures as a chord if multiple
+            const gestures = scheduledGestures.map(g =>
+                typeof g === 'object' ? g.gesture : g
+            );
+
+            if (gestures.length === 1) {
+                this.executeGesture(gestures[0], scheduledGestures[0].velocity);
+            } else {
+                this.executeChord(gestures);
+            }
+
+            // Clear executed gestures
+            this.state.scheduledGestures[subdivision] = [];
+        }
+
+        // Process main queue on downbeat (0) or based on intensity
+        if (subdivision === 0) {
+            this.processMainQueue();
+        } else if (this.shouldProcessOnSubdivision(subdivision)) {
+            this.processMainQueue();
+        }
+    }
+
+    /**
+     * Determine if we should process queue on this subdivision based on intensity
+     */
+    shouldProcessOnSubdivision(subdivision) {
+        switch (this.state.intensity) {
+            case 'sparse':
+                return false; // Only downbeats
+            case 'moderate':
+                return subdivision === 0.5; // Downbeats and offbeats
+            case 'dense':
+                return subdivision === 0.5 || subdivision === 0.25 || subdivision === 0.75; // All subdivisions
+            case 'chaos':
+                return true; // Every subdivision
+            default:
+                return subdivision === 0.5;
+        }
+    }
+
+    /**
+     * Process the main gesture queue
+     */
+    processMainQueue() {
+        // Calculate if we should process a gesture this beat
+        const beatsSinceLastGesture = this.state.currentBeatNumber - this.state.lastBeatNumber;
+        const shouldProcessThisBeat = beatsSinceLastGesture >= this.state.beatsPerGesture;
+
+        this.logger.debug('Processing main queue', {
+            beatNumber: this.state.currentBeatNumber,
+            subdivision: this.state.currentSubdivision,
+            lastBeatNumber: this.state.lastBeatNumber,
+            beatsSinceLastGesture,
+            shouldProcessThisBeat,
+            queueLength: this.state.gestureQueue.length
+        });
+
+        // Only process if enough beats have passed and we have gestures waiting
+        if (shouldProcessThisBeat &&
+            this.state.gestureQueue.length > 0 &&
+            !this.state.isProcessingQueue) {
+
+            this.logger.debug('Processing gesture from queue', {
+                beat: this.state.currentBeatNumber,
+                subdivision: this.state.currentSubdivision
+            });
+
             this.processGestureQueue();
+            this.state.lastBeatNumber = this.state.currentBeatNumber;
         }
     }
 
@@ -435,6 +612,153 @@ class GestureController {
     }
 
     /**
+     * Set beats per gesture (musical subdivision)
+     * @param {number} beats - Number of beats between gestures (1 = every beat, 2 = every other beat, etc.)
+     */
+    setBeatsPerGesture(beats) {
+        this.state.beatsPerGesture = Math.max(1, Math.floor(beats));
+        this.logger.debug(`Beats per gesture set to ${this.state.beatsPerGesture}`);
+    }
+
+    /**
+     * Adapt to BPM - automatically adjust gesture frequency based on tempo
+     * @param {number} bpm - Current BPM
+     */
+    adaptToBPM(bpm) {
+        this.state.currentBPM = bpm;
+
+        // Adjust gesture frequency
+        if (bpm < 60) {
+            // Very slow - gesture every beat
+            this.setBeatsPerGesture(1);
+            this.setIntensity('dense'); // More activity to fill the space
+        } else if (bpm < 90) {
+            // Slow to medium - gesture every beat
+            this.setBeatsPerGesture(1);
+            this.setIntensity('moderate');
+        } else if (bpm < 140) {
+            // Medium to fast - gesture every other beat
+            this.setBeatsPerGesture(2);
+            this.setIntensity('moderate');
+        } else {
+            // Very fast - gesture every 4 beats
+            this.setBeatsPerGesture(4);
+            this.setIntensity('sparse'); // Less activity to avoid chaos
+        }
+    }
+
+    /**
+     * Schedule fill patterns based on current context
+     */
+    scheduleFillPatterns() {
+        if (!this.mascot?.gestureCompatibility) return;
+
+        const compatibility = this.mascot.gestureCompatibility;
+        const fillPattern = compatibility.getFillPattern(
+            this.state.currentBPM,
+            this.state.intensity
+        );
+
+        if (!fillPattern) return;
+
+        // Schedule fills at appropriate subdivisions
+        fillPattern.forEach(fillGesture => {
+            const timing = compatibility.getGestureTiming(fillGesture);
+            if (timing && timing !== 0) {
+                // Add to scheduled gestures for this subdivision
+                if (!this.state.scheduledGestures[timing]) {
+                    this.state.scheduledGestures[timing] = [];
+                }
+                this.state.scheduledGestures[timing].push(fillGesture);
+            }
+        });
+    }
+
+    /**
+     * Execute a single gesture
+     * @param {string} gestureName - Name of the gesture
+     * @param {number} velocity - Velocity/intensity (0-1)
+     */
+    executeGesture(gestureName, velocity = 1.0) {
+        if (this.mascot) {
+            this.logger.debug(`Executing gesture: ${gestureName} at subdivision ${this.state.currentSubdivision} with velocity ${velocity}`);
+
+            // Pass velocity as options if the mascot supports it
+            if (velocity !== 1.0) {
+                this.mascot.express(gestureName, { velocity, intensity: velocity });
+            } else {
+                this.mascot.express(gestureName);
+            }
+        }
+    }
+
+    /**
+     * Execute multiple gestures as a chord
+     */
+    executeChord(gestures) {
+        if (this.mascot && this.mascot.expressChord) {
+            this.logger.debug(`Executing chord: ${gestures.join('+')} at subdivision ${this.state.currentSubdivision}`);
+            this.mascot.expressChord(gestures);
+        } else if (this.mascot) {
+            // Fallback to sequential if chord not supported
+            gestures.forEach(g => this.executeGesture(g));
+        }
+    }
+
+    /**
+     * Set the gesture intensity level
+     */
+    setIntensity(level) {
+        const validLevels = ['sparse', 'moderate', 'dense', 'chaos'];
+        if (validLevels.includes(level)) {
+            this.state.intensity = level;
+            this.logger.debug(`Intensity set to ${level}`);
+        }
+    }
+
+    /**
+     * Schedule a gesture for a specific subdivision
+     */
+    scheduleGesture(gestureName, subdivision) {
+        if (!this.state.scheduledGestures[subdivision]) {
+            this.state.scheduledGestures[subdivision] = [];
+        }
+        this.state.scheduledGestures[subdivision].push(gestureName);
+        this.logger.debug(`Scheduled ${gestureName} for subdivision ${subdivision}`);
+    }
+
+    /**
+     * Set the active groove template
+     * @param {string} grooveName - Name of the groove (straight, swing, latin, etc.)
+     * @param {string} transitionMode - How to transition (instant, nextBar, nextPhrase)
+     */
+    setGroove(grooveName, transitionMode = 'nextBar') {
+        if (!this.grooveTemplates) {
+            this.logger.warn('Groove templates not available');
+            return false;
+        }
+
+        const success = this.grooveTemplates.setGroove(grooveName, transitionMode);
+        if (success) {
+            this.logger.info(`Groove set to ${grooveName} with ${transitionMode} transition`);
+
+            // Update intensity based on groove
+            const groove = this.grooveTemplates.getTemplate(grooveName);
+            if (groove && groove.intensity) {
+                this.setIntensity(groove.intensity);
+            }
+        }
+        return success;
+    }
+
+    /**
+     * Get available groove names
+     */
+    getAvailableGrooves() {
+        return this.grooveTemplates ? this.grooveTemplates.getGrooveNames() : [];
+    }
+
+    /**
      * Clear gesture queue
      */
     clearGestureQueue() {
@@ -456,7 +780,10 @@ class GestureController {
     }
 }
 
-// Export for use
+// Export as ES6 module
+export default GestureController;
+
+// Make available globally for app.js
 if (typeof window !== 'undefined') {
     window.GestureController = GestureController;
 }

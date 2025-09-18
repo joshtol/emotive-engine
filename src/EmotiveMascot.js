@@ -59,6 +59,8 @@ import { emotiveDebugger, runtimeCapabilities } from './utils/debugger.js';
 import rhythmIntegration from './core/rhythmIntegration.js';
 import ShapeMorpher from './core/ShapeMorpher.js';
 import { AudioAnalyzer } from './core/AudioAnalyzer.js';
+import gestureCompatibility from './core/GestureCompatibility.js';
+import GrooveTemplates from './core/GrooveTemplates.js';
 
 // Import modular handlers
 import { AudioHandler } from './mascot/AudioHandler.js';
@@ -158,6 +160,12 @@ class EmotiveMascot {
         // Initialize shape morphing and audio analysis early
         this.shapeMorpher = new ShapeMorpher();
         this.audioAnalyzer = new AudioAnalyzer();
+
+        // Gesture compatibility system
+        this.gestureCompatibility = gestureCompatibility;
+
+        // Groove templates for musical rhythm patterns
+        this.grooveTemplates = new GrooveTemplates();
         
         // Pass audioAnalyzer to shapeMorpher for audio-reactive deformation
         this.shapeMorpher.audioAnalyzer = this.audioAnalyzer;
@@ -591,8 +599,9 @@ class EmotiveMascot {
     }
 
     /**
-     * Executes a single gesture
-     * @param {string} gesture - The gesture to execute
+     * Executes a single gesture or chord (multiple simultaneous gestures)
+     * @param {string|Array<string>|Object} gesture - Single gesture, array of gestures, or chord object
+     * @param {Object} options - Options for the gesture execution
      * @returns {EmotiveMascot} This instance for chaining
      */
     express(gesture, options = {}) {
@@ -602,7 +611,17 @@ class EmotiveMascot {
                 return this;
             }
 
-            // Express called with gesture
+            // Handle chord (multiple simultaneous gestures)
+            if (Array.isArray(gesture)) {
+                return this.expressChord(gesture, options);
+            }
+
+            // Handle chord object
+            if (typeof gesture === 'object' && gesture.type === 'chord') {
+                return this.expressChord(gesture.gestures, options);
+            }
+
+            // Express called with single gesture
 
             // Route through GestureScheduler when rhythm is active
             // This ensures gestures are queued to play on beat
@@ -726,16 +745,120 @@ class EmotiveMascot {
     }
 
     /**
+     * Express multiple gestures simultaneously (chord)
+     * @param {Array<string>} gestures - Array of gesture names to execute together
+     * @param {Object} options - Options for the chord execution
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    expressChord(gestures, options = {}) {
+        return this.errorBoundary.wrap(() => {
+            if (!gestures || !Array.isArray(gestures) || gestures.length === 0) {
+                return this;
+            }
+
+            // Import gesture compatibility if not loaded
+            if (!this.gestureCompatibility) {
+                // Try to load it dynamically
+                import('./core/GestureCompatibility.js').then(module => {
+                    this.gestureCompatibility = module.default;
+                }).catch(err => {
+                    console.warn('GestureCompatibility not available:', err);
+                });
+            }
+
+            // Use compatibility system if available
+            const compatibleGestures = this.gestureCompatibility ?
+                this.gestureCompatibility.getCompatibleGestures(gestures) :
+                gestures;
+
+            console.log('Executing gesture chord:', compatibleGestures);
+
+            // Execute all compatible gestures simultaneously
+            compatibleGestures.forEach(gestureName => {
+                const normalizedGesture = typeof gestureName === 'string' ?
+                    gestureName : gestureName.gestureName;
+
+                // Execute directly to ensure simultaneity
+                this.executeGestureDirectly(normalizedGesture, options);
+            });
+
+            // Check for enhancing combination
+            if (this.gestureCompatibility?.isEnhancingCombination?.(compatibleGestures)) {
+                // Add extra visual flair
+                this.renderer?.specialEffects?.addSparkle?.();
+            }
+
+            return this;
+        }, 'gesture-chord', this)();
+    }
+
+    /**
+     * Execute a gesture directly on the renderer (bypasses routing)
+     * @private
+     */
+    executeGestureDirectly(gesture, options = {}) {
+        // Direct mapping to renderer methods
+        const rendererMethods = {
+            'bounce': 'startBounce',
+            'pulse': 'startPulse',
+            'shake': 'startShake',
+            'spin': 'startSpin',
+            'nod': 'startNod',
+            'tilt': 'startTilt',
+            'flash': 'startFlash',
+            'glow': 'startGlow',
+            'sparkle': 'startSparkle',
+            'shimmer': 'startShimmer',
+            'wiggle': 'startWiggle',
+            'groove': 'startGroove',
+            'point': 'startPoint',
+            'lean': 'startLean',
+            'reach': 'startReach',
+            'headBob': 'startHeadBob',
+            'orbit': 'startOrbit',
+            'sway': 'startSway',
+            'jump': 'startJump',
+            'wave': 'startWave',
+            'flicker': 'startFlicker',
+            'breathe': 'startBreathe',
+            'float': 'startFloat',
+            'rain': 'startRain',
+            'hula': 'startHula',
+            'twist': 'startTwist'
+        };
+
+        const methodName = rendererMethods[gesture];
+        if (methodName && this.renderer && typeof this.renderer[methodName] === 'function') {
+            this.renderer[methodName](options);
+        }
+
+        // Emit event
+        this.emit('gesture', { name: gesture, options });
+    }
+
+    /**
      * Chains multiple gestures for sequential execution
      * @param {...string} gestures - Gestures to chain
      * @returns {EmotiveMascot} This instance for chaining
      */
     chain(...gestures) {
-        // Gesture chaining not implemented in new system yet
-        // Gesture chaining not available in current version
-        // Execute first gesture if provided
-        if (gestures.length > 0) {
-            this.express(gestures[0]);
+        // Parse the chain using GestureCompatibility if available
+        if (this.gestureCompatibility) {
+            const steps = this.gestureCompatibility.parseChain(gestures.join('>'));
+            // Execute first step (which might be a chord)
+            if (steps.length > 0) {
+                const firstStep = steps[0];
+                if (firstStep.length > 1) {
+                    this.expressChord(firstStep);
+                } else {
+                    this.express(firstStep[0]);
+                }
+            }
+        } else {
+            // Fallback: execute first gesture
+            if (gestures.length > 0) {
+                this.express(gestures[0]);
+            }
         }
         return this;
     }

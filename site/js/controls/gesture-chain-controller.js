@@ -308,7 +308,10 @@ class GestureChainController {
     }
 }
 
-// Export for use
+// Export as ES6 module
+export default GestureChainController;
+
+// Make available globally for app.js
 if (typeof window !== 'undefined') {
     window.GestureChainController = GestureChainController;
 }

@@ -248,7 +248,5 @@ class ModuleLoader {
     }
 }
 
-// Export for use
-if (typeof window !== 'undefined') {
-    window.ModuleLoader = ModuleLoader;
-}
+// Export as ES6 module
+export default ModuleLoader;

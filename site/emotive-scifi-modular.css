@@ -18,6 +18,8 @@
 @import url('styles/components/emotions.css'); /* Emotion panels */
 @import url('styles/components/audio.css');    /* Audio visualizer and controls */
 @import url('styles/components/rhythm-sync.css'); /* Rhythm sync visualizer */
+@import url('styles/components/gesture-queue.css'); /* Gesture queue visual feedback */
+@import url('styles/components/groove-selector.css'); /* Groove template selector */
 @import url('styles/components/effects.css');  /* Holo effects and decorations */
 @import url('styles/components/notifications.css'); /* Notification system */
 @import url('styles/components/footer.css');   /* Footer styles */

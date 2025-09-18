@@ -212,6 +212,22 @@
         <!-- Rhythm Sync Visualizer -->
         <div id="rhythm-sync-container"></div>
 
+        <!-- Groove template selector -->
+        <div id="groove-selector-container" class="groove-selector" style="display: none;">
+            <select id="groove-select" class="sci-fi-select">
+                <option value="straight">Straight</option>
+                <option value="swing">Swing</option>
+                <option value="shuffle">Shuffle</option>
+                <option value="latin">Latin</option>
+                <option value="breakbeat">Breakbeat</option>
+                <option value="waltz">Waltz</option>
+                <option value="techno">Techno</option>
+                <option value="ambient">Ambient</option>
+                <option value="funk">Funk</option>
+                <option value="trap">Trap</option>
+            </select>
+        </div>
+
         <aside class="controls-right right-menu" role="complementary" aria-label="Gesture controls">
             <div class="control-section">
                 <div class="gesture-categories">
@@ -277,42 +293,46 @@
         </div>
     </footer>
 
+    <!-- Utilities -->
+    <script type="module" src="js/utils/logger.js"></script>
+
     <!-- UI Modules -->
-    <script src="js/ui/theme-manager.js"></script>
-    <script src="js/ui/notification-system.js"></script>
-    <script src="js/ui/display-manager.js"></script>
-    <script src="js/ui/scrollbar-compensator.js"></script>
-    <script src="js/ui/dice-roller.js"></script>
-    <script src="js/ui/dj-scratcher.js"></script>
-    <script src="js/ui/audio-visualizer.js"></script>
-    <script src="js/ui/rhythm-sync-visualizer.js"></script>
+    <script type="module" src="js/ui/theme-manager.js"></script>
+    <script type="module" src="js/ui/notification-system.js"></script>
+    <script type="module" src="js/ui/display-manager.js"></script>
+    <script type="module" src="js/ui/scrollbar-compensator.js"></script>
+    <script type="module" src="js/ui/dice-roller.js"></script>
+    <script type="module" src="js/ui/dj-scratcher.js"></script>
+    <script type="module" src="js/ui/audio-visualizer.js"></script>
+    <script type="module" src="js/ui/rhythm-sync-visualizer.js"></script>
 
     <!-- Control Modules -->
-    <script src="js/controls/randomizer-controller.js"></script>
-    <script src="js/controls/gesture-chain-controller.js"></script>
-    <script src="js/controls/undertone-controller.js"></script>
-    <script src="js/controls/system-controls-controller.js"></script>
-    <script src="js/controls/emotion-controller.js"></script>
-    <script src="js/controls/shape-morph-controller.js"></script>
-    <script src="js/controls/audio-controller.js"></script>
-    <script src="js/controls/dice-controller.js"></script>
-    <script src="js/controls/gesture-controller.js"></script>
-    <script src="js/controls/orientation-controller.js"></script>
+    <script type="module" src="js/controls/randomizer-controller.js"></script>
+    <script type="module" src="js/controls/gesture-chain-controller.js"></script>
+    <script type="module" src="js/controls/undertone-controller.js"></script>
+    <script type="module" src="js/controls/system-controls-controller.js"></script>
+    <script type="module" src="js/controls/emotion-controller.js"></script>
+    <script type="module" src="js/controls/shape-morph-controller.js"></script>
+    <script type="module" src="js/controls/audio-controller.js"></script>
+    <script type="module" src="js/controls/dice-controller.js"></script>
+    <script type="module" src="js/controls/gesture-controller.js"></script>
+    <script type="module" src="js/controls/orientation-controller.js"></script>
 
     <!-- Configuration -->
-    <script src="js/config/ui-strings.js"></script>
-    <script src="js/config/assets-config.js"></script>
-    <script src="js/config/icons-config.js"></script>
-    <script src="js/config/footer-config.js"></script>
+    <script type="module" src="js/config/constants.js"></script>
+    <script type="module" src="js/config/ui-strings.js"></script>
+    <script type="module" src="js/config/assets-config.js"></script>
+    <script type="module" src="js/config/icons-config.js"></script>
+    <script type="module" src="js/config/footer-config.js"></script>
 
     <!-- Core Application -->
-    <script src="js/core/global-state.js"></script>
-    <script src="js/core/module-loader.js"></script>
-    <script src="js/core/legacy-compatibility.js"></script>
-    <script src="js/core/app.js"></script>
+    <script type="module" src="js/core/global-state.js"></script>
+    <script type="module" src="js/core/module-loader.js"></script>
+    <script type="module" src="js/core/legacy-compatibility.js"></script>
+    <script type="module" src="js/core/app.js"></script>
 
     <!-- Bootstrap - Initializes the application -->
-    <script src="js/core/app-bootstrap.js"></script>
+    <script type="module" src="js/core/app-bootstrap.js"></script>
 
     <!--
         Application Initialization:

@@ -2,6 +2,22 @@
  * RhythmSyncVisualizer - Visual rhythm sync display with BPM subdivision
  * Modular component that integrates with existing BPM detection
  */
+
+// Import constants if available
+const CONSTANTS = window.APP_CONSTANTS || {};
+const BPM_CONSTANTS = CONSTANTS.BPM || {
+    MIN: 40,
+    MAX: 300,
+    SUBDIVISION_HALF: 0.5,
+    SUBDIVISION_NORMAL: 1.0,
+    SUBDIVISION_DOUBLE: 2.0
+};
+const TIMING_CONSTANTS = CONSTANTS.TIMING || {
+    BEAT_PULSE_DURATION: 150,
+    BEAT_PREVENTION_THRESHOLD: 50,
+    RHYTHM_FADE_TRANSITION: 300
+};
+
 class RhythmSyncVisualizer {
     constructor(containerId, options = {}) {
         // Configuration
@@ -173,6 +189,13 @@ class RhythmSyncVisualizer {
         // Show the visualizer when starting
         this.show();
 
+        // Show groove selector if it exists
+        const grooveSelector = document.getElementById('groove-selector-container');
+        if (grooveSelector) {
+            grooveSelector.style.display = 'block';
+            this.setupGrooveSelector();
+        }
+
         // Determine which BPM to use
         let bpmToUse = 120; // Default
 
@@ -218,10 +241,29 @@ class RhythmSyncVisualizer {
         // Hide the visualizer when stopping
         this.hide();
 
+        // Hide groove selector
+        const grooveSelector = document.getElementById('groove-selector-container');
+        if (grooveSelector) {
+            grooveSelector.style.display = 'none';
+        }
+
         // Stop the rhythm engine
         if (window.rhythmIntegration) {
             console.log('RhythmSyncVisualizer: Stopping rhythm engine');
             window.rhythmIntegration.stop();
+        }
+
+        // Reset gesture controller's beat tracking
+        if (window.gestureController) {
+            // Reset beat counters when rhythm stops
+            if (window.gestureController.state) {
+                window.gestureController.state.currentBeatNumber = 0;
+                window.gestureController.state.lastBeatNumber = 0;
+            }
+            // Clear any queued gestures
+            if (window.gestureController.clearGestureQueue) {
+                window.gestureController.clearGestureQueue();
+            }
         }
 
         // Clear timers
@@ -233,6 +275,11 @@ class RhythmSyncVisualizer {
         if (this.beatInterval) {
             clearInterval(this.beatInterval);
             this.beatInterval = null;
+        }
+
+        if (this.subdivisionInterval) {
+            clearInterval(this.subdivisionInterval);
+            this.subdivisionInterval = null;
         }
 
         // Reset indicators
@@ -319,9 +366,12 @@ class RhythmSyncVisualizer {
         // Clamp BPM to limits
         const clampedBPM = Math.max(this.config.minBPM, Math.min(this.config.maxBPM, bpm));
 
-        // Clear existing interval
+        // Clear existing intervals
         if (this.beatInterval) {
             clearInterval(this.beatInterval);
+        }
+        if (this.subdivisionInterval) {
+            clearInterval(this.subdivisionInterval);
         }
 
         // Update rhythm engine BPM if active
@@ -329,14 +379,34 @@ class RhythmSyncVisualizer {
             window.rhythmIntegration.setBPM(clampedBPM);
         }
 
-        // Calculate interval with subdivision
-        const baseInterval = 60000 / clampedBPM; // ms per beat
-        const interval = baseInterval / this.state.subdivision;
+        // Notify gesture controller of BPM change for musical timing
+        if (window.gestureController && window.gestureController.adaptToBPM) {
+            window.gestureController.adaptToBPM(clampedBPM);
+        }
 
-        // Start beat animation
+        // Calculate intervals
+        const baseInterval = 60000 / clampedBPM; // ms per beat
+        const visualInterval = baseInterval / this.state.subdivision; // Visual beat interval
+        const subdivisionInterval = baseInterval / 4; // Quarter note subdivisions
+
+        // Start visual beat animation
         this.beatInterval = setInterval(() => {
             this.triggerBeat();
-        }, interval);
+        }, visualInterval);
+
+        // Start subdivision callbacks for gesture timing
+        if (window.gestureController && window.gestureController.onSubdivisionBeat) {
+            let subdivisionCounter = 0;
+            this.subdivisionInterval = setInterval(() => {
+                subdivisionCounter = (subdivisionCounter + 1) % 4;
+                const subdivision = subdivisionCounter * 0.25;
+
+                // Skip the downbeat (0) as it's handled by onBeatActive
+                if (subdivision > 0) {
+                    window.gestureController.onSubdivisionBeat(subdivision);
+                }
+            }, subdivisionInterval);
+        }
 
         // Trigger first beat immediately
         this.triggerBeat();
@@ -348,8 +418,9 @@ class RhythmSyncVisualizer {
     triggerBeat() {
         const now = performance.now();
 
-        // Prevent double-triggering
-        if (now - this.state.lastBeatTime < 50) return;
+        // Prevent double-triggering: if two beats occur within 50ms,
+        // they're likely the same beat detected twice (bounce/echo effect)
+        if (now - this.state.lastBeatTime < TIMING_CONSTANTS.BEAT_PREVENTION_THRESHOLD) return;
         this.state.lastBeatTime = now;
 
         // Get current indicator
@@ -364,8 +435,13 @@ class RhythmSyncVisualizer {
         indicator.classList.add('active', 'pulse');
 
         // Notify gesture controller that a beat is active
+        // Delay slightly to align with visual feedback
         if (window.gestureController && window.gestureController.onBeatActive) {
-            window.gestureController.onBeatActive();
+            // Execute gesture at the peak of the pulse animation
+            // This creates better visual synchronization
+            setTimeout(() => {
+                window.gestureController.onBeatActive();
+            }, 50); // Trigger gesture 50ms into the beat for visual alignment
         }
 
         // Remove pulse after animation
@@ -375,7 +451,7 @@ class RhythmSyncVisualizer {
             if (window.gestureController && window.gestureController.onBeatInactive) {
                 window.gestureController.onBeatInactive();
             }
-        }, 150);
+        }, TIMING_CONSTANTS.BEAT_PULSE_DURATION);
 
         // Move to next beat
         this.state.beatIndex = (this.state.beatIndex + 1) % this.config.numBeats;
@@ -453,12 +529,44 @@ class RhythmSyncVisualizer {
         if (this.container) {
             this.container.classList.remove('visible');
             // Hide completely after animation
+            // Wait for CSS transition to complete before hiding element
             setTimeout(() => {
                 if (!this.state.active) {
                     this.container.style.display = 'none';
                 }
-            }, 300);
+            }, TIMING_CONSTANTS.RHYTHM_FADE_TRANSITION);
         }
+    }
+
+    /**
+     * Set up groove selector UI
+     */
+    setupGrooveSelector() {
+        const selector = document.getElementById('groove-select');
+        if (!selector || this.grooveSelectorSetup) return;
+
+        this.grooveSelectorSetup = true;
+
+        // Set default groove on gesture controller
+        if (window.gestureController?.setGroove) {
+            window.gestureController.setGroove('straight', 'instant');
+        }
+
+        // Handle groove selection changes
+        selector.addEventListener('change', (e) => {
+            const groove = e.target.value;
+            console.log('RhythmSyncVisualizer: Changing groove to', groove);
+
+            if (window.gestureController?.setGroove) {
+                window.gestureController.setGroove(groove);
+
+                // Visual feedback
+                selector.classList.add('groove-changing');
+                setTimeout(() => {
+                    selector.classList.remove('groove-changing');
+                }, 300);
+            }
+        });
     }
 
     /**
@@ -468,10 +576,14 @@ class RhythmSyncVisualizer {
         this.stop();
         this.container.innerHTML = '';
         this.beatIndicators = [];
+        this.grooveSelectorSetup = false;
     }
 }
 
-// Export for use
+// Export as ES6 module
+export default RhythmSyncVisualizer;
+
+// Make available globally for app.js
 if (typeof window !== 'undefined') {
     window.RhythmSyncVisualizer = RhythmSyncVisualizer;
 }
