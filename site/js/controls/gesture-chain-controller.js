@@ -163,8 +163,18 @@ class GestureChainController {
                 // Highlight gesture button as it activates with color variation
                 this.highlightGestureButton(item.gesture, index);
 
-                // Execute the gesture
-                this.executeGesture(item.gesture);
+                // Execute the gesture with chain layer for AnimationMixer
+                // Chain gestures stack on top of base movement but below user gestures
+                if (this.mascot && this.mascot.express) {
+                    this.mascot.express(item.gesture, {
+                        fromChain: true,
+                        chainIndex: index,
+                        chainLength: chain.length
+                    });
+                } else {
+                    // Fallback to old method
+                    this.executeGesture(item.gesture);
+                }
             }, item.delay);
 
             this.state.executionTimeouts.push(timeout);

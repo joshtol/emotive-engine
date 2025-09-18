@@ -61,6 +61,8 @@ import ShapeMorpher from './core/ShapeMorpher.js';
 import { AudioAnalyzer } from './core/AudioAnalyzer.js';
 import gestureCompatibility from './core/GestureCompatibility.js';
 import GrooveTemplates from './core/GrooveTemplates.js';
+import GestureBlender from './core/GestureBlender.js';
+import AnimationMixer from './core/AnimationMixer.js';
 
 // Import modular handlers
 import { AudioHandler } from './mascot/AudioHandler.js';
@@ -86,6 +88,66 @@ class EmotiveMascot {
         this.errorBoundary.wrap(() => {
             this.initialize(config);
         }, 'initialization')();
+    }
+
+    /**
+     * Get default duration for a gesture
+     */
+    getGestureDuration(gesture) {
+        const durations = {
+            // Base movements are infinite
+            grooveSway: -1,
+            grooveBob: -1,
+            grooveFlow: -1,
+            groovePulse: -1,
+            grooveStep: -1,
+
+            // User gestures have specific durations
+            bounce: 1000,
+            spin: 2000,
+            wave: 1500,
+            pulse: 800,
+            shake: 600,
+            wiggle: 1000,
+            jump: 800,
+            nod: 600,
+            headBob: 1000,
+
+            // Effects are shorter
+            sparkle: 500,
+            shimmer: 600,
+            glow: 800,
+            flash: 300
+        };
+
+        return durations[gesture] || 1000;
+    }
+
+    /**
+     * Get blend mode for a gesture
+     */
+    getGestureBlendMode(gesture) {
+        // Movement gestures are additive
+        if (['bounce', 'jump', 'sway', 'wiggle', 'wave'].includes(gesture)) {
+            return 'additive';
+        }
+
+        // Rotations override
+        if (['spin', 'orbit'].includes(gesture)) {
+            return 'override';
+        }
+
+        // Effects multiply
+        if (['pulse', 'sparkle', 'shimmer', 'glow'].includes(gesture)) {
+            return 'multiply';
+        }
+
+        // Base movements are additive
+        if (gesture.startsWith('groove')) {
+            return 'additive';
+        }
+
+        return 'additive';
     }
 
     /**
@@ -166,6 +228,12 @@ class EmotiveMascot {
 
         // Groove templates for musical rhythm patterns
         this.grooveTemplates = new GrooveTemplates();
+
+        // Gesture blending system for layered movements
+        this.gestureBlender = new GestureBlender();
+
+        // Unified animation mixer for proper stacking and blending
+        this.animationMixer = new AnimationMixer();
         
         // Pass audioAnalyzer to shapeMorpher for audio-reactive deformation
         this.shapeMorpher.audioAnalyzer = this.audioAnalyzer;
@@ -690,22 +758,53 @@ class EmotiveMascot {
                 'jump': 'startJump',
                 'rain': 'startRain',
                 'runningman': 'startRunningMan',
-                'charleston': 'startCharleston'
-                // Note: burst, peek, hold, scan, twitch, jitter, float 
+                'charleston': 'startCharleston',
+                // Ambient dance gestures
+                'grooveSway': 'startGrooveSway',
+                'grooveBob': 'startGrooveBob',
+                'grooveFlow': 'startGrooveFlow',
+                'groovePulse': 'startGroovePulse',
+                'grooveStep': 'startGrooveStep'
+                // Note: burst, peek, hold, scan, twitch, jitter, float
                 // are handled by the gesture system below
             };
             
             // Check if this gesture has a direct renderer method
             const methodName = rendererMethods[gesture];
             if (methodName && this.renderer && this.renderer[methodName]) {
-                this.renderer[methodName]();
-                // Triggered gesture directly in renderer
-                
+                // Use animation mixer if available
+                if (this.animationMixer) {
+                    // Determine layer based on options or gesture type
+                    const layer = options.fromGroove ? 'base' :
+                                options.fromChain ? 'chain' :
+                                options.isUserTriggered ? 'user' :
+                                options.isAccent ? 'accent' : 'user';
+
+                    // Add animation to mixer - DON'T call renderer method
+                    const animId = this.animationMixer.addAnimation(gesture, layer, {
+                        duration: options.duration || this.getGestureDuration(gesture),
+                        amplitude: options.velocity || options.intensity || 1.0,
+                        frequency: options.frequency || 1.0,
+                        blendMode: this.getGestureBlendMode(gesture)
+                    });
+
+                    // For base movements, track the ID
+                    if (layer === 'base') {
+                        this.currentBaseAnimationId = animId;
+                    }
+
+                    // DON'T call the renderer method when using AnimationMixer
+                    // The mixer handles all animations now
+                } else {
+                    // Only use direct renderer call as fallback when no mixer
+                    this.renderer[methodName](options);
+                }
+
                 // Play gesture sound effect if available
                 if (this.soundSystem.isAvailable()) {
                     this.soundSystem.playGestureSound(gesture);
                 }
-                
+
                 return this;
             }
             

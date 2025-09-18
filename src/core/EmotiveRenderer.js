@@ -100,6 +100,7 @@ import { BreathingAnimator } from './renderer/BreathingAnimator.js';
 import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
 import { RotationBrake } from './animation/RotationBrake.js';
+import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 
 class EmotiveRenderer {
     constructor(canvasManager, options = {}) {
@@ -124,6 +125,7 @@ class EmotiveRenderer {
         this.glowRenderer = new GlowRenderer(this);
         this.coreRenderer = new CoreRenderer(this);
         this.rotationBrake = new RotationBrake(this);
+        this.ambientDanceAnimator = new AmbientDanceAnimator(this);
 
         // Configuration - matching original Emotive proportions
         this.config = {
@@ -596,9 +598,45 @@ class EmotiveRenderer {
      * Main render method
      */
     render(state, deltaTime, gestureTransform = null) {
+        // Use AnimationMixer for all animation blending
+        if (window.mascot?.animationMixer) {
+            const mixerState = window.mascot.animationMixer.update(deltaTime);
+
+            // Use mixer state as the base transform - map to the format renderer expects
+            gestureTransform = {
+                x: mixerState.x,
+                y: mixerState.y,
+                offsetX: mixerState.x,  // Renderer also looks for offsetX
+                offsetY: mixerState.y,  // Renderer also looks for offsetY
+                rotation: mixerState.rotation,
+                scale: mixerState.scale,
+                opacity: mixerState.opacity,
+                glow: mixerState.glow || 1,
+                glowIntensity: mixerState.glow || 1
+            };
+        } else {
+            // Fallback to old system
+            if (window.mascot?.gestureBlender) {
+                const blendState = window.mascot.gestureBlender.update(deltaTime);
+                this.ambientDanceAnimator.updateBlendState(blendState);
+            }
+
+            // Get ambient dance transform and merge with gesture transform
+            const ambientTransform = this.ambientDanceAnimator.getTransform(deltaTime);
+            if (gestureTransform) {
+                // Merge transforms
+                gestureTransform.x = (gestureTransform.x || 0) + (ambientTransform.x || 0);
+                gestureTransform.y = (gestureTransform.y || 0) + (ambientTransform.y || 0);
+                gestureTransform.rotation = (gestureTransform.rotation || 0) + (ambientTransform.rotation || 0);
+                gestureTransform.scale = (gestureTransform.scale || 1) * (ambientTransform.scale || 1);
+            } else {
+                gestureTransform = ambientTransform;
+            }
+        }
+
         // Store gestureTransform for use in other methods
         this.gestureTransform = gestureTransform;
-        
+
         // Update offscreen canvas size if needed
         this.updateOffscreenSize();
         
@@ -671,16 +709,20 @@ class EmotiveRenderer {
             rotationAngle = (gestureTransform.rotation || 0) * Math.PI / 180;
             glowMultiplier = gestureTransform.glowIntensity || 1;
         }
-        
-        // Apply gesture animations (delegate to GestureAnimator)
-        const gestureTransforms = this.gestureAnimator.applyGestureAnimations();
-        if (gestureTransforms) {
-            centerX += gestureTransforms.offsetX || 0;
-            centerY += gestureTransforms.offsetY || 0;
-            scaleMultiplier *= gestureTransforms.scale || 1;
-            rotationAngle += (gestureTransforms.rotation || 0) * Math.PI / 180;
-            // DON'T MULTIPLY - just use the glow value directly to prevent accumulation
-            glowMultiplier = gestureTransforms.glow || 1;
+
+        // Skip old gestureAnimator if AnimationMixer is being used
+        // The AnimationMixer handles all gesture transforms now
+        if (!window.mascot?.animationMixer) {
+            // Only use old system as fallback
+            const gestureTransforms = this.gestureAnimator.applyGestureAnimations();
+            if (gestureTransforms) {
+                centerX += gestureTransforms.offsetX || 0;
+                centerY += gestureTransforms.offsetY || 0;
+                scaleMultiplier *= gestureTransforms.scale || 1;
+                rotationAngle += (gestureTransforms.rotation || 0) * Math.PI / 180;
+                // DON'T MULTIPLY - just use the glow value directly to prevent accumulation
+                glowMultiplier = gestureTransforms.glow || 1;
+            }
         }
         
         // Apply zen levitation - lazy floating when in zen state
@@ -927,6 +969,7 @@ class EmotiveRenderer {
         }
         
         // Render flash wave if present
+        const gestureTransforms = !window.mascot?.animationMixer ? this.gestureAnimator.applyGestureAnimations() : null;
         if (gestureTransforms && gestureTransforms.flashWave) {
             const wave = gestureTransforms.flashWave;
             const ctx = this.ctx;
@@ -2982,6 +3025,13 @@ class EmotiveRenderer {
     startRain() { this.gestureAnimator.startRain(); }
     startRunningMan() { this.gestureAnimator.startRunningMan(); }
     startCharleston() { this.gestureAnimator.startCharleston(); }
+
+    // Ambient dance animations
+    startGrooveSway(options) { this.ambientDanceAnimator.startAmbientAnimation('grooveSway', options); }
+    startGrooveBob(options) { this.ambientDanceAnimator.startAmbientAnimation('grooveBob', options); }
+    startGrooveFlow(options) { this.ambientDanceAnimator.startAmbientAnimation('grooveFlow', options); }
+    startGroovePulse(options) { this.ambientDanceAnimator.startAmbientAnimation('groovePulse', options); }
+    startGrooveStep(options) { this.ambientDanceAnimator.startAmbientAnimation('grooveStep', options); }
     startSparkle() { this.gestureAnimator.startSparkle(); }
     startShimmer() { this.gestureAnimator.startShimmer(); }
     startWiggle() { this.gestureAnimator.startWiggle(); }

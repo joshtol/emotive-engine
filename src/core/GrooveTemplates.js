@@ -10,6 +10,8 @@ class GrooveTemplates {
             straight: {
                 name: 'Straight',
                 timeSignature: '4/4',
+                baseMovement: 'grooveBob', // Continuous base layer
+                transitionStyle: 'transitionLean',
                 pattern: {
                     emphasis: [1, 0, 0.5, 0], // Strong on 1, medium on 3
                     velocities: [1.0, 0, 0.6, 0],
@@ -22,6 +24,7 @@ class GrooveTemplates {
                     offbeat: ['pulse', 'breathe'],
                     fills: ['sparkle', 'glow']
                 },
+                compositeMove: null, // No special composite for straight
                 intensity: 'moderate',
                 description: 'Standard 4/4 rhythm, good for pop/rock'
             },
@@ -29,6 +32,9 @@ class GrooveTemplates {
             swing: {
                 name: 'Swing',
                 timeSignature: '4/4',
+                baseMovement: 'grooveFlow',
+                transitionStyle: 'transitionGlide',
+                compositeMove: 'swingOut',
                 pattern: {
                     emphasis: [1, 0, 0.66, 0], // Swung eighth notes
                     velocities: [1.0, 0, 0.7, 0],
@@ -48,6 +54,9 @@ class GrooveTemplates {
             shuffle: {
                 name: 'Shuffle',
                 timeSignature: '4/4',
+                baseMovement: 'grooveBob',
+                transitionStyle: 'transitionLean',
+                compositeMove: null,
                 pattern: {
                     emphasis: [1, 0.25, 0.5, 0.75], // Driving shuffle
                     velocities: [1.0, 0.3, 0.7, 0.3],
@@ -68,6 +77,9 @@ class GrooveTemplates {
             latin: {
                 name: 'Latin',
                 timeSignature: '4/4',
+                baseMovement: 'grooveSway',
+                transitionStyle: 'transitionRoll',
+                compositeMove: 'latinHips',
                 pattern: {
                     // Clave-inspired pattern: 1 e + a 2 e + a 3 e + a 4 e + a
                     emphasis: [1, 0, 0.375, 0.5, 0, 0.75, 0, 0],
@@ -89,6 +101,9 @@ class GrooveTemplates {
             breakbeat: {
                 name: 'Breakbeat',
                 timeSignature: '4/4',
+                baseMovement: 'grooveStep',
+                transitionStyle: 'transitionGlide',
+                compositeMove: null,
                 pattern: {
                     // Classic Amen break pattern simplified
                     emphasis: [1, 0, 0, 0.75, 0.25, 0.5, 0, 0.625],
@@ -110,6 +125,9 @@ class GrooveTemplates {
             waltz: {
                 name: 'Waltz',
                 timeSignature: '3/4',
+                baseMovement: 'grooveFlow',
+                transitionStyle: 'transitionGlide',
+                compositeMove: null,
                 pattern: {
                     emphasis: [1, 0.33, 0.67], // 1-2-3, 1-2-3
                     velocities: [1.0, 0.5, 0.5],
@@ -129,6 +147,9 @@ class GrooveTemplates {
             techno: {
                 name: 'Techno',
                 timeSignature: '4/4',
+                baseMovement: 'groovePulse',
+                transitionStyle: 'transitionLean',
+                compositeMove: 'robotPop',
                 pattern: {
                     // Four-on-the-floor with 16th note variations
                     emphasis: [1, 0.25, 0.5, 0.75, 1, 0.25, 0.5, 0.75],
@@ -149,6 +170,9 @@ class GrooveTemplates {
             ambient: {
                 name: 'Ambient',
                 timeSignature: '4/4',
+                baseMovement: 'groovePulse',
+                transitionStyle: 'transitionGlide',
+                compositeMove: null,
                 pattern: {
                     emphasis: [0.8, 0, 0.3, 0, 0.5, 0, 0.3, 0],
                     velocities: [0.8, 0, 0.3, 0, 0.5, 0, 0.3, 0],
@@ -168,6 +192,9 @@ class GrooveTemplates {
             funk: {
                 name: 'Funk',
                 timeSignature: '4/4',
+                baseMovement: 'grooveSway',
+                transitionStyle: 'transitionRoll',
+                compositeMove: 'funkChicken',
                 pattern: {
                     // "One" emphasis with 16th note ghost notes
                     emphasis: [1.2, 0.125, 0.25, 0, 0.625, 0.75, 0, 0.875],
@@ -189,6 +216,9 @@ class GrooveTemplates {
             trap: {
                 name: 'Trap',
                 timeSignature: '4/4',
+                baseMovement: 'grooveStep',
+                transitionStyle: 'transitionLean',
+                compositeMove: null,
                 pattern: {
                     // Hi-hat rolls and syncopated kicks
                     emphasis: [1, 0, 0, 0.375, 0, 0.75, 0.875, 0],
@@ -374,6 +404,83 @@ class GrooveTemplates {
     }
 
     /**
+     * Get base movement for current groove
+     */
+    getBaseMovement() {
+        return this.currentGroove?.baseMovement || null;
+    }
+
+    /**
+     * Get transition style for current groove
+     */
+    getTransitionStyle() {
+        return this.currentGroove?.transitionStyle || 'transitionLean';
+    }
+
+    /**
+     * Get composite move for current groove
+     */
+    getCompositeMove() {
+        return this.currentGroove?.compositeMove || null;
+    }
+
+    /**
+     * Check if we should trigger composite move
+     * @param {number} beatNumber - Current beat number
+     * @returns {boolean} True if composite should trigger
+     */
+    shouldTriggerComposite(beatNumber) {
+        if (!this.currentGroove?.compositeMove) return false;
+
+        // Trigger composite every 4 or 8 bars depending on intensity
+        const interval = this.currentGroove.intensity === 'sparse' ? 32 : 16;
+        return beatNumber % interval === 0;
+    }
+
+    /**
+     * Get layered gesture configuration for current position
+     * @param {number} beatNumber - Current beat number
+     * @param {number} subdivision - Current subdivision (0, 0.25, 0.5, 0.75)
+     * @returns {Object} Configuration with base, accent, and transition layers
+     */
+    getLayeredGestures(beatNumber, subdivision) {
+        if (!this.currentGroove) return null;
+
+        const config = {
+            base: this.getBaseMovement(),
+            accent: null,
+            transition: null,
+            composite: null,
+            velocity: 1.0
+        };
+
+        // Check for composite move trigger
+        if (this.shouldTriggerComposite(beatNumber) && subdivision === 0) {
+            config.composite = this.getCompositeMove();
+        }
+
+        // Get accent gesture based on emphasis
+        const emphasis = this.getEmphasis(this.currentGroove, beatNumber, subdivision);
+        const velocity = this.getVelocity(this.currentGroove, beatNumber, subdivision);
+
+        if (emphasis > 0.3 && velocity > 0.3) {
+            config.accent = this.getPreferredGesture(
+                this.currentGroove,
+                beatNumber,
+                subdivision
+            );
+            config.velocity = velocity;
+        }
+
+        // Add transition if changing positions
+        if (config.accent && Math.random() < 0.3) {
+            config.transition = this.getTransitionStyle();
+        }
+
+        return config;
+    }
+
+    /**
      * Get all available groove names
      */
     getGrooveNames() {
@@ -392,7 +499,9 @@ class GrooveTemplates {
             timeSignature: template.timeSignature,
             description: template.description,
             intensity: template.intensity,
-            swing: template.swing
+            swing: template.swing,
+            baseMovement: template.baseMovement,
+            compositeMove: template.compositeMove
         };
     }
 }

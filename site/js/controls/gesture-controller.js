@@ -58,7 +58,9 @@ class GestureController {
             beatsPerGesture: 1,  // How many beats between gestures (musical timing)
             currentBPM: 120,
             fillsEnabled: true,
-            intensity: 'moderate'  // sparse, moderate, dense, chaos
+            intensity: 'moderate',  // sparse, moderate, dense, chaos
+            baseMovementActive: false,  // Track if base movement is running
+            currentBaseMovement: null  // Current base movement gesture
         };
 
         // Button elements
@@ -220,7 +222,8 @@ class GestureController {
         const queueItem = {
             gestureName,
             buttonElement,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            isUserTriggered: true  // Mark as user-triggered
         };
 
         this.state.gestureQueue.push(queueItem);
@@ -233,7 +236,7 @@ class GestureController {
             buttonElement.dataset.queuePosition = queuePosition;
         }
 
-        this.logger.debug(`Queued gesture: ${gestureName} (position ${this.state.gestureQueue.length})`);
+        this.logger.info(`Queued user gesture: ${gestureName} (position ${this.state.gestureQueue.length})`);
     }
 
     /**
@@ -274,7 +277,14 @@ class GestureController {
 
         // Execute the gesture
         if (this.mascot) {
-            this.mascot.express(gestureName);
+            // User-triggered gestures should always execute, even with base movement
+            this.logger.info(`Executing queued gesture: ${gestureName}`);
+
+            // Mark as user-triggered so AnimationMixer knows to reduce base movement
+            this.mascot.express(gestureName, {
+                isUserTriggered: true,
+                fromButton: true
+            });
             // Timing is now handled by beat numbers, not timestamps
         }
 
@@ -327,12 +337,46 @@ class GestureController {
         this.state.currentBeatNumber++;
         this.state.currentSubdivision = 0; // Reset to downbeat
 
+        // Start base movement on first beat or when groove changes
+        if (this.grooveTemplates?.currentGroove && !this.state.baseMovementActive) {
+            this.updateBaseMovement();
+        }
+
         // Process main beat gestures
         this.processSubdivisionBeat(0);
 
-        // Schedule fill patterns if enabled
-        if (this.state.fillsEnabled && this.mascot?.gestureCompatibility) {
+        // Skip fill patterns when base movement is active - it's already providing continuous motion
+        if (this.state.fillsEnabled && this.mascot?.gestureCompatibility && !this.state.baseMovementActive) {
             this.scheduleFillPatterns();
+        }
+    }
+
+    /**
+     * Update the base movement layer for current groove
+     */
+    updateBaseMovement() {
+        const baseMovement = this.grooveTemplates.getBaseMovement();
+
+        // Only start if it's a different movement or not active
+        if (baseMovement && baseMovement !== this.state.currentBaseMovement) {
+            const intensity = this.state.intensity === 'sparse' ? 0.5 :
+                            this.state.intensity === 'moderate' ? 0.7 :
+                            this.state.intensity === 'dense' ? 0.9 : 1.0;
+
+            // Actually start the ambient animation through the mascot
+            if (this.mascot && this.mascot.express) {
+                this.logger.info(`Starting base movement: ${baseMovement} with intensity ${intensity}`);
+                this.mascot.express(baseMovement, { intensity, fromGroove: true });
+
+                // Update state
+                this.state.baseMovementActive = true;
+                this.state.currentBaseMovement = baseMovement;
+            }
+
+            // Also set it in the blender if available
+            if (this.mascot?.gestureBlender) {
+                this.mascot.gestureBlender.setBaseLayer(baseMovement, { intensity });
+            }
         }
     }
 
@@ -349,37 +393,54 @@ class GestureController {
      * Process gestures for a specific subdivision
      */
     processSubdivisionBeat(subdivision) {
-        // Apply groove template if active
-        if (this.grooveTemplates?.currentGroove) {
-            const groove = this.grooveTemplates.currentGroove;
+        // When base movement is active, we still want to process accent gestures
+        if (this.state.baseMovementActive && this.grooveTemplates?.currentGroove) {
+            const layeredConfig = this.grooveTemplates.getLayeredGestures(
+                this.state.currentBeatNumber,
+                subdivision
+            );
 
-            // Apply swing timing
-            subdivision = this.grooveTemplates.applySwing(groove, subdivision);
+            if (layeredConfig) {
+                // Handle composite move
+                if (layeredConfig.composite && subdivision === 0) {
+                    this.logger.info(`Triggering composite move: ${layeredConfig.composite}`);
+                    // For now, skip composites since they're not implemented yet
+                    // this.executeComposite(layeredConfig.composite);
+                }
 
-            // Get emphasis and velocity for this position
-            const emphasis = this.grooveTemplates.getEmphasis(groove, this.state.currentBeatNumber, subdivision);
-            const velocity = this.grooveTemplates.getVelocity(groove, this.state.currentBeatNumber, subdivision);
+                // Handle accent gesture - but be VERY selective
+                // Only fire automatic accents occasionally for variety
+                if (layeredConfig.accent && layeredConfig.velocity > 0.7) {
+                    const emphasis = this.grooveTemplates.getEmphasis(
+                        this.grooveTemplates.currentGroove,
+                        this.state.currentBeatNumber,
+                        subdivision
+                    );
 
-            // Only process if there's emphasis at this position
-            if (emphasis > 0.1) {
-                // Get preferred gesture for this groove position
-                const availableGestures = this.getAvailableGestures();
-                const preferredGesture = this.grooveTemplates.getPreferredGesture(
-                    groove,
-                    this.state.currentBeatNumber,
-                    subdivision,
-                    availableGestures
-                );
+                    // Only fire accents very rarely - like every 16 beats on strong emphasis
+                    // This adds occasional punctuation without being too busy
+                    const shouldFireAccent = emphasis > 0.9 &&
+                                            subdivision === 0 &&
+                                            this.state.currentBeatNumber % 16 === 0 &&
+                                            Math.random() > 0.5; // 50% chance even then
 
-                // Schedule the preferred gesture if we have one and velocity is high enough
-                if (preferredGesture && velocity > 0.3) {
-                    if (!this.state.scheduledGestures[subdivision]) {
-                        this.state.scheduledGestures[subdivision] = [];
+                    if (shouldFireAccent) {
+                        this.logger.debug(`Firing rare accent: ${layeredConfig.accent} on beat ${this.state.currentBeatNumber}`);
+
+                        // Use a subtle effect gesture instead of big movements
+                        const subtleAccents = ['pulse', 'glow', 'sparkle', 'shimmer'];
+                        const accentGesture = subtleAccents.includes(layeredConfig.accent) ?
+                                            layeredConfig.accent : 'pulse';
+
+                        // Schedule the accent gesture
+                        if (!this.state.scheduledGestures[subdivision]) {
+                            this.state.scheduledGestures[subdivision] = [];
+                        }
+                        this.state.scheduledGestures[subdivision].push({
+                            gesture: accentGesture,
+                            velocity: layeredConfig.velocity * 0.5 // Reduce intensity
+                        });
                     }
-                    this.state.scheduledGestures[subdivision].push({
-                        gesture: preferredGesture,
-                        velocity: velocity
-                    });
                 }
             }
         }
@@ -404,6 +465,7 @@ class GestureController {
         }
 
         // Process main queue on downbeat (0) or based on intensity
+        // This handles user-triggered gestures from the UI
         if (subdivision === 0) {
             this.processMainQueue();
         } else if (this.shouldProcessOnSubdivision(subdivision)) {
@@ -742,10 +804,19 @@ class GestureController {
         if (success) {
             this.logger.info(`Groove set to ${grooveName} with ${transitionMode} transition`);
 
+            // Reset base movement state so it starts fresh
+            this.state.baseMovementActive = false;
+            this.state.currentBaseMovement = null;
+
             // Update intensity based on groove
             const groove = this.grooveTemplates.getTemplate(grooveName);
             if (groove && groove.intensity) {
                 this.setIntensity(groove.intensity);
+            }
+
+            // If rhythm is active, start the base movement immediately
+            if (this.isRhythmSyncActive()) {
+                this.updateBaseMovement();
             }
         }
         return success;
