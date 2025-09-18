@@ -125,7 +125,8 @@
       "Bash(npm install:*)",
       "Bash(start http://localhost:8080/themed-scifi-instrument.html)",
       "Read(//c/Users/raven/OneDrive/Pictures/Screenshots/**)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(firebase deploy:*)"
     ],
     "deny": [],
     "ask": []

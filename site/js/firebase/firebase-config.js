@@ -8,10 +8,13 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
     getAuth,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signInAnonymously,
     GoogleAuthProvider,
     onAuthStateChanged,
     linkWithPopup,
+    linkWithRedirect,
     signOut
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import {
@@ -54,9 +57,12 @@ export const googleProvider = new GoogleAuthProvider();
 // Export auth methods
 export {
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signInAnonymously,
     onAuthStateChanged,
     linkWithPopup,
+    linkWithRedirect,
     signOut
 };
 

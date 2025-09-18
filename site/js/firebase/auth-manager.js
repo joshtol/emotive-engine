@@ -8,15 +8,19 @@ import {
     db,
     googleProvider,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signInAnonymously,
     onAuthStateChanged,
     linkWithPopup,
+    linkWithRedirect,
     signOut,
     doc,
     setDoc,
     getDoc,
     updateDoc,
-    serverTimestamp
+    serverTimestamp,
+    increment
 } from './firebase-config.js';
 
 class AuthManager {
@@ -36,6 +40,16 @@ class AuthManager {
      */
     initAuthListener() {
         console.log('AuthManager: Setting up auth state listener...');
+
+        // Check for redirect result first
+        getRedirectResult(auth).then((result) => {
+            if (result?.user) {
+                console.log('AuthManager: Sign-in via redirect completed:', result.user.email);
+            }
+        }).catch((error) => {
+            console.error('AuthManager: Redirect sign-in error:', error);
+        });
+
         onAuthStateChanged(auth, async (user) => {
             console.log('AuthManager: Auth state changed, user:', user ? user.uid : 'null');
 
@@ -103,14 +117,29 @@ class AuthManager {
                 return await this.linkWithGoogle();
             }
 
-            // Regular sign in
-            const result = await signInWithPopup(auth, googleProvider);
-            console.log('Signed in with Google:', result.user.email);
-
-            return {
-                success: true,
-                user: result.user
-            };
+            // Try popup first
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                console.log('Signed in with Google (popup):', result.user.email);
+                return {
+                    success: true,
+                    user: result.user
+                };
+            } catch (popupError) {
+                // If popup blocked or failed, try redirect
+                if (popupError.code === 'auth/popup-blocked' ||
+                    popupError.code === 'auth/popup-closed-by-user' ||
+                    popupError.code === 'auth/cancelled-popup-request') {
+                    console.log('Popup blocked/closed, using redirect flow...');
+                    await signInWithRedirect(auth, googleProvider);
+                    // Redirect will happen, no return value needed
+                    return {
+                        success: true,
+                        redirecting: true
+                    };
+                }
+                throw popupError;
+            }
         } catch (error) {
             console.error('Google sign-in error:', error);
 
@@ -134,22 +163,37 @@ class AuthManager {
      */
     async linkWithGoogle() {
         try {
-            const result = await linkWithPopup(this.currentUser, googleProvider);
-            console.log('Linked anonymous account with Google:', result.user.email);
+            // Try popup first
+            try {
+                const result = await linkWithPopup(this.currentUser, googleProvider);
+                console.log('Linked anonymous account with Google:', result.user.email);
 
-            // Update user profile with Google data
-            await this.updateUserProfile({
-                displayName: result.user.displayName,
-                photoURL: result.user.photoURL,
-                email: result.user.email,
-                isAnonymous: false
-            });
+                // Update user profile with Google data
+                await this.updateUserProfile({
+                    displayName: result.user.displayName,
+                    photoURL: result.user.photoURL,
+                    email: result.user.email,
+                    isAnonymous: false
+                });
 
-            return {
-                success: true,
-                user: result.user,
-                linked: true
-            };
+                return {
+                    success: true,
+                    user: result.user,
+                    linked: true
+                };
+            } catch (popupError) {
+                // If popup blocked, try redirect
+                if (popupError.code === 'auth/popup-blocked' ||
+                    popupError.code === 'auth/cancelled-popup-request') {
+                    console.log('Popup blocked, using redirect for account linking...');
+                    await linkWithRedirect(this.currentUser, googleProvider);
+                    return {
+                        success: true,
+                        redirecting: true
+                    };
+                }
+                throw popupError;
+            }
         } catch (error) {
             console.error('Account linking error:', error);
 

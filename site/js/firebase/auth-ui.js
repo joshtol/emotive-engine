@@ -174,13 +174,38 @@ class AuthUI {
      * Handle sign in
      */
     async handleSignIn() {
-        const result = await authManager.signInWithGoogle();
+        try {
+            // Disable button and show loading state
+            const signInBtn = this.container.querySelector('.google-signin');
+            const upgradeBtn = this.container.querySelector('.auth-upgrade-btn');
+            const activeBtn = signInBtn || upgradeBtn;
 
-        if (!result.success) {
-            if (result.error !== 'Sign-in cancelled') {
-                console.error('Sign in failed:', result.error);
-                // Could show error toast here
+            if (activeBtn) {
+                const originalText = activeBtn.innerHTML;
+                activeBtn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span> Signing in...';
+                activeBtn.disabled = true;
+
+                const result = await authManager.signInWithGoogle();
+
+                if (result.redirecting) {
+                    // Page will redirect, keep loading state
+                    console.log('Redirecting for authentication...');
+                } else if (!result.success) {
+                    // Restore button on error
+                    activeBtn.innerHTML = originalText;
+                    activeBtn.disabled = false;
+
+                    if (result.error !== 'Sign-in cancelled') {
+                        console.error('Sign in failed:', result.error);
+                    }
+                } else {
+                    // Successful popup sign-in
+                    activeBtn.innerHTML = originalText;
+                    activeBtn.disabled = false;
+                }
             }
+        } catch (error) {
+            console.error('Unexpected sign-in error:', error);
         }
     }
 
@@ -330,6 +355,11 @@ class AuthUI {
         const styles = document.createElement('style');
         styles.id = 'auth-ui-styles';
         styles.innerHTML = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+
             .auth-container {
                 position: fixed;
                 top: 20px;
