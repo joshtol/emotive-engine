@@ -61,8 +61,6 @@ import ShapeMorpher from './core/ShapeMorpher.js';
 import { AudioAnalyzer } from './core/AudioAnalyzer.js';
 import gestureCompatibility from './core/GestureCompatibility.js';
 import GrooveTemplates from './core/GrooveTemplates.js';
-import GestureBlender from './core/GestureBlender.js';
-import AnimationMixer from './core/AnimationMixer.js';
 
 // Import modular handlers
 import { AudioHandler } from './mascot/AudioHandler.js';
