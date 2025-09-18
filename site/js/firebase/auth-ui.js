@@ -285,16 +285,7 @@ class AuthUI {
 
         // Make sure container is visible
         this.container.style.display = 'block';
-
-        // Debug: Add temporary red border to see if container is visible
-        this.container.style.border = '3px solid red';
         console.log('Auth UI: Anonymous prompt displayed');
-        console.log('Container dimensions:', {
-            width: this.container.offsetWidth,
-            height: this.container.offsetHeight,
-            top: this.container.offsetTop,
-            left: this.container.offsetLeft
-        });
     }
 
     /**
@@ -341,10 +332,10 @@ class AuthUI {
         styles.innerHTML = `
             .auth-container {
                 position: fixed;
-                top: 10px;
-                right: 10px;
+                top: 20px;
+                right: 20px;
                 z-index: 999999;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
 
             .auth-wrapper {
@@ -353,87 +344,131 @@ class AuthUI {
                 gap: 10px;
             }
 
-            /* Sign in button */
+            /* Sign in button - sci-fi style */
             .google-signin {
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                padding: 8px 16px;
-                background: white;
-                border: 1px solid #dadce0;
-                border-radius: 20px;
+                gap: 10px;
+                padding: 10px 20px;
+                background: rgba(0, 255, 200, 0.1);
+                border: 1px solid rgba(0, 255, 200, 0.3);
+                border-radius: 25px;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: all 0.3s ease;
                 font-size: 14px;
-                color: #3c4043;
-                font-weight: 500;
+                color: #00ffc8;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                backdrop-filter: blur(10px);
+                box-shadow:
+                    0 0 20px rgba(0, 255, 200, 0.2),
+                    inset 0 0 20px rgba(0, 255, 200, 0.05);
             }
 
             .google-signin:hover {
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                background: #f8f9fa;
+                background: rgba(0, 255, 200, 0.2);
+                border-color: rgba(0, 255, 200, 0.5);
+                box-shadow:
+                    0 0 30px rgba(0, 255, 200, 0.4),
+                    inset 0 0 20px rgba(0, 255, 200, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .google-signin svg {
+                filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
             }
 
             /* User display */
             .auth-user-display {
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                padding: 4px 8px 4px 4px;
-                background: rgba(255, 255, 255, 0.1);
+                gap: 10px;
+                padding: 6px 12px 6px 6px;
+                background: rgba(0, 255, 200, 0.1);
                 backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 20px;
+                border: 1px solid rgba(0, 255, 200, 0.3);
+                border-radius: 25px;
                 cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow:
+                    0 0 20px rgba(0, 255, 200, 0.2),
+                    inset 0 0 20px rgba(0, 255, 200, 0.05);
+            }
+
+            .auth-user-display:hover {
+                background: rgba(0, 255, 200, 0.15);
+                border-color: rgba(0, 255, 200, 0.4);
+                box-shadow:
+                    0 0 25px rgba(0, 255, 200, 0.3),
+                    inset 0 0 20px rgba(0, 255, 200, 0.08);
             }
 
             .auth-user-avatar {
-                width: 32px;
-                height: 32px;
+                width: 36px;
+                height: 36px;
                 border-radius: 50%;
+                border: 2px solid rgba(0, 255, 200, 0.5);
+                box-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
             }
 
             .auth-user-name {
-                color: white;
+                color: #00ffc8;
                 font-size: 14px;
+                font-weight: 600;
                 max-width: 150px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
 
             .auth-menu-toggle {
                 background: none;
                 border: none;
-                color: white;
+                color: #00ffc8;
                 cursor: pointer;
-                font-size: 10px;
+                font-size: 12px;
+                transition: transform 0.3s ease;
+            }
+
+            .auth-menu-toggle:hover {
+                transform: rotate(180deg);
             }
 
             /* User menu */
             .auth-user-menu {
                 position: absolute;
-                top: 45px;
+                top: 50px;
                 right: 0;
-                background: white;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                background: rgba(20, 20, 30, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(0, 255, 200, 0.3);
+                border-radius: 15px;
+                box-shadow:
+                    0 10px 40px rgba(0, 0, 0, 0.8),
+                    0 0 30px rgba(0, 255, 200, 0.2),
+                    inset 0 0 30px rgba(0, 255, 200, 0.05);
                 overflow: hidden;
-                min-width: 250px;
+                min-width: 280px;
             }
 
             .auth-menu-header {
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                padding: 16px;
-                background: #f8f9fa;
+                gap: 15px;
+                padding: 20px;
+                background: rgba(0, 255, 200, 0.05);
+                border-bottom: 1px solid rgba(0, 255, 200, 0.2);
             }
 
             .auth-menu-avatar {
-                width: 40px;
-                height: 40px;
+                width: 45px;
+                height: 45px;
                 border-radius: 50%;
+                border: 2px solid rgba(0, 255, 200, 0.5);
+                box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
             }
 
             .auth-menu-info {
@@ -442,71 +477,118 @@ class AuthUI {
             }
 
             .auth-menu-name {
-                font-weight: 600;
-                color: #202124;
-                font-size: 14px;
+                font-weight: 700;
+                color: #00ffc8;
+                font-size: 15px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 3px;
             }
 
             .auth-menu-email {
-                color: #5f6368;
+                color: rgba(0, 255, 200, 0.7);
                 font-size: 12px;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                letter-spacing: 0.3px;
             }
 
             .auth-menu-divider {
                 height: 1px;
-                background: #e0e0e0;
+                background: linear-gradient(90deg,
+                    transparent,
+                    rgba(0, 255, 200, 0.3) 20%,
+                    rgba(0, 255, 200, 0.3) 80%,
+                    transparent
+                );
             }
 
             .auth-menu-item {
                 display: block;
                 width: 100%;
-                padding: 12px 16px;
+                padding: 14px 20px;
                 background: none;
                 border: none;
                 text-align: left;
                 cursor: pointer;
                 font-size: 14px;
-                color: #202124;
-                transition: background 0.2s;
+                font-weight: 600;
+                color: rgba(0, 255, 200, 0.9);
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                position: relative;
+            }
+
+            .auth-menu-item::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 3px;
+                height: 100%;
+                background: #00ffc8;
+                transform: scaleY(0);
+                transition: transform 0.3s ease;
             }
 
             .auth-menu-item:hover {
-                background: #f8f9fa;
+                background: rgba(0, 255, 200, 0.1);
+                color: #00ffc8;
+                padding-left: 25px;
+            }
+
+            .auth-menu-item:hover::before {
+                transform: scaleY(1);
             }
 
             /* Anonymous prompt */
             .auth-anonymous-prompt {
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                padding: 8px 12px;
-                background: rgba(255, 255, 255, 0.1);
+                gap: 15px;
+                padding: 10px 15px;
+                background: rgba(255, 180, 0, 0.1);
                 backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 20px;
+                border: 1px solid rgba(255, 180, 0, 0.3);
+                border-radius: 25px;
+                box-shadow:
+                    0 0 20px rgba(255, 180, 0, 0.2),
+                    inset 0 0 20px rgba(255, 180, 0, 0.05);
             }
 
             .auth-prompt-text {
-                color: rgba(255, 255, 255, 0.8);
-                font-size: 14px;
+                color: rgba(255, 180, 0, 0.9);
+                font-size: 13px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
 
             .auth-upgrade-btn {
-                padding: 6px 12px;
-                background: white;
-                border: none;
-                border-radius: 12px;
+                padding: 8px 16px;
+                background: rgba(0, 255, 200, 0.1);
+                border: 1px solid rgba(0, 255, 200, 0.4);
+                border-radius: 20px;
                 cursor: pointer;
                 font-size: 12px;
-                font-weight: 500;
-                color: #1a73e8;
-                transition: all 0.2s;
+                font-weight: 600;
+                color: #00ffc8;
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                box-shadow:
+                    0 0 15px rgba(0, 255, 200, 0.2),
+                    inset 0 0 15px rgba(0, 255, 200, 0.05);
             }
 
             .auth-upgrade-btn:hover {
-                background: #f8f9fa;
+                background: rgba(0, 255, 200, 0.2);
+                border-color: rgba(0, 255, 200, 0.6);
+                box-shadow:
+                    0 0 20px rgba(0, 255, 200, 0.4),
+                    inset 0 0 15px rgba(0, 255, 200, 0.1);
+                transform: translateY(-1px);
             }
         `;
 
