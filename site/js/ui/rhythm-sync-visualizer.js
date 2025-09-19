@@ -1,3 +1,14 @@
+/*!
+ * Emotive Engine™ - Proprietary and Confidential
+ * Copyright (c) 2025 Emotive Engine. All Rights Reserved.
+ *
+ * NOTICE: This code is proprietary and confidential. Unauthorized copying,
+ * modification, or distribution is strictly prohibited and may result in
+ * legal action. This software is licensed, not sold.
+ *
+ * Website: https://emotiveengine.com
+ * License: https://emotive-engine.web.app/LICENSE.md
+ */
 /**
  * RhythmSyncVisualizer - Visual rhythm sync display with BPM subdivision
  * Modular component that integrates with existing BPM detection
@@ -46,7 +57,7 @@ class RhythmSyncVisualizer {
 
         // References
         this.container = document.getElementById(containerId);
-        this.mascot = null;
+        this.mascot = options.mascot || null;
         this.beatIndicators = [];
         this.animationTimer = null;
         this.beatInterval = null;
@@ -92,6 +103,9 @@ class RhythmSyncVisualizer {
      * Create DOM structure
      */
     createDOM() {
+        // Clear previous indicators
+        this.beatIndicators = [];
+
         this.container.innerHTML = '';
         this.container.className = 'rhythm-sync-visualizer';
 
@@ -177,7 +191,11 @@ class RhythmSyncVisualizer {
      * Start rhythm sync
      */
     start() {
-        console.log('RhythmSyncVisualizer: Starting...');
+        console.log('RhythmSyncVisualizer: Starting...', {
+            mascot: !!this.mascot,
+            shapeMorpher: !!this.mascot?.shapeMorpher,
+            musicDetector: !!this.mascot?.shapeMorpher?.musicDetector
+        });
         if (!this.mascot?.shapeMorpher) {
             console.warn('RhythmSyncVisualizer: No mascot connected');
             return;
@@ -219,6 +237,7 @@ class RhythmSyncVisualizer {
         }
 
         // Start beat animation
+        console.log('RhythmSyncVisualizer: Starting beat animation with BPM:', bpmToUse, 'Indicators:', this.beatIndicators.length);
         this.updateBPM(bpmToUse);
 
         // Start update loop
@@ -230,6 +249,27 @@ class RhythmSyncVisualizer {
      */
     stop() {
         this.state.active = false;
+
+        // Clear beat animation intervals
+        if (this.beatInterval) {
+            clearInterval(this.beatInterval);
+            this.beatInterval = null;
+        }
+        if (this.subdivisionInterval) {
+            clearInterval(this.subdivisionInterval);
+            this.subdivisionInterval = null;
+        }
+
+        // Cancel animation frame
+        if (this.animationTimer) {
+            cancelAnimationFrame(this.animationTimer);
+            this.animationTimer = null;
+        }
+
+        // Remove active states from all indicators immediately
+        this.beatIndicators.forEach(ind => {
+            ind.classList.remove('active', 'pulse');
+        });
 
         // Exit manual mode when stopping
         if (this.state.isManualMode) {
@@ -322,15 +362,26 @@ class RhythmSyncVisualizer {
                 }
             }
 
-            // Auto-stop if music stops or tempo is lost
+            // Auto-stop only if music actually stops (not just because tempo isn't locked yet)
             if (this.state.active) {
                 const hasFrequencyData = morpher.frequencyData && morpher.frequencyData.some(v => v > 0);
-                const tempoLocked = detector.tempoLocked;
 
-                if (!hasFrequencyData || !tempoLocked) {
-                    console.log('RhythmSyncVisualizer: Music stopped or tempo lost, auto-stopping');
-                    this.stop();
-                    // Don't return here either, let the update loop continue
+                // Only stop if there's no audio data at all
+                // Don't stop just because tempo isn't locked - it needs time to detect
+                if (!hasFrequencyData) {
+                    // Add a grace period before stopping
+                    if (!this._noDataCounter) this._noDataCounter = 0;
+                    this._noDataCounter++;
+
+                    // Only stop after 60 frames (~1 second) of no data
+                    if (this._noDataCounter > 60) {
+                        console.log('RhythmSyncVisualizer: No audio data detected, auto-stopping');
+                        this.stop();
+                        this._noDataCounter = 0;
+                    }
+                } else {
+                    // Reset counter when we have data
+                    this._noDataCounter = 0;
                 }
             }
 
@@ -341,12 +392,19 @@ class RhythmSyncVisualizer {
                     if (detector.tempoLocked && detector.detectedBPM > 0) {
                         // Update BPM if changed
                         if (Math.abs(detector.detectedBPM - this.state.lockedBPM) > 1) {
+                            console.log('RhythmSyncVisualizer: Updating BPM to', detector.detectedBPM);
                             this.state.lockedBPM = detector.detectedBPM;
                             this.updateBPM(detector.detectedBPM);
                         }
                     } else {
                         // Track current BPM internally
                         this.state.currentBPM = detector.detectedBPM || 0;
+                        // Log BPM detection status periodically
+                        if (!this._bpmLogCounter) this._bpmLogCounter = 0;
+                        this._bpmLogCounter++;
+                        if (this._bpmLogCounter % 60 === 0) {
+                            console.log('RhythmSyncVisualizer: BPM detection status - locked:', detector.tempoLocked, 'BPM:', detector.detectedBPM);
+                        }
                     }
                 } else {
                     // In manual mode, just track the detected BPM for reference
@@ -355,8 +413,10 @@ class RhythmSyncVisualizer {
             }
         }
 
-        // Continue update loop
-        this.animationTimer = requestAnimationFrame(() => this.update());
+        // Continue update loop only if still active
+        if (this.state.active) {
+            this.animationTimer = requestAnimationFrame(() => this.update());
+        }
     }
 
     /**
@@ -388,6 +448,8 @@ class RhythmSyncVisualizer {
         const baseInterval = 60000 / clampedBPM; // ms per beat
         const visualInterval = baseInterval / this.state.subdivision; // Visual beat interval
         const subdivisionInterval = baseInterval / 4; // Quarter note subdivisions
+
+        console.log('RhythmSyncVisualizer: Setting beat interval:', visualInterval, 'ms (BPM:', clampedBPM, ', subdivision:', this.state.subdivision, ')');
 
         // Start visual beat animation
         this.beatInterval = setInterval(() => {
@@ -423,8 +485,18 @@ class RhythmSyncVisualizer {
         if (now - this.state.lastBeatTime < TIMING_CONSTANTS.BEAT_PREVENTION_THRESHOLD) return;
         this.state.lastBeatTime = now;
 
+        // Check if indicators exist
+        if (!this.beatIndicators || this.beatIndicators.length === 0) {
+            console.warn('RhythmSyncVisualizer: No beat indicators found');
+            return;
+        }
+
         // Get current indicator
         const indicator = this.beatIndicators[this.state.beatIndex];
+        if (!indicator) {
+            console.warn('RhythmSyncVisualizer: No indicator at index', this.state.beatIndex);
+            return;
+        }
 
         // Remove active from all
         this.beatIndicators.forEach(ind => {
@@ -581,9 +653,11 @@ class RhythmSyncVisualizer {
 }
 
 // Export as ES6 module
+// ES6 Module Export
+export { RhythmSyncVisualizer };
 export default RhythmSyncVisualizer;
 
-// Make available globally for app.js
-if (typeof window !== 'undefined') {
-    window.RhythmSyncVisualizer = RhythmSyncVisualizer;
-}
+// LEGAL WARNING: This code is protected by copyright law and international treaties.
+// Unauthorized reproduction or distribution of this code, or any portion of it,
+// may result in severe civil and criminal penalties, and will be prosecuted
+// to the maximum extent possible under the law.

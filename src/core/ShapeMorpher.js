@@ -241,7 +241,12 @@ class ShapeMorpher {
                 }
             }
         }
-        
+
+        // Update music detector BPM calculation
+        if (this.musicDetector) {
+            this.musicDetector.update(performance.now());
+        }
+
         // Return early if not transitioning
         if (!this.isTransitioning || !this.targetShape) return;
         

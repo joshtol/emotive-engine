@@ -431,6 +431,18 @@ export class GestureCompatibility {
     }
 
     /**
+     * Get fill pattern for current rhythm context
+     * @param {number} bpm - Current BPM
+     * @param {string} intensity - Intensity level (sparse/moderate/dense/chaos)
+     * @returns {Array} - Array of gestures to use as fills
+     */
+    getFillPattern(bpm, intensity = 'moderate') {
+        // This is an alias for getFillGestures to maintain compatibility
+        // The gesture-controller expects this method name
+        return this.getFillGestures(bpm, intensity);
+    }
+
+    /**
      * Schedule gestures with musical timing
      * @param {Array} gestureQueue - Current gesture queue
      * @param {number} currentBeat - Current beat number

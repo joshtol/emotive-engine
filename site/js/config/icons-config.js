@@ -1,3 +1,14 @@
+/*!
+ * Emotive Engine™ - Proprietary and Confidential
+ * Copyright (c) 2025 Emotive Engine. All Rights Reserved.
+ *
+ * NOTICE: This code is proprietary and confidential. Unauthorized copying,
+ * modification, or distribution is strictly prohibited and may result in
+ * legal action. This software is licensed, not sold.
+ *
+ * Website: https://emotiveengine.com
+ * License: https://emotive-engine.web.app/LICENSE.md
+ */
 /**
  * IconsConfig - Centralized icons and symbols configuration
  * Manages all emoji icons, symbols, and visual indicators
@@ -127,12 +138,13 @@ class IconsConfig {
      * Apply shape icons to buttons
      */
     applyShapeIcons() {
-        document.querySelectorAll('.shape-btn').forEach(btn => {
-            const shape = btn.dataset.shape;
-            if (shape && this.config.shapes[shape]) {
-                this.setButtonIcon(btn, this.config.shapes[shape]);
-            }
-        });
+        // Shape buttons already have icons in HTML, skip adding them again
+        // document.querySelectorAll('.shape-btn').forEach(btn => {
+        //     const shape = btn.dataset.shape;
+        //     if (shape && this.config.shapes[shape]) {
+        //         this.setButtonIcon(btn, this.config.shapes[shape]);
+        //     }
+        // });
     }
 
     /**
@@ -265,7 +277,7 @@ class IconsConfig {
      * Get all icons for a category
      */
     getCategory(category) {
-        return { ...this.config[category] } || {};
+        return this.config[category] ? { ...this.config[category] } : {};
     }
 
     /**
@@ -302,7 +314,11 @@ class IconsConfig {
     }
 }
 
-// Export for use
-if (typeof window !== 'undefined') {
-    window.IconsConfig = IconsConfig;
-}
+// ES6 Module Export
+export { IconsConfig };
+export default IconsConfig;
+
+// LEGAL WARNING: This code is protected by copyright law and international treaties.
+// Unauthorized reproduction or distribution of this code, or any portion of it,
+// may result in severe civil and criminal penalties, and will be prosecuted
+// to the maximum extent possible under the law.

@@ -507,9 +507,5 @@ class GrooveTemplates {
 }
 
 // Export as ES6 module
+// No longer polluting global scope with window assignment
 export default GrooveTemplates;
-
-// Make available globally
-if (typeof window !== 'undefined') {
-    window.GrooveTemplates = GrooveTemplates;
-}

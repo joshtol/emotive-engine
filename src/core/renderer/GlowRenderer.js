@@ -3,6 +3,8 @@
  * @module core/renderer/GlowRenderer
  */
 
+import { gradientCache } from './GradientCache.js';
+
 export class GlowRenderer {
     constructor(renderer) {
         this.renderer = renderer;
@@ -109,13 +111,17 @@ export class GlowRenderer {
         // Clear offscreen canvas
         offCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
         
-        // Create gradient - higher opacity to match original brightness
-        const gradient = offCtx.createRadialGradient(center, center, 0, center, center, size);
-        gradient.addColorStop(0, this.hexToRgba(color, 0.4));
-        gradient.addColorStop(0.3, this.hexToRgba(color, 0.2));
-        gradient.addColorStop(0.6, this.hexToRgba(color, 0.1));
-        gradient.addColorStop(1, this.hexToRgba(color, 0));
-        
+        // Use cached gradient - higher opacity to match original brightness
+        const gradient = gradientCache.getRadialGradient(
+            offCtx, center, center, 0, center, center, size,
+            [
+                { offset: 0, color: this.hexToRgba(color, 0.4) },
+                { offset: 0.3, color: this.hexToRgba(color, 0.2) },
+                { offset: 0.6, color: this.hexToRgba(color, 0.1) },
+                { offset: 1, color: this.hexToRgba(color, 0) }
+            ]
+        );
+
         // Draw gradient to offscreen canvas
         offCtx.fillStyle = gradient;
         offCtx.fillRect(0, 0, size * 2, size * 2);
@@ -138,16 +144,20 @@ export class GlowRenderer {
         // Use the EXACT original formula for consistent brightness
         ctx.save();
         
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-        
-        // Original used 20 stops with opacity = 0.6 * Math.pow(1 - position, 2.2)
+        // Build gradient stops array
         const stops = 20;
+        const gradientStops = [];
         for (let i = 0; i <= stops; i++) {
             const position = i / stops;
             const baseOpacity = 0.6 * Math.pow(1 - position, 2.2);
             const opacity = baseOpacity * intensity;
-            gradient.addColorStop(position, this.hexToRgba(color, opacity));
+            gradientStops.push({ offset: position, color: this.hexToRgba(color, opacity) });
         }
+
+        // Use cached gradient
+        const gradient = gradientCache.getRadialGradient(
+            ctx, x, y, 0, x, y, radius, gradientStops
+        );
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -167,11 +177,14 @@ export class GlowRenderer {
     renderRecordingGlow(x, y, radius, intensity) {
         const ctx = this.ctx;
         const glowSize = radius * 2.5;
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowSize);
-        
-        gradient.addColorStop(0, `rgba(255, 0, 0, ${0.3 * intensity})`);
-        gradient.addColorStop(0.5, `rgba(255, 0, 0, ${0.15 * intensity})`);
-        gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+        const gradient = gradientCache.getRadialGradient(
+            ctx, x, y, 0, x, y, glowSize,
+            [
+                { offset: 0, color: `rgba(255, 0, 0, ${0.3 * intensity})` },
+                { offset: 0.5, color: `rgba(255, 0, 0, ${0.15 * intensity})` },
+                { offset: 1, color: 'rgba(255, 0, 0, 0)' }
+            ]
+        );
         
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
@@ -193,10 +206,14 @@ export class GlowRenderer {
         const zenRadius = radius * (0.9 + breathPhase * 0.1);
         
         // Inner glow
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, zenRadius);
-        gradient.addColorStop(0, 'rgba(147, 112, 219, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(147, 112, 219, 0.3)');
-        gradient.addColorStop(1, 'rgba(147, 112, 219, 0)');
+        const gradient = gradientCache.getRadialGradient(
+            ctx, x, y, 0, x, y, zenRadius,
+            [
+                { offset: 0, color: 'rgba(147, 112, 219, 0.8)' },
+                { offset: 0.7, color: 'rgba(147, 112, 219, 0.3)' },
+                { offset: 1, color: 'rgba(147, 112, 219, 0)' }
+            ]
+        );
         
         ctx.save();
         ctx.globalCompositeOperation = 'screen';

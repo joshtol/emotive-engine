@@ -3,6 +3,8 @@
  * @module core/renderer/CoreRenderer
  */
 
+import { gradientCache } from './GradientCache.js';
+
 export class CoreRenderer {
     constructor(renderer) {
         this.renderer = renderer;
@@ -92,11 +94,15 @@ export class CoreRenderer {
             ctx.fill();
         } else {
             // Shadow gradient - dark center fading to transparent
-            const shadowGradient = ctx.createRadialGradient(0, 0, radius * 0.7, 0, 0, radius * 1.2);
-            shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
-            shadowGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.1)');
-            shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            
+            const shadowGradient = gradientCache.getRadialGradient(
+                ctx, 0, 0, radius * 0.7, 0, 0, radius * 1.2,
+                [
+                    { offset: 0, color: 'rgba(0, 0, 0, 0.2)' },
+                    { offset: 0.8, color: 'rgba(0, 0, 0, 0.1)' },
+                    { offset: 1, color: 'rgba(0, 0, 0, 0)' }
+                ]
+            );
+
             ctx.fillStyle = shadowGradient;
             ctx.beginPath();
             if (shapePoints) {

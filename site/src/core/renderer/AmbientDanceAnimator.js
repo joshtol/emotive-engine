@@ -113,8 +113,20 @@ class AmbientDanceAnimator {
                         break;
 
                     case 'groovePulse':
-                        transform.scale *= 1 + Math.sin(elapsed / 250 * animation.frequency) * 0.05 * animation.intensity;
-                        transform.opacity *= 0.9 + Math.sin(elapsed / 250 * animation.frequency) * 0.1 * animation.intensity;
+                        // Ambient floating movement with gentle pulsing
+                        const t1 = elapsed / 1000 * animation.frequency;
+                        const t2 = elapsed / 1500 * animation.frequency;
+
+                        // Smooth figure-8 floating motion
+                        transform.x += Math.sin(t1) * 30 * animation.intensity;
+                        transform.y += Math.sin(t2 * 2) * 15 * animation.intensity;
+
+                        // Gentle rotation sway
+                        transform.rotation += Math.sin(t1 * 0.7) * 10 * animation.intensity;
+
+                        // Subtle breathing pulse
+                        const breathe = Math.sin(t1 * 2) * animation.intensity;
+                        transform.scale *= 1 + breathe * 0.08;
                         break;
 
                     case 'grooveStep':

@@ -1,3 +1,14 @@
+/*!
+ * Emotive Engine™ - Proprietary and Confidential
+ * Copyright (c) 2025 Emotive Engine. All Rights Reserved.
+ *
+ * NOTICE: This code is proprietary and confidential. Unauthorized copying,
+ * modification, or distribution is strictly prohibited and may result in
+ * legal action. This software is licensed, not sold.
+ *
+ * Website: https://emotiveengine.com
+ * License: https://emotive-engine.web.app/LICENSE.md
+ */
 /**
  * AudioController - Manages audio playback and controls
  * Handles audio file loading, demo tracks, and visualization
@@ -133,6 +144,16 @@ class AudioController {
             window.startAudioViz();
         }
 
+        // Start rhythm sync visualizer
+        if (window.rhythmSyncVisualizer && !window.rhythmSyncVisualizer.state.active) {
+            window.rhythmSyncVisualizer.start();
+        }
+
+        // Start ambient groove animation
+        if (this.mascot?.renderer) {
+            this.mascot.renderer.startGrooveBob({ intensity: 0.5, frequency: 1.0 });
+        }
+
         // Trigger callback
         if (this.onPlay) {
             this.onPlay();
@@ -148,6 +169,16 @@ class AudioController {
         // Stop audio visualization
         if (window.stopAudioViz) {
             window.stopAudioViz();
+        }
+
+        // Stop rhythm sync visualizer
+        if (window.rhythmSyncVisualizer && window.rhythmSyncVisualizer.state.active) {
+            window.rhythmSyncVisualizer.stop();
+        }
+
+        // Stop ambient groove animation
+        if (this.mascot?.renderer?.ambientDanceAnimator) {
+            this.mascot.renderer.ambientDanceAnimator.stopAmbientAnimation('grooveBob');
         }
 
         // Trigger callback
@@ -170,6 +201,11 @@ class AudioController {
         // Stop audio visualization
         if (window.stopAudioViz) {
             window.stopAudioViz();
+        }
+
+        // Stop rhythm sync visualizer
+        if (window.rhythmSyncVisualizer && window.rhythmSyncVisualizer.state.active) {
+            window.rhythmSyncVisualizer.stop();
         }
 
         // Hide visualizer on mobile portrait
@@ -343,7 +379,10 @@ class AudioController {
     }
 }
 
-// Export for use
-if (typeof window !== 'undefined') {
-    window.AudioController = AudioController;
-}
+// Export class for ES6 modules
+export { AudioController };
+
+// LEGAL WARNING: This code is protected by copyright law and international treaties.
+// Unauthorized reproduction or distribution of this code, or any portion of it,
+// may result in severe civil and criminal penalties, and will be prosecuted
+// to the maximum extent possible under the law.

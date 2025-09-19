@@ -101,6 +101,8 @@ import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
 import { RotationBrake } from './animation/RotationBrake.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
+import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
+import { gradientCache } from './renderer/GradientCache.js';
 
 class EmotiveRenderer {
     constructor(canvasManager, options = {}) {
@@ -197,6 +199,14 @@ class EmotiveRenderer {
         // Track animation frame IDs to prevent memory leaks
         this.animationFrameIds = {
             colorTransition: null,
+            eyeClose: null,
+            eyeOpen: null,
+            zenEnter: null,
+            zenExit: null
+        };
+
+        // Track loop manager callback IDs
+        this.loopCallbackIds = {
             eyeClose: null,
             eyeOpen: null,
             zenEnter: null,
@@ -598,6 +608,12 @@ class EmotiveRenderer {
      * Main render method
      */
     render(state, deltaTime, gestureTransform = null) {
+        // Performance marker: Frame start
+        if (this.performanceMonitor) {
+            this.performanceMonitor.markFrameStart();
+        }
+        const frameStartTime = performance.now();
+
         // Get ambient dance transform and merge with gesture transform
         const ambientTransform = this.ambientDanceAnimator.getTransform(deltaTime);
         if (gestureTransform) {
@@ -953,13 +969,18 @@ class EmotiveRenderer {
             const outerR = coreRadius * wave.outerRadius;
             
             if (outerR > innerR) {
-                const gradient = ctx.createRadialGradient(coreX, coreY, innerR, coreX, coreY, outerR);
-                gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                gradient.addColorStop(0.2, `rgba(255, 255, 255, ${wave.intensity * 0.15})`);
-                gradient.addColorStop(0.5, `rgba(255, 255, 255, ${wave.intensity * 0.25})`); // Peak in center
-                gradient.addColorStop(0.8, `rgba(255, 255, 255, ${wave.intensity * 0.15})`);
-                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                
+                // Use cached gradient for flash wave
+                const gradient = gradientCache.getRadialGradient(
+                    ctx, coreX, coreY, innerR, coreX, coreY, outerR,
+                    [
+                        { offset: 0, color: 'rgba(255, 255, 255, 0)' },
+                        { offset: 0.2, color: `rgba(255, 255, 255, ${wave.intensity * 0.15})` },
+                        { offset: 0.5, color: `rgba(255, 255, 255, ${wave.intensity * 0.25})` }, // Peak in center
+                        { offset: 0.8, color: `rgba(255, 255, 255, ${wave.intensity * 0.15})` },
+                        { offset: 1, color: 'rgba(255, 255, 255, 0)' }
+                    ]
+                );
+
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
                 ctx.arc(coreX, coreY, outerR, 0, Math.PI * 2);
@@ -1141,6 +1162,14 @@ class EmotiveRenderer {
                 recordingEffect.drawRecordingIndicator(originalCtx, this.canvas.width, this.canvas.height);
             }
         }
+
+        // Performance marker: Frame end
+        const frameEndTime = performance.now();
+        const frameTime = frameEndTime - frameStartTime;
+        if (this.performanceMonitor) {
+            this.performanceMonitor.markFrameEnd();
+            this.performanceMonitor.recordFrameTime(frameTime);
+        }
     }
     
     // renderGlow method removed - now handled by GlowRenderer module
@@ -1164,15 +1193,17 @@ class EmotiveRenderer {
         );
         const safeRadius = Math.max(50, maxRadius); // Ensure minimum radius
         
-        // Create radial gradient for the recording glow
-        const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, safeRadius);
-        
-        // Pulsating red gradient - fade out before edge to prevent square clipping
-        gradient.addColorStop(0, this.hexToRgba('#FF0000', 0.7 * intensity));
-        gradient.addColorStop(0.3, this.hexToRgba('#FF0000', 0.5 * intensity));
-        gradient.addColorStop(0.6, this.hexToRgba('#FF0000', 0.3 * intensity));
-        gradient.addColorStop(0.85, this.hexToRgba('#FF0000', 0.1 * intensity)); // Fade earlier
-        gradient.addColorStop(1, this.hexToRgba('#FF0000', 0));
+        // Use cached gradient for the recording glow
+        const gradient = gradientCache.getRadialGradient(
+            this.ctx, x, y, 0, x, y, safeRadius,
+            [
+                { offset: 0, color: this.hexToRgba('#FF0000', 0.7 * intensity) },
+                { offset: 0.3, color: this.hexToRgba('#FF0000', 0.5 * intensity) },
+                { offset: 0.6, color: this.hexToRgba('#FF0000', 0.3 * intensity) },
+                { offset: 0.85, color: this.hexToRgba('#FF0000', 0.1 * intensity) }, // Fade earlier
+                { offset: 1, color: this.hexToRgba('#FF0000', 0) }
+            ]
+        );
         
         // Draw the recording glow
         this.ctx.fillStyle = gradient;
@@ -2398,13 +2429,13 @@ class EmotiveRenderer {
      */
     animateEyeClose() {
         // Cancel any existing eye animations
-        if (this.animationFrameIds.eyeClose) {
-            cancelAnimationFrame(this.animationFrameIds.eyeClose);
-            this.animationFrameIds.eyeClose = null;
+        if (this.loopCallbackIds.eyeClose) {
+            animationLoopManager.unregister(this.loopCallbackIds.eyeClose);
+            this.loopCallbackIds.eyeClose = null;
         }
-        if (this.animationFrameIds.eyeOpen) {
-            cancelAnimationFrame(this.animationFrameIds.eyeOpen);
-            this.animationFrameIds.eyeOpen = null;
+        if (this.loopCallbackIds.eyeOpen) {
+            animationLoopManager.unregister(this.loopCallbackIds.eyeOpen);
+            this.loopCallbackIds.eyeOpen = null;
         }
         
         const startTime = performance.now();
@@ -2413,8 +2444,8 @@ class EmotiveRenderer {
         
         const animate = () => {
             if (!this.state.sleeping) {
-                // Clean up animation frame ID
-                this.animationFrameIds.eyeClose = null;
+                // Clean up loop callback ID
+                this.loopCallbackIds.eyeClose = null;
                 return; // Stop if woken up
             }
             
@@ -2430,7 +2461,7 @@ class EmotiveRenderer {
                 this.state.sleepDimness = 1.0;
                 this.state.sleepScale = 1.0;
                 
-                this.animationFrameIds.eyeClose = requestAnimationFrame(animate);
+                // Continue animation on next frame
             } else if (elapsed < eyeCloseDuration + dimDuration) {
                 // Phase 2: Dim the orb
                 const dimProgress = (elapsed - eyeCloseDuration) / dimDuration;
@@ -2443,18 +2474,23 @@ class EmotiveRenderer {
                 this.state.sleepDimness = 1.0 - (dimEased * 0.4); // Dim to 0.6
                 this.state.sleepScale = 1.0 - (dimEased * 0.1); // Scale to 0.9
                 
-                this.animationFrameIds.eyeClose = requestAnimationFrame(animate);
+                // Continue animation on next frame
             } else {
                 // Final state
                 this.state.eyeOpenness = 0.1;
                 this.state.sleepDimness = 0.6;
                 this.state.sleepScale = 0.9;
-                // Clean up animation frame ID
-                this.animationFrameIds.eyeClose = null;
+                // Clean up loop callback ID
+                this.loopCallbackIds.eyeClose = null;
             }
         };
-        
-        this.animationFrameIds.eyeClose = requestAnimationFrame(animate);
+
+        // Register with AnimationLoopManager
+        this.loopCallbackIds.eyeClose = animationLoopManager.register(
+            animate,
+            AnimationPriority.HIGH, // Eye animations are high priority
+            this
+        );
     }
     
     /**
@@ -2490,13 +2526,13 @@ class EmotiveRenderer {
      */
     animateEyeOpen() {
         // Cancel any existing eye animations
-        if (this.animationFrameIds.eyeOpen) {
-            cancelAnimationFrame(this.animationFrameIds.eyeOpen);
-            this.animationFrameIds.eyeOpen = null;
+        if (this.loopCallbackIds.eyeOpen) {
+            animationLoopManager.unregister(this.loopCallbackIds.eyeOpen);
+            this.loopCallbackIds.eyeOpen = null;
         }
-        if (this.animationFrameIds.eyeClose) {
-            cancelAnimationFrame(this.animationFrameIds.eyeClose);
-            this.animationFrameIds.eyeClose = null;
+        if (this.loopCallbackIds.eyeClose) {
+            animationLoopManager.unregister(this.loopCallbackIds.eyeClose);
+            this.loopCallbackIds.eyeClose = null;
         }
         
         const startTime = performance.now();
@@ -2518,7 +2554,7 @@ class EmotiveRenderer {
                 // Keep eyes closed during brightening
                 this.state.eyeOpenness = 0.1;
                 
-                this.animationFrameIds.eyeOpen = requestAnimationFrame(animate);
+                // Continue animation on next frame
             } else if (elapsed < brightenDuration + eyeOpenDuration) {
                 // Phase 2: Open eyes
                 const eyeProgress = (elapsed - brightenDuration) / eyeOpenDuration;
@@ -2531,18 +2567,23 @@ class EmotiveRenderer {
                 // Animate eye opening
                 this.state.eyeOpenness = 0.1 + eyeEased * 0.9; // Open from 0.1 to 1.0
                 
-                this.animationFrameIds.eyeOpen = requestAnimationFrame(animate);
+                // Continue animation on next frame
             } else {
                 // Final state
                 this.state.eyeOpenness = 1.0;
                 this.state.sleepDimness = 1.0;
                 this.state.sleepScale = 1.0;
-                // Clean up animation frame ID
-                this.animationFrameIds.eyeOpen = null;
+                // Clean up loop callback ID
+                this.loopCallbackIds.eyeOpen = null;
             }
         };
-        
-        this.animationFrameIds.eyeOpen = requestAnimationFrame(animate);
+
+        // Register with AnimationLoopManager
+        this.loopCallbackIds.eyeOpen = animationLoopManager.register(
+            animate,
+            AnimationPriority.HIGH, // Eye animations are high priority
+            this
+        );
     }
     
     /**
@@ -2582,8 +2623,8 @@ class EmotiveRenderer {
         
         const animate = () => {
             if (!this.zenTransition.active || this.zenTransition.phase !== 'entering') {
-                // Clean up animation frame ID
-                this.animationFrameIds.zenEnter = null;
+                // Clean up loop callback ID
+                this.loopCallbackIds.zenEnter = null;
                 return;
             }
             
@@ -2607,7 +2648,12 @@ class EmotiveRenderer {
                 // Smile appears gradually
                 this.zenTransition.smileCurve = Math.sin(lotusProgress * Math.PI / 2); // Smooth ease
                 
-                this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
+                // Register with AnimationLoopManager
+        this.loopCallbackIds.zenEnter = animationLoopManager.register(
+            animate,
+            AnimationPriority.MEDIUM, // Zen animations are medium priority
+            this
+        );
             } else {
                 // Final state - in meditation with full lotus, then start floating
                 this.zenTransition.phase = 'in';
@@ -2620,12 +2666,17 @@ class EmotiveRenderer {
                 
                 // Set gentle vortex for zen state
                 this.state.zenVortexIntensity = 1.0;  // Can be adjusted: 0.5 = very gentle, 2.0 = strong
-                // Clean up animation frame ID
-                this.animationFrameIds.zenEnter = null;
+                // Clean up loop callback ID
+                this.loopCallbackIds.zenEnter = null;
             }
         };
         
-        this.animationFrameIds.zenEnter = requestAnimationFrame(animate);
+        // Register with AnimationLoopManager
+        this.loopCallbackIds.zenEnter = animationLoopManager.register(
+            animate,
+            AnimationPriority.MEDIUM, // Zen animations are medium priority
+            this
+        );
     }
     
     /**
@@ -2650,8 +2701,8 @@ class EmotiveRenderer {
         
         const animate = () => {
             if (!this.zenTransition.active || this.zenTransition.phase !== 'exiting') {
-                // Clean up animation frame ID
-                this.animationFrameIds.zenExit = null;
+                // Clean up loop callback ID
+                this.loopCallbackIds.zenExit = null;
                 return;
             }
             
@@ -2684,7 +2735,12 @@ class EmotiveRenderer {
                     this.zenTransition.lotusMorph = 1.0 * (1 - morphProgress); // Lotus disappears
                 }
                 
-                this.animationFrameIds.zenExit = requestAnimationFrame(animate);
+                // Register with AnimationLoopManager
+        this.loopCallbackIds.zenExit = animationLoopManager.register(
+            animate,
+            AnimationPriority.MEDIUM, // Zen animations are medium priority
+            this
+        );
             } else if (elapsed < straightenDuration + awakeDuration) {
                 // Phase 2: Awakening gestures
                 const awakeProgress = (elapsed - straightenDuration) / awakeDuration;
@@ -2713,7 +2769,12 @@ class EmotiveRenderer {
                     this.state.glowIntensity = 1.0 + (0.5 * driftProg); // Brighten
                 }
                 
-                this.animationFrameIds.zenExit = requestAnimationFrame(animate);
+                // Register with AnimationLoopManager
+        this.loopCallbackIds.zenExit = animationLoopManager.register(
+            animate,
+            AnimationPriority.MEDIUM, // Zen animations are medium priority
+            this
+        );
             } else if (elapsed < straightenDuration + awakeDuration + expandDuration) {
                 // Phase 3: Horizontal expansion (sunrise)
                 const expandProgress = (elapsed - straightenDuration - awakeDuration) / expandDuration;
@@ -2724,7 +2785,12 @@ class EmotiveRenderer {
                 this.state.driftY = -10 * (1 - expandProgress); // Return to center
                 this.state.glowIntensity = 1.5 - (0.5 * expandProgress); // Normal glow
                 
-                this.animationFrameIds.zenExit = requestAnimationFrame(animate);
+                // Register with AnimationLoopManager
+        this.loopCallbackIds.zenExit = animationLoopManager.register(
+            animate,
+            AnimationPriority.MEDIUM, // Zen animations are medium priority
+            this
+        );
             } else if (elapsed < straightenDuration + awakeDuration + expandDuration + settleDuration) {
                 // Phase 4: Final settle pulse
                 const settleProgress = (elapsed - straightenDuration - awakeDuration - expandDuration) / settleDuration;
@@ -2733,7 +2799,12 @@ class EmotiveRenderer {
                 this.zenTransition.scaleX = 1.0 + (pulse * 0.05);
                 this.zenTransition.scaleY = 1.0 + (pulse * 0.05);
                 
-                this.animationFrameIds.zenExit = requestAnimationFrame(animate);
+                // Register with AnimationLoopManager
+        this.loopCallbackIds.zenExit = animationLoopManager.register(
+            animate,
+            AnimationPriority.MEDIUM, // Zen animations are medium priority
+            this
+        );
             } else {
                 // Complete - reset to normal
                 this.zenTransition.active = false;
@@ -2746,12 +2817,17 @@ class EmotiveRenderer {
                 this.zenTransition.smileCurve = 0;
                 this.state.shakeOffset = 0;
                 this.state.driftY = 0;
-                // Clean up animation frame ID
-                this.animationFrameIds.zenExit = null;
+                // Clean up loop callback ID
+                this.loopCallbackIds.zenExit = null;
             }
         };
         
-        this.animationFrameIds.zenExit = requestAnimationFrame(animate);
+        // Register with AnimationLoopManager
+        this.loopCallbackIds.zenExit = animationLoopManager.register(
+            animate,
+            AnimationPriority.MEDIUM, // Zen animations are medium priority
+            this
+        );
     }
     
     /**

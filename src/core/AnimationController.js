@@ -2,9 +2,9 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                    ◐ ◑ ◒ ◓  ANIMATION CONTROLLER  ◓ ◒ ◑ ◐                    
- *                                                                                    
+ *  └─○═╝
+ *                    ◐ ◑ ◒ ◓  ANIMATION CONTROLLER  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Animation Controller - Main Loop & Performance Management
@@ -76,6 +76,7 @@
 
 import PerformanceMonitor from './PerformanceMonitor.js';
 import SimpleFPSCounter from './SimpleFPSCounter.js';
+import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 
 class AnimationController {
     constructor(errorBoundary, config = {}) {
@@ -86,6 +87,7 @@ class AnimationController {
         // Animation state
         this.isRunning = false;
         this.animationFrameId = null;
+        this.loopCallbackId = null; // For AnimationLoopManager
         this.lastFrameTime = 0;
         this.deltaTime = 0;
         this.isPaused = false;
@@ -199,10 +201,14 @@ class AnimationController {
             if (this.subsystems.soundSystem && this.subsystems.soundSystem.isAvailable()) {
                 this.subsystems.soundSystem.resumeContext();
             }
-            
-            // Start the main animation loop
-            this.animate();
-            
+
+            // Register with AnimationLoopManager instead of direct RAF
+            this.loopCallbackId = animationLoopManager.register(
+                (deltaTime, timestamp) => this.animate(deltaTime, timestamp),
+                AnimationPriority.CRITICAL, // Main render loop is critical priority
+                this
+            );
+
             // Emit start event
             this.emit('animationStarted', { targetFPS: this.targetFPS });
             
@@ -222,12 +228,19 @@ class AnimationController {
             
             // Stop animation loop
             this.isRunning = false;
-            
+
+            // Unregister from AnimationLoopManager
+            if (this.loopCallbackId) {
+                animationLoopManager.unregister(this.loopCallbackId);
+                this.loopCallbackId = null;
+            }
+
+            // Clean up old RAF if it exists (for backwards compatibility)
             if (this.animationFrameId) {
                 cancelAnimationFrame(this.animationFrameId);
                 this.animationFrameId = null;
             }
-            
+
 
             
             // Stop all active gestures
@@ -280,13 +293,17 @@ class AnimationController {
     
     /**
      * Main animation loop with deltaTime calculation and performance monitoring
+     * Now called by AnimationLoopManager with centralized frame timing
+     * @param {number} deltaTime - Time since last frame from loop manager
+     * @param {number} timestamp - Current timestamp from loop manager
      */
-    animate() {
+    animate(deltaTime, timestamp) {
         if (!this.isRunning || this.isPaused) return;
-        
+
         this.errorBoundary.wrap(() => {
-            const currentTime = performance.now();
-            this.deltaTime = currentTime - this.lastFrameTime;
+            // Use deltaTime from AnimationLoopManager if provided, else calculate
+            const currentTime = timestamp || performance.now();
+            this.deltaTime = deltaTime || (currentTime - this.lastFrameTime);
             
             // Cap deltaTime to prevent physics instability
             // Use a consistent cap of 50ms (20 FPS minimum)
@@ -326,10 +343,10 @@ class AnimationController {
             if (this.performanceMonitor) {
                 this.performanceMonitor.endFrame(performance.now());
             }
-            
-            // Schedule next frame using requestAnimationFrame for optimal timing
-            this.animationFrameId = requestAnimationFrame(() => this.animate());
-            
+
+            // AnimationLoopManager now handles the loop scheduling
+            // No need to call requestAnimationFrame here
+
         }, 'animation-loop')();
     }
 

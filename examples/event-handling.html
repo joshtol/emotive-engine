@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Event Handling Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        h2 {
+            color: #555;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .canvas-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #mascot-canvas {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+        }
+
+        .event-log {
+            background: #1a202c;
+            color: #a0aec0;
+            border-radius: 8px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .event-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .event-type {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .event-time {
+            color: #718096;
+            font-size: 11px;
+        }
+
+        .event-data {
+            color: #cbd5e0;
+            margin-top: 4px;
+        }
+
+        .event-entry.gesture {
+            border-left-color: #48bb78;
+        }
+
+        .event-entry.gesture .event-type {
+            color: #48bb78;
+        }
+
+        .event-entry.emotion {
+            border-left-color: #ed8936;
+        }
+
+        .event-entry.emotion .event-type {
+            color: #ed8936;
+        }
+
+        .event-entry.rhythm {
+            border-left-color: #9f7aea;
+        }
+
+        .event-entry.rhythm .event-type {
+            color: #9f7aea;
+        }
+
+        .event-entry.interaction {
+            border-left-color: #f687b3;
+        }
+
+        .event-entry.interaction .event-type {
+            color: #f687b3;
+        }
+
+        .event-entry.system {
+            border-left-color: #4299e1;
+        }
+
+        .event-entry.system .event-type {
+            color: #4299e1;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        button.active {
+            background: #48bb78;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-button {
+            padding: 6px 12px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .filter-button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .event-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .listener-list {
+            background: #f7fafc;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .listener-item {
+            padding: 5px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .custom-event {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Control Panel -->
+        <div class="panel">
+            <h1>📡 Event System Demo</h1>
+
+            <div class="canvas-container">
+                <canvas id="mascot-canvas" width="300" height="300"></canvas>
+            </div>
+
+            <h2>Trigger Events</h2>
+            <div class="controls">
+                <div class="control-group">
+                    <button onclick="mascot.triggerGesture('bounce')">Trigger Bounce</button>
+                    <button onclick="mascot.triggerGesture('spin')">Trigger Spin</button>
+                    <button onclick="mascot.setEmotion('happy')">Set Happy</button>
+                    <button onclick="mascot.setEmotion('sad')">Set Sad</button>
+                </div>
+
+                <div class="control-group">
+                    <button onclick="toggleRhythm()">Toggle Rhythm</button>
+                    <button onclick="simulateInteraction()">Simulate Click</button>
+                    <button onclick="triggerError()">Trigger Error</button>
+                </div>
+            </div>
+
+            <h2>Event Listeners</h2>
+            <div class="listener-list" id="listener-list">
+                <div class="listener-item">
+                    <span>gesture</span>
+                    <button onclick="toggleListener('gesture')">On</button>
+                </div>
+                <div class="listener-item">
+                    <span>emotion</span>
+                    <button onclick="toggleListener('emotion')">On</button>
+                </div>
+                <div class="listener-item">
+                    <span>rhythm:beat</span>
+                    <button onclick="toggleListener('rhythm:beat')">On</button>
+                </div>
+                <div class="listener-item">
+                    <span>interaction</span>
+                    <button onclick="toggleListener('interaction')">On</button>
+                </div>
+                <div class="listener-item">
+                    <span>error</span>
+                    <button onclick="toggleListener('error')">On</button>
+                </div>
+            </div>
+
+            <h2>Custom Event</h2>
+            <div class="custom-event">
+                <input type="text" id="custom-event-name" placeholder="Event name">
+                <input type="text" id="custom-event-data" placeholder="Event data (JSON)">
+                <button onclick="emitCustomEvent()" style="grid-column: span 2;">Emit Custom Event</button>
+            </div>
+
+            <h2>Statistics</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-events">0</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="events-per-sec">0</div>
+                    <div class="stat-label">Events/Sec</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="unique-types">0</div>
+                    <div class="stat-label">Event Types</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Log Panel -->
+        <div class="panel">
+            <div class="event-controls">
+                <h2>Event Log</h2>
+                <div>
+                    <button onclick="clearLog()" style="background: #e53e3e;">Clear</button>
+                    <button onclick="pauseLog()" id="pause-button">Pause</button>
+                    <button onclick="exportLog()">Export</button>
+                </div>
+            </div>
+
+            <div class="filter-buttons">
+                <button class="filter-button active" onclick="filterEvents('all')">All</button>
+                <button class="filter-button" onclick="filterEvents('gesture')">Gesture</button>
+                <button class="filter-button" onclick="filterEvents('emotion')">Emotion</button>
+                <button class="filter-button" onclick="filterEvents('rhythm')">Rhythm</button>
+                <button class="filter-button" onclick="filterEvents('interaction')">Interaction</button>
+                <button class="filter-button" onclick="filterEvents('system')">System</button>
+                <button class="filter-button" onclick="filterEvents('custom')">Custom</button>
+            </div>
+
+            <div class="event-log" id="event-log"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot from '../site/src/EmotiveMascotPublic.js';
+
+        let mascot;
+        let eventLog = [];
+        let eventStats = {
+            total: 0,
+            byType: {},
+            startTime: Date.now()
+        };
+        let isPaused = false;
+        let currentFilter = 'all';
+        let listeners = {};
+        let rhythmEnabled = false;
+
+        async function init() {
+            try {
+                mascot = new EmotiveMascot({
+                    particleIntensity: 0.8,
+                    glowIntensity: 0.7
+                });
+
+                window.mascot = mascot;
+
+                const canvas = document.getElementById('mascot-canvas');
+                await mascot.init(canvas);
+                mascot.start();
+
+                setupEventListeners();
+                startStatsUpdate();
+
+                logEvent('system', 'initialized', {
+                    version: '2.0.0',
+                    features: ['gestures', 'emotions', 'rhythm', 'particles']
+                });
+
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                logEvent('error', 'initialization_failed', { error: error.message });
+            }
+        }
+
+        function setupEventListeners() {
+            // Gesture events
+            listeners.gesture = (data) => {
+                logEvent('gesture', 'gesture', data);
+            };
+            mascot.on('gesture', listeners.gesture);
+
+            // Emotion events
+            listeners.emotion = (data) => {
+                logEvent('emotion', 'emotion_change', data);
+            };
+            mascot.on('emotion', listeners.emotion);
+
+            // Rhythm events
+            listeners['rhythm:beat'] = (data) => {
+                logEvent('rhythm', 'beat', data);
+            };
+            mascot.on('rhythm:beat', listeners['rhythm:beat']);
+
+            // Interaction events
+            listeners.interaction = (data) => {
+                logEvent('interaction', 'user_interaction', data);
+            };
+            mascot.on('interaction', listeners.interaction);
+
+            // Error events
+            listeners.error = (data) => {
+                logEvent('error', 'error_occurred', data);
+            };
+            mascot.on('error', listeners.error);
+
+            // Additional events
+            mascot.on('gesture:start', (data) => {
+                logEvent('gesture', 'gesture_start', data);
+            });
+
+            mascot.on('gesture:complete', (data) => {
+                logEvent('gesture', 'gesture_complete', data);
+            });
+
+            mascot.on('rhythm:bpmDetected', (data) => {
+                logEvent('rhythm', 'bpm_detected', data);
+            });
+
+            mascot.on('animation:frame', (data) => {
+                // Too frequent, only log if specifically requested
+                if (currentFilter === 'system') {
+                    logEvent('system', 'animation_frame', data);
+                }
+            });
+
+            // Canvas interaction
+            const canvas = document.getElementById('mascot-canvas');
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                mascot.emit('interaction', {
+                    type: 'click',
+                    position: { x, y }
+                });
+
+                // Trigger a random gesture on click
+                const gestures = ['bounce', 'spin', 'pulse', 'wave'];
+                const gesture = gestures[Math.floor(Math.random() * gestures.length)];
+                mascot.triggerGesture(gesture);
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Throttle mousemove events
+                if (!this.lastMouseMove || Date.now() - this.lastMouseMove > 100) {
+                    mascot.emit('interaction', {
+                        type: 'mousemove',
+                        position: { x, y }
+                    });
+                    this.lastMouseMove = Date.now();
+                }
+            });
+        }
+
+        function logEvent(category, type, data = {}) {
+            if (isPaused) return;
+
+            const event = {
+                id: eventLog.length + 1,
+                category,
+                type,
+                data,
+                timestamp: Date.now()
+            };
+
+            eventLog.push(event);
+            eventStats.total++;
+
+            // Update stats
+            if (!eventStats.byType[category]) {
+                eventStats.byType[category] = 0;
+            }
+            eventStats.byType[category]++;
+
+            // Display event
+            if (currentFilter === 'all' || currentFilter === category) {
+                displayEvent(event);
+            }
+
+            // Keep log size manageable
+            if (eventLog.length > 1000) {
+                eventLog.shift();
+            }
+
+            updateStats();
+        }
+
+        function displayEvent(event) {
+            const logElement = document.getElementById('event-log');
+
+            const eventDiv = document.createElement('div');
+            eventDiv.className = `event-entry ${event.category}`;
+
+            const time = new Date(event.timestamp).toLocaleTimeString();
+            const dataStr = JSON.stringify(event.data, null, 2);
+
+            eventDiv.innerHTML = `
+                <span class="event-type">[${event.category}]</span>
+                <span class="event-time">${time}</span>
+                <div class="event-data">
+                    ${event.type}
+                    ${Object.keys(event.data).length > 0 ? `<br><pre>${dataStr}</pre>` : ''}
+                </div>
+            `;
+
+            logElement.insertBefore(eventDiv, logElement.firstChild);
+
+            // Keep only last 100 visible events
+            while (logElement.children.length > 100) {
+                logElement.removeChild(logElement.lastChild);
+            }
+        }
+
+        function filterEvents(filter) {
+            currentFilter = filter;
+
+            // Update button states
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase() === filter ||
+                    (filter === 'all' && btn.textContent === 'All')) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Redisplay filtered events
+            const logElement = document.getElementById('event-log');
+            logElement.innerHTML = '';
+
+            const filteredEvents = filter === 'all'
+                ? eventLog.slice(-100)
+                : eventLog.filter(e => e.category === filter).slice(-100);
+
+            filteredEvents.reverse().forEach(event => {
+                displayEvent(event);
+            });
+        }
+
+        function clearLog() {
+            eventLog = [];
+            eventStats.total = 0;
+            eventStats.byType = {};
+            eventStats.startTime = Date.now();
+            document.getElementById('event-log').innerHTML = '';
+            updateStats();
+            logEvent('system', 'log_cleared');
+        }
+
+        function pauseLog() {
+            isPaused = !isPaused;
+            const button = document.getElementById('pause-button');
+            button.textContent = isPaused ? 'Resume' : 'Pause';
+            button.style.background = isPaused ? '#48bb78' : '#667eea';
+
+            if (isPaused) {
+                logEvent('system', 'logging_paused');
+            } else {
+                logEvent('system', 'logging_resumed');
+            }
+        }
+
+        function exportLog() {
+            const data = {
+                events: eventLog,
+                stats: eventStats,
+                exported: new Date().toISOString()
+            };
+
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `event-log-${Date.now()}.json`;
+            a.click();
+
+            logEvent('system', 'log_exported', { eventCount: eventLog.length });
+        }
+
+        function toggleListener(eventName) {
+            const button = event.target;
+            const isOn = button.textContent === 'On';
+
+            if (isOn) {
+                // Remove listener
+                if (listeners[eventName]) {
+                    mascot.off(eventName, listeners[eventName]);
+                    button.textContent = 'Off';
+                    button.style.background = '#e53e3e';
+                    logEvent('system', 'listener_removed', { event: eventName });
+                }
+            } else {
+                // Add listener
+                if (listeners[eventName]) {
+                    mascot.on(eventName, listeners[eventName]);
+                    button.textContent = 'On';
+                    button.style.background = '#48bb78';
+                    logEvent('system', 'listener_added', { event: eventName });
+                }
+            }
+        }
+
+        function toggleRhythm() {
+            rhythmEnabled = !rhythmEnabled;
+
+            if (rhythmEnabled) {
+                mascot.enableRhythmSync();
+                mascot.setBPM(120);
+                logEvent('system', 'rhythm_enabled', { bpm: 120 });
+            } else {
+                mascot.disableRhythmSync();
+                logEvent('system', 'rhythm_disabled');
+            }
+        }
+
+        function simulateInteraction() {
+            const x = Math.random() * 300;
+            const y = Math.random() * 300;
+
+            mascot.emit('interaction', {
+                type: 'simulated_click',
+                position: { x, y }
+            });
+
+            mascot.triggerGesture('flash');
+        }
+
+        function triggerError() {
+            try {
+                // Intentionally trigger an error
+                mascot.triggerGesture('nonexistent_gesture_xyz');
+                mascot.setEmotion('invalid_emotion_abc');
+            } catch (error) {
+                mascot.emit('error', {
+                    message: error.message,
+                    stack: error.stack
+                });
+            }
+
+            // Also emit a custom error
+            mascot.emit('error', {
+                type: 'test_error',
+                message: 'This is a test error',
+                severity: 'warning'
+            });
+        }
+
+        function emitCustomEvent() {
+            const name = document.getElementById('custom-event-name').value;
+            const dataStr = document.getElementById('custom-event-data').value;
+
+            if (!name) {
+                alert('Please enter an event name');
+                return;
+            }
+
+            let data = {};
+            if (dataStr) {
+                try {
+                    data = JSON.parse(dataStr);
+                } catch (e) {
+                    data = { value: dataStr };
+                }
+            }
+
+            mascot.emit(name, data);
+            logEvent('custom', name, data);
+
+            // Clear inputs
+            document.getElementById('custom-event-name').value = '';
+            document.getElementById('custom-event-data').value = '';
+        }
+
+        function updateStats() {
+            document.getElementById('total-events').textContent = eventStats.total;
+            document.getElementById('unique-types').textContent = Object.keys(eventStats.byType).length;
+        }
+
+        function startStatsUpdate() {
+            setInterval(() => {
+                const elapsed = (Date.now() - eventStats.startTime) / 1000;
+                const eventsPerSec = elapsed > 0 ? (eventStats.total / elapsed).toFixed(1) : 0;
+                document.getElementById('events-per-sec').textContent = eventsPerSec;
+            }, 1000);
+        }
+
+        // Make functions globally available
+        window.toggleListener = toggleListener;
+        window.toggleRhythm = toggleRhythm;
+        window.simulateInteraction = simulateInteraction;
+        window.triggerError = triggerError;
+        window.emitCustomEvent = emitCustomEvent;
+        window.filterEvents = filterEvents;
+        window.clearLog = clearLog;
+        window.pauseLog = pauseLog;
+        window.exportLog = exportLog;
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

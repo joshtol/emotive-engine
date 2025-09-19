@@ -1,3 +1,14 @@
+/*!
+ * Emotive Engine™ - Proprietary and Confidential
+ * Copyright (c) 2025 Emotive Engine. All Rights Reserved.
+ *
+ * NOTICE: This code is proprietary and confidential. Unauthorized copying,
+ * modification, or distribution is strictly prohibited and may result in
+ * legal action. This software is licensed, not sold.
+ *
+ * Website: https://emotiveengine.com
+ * License: https://emotive-engine.web.app/LICENSE.md
+ */
 /**
  * AssetsConfig - Centralized assets and external resources configuration
  * Manages all asset paths, external dependencies, and resource loading
@@ -60,8 +71,7 @@ class AssetsConfig {
                     'js/controls/emotion-controller.js',
                     'js/controls/shape-morph-controller.js',
                     'js/controls/audio-controller.js',
-                    'js/controls/rhythm-controller.js',
-                    'js/controls/bpm-modifier-controller.js',
+                    // rhythm and bpm controllers removed - functionality merged
                     'js/controls/dice-controller.js',
                     'js/controls/gesture-controller.js',
                     'js/controls/orientation-controller.js'
@@ -259,7 +269,7 @@ class AssetsConfig {
     /**
      * Load all configured scripts
      */
-    async loadAllScripts() {
+    loadAllScripts() {
         const allScripts = [
             ...this.config.scripts.ui,
             ...this.config.scripts.controls,
@@ -348,7 +358,10 @@ class AssetsConfig {
     }
 }
 
-// Export for use
-if (typeof window !== 'undefined') {
-    window.AssetsConfig = AssetsConfig;
-}
+// ES6 Module Export
+export default AssetsConfig;
+
+// LEGAL WARNING: This code is protected by copyright law and international treaties.
+// Unauthorized reproduction or distribution of this code, or any portion of it,
+// may result in severe civil and criminal penalties, and will be prosecuted
+// to the maximum extent possible under the law.

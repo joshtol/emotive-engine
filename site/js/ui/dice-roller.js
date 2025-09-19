@@ -1,3 +1,14 @@
+/*!
+ * Emotive Engine™ - Proprietary and Confidential
+ * Copyright (c) 2025 Emotive Engine. All Rights Reserved.
+ *
+ * NOTICE: This code is proprietary and confidential. Unauthorized copying,
+ * modification, or distribution is strictly prohibited and may result in
+ * legal action. This software is licensed, not sold.
+ *
+ * Website: https://emotiveengine.com
+ * License: https://emotive-engine.web.app/LICENSE.md
+ */
 /**
  * DiceRoller - Centralized dice rolling system for UI
  * Handles all randomization logic, visual feedback, and selection rules
@@ -352,7 +363,10 @@ class DiceRoller {
     }
 }
 
-// Export for use in demo
-if (typeof window !== 'undefined') {
-    window.DiceRoller = DiceRoller;
-}
+// ES6 Module Export
+export { DiceRoller };
+
+// LEGAL WARNING: This code is protected by copyright law and international treaties.
+// Unauthorized reproduction or distribution of this code, or any portion of it,
+// may result in severe civil and criminal penalties, and will be prosecuted
+// to the maximum extent possible under the law.

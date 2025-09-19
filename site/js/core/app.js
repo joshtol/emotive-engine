@@ -1,32 +1,66 @@
+/*!
+ * Emotive Engine™ - Proprietary and Confidential
+ * Copyright (c) 2025 Emotive Engine. All Rights Reserved.
+ *
+ * NOTICE: This code is proprietary and confidential. Unauthorized copying,
+ * modification, or distribution is strictly prohibited and may result in
+ * legal action. This software is licensed, not sold.
+ *
+ * Website: https://emotiveengine.com
+ * License: https://emotive-engine.web.app/LICENSE.md
+ */
+
+// Import all dependencies
+import { emotiveState } from './global-state.js';
+import { ThemeManager } from '../ui/theme-manager.js';
+import { DisplayManager } from '../ui/display-manager.js';
+import { ScrollbarCompensator } from '../ui/scrollbar-compensator.js';
+import { DiceRoller } from '../ui/dice-roller.js';
+import { AudioVisualizer } from '../ui/audio-visualizer.js';
+import { RhythmSyncVisualizer } from '../ui/rhythm-sync-visualizer.js';
+import { NotificationSystem } from '../ui/notification-system.js';
+
+// Import controllers
+import { RandomizerController } from '../controls/randomizer-controller.js';
+import { GestureChainController } from '../controls/gesture-chain-controller.js';
+import { UndertoneController } from '../controls/undertone-controller.js';
+import { SystemControlsController } from '../controls/system-controls-controller.js';
+import { EmotionController } from '../controls/emotion-controller.js';
+import { ShapeMorphController } from '../controls/shape-morph-controller.js';
+import { AudioController } from '../controls/audio-controller.js';
+import { GestureController } from '../controls/gesture-controller.js';
+import { OrientationController } from '../controls/orientation-controller.js';
+
+// Import config modules
+import { UIStringsConfig } from '../config/ui-strings.js';
+import { IconsConfig } from '../config/icons-config.js';
+import { FooterConfig } from '../config/footer-config.js';
+import AssetsConfig from '../config/assets-config.js';
+
+// Import mascot engine
+import { MascotEngine } from './mascot-engine-wrapper.js';
+
 /**
  * EmotiveApp - Main application controller for the Emotive demo
  * Coordinates all modules and manages application lifecycle
  */
-class EmotiveApp {
-    constructor() {
+export class EmotiveApp {
+    constructor(options = {}) {
         // Core modules
         this.mascot = null;
         this.engine = null;
-        this.globalState = null;
-        this.legacyBridge = null;
-        this.moduleLoader = null;
-        this.uiStrings = null;
-        this.assetsConfig = null;
-        this.iconsConfig = null;
-        this.footerConfig = null;
-
-        // External modules
-        this.gestureScheduler = null;
-        this.fpsCounter = null;
+        this.globalState = emotiveState;
 
         // UI modules
         this.themeManager = null;
-        this.tooltipSystem = null;
         this.displayManager = null;
         this.scrollbarCompensator = null;
         this.diceRoller = null;
-        this.djScratcher = null;
         this.audioVisualizer = null;
+        this.rhythmSyncVisualizer = null;
+        this.notificationSystem = null;
+
+        // Controllers
         this.randomizerController = null;
         this.gestureChainController = null;
         this.undertoneController = null;
@@ -38,14 +72,16 @@ class EmotiveApp {
         this.gestureController = null;
         this.orientationController = null;
 
-        // State is now managed by GlobalStateManager
-        this.state = null;
+        // Config modules
+        this.uiStrings = null;
+        this.assetsConfig = null;
+        this.iconsConfig = null;
+        this.footerConfig = null;
 
         // Configuration
         this.config = {
             defaultTheme: 'night',
-            debugMode: localStorage.getItem('debugMode') === 'true' || false,
-            logLevel: localStorage.getItem('logLevel') || 'info',
+            debugMode: options.debug || false,
             mascotOptions: {
                 canvasId: 'emotive-canvas',
                 startingEmotion: 'neutral',
@@ -61,670 +97,329 @@ class EmotiveApp {
             }
         };
 
-        // Logger for app
-        this.logger = null;
+        // Simple logger
+        this.logger = console;
     }
 
     /**
      * Initialize the application
      */
-    async init() {
+    async initialize() {
+        this.logger.info('Initializing Emotive Engine...');
+
+        // Show loading state
+        this.showLoader(true);
+
         try {
-            // Initialize logger first
-            if (window.loggerFactory) {
-                this.logger = window.loggerFactory.getLogger('EmotiveApp');
+            // Initialize config modules
+            await this.initConfigs();
 
-                // Set debug mode if configured
-                if (this.config.debugMode) {
-                    window.loggerFactory.enableDebugMode();
-                }
-            } else {
-                // Fallback to console if logger not available
-                this.logger = console;
-            }
-
-            this.logger.info('Initializing Emotive App...');
-
-            // Initialize global state manager first
-            this.initGlobalState();
-
-            // Initialize UI strings configuration
-            this.initUIStrings();
-
-            // Initialize assets configuration
-            this.initAssetsConfig();
-
-            // Initialize icons configuration
-            this.initIconsConfig();
-
-            // Initialize footer configuration
-            this.initFooterConfig();
-
-            // Initialize module loader
-            this.initModuleLoader();
-
-            // Load the engine
-            await this.loadEngine();
-
-            // Initialize mascot
+            // Initialize mascot engine
             await this.initMascot();
 
-            // Initialize external modules BEFORE UI modules
-            // This ensures GestureScheduler is available when controllers are initialized
-            await this.initExternalModules();
-
             // Initialize UI modules
-            this.initUIModules();
+            await this.initUIModules();
 
-            // Apply UI strings to DOM elements
-            if (this.uiStrings) {
-                this.uiStrings.init();
-            }
+            // Initialize controllers
+            await this.initControllers();
 
-            // Apply icons to DOM elements
-            if (this.iconsConfig) {
-                this.iconsConfig.init();
-            }
+            // Setup event listeners
+            this.setupEventListeners();
 
-            // Apply footer content to DOM
-            if (this.footerConfig) {
-                this.footerConfig.init();
-            }
+            // Start animation
+            this.start();
 
-            // Set up event handlers
-            this.setupEventHandlers();
+            // Hide loader
+            this.showLoader(false);
 
-            // Initialize legacy compatibility bridge
-            this.initLegacyBridge();
-
-            // Start mascot animation
-            if (this.mascot) {
-                this.mascot.start();
-            }
-
-            // Initial display update
-            this.updateDisplay();
-
-            this.logger.info('Emotive App initialized successfully');
-            return this;
+            this.logger.info('Emotive Engine initialized successfully');
 
         } catch (error) {
-            if (this.logger) {
-                this.logger.error('Failed to initialize Emotive App:', error);
-            } else {
-                console.error('Failed to initialize Emotive App:', error);
-            }
+            this.logger.error('Failed to initialize:', error);
             throw error;
         }
     }
 
     /**
-     * Initialize global state manager
+     * Initialize configuration modules
      */
-    initGlobalState() {
-        if (window.GlobalStateManager) {
-            this.globalState = new window.GlobalStateManager({
-                defaultEmotion: 'neutral',
-                defaultUndertone: '',
-                defaultShowingFPS: false,
-                defaultIsRecording: false,
-                defaultTheme: this.config.defaultTheme,
-                defaultSoundEnabled: false,
-                syncToWindow: true,
-                onChange: {
-                    currentEmotion: (value) => this.updateDisplay(),
-                    currentUndertone: (value) => this.updateDisplay(),
-                    showingFPS: (value) => {
-                        if (this.displayManager) {
-                            this.displayManager.toggleFPS(value);
-                        }
-                    }
-                }
-            });
-            this.globalState.init();
+    async initConfigs() {
+        // UI Strings
+        this.uiStrings = new UIStringsConfig();
+        this.uiStrings.init();
 
-            // Create convenient state proxy
-            this.state = this.globalState.state;
-        } else {
-            // Fallback to simple state object if GlobalStateManager not available
-            this.state = {
-                currentEmotion: 'neutral',
-                currentUndertone: '',
-                showingFPS: false,
-                isRecording: false,
-                soundEnabled: false
-            };
-        }
+        // Assets config (already initialized in main.js, just store reference)
+        this.assetsConfig = new AssetsConfig();
+
+        // Icons config
+        this.iconsConfig = new IconsConfig();
+        this.iconsConfig.init();
+
+        // Footer config (already initialized in main.js)
+        this.footerConfig = new FooterConfig();
     }
 
     /**
-     * Initialize UI strings configuration
-     */
-    initUIStrings() {
-        if (window.UIStringsConfig) {
-            this.uiStrings = new window.UIStringsConfig({
-                // Can be customized here or loaded from JSON
-                locale: 'en-US'
-            });
-            // Don't init yet - wait until DOM is ready
-        }
-    }
-
-    /**
-     * Initialize assets configuration
-     */
-    initAssetsConfig() {
-        if (window.AssetsConfig) {
-            // Get configuration from HTML data attributes
-            const html = document.documentElement;
-            const assetsBase = html.dataset.assetsBase || '../assets';
-            const cacheVersion = html.dataset.cacheVersion || '1.0.0';
-
-            this.assetsConfig = new window.AssetsConfig({
-                assetsPath: assetsBase,
-                cacheVersion: cacheVersion,
-                images: {
-                    favicon: `${assetsBase}/emotive-engine-icon.svg`,
-                    headerLogo: `${assetsBase}/emotive-engine-full-BW.svg`
-                },
-                audio: {
-                    demoTrack: `${assetsBase}/Electric Glow (Remix).wav`
-                }
-            });
-            this.assetsConfig.init();
-        }
-    }
-
-    /**
-     * Initialize icons configuration
-     */
-    initIconsConfig() {
-        if (window.IconsConfig) {
-            this.iconsConfig = new window.IconsConfig({
-                autoApply: false // Don't apply yet - wait for DOM
-            });
-            // Will be applied after UI modules are initialized
-        }
-    }
-
-    /**
-     * Initialize footer configuration
-     */
-    initFooterConfig() {
-        if (window.FooterConfig) {
-            this.footerConfig = new window.FooterConfig({
-                autoApply: true // Apply when init() is called
-            });
-            // Will be applied after UI modules are initialized
-        }
-    }
-
-    /**
-     * Initialize module loader
-     */
-    initModuleLoader() {
-        if (window.ModuleLoader) {
-            this.moduleLoader = new window.ModuleLoader({
-                enginePath: '../../../src/EmotiveMascot.js',
-                gestureSchedulerPath: '../../../src/core/GestureScheduler.js',
-                fpsCounterPath: '../../../src/utils/FPSCounter.js',
-                onModuleLoad: (name, module) => {
-                    console.log(`Module loaded: ${name}`);
-                }
-            });
-        }
-    }
-
-    /**
-     * Load the Emotive Engine dynamically
-     */
-    async loadEngine() {
-        if (this.moduleLoader) {
-            this.engine = await this.moduleLoader.loadEngine();
-        } else {
-            // Fallback to direct import
-            const module = await import('../../src/EmotiveMascot.js');
-            this.engine = module.default;
-        }
-        return this.engine;
-    }
-
-    /**
-     * Initialize the mascot
+     * Initialize the mascot engine
      */
     async initMascot() {
+        // Use the imported MascotEngine ES6 module
+        this.engine = MascotEngine;
+
         if (!this.engine) {
-            throw new Error('Engine not loaded');
+            throw new Error('Mascot engine not found.');
         }
 
+        // Create mascot instance (constructor handles initialization)
         this.mascot = new this.engine(this.config.mascotOptions);
 
-        // Initialize audio analyzer
-        if (this.mascot.audioAnalyzer) {
-            await this.mascot.audioAnalyzer.init();
-        }
-
-        // Disable sound initially
-        setTimeout(() => {
-            if (this.mascot.soundSystem) {
-                this.mascot.soundSystem.isEnabled = false;
-            }
-        }, 100);
-
-        // Make mascot globally accessible for legacy code
+        // Make globally available for compatibility
         window.mascot = this.mascot;
+
+        this.logger.info('Mascot initialized');
     }
 
     /**
      * Initialize UI modules
      */
-    initUIModules() {
-        // Initialize theme manager
-        if (window.ThemeManager) {
-            this.themeManager = new window.ThemeManager({
-                defaultTheme: this.config.defaultTheme,
-                onThemeChange: (theme) => this.onThemeChange(theme)
-            });
-            this.themeManager.init();
-        }
+    async initUIModules() {
+        // Theme Manager
+        this.themeManager = new ThemeManager({
+            defaultTheme: this.config.defaultTheme,
+            mascot: this.mascot
+        });
+        this.themeManager.init();
 
-        // Initialize notification system
-        if (window.NotificationSystem) {
-            this.notificationSystem = new window.NotificationSystem({
-                maxNotifications: 3,
-                stackNotifications: true,
-                showProgress: true
-            });
-            this.notificationSystem.init();
+        // Display Manager
+        this.displayManager = new DisplayManager();
+        this.displayManager.init();
 
-            // Make globally accessible
-            window.notifications = this.notificationSystem;
-        }
+        // Notification System
+        this.notificationSystem = new NotificationSystem();
+        this.notificationSystem.init();
+        window.notifications = this.notificationSystem;
 
-        // Initialize display manager
-        if (window.DisplayManager) {
-            this.displayManager = new window.DisplayManager();
-            this.displayManager.init(this.mascot);
-        }
+        // Scrollbar Compensator
+        this.scrollbarCompensator = new ScrollbarCompensator();
+        this.scrollbarCompensator.init();
+        this.scrollbarCompensator.start();
 
-        // Initialize scrollbar compensator
-        if (window.ScrollbarCompensator) {
-            this.scrollbarCompensator = new window.ScrollbarCompensator({
-                leftSelector: '.controls-left',
-                rightSelector: '.controls-right',
-                autoStart: true
-            });
-            this.scrollbarCompensator.init();
-        }
+        // Dice Roller
+        this.diceRoller = new DiceRoller();
 
-        // Initialize dice roller
-        if (window.DiceRoller) {
-            this.diceRoller = new window.DiceRoller();
+        // Audio Visualizer
+        this.audioVisualizer = new AudioVisualizer('spectrum-viz', this.mascot, {
+            numBars: 16,
+            minHeight: 2,
+            maxHeight: 100
+        });
 
-            // Add overlayable configuration
-            this.diceRoller.config.overlayable = {
-                selector: '.gesture-btn',
-                attribute: 'data-gesture',
-                excludeActive: true,
-                animationType: 'toggle',
-                cooldown: 500,
-                weights: null
-            };
-        }
+        // Rhythm Sync Visualizer
+        this.rhythmSyncVisualizer = new RhythmSyncVisualizer('rhythm-sync-container', {
+            mascot: this.mascot
+        });
+        this.rhythmSyncVisualizer.init();
+        window.rhythmSyncVisualizer = this.rhythmSyncVisualizer;
+    }
 
-        // Initialize DJ scratcher
-        const canvas = document.getElementById('emotive-canvas');
-        if (window.DJScratcher && canvas) {
-            this.djScratcher = new window.DJScratcher(canvas, this.mascot);
-        }
+    /**
+     * Initialize controllers
+     */
+    async initControllers() {
+        // Randomizer Controller
+        this.randomizerController = new RandomizerController({
+            diceRoller: this.diceRoller
+        });
+        this.randomizerController.init();
 
-        // Initialize audio visualizer
-        if (window.AudioVisualizer) {
-            this.audioVisualizer = new window.AudioVisualizer('spectrum-viz', this.mascot, {
-                numBars: 16,
-                minHeight: 2,
-                maxHeight: 100,
-                transitionTime: 0.15,
-                logarithmicScale: 0.7
-            });
+        // Gesture Chain Controller
+        this.gestureChainController = new GestureChainController();
+        this.gestureChainController.init(this, this.mascot);
 
-            // Set up global functions for backward compatibility
-            window.startAudioViz = () => this.audioVisualizer.start();
-            window.stopAudioViz = () => this.audioVisualizer.stop();
-        }
+        // Undertone Controller
+        this.undertoneController = new UndertoneController({
+            mascot: this.mascot
+        });
+        this.undertoneController.init();
 
-        // Initialize rhythm sync visualizer
-        if (window.RhythmSyncVisualizer) {
-            this.rhythmSyncVisualizer = new window.RhythmSyncVisualizer('rhythm-sync-container', {
-                numBeats: 8,
-                autoStart: true,
-                showLabels: true
-            });
+        // System Controls Controller
+        this.systemControlsController = new SystemControlsController({
+            mascot: this.mascot,
+            displayManager: this.displayManager,
+            audioVisualizer: this.audioVisualizer
+        });
+        this.systemControlsController.init();
 
-            // Connect to mascot for BPM data
-            if (this.mascot) {
-                this.rhythmSyncVisualizer.connect(this.mascot);
-            }
+        // Emotion Controller
+        this.emotionController = new EmotionController({
+            mascot: this.mascot,
+            allowToggle: true,
+            defaultEmotion: 'neutral'
+        });
+        this.emotionController.init();
 
-            // Make globally accessible
-            window.rhythmSyncVisualizer = this.rhythmSyncVisualizer;
-        }
+        // Shape Morph Controller
+        this.shapeMorphController = new ShapeMorphController({
+            mascot: this.mascot,
+            defaultShape: 'circle'
+        });
+        this.shapeMorphController.init();
 
-        // Initialize randomizer controller
-        if (window.RandomizerController) {
-            this.randomizerController = new window.RandomizerController({
-                cascadeDelay: 100,
-                undertoneDelay: 100,
-                shapeChanceOnChain: 0.1
-            });
-            this.randomizerController.init(this, this.diceRoller, this.mascot);
+        // Audio Controller
+        this.audioController = new AudioController({
+            mascot: this.mascot,
+            audioVisualizer: this.audioVisualizer
+        });
+        this.audioController.init();
 
-            // Make globally accessible for backward compatibility
-            window.randomizer = this.randomizerController;
-        }
+        // Dice controller removed - dice buttons removed from UI
 
-        // Initialize gesture chain controller
-        if (window.GestureChainController) {
-            this.gestureChainController = new window.GestureChainController({
-                shapeMorphChance: 0.1,
-                pulsingDuration: 300,
-                highlightDuration: 500
-            });
-            this.gestureChainController.init(this, this.mascot, window.gestureScheduler);
+        // Gesture Controller
+        this.gestureController = new GestureController({
+            mascot: this.mascot,
+            allowToggle: true,
+            cooldown: 100,
+            rhythmScheduler: window.gestureScheduler
+        });
+        this.gestureController.init();
 
-            // Make globally accessible for backward compatibility
-            window.chainController = this.gestureChainController;
-        }
-
-        // Initialize undertone controller
-        if (window.UndertoneController) {
-            this.undertoneController = new window.UndertoneController({
-                debounceDelay: 50,
-                onDisplayUpdate: () => this.updateDisplay()
-            });
-            this.undertoneController.init(this, this.mascot);
-
-            // Make globally accessible for backward compatibility
-            window.undertoneController = this.undertoneController;
-        }
-
-        // Initialize system controls controller
-        if (window.SystemControlsController) {
-            this.systemControlsController = new window.SystemControlsController({
-                defaultStates: {
-                    fps: false,
-                    blinking: true,
-                    gaze: false,
-                    recording: false
-                }
-            });
-            this.systemControlsController.init(this, this.mascot);
-
-            // Make globally accessible for backward compatibility
-            window.systemControls = this.systemControlsController;
-        }
-
-        // Initialize emotion controller
-        if (window.EmotionController) {
-            this.emotionController = new window.EmotionController({
-                defaultEmotion: 'neutral',
-                onDisplayUpdate: () => this.updateDisplay(),
-                onEmotionChange: (emotion) => {
-                    if (this.globalState) {
-                        this.globalState.set('currentEmotion', emotion);
-                    } else {
-                        this.state.currentEmotion = emotion;
-                    }
-                    this.updateDisplay();
-                }
-            });
-            this.emotionController.init(this, this.mascot);
-
-            // Make globally accessible for backward compatibility
-            window.emotionController = this.emotionController;
-        }
-
-        // Initialize shape morph controller
-        if (window.ShapeMorphController) {
-            this.shapeMorphController = new window.ShapeMorphController({
-                defaultMode: 'hybrid',
-                defaultDuration: 1000,
-                specialTransitions: {
-                    'lunar-solar': 500,
-                    'solar-lunar': 500
-                }
-            });
-            this.shapeMorphController.init(this, this.mascot);
-
-            // Make globally accessible for backward compatibility
-            window.shapeMorphController = this.shapeMorphController;
-        }
-
-        // Initialize audio controller
-        if (window.AudioController) {
-            this.audioController = new window.AudioController({
-                demoTrackPath: '../assets/Electric Glow (Remix).wav',
-                autoShowPlayer: true,
-                autoShowVisualizer: true
-            });
-            this.audioController.init(this, this.mascot);
-
-            // Make globally accessible for backward compatibility
-            window.audioController = this.audioController;
-        }
-
-
-        // Initialize dice controller
-        if (window.DiceController) {
-            this.diceController = new window.DiceController({
-                overlayablePool: [
-                    'wave', 'point', 'nod', 'shake',
-                    'lean', 'tilt', 'reach', 'breathe',
-                    'float', 'rain', 'runningman', 'charleston'
-                ]
-            });
-            this.diceController.init(this, this.diceRoller);
-
-            // Make globally accessible for backward compatibility
-            window.diceController = this.diceController;
-        }
-
-        // Initialize gesture controller
-        if (window.GestureController) {
-            this.gestureController = new window.GestureController({
-                triggeredDuration: 200,
-                maxQueueSize: 4,
-                requireBeatSync: true  // Beat-synced gestures when rhythm is active
-            });
-            this.gestureController.init(this, this.mascot);
-
-            // Connect rhythm sync visualizer if available
-            if (this.rhythmSyncVisualizer) {
-                this.gestureController.setRhythmSyncVisualizer(this.rhythmSyncVisualizer);
-            }
-
-            // Gesture scheduler will be set in initExternalModules
-
-            // Make globally accessible for backward compatibility
-            window.gestureController = this.gestureController;
-        }
-
-        // Initialize orientation controller
-        if (window.OrientationController) {
-            this.orientationController = new window.OrientationController({
-                transitionBlur: 30,
-                revealBlur: 25,
-                layoutChangeDelay: 150,
-                blurRevealDelay: 50,
-                resizeDebounce: 100,
-                orientationDelay: 100,
-                onOrientationChange: (newOrientation, previousOrientation) => {
-                    console.log(`Orientation changed from ${previousOrientation} to ${newOrientation}`);
-                }
-            });
-            this.orientationController.init(this, this.mascot);
-
-            // Make globally accessible for backward compatibility
-            window.orientationController = this.orientationController;
+        // Orientation Controller
+        this.orientationController = new OrientationController({
+            mascot: this.mascot,
+            sensitivity: 0.3,
+            deadzone: 5
+        });
+        // Check if device orientation is supported
+        if (window.DeviceOrientationEvent) {
+            this.orientationController.init();
         }
     }
 
     /**
-     * Set up event handlers
+     * Setup event listeners
      */
-    setupEventHandlers() {
-        // Window resize handler
+    setupEventListeners() {
+        // Window resize
         window.addEventListener('resize', () => {
-            // Check scrollbar compensation on resize
-            if (this.scrollbarCompensator) {
-                this.scrollbarCompensator.check();
+            if (this.mascot) {
+                this.mascot.handleResize();
             }
         });
 
-        // This would contain all the event handler setup
-        // For now, keeping them in HTML for compatibility
-        console.log('Event handlers setup complete');
+        // State change subscriptions
+        this.globalState.subscribe('currentEmotion', () => this.updateDisplay());
+        this.globalState.subscribe('currentUndertone', () => this.updateDisplay());
+        this.globalState.subscribe('showingFPS', (value) => {
+            if (this.displayManager) {
+                this.displayManager.toggleFPS(value);
+            }
+        });
     }
 
     /**
-     * Initialize legacy compatibility bridge
-     */
-    initLegacyBridge() {
-        if (window.LegacyCompatibilityBridge) {
-            this.legacyBridge = new window.LegacyCompatibilityBridge({
-                enableGlobalFunctions: true,
-                enableElementReferences: true,
-                logDeprecations: false // Set to true to see deprecation warnings
-            });
-            this.legacyBridge.init(this);
-
-            // The bridge automatically creates these global functions:
-            // - randomizeEmotion()
-            // - randomizeUndertone()
-            // - getUndertoneFromValue(value)
-            // - updateDisplay()
-            // - startAudioViz()
-            // - stopAudioViz()
-        }
-    }
-
-    /**
-     * Handle theme change
-     */
-    onThemeChange(theme) {
-        console.log('Theme changed to:', theme);
-        // Any additional theme change logic
-    }
-
-    /**
-     * Set emotion
-     */
-    setEmotion(emotion, undertone) {
-        this.state.currentEmotion = emotion;
-        this.state.currentUndertone = undertone || '';
-
-        if (this.mascot) {
-            this.mascot.setEmotion(emotion, undertone);
-        }
-
-        this.updateDisplay();
-    }
-
-    /**
-     * Update display elements
+     * Update display based on state
      */
     updateDisplay() {
         if (this.displayManager) {
-            this.displayManager.update(this.state.currentEmotion, this.state.currentUndertone);
+            this.displayManager.updateEmotionDisplay(this.globalState.get('currentEmotion'));
+            this.displayManager.updateUndertoneDisplay(this.globalState.get('currentUndertone'));
         }
     }
 
     /**
-     * Initialize external modules (gestures, FPS)
+     * Show/hide loader
      */
-    async initExternalModules() {
-        // Load modules
-        if (this.moduleLoader) {
-            const modules = await this.moduleLoader.loadModules();
-            if (modules) {
-                const GestureScheduler = modules.GestureScheduler;
-                const FPSCounter = modules.FPSCounter;
-
-                // Initialize gesture scheduler
-                if (GestureScheduler && this.mascot) {
-                    this.gestureScheduler = new GestureScheduler(this.mascot);
-
-                    // Make globally accessible for backward compatibility
-                    window.gestureScheduler = this.gestureScheduler;
-
-                    // Set reference in controllers that use it
-                    if (this.gestureController) {
-                        this.gestureController.setGestureScheduler(this.gestureScheduler);
-                    }
-                    if (this.gestureChainController) {
-                        this.gestureChainController.setGestureScheduler(this.gestureScheduler);
-                    }
-                }
-
-                // Initialize FPS counter
-                if (FPSCounter) {
-                    this.fpsCounter = new FPSCounter();
-
-                    // Make globally accessible for backward compatibility
-                    window.fpsCounter = this.fpsCounter;
-
-                    // Start FPS update loop
-                    this.startFPSUpdateLoop();
-                }
-            }
+    showLoader(show) {
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.style.display = show ? 'flex' : 'none';
         }
     }
 
     /**
-     * Start FPS counter update loop
+     * Start the application
      */
-    startFPSUpdateLoop() {
-        if (!this.fpsCounter) return;
+    start() {
+        if (this.mascot) {
+            this.mascot.start();
+        }
 
-        const updateFPSCounter = () => {
-            if (this.fpsCounter) {
-                this.fpsCounter.update();
-                requestAnimationFrame(updateFPSCounter);
-            }
-        };
-        updateFPSCounter();
+        // Initialize displays
+        this.updateDisplay();
+
+        // Start any auto-play features
+        if (this.config.autoPlay) {
+            setTimeout(() => {
+                if (this.audioController) {
+                    this.audioController.loadDemoSong();
+                }
+            }, 1000);
+        }
     }
 
     /**
-     * Get current state
+     * Stop the application
      */
-    getState() {
-        return { ...this.state };
-    }
-
-    /**
-     * Clean up
-     */
-    destroy() {
+    stop() {
         if (this.mascot) {
             this.mascot.stop();
         }
 
-        if (this.themeManager) {
-            this.themeManager.destroy();
-        }
-
-        if (this.djScratcher) {
-            this.djScratcher.destroy();
+        if (this.audioController) {
+            this.audioController.stop();
         }
 
         if (this.audioVisualizer) {
+            this.audioVisualizer.stop();
+        }
+    }
+
+    /**
+     * Clean up resources
+     */
+    destroy() {
+        this.stop();
+
+        // Clean up all controllers
+        const controllers = [
+            this.emotionController,
+            this.gestureController,
+            this.shapeMorphController,
+            this.audioController,
+            this.systemControlsController,
+            this.undertoneController,
+            this.gestureChainController,
+            this.orientationController,
+            this.diceController,
+            this.randomizerController
+        ];
+
+        controllers.forEach(controller => {
+            if (controller && controller.destroy) {
+                controller.destroy();
+            }
+        });
+
+        // Clean up UI modules
+        if (this.audioVisualizer) {
             this.audioVisualizer.destroy();
+        }
+
+        if (this.scrollbarCompensator) {
+            this.scrollbarCompensator.destroy();
+        }
+
+        // Clean up mascot
+        if (this.mascot) {
+            this.mascot.destroy();
         }
     }
 }
 
-// Export for use
-if (typeof window !== 'undefined') {
-    window.EmotiveApp = EmotiveApp;
-}
+// Export default
+export default EmotiveApp;
+
+// LEGAL WARNING: This code is protected by copyright law and international treaties.
+// Unauthorized reproduction or distribution of this code, or any portion of it,
+// may result in severe civil and criminal penalties, and will be prosecuted
+// to the maximum extent possible under the law.

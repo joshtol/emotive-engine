@@ -5,6 +5,7 @@
  */
 
 import EmotiveMascot from './EmotiveMascot.js';
+import { errorHandler, EngineError, ErrorCodes } from './utils/ErrorHandler.js';
 
 class EmotiveMascotPublic {
     constructor(config = {}) {
@@ -60,23 +61,40 @@ class EmotiveMascotPublic {
     }
 
     /**
-     * Initialize the engine
+     * Initialize the Emotive Mascot engine
+     * @public
      * @param {HTMLCanvasElement} canvas - Canvas element to render to
-     * @returns {Promise<void>}
+     * @returns {Promise<void>} Resolves when initialization is complete
+     * @throws {Error} If canvas is invalid or initialization fails
+     * @fires EmotiveMascot#initialized
+     * @example
+     * const canvas = document.getElementById('emotive-canvas');
+     * await mascot.init(canvas);
      */
     async init(canvas) {
-        if (this._initialized) {
-            return Promise.resolve();
-        }
-        
-        // Create engine instance with canvas
-        const engineConfig = {
-            ...this._config,
-            canvasId: canvas  // This accepts either string ID or element
-        };
-        
-        // Create and initialize the engine - wrap in protective proxy
-        const engine = new EmotiveMascot(engineConfig);
+        return errorHandler.wrapAsync(async () => {
+            if (this._initialized) {
+                return Promise.resolve();
+            }
+
+            // Validate canvas
+            if (!canvas) {
+                throw new EngineError(
+                    'Canvas element is required',
+                    ErrorCodes.INVALID_CANVAS,
+                    { canvas }
+                );
+            }
+
+            // Create engine instance with canvas
+            const engineConfig = {
+                ...this._config,
+                canvasId: canvas  // This accepts either string ID or element
+            };
+
+            // Create and initialize the engine - wrap in protective proxy
+            const engine = new EmotiveMascot(engineConfig);
+        }, { context: 'EmotiveMascotPublic.init', fallback: false })();
         
         // Keep real engine reference for internal use (hidden from external access)
         Object.defineProperty(this, '_realEngine', {
@@ -362,26 +380,54 @@ class EmotiveMascotPublic {
     // === Animation Control ===
 
     /**
-     * Trigger a gesture
-     * @param {string} gestureName - Name of gesture to trigger
-     * @param {number} [timestamp] - Optional timestamp for recording
+     * Trigger a gesture animation (alias for express in public API)
+     * @public
+     * @param {string} gestureName - Name of gesture to trigger (e.g., 'bounce', 'pulse', 'shake')
+     * @param {number} [timestamp] - Optional timestamp for recording mode
+     * @throws {Error} If engine not initialized
+     * @example
+     * // Simple gesture trigger
+     * mascot.triggerGesture('bounce');
+     *
+     * // With timestamp for recording
+     * mascot.triggerGesture('pulse', 1000);
      */
     triggerGesture(gestureName, timestamp) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
-        // Record if in recording mode
-        if (this._isRecording) {
-            const time = timestamp || (Date.now() - this._recordingStartTime);
-            this._timeline.push({
-                type: 'gesture',
-                name: gestureName,
-                time: time
-            });
-        }
-        
-        // Trigger in engine
-        engine.express(gestureName);
+        return errorHandler.wrap(() => {
+            const engine = this._getReal();
+            if (!engine) {
+                throw new EngineError(
+                    'Engine not initialized. Call init() first.',
+                    ErrorCodes.NOT_INITIALIZED
+                );
+            }
+
+            // Validate gesture name
+            if (!gestureName || typeof gestureName !== 'string') {
+                throw new EngineError(
+                    'Invalid gesture name',
+                    ErrorCodes.INVALID_GESTURE,
+                    { gestureName }
+                );
+            }
+
+            // Record if in recording mode
+            if (this._isRecording) {
+                const time = timestamp || (Date.now() - this._recordingStartTime);
+                this._timeline.push({
+                    type: 'gesture',
+                    name: gestureName,
+                    time: time
+                });
+            }
+
+            // Trigger in engine
+            engine.express(gestureName);
+        }, {
+            context: 'EmotiveMascotPublic.triggerGesture',
+            fallback: undefined,
+            retryCallback: () => this.triggerGesture(gestureName, timestamp)
+        })();
     }
 
     /**
@@ -391,41 +437,60 @@ class EmotiveMascotPublic {
      * @param {number} [timestamp] - Optional timestamp for recording
      */
     setEmotion(emotion, undertoneOrOptions, timestamp) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
-        // Handle different parameter formats
-        let undertone = null;
-        let recordTime = timestamp;
-        
-        if (typeof undertoneOrOptions === 'string') {
-            // It's an undertone
-            undertone = undertoneOrOptions;
-        } else if (typeof undertoneOrOptions === 'number') {
-            // It's a timestamp (no undertone provided)
-            recordTime = undertoneOrOptions;
-        } else if (undertoneOrOptions && typeof undertoneOrOptions === 'object') {
-            // It's an options object
-            undertone = undertoneOrOptions.undertone;
-        }
-        
-        // Record if in recording mode
-        if (this._isRecording) {
-            const time = recordTime || (Date.now() - this._recordingStartTime);
-            this._timeline.push({
-                type: 'emotion',
-                name: emotion,
-                undertone: undertone,
-                time: time
-            });
-        }
-        
-        // Set in engine with undertone
-        if (undertone) {
-            engine.setEmotion(emotion, { undertone: undertone });
-        } else {
-            engine.setEmotion(emotion);
-        }
+        return errorHandler.wrap(() => {
+            const engine = this._getReal();
+            if (!engine) {
+                throw new EngineError(
+                    'Engine not initialized. Call init() first.',
+                    ErrorCodes.NOT_INITIALIZED
+                );
+            }
+
+            // Validate emotion
+            if (!emotion || typeof emotion !== 'string') {
+                throw new EngineError(
+                    'Invalid emotion name',
+                    ErrorCodes.INVALID_EMOTION,
+                    { emotion }
+                );
+            }
+
+            // Handle different parameter formats
+            let undertone = null;
+            let recordTime = timestamp;
+
+            if (typeof undertoneOrOptions === 'string') {
+                // It's an undertone
+                undertone = undertoneOrOptions;
+            } else if (typeof undertoneOrOptions === 'number') {
+                // It's a timestamp (no undertone provided)
+                recordTime = undertoneOrOptions;
+            } else if (undertoneOrOptions && typeof undertoneOrOptions === 'object') {
+                // It's an options object
+                undertone = undertoneOrOptions.undertone;
+            }
+
+            // Record if in recording mode
+            if (this._isRecording) {
+                const time = recordTime || (Date.now() - this._recordingStartTime);
+                this._timeline.push({
+                    type: 'emotion',
+                    name: emotion,
+                    undertone: undertone,
+                    time: time
+                });
+            }
+
+            // Set in engine with undertone
+            if (undertone) {
+                engine.setEmotion(emotion, { undertone: undertone });
+            } else {
+                engine.setEmotion(emotion);
+            }
+        }, {
+            context: 'EmotiveMascotPublic.setEmotion',
+            fallback: 'neutral'
+        })();
     }
 
     /**
@@ -433,13 +498,23 @@ class EmotiveMascotPublic {
      * @param {boolean} enabled - Whether sound should be enabled
      */
     setSoundEnabled(enabled) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
-        // Set sound state in the engine's sound system
-        if (engine.soundSystem) {
-            engine.soundSystem.enabled = enabled;
-        }
+        return errorHandler.wrap(() => {
+            const engine = this._getReal();
+            if (!engine) {
+                throw new EngineError(
+                    'Engine not initialized. Call init() first.',
+                    ErrorCodes.NOT_INITIALIZED
+                );
+            }
+
+            // Set sound state in the engine's sound system
+            if (engine.soundSystem) {
+                engine.soundSystem.enabled = enabled;
+            }
+        }, {
+            context: 'EmotiveMascotPublic.setSoundEnabled',
+            fallback: undefined
+        })();
     }
 
     /**

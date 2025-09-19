@@ -7,8 +7,7 @@ export class SpecialEffects {
     constructor(renderer) {
         this.renderer = renderer;
         this.ctx = renderer.ctx;
-        this.canvas = renderer.canvas;
-        console.log('[SpecialEffects] Canvas element:', this.canvas);
+        this.canvas = renderer.canvasManager?.canvas || renderer.canvas;
         
         // Effect states
         this.recordingActive = false;

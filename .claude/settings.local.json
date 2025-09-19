@@ -126,7 +126,15 @@
       "Bash(start http://localhost:8080/themed-scifi-instrument.html)",
       "Read(//c/Users/raven/OneDrive/Pictures/Screenshots/**)",
       "Bash(rm:*)",
-      "Bash(firebase deploy:*)"
+      "Bash(firebase deploy:*)",
+      "Bash(touch:*)",
+      "Bash(npm test:*)",
+      "Bash(npx husky init:*)",
+      "Bash(firebase projects:list:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(tail:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

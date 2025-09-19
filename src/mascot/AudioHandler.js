@@ -42,7 +42,12 @@ export class AudioHandler {
             this.mascot.shapeMorpher.beatGlitchIntensity = 0;
             this.mascot.shapeMorpher.glitchPoints = [];
         }
-        
+
+        // Stop ambient groove animation when audio stops
+        if (this.mascot.renderer) {
+            this.mascot.renderer.ambientDanceAnimator.stopAmbientAnimation('grooveBob');
+        }
+
         return this.mascot;
     }
 
@@ -68,11 +73,19 @@ export class AudioHandler {
         if (this.mascot.shapeMorpher) {
             this.mascot.shapeMorpher.audioAnalyzer = this.mascot.audioAnalyzer;
             
-            // Set up beat detection callback for glitches (only during vocals)
+            // Set up beat detection callback for glitches and rhythm detection
             this.mascot.audioAnalyzer.onBeat((amplitude) => {
-                if (this.mascot.shapeMorpher && this.mascot.shapeMorpher.vocalEffectActive) {
+                if (this.mascot.shapeMorpher) {
+                    // Feed beat to music detector for BPM detection
+                    if (this.mascot.shapeMorpher.musicDetector) {
+                        const now = performance.now();
+                        this.mascot.shapeMorpher.musicDetector.addOnset(now, amplitude);
+                    }
+
                     // Only trigger beat glitches when vocals are active
-                    this.mascot.shapeMorpher.beatGlitchIntensity = amplitude * 0.3;
+                    if (this.mascot.shapeMorpher.vocalEffectActive) {
+                        this.mascot.shapeMorpher.beatGlitchIntensity = amplitude * 0.3;
+                    }
                 }
             });
         }
@@ -82,15 +95,21 @@ export class AudioHandler {
             clearInterval(this.vocalUpdateInterval);
         }
         
+        // Start ambient groove animation when audio starts
+        // This provides the continuous background movement
+        if (this.mascot.renderer) {
+            this.mascot.renderer.startGrooveBob({ intensity: 0.5, frequency: 1.0 });
+        }
+
         this.vocalUpdateInterval = setInterval(() => {
             if (this.mascot.audioAnalyzer.isAnalyzing && this.mascot.shapeMorpher) {
                 // Get current analysis data directly from properties
                 const amplitude = this.mascot.audioAnalyzer.currentAmplitude || 0;
                 const vocalInstability = this.mascot.audioAnalyzer.getVocalInstability() || 0;
-                
+
                 // Set vocal energy for shape pulsing
                 this.mascot.shapeMorpher.setVocalEnergy(vocalInstability);
-                
+
                 // Set overall deformation based on amplitude (0 to 1, no shrinking)
                 this.mascot.shapeMorpher.setAudioDeformation(amplitude * 2); // Keep positive for expansion only
             }

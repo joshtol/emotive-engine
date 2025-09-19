@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Basic Usage Example</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .canvas-container {
+            background: #f7f7f7;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        #mascot-canvas {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            display: grid;
+            gap: 15px;
+        }
+
+        .control-group {
+            background: #f7f7f7;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.emotion {
+            background: #48bb78;
+        }
+
+        button.emotion:hover {
+            background: #38a169;
+        }
+
+        button.effect {
+            background: #ed8936;
+        }
+
+        button.effect:hover {
+            background: #dd6b20;
+        }
+
+        button.control {
+            background: #9f7aea;
+        }
+
+        button.control:hover {
+            background: #805ad5;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            color: #22543d;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 8px;
+            color: #2c5282;
+            font-size: 13px;
+        }
+
+        .info code {
+            background: #bee3f8;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Emotive Engine</h1>
+        <p class="subtitle">Basic Usage Example</p>
+
+        <div class="canvas-container">
+            <canvas id="mascot-canvas" width="300" height="300"></canvas>
+        </div>
+
+        <div class="controls">
+            <!-- Gesture Controls -->
+            <div class="control-group">
+                <h3>Gestures</h3>
+                <div class="button-grid">
+                    <button onclick="mascot.triggerGesture('bounce')">Bounce</button>
+                    <button onclick="mascot.triggerGesture('spin')">Spin</button>
+                    <button onclick="mascot.triggerGesture('wave')">Wave</button>
+                    <button onclick="mascot.triggerGesture('pulse')">Pulse</button>
+                    <button onclick="mascot.triggerGesture('shake')">Shake</button>
+                    <button onclick="mascot.triggerGesture('float')">Float</button>
+                </div>
+            </div>
+
+            <!-- Emotion Controls -->
+            <div class="control-group">
+                <h3>Emotions</h3>
+                <div class="button-grid">
+                    <button class="emotion" onclick="setEmotion('happy')">Happy 😊</button>
+                    <button class="emotion" onclick="setEmotion('sad')">Sad 😢</button>
+                    <button class="emotion" onclick="setEmotion('excited')">Excited 🎉</button>
+                    <button class="emotion" onclick="setEmotion('calm')">Calm 😌</button>
+                    <button class="emotion" onclick="setEmotion('confused')">Confused 😕</button>
+                    <button class="emotion" onclick="setEmotion('love')">Love ❤️</button>
+                </div>
+            </div>
+
+            <!-- Effect Controls -->
+            <div class="control-group">
+                <h3>Effects</h3>
+                <div class="button-grid">
+                    <button class="effect" onclick="mascot.triggerGesture('glow')">Glow ✨</button>
+                    <button class="effect" onclick="mascot.triggerGesture('sparkle')">Sparkle 🌟</button>
+                    <button class="effect" onclick="mascot.triggerGesture('shimmer')">Shimmer 🌊</button>
+                    <button class="effect" onclick="mascot.triggerGesture('flash')">Flash ⚡</button>
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="control-group">
+                <h3>Controls</h3>
+                <div class="button-grid">
+                    <button class="control" onclick="toggleAnimation()">Start/Stop</button>
+                    <button class="control" onclick="mascot.pause()">Pause</button>
+                    <button class="control" onclick="mascot.resume()">Resume</button>
+                    <button class="control" onclick="randomAction()">Random!</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="status" id="status">
+            Initializing mascot...
+        </div>
+
+        <div class="info">
+            <strong>Try these combinations:</strong><br>
+            • Happy + Bounce = Joyful jumping<br>
+            • Confused + Shake = Strong disagreement<br>
+            • Love + Glow = Warm affection<br>
+            • Click "Random!" for surprise animations<br><br>
+            <strong>Keyboard shortcuts:</strong> <code>Space</code> = Random, <code>B</code> = Bounce, <code>S</code> = Spin
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot from '../site/src/EmotiveMascotPublic.js';
+
+        let mascot;
+        let currentEmotion = 'neutral';
+        let isAnimating = false;
+
+        async function init() {
+            try {
+                // Create mascot instance
+                mascot = new EmotiveMascot({
+                    particleIntensity: 0.8,
+                    glowIntensity: 0.7,
+                    startingEmotion: 'happy',
+                    debugMode: false
+                });
+
+                // Make globally available for button clicks
+                window.mascot = mascot;
+
+                // Initialize with canvas
+                const canvas = document.getElementById('mascot-canvas');
+                await mascot.init(canvas);
+
+                // Start animation
+                mascot.start();
+                isAnimating = true;
+
+                // Initial gesture
+                setTimeout(() => {
+                    mascot.triggerGesture('wave');
+                    updateStatus('Ready! Click buttons to animate the mascot.');
+                }, 500);
+
+                // Set up event listeners
+                setupEventListeners();
+
+            } catch (error) {
+                console.error('Failed to initialize mascot:', error);
+                updateStatus('Error: Failed to initialize mascot');
+            }
+        }
+
+        function setupEventListeners() {
+            // Listen to mascot events
+            mascot.on('gesture', (data) => {
+                updateStatus(`Performing: ${data.gesture}`);
+            });
+
+            mascot.on('emotion', (data) => {
+                currentEmotion = data.emotion;
+                updateStatus(`Emotion changed to: ${data.emotion}`);
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                switch(e.key.toLowerCase()) {
+                    case ' ':
+                        e.preventDefault();
+                        randomAction();
+                        break;
+                    case 'b':
+                        mascot.triggerGesture('bounce');
+                        break;
+                    case 's':
+                        mascot.triggerGesture('spin');
+                        break;
+                    case 'w':
+                        mascot.triggerGesture('wave');
+                        break;
+                    case 'p':
+                        mascot.triggerGesture('pulse');
+                        break;
+                }
+            });
+        }
+
+        function setEmotion(emotion) {
+            const undertones = {
+                happy: 'energetic',
+                sad: 'mellow',
+                excited: 'wild',
+                calm: 'gentle',
+                confused: 'playful',
+                love: 'dreamy'
+            };
+
+            mascot.setEmotion(emotion, undertones[emotion]);
+
+            // Trigger matching gesture
+            const emotionGestures = {
+                happy: 'bounce',
+                sad: 'sway',
+                excited: 'spin',
+                calm: 'float',
+                confused: 'tilt',
+                love: 'pulse'
+            };
+
+            setTimeout(() => {
+                mascot.triggerGesture(emotionGestures[emotion]);
+            }, 200);
+        }
+
+        function toggleAnimation() {
+            if (isAnimating) {
+                mascot.stop();
+                isAnimating = false;
+                updateStatus('Animation stopped');
+            } else {
+                mascot.start();
+                isAnimating = true;
+                updateStatus('Animation started');
+            }
+        }
+
+        function randomAction() {
+            const gestures = ['bounce', 'spin', 'wave', 'pulse', 'shake', 'float', 'wiggle', 'orbit'];
+            const emotions = ['happy', 'sad', 'excited', 'calm', 'confused', 'love', 'curious'];
+            const effects = ['glow', 'sparkle', 'shimmer', 'flash'];
+
+            const randomType = Math.random();
+
+            if (randomType < 0.4) {
+                // Random gesture
+                const gesture = gestures[Math.floor(Math.random() * gestures.length)];
+                mascot.triggerGesture(gesture);
+            } else if (randomType < 0.7) {
+                // Random emotion + gesture
+                const emotion = emotions[Math.floor(Math.random() * emotions.length)];
+                setEmotion(emotion);
+            } else {
+                // Random effect
+                const effect = effects[Math.floor(Math.random() * effects.length)];
+                mascot.triggerGesture(effect);
+            }
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Make functions globally available
+        window.setEmotion = setEmotion;
+        window.toggleAnimation = toggleAnimation;
+        window.randomAction = randomAction;
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

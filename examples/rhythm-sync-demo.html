@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Rhythm Sync Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .canvas-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        #mascot-canvas {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .bpm-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: grid;
+            gap: 15px;
+        }
+
+        .control-group {
+            background: #f7f7f7;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        button {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.active {
+            background: #48bb78;
+            box-shadow: 0 0 20px rgba(72, 187, 120, 0.4);
+        }
+
+        button.tap {
+            background: #ed8936;
+            font-size: 24px;
+            padding: 20px;
+        }
+
+        button.tap:hover {
+            background: #dd6b20;
+        }
+
+        .bpm-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .bpm-value {
+            display: inline-block;
+            width: 60px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .beat-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ccc;
+            margin-left: 10px;
+            transition: all 0.1s ease;
+        }
+
+        .beat-indicator.beat {
+            background: #48bb78;
+            box-shadow: 0 0 10px rgba(72, 187, 120, 0.8);
+            transform: scale(1.2);
+        }
+
+        .visualization {
+            margin-top: 20px;
+            height: 60px;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .beat-bar {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: #48bb78;
+            animation: moveLeft 2s linear infinite;
+        }
+
+        @keyframes moveLeft {
+            from { left: 100%; }
+            to { left: -2px; }
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            color: #22543d;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 8px;
+            color: #2c5282;
+            font-size: 13px;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Rhythm Sync Demo</h1>
+        <p class="subtitle">Watch the mascot dance to the beat!</p>
+
+        <div class="canvas-container">
+            <canvas id="mascot-canvas" width="300" height="300"></canvas>
+            <div class="bpm-display" id="bpm-display">BPM: --</div>
+        </div>
+
+        <div class="controls">
+            <!-- Rhythm Controls -->
+            <div class="control-group">
+                <h3>Rhythm Sync</h3>
+                <div class="button-grid">
+                    <button id="sync-toggle" onclick="toggleRhythmSync()">Enable Sync</button>
+                    <button id="auto-detect" onclick="toggleAutoDetect()">Auto-Detect BPM</button>
+                </div>
+            </div>
+
+            <!-- BPM Controls -->
+            <div class="control-group">
+                <h3>BPM Control</h3>
+                <div>
+                    <label>Manual BPM: <span class="bpm-value" id="bpm-value">120</span></label>
+                    <span class="beat-indicator" id="beat-indicator"></span>
+                </div>
+                <input type="range" class="bpm-slider" id="bpm-slider"
+                       min="60" max="180" value="120"
+                       oninput="updateBPM(this.value)">
+
+                <div style="margin-top: 15px;">
+                    <button class="tap" onclick="tapTempo()">TAP TEMPO</button>
+                    <span style="margin-left: 10px; color: #666;">Tap 4+ times to detect BPM</span>
+                </div>
+            </div>
+
+            <!-- Groove Gestures -->
+            <div class="control-group">
+                <h3>Groove Styles</h3>
+                <div class="button-grid">
+                    <button onclick="setGroove('grooveSway')">Sway</button>
+                    <button onclick="setGroove('grooveBob')">Bob</button>
+                    <button onclick="setGroove('grooveFlow')">Flow</button>
+                    <button onclick="setGroove('groovePulse')">Pulse</button>
+                    <button onclick="setGroove('grooveStep')">Step</button>
+                    <button onclick="stopGroove()">Stop Groove</button>
+                </div>
+            </div>
+
+            <!-- Beat-Synced Actions -->
+            <div class="control-group">
+                <h3>Beat-Synced Actions</h3>
+                <div class="button-grid">
+                    <button onclick="mascot.triggerGestureOnBeat('bounce')">Bounce on Beat</button>
+                    <button onclick="mascot.triggerGestureOnBeat('spin')">Spin on Beat</button>
+                    <button onclick="mascot.triggerGestureOnBeat('flash')">Flash on Beat</button>
+                    <button onclick="startBeatPattern()">Beat Pattern</button>
+                </div>
+            </div>
+
+            <!-- Audio Source -->
+            <div class="control-group">
+                <h3>Audio Source (Optional)</h3>
+                <audio id="audio-source" controls>
+                    <source src="demo-music.mp3" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+                <button onclick="connectAudio()" style="margin-top: 10px;">Connect Audio</button>
+            </div>
+        </div>
+
+        <div class="visualization" id="visualization"></div>
+
+        <div class="status" id="status">
+            Initializing rhythm engine...
+        </div>
+
+        <div class="info">
+            <strong>How to use:</strong><br>
+            • <strong>Tap Tempo:</strong> Click the TAP button in rhythm to detect BPM<br>
+            • <strong>Manual BPM:</strong> Use the slider to set exact BPM<br>
+            • <strong>Groove Styles:</strong> Different dance styles that sync to the beat<br>
+            • <strong>Audio Sync:</strong> Load an audio file to auto-detect BPM from music<br>
+            • <strong>Beat Pattern:</strong> Creates a synchronized gesture sequence
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot from '../site/src/EmotiveMascotPublic.js';
+
+        let mascot;
+        let rhythmEnabled = false;
+        let autoDetectEnabled = false;
+        let currentBPM = 120;
+        let tapTimes = [];
+        let beatInterval;
+        let currentGroove = null;
+
+        async function init() {
+            try {
+                // Create mascot instance
+                mascot = new EmotiveMascot({
+                    particleIntensity: 0.8,
+                    glowIntensity: 0.7,
+                    startingEmotion: 'excited'
+                });
+
+                // Make globally available
+                window.mascot = mascot;
+
+                // Initialize with canvas
+                const canvas = document.getElementById('mascot-canvas');
+                await mascot.init(canvas);
+
+                // Start animation
+                mascot.start();
+
+                // Setup event listeners
+                setupEventListeners();
+
+                updateStatus('Ready! Enable rhythm sync to start.');
+
+            } catch (error) {
+                console.error('Failed to initialize mascot:', error);
+                updateStatus('Error: Failed to initialize mascot');
+            }
+        }
+
+        function setupEventListeners() {
+            // Listen to rhythm events
+            mascot.on('rhythm:beat', (data) => {
+                flashBeatIndicator();
+                addBeatBar();
+            });
+
+            mascot.on('rhythm:bpmDetected', (data) => {
+                currentBPM = data.bpm;
+                updateBPMDisplay(currentBPM);
+                updateStatus(`BPM detected: ${Math.round(currentBPM)}`);
+            });
+
+            // Update BPM display periodically
+            setInterval(() => {
+                if (rhythmEnabled) {
+                    const bpm = mascot.getCurrentBPM();
+                    if (bpm) {
+                        updateBPMDisplay(bpm);
+                    }
+                }
+            }, 500);
+        }
+
+        function toggleRhythmSync() {
+            rhythmEnabled = !rhythmEnabled;
+            const button = document.getElementById('sync-toggle');
+
+            if (rhythmEnabled) {
+                mascot.enableRhythmSync();
+                button.classList.add('active');
+                button.textContent = 'Disable Sync';
+                updateStatus('Rhythm sync enabled!');
+                startBeatIndicator();
+            } else {
+                mascot.disableRhythmSync();
+                button.classList.remove('active');
+                button.textContent = 'Enable Sync';
+                updateStatus('Rhythm sync disabled');
+                stopBeatIndicator();
+                if (currentGroove) {
+                    stopGroove();
+                }
+            }
+        }
+
+        function toggleAutoDetect() {
+            autoDetectEnabled = !autoDetectEnabled;
+            const button = document.getElementById('auto-detect');
+
+            if (autoDetectEnabled) {
+                button.classList.add('active');
+                updateStatus('Auto-detect BPM enabled - play some music!');
+            } else {
+                button.classList.remove('active');
+                updateStatus('Auto-detect BPM disabled');
+            }
+        }
+
+        function updateBPM(value) {
+            currentBPM = parseInt(value);
+            document.getElementById('bpm-value').textContent = currentBPM;
+
+            if (rhythmEnabled) {
+                mascot.setBPM(currentBPM);
+                updateBPMDisplay(currentBPM);
+                restartBeatIndicator();
+            }
+        }
+
+        function tapTempo() {
+            const now = Date.now();
+
+            // Reset if last tap was too long ago
+            if (tapTimes.length > 0 && now - tapTimes[tapTimes.length - 1] > 2000) {
+                tapTimes = [];
+            }
+
+            tapTimes.push(now);
+            mascot.tap();
+
+            // Flash the button
+            const button = document.querySelector('.tap');
+            button.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 100);
+
+            // Calculate BPM if we have enough taps
+            if (tapTimes.length >= 4) {
+                const intervals = [];
+                for (let i = 1; i < tapTimes.length; i++) {
+                    intervals.push(tapTimes[i] - tapTimes[i - 1]);
+                }
+                const avgInterval = intervals.reduce((a, b) => a + b) / intervals.length;
+                const detectedBPM = Math.round(60000 / avgInterval);
+
+                currentBPM = detectedBPM;
+                document.getElementById('bpm-slider').value = detectedBPM;
+                document.getElementById('bpm-value').textContent = detectedBPM;
+
+                if (rhythmEnabled) {
+                    mascot.setBPM(detectedBPM);
+                }
+
+                updateStatus(`Tap tempo detected: ${detectedBPM} BPM`);
+
+                // Reset after successful detection
+                setTimeout(() => {
+                    tapTimes = [];
+                }, 2000);
+            }
+        }
+
+        function setGroove(grooveType) {
+            if (!rhythmEnabled) {
+                updateStatus('Enable rhythm sync first!');
+                return;
+            }
+
+            // Stop current groove if any
+            if (currentGroove) {
+                mascot.stopGesture(currentGroove);
+            }
+
+            currentGroove = grooveType;
+            mascot.triggerGesture(grooveType);
+            updateStatus(`Grooving with: ${grooveType}`);
+        }
+
+        function stopGroove() {
+            if (currentGroove) {
+                mascot.stopGesture(currentGroove);
+                currentGroove = null;
+                updateStatus('Groove stopped');
+            }
+        }
+
+        function startBeatPattern() {
+            if (!rhythmEnabled) {
+                updateStatus('Enable rhythm sync first!');
+                return;
+            }
+
+            const pattern = [
+                { beat: 1, gesture: 'bounce' },
+                { beat: 2, gesture: 'pulse' },
+                { beat: 3, gesture: 'sway' },
+                { beat: 4, gesture: 'flash' }
+            ];
+
+            let beatCount = 0;
+            const patternInterval = setInterval(() => {
+                if (!rhythmEnabled) {
+                    clearInterval(patternInterval);
+                    return;
+                }
+
+                const currentPattern = pattern[beatCount % pattern.length];
+                mascot.triggerGesture(currentPattern.gesture);
+                beatCount++;
+
+                if (beatCount >= 16) {
+                    clearInterval(patternInterval);
+                    updateStatus('Beat pattern complete!');
+                }
+            }, 60000 / currentBPM);
+
+            updateStatus('Playing beat pattern...');
+        }
+
+        function connectAudio() {
+            const audio = document.getElementById('audio-source');
+
+            if (!audio.src || audio.src === '') {
+                updateStatus('Please load an audio file first');
+                return;
+            }
+
+            mascot.connectAudioSource(audio);
+
+            if (!rhythmEnabled) {
+                toggleRhythmSync();
+            }
+
+            if (!autoDetectEnabled) {
+                toggleAutoDetect();
+            }
+
+            updateStatus('Audio connected! BPM will be detected automatically.');
+        }
+
+        function startBeatIndicator() {
+            if (beatInterval) clearInterval(beatInterval);
+
+            const interval = 60000 / currentBPM;
+            beatInterval = setInterval(() => {
+                flashBeatIndicator();
+            }, interval);
+        }
+
+        function stopBeatIndicator() {
+            if (beatInterval) {
+                clearInterval(beatInterval);
+                beatInterval = null;
+            }
+        }
+
+        function restartBeatIndicator() {
+            stopBeatIndicator();
+            startBeatIndicator();
+        }
+
+        function flashBeatIndicator() {
+            const indicator = document.getElementById('beat-indicator');
+            indicator.classList.add('beat');
+            setTimeout(() => {
+                indicator.classList.remove('beat');
+            }, 100);
+        }
+
+        function addBeatBar() {
+            const viz = document.getElementById('visualization');
+            const bar = document.createElement('div');
+            bar.className = 'beat-bar';
+            bar.style.animationDuration = (240000 / currentBPM) + 'ms';
+            viz.appendChild(bar);
+
+            // Remove old bars
+            setTimeout(() => {
+                bar.remove();
+            }, 2500);
+
+            // Limit number of bars
+            while (viz.children.length > 20) {
+                viz.removeChild(viz.firstChild);
+            }
+        }
+
+        function updateBPMDisplay(bpm) {
+            document.getElementById('bpm-display').textContent = `BPM: ${Math.round(bpm)}`;
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Make functions globally available
+        window.toggleRhythmSync = toggleRhythmSync;
+        window.toggleAutoDetect = toggleAutoDetect;
+        window.updateBPM = updateBPM;
+        window.tapTempo = tapTempo;
+        window.setGroove = setGroove;
+        window.stopGroove = stopGroove;
+        window.startBeatPattern = startBeatPattern;
+        window.connectAudio = connectAudio;
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

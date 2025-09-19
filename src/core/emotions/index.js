@@ -237,16 +237,8 @@ export function getEmotionGestures(emotionName) {
     return emotion?.gestures || [];
 }
 
-// Debug utilities
-if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
-    window.Emotions = {
-        registry: emotionRegistry,
-        aliases: emotionAliases,
-        list: listEmotions,
-        get: getEmotion,
-        has: hasEmotion
-    };
-}
+// Debug utilities can be imported directly if needed
+// No longer polluting global scope
 
 // Export plugin adapter for external use
 export { pluginAdapter };

@@ -355,19 +355,8 @@ export function listGestures() {
     return allGestures;
 }
 
-// ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ DEBUG UTILITIES
-// └─────────────────────────────────────────────────────────────────────────────────────
-if (typeof window !== 'undefined' && window.DEBUG_GESTURES) {
-    window.Gestures = {
-        registry: GESTURE_REGISTRY,
-        types: GESTURE_TYPES,
-        list: listGestures,
-        get: getGesture,
-        isBlending: isBlendingGesture,
-        isOverride: isOverrideGesture
-    };
-}
+// Debug utilities can be imported directly if needed
+// Export them instead of polluting global scope
 
 // Export plugin adapter for external use
 export { pluginAdapter };

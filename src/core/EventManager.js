@@ -1,532 +1,388 @@
 /**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                       ◐ ◑ ◒ ◓  EVENT MANAGER  ◓ ◒ ◑ ◐                       
- *                                                                                    
- * ═══════════════════════════════════════════════════════════════════════════════════════
+ * Event Manager
+ * Centralized event listener management to prevent memory leaks
  *
- * @fileoverview Event Manager - Centralized Event System & Memory Management
- * @author Emotive Engine Team
- * @version 2.0.0
- * @module EventManager
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The NERVOUS SYSTEM of the engine. Manages all event listeners with proper         
- * ║ cleanup to prevent memory leaks. Centralizes event handling for DOM events,       
- * ║ custom events, and ensures everything is properly disposed when destroyed.        
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 📡 EVENT FEATURES                                                                  
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Centralized listener registration                                               
- * │ • Automatic cleanup on destroy                                                    
- * │ • Memory leak prevention                                                          
- * │ • Event delegation support                                                        
- * │ • Custom event emitter pattern                                                    
- * │ • Throttled and debounced events                                                  
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ════════════════════════════════════════════════════════════════════════════════════
+ * @module core/EventManager
+ * @version 1.0.0
  */
 
-class EventManager {
-    constructor(config = {}) {
-        // Event storage
+/**
+ * Manages all event listeners to ensure proper cleanup
+ */
+export class EventManager {
+    constructor() {
+        // Track all registered listeners
         this.listeners = new Map();
-        this.onceListeners = new Set();
-        
-        // Configuration
-        this.maxListeners = config.maxListeners || 100;
-        this.enableDebugging = config.enableDebugging || false;
-        this.enableMonitoring = config.enableMonitoring || false;
-        
-        // Memory management
-        this.totalListenerCount = 0;
-        this.listenerHistory = [];
-        this.memoryWarningThreshold = config.memoryWarningThreshold || 50;
-        
-        // Debugging and monitoring
-        this.eventStats = new Map();
-        this.isDestroyed = false;
-        
-        // Bind methods for proper context
-        this.cleanup = this.cleanup.bind(this);
-        
-        if (this.enableDebugging) {
-            // EventManager initialized with debugging enabled
-        }
+
+        // Track listener groups for batch operations
+        this.groups = new Map();
+
+        // Auto-cleanup on page unload
+        // Removed unload handler - not needed and causes violations
+
+        // Stats
+        this.stats = {
+            registered: 0,
+            removed: 0,
+            active: 0
+        };
     }
 
     /**
-     * Adds an event listener
-     * @param {string} event - Event name
-     * @param {Function} callback - Event callback function
+     * Register an event listener
+     * @param {EventTarget} target - Event target (element, window, document, etc.)
+     * @param {string} eventType - Event type (click, resize, etc.)
+     * @param {Function} handler - Event handler function
+     * @param {Object} options - addEventListener options
+     * @param {string} group - Optional group name for batch operations
+     * @returns {string} Listener ID for later removal
+     */
+    addEventListener(target, eventType, handler, options = {}, group = 'default') {
+        // Generate unique ID
+        const id = this.generateId();
+
+        // Create listener info
+        const listenerInfo = {
+            id,
+            target,
+            eventType,
+            handler,
+            options,
+            group,
+            active: true
+        };
+
+        // Store listener
+        this.listeners.set(id, listenerInfo);
+
+        // Add to group
+        if (!this.groups.has(group)) {
+            this.groups.set(group, new Set());
+        }
+        this.groups.get(group).add(id);
+
+        // Actually add the listener
+        target.addEventListener(eventType, handler, options);
+
+        // Update stats
+        this.stats.registered++;
+        this.stats.active++;
+
+        return id;
+    }
+
+    /**
+     * Remove an event listener by ID
+     * @param {string} id - Listener ID
      * @returns {boolean} Success status
      */
-    on(event, callback) {
-        if (this.isDestroyed) {
-            // Cannot add listener to destroyed EventManager
+    removeEventListener(id) {
+        const listenerInfo = this.listeners.get(id);
+
+        if (!listenerInfo || !listenerInfo.active) {
             return false;
         }
 
-        // Validate inputs
-        const validation = this.validateEvent(event, callback);
-        if (!validation.isValid) {
-            // Validation error
-            return false;
+        // Remove the actual listener
+        listenerInfo.target.removeEventListener(
+            listenerInfo.eventType,
+            listenerInfo.handler,
+            listenerInfo.options
+        );
+
+        // Mark as inactive
+        listenerInfo.active = false;
+
+        // Remove from group
+        const group = this.groups.get(listenerInfo.group);
+        if (group) {
+            group.delete(id);
+            if (group.size === 0) {
+                this.groups.delete(listenerInfo.group);
+            }
         }
 
-        // Check listener limits
-        if (this.totalListenerCount >= this.maxListeners) {
-            // Maximum listener limit reached
-            return false;
-        }
+        // Remove from listeners map
+        this.listeners.delete(id);
 
-        // Initialize event array if needed
-        if (!this.listeners.has(event)) {
-            this.listeners.set(event, []);
-            this.eventStats.set(event, {
-                listenerCount: 0,
-                emitCount: 0,
-                lastEmit: null,
-                created: Date.now()
-            });
-        }
-
-        // Add listener
-        const listeners = this.listeners.get(event);
-        listeners.push(callback);
-        this.totalListenerCount++;
-
-        // Update statistics
-        const stats = this.eventStats.get(event);
-        stats.listenerCount = listeners.length;
-
-        // Memory monitoring
-        if (this.enableMonitoring) {
-            this.checkMemoryUsage();
-        }
-
-        // Debugging
-        if (this.enableDebugging) {
-            // Added listener
-        }
-
-        // Emit internal event for monitoring
-        this.emitInternal('listenerAdded', { 
-            event, 
-            listenerCount: listeners.length,
-            totalListeners: this.totalListenerCount
-        });
+        // Update stats
+        this.stats.removed++;
+        this.stats.active--;
 
         return true;
     }
 
     /**
-     * Removes a specific event listener
-     * @param {string} event - Event name
-     * @param {Function} callback - Event callback function to remove
-     * @returns {boolean} Success status
+     * Remove all listeners in a group
+     * @param {string} group - Group name
+     * @returns {number} Number of listeners removed
      */
-    off(event, callback) {
-        if (this.isDestroyed) {
-            // Cannot remove listener from destroyed EventManager
-            return false;
+    removeGroup(group) {
+        const groupSet = this.groups.get(group);
+
+        if (!groupSet) {
+            return 0;
         }
 
-        if (!this.listeners.has(event)) {
-            return false;
+        let removed = 0;
+
+        for (const id of groupSet) {
+            if (this.removeEventListener(id)) {
+                removed++;
+            }
         }
 
-        const listeners = this.listeners.get(event);
-        const index = listeners.indexOf(callback);
-        
-        if (index === -1) {
-            return false;
-        }
-
-        // Remove listener
-        listeners.splice(index, 1);
-        this.totalListenerCount--;
-
-        // Remove once listener tracking if applicable
-        this.onceListeners.delete(callback);
-
-        // Clean up empty event arrays
-        if (listeners.length === 0) {
-            this.listeners.delete(event);
-            this.eventStats.delete(event);
-        } else {
-            // Update statistics
-            const stats = this.eventStats.get(event);
-            stats.listenerCount = listeners.length;
-        }
-
-        // Debugging
-        if (this.enableDebugging) {
-            // Removed listener
-        }
-
-        // Emit internal event for monitoring
-        this.emitInternal('listenerRemoved', { 
-            event, 
-            listenerCount: listeners.length,
-            totalListeners: this.totalListenerCount
-        });
-
-        return true;
+        return removed;
     }
 
     /**
-     * Adds a one-time event listener that removes itself after first execution
-     * @param {string} event - Event name
-     * @param {Function} callback - Event callback function
-     * @returns {boolean} Success status
+     * Remove all listeners for a specific target
+     * @param {EventTarget} target - Event target
+     * @returns {number} Number of listeners removed
      */
-    once(event, callback) {
-        if (this.isDestroyed) {
-            // Cannot add once listener to destroyed EventManager
-            return false;
+    removeAllForTarget(target) {
+        let removed = 0;
+
+        for (const [id, info] of this.listeners.entries()) {
+            if (info.target === target && info.active) {
+                if (this.removeEventListener(id)) {
+                    removed++;
+                }
+            }
         }
 
-        // Create wrapper function that removes itself
-        const onceWrapper = (data) => {
-            try {
-                callback(data);
-            } finally {
-                // Always remove the listener, even if callback throws
-                this.off(event, onceWrapper);
+        return removed;
+    }
+
+    /**
+     * Remove all listeners of a specific type
+     * @param {string} eventType - Event type
+     * @returns {number} Number of listeners removed
+     */
+    removeAllOfType(eventType) {
+        let removed = 0;
+
+        for (const [id, info] of this.listeners.entries()) {
+            if (info.eventType === eventType && info.active) {
+                if (this.removeEventListener(id)) {
+                    removed++;
+                }
+            }
+        }
+
+        return removed;
+    }
+
+    /**
+     * Remove all listeners
+     * @returns {number} Number of listeners removed
+     */
+    removeAll() {
+        let removed = 0;
+
+        for (const [id, info] of this.listeners.entries()) {
+            if (info.active) {
+                if (this.removeEventListener(id)) {
+                    removed++;
+                }
+            }
+        }
+
+        return removed;
+    }
+
+    /**
+     * Create a bound listener that auto-removes
+     * @param {EventTarget} target - Event target
+     * @param {string} eventType - Event type
+     * @param {Function} handler - Event handler
+     * @param {Object} options - Options
+     * @returns {Object} Controller with remove method
+     */
+    createAutoRemove(target, eventType, handler, options = {}) {
+        const id = this.addEventListener(target, eventType, handler, options);
+
+        return {
+            id,
+            remove: () => this.removeEventListener(id)
+        };
+    }
+
+    /**
+     * Add listener that fires only once
+     * @param {EventTarget} target - Event target
+     * @param {string} eventType - Event type
+     * @param {Function} handler - Event handler
+     * @param {Object} options - Options
+     * @returns {string} Listener ID
+     */
+    once(target, eventType, handler, options = {}) {
+        const wrappedHandler = (event) => {
+            handler(event);
+            this.removeEventListener(id);
+        };
+
+        const id = this.addEventListener(target, eventType, wrappedHandler, options);
+
+        return id;
+    }
+
+    /**
+     * Debounced event listener
+     * @param {EventTarget} target - Event target
+     * @param {string} eventType - Event type
+     * @param {Function} handler - Event handler
+     * @param {number} delay - Debounce delay in ms
+     * @param {Object} options - Options
+     * @returns {string} Listener ID
+     */
+    debounced(target, eventType, handler, delay = 250, options = {}) {
+        let timeoutId;
+
+        const debouncedHandler = (event) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => handler(event), delay);
+        };
+
+        return this.addEventListener(target, eventType, debouncedHandler, options);
+    }
+
+    /**
+     * Throttled event listener
+     * @param {EventTarget} target - Event target
+     * @param {string} eventType - Event type
+     * @param {Function} handler - Event handler
+     * @param {number} limit - Throttle limit in ms
+     * @param {Object} options - Options
+     * @returns {string} Listener ID
+     */
+    throttled(target, eventType, handler, limit = 100, options = {}) {
+        let inThrottle = false;
+
+        const throttledHandler = (event) => {
+            if (!inThrottle) {
+                handler(event);
+                inThrottle = true;
+                setTimeout(() => {
+                    inThrottle = false;
+                }, limit);
             }
         };
 
-        // Track this as a once listener for cleanup
-        this.onceListeners.add(onceWrapper);
+        return this.addEventListener(target, eventType, throttledHandler, options);
+    }
 
-        // Add the wrapper as a regular listener
-        const success = this.on(event, onceWrapper);
+    // Removed setupUnloadHandler - causes permission violations
+    // Browser automatically cleans up event listeners on unload
 
-        if (this.enableDebugging && success) {
-            // Added once listener
-        }
-
-        return success;
+    /**
+     * Generate unique ID
+     * @private
+     * @returns {string} Unique ID
+     */
+    generateId() {
+        return `listener_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
 
     /**
-     * Emits an event to all registered listeners
-     * @param {string} event - Event name
-     * @param {*} data - Event data
-     * @returns {number} Number of listeners that received the event
+     * Get statistics
+     * @returns {Object} Statistics
      */
-    emit(event, data = null) {
-        if (this.isDestroyed) {
-            return 0;
-        }
+    getStats() {
+        return {
+            ...this.stats,
+            groups: this.groups.size,
+            listeners: this.listeners.size
+        };
+    }
 
-        if (!this.listeners.has(event)) {
-            return 0;
-        }
+    /**
+     * Get active listeners for debugging
+     * @returns {Array} Active listener info
+     */
+    getActiveListeners() {
+        const active = [];
 
-        const listeners = this.listeners.get(event);
-        let successCount = 0;
-
-        // Update statistics
-        const stats = this.eventStats.get(event);
-        stats.emitCount++;
-        stats.lastEmit = Date.now();
-
-        // Execute all listeners with error protection
-        for (const callback of [...listeners]) { // Copy array to handle modifications during iteration
-            try {
-                callback(data);
-                successCount++;
-            } catch (error) {
-                // Error in listener
-                
-                // Emit error event for monitoring
-                this.emitInternal('listenerError', {
-                    event,
-                    error: error.message,
-                    stack: error.stack
+        for (const [id, info] of this.listeners.entries()) {
+            if (info.active) {
+                active.push({
+                    id,
+                    eventType: info.eventType,
+                    group: info.group,
+                    target: info.target.constructor.name
                 });
             }
         }
 
-        // Debugging
-        if (this.enableDebugging) {
-            // Emitted event to listeners
-        }
-
-        return successCount;
+        return active;
     }
 
     /**
-     * Removes all listeners for a specific event or all events
-     * @param {string|null} event - Event name to clear, or null to clear all
-     * @returns {number} Number of listeners removed
+     * Check for potential memory leaks
+     * @returns {Object} Leak analysis
      */
-    removeAllListeners(event = null) {
-        if (this.isDestroyed) {
-            return 0;
-        }
-
-        let removedCount = 0;
-
-        if (event === null) {
-            // Clear all listeners
-            for (const [eventName, listeners] of this.listeners) {
-                removedCount += listeners.length;
-            }
-            
-            this.listeners.clear();
-            this.eventStats.clear();
-            this.onceListeners.clear();
-            this.totalListenerCount = 0;
-
-            if (this.enableDebugging) {
-                // Cleared all event listeners
-            }
-        } else if (this.listeners.has(event)) {
-            // Clear listeners for specific event
-            const listeners = this.listeners.get(event);
-            removedCount = listeners.length;
-            
-            // Remove once listener tracking for this event
-            for (const listener of listeners) {
-                this.onceListeners.delete(listener);
-            }
-            
-            this.listeners.delete(event);
-            this.eventStats.delete(event);
-            this.totalListenerCount -= removedCount;
-
-            if (this.enableDebugging) {
-                // Cleared listeners for event
-            }
-        }
-
-        // Emit internal event for monitoring
-        if (removedCount > 0) {
-            this.emitInternal('listenersCleared', { 
-                event, 
-                removedCount,
-                totalListeners: this.totalListenerCount
-            });
-        }
-
-        return removedCount;
-    }
-
-    /**
-     * Gets the number of listeners for an event
-     * @param {string} event - Event name
-     * @returns {number} Number of listeners
-     */
-    listenerCount(event) {
-        return this.listeners.has(event) ? this.listeners.get(event).length : 0;
-    }
-
-    /**
-     * Gets all registered event names
-     * @returns {Array<string>} Array of event names
-     */
-    getEventNames() {
-        return Array.from(this.listeners.keys());
-    }
-
-    /**
-     * Gets comprehensive event statistics
-     * @returns {Object} Event statistics and monitoring data
-     */
-    getEventStats() {
-        const stats = {
-            totalListeners: this.totalListenerCount,
-            totalEvents: this.listeners.size,
-            onceListeners: this.onceListeners.size,
-            events: {}
+    analyzeLeaks() {
+        const analysis = {
+            totalListeners: this.listeners.size,
+            activeListeners: this.stats.active,
+            inactiveButNotRemoved: 0,
+            byTarget: new Map(),
+            byType: new Map(),
+            potentialLeaks: []
         };
 
-        for (const [event, eventStats] of this.eventStats) {
-            stats.events[event] = {
-                ...eventStats,
-                currentListeners: this.listenerCount(event)
-            };
+        for (const [id, info] of this.listeners.entries()) {
+            // Count by target
+            const targetName = info.target.constructor.name;
+            analysis.byTarget.set(
+                targetName,
+                (analysis.byTarget.get(targetName) || 0) + 1
+            );
+
+            // Count by type
+            analysis.byType.set(
+                info.eventType,
+                (analysis.byType.get(info.eventType) || 0) + 1
+            );
+
+            // Check for inactive but not removed
+            if (!info.active) {
+                analysis.inactiveButNotRemoved++;
+                analysis.potentialLeaks.push({
+                    id,
+                    eventType: info.eventType,
+                    target: targetName
+                });
+            }
         }
 
-        return stats;
+        // Convert maps to objects for easier reading
+        analysis.byTarget = Object.fromEntries(analysis.byTarget);
+        analysis.byType = Object.fromEntries(analysis.byType);
+
+        return analysis;
     }
 
     /**
-     * Validates event name and callback
-     * @param {string} event - Event name
-     * @param {Function} callback - Event callback function
-     * @returns {Object} Validation result
-     */
-    validateEvent(event, callback) {
-        if (typeof event !== 'string' || !event.trim()) {
-            return {
-                isValid: false,
-                error: 'Event name must be a non-empty string'
-            };
-        }
-
-        if (typeof callback !== 'function') {
-            return {
-                isValid: false,
-                error: 'Event callback must be a function'
-            };
-        }
-
-        // Note: We allow external listeners for monitoring events like 'listenerAdded', etc.
-        // These are useful for debugging and monitoring purposes
-
-        return { isValid: true };
-    }
-
-    /**
-     * Checks memory usage and emits warnings if thresholds are exceeded
-     */
-    checkMemoryUsage() {
-        if (this.totalListenerCount > this.memoryWarningThreshold) {
-            // High listener count detected
-            
-            this.emitInternal('memoryWarning', {
-                totalListeners: this.totalListenerCount,
-                maxListeners: this.maxListeners,
-                threshold: this.memoryWarningThreshold
-            });
-        }
-
-        // Track listener history for leak detection
-        this.listenerHistory.push({
-            timestamp: Date.now(),
-            count: this.totalListenerCount
-        });
-
-        // Keep only recent history (last 100 entries)
-        if (this.listenerHistory.length > 100) {
-            this.listenerHistory.shift();
-        }
-    }
-
-    /**
-     * Detects potential memory leaks based on listener growth patterns
-     * @returns {Object} Leak detection results
-     */
-    detectMemoryLeaks() {
-        if (this.listenerHistory.length < 10) {
-            return { hasLeak: false, reason: 'Insufficient data' };
-        }
-
-        const recent = this.listenerHistory.slice(-10);
-        const growth = recent[recent.length - 1].count - recent[0].count;
-        const timeSpan = recent[recent.length - 1].timestamp - recent[0].timestamp;
-
-        // Check for rapid growth (more than 1 listener per 100ms)
-        const growthRate = growth / (timeSpan / 1000);
-        
-        if (growthRate > 10) {
-            return {
-                hasLeak: true,
-                reason: 'Rapid listener growth detected',
-                growthRate,
-                recommendation: 'Check for missing off() calls or cleanup in once() listeners'
-            };
-        }
-
-        // Check for consistently high listener count
-        const avgCount = recent.reduce((sum, entry) => sum + entry.count, 0) / recent.length;
-        if (avgCount > this.memoryWarningThreshold * 0.8) {
-            return {
-                hasLeak: true,
-                reason: 'Consistently high listener count',
-                averageCount: avgCount,
-                recommendation: 'Review listener lifecycle and cleanup patterns'
-            };
-        }
-
-        return { hasLeak: false };
-    }
-
-    /**
-     * Emits internal events for monitoring (prevents infinite recursion)
-     * @param {string} event - Internal event name
-     * @param {*} data - Event data
-     */
-    emitInternal(event, data) {
-        // Only emit if there are external listeners and we're not destroyed
-        if (!this.isDestroyed && this.listeners.has(event)) {
-            // Use setTimeout to prevent recursion issues
-            setTimeout(() => {
-                if (!this.isDestroyed) {
-                    this.emit(event, data);
-                }
-            }, 0);
-        }
-    }
-
-    /**
-     * Performs comprehensive cleanup of all resources
+     * Clean up inactive listeners
+     * @returns {number} Number cleaned
      */
     cleanup() {
-        if (this.isDestroyed) {
-            return;
+        let cleaned = 0;
+
+        for (const [id, info] of this.listeners.entries()) {
+            if (!info.active) {
+                this.listeners.delete(id);
+                cleaned++;
+            }
         }
 
-        const totalRemoved = this.totalListenerCount;
-
-        // Clear all listeners and tracking
-        this.listeners.clear();
-        this.eventStats.clear();
-        this.onceListeners.clear();
-        this.listenerHistory = [];
-        this.totalListenerCount = 0;
-
-        if (this.enableDebugging) {
-            // EventManager cleanup completed
-        }
-    }
-
-    /**
-     * Destroys the EventManager and prevents further use
-     */
-    destroy() {
-        if (this.isDestroyed) {
-            return;
-        }
-
-        this.cleanup();
-        this.isDestroyed = true;
-
-        if (this.enableDebugging) {
-            // EventManager destroyed
-        }
-    }
-
-    /**
-     * Gets debugging information about the EventManager state
-     * @returns {Object} Debug information
-     */
-    getDebugInfo() {
-        return {
-            isDestroyed: this.isDestroyed,
-            totalListeners: this.totalListenerCount,
-            maxListeners: this.maxListeners,
-            eventCount: this.listeners.size,
-            onceListenerCount: this.onceListeners.size,
-            memoryWarningThreshold: this.memoryWarningThreshold,
-            enableDebugging: this.enableDebugging,
-            enableMonitoring: this.enableMonitoring,
-            events: this.getEventNames(),
-            stats: this.getEventStats(),
-            memoryLeakCheck: this.detectMemoryLeaks()
-        };
+        return cleaned;
     }
 }
 
-export default EventManager;
+// Create singleton instance
+export const eventManager = new EventManager();
+
+// Export for convenience
+export default eventManager;

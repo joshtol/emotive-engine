@@ -4,8 +4,16 @@
   "version": "2.4.0",
   "description": "Proprietary animation engine with musical time synchronization",
   "main": "dist/emotive-engine.min.js",
-  "module": "src/EmotiveMascotPublic.js",
+  "module": "src/index.js",
   "types": "dist/emotive-engine.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./dist/emotive-engine.min.js",
+      "types": "./dist/emotive-engine.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "private": true,
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
@@ -21,18 +29,32 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "build:rollup": "rollup -c --environment NODE_ENV:production",
+    "build": "rollup -c --environment NODE_ENV:production",
     "build:dev": "rollup -c --environment NODE_ENV:development",
+    "build:split": "rollup -c rollup.split.config.js --environment NODE_ENV:production",
+    "build:demo": "rollup -c rollup.demo.config.js",
     "build:watch": "rollup -c -w --environment NODE_ENV:development",
     "build:analyze": "rollup -c --environment NODE_ENV:production,ANALYZE:true",
-    "build:all": "npm run build && npm run build:dev",
+    "build:all": "npm run build && npm run build:split && npm run build:demo",
+    "build:docs": "node scripts/build-docs.js",
+    "optimize": "node scripts/optimize-bundle.js",
+    "docs": "jsdoc -c jsdoc.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run build",
+    "test:coverage": "vitest run --coverage",
+    "bench": "vitest bench",
+    "bench:watch": "vitest bench --watch",
+    "lint": "eslint src/**/*.js",
+    "lint:fix": "eslint src/**/*.js --fix",
+    "format": "prettier --write \"src/**/*.{js,json}\"",
+    "format:check": "prettier --check \"src/**/*.{js,json}\"",
+    "size": "bundlesize",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
     "publish:patch": "npm version patch && npm publish",
     "publish:minor": "npm version minor && npm publish",
-    "publish:major": "npm version major && npm publish"
+    "publish:major": "npm version major && npm publish",
+    "prepare": "husky"
   },
   "keywords": [
     "mascot",
@@ -71,12 +93,22 @@
     "@rollup/plugin-node-resolve": "^15.0.2",
     "@rollup/plugin-terser": "^0.4.4",
     "babel-loader": "^9.1.3",
+    "bundlesize2": "^0.0.35",
+    "eslint": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
+    "html-minifier-terser": "^7.2.0",
+    "husky": "^9.1.7",
     "javascript-obfuscator": "^4.1.1",
+    "jsdoc": "^4.0.4",
+    "jsdoc-to-markdown": "^9.1.2",
     "jsdom": "^23.0.0",
+    "lint-staged": "^16.1.6",
+    "prettier": "^3.6.2",
     "rollup": "^4.9.5",
     "rollup-plugin-analyzer": "^4.0.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-visualizer": "^6.0.3",
+    "terser": "^5.44.0",
     "terser-webpack-plugin": "^5.3.9",
     "vitest": "^1.0.0",
     "webpack": "^5.89.0",
@@ -87,5 +119,26 @@
     "@babel/runtime": "^7.28.4",
     "firebase": "^12.2.1",
     "firebase-admin": "^13.5.0"
-  }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "vitest related --run"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "bundlesize": [
+    {
+      "path": "./dist/emotive-engine.min.js",
+      "maxSize": "500 KB",
+      "compression": "none"
+    },
+    {
+      "path": "./dist/emotive-engine.min.js",
+      "maxSize": "150 KB",
+      "compression": "gzip"
+    }
+  ]
 }

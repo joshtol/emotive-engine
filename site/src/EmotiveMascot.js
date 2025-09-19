@@ -602,10 +602,29 @@ class EmotiveMascot {
     }
 
     /**
-     * Executes a single gesture or chord (multiple simultaneous gestures)
-     * @param {string|Array<string>|Object} gesture - Single gesture, array of gestures, or chord object
-     * @param {Object} options - Options for the gesture execution
-     * @returns {EmotiveMascot} This instance for chaining
+     * Express a gesture animation or chord of multiple gestures
+     * @public
+     * @param {string|Array<string>|Object} gesture - Gesture to express:
+     *   - string: Single gesture name (e.g., 'bounce', 'pulse')
+     *   - Array: Multiple simultaneous gestures ['bounce', 'glow']
+     *   - Object: Chord object with type:'chord' and gestures:Array
+     * @param {Object} [options={}] - Animation options
+     * @param {number} [options.intensity=1.0] - Animation intensity (0-1)
+     * @param {number} [options.duration] - Override duration in milliseconds
+     * @param {boolean} [options.fromScheduler=false] - Internal flag for scheduler
+     * @param {boolean} [options.fromGroove=false] - Internal flag for groove system
+     * @returns {EmotiveMascot} This instance for method chaining
+     * @fires EmotiveMascot#gestureTriggered
+     * @fires EmotiveMascot#gestureComplete
+     * @example
+     * // Single gesture
+     * mascot.express('bounce');
+     *
+     * // Gesture with options
+     * mascot.express('pulse', { intensity: 0.5, duration: 2000 });
+     *
+     * // Gesture chord (multiple simultaneous)
+     * mascot.express(['bounce', 'glow']);
      */
     express(gesture, options = {}) {
         return this.errorBoundary.wrap(() => {

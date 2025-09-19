@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Production builds
+dist/
+build/
+site/dist/
+
+# Test coverage
+coverage/
+
+# Documentation
+docs/
+
+# Temporary files
+*.tmp
+*.log
+
+# Minified files
+*.min.js
+*.min.css
+
+# Old files
+*.old.js
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

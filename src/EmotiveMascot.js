@@ -50,7 +50,7 @@ import { getGesture } from './core/gestures/index.js';
 import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
-import EventManager from './core/EventManager.js';
+import { EventManager } from './core/EventManager.js';
 import AccessibilityManager from './core/AccessibilityManager.js';
 import MobileOptimization from './core/MobileOptimization.js';
 import PluginSystem from './core/PluginSystem.js';
@@ -74,13 +74,39 @@ class EmotiveMascot {
         // Initialize error boundary first
         this.errorBoundary = new ErrorBoundary();
         
-        // Initialize EventManager early to avoid undefined errors
+        // Initialize EventManager with simple event emitter functionality
         this.eventManager = new EventManager({
             maxListeners: config.maxEventListeners || 100,
             enableDebugging: config.enableEventDebugging || false,
             enableMonitoring: config.enableEventMonitoring || true,
             memoryWarningThreshold: config.eventMemoryWarningThreshold || 50
         });
+
+        // Add simple event emitter methods if not present
+        if (!this.eventManager.emit) {
+            this.eventManager._listeners = {};
+            this.eventManager.emit = (event, data) => {
+                const listeners = this.eventManager._listeners[event];
+                if (listeners) {
+                    listeners.forEach(listener => listener(data));
+                }
+            };
+            this.eventManager.on = (event, listener) => {
+                if (!this.eventManager._listeners[event]) {
+                    this.eventManager._listeners[event] = [];
+                }
+                this.eventManager._listeners[event].push(listener);
+            };
+            this.eventManager.off = (event, listener) => {
+                const listeners = this.eventManager._listeners[event];
+                if (listeners) {
+                    const index = listeners.indexOf(listener);
+                    if (index > -1) {
+                        listeners.splice(index, 1);
+                    }
+                }
+            };
+        }
         
         // Wrap initialization in error boundary
         this.errorBoundary.wrap(() => {
@@ -105,6 +131,7 @@ class EmotiveMascot {
             canvasId: 'emotive-mascot',
             targetFPS: 60,
             enableAudio: browserCompatibility.featureDetection.features.webAudio,
+            soundEnabled: false,  // Disable gesture sounds by default
             masterVolume: 0.5,
             maxParticles: browserOpts.particleLimit,
             defaultEmotion: 'neutral',
@@ -332,9 +359,8 @@ class EmotiveMascot {
         rhythmIntegration.initialize();
 
         // Expose rhythmIntegration globally for UI controls
-        if (typeof window !== 'undefined') {
-            window.rhythmIntegration = rhythmIntegration;
-        }
+        // Store rhythm integration internally instead of global
+        this.rhythmIntegration = rhythmIntegration;
         this.warningThrottle = 5000; // Only show same warning every 5 seconds
         
         // Recording state (listening/capturing)
@@ -609,8 +635,21 @@ class EmotiveMascot {
      */
     express(gesture, options = {}) {
         return this.errorBoundary.wrap(() => {
+            // Performance marker: Gesture start
+            const gestureStartTime = performance.now();
+            const gestureName = Array.isArray(gesture) ? 'chord' :
+                               (typeof gesture === 'object' && gesture.type === 'chord') ? 'chord' :
+                               gesture;
+
+            if (this.performanceMonitor) {
+                this.performanceMonitor.markGestureStart(gestureName);
+            }
+
             if (!gesture) {
                 // No gesture provided to express()
+                if (this.performanceMonitor) {
+                    this.performanceMonitor.markGestureEnd(gestureName);
+                }
                 return this;
             }
 
@@ -634,22 +673,8 @@ class EmotiveMascot {
                 return this;
             }
 
-            // First check if this is a modular gesture
-            // TODO: Re-enable once gestureController methods are moved
-            // if (this.gestureController) {
-            //     const hasGesture = this.gestureController.hasGesture(gesture);
-            //     if (hasGesture) {
-            //         this.gestureController.triggerGesture(gesture);
-            //         Triggered gesture via gesture controller
-            //
-            //         // Play gesture sound effect if available
-            //         if (this.soundSystem.isAvailable()) {
-            //             this.soundSystem.playGestureSound(gesture);
-            //         }
-            //
-            //         return this;
-            //     }
-            // }
+            // Note: Modular gesture controller integration can be added here
+            // when implementing custom gesture extensions
 
             // Direct mapping to renderer methods for all gestures
             const rendererMethods = {
@@ -710,9 +735,16 @@ class EmotiveMascot {
                 // Call the renderer method directly
                 this.renderer[methodName](options);
 
-                // Play gesture sound effect if available
-                if (this.soundSystem.isAvailable()) {
+                // Play gesture sound effect if available and enabled
+                if (this.config.soundEnabled && this.soundSystem.isAvailable()) {
                     this.soundSystem.playGestureSound(gesture);
+                }
+
+                // Performance marker: Gesture end
+                if (this.performanceMonitor) {
+                    const gestureEndTime = performance.now();
+                    this.performanceMonitor.markGestureEnd(gestureName);
+                    this.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
                 }
 
                 return this;
@@ -738,17 +770,29 @@ class EmotiveMascot {
                 
                 // Executed gesture through particle system
                 
-                // Play gesture sound effect if available
-                if (this.soundSystem.isAvailable()) {
+                // Play gesture sound effect if available and enabled
+                if (this.config.soundEnabled && this.soundSystem.isAvailable()) {
                     this.soundSystem.playGestureSound(gesture);
                 }
-                
+
+                // Performance marker: Gesture end
+                if (this.performanceMonitor) {
+                    const gestureEndTime = performance.now();
+                    this.performanceMonitor.markGestureEnd(gestureName);
+                    this.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
+                }
+
                 return this;
             }
             
             // Unknown gesture - throttled warning
             this.throttledWarn(`Unknown gesture: ${gesture}`, `gesture_${gesture}`);
-            
+
+            // Performance marker: Gesture end (failed)
+            if (this.performanceMonitor) {
+                this.performanceMonitor.markGestureEnd(gestureName);
+            }
+
             return this;
         }, 'gesture-expression', this)();
     }
@@ -2242,6 +2286,24 @@ class EmotiveMascot {
      */
     getVolume() {
         return this.config.masterVolume;
+    }
+
+    /**
+     * Enable or disable gesture sounds
+     * @param {boolean} enabled - Whether to enable gesture sounds
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setSoundEnabled(enabled) {
+        this.config.soundEnabled = enabled;
+        return this;
+    }
+
+    /**
+     * Check if gesture sounds are enabled
+     * @returns {boolean} Whether gesture sounds are enabled
+     */
+    isSoundEnabled() {
+        return this.config.soundEnabled;
     }
 
     /**

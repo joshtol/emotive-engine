@@ -1,3 +1,14 @@
+/*!
+ * Emotive Engine™ - Proprietary and Confidential
+ * Copyright (c) 2025 Emotive Engine. All Rights Reserved.
+ *
+ * NOTICE: This code is proprietary and confidential. Unauthorized copying,
+ * modification, or distribution is strictly prohibited and may result in
+ * legal action. This software is licensed, not sold.
+ *
+ * Website: https://emotiveengine.com
+ * License: https://emotive-engine.web.app/LICENSE.md
+ */
 /**
  * UIStringsConfig - Centralized UI text and labels configuration
  * Provides all user-facing strings for the interface
@@ -338,7 +349,11 @@ class UIStringsConfig {
     }
 }
 
-// Export for use
-if (typeof window !== 'undefined') {
-    window.UIStringsConfig = UIStringsConfig;
-}
+// ES6 Module Export
+export { UIStringsConfig };
+export default UIStringsConfig;
+
+// LEGAL WARNING: This code is protected by copyright law and international treaties.
+// Unauthorized reproduction or distribution of this code, or any portion of it,
+// may result in severe civil and criminal penalties, and will be prosecuted
+// to the maximum extent possible under the law.

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Custom Gesture Creator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ec008c 0%, #fc6767 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .canvas-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #mascot-canvas {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group h3 {
+            color: #555;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        button.primary {
+            background: #48bb78;
+        }
+
+        button.primary:hover {
+            background: #38a169;
+        }
+
+        button.danger {
+            background: #f56565;
+        }
+
+        button.danger:hover {
+            background: #e53e3e;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .code-output {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .timeline {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .keyframe {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr 1fr 1fr 40px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .keyframe input {
+            padding: 4px;
+            font-size: 12px;
+        }
+
+        .keyframe button {
+            padding: 4px 8px;
+            margin: 0;
+            font-size: 12px;
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .status {
+            padding: 10px;
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 6px;
+            color: #22543d;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tab-button {
+            padding: 8px 16px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Panel -->
+        <div class="panel">
+            <h1>🎨 Custom Gesture Creator</h1>
+            <p class="subtitle">Design your own animations for the Emotive Mascot</p>
+
+            <div class="canvas-container">
+                <canvas id="mascot-canvas" width="300" height="300"></canvas>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('simple')">Simple</button>
+                <button class="tab-button" onclick="switchTab('keyframe')">Keyframe</button>
+                <button class="tab-button" onclick="switchTab('composite')">Composite</button>
+            </div>
+
+            <!-- Simple Animation Tab -->
+            <div id="simple-tab" class="tab-content active">
+                <div class="control-group">
+                    <h3>Basic Properties</h3>
+
+                    <input type="text" id="gesture-name" placeholder="Gesture name (e.g., myBounce)" value="customGesture">
+
+                    <div style="margin-top: 10px;">
+                        <select id="gesture-category">
+                            <option value="movement">Movement</option>
+                            <option value="expression">Expression</option>
+                            <option value="effects">Effects</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Animation Parameters</h3>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Duration</span>
+                            <span id="duration-value">1000ms</span>
+                        </div>
+                        <input type="range" id="duration" min="200" max="3000" value="1000" step="100">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>X Movement</span>
+                            <span id="x-value">50</span>
+                        </div>
+                        <input type="range" id="x-amplitude" min="0" max="200" value="50">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Y Movement</span>
+                            <span id="y-value">30</span>
+                        </div>
+                        <input type="range" id="y-amplitude" min="0" max="200" value="30">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Rotation</span>
+                            <span id="rotation-value">0.5rad</span>
+                        </div>
+                        <input type="range" id="rotation" min="0" max="6.28" value="0.5" step="0.1">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Scale</span>
+                            <span id="scale-value">1.2x</span>
+                        </div>
+                        <input type="range" id="scale" min="0.5" max="2" value="1.2" step="0.1">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Frequency</span>
+                            <span id="frequency-value">2Hz</span>
+                        </div>
+                        <input type="range" id="frequency" min="0.5" max="10" value="2" step="0.5">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Effects</h3>
+                    <label>
+                        <input type="checkbox" id="enable-particles"> Enable Particles
+                    </label>
+                    <div class="slider-group" style="margin-top: 10px;">
+                        <div class="slider-label">
+                            <span>Particle Count</span>
+                            <span id="particle-value">20</span>
+                        </div>
+                        <input type="range" id="particle-count" min="5" max="100" value="20">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyframe Animation Tab -->
+            <div id="keyframe-tab" class="tab-content">
+                <div class="control-group">
+                    <h3>Keyframe Animation</h3>
+                    <div class="timeline" id="keyframe-list">
+                        <div class="keyframe">
+                            <input type="number" value="0" step="0.1" min="0" max="1" placeholder="Time">
+                            <input type="number" value="0" placeholder="X">
+                            <input type="number" value="0" placeholder="Y">
+                            <input type="number" value="1" step="0.1" placeholder="Scale">
+                            <input type="number" value="0" step="0.1" placeholder="Rotation">
+                            <button onclick="removeKeyframe(this)">×</button>
+                        </div>
+                    </div>
+                    <button onclick="addKeyframe()">+ Add Keyframe</button>
+                </div>
+            </div>
+
+            <!-- Composite Animation Tab -->
+            <div id="composite-tab" class="tab-content">
+                <div class="control-group">
+                    <h3>Composite Sequence</h3>
+                    <div id="sequence-list">
+                        <div style="margin-bottom: 10px;">
+                            <select id="sequence-gesture-1">
+                                <option value="bounce">Bounce</option>
+                                <option value="spin">Spin</option>
+                                <option value="pulse">Pulse</option>
+                                <option value="wave">Wave</option>
+                                <option value="flash">Flash</option>
+                            </select>
+                            <input type="number" id="sequence-delay-1" value="0" min="0" step="100" placeholder="Delay (ms)" style="width: 100px; margin-left: 10px;">
+                        </div>
+                    </div>
+                    <button onclick="addSequenceStep()">+ Add Step</button>
+                </div>
+            </div>
+
+            <div class="preview-controls">
+                <button class="primary" onclick="previewGesture()">▶ Preview</button>
+                <button onclick="stopPreview()">⏹ Stop</button>
+                <button onclick="resetValues()">Reset</button>
+            </div>
+
+            <div class="status" id="status">
+                Ready to create custom gestures!
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="panel">
+            <h2>Presets</h2>
+            <div class="preset-buttons">
+                <button onclick="loadPreset('bounce')">Bounce</button>
+                <button onclick="loadPreset('wobble')">Wobble</button>
+                <button onclick="loadPreset('spiral')">Spiral</button>
+                <button onclick="loadPreset('pulse')">Pulse</button>
+                <button onclick="loadPreset('shake')">Shake</button>
+                <button onclick="loadPreset('float')">Float</button>
+            </div>
+
+            <h3 style="margin-top: 20px;">Generated Code</h3>
+            <div class="code-output" id="code-output">
+// Your gesture code will appear here
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button class="primary" onclick="registerGesture()">Register Gesture</button>
+                <button onclick="copyCode()">Copy Code</button>
+            </div>
+
+            <h3 style="margin-top: 20px;">Registered Gestures</h3>
+            <div id="registered-list">
+                <em>No custom gestures registered yet</em>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button onclick="exportAll()">Export All</button>
+                <button class="danger" onclick="clearAll()">Clear All</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot from '../site/src/EmotiveMascotPublic.js';
+
+        let mascot;
+        let currentTab = 'simple';
+        let registeredGestures = [];
+
+        async function init() {
+            try {
+                mascot = new EmotiveMascot({
+                    particleIntensity: 0.8,
+                    glowIntensity: 0.7
+                });
+
+                window.mascot = mascot;
+
+                const canvas = document.getElementById('mascot-canvas');
+                await mascot.init(canvas);
+                mascot.start();
+
+                setupEventListeners();
+                updateCode();
+
+                updateStatus('Ready! Adjust parameters and preview your gesture.');
+
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                updateStatus('Error: Failed to initialize mascot');
+            }
+        }
+
+        function setupEventListeners() {
+            // Simple tab sliders
+            document.getElementById('duration').addEventListener('input', (e) => {
+                document.getElementById('duration-value').textContent = e.target.value + 'ms';
+                updateCode();
+            });
+
+            document.getElementById('x-amplitude').addEventListener('input', (e) => {
+                document.getElementById('x-value').textContent = e.target.value;
+                updateCode();
+            });
+
+            document.getElementById('y-amplitude').addEventListener('input', (e) => {
+                document.getElementById('y-value').textContent = e.target.value;
+                updateCode();
+            });
+
+            document.getElementById('rotation').addEventListener('input', (e) => {
+                document.getElementById('rotation-value').textContent = e.target.value + 'rad';
+                updateCode();
+            });
+
+            document.getElementById('scale').addEventListener('input', (e) => {
+                document.getElementById('scale-value').textContent = e.target.value + 'x';
+                updateCode();
+            });
+
+            document.getElementById('frequency').addEventListener('input', (e) => {
+                document.getElementById('frequency-value').textContent = e.target.value + 'Hz';
+                updateCode();
+            });
+
+            document.getElementById('particle-count').addEventListener('input', (e) => {
+                document.getElementById('particle-value').textContent = e.target.value;
+                updateCode();
+            });
+
+            // Other inputs
+            document.getElementById('gesture-name').addEventListener('input', updateCode);
+            document.getElementById('gesture-category').addEventListener('change', updateCode);
+            document.getElementById('enable-particles').addEventListener('change', updateCode);
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tab}-tab`).classList.add('active');
+
+            updateCode();
+        }
+
+        function updateCode() {
+            let code = '';
+
+            if (currentTab === 'simple') {
+                const name = document.getElementById('gesture-name').value || 'customGesture';
+                const category = document.getElementById('gesture-category').value;
+                const duration = document.getElementById('duration').value;
+                const xAmp = document.getElementById('x-amplitude').value;
+                const yAmp = document.getElementById('y-amplitude').value;
+                const rotation = document.getElementById('rotation').value;
+                const scale = document.getElementById('scale').value;
+                const frequency = document.getElementById('frequency').value;
+                const particles = document.getElementById('enable-particles').checked;
+                const particleCount = document.getElementById('particle-count').value;
+
+                code = `const ${name} = {
+    name: '${name}',
+    type: 'gesture',
+    category: '${category}',
+    duration: ${duration},
+    animation: {
+        x: { amplitude: ${xAmp}, frequency: ${frequency} },
+        y: { amplitude: ${yAmp}, frequency: ${frequency} },
+        rotation: { amplitude: ${rotation}, frequency: 1 },
+        scale: { max: ${scale}, frequency: ${frequency} }
+    }${particles ? `,
+    particles: {
+        enabled: true,
+        count: ${particleCount},
+        spread: 100,
+        velocity: 150
+    }` : ''}
+};
+
+mascot.registerGesture(${name});
+mascot.triggerGesture('${name}');`;
+
+            } else if (currentTab === 'keyframe') {
+                const name = document.getElementById('gesture-name').value || 'customGesture';
+                const keyframes = getKeyframesFromUI();
+
+                code = `const ${name} = {
+    name: '${name}',
+    type: 'gesture',
+    category: 'movement',
+    duration: 2000,
+    keyframes: ${JSON.stringify(keyframes, null, 8)}
+};
+
+mascot.registerGesture(${name});
+mascot.triggerGesture('${name}');`;
+
+            } else if (currentTab === 'composite') {
+                const name = document.getElementById('gesture-name').value || 'customGesture';
+                const sequence = getSequenceFromUI();
+
+                code = `const ${name} = {
+    name: '${name}',
+    type: 'composite',
+    sequence: ${JSON.stringify(sequence, null, 8)}
+};
+
+mascot.registerGesture(${name});
+mascot.triggerGesture('${name}');`;
+            }
+
+            document.getElementById('code-output').textContent = code;
+        }
+
+        function getKeyframesFromUI() {
+            const keyframes = [];
+            document.querySelectorAll('#keyframe-list .keyframe').forEach(kf => {
+                const inputs = kf.querySelectorAll('input');
+                keyframes.push({
+                    time: parseFloat(inputs[0].value) || 0,
+                    x: parseFloat(inputs[1].value) || 0,
+                    y: parseFloat(inputs[2].value) || 0,
+                    scale: parseFloat(inputs[3].value) || 1,
+                    rotation: parseFloat(inputs[4].value) || 0
+                });
+            });
+            return keyframes;
+        }
+
+        function getSequenceFromUI() {
+            const sequence = [];
+            for (let i = 1; document.getElementById(`sequence-gesture-${i}`); i++) {
+                sequence.push({
+                    gesture: document.getElementById(`sequence-gesture-${i}`).value,
+                    delay: parseInt(document.getElementById(`sequence-delay-${i}`).value) || 0
+                });
+            }
+            return sequence;
+        }
+
+        function addKeyframe() {
+            const list = document.getElementById('keyframe-list');
+            const div = document.createElement('div');
+            div.className = 'keyframe';
+            div.innerHTML = `
+                <input type="number" value="0.5" step="0.1" min="0" max="1" placeholder="Time">
+                <input type="number" value="0" placeholder="X">
+                <input type="number" value="0" placeholder="Y">
+                <input type="number" value="1" step="0.1" placeholder="Scale">
+                <input type="number" value="0" step="0.1" placeholder="Rotation">
+                <button onclick="removeKeyframe(this)">×</button>
+            `;
+            list.appendChild(div);
+
+            // Add event listeners
+            div.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', updateCode);
+            });
+        }
+
+        function removeKeyframe(button) {
+            button.parentElement.remove();
+            updateCode();
+        }
+
+        let sequenceCount = 1;
+        function addSequenceStep() {
+            sequenceCount++;
+            const list = document.getElementById('sequence-list');
+            const div = document.createElement('div');
+            div.style.marginBottom = '10px';
+            div.innerHTML = `
+                <select id="sequence-gesture-${sequenceCount}">
+                    <option value="bounce">Bounce</option>
+                    <option value="spin">Spin</option>
+                    <option value="pulse">Pulse</option>
+                    <option value="wave">Wave</option>
+                    <option value="flash">Flash</option>
+                </select>
+                <input type="number" id="sequence-delay-${sequenceCount}" value="200" min="0" step="100" placeholder="Delay (ms)" style="width: 100px; margin-left: 10px;">
+            `;
+            list.appendChild(div);
+
+            // Add event listeners
+            div.querySelectorAll('select, input').forEach(el => {
+                el.addEventListener('change', updateCode);
+            });
+        }
+
+        function previewGesture() {
+            try {
+                const code = document.getElementById('code-output').textContent;
+                // Create and execute the gesture
+                eval(code);
+                updateStatus('Preview playing...');
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+
+        function stopPreview() {
+            mascot.clearGestureQueue();
+            updateStatus('Preview stopped');
+        }
+
+        function registerGesture() {
+            try {
+                const code = document.getElementById('code-output').textContent;
+                eval(code.split('mascot.triggerGesture')[0]); // Register without triggering
+
+                const name = document.getElementById('gesture-name').value || 'customGesture';
+                registeredGestures.push(name);
+                updateRegisteredList();
+                updateStatus(`Gesture '${name}' registered successfully!`);
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+
+        function updateRegisteredList() {
+            const list = document.getElementById('registered-list');
+            if (registeredGestures.length === 0) {
+                list.innerHTML = '<em>No custom gestures registered yet</em>';
+            } else {
+                list.innerHTML = registeredGestures.map(name => `
+                    <div style="margin-bottom: 5px;">
+                        <button onclick="mascot.triggerGesture('${name}')" style="font-size: 12px;">${name}</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function loadPreset(type) {
+            if (type === 'bounce') {
+                document.getElementById('x-amplitude').value = 0;
+                document.getElementById('y-amplitude').value = 100;
+                document.getElementById('rotation').value = 0;
+                document.getElementById('scale').value = 1.1;
+                document.getElementById('frequency').value = 2;
+                document.getElementById('duration').value = 1000;
+            } else if (type === 'wobble') {
+                document.getElementById('x-amplitude').value = 50;
+                document.getElementById('y-amplitude').value = 20;
+                document.getElementById('rotation').value = 0.3;
+                document.getElementById('scale').value = 1;
+                document.getElementById('frequency').value = 3;
+                document.getElementById('duration').value = 800;
+            } else if (type === 'spiral') {
+                document.getElementById('x-amplitude').value = 100;
+                document.getElementById('y-amplitude').value = 100;
+                document.getElementById('rotation').value = 6.28;
+                document.getElementById('scale').value = 1.5;
+                document.getElementById('frequency').value = 1;
+                document.getElementById('duration').value = 2000;
+            } else if (type === 'pulse') {
+                document.getElementById('x-amplitude').value = 0;
+                document.getElementById('y-amplitude').value = 0;
+                document.getElementById('rotation').value = 0;
+                document.getElementById('scale').value = 1.5;
+                document.getElementById('frequency').value = 4;
+                document.getElementById('duration').value = 600;
+            } else if (type === 'shake') {
+                document.getElementById('x-amplitude').value = 30;
+                document.getElementById('y-amplitude').value = 0;
+                document.getElementById('rotation').value = 0.2;
+                document.getElementById('scale').value = 1;
+                document.getElementById('frequency').value = 10;
+                document.getElementById('duration').value = 500;
+            } else if (type === 'float') {
+                document.getElementById('x-amplitude').value = 20;
+                document.getElementById('y-amplitude').value = 50;
+                document.getElementById('rotation').value = 0;
+                document.getElementById('scale').value = 1.05;
+                document.getElementById('frequency').value = 0.5;
+                document.getElementById('duration').value = 3000;
+            }
+
+            // Update displays
+            document.getElementById('x-value').textContent = document.getElementById('x-amplitude').value;
+            document.getElementById('y-value').textContent = document.getElementById('y-amplitude').value;
+            document.getElementById('rotation-value').textContent = document.getElementById('rotation').value + 'rad';
+            document.getElementById('scale-value').textContent = document.getElementById('scale').value + 'x';
+            document.getElementById('frequency-value').textContent = document.getElementById('frequency').value + 'Hz';
+            document.getElementById('duration-value').textContent = document.getElementById('duration').value + 'ms';
+
+            updateCode();
+            updateStatus(`Loaded '${type}' preset`);
+        }
+
+        function resetValues() {
+            loadPreset('bounce');
+            document.getElementById('gesture-name').value = 'customGesture';
+            document.getElementById('enable-particles').checked = false;
+            updateCode();
+            updateStatus('Values reset to defaults');
+        }
+
+        function copyCode() {
+            const code = document.getElementById('code-output').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                updateStatus('Code copied to clipboard!');
+            });
+        }
+
+        function exportAll() {
+            const data = {
+                gestures: registeredGestures,
+                timestamp: new Date().toISOString()
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'custom-gestures.json';
+            a.click();
+            updateStatus('Exported all gestures');
+        }
+
+        function clearAll() {
+            if (confirm('Clear all registered gestures?')) {
+                registeredGestures = [];
+                updateRegisteredList();
+                updateStatus('All gestures cleared');
+            }
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Make functions globally available
+        window.switchTab = switchTab;
+        window.addKeyframe = addKeyframe;
+        window.removeKeyframe = removeKeyframe;
+        window.addSequenceStep = addSequenceStep;
+        window.previewGesture = previewGesture;
+        window.stopPreview = stopPreview;
+        window.registerGesture = registerGesture;
+        window.loadPreset = loadPreset;
+        window.resetValues = resetValues;
+        window.copyCode = copyCode;
+        window.exportAll = exportAll;
+        window.clearAll = clearAll;
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

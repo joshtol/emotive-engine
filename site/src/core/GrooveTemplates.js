@@ -182,8 +182,8 @@ class GrooveTemplates {
                 humanization: 0.15, // Very loose timing
                 preferredGestures: {
                     downbeat: ['float', 'breathe'],
-                    offbeat: ['sway', 'shimmer'],
-                    fills: ['glow', 'pulse']
+                    offbeat: ['sway', 'lean'],
+                    fills: ['drift', 'pulse']  // Removed glow/shimmer
                 },
                 intensity: 'sparse',
                 description: 'Floating ambient rhythm'

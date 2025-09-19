@@ -115,29 +115,40 @@ export const groovePulse = {
     type: 'ambient',
     category: 'dance',
     duration: -1,
-    amplitude: 0.2,
-    frequency: 2.0,
+    amplitude: 0.3,
+    frequency: 0.5,  // Slower for more chill vibe
     easing: 'sineInOut',
     loop: true,
     blendable: true,
 
     animation: {
-        scale: {
-            type: 'oscillate',
-            amplitude: 0.05,
-            frequency: 'bpm*2',
+        x: {
+            type: 'figure8',
+            amplitude: 25,
+            frequency: 'bpm/4',  // Slow drift
             phase: 0
         },
-        opacity: {
+        y: {
+            type: 'wave',
+            amplitude: 15,
+            frequency: 'bpm/3',
+            phase: 0.25
+        },
+        rotation: {
             type: 'oscillate',
-            amplitude: 0.1,
-            frequency: 'bpm*2',
-            phase: 0.5,
-            offset: 0.9
+            amplitude: 8,
+            frequency: 'bpm/2',
+            phase: 0
+        },
+        scale: {
+            type: 'breathe',
+            amplitude: 0.08,
+            frequency: 'bpm/2',
+            phase: 0
         }
     },
 
-    description: 'Subtle whole-body pulse for ambient'
+    description: 'Smooth ambient floating with gentle breathing'
 };
 
 export const grooveStep = {

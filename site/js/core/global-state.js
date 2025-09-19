@@ -1,54 +1,41 @@
 /**
- * GlobalStateManager - Manages legacy global state variables
- * Provides centralized state management for backward compatibility
+ * Global State Manager - ES6 Module
+ * Centralized state management for the Emotive Engine
  */
+
 class GlobalStateManager {
-    constructor(options = {}) {
-        // Configuration with defaults
-        this.config = {
-            // Default state values
-            defaults: {
-                currentEmotion: options.defaultEmotion || 'neutral',
-                currentUndertone: options.defaultUndertone || '',
-                showingFPS: options.defaultShowingFPS || false,
-                isRecording: options.defaultIsRecording || false,
-                currentTheme: options.defaultTheme || 'night',
-                soundEnabled: options.defaultSoundEnabled || false,
-                rhythmActive: options.defaultRhythmActive || false,
-                currentBPMModifier: options.defaultBPMModifier || 1.0
-            },
+    constructor() {
+        // Core state
+        this.state = {
+            // Emotion & display
+            currentEmotion: 'neutral',
+            currentUndertone: '',
+            currentShape: 'circle',
+            currentTheme: 'night',
 
-            // Enable automatic window global sync
-            syncToWindow: options.syncToWindow !== false,
+            // Audio & rhythm
+            soundEnabled: false,
+            rhythmActive: false,
+            currentBPM: 120,
+            currentBPMModifier: 1.0,
+            audioContext: null,
 
-            // State change callbacks
-            onChange: options.onChange || {},
+            // UI state
+            showingFPS: false,
+            isRecording: false,
+            isBlinking: true,
+            gazeEnabled: false,
 
-            ...options
+            // Performance
+            lastFrameTime: 0,
+            deltaTime: 0,
+
+            // Mascot reference
+            mascotInstance: null
         };
-
-        // Internal state storage
-        this.state = { ...this.config.defaults };
 
         // State change subscribers
         this.subscribers = new Map();
-
-        // Initialize window globals if enabled
-        if (this.config.syncToWindow) {
-            this.syncToWindow();
-        }
-    }
-
-    /**
-     * Initialize the state manager
-     */
-    init() {
-        // Set up property descriptors for automatic sync
-        if (this.config.syncToWindow) {
-            this.setupWindowSync();
-        }
-
-        return this;
     }
 
     /**
@@ -64,47 +51,19 @@ class GlobalStateManager {
     set(key, value) {
         const oldValue = this.state[key];
 
-        if (oldValue === value) {
-            return;
-        }
+        if (oldValue === value) return;
 
         this.state[key] = value;
-
-        // Update window global if sync is enabled
-        if (this.config.syncToWindow && typeof window !== 'undefined') {
-            window[key] = value;
-        }
-
-        // Call specific change callback if exists
-        if (this.config.onChange[key]) {
-            this.config.onChange[key](value, oldValue);
-        }
-
-        // Notify subscribers
         this.notifySubscribers(key, value, oldValue);
     }
 
     /**
-     * Update multiple state values at once
+     * Update multiple state values
      */
     update(updates) {
-        for (const [key, value] of Object.entries(updates)) {
+        Object.entries(updates).forEach(([key, value]) => {
             this.set(key, value);
-        }
-    }
-
-    /**
-     * Get all state
-     */
-    getAll() {
-        return { ...this.state };
-    }
-
-    /**
-     * Reset state to defaults
-     */
-    reset() {
-        this.update(this.config.defaults);
+        });
     }
 
     /**
@@ -132,134 +91,57 @@ class GlobalStateManager {
         const callbacks = this.subscribers.get(key);
         if (callbacks) {
             callbacks.forEach(callback => {
-                callback(value, oldValue);
+                try {
+                    callback(value, oldValue, key);
+                } catch (error) {
+                    console.error(`Subscriber error for ${key}:`, error);
+                }
             });
         }
     }
 
     /**
-     * Sync current state to window globals
+     * Get all state
      */
-    syncToWindow() {
-        if (typeof window === 'undefined') return;
-
-        for (const [key, value] of Object.entries(this.state)) {
-            window[key] = value;
-        }
+    getState() {
+        return { ...this.state };
     }
 
     /**
-     * Set up automatic window sync with property descriptors
+     * Reset state to defaults
      */
-    setupWindowSync() {
-        if (typeof window === 'undefined') return;
+    reset() {
+        this.state = {
+            currentEmotion: 'neutral',
+            currentUndertone: '',
+            currentShape: 'circle',
+            currentTheme: 'night',
+            soundEnabled: false,
+            rhythmActive: false,
+            currentBPM: 120,
+            currentBPMModifier: 1.0,
+            audioContext: null,
+            showingFPS: false,
+            isRecording: false,
+            isBlinking: true,
+            gazeEnabled: false,
+            lastFrameTime: 0,
+            deltaTime: 0,
+            mascotInstance: null
+        };
 
-        // Create property descriptors for each state key
-        for (const key of Object.keys(this.state)) {
-            const descriptor = {
-                get: () => this.state[key],
-                set: (value) => this.set(key, value),
-                configurable: true
-            };
-
-            // Define property on window
-            Object.defineProperty(window, key, descriptor);
-        }
-    }
-
-    /**
-     * Load state from window globals
-     */
-    loadFromWindow() {
-        if (typeof window === 'undefined') return;
-
-        const updates = {};
-        for (const key of Object.keys(this.state)) {
-            if (key in window && window[key] !== undefined) {
-                updates[key] = window[key];
-            }
-        }
-
-        this.update(updates);
-    }
-
-    /**
-     * Register a module that uses global state
-     */
-    registerModule(moduleName, stateKeys) {
-        // Track which modules use which state keys
-        // This can be useful for debugging and dependency management
-        if (!this.moduleRegistry) {
-            this.moduleRegistry = new Map();
-        }
-
-        this.moduleRegistry.set(moduleName, stateKeys);
-    }
-
-    /**
-     * Get modules that depend on a state key
-     */
-    getDependentModules(stateKey) {
-        if (!this.moduleRegistry) return [];
-
-        const modules = [];
-        for (const [moduleName, keys] of this.moduleRegistry.entries()) {
-            if (keys.includes(stateKey)) {
-                modules.push(moduleName);
-            }
-        }
-
-        return modules;
-    }
-
-    /**
-     * Create a proxy object for a specific module
-     * This provides a scoped view of only the state that module needs
-     */
-    createModuleProxy(moduleKeys) {
-        const proxy = {};
-
-        for (const key of moduleKeys) {
-            Object.defineProperty(proxy, key, {
-                get: () => this.state[key],
-                set: (value) => this.set(key, value)
-            });
-        }
-
-        return proxy;
-    }
-
-    /**
-     * Export state as JSON
-     */
-    toJSON() {
-        return JSON.stringify(this.state);
-    }
-
-    /**
-     * Import state from JSON
-     */
-    fromJSON(json) {
-        try {
-            const parsed = typeof json === 'string' ? JSON.parse(json) : json;
-            this.update(parsed);
-        } catch (error) {
-            console.error('Failed to parse state JSON:', error);
-        }
-    }
-
-    /**
-     * Clean up
-     */
-    destroy() {
-        this.subscribers.clear();
-        if (this.moduleRegistry) {
-            this.moduleRegistry.clear();
-        }
+        // Notify all subscribers
+        Object.keys(this.state).forEach(key => {
+            this.notifySubscribers(key, this.state[key], undefined);
+        });
     }
 }
 
-// Export for use
-if (typeof window !== 'undefined') {
-    window.GlobalStateManager = GlobalStateManager;
-}
+// Create singleton instance
+export const emotiveState = new GlobalStateManager();
+
+// Named exports for convenience
+export const getState = (key) => emotiveState.get(key);
+export const setState = (key, value) => emotiveState.set(key, value);
+export const updateState = (updates) => emotiveState.update(updates);
+export const subscribeToState = (key, callback) => emotiveState.subscribe(key, callback);
