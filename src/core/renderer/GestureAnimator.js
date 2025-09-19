@@ -10,7 +10,6 @@ export class GestureAnimator {
     constructor(renderer) {
         this.renderer = renderer;
         this.activeGestures = new Map();
-        this.gestureQueue = [];
         this.scaleFactor = renderer.scaleFactor || 1;
         
         // Gesture animations state
@@ -398,7 +397,6 @@ export class GestureAnimator {
             this.gestureAnimations[key].params = null;
         });
         this.activeGestures.clear();
-        this.gestureQueue = [];
     }
     
     /**
@@ -1404,7 +1402,6 @@ export class GestureAnimator {
             delete anim.pausedProgress;
         }
         this.activeGestures.clear();
-        this.gestureQueue = [];
         this.isPaused = false;
     }
 }

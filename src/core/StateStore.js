@@ -446,7 +446,6 @@ export const engineState = new StateStore({
     // Animation state
     animation: {
         currentGesture: null,
-        gestureQueue: [],
         activeLoops: 0
     },
 

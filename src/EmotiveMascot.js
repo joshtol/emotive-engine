@@ -664,17 +664,8 @@ class EmotiveMascot {
             }
 
             // Express called with single gesture
-
-            // Route through GestureScheduler when rhythm is active
-            // This ensures gestures are queued to play on beat
-            // Skip if already coming from scheduler to avoid infinite loop
-            if (!options.fromScheduler && window.gestureScheduler && window.rhythmIntegration && window.rhythmIntegration.enabled) {
-                const queueItem = window.gestureScheduler.requestGesture(gesture, options);
-                return this;
-            }
-
-            // Note: Modular gesture controller integration can be added here
-            // when implementing custom gesture extensions
+            // In rhythm game mode, gestures will be triggered directly by gameplay
+            // No queuing needed - immediate response to player actions
 
             // Direct mapping to renderer methods for all gestures
             const rendererMethods = {

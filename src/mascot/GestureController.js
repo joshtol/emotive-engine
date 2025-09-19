@@ -7,7 +7,6 @@ export class GestureController {
     constructor(mascot) {
         this.mascot = mascot;
         this.currentGesture = null;
-        this.gestureQueue = [];
     }
 
     /**
@@ -21,8 +20,6 @@ export class GestureController {
      * Methods to be moved here:
      * - setGestureProtocol()
      * - performGesture()
-     * - queueGesture()
-     * - clearGestureQueue()
      * - Gesture animation logic
      */
 
@@ -30,7 +27,6 @@ export class GestureController {
      * Cleanup
      */
     destroy() {
-        this.gestureQueue = [];
         this.currentGesture = null;
     }
 }

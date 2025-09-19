@@ -35,9 +35,8 @@
  * ├───────────────────────────────────────────────────────────────────────────────────
  * │ • emotion      : Current emotional state (must be valid emotion)                  
  * │ • undertone    : Optional modifier (null or valid undertone)                      
- * │ • gesture      : Currently playing gesture animation                              
- * │ • transitions  : Active transition data (progress, timing, easing)                
- * │ • gestureQueue : Pending gestures to play sequentially                            
+ * │ • gesture      : Currently playing gesture animation
+ * │ • transitions  : Active transition data (progress, timing, easing)
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -87,7 +86,6 @@ class EmotiveStateMachine {
             emotion: 'neutral',
             undertone: null,
             gesture: null,
-            gestureQueue: [],
             speaking: false,
             audioLevel: 0
         };

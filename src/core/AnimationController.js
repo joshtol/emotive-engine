@@ -497,7 +497,6 @@ class AnimationController {
             if (this.performanceMonitor) {
                 this.performanceMonitor.updateMetrics({
                     particleCount: this.subsystems.particleSystem?.getActiveParticleCount?.() || 0,
-                    gestureQueueLength: 0,
                     audioLatency: this.subsystems.soundSystem?.getLatency?.() || 0
                 });
             }

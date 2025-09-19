@@ -431,58 +431,17 @@ export class GestureCompatibility {
     }
 
     /**
-     * Schedule gestures with musical timing
-     * @param {Array} gestureQueue - Current gesture queue
+     * Get next beat timing for a gesture (for rhythm game mode)
+     * @param {string} gestureName - Name of the gesture
      * @param {number} currentBeat - Current beat number
      * @param {number} bpm - Current BPM
-     * @returns {Object} - Scheduled gestures by beat
+     * @returns {number} - Next beat to trigger on
      */
-    scheduleGesturesMusically(gestureQueue, currentBeat, bpm) {
-        const scheduled = {};
-        const processed = new Set();
-
-        // First, schedule queued gestures based on their timing classes
-        for (const item of gestureQueue) {
-            if (processed.has(item)) continue;
-
-            const gesture = typeof item === 'string' ? item : item.gestureName;
-            const nextBeat = this.getNextBeatForGesture(gesture, currentBeat);
-
-            if (!scheduled[nextBeat]) {
-                scheduled[nextBeat] = [];
-            }
-
-            // Check for compatible gestures that can fire together
-            const compatible = this.getCompatibleGestures(
-                gestureQueue.filter(g => !processed.has(g))
-            );
-
-            compatible.forEach(g => {
-                const gName = typeof g === 'string' ? g : g.gestureName;
-                const gTiming = this.getGestureTiming(gName);
-
-                // Group gestures with same timing class
-                if (gTiming && this.getNextBeatForGesture(gName, currentBeat) === nextBeat) {
-                    scheduled[nextBeat].push(g);
-                    processed.add(g);
-                }
-            });
-        }
-
-        // Add fill gestures if there's dead space
-        const intensity = this.getIntensityFromBPM(bpm);
-        const fills = this.getFillGestures(bpm, intensity);
-
-        // Find empty beats and add fills
-        for (let beat = currentBeat; beat < currentBeat + 4; beat += 0.25) {
-            if (!scheduled[beat] || scheduled[beat].length === 0) {
-                if (fills.length > 0 && Math.random() < 0.3) {
-                    scheduled[beat] = [fills[Math.floor(Math.random() * fills.length)]];
-                }
-            }
-        }
-
-        return scheduled;
+    getNextBeatTiming(gestureName, currentBeat, bpm) {
+        // In rhythm game mode, this will be determined by the game logic
+        // For now, just return the next appropriate beat based on gesture type
+        const nextBeat = this.getNextBeatForGesture(gestureName, currentBeat);
+        return nextBeat;
     }
 
     /**
