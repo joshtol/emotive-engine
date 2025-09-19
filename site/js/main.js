@@ -8,6 +8,7 @@ import { EmotiveApp } from './core/app.js';
 import { emotiveState } from './core/global-state.js';
 import AssetsConfig from './config/assets-config.js';
 import FooterConfig from './config/footer-config.js';
+import authUI from './firebase/auth-ui.js';
 
 // Development mode flag
 const isDevelopment = !location.hostname.includes('emotive-engine');
@@ -36,6 +37,15 @@ async function init() {
             copyrightAuthor: 'Joshua Tollette'
         });
         footerConfig.init();
+
+        // Initialize authentication UI
+        try {
+            await authUI.init('auth-container');
+            console.log('Authentication UI initialized');
+        } catch (error) {
+            console.error('Failed to initialize auth UI:', error);
+            // Continue without auth - not critical for demo
+        }
 
         // Initialize main app
         const app = new EmotiveApp({
