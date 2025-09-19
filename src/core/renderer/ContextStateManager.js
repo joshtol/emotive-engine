@@ -224,6 +224,33 @@ export class ContextStateManager {
     }
 
     /**
+     * Reset context state to defaults
+     */
+    reset() {
+        // Reset tracked state
+        this.currentState = {
+            fillStyle: null,
+            strokeStyle: null,
+            globalAlpha: 1,
+            globalCompositeOperation: 'source-over',
+            lineWidth: 1,
+            lineCap: 'butt',
+            lineJoin: 'miter',
+            shadowBlur: 0,
+            shadowColor: 'transparent',
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
+            font: '10px sans-serif'
+        };
+
+        // Clear state stack
+        this.stateStack = [];
+
+        // Reset stats
+        this.resetStats();
+    }
+
+    /**
      * Create a scoped operation that automatically saves/restores
      * @param {Function} operation - Operation to perform
      */

@@ -272,7 +272,7 @@ class AnimationController {
         if (document.hidden) {
             // Tab became hidden - pause animation
             this.isPaused = true;
-            
+
             // Only reset accumulator, don't clear existing particles
             if (this.subsystems?.particleSystem) {
                 this.subsystems.particleSystem.resetAccumulator();
@@ -286,6 +286,12 @@ class AnimationController {
                 // Reset accumulator to prevent burst spawning
                 if (this.subsystems?.particleSystem) {
                     this.subsystems.particleSystem.resetAccumulator();
+                }
+
+                // Force canvas context restoration and clear
+                if (this.renderer) {
+                    // Reset canvas context to fix rendering artifacts
+                    this.renderer.resetCanvasContext();
                 }
             }
         }

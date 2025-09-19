@@ -614,6 +614,15 @@ class EmotiveRenderer {
         }
         const frameStartTime = performance.now();
 
+        // Handle forced clean render after tab switch
+        if (this.forceCleanRender) {
+            this.forceCleanRender = false;
+            // Clear any rendering artifacts
+            if (this.canvas && this.ctx) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+        }
+
         // Get ambient dance transform and merge with gesture transform
         const ambientTransform = this.ambientDanceAnimator.getTransform(deltaTime);
         if (gestureTransform) {
@@ -2940,6 +2949,45 @@ class EmotiveRenderer {
             document.removeEventListener('touchmove', this.handleTouchMove);
         }
         this.gazeTrackingInitialized = false;
+    }
+
+    /**
+     * Reset canvas context to fix rendering artifacts after tab switch
+     */
+    resetCanvasContext() {
+        if (!this.canvas || !this.ctx) return;
+
+        // Save current dimensions
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+
+        // Reset all canvas state
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.globalAlpha = 1;
+        this.ctx.globalCompositeOperation = 'source-over';
+        this.ctx.imageSmoothingEnabled = true;
+        this.ctx.imageSmoothingQuality = 'high';
+
+        // Clear the entire canvas
+        this.ctx.clearRect(0, 0, width, height);
+
+        // Also reset offscreen canvas if it exists
+        if (this.offscreenCanvas && this.offscreenCtx) {
+            this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
+            this.offscreenCtx.globalAlpha = 1;
+            this.offscreenCtx.globalCompositeOperation = 'source-over';
+            this.offscreenCtx.imageSmoothingEnabled = true;
+            this.offscreenCtx.imageSmoothingQuality = 'high';
+            this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+        }
+
+        // Reset context state manager if it exists
+        if (this.contextStateManager) {
+            this.contextStateManager.reset();
+        }
+
+        // Force a clean render on next frame
+        this.forceCleanRender = true;
     }
 
     /**
