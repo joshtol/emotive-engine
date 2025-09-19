@@ -92,10 +92,15 @@ class AnimationController {
         this.deltaTime = 0;
         this.isPaused = false;
         
-        // Set up visibility change handling
+        // Set up visibility change and window focus handling
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
+        this.handleWindowBlur = this.handleWindowBlur.bind(this);
+        this.handleWindowFocus = this.handleWindowFocus.bind(this);
+
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', this.handleVisibilityChange);
+            window.addEventListener('blur', this.handleWindowBlur);
+            window.addEventListener('focus', this.handleWindowFocus);
         }
         
         // PerformanceMonitor DISABLED - no FPS interference
@@ -266,32 +271,107 @@ class AnimationController {
     }
 
     /**
+     * Handles window blur event
+     */
+    handleWindowBlur() {
+        // Use same logic as visibility change
+        if (!document.hidden) {
+            // Only pause if document isn't already hidden (avoid double-pause)
+            this.handleVisibilityChange();
+        }
+    }
+
+    /**
+     * Handles window focus event
+     */
+    handleWindowFocus() {
+        // Force a resume check
+        if (!document.hidden && this.isPaused) {
+            // Simulate visibility change to visible
+            this.handleVisibilityChange();
+        }
+    }
+
+    /**
      * Handles document visibility changes to pause/resume animation
      */
     handleVisibilityChange() {
         if (document.hidden) {
             // Tab became hidden - pause animation
+            this.wasRunning = this.isRunning;
             this.isPaused = true;
 
-            // Only reset accumulator, don't clear existing particles
+            // Store current time to calculate gap when resuming
+            this.pauseTime = performance.now();
+
+            // Stop all active systems
             if (this.subsystems?.particleSystem) {
+                // Clear spawn accumulator to prevent burst on resume
                 this.subsystems.particleSystem.resetAccumulator();
+                // Store particle count for debugging
+                this.pausedParticleCount = this.subsystems.particleSystem.particles?.length || 0;
+            }
+
+            // Pause gesture animations if any are active
+            if (this.subsystems?.renderer?.gestureAnimator) {
+                this.subsystems.renderer.gestureAnimator.pauseCurrentAnimation?.();
+            }
+
+            // Notify parent mascot to pause
+            if (this.parentMascot?.pause) {
+                this.parentMascot.pause();
             }
         } else {
             // Tab became visible - resume animation smoothly
-            if (this.isPaused) {
-                this.isPaused = false;
-                // Reset the last frame time to current time to avoid huge delta
-                this.lastFrameTime = performance.now();
-                // Reset accumulator to prevent burst spawning
+            if (this.isPaused && this.wasRunning) {
+                // Calculate time gap
+                const resumeTime = performance.now();
+                const gap = resumeTime - this.pauseTime;
+
+                // Reset timing to prevent huge deltaTime spike
+                this.lastFrameTime = resumeTime;
+                this.frameTimeAccumulator = 0;
+
+                // Clear and reset all systems
                 if (this.subsystems?.particleSystem) {
+                    // Clear accumulator again to be safe
                     this.subsystems.particleSystem.resetAccumulator();
+                    // Clear any stuck particles if gap was too long
+                    if (gap > 5000) { // More than 5 seconds
+                        this.subsystems.particleSystem.particles = [];
+                    }
                 }
 
-                // Force canvas context restoration and clear
+                // Reset canvas context to fix any rendering artifacts
                 if (this.renderer) {
-                    // Reset canvas context to fix rendering artifacts
                     this.renderer.resetCanvasContext();
+
+                    // Reset any active animations
+                    if (this.renderer.gestureAnimator) {
+                        this.renderer.gestureAnimator.resumeAnimation?.();
+                    }
+
+                    // Force a clean frame
+                    this.renderer.forceCleanRender = true;
+                }
+
+                // Reset state machine timing
+                if (this.subsystems?.stateMachine) {
+                    // Update state machine's last update time
+                    this.subsystems.stateMachine.lastUpdateTime = resumeTime;
+                }
+
+                // Notify parent mascot to resume
+                if (this.parentMascot?.resume) {
+                    this.parentMascot.resume();
+                }
+
+                // Finally unpause
+                this.isPaused = false;
+
+                // Log for debugging
+                if (this.performanceMonitor) {
+                    console.log(`Resumed after ${(gap/1000).toFixed(1)}s pause. Cleared particles: ${this.pausedParticleCount || 0}`);
                 }
             }
         }
@@ -490,9 +570,11 @@ class AnimationController {
     destroy() {
         this.stop();
         
-        // Remove visibility change listener
+        // Remove visibility change and focus listeners
         if (typeof document !== 'undefined') {
             document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+            window.removeEventListener('blur', this.handleWindowBlur);
+            window.removeEventListener('focus', this.handleWindowFocus);
         }
         
         // Destroy performance monitor

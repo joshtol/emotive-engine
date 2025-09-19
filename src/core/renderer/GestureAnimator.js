@@ -1352,6 +1352,61 @@ export class GestureAnimator {
     
     startRunningMan() { this.startGesture('runningman'); }
     startCharleston() { this.startGesture('charleston'); }
+
+    /**
+     * Pause current animation (called on tab switch)
+     */
+    pauseCurrentAnimation() {
+        // Store pause time for all active animations
+        const now = performance.now();
+        for (const [type, anim] of Object.entries(this.gestureAnimations)) {
+            if (anim.active) {
+                anim.pausedAt = now;
+                anim.pausedProgress = anim.progress;
+            }
+        }
+        this.isPaused = true;
+    }
+
+    /**
+     * Resume animations after pause
+     */
+    resumeAnimation() {
+        if (!this.isPaused) return;
+
+        const now = performance.now();
+        for (const [type, anim] of Object.entries(this.gestureAnimations)) {
+            if (anim.active && anim.pausedAt) {
+                // Adjust start time to account for pause
+                const pauseDuration = now - anim.pausedAt;
+                if (anim.startTime) {
+                    anim.startTime += pauseDuration;
+                }
+                // Clear pause state
+                delete anim.pausedAt;
+                delete anim.pausedProgress;
+            }
+        }
+        this.isPaused = false;
+    }
+
+    /**
+     * Reset all gesture animations
+     */
+    reset() {
+        // Clear all active animations
+        for (const [type, anim] of Object.entries(this.gestureAnimations)) {
+            anim.active = false;
+            anim.progress = 0;
+            anim.params = {};
+            delete anim.startTime;
+            delete anim.pausedAt;
+            delete anim.pausedProgress;
+        }
+        this.activeGestures.clear();
+        this.gestureQueue = [];
+        this.isPaused = false;
+    }
 }
 
 export default GestureAnimator;
