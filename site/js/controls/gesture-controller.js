@@ -58,15 +58,10 @@ class GestureController {
             pendingGestures: new Set(),
             lastGesture: null,
             lastBeatNumber: 0,  // Track which beat we last executed on
-            gestureQueue: [],
-            scheduledGestures: {},  // Gestures scheduled by beat subdivision
-            isProcessingQueue: false,
             currentBeatActive: false,
             currentBeatNumber: 0,
             currentSubdivision: 0,  // 0, 0.25, 0.5, 0.75 for quarter notes
             beatSyncEnabled: false,
-            nextBeatProcessing: false,
-            beatsPerGesture: 1,  // How many beats between gestures (musical timing)
             currentBPM: 120,
             fillsEnabled: true,
             intensity: 'moderate',  // sparse, moderate, dense, chaos
@@ -175,18 +170,18 @@ class GestureController {
             lastBeat: this.state.lastBeatNumber
         });
 
-        // When rhythm is active, ALL timing is musical
-        if (rhythmActive && this.config.requireBeatSync) {
-            // Queue the gesture for beat-synced execution
-            this.queueGesture(gestureName, buttonElement);
-        } else if (window.rhythmActive && this.gestureScheduler) {
-            // Legacy rhythm scheduler
-            this.gestureScheduler.requestGesture(gestureName);
-        } else {
-            // Direct execution when no rhythm (no cooldown - let the animation system handle timing)
-            if (this.mascot) {
-                this.logger.debug(`Executing gesture directly: ${gestureName}`);
-                this.mascot.express(gestureName);
+        // In rhythm game mode, gestures fire immediately on player input
+        // No queuing - direct response for better gameplay feel
+        if (this.mascot) {
+            this.logger.debug(`Executing gesture: ${gestureName} (rhythm: ${rhythmActive})`);
+            this.mascot.express(gestureName);
+
+            // Add visual feedback for rhythm mode
+            if (rhythmActive && buttonElement) {
+                buttonElement.classList.add(this.config.triggeredClass);
+                setTimeout(() => {
+                    buttonElement.classList.remove(this.config.triggeredClass);
+                }, this.config.triggerDuration);
             } else {
                 this.logger.error('Mascot not available for gesture:', gestureName);
             }
@@ -201,121 +196,12 @@ class GestureController {
         }
     }
 
-    /**
-     * Queue a gesture for beat-synced execution
-     */
-    queueGesture(gestureName, buttonElement) {
-        // Check queue size
-        if (this.state.gestureQueue.length >= this.config.maxQueueSize) {
-            this.logger.debug(`Gesture queue full (max ${this.config.maxQueueSize})`);
-
-            // Visual feedback that queue is full
-            if (buttonElement) {
-                buttonElement.classList.add('queue-full');
-                setTimeout(() => {
-                    buttonElement.classList.remove('queue-full');
-                }, 300);
-            }
-            return;
-        }
-
-        // Prevent queueing the same button if it's already queued
-        // Allow different gestures but not spam of the same button
-        const existingFromButton = this.state.gestureQueue.find(
-            item => item.buttonElement === buttonElement && buttonElement !== null
-        );
-        if (existingFromButton) {
-            this.logger.debug(`Button already has a queued gesture`);
-            return;
-        }
-
-        // Add to queue
-        const queueItem = {
-            gestureName,
-            buttonElement,
-            timestamp: Date.now(),
-            isUserTriggered: true  // Mark as user-triggered
-        };
-
-        this.state.gestureQueue.push(queueItem);
-
-        // Add visual feedback
-        if (buttonElement) {
-            buttonElement.classList.add(this.config.queuedClass);
-            // Add queue position indicator
-            const queuePosition = this.state.gestureQueue.length;
-            buttonElement.dataset.queuePosition = queuePosition;
-        }
-
-        this.logger.info(`Queued user gesture: ${gestureName} (position ${this.state.gestureQueue.length})`);
-    }
 
     /**
-     * Process queued gestures on beat
+     * REMOVED - No queue processing in rhythm game mode
      */
     processGestureQueue() {
-        // Don't process if queue is empty
-        if (this.state.gestureQueue.length === 0) {
-            this.state.nextBeatProcessing = false;
-            return;
-        }
-
-        // Don't process if already processing
-        if (this.state.isProcessingQueue) {
-            return;
-        }
-
-        this.state.isProcessingQueue = true;
-
-        // Get next gesture from queue
-        const queueItem = this.state.gestureQueue.shift();
-        const { gestureName, buttonElement } = queueItem;
-
-        // Remove queued visual state
-        if (buttonElement) {
-            buttonElement.classList.remove(this.config.queuedClass);
-            delete buttonElement.dataset.queuePosition;
-
-            // Add triggered animation
-            buttonElement.classList.add(this.config.triggeredClass);
-            setTimeout(() => {
-                buttonElement.classList.remove(this.config.triggeredClass);
-            }, this.config.triggeredDuration);
-        }
-
-        // Update queue positions for remaining items
-        this.updateQueuePositions();
-
-        // Execute the gesture
-        if (this.mascot) {
-            // User-triggered gestures should always execute, even with base movement
-            this.logger.info(`Executing queued gesture: ${gestureName}`);
-
-            // Mark as user-triggered so AnimationMixer knows to reduce base movement
-            this.mascot.express(gestureName, {
-                isUserTriggered: true,
-                fromButton: true
-            });
-            // Timing is now handled by beat numbers, not timestamps
-        }
-
-        this.state.isProcessingQueue = false;
-
-        // If there are more gestures, mark for next beat
-        if (this.state.gestureQueue.length > 0) {
-            this.state.nextBeatProcessing = true;
-        }
-    }
-
-    /**
-     * Update visual queue positions after dequeue
-     */
-    updateQueuePositions() {
-        this.state.gestureQueue.forEach((item, index) => {
-            if (item.buttonElement) {
-                item.buttonElement.dataset.queuePosition = index + 1;
-            }
-        });
+        // No-op - no queue processing in rhythm game mode
     }
 
     /**
@@ -570,19 +456,10 @@ class GestureController {
     }
 
     /**
-     * Handle gesture queued visual feedback
+     * REMOVED - No queue visual feedback in rhythm game mode
      */
     handleGestureQueued(item) {
-        const btn = this.findButtonByGesture(item.gestureName);
-        if (btn) {
-            btn.classList.add(this.config.pendingClass);
-            this.state.pendingGestures.add(item.gestureName);
-        }
-
-        // Trigger callback
-        if (this.onGestureQueued) {
-            this.onGestureQueued(item);
-        }
+        // No-op - no queuing in rhythm game mode
     }
 
     /**
@@ -841,16 +718,10 @@ class GestureController {
     }
 
     /**
-     * Clear gesture queue
+     * REMOVED - No queue to clear in rhythm game mode
      */
     clearGestureQueue() {
-        this.state.gestureQueue.forEach(item => {
-            if (item.buttonElement) {
-                item.buttonElement.classList.remove(this.config.queuedClass);
-                delete item.buttonElement.dataset.queuePosition;
-            }
-        });
-        this.state.gestureQueue = [];
+        // No-op - no queue in rhythm game mode
     }
 
     /**
