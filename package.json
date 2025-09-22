@@ -29,8 +29,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "rollup -c --environment NODE_ENV:production",
-    "build:dev": "rollup -c --environment NODE_ENV:development",
+    "build": "rollup -c --environment NODE_ENV:production && node scripts/copy-built-files.js",
+    "build:dev": "rollup -c --environment NODE_ENV:development && node scripts/copy-built-files.js",
     "build:split": "rollup -c rollup.split.config.js --environment NODE_ENV:production",
     "build:demo": "rollup -c rollup.demo.config.js",
     "build:watch": "rollup -c -w --environment NODE_ENV:development",
