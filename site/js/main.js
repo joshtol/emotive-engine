@@ -11,7 +11,7 @@ import FooterConfig from './config/footer-config.js';
 import authUI from './firebase/auth-ui.js';
 
 // Development mode flag
-const isDevelopment = !location.hostname.includes('emotive-engine');
+const isDevelopment = !window.location.hostname.includes('emotive-engine');
 
 // Initialize on DOM ready
 if (document.readyState === 'loading') {
@@ -41,7 +41,7 @@ async function init() {
         // Initialize authentication UI
         try {
             await authUI.init('auth-container');
-            console.log('Authentication UI initialized');
+            // Authentication UI initialized
         } catch (error) {
             console.error('Failed to initialize auth UI:', error);
             // Continue without auth - not critical for demo
@@ -60,10 +60,18 @@ async function init() {
             window.DEBUG_APP = {
                 app,
                 emotiveState,
-                reload: () => location.reload()
+                reload: () => window.location.reload()
             };
-            console.log('Emotive Engine initialized in development mode');
+            // Emotive Engine initialized in development mode
         }
+
+        // Make app globally available and add audio visualizer function
+        window.app = app;
+        window.startAudioViz = () => {
+            if (app.audioVisualizer) {
+                app.audioVisualizer.start();
+            }
+        };
 
     } catch (error) {
         console.error('Failed to initialize Emotive Engine:', error);
