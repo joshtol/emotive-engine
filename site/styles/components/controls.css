@@ -135,6 +135,28 @@
     color: rgba(0, 255, 255, var(--opacity-solid));
 }
 
+/* Play/Pause Button States */
+.system-controls .sci-fi-btn.playing {
+    background: rgba(0, 255, 255, var(--opacity-soft));
+    color: rgba(0, 255, 255, var(--opacity-solid));
+    border-color: rgba(0, 255, 255, var(--opacity-soft));
+}
+
+.system-controls .sci-fi-btn.playing:hover {
+    background: rgba(0, 255, 255, var(--opacity-medium));
+    color: rgba(0, 255, 255, var(--opacity-solid));
+    transform: scale(1.05);
+}
+
+/* Play/Pause Icons - handled by JavaScript text content */
+.system-controls .sci-fi-btn.playing {
+    /* Icon is set by JavaScript textContent */
+}
+
+.system-controls .sci-fi-btn:not(.playing) {
+    /* Icon is set by JavaScript textContent */
+}
+
 .system-controls .sci-fi-btn.recording {
     background: rgba(255, 0, 0, 0.15);
     color: rgba(255, 100, 100, 0.9);

@@ -44,6 +44,7 @@
     position: relative;
     overflow: hidden;
     min-height: 100px;
+    contain: layout; /* Only layout containment, not style or paint */
     background: repeating-linear-gradient(
         45deg,
         transparent,
@@ -73,6 +74,7 @@
     transition: height 0.1s ease;
     min-height: 2px;
     opacity: 0.9;
+    will-change: height;
 }
 
 /* Spectrum Visualizer */
@@ -101,6 +103,7 @@
     max-width: 20px;
     opacity: 0.9;
     box-shadow: 0 0 1px var(--accent-glow);
+    will-change: height;
 }
 
 

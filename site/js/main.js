@@ -65,13 +65,8 @@ async function init() {
             // Emotive Engine initialized in development mode
         }
 
-        // Make app globally available and add audio visualizer function
+        // Make app globally available
         window.app = app;
-        window.startAudioViz = () => {
-            if (app.audioVisualizer) {
-                app.audioVisualizer.start();
-            }
-        };
 
     } catch (error) {
         console.error('Failed to initialize Emotive Engine:', error);

@@ -38,6 +38,7 @@
     gap: 0;
     margin: 0;
     display: flex;
+    contain: layout; /* Only layout containment, not style */
 }
 
 /* Center container for main content */
@@ -69,6 +70,16 @@
     padding-top: var(--spacing-md);
     padding-bottom: var(--spacing-md);
     z-index: 20;
+}
+
+/* Emotional state indicators - ensure they appear above menus */
+.emotion-state-indicator,
+.emotional-state-bar,
+.state-indicator,
+[data-emotion-state],
+.emotion-display,
+.current-emotion {
+    z-index: var(--z-indicators) !important;
 }
 
 .controls-left {

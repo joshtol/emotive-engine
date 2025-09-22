@@ -14,6 +14,8 @@
 .emotion-state-indicator {
     font-size: var(--text-base);
     color: var(--text-secondary);
+    z-index: var(--z-indicators) !important;
+    position: relative;
 }
 
 /* Undertone Section - More Compact */

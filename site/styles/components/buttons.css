@@ -20,6 +20,7 @@
     letter-spacing: var(--spacing-letter-wide);
     position: relative;
     z-index: 2;
+    will-change: transform, background-color, color;
 }
 
 /* Dice Icon Styling */
@@ -432,6 +433,8 @@ body.light .display-and-controls .display-container .shape-controls-hero {
     background: transparent;
     font-size: calc(var(--text-xl) + 0.3rem);
     line-height: var(--line-height-tight);
+    z-index: var(--z-indicators) !important;
+    position: relative;
 }
 
 .emotion-panel .emotion-btn {
@@ -449,16 +452,20 @@ body.light .display-and-controls .display-container .shape-controls-hero {
     transition: all var(--transition-smooth);
     cursor: pointer;
     color: var(--text-primary);
+    z-index: var(--z-indicators) !important;
+    position: relative;
 }
 
 .emotion-panel .emotion-btn:hover {
     transform: translateY(-2px) scale(1.1);
     filter: brightness(1.2);
+    z-index: var(--z-indicators) !important;
 }
 
 .emotion-panel .emotion-btn.active {
     transform: scale(1.15);
     filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6));
+    z-index: var(--z-indicators) !important;
 }
 
 /* BPM Modifier Buttons */

@@ -26,7 +26,7 @@ class AudioController {
             audioVizSectionId: options.audioVizSectionId || 'audio-viz-section',
 
             // Default demo track
-            demoTrackPath: options.demoTrackPath || '../assets/Electric Glow (Remix).wav',
+            demoTrackPath: options.demoTrackPath || '/assets/electric-glow-remix-male.wav',
             demoTrackName: options.demoTrackName || 'Electric Glow (Remix)',
 
             // Display settings
@@ -102,10 +102,10 @@ class AudioController {
             this.audioFile.addEventListener('change', (e) => this.handleFileSelect(e));
         }
 
-        // Load demo track button
+        // Play/Pause demo track button
         const loadAudioBtn = document.getElementById(this.config.loadAudioButtonId);
         if (loadAudioBtn) {
-            loadAudioBtn.addEventListener('click', () => this.loadDemoTrack());
+            loadAudioBtn.addEventListener('click', () => this.togglePlayPause());
         }
 
         // Load song button (opens file dialog)
@@ -120,6 +120,7 @@ class AudioController {
      */
     async handlePlay() {
         this.state.isPlaying = true;
+        this.updatePlayButton(true);
 
         if (this.mascot) {
             // Reset music detection when audio starts playing
@@ -139,10 +140,6 @@ class AudioController {
             this.state.audioConnected = true;
         }
 
-        // Start audio visualization
-        if (window.startAudioViz) {
-            window.startAudioViz();
-        }
 
         // Start rhythm sync visualizer
         if (window.rhythmSyncVisualizer && !window.rhythmSyncVisualizer.state.active) {
@@ -165,6 +162,7 @@ class AudioController {
      */
     handlePause() {
         this.state.isPlaying = false;
+        this.updatePlayButton(false);
 
         // Stop audio visualization
         if (window.stopAudioViz) {
@@ -222,7 +220,7 @@ class AudioController {
     /**
      * Handle file selection
      */
-    handleFileSelect(event) {
+    async handleFileSelect(event) {
         const file = event.target.files[0];
         if (!file) return;
 
@@ -241,9 +239,82 @@ class AudioController {
     loadDemoTrack() {
         this.loadAudioUrl(this.config.demoTrackPath, this.config.demoTrackName);
 
-        // Auto-play the demo track
+        // Don't auto-play - browsers block this until user interaction
+        // Audio will be ready for manual play
+        console.log('Demo track loaded and ready to play');
+    }
+
+    /**
+     * Toggle play/pause for demo track
+     */
+    async togglePlayPause() {
+        if (!this.audioPlayer) return;
+
+        // If no audio is loaded, load the demo track first
+        if (!this.audioPlayer.src) {
+            this.loadAudioUrl(this.config.demoTrackPath, this.config.demoTrackName);
+            // Wait a moment for the audio to load, then play
+            setTimeout(async () => {
+                try {
+                    await this.audioPlayer.play();
+                    this.updatePlayButton(true);
+                    console.log('Demo track playing');
+                } catch (error) {
+                    console.error('Failed to play demo track:', error);
+                }
+            }, 100);
+            return;
+        }
+
+        // Toggle play/pause
+        if (this.audioPlayer.paused) {
+            try {
+                await this.audioPlayer.play();
+                this.updatePlayButton(true);
+                console.log('Demo track playing');
+            } catch (error) {
+                console.error('Failed to play demo track:', error);
+            }
+        } else {
+            this.audioPlayer.pause();
+            this.updatePlayButton(false);
+            console.log('Demo track paused');
+        }
+    }
+
+    /**
+     * Update play button appearance
+     */
+    updatePlayButton(isPlaying) {
+        const playBtn = document.getElementById(this.config.loadAudioButtonId);
+        if (playBtn) {
+            if (isPlaying) {
+                playBtn.classList.add('playing');
+                playBtn.textContent = '⏸';
+                playBtn.setAttribute('aria-label', 'Pause demo song');
+            } else {
+                playBtn.classList.remove('playing');
+                playBtn.textContent = '▶';
+                playBtn.setAttribute('aria-label', 'Play demo song');
+            }
+        }
+    }
+
+    /**
+     * Load and play demo track (for button click) - kept for compatibility
+     */
+    async loadAndPlayDemoTrack() {
+        this.loadAudioUrl(this.config.demoTrackPath, this.config.demoTrackName);
+
+        // Wait a moment for the audio to load, then play
         if (this.audioPlayer) {
-            this.audioPlayer.play();
+            try {
+                await this.audioPlayer.play();
+                this.updatePlayButton(true);
+                console.log('Demo track playing');
+            } catch (error) {
+                console.error('Failed to play demo track:', error);
+            }
         }
     }
 

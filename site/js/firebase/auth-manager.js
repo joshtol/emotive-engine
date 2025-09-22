@@ -19,12 +19,9 @@ import {
     db,
     googleProvider,
     signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
     signInAnonymously,
     onAuthStateChanged,
     linkWithPopup,
-    linkWithRedirect,
     signOut,
     doc,
     setDoc,
@@ -51,29 +48,6 @@ class AuthManager {
      */
     initAuthListener() {
         console.log('AuthManager: Setting up auth state listener...');
-
-        // Check for redirect result first
-        getRedirectResult(auth).then(async (result) => {
-            if (result?.user) {
-                console.log('AuthManager: Sign-in via redirect completed:', result.user.email);
-
-                // If this was an anonymous user linking, we need to update the profile
-                if (result.user && !result.user.isAnonymous) {
-                    await this.updateUserProfile({
-                        displayName: result.user.displayName,
-                        photoURL: result.user.photoURL,
-                        email: result.user.email,
-                        isAnonymous: false
-                    });
-                }
-            }
-        }).catch((error) => {
-            if (error.code === 'auth/credential-already-in-use') {
-                console.log('AuthManager: Credential already in use, likely from linking attempt');
-            } else if (error.code !== 'auth/missing-auth-domain') {
-                console.error('AuthManager: Redirect sign-in error:', error);
-            }
-        });
 
         onAuthStateChanged(auth, async (user) => {
             console.log('AuthManager: Auth state changed, user:', user ? user.uid : 'null');
@@ -133,43 +107,62 @@ class AuthManager {
     }
 
     /**
-     * Sign in with Google
+     * Sign in with Google using popup (like premium services)
      */
     async signInWithGoogle() {
         try {
-            // If user is anonymous, try to link accounts
-            if (this.isAnonymous && this.currentUser) {
-                return await this.linkWithGoogle();
-            }
+            // Configure Google provider with proper scopes
+            googleProvider.addScope('email');
+            googleProvider.addScope('profile');
+            googleProvider.setCustomParameters({
+                prompt: 'select_account'
+            });
 
-            // Use popup - most browsers allow it if triggered by user click
+            // Always use direct popup sign-in (no linking logic)
             const result = await signInWithPopup(auth, googleProvider);
-            console.log('Signed in with Google:', result.user.email);
+            console.log('Google sign-in successful:', result.user.email);
+
+            // Update user profile with Google data
+            await this.updateUserProfile({
+                displayName: result.user.displayName,
+                photoURL: result.user.photoURL,
+                email: result.user.email,
+                isAnonymous: false
+            });
 
             return {
                 success: true,
-                user: result.user
+                user: result.user,
+                provider: 'google'
             };
         } catch (error) {
             console.error('Google sign-in error:', error);
 
-            // Handle specific errors
+            // Handle specific errors with helpful messages
             if (error.code === 'auth/popup-closed-by-user') {
                 return {
                     success: false,
                     error: 'Sign-in cancelled'
                 };
             } else if (error.code === 'auth/popup-blocked') {
-                // Inform user to allow popups
                 return {
                     success: false,
                     error: 'Please allow popups for this site to sign in with Google'
                 };
             } else if (error.code === 'auth/cancelled-popup-request') {
-                // Another popup is already open
                 return {
                     success: false,
                     error: 'Another sign-in window is already open'
+                };
+            } else if (error.code === 'auth/unauthorized-domain') {
+                return {
+                    success: false,
+                    error: 'This domain is not authorized for Google sign-in'
+                };
+            } else if (error.code === 'auth/credential-already-in-use') {
+                return {
+                    success: false,
+                    error: 'This Google account is already linked to another user. Please sign out and try again.'
                 };
             }
 
@@ -185,6 +178,13 @@ class AuthManager {
      */
     async linkWithGoogle() {
         try {
+            // Configure Google provider for linking
+            googleProvider.addScope('email');
+            googleProvider.addScope('profile');
+            googleProvider.setCustomParameters({
+                prompt: 'select_account'
+            });
+
             const result = await linkWithPopup(this.currentUser, googleProvider);
             console.log('Linked anonymous account with Google:', result.user.email);
 
@@ -208,10 +208,18 @@ class AuthManager {
             if (error.code === 'auth/credential-already-in-use') {
                 // Sign in with the Google account instead
                 console.log('Credential already in use, signing in instead...');
-                // Sign out anonymous user first
-                await signOut(auth);
-                // Then sign in with Google
-                return await this.signInWithGoogle();
+                try {
+                    // Sign out anonymous user first
+                    await signOut(auth);
+                    // Then sign in with Google
+                    return await this.signInWithGoogle();
+                } catch (signInError) {
+                    console.error('Sign in after linking failed:', signInError);
+                    return {
+                        success: false,
+                        error: 'Account already exists. Please sign in with your Google account directly.'
+                    };
+                }
             } else if (error.code === 'auth/popup-blocked') {
                 return {
                     success: false,
@@ -242,6 +250,52 @@ class AuthManager {
                 success: false,
                 error: error.message
             };
+        }
+    }
+
+    /**
+     * Clear all authentication state (for testing)
+     */
+    async clearAuthState() {
+        try {
+            await signOut(auth);
+            this.currentUser = null;
+            this.isAnonymous = false;
+            // Clear any stored auth data
+            localStorage.removeItem('emotive_auth_state');
+            console.log('Authentication state cleared');
+            return { success: true };
+        } catch (error) {
+            console.error('Clear auth state error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Force sign out and clear all data
+     */
+    async forceSignOut() {
+        try {
+            // Sign out from Firebase
+            await signOut(auth);
+            
+            // Clear local state
+            this.currentUser = null;
+            this.isAnonymous = false;
+            
+            // Clear all localStorage
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('firebase:') || key.startsWith('emotive_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            console.log('Force sign out completed');
+            return { success: true };
+        } catch (error) {
+            console.error('Force sign out error:', error);
+            return { success: false, error: error.message };
         }
     }
 

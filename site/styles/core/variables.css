@@ -10,6 +10,7 @@
     --z-dropdown: 5;
     --z-menu: 10;
     --z-overlay: 100;
+    --z-indicators: 150; /* Emotional state indicators above menus */
     --z-modal: 999;
     --z-header: 1000;
     --z-system: 2000;

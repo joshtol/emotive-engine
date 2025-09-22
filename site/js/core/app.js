@@ -16,9 +16,12 @@ import { ThemeManager } from '../ui/theme-manager.js';
 import { DisplayManager } from '../ui/display-manager.js';
 import { ScrollbarCompensator } from '../ui/scrollbar-compensator.js';
 import { DiceRoller } from '../ui/dice-roller.js';
-import { AudioVisualizer } from '../ui/audio-visualizer.js';
+// AudioVisualizer - lazy loaded when needed
 import { RhythmSyncVisualizer } from '../ui/rhythm-sync-visualizer.js';
 import { NotificationSystem } from '../ui/notification-system.js';
+
+// Import lazy loader for non-critical components
+import { lazyLoader } from '../utils/lazy-loader.js';
 
 // Import controllers
 import { RandomizerController } from '../controls/randomizer-controller.js';
@@ -36,9 +39,16 @@ import { UIStringsConfig } from '../config/ui-strings.js';
 import { IconsConfig } from '../config/icons-config.js';
 import { FooterConfig } from '../config/footer-config.js';
 import AssetsConfig from '../config/assets-config.js';
+import SystemControlsConfig from '../config/system-controls-config.js';
 
 // Import mascot engine
 import { MascotEngine } from './mascot-engine-wrapper.js';
+
+// Import event manager
+import { eventManager } from './event-manager.js';
+
+// Import UI generators
+import SystemControlsGenerator from '../ui/system-controls-generator.js';
 
 /**
  * EmotiveApp - Main application controller for the Emotive demo
@@ -82,6 +92,7 @@ export class EmotiveApp {
         this.config = {
             defaultTheme: 'night',
             debugMode: options.debug || false,
+            autoPlay: false, // Browsers block autoplay until user interaction
             mascotOptions: {
                 canvasId: 'emotive-canvas',
                 startingEmotion: 'neutral',
@@ -111,19 +122,26 @@ export class EmotiveApp {
         this.showLoader(true);
 
         try {
+            // Initialize event manager first
+            eventManager.init(document.body);
+
             // Initialize config modules
             await this.initConfigs();
 
             // Initialize mascot engine
             await this.initMascot();
 
-            // Initialize UI modules
-            await this.initUIModules();
+        // Initialize UI modules
+        await this.initUIModules();
 
-            // Initialize controllers
-            await this.initControllers();
+        // Initialize system controls generator
+        this.systemControlsGenerator = new SystemControlsGenerator(this.systemControlsConfig);
+        this.systemControlsGenerator.init();
 
-            // Setup event listeners
+        // Initialize controllers
+        await this.initControllers();
+
+            // Setup legacy event listeners (for non-delegated events)
             this.setupEventListeners();
 
             // Start animation
@@ -157,6 +175,10 @@ export class EmotiveApp {
 
         // Footer config (already initialized in main.js)
         this.footerConfig = new FooterConfig();
+
+        // System Controls config
+        this.systemControlsConfig = new SystemControlsConfig();
+        this.systemControlsConfig.init();
     }
 
     /**
@@ -207,12 +229,6 @@ export class EmotiveApp {
         // Dice Roller
         this.diceRoller = new DiceRoller();
 
-        // Audio Visualizer
-        this.audioVisualizer = new AudioVisualizer('spectrum-viz', this.mascot, {
-            numBars: 16,
-            minHeight: 2,
-            maxHeight: 100
-        });
 
         // Rhythm Sync Visualizer
         this.rhythmSyncVisualizer = new RhythmSyncVisualizer('rhythm-sync-container', {
@@ -221,6 +237,7 @@ export class EmotiveApp {
         this.rhythmSyncVisualizer.init();
         window.rhythmSyncVisualizer = this.rhythmSyncVisualizer;
     }
+
 
     /**
      * Initialize controllers
@@ -351,7 +368,7 @@ export class EmotiveApp {
         if (this.config.autoPlay) {
             setTimeout(() => {
                 if (this.audioController) {
-                    this.audioController.loadDemoSong();
+                    this.audioController.loadDemoTrack();
                 }
             }, 1000);
         }
@@ -413,6 +430,9 @@ export class EmotiveApp {
         if (this.mascot) {
             this.mascot.destroy();
         }
+
+        // Clean up event manager
+        eventManager.cleanup();
     }
 }
 

@@ -18,3 +18,4 @@ service-account.json
 # Environment files
 .env
 .env.local
+.vercel

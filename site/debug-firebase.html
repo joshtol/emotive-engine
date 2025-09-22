@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Debug - Domain Check</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase Authentication Debug</h1>
+    
+    <div class="info">
+        <h3>Current Domain Information:</h3>
+        <p><strong>Current URL:</strong> <span id="currentUrl"></span></p>
+        <p><strong>Hostname:</strong> <span id="hostname"></span></p>
+        <p><strong>Protocol:</strong> <span id="protocol"></span></p>
+    </div>
+
+    <div id="firebaseStatus" class="info">
+        <h3>Firebase Configuration:</h3>
+        <p><strong>Project ID:</strong> emotive-engine</p>
+        <p><strong>Auth Domain:</strong> emotive-engine.firebaseapp.com</p>
+        <p><strong>API Key:</strong> AIzaSyD4i0QMfbknNrHkTunBYpVKFma429707Wc</p>
+    </div>
+
+    <button onclick="testFirebaseConnection()">Test Firebase Connection</button>
+    <button onclick="testGoogleAuth()">Test Google Authentication</button>
+    <button onclick="forceSignOut()">Force Sign Out & Clear Data</button>
+    <button onclick="checkAuthorizedDomains()">Check Authorized Domains</button>
+    
+    <div id="output"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Display current domain info
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('hostname').textContent = window.location.hostname;
+        document.getElementById('protocol').textContent = window.location.protocol;
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4i0QMfbknNrHkTunBYpVKFma429707Wc",
+            authDomain: "emotive-engine.firebaseapp.com",
+            projectId: "emotive-engine",
+            storageBucket: "emotive-engine.firebasestorage.app",
+            messagingSenderId: "312651506267",
+            appId: "1:312651506267:web:2f159e5ca265d61084157e"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Configure provider
+        provider.addScope('email');
+        provider.addScope('profile');
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
+        window.testFirebaseConnection = async () => {
+            try {
+                // Test basic Firebase connection
+                const response = await fetch(`https://identitytoolkit.googleapis.com/v1/projects?key=${firebaseConfig.apiKey}`);
+                if (response.ok) {
+                    document.getElementById('output').innerHTML = '<div class="success">✅ Firebase connection successful!</div>';
+                } else {
+                    const error = await response.text();
+                    document.getElementById('output').innerHTML = `<div class="error">❌ Firebase connection failed: ${error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('output').innerHTML = `<div class="error">❌ Firebase connection error: ${error.message}</div>`;
+            }
+        };
+
+        window.testGoogleAuth = async () => {
+            try {
+                document.getElementById('output').innerHTML = '<div class="info">🔄 Attempting Google authentication...</div>';
+                
+                const result = await signInWithPopup(auth, provider);
+                document.getElementById('output').innerHTML = `
+                    <div class="success">
+                        ✅ Google authentication successful!<br>
+                        <strong>User:</strong> ${result.user.email}<br>
+                        <strong>Name:</strong> ${result.user.displayName}<br>
+                        <strong>UID:</strong> ${result.user.uid}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Auth error:', error);
+                let errorMessage = error.message;
+                
+                if (error.code === 'auth/unauthorized-domain') {
+                    errorMessage = `❌ Domain not authorized!<br><br>
+                    <strong>Current domain:</strong> ${window.location.hostname}<br>
+                    <strong>Solution:</strong> Add "${window.location.hostname}" to authorized domains in Firebase Console<br>
+                    <strong>Firebase Console:</strong> <a href="https://console.firebase.google.com/project/emotive-engine/authentication/settings" target="_blank">https://console.firebase.google.com/project/emotive-engine/authentication/settings</a>`;
+                } else if (error.code === 'auth/popup-blocked') {
+                    errorMessage = '❌ Popup blocked by browser. Please allow popups for this site.';
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    errorMessage = '❌ Sign-in cancelled by user.';
+                }
+                
+                document.getElementById('output').innerHTML = `<div class="error">${errorMessage}</div>`;
+            }
+        };
+
+        window.forceSignOut = async () => {
+            try {
+                await signOut(auth);
+                
+                // Clear all localStorage
+                const keys = Object.keys(localStorage);
+                keys.forEach(key => {
+                    if (key.startsWith('firebase:') || key.startsWith('emotive_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                
+                document.getElementById('output').innerHTML = '<div class="success">✅ Force sign out completed! All data cleared.</div>';
+            } catch (error) {
+                document.getElementById('output').innerHTML = `<div class="error">❌ Force sign out error: ${error.message}</div>`;
+            }
+        };
+
+        window.checkAuthorizedDomains = () => {
+            document.getElementById('output').innerHTML = `
+                <div class="info">
+                    <h3>🔧 Firebase Console Setup Required:</h3>
+                    <ol>
+                        <li>Go to <a href="https://console.firebase.google.com/project/emotive-engine/authentication/settings" target="_blank">Firebase Console</a></li>
+                        <li>Click on "Authentication" → "Settings" → "Authorized domains"</li>
+                        <li>Add these domains:
+                            <ul>
+                                <li><code>localhost</code> (for local development)</li>
+                                <li><code>127.0.0.1</code> (for local development)</li>
+                                <li><code>emotiveengine.com</code> (for production)</li>
+                                <li><code>www.emotiveengine.com</code> (for production)</li>
+                            </ul>
+                        </li>
+                        <li>Click "Add domain" for each one</li>
+                        <li>Save the changes</li>
+                    </ol>
+                    <p><strong>Current domain:</strong> <code>${window.location.hostname}</code></p>
+                </div>
+            `;
+        };
+    </script>
+</body>
+</html>
