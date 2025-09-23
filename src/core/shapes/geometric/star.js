@@ -45,41 +45,32 @@ export default {
     },
     
     /**
-     * Generate star shape points
+     * Generate star shape points matching star.svg geometry
      * @param {number} numPoints - Number of points to generate
      * @returns {Array} Array of normalized points
      */
     generate(numPoints) {
         const points = [];
-        const starPoints = 5; // 5-pointed star
-        const outerRadius = 0.5;
-        const innerRadius = outerRadius * 0.382; // Golden ratio for perfect star
         
-        // Generate the 10 vertices (5 outer, 5 inner)
-        const vertices = [];
-        const angleStep = (Math.PI * 2) / starPoints; // 72 degrees between star points
-        const halfAngleStep = angleStep / 2; // 36 degrees offset for inner points
+        // Star.svg path coordinates (normalized to 0-1 range)
+        // Original: M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z
+        const starVertices = [
+            { x: 0.5, y: 0.72 },      // 12, 17.27 -> center bottom
+            { x: 0.76, y: 0.875 },    // 18.18, 21 -> top right
+            { x: 0.68, y: 0.21 },     // 16.36, 5.03 -> right middle
+            { x: 0.92, y: 0.385 },    // 22, 9.24 -> top right
+            { x: 0.2, y: 0.36 },      // 4.81, 8.63 -> left middle
+            { x: 0.5, y: 0.083 },     // 12, 2 -> top center
+            { x: 0.38, y: 0.36 },     // 9.19, 8.63 -> left middle
+            { x: 0.083, y: 0.385 },   // 2, 9.24 -> top left
+            { x: 0.23, y: 0.21 },     // 5.46, 5.03 -> left middle
+            { x: 0.24, y: 0.875 }     // 5.82, 21 -> top left
+        ];
         
-        for (let i = 0; i < starPoints; i++) {
-            // Outer point (star tip)
-            const outerAngle = (i * angleStep) - Math.PI / 2; // Start from top
-            vertices.push({
-                x: 0.5 + Math.cos(outerAngle) * outerRadius,
-                y: 0.5 + Math.sin(outerAngle) * outerRadius
-            });
-            
-            // Inner point (valley) - offset by half the angle
-            const innerAngle = outerAngle + halfAngleStep;
-            vertices.push({
-                x: 0.5 + Math.cos(innerAngle) * innerRadius,
-                y: 0.5 + Math.sin(innerAngle) * innerRadius
-            });
-        }
-        
-        // Now interpolate points along the star perimeter
+        // Interpolate points along the star perimeter
         for (let i = 0; i < numPoints; i++) {
             const t = i / numPoints;
-            const vertexCount = vertices.length;
+            const vertexCount = starVertices.length;
             
             // Which edge are we on?
             const edgeFloat = t * vertexCount;
@@ -88,8 +79,8 @@ export default {
             const edgeProgress = edgeFloat - Math.floor(edgeFloat);
             
             // Linear interpolation between vertices
-            const v1 = vertices[edgeIndex];
-            const v2 = vertices[nextIndex];
+            const v1 = starVertices[edgeIndex];
+            const v2 = starVertices[nextIndex];
             
             points.push({
                 x: v1.x + (v2.x - v1.x) * edgeProgress,
