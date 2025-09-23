@@ -145,6 +145,13 @@ class ShapeMorphController {
     }
 
     /**
+     * Set shape (alias for morphToShape for compatibility with event manager)
+     */
+    setShape(shape, buttonElement = null) {
+        this.morphToShape(shape, buttonElement);
+    }
+
+    /**
      * Calculate morph duration based on transition type
      */
     calculateDuration(fromShape, toShape) {

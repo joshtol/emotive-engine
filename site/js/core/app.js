@@ -293,7 +293,7 @@ export class EmotiveApp {
             mascot: this.mascot,
             defaultShape: 'circle'
         });
-        this.shapeMorphController.init();
+        this.shapeMorphController.init(this, this.mascot);
 
         // Audio Controller
         this.audioController = new AudioController({
@@ -311,7 +311,7 @@ export class EmotiveApp {
             cooldown: 100,
             rhythmScheduler: window.gestureScheduler
         });
-        this.gestureController.init();
+        this.gestureController.init(this, this.mascot);
 
         // Orientation Controller
         this.orientationController = new OrientationController({

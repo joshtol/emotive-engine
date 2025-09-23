@@ -182,9 +182,9 @@ class GestureController {
                 setTimeout(() => {
                     buttonElement.classList.remove(this.config.triggeredClass);
                 }, this.config.triggerDuration);
-            } else {
-                this.logger.error('Mascot not available for gesture:', gestureName);
             }
+        } else {
+            this.logger.error('Mascot not available for gesture:', gestureName);
         }
 
         // Update state
