@@ -4,7 +4,9 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import EmotiveStateMachine from '../src/core/EmotiveStateMachine.js';
-import GestureSystem from '../src/core/GestureSystem.js';
+import GestureCompositor from '../src/core/GestureCompositor.js';
+import GestureScheduler from '../src/core/GestureScheduler.js';
+import { getGesture } from '../src/core/gestures/index.js';
 import ParticleSystem from '../src/core/ParticleSystem.js';
 import { interpolateHsl } from '../src/utils/colorUtils.js';
 

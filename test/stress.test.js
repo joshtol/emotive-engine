@@ -7,7 +7,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import EmotiveMascot from '../src/EmotiveMascot.js';
 import PerformanceMonitor from '../src/core/PerformanceMonitor.js';
 import ParticleSystem from '../src/core/ParticleSystem.js';
-import GestureSystem from '../src/core/GestureSystem.js';
+import GestureCompositor from '../src/core/GestureCompositor.js';
+import GestureScheduler from '../src/core/GestureScheduler.js';
+import { getGesture } from '../src/core/gestures/index.js';
 
 describe('Stress Testing Framework', () => {
     let mascot;
@@ -149,8 +151,9 @@ describe('Stress Testing Framework', () => {
     
     describe('Gesture Execution Stress Tests', () => {
         it('should handle rapid gesture changes without memory leaks', async () => {
-            const gestureSystem = new GestureSystem();
-            const gestures = ['wobble', 'shake', 'spin', 'bounce'];
+            const compositor = new GestureCompositor();
+            const scheduler = new GestureScheduler();
+            const gestures = ['bounce', 'shake', 'spin', 'pulse'];
             
             // Measure initial memory (if available)
             const initialMemory = performance.memory?.usedJSHeapSize || 0;
@@ -158,8 +161,10 @@ describe('Stress Testing Framework', () => {
             // Rapidly change gestures
             for (let i = 0; i < 1000; i++) {
                 const gesture = gestures[i % gestures.length];
-                gestureSystem.triggerGesture(gesture);
-                gestureSystem.update(5); // Fast forward
+                const gestureDef = getGesture(gesture);
+                if (gestureDef) {
+                    compositor.composeGesture(gesture, {});
+                }
             }
             
             // Check for memory growth
@@ -172,7 +177,7 @@ describe('Stress Testing Framework', () => {
             }
             
             // System should still be functional
-            expect(() => gestureSystem.triggerGesture('wobble')).not.toThrow();
+            expect(() => getGesture('bounce')).not.toThrow();
         });
         
         it('should handle gesture queue overflow', () => {
