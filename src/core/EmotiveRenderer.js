@@ -186,6 +186,12 @@ class EmotiveRenderer {
             breathDepthMult: 1.0,
             breathIrregular: false,
             particleRateMult: 1.0,
+            // Glow and color effects - initialize with defaults
+            glowPulse: 0,
+            brightnessFlicker: 0,
+            brightnessMult: 1.0,
+            saturationMult: 1.0,
+            hueShift: 0,
             // Manual rotation control (not BPM-locked)
             manualRotation: 0,        // Current rotation angle in DEGREES
             rotationSpeed: 0,         // Rotation speed in DEGREES per frame (like velocity in demo)
@@ -2094,12 +2100,19 @@ class EmotiveRenderer {
             this.state.breathDepthMult = 1.0 + ((undertone.breathDepthMult || 1.0) - 1.0) * weight;
             this.state.breathIrregular = weight > 0.5 ? (undertone.breathIrregular || false) : false;
             this.state.particleRateMult = 1.0;
+            
+            // Apply weighted glow and color effects
+            this.state.glowPulse = (undertone.glowPulse || 0) * weight;
+            this.state.brightnessFlicker = (undertone.brightnessFlicker || 0) * weight;
+            this.state.brightnessMult = 1.0 + ((undertone.brightnessMult || 1.0) - 1.0) * weight;
+            this.state.saturationMult = 1.0 + ((undertone.saturationMult || 1.0) - 1.0) * weight;
+            this.state.hueShift = (undertone.hueShift || 0) * weight;
             return;
         }
         
         // String-based undertone handling
         if (!undertone || !this.undertoneModifiers[undertone]) {
-            // Reset to defaults if no undertone
+            // Reset to defaults if no undertone - CLEAR ALL GLOW EFFECTS
             this.state.sizeMultiplier = 1.0;
             this.state.jitterAmount = 0;
             this.state.episodicFlutter = false;
@@ -2108,6 +2121,13 @@ class EmotiveRenderer {
             this.state.breathDepthMult = 1.0;
             this.state.breathIrregular = false;
             this.state.particleRateMult = 1.0;
+            
+            // Reset all glow and color effects to prevent accumulation
+            this.state.glowPulse = 0;
+            this.state.brightnessFlicker = 0;
+            this.state.brightnessMult = 1.0;
+            this.state.saturationMult = 1.0;
+            this.state.hueShift = 0;
             return;
         }
         
@@ -2122,6 +2142,13 @@ class EmotiveRenderer {
         this.state.breathDepthMult = modifier.breathDepthMult;
         this.state.breathIrregular = modifier.breathIrregular || false;
         this.state.particleRateMult = 1.0;
+        
+        // Apply all glow and color effects
+        this.state.glowPulse = modifier.glowPulse || 0;
+        this.state.brightnessFlicker = modifier.brightnessFlicker || 0;
+        this.state.brightnessMult = modifier.brightnessMult || 1.0;
+        this.state.saturationMult = modifier.saturationMult || 1.0;
+        this.state.hueShift = modifier.hueShift || 0;
     }
     
     /**

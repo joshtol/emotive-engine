@@ -370,6 +370,31 @@ export class GestureAnimator {
                     anim.flashWave = null;
                     anim.flashWaveData = null;
                 }
+                // Clean up glow effect data to prevent accumulation
+                if (gestureTransform.glowEffect) {
+                    gestureTransform.glowEffect = null;
+                    gestureTransform.particleGlow = null;
+                    gestureTransform.glowTime = null;
+                    gestureTransform.glowProgress = null;
+                    gestureTransform.glowEnvelope = null;
+                }
+                // Clean up other effect data
+                if (gestureTransform.fireflyEffect) {
+                    gestureTransform.fireflyEffect = null;
+                    gestureTransform.particleGlow = null;
+                    gestureTransform.fireflyTime = null;
+                }
+                if (gestureTransform.flickerEffect) {
+                    gestureTransform.flickerEffect = null;
+                    gestureTransform.particleGlow = null;
+                    gestureTransform.flickerTime = null;
+                }
+                if (gestureTransform.shimmerEffect) {
+                    gestureTransform.shimmerEffect = null;
+                    gestureTransform.particleGlow = null;
+                    gestureTransform.shimmerTime = null;
+                    gestureTransform.shimmerWave = null;
+                }
             }
         }
         
@@ -391,10 +416,42 @@ export class GestureAnimator {
     stopAllGestures() {
         // Reset all gesture animations
         Object.keys(this.gestureAnimations).forEach(key => {
-            this.gestureAnimations[key].active = false;
-            this.gestureAnimations[key].startTime = 0;
-            this.gestureAnimations[key].progress = 0;
-            this.gestureAnimations[key].params = null;
+            const anim = this.gestureAnimations[key];
+            anim.active = false;
+            anim.startTime = 0;
+            anim.progress = 0;
+            anim.params = null;
+            
+            // Clean up all glow effect data to prevent accumulation
+            if (anim.glowEffect) {
+                anim.glowEffect = null;
+                anim.particleGlow = null;
+                anim.glowTime = null;
+                anim.glowProgress = null;
+                anim.glowEnvelope = null;
+            }
+            // Clean up other effect data
+            if (anim.fireflyEffect) {
+                anim.fireflyEffect = null;
+                anim.particleGlow = null;
+                anim.fireflyTime = null;
+            }
+            if (anim.flickerEffect) {
+                anim.flickerEffect = null;
+                anim.particleGlow = null;
+                anim.flickerTime = null;
+            }
+            if (anim.shimmerEffect) {
+                anim.shimmerEffect = null;
+                anim.particleGlow = null;
+                anim.shimmerTime = null;
+                anim.shimmerWave = null;
+            }
+            // Clean up flash wave data
+            if (anim.flashWave) {
+                anim.flashWave = null;
+                anim.flashWaveData = null;
+            }
         });
         this.activeGestures.clear();
     }
