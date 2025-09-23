@@ -142,14 +142,21 @@ export class EventManager {
     
     // Emotion button handler
     handleEmotionClick(e) {
+        console.log('EventManager handleEmotionClick called with:', e.target);
         const emotion = e.target.dataset.emotion;
+        console.log('EventManager: Extracted emotion:', emotion);
+        
         if (emotion && window.app?.emotionController) {
+            console.log('EventManager: Calling emotionController.setEmotion with:', emotion);
             window.app.emotionController.setEmotion(emotion);
         } else if (emotion) {
+            console.log('EventManager: Fallback - calling mascot.setEmotion with:', emotion);
             // Fallback: direct mascot call if controller not loaded yet
             if (window.app?.mascot) {
                 window.app.mascot.setEmotion(emotion);
             }
+        } else {
+            console.warn('EventManager: No emotion found in dataset');
         }
     }
 

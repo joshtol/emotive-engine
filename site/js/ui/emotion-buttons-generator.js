@@ -98,7 +98,7 @@ class EmotionButtonsGenerator {
      * Add SVG icon to button
      */
     addSVGIcon(button, svgPath) {
-        console.log('Adding SVG icon:', svgPath, 'to button:', button);
+        // Adding SVG icon to button
         
         // Create img element for SVG (simpler approach)
         const img = document.createElement('img');
@@ -115,7 +115,7 @@ class EmotionButtonsGenerator {
         };
         
         img.onload = () => {
-            console.log('SVG loaded successfully:', svgPath);
+            // SVG loaded successfully
         };
         
         button.appendChild(img);

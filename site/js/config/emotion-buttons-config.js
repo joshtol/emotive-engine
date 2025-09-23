@@ -22,8 +22,8 @@ class EmotionButtonsConfig {
                 {
                     id: 'neutral',
                     label: 'Neutral',
-                    icon: '😐', // Will be replaced with SVG
-                    svgPath: null, // Will be set when SVG is available
+                    icon: '😐',
+                    svgPath: 'assets/icons/neutral.svg',
                     group: 'left',
                     defaultActive: true
                 },
@@ -95,7 +95,7 @@ class EmotionButtonsConfig {
                     id: 'sadness',
                     label: 'Sadness',
                     icon: '😢',
-                    svgPath: null,
+                    svgPath: 'assets/icons/sadness.svg',
                     group: 'right',
                     defaultActive: false
                 },

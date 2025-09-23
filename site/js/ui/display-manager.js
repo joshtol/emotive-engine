@@ -66,6 +66,13 @@ class DisplayManager {
         this.elements.fpsDisplay = document.getElementById(this.config.fpsDisplayId);
         this.elements.fpsValue = document.getElementById(this.config.fpsValueId);
 
+        console.log('DisplayManager init - Elements found:', {
+            emotionDisplay: !!this.elements.emotionDisplay,
+            undertoneDisplay: !!this.elements.undertoneDisplay,
+            fpsDisplay: !!this.elements.fpsDisplay,
+            fpsValue: !!this.elements.fpsValue
+        });
+
         // Store mascot reference
         this.mascot = mascot || window.mascot;
 
@@ -80,7 +87,11 @@ class DisplayManager {
      * Update emotion display
      */
     updateEmotionDisplay(emotion) {
-        if (!this.elements.emotionDisplay) return;
+        console.log('DisplayManager updateEmotionDisplay called with:', emotion);
+        if (!this.elements.emotionDisplay) {
+            console.warn('DisplayManager: emotionDisplay element not found');
+            return;
+        }
 
         // Handle if emotion is passed as an object (from mascot state)
         if (typeof emotion === 'object' && emotion !== null) {
@@ -119,7 +130,11 @@ class DisplayManager {
      * Update undertone display
      */
     updateUndertoneDisplay(undertone) {
-        if (!this.elements.undertoneDisplay) return;
+        console.log('DisplayManager updateUndertoneDisplay called with:', undertone);
+        if (!this.elements.undertoneDisplay) {
+            console.warn('DisplayManager: undertoneDisplay element not found');
+            return;
+        }
 
         this.state.currentUndertone = undertone;
         const value = undertone ? undertone.toUpperCase() : this.config.defaultUndertone;

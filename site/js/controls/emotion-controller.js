@@ -117,14 +117,26 @@ class EmotionController {
      * Set emotion
      */
     setEmotion(emotion, buttonElement = null) {
+        console.log('EmotionController setEmotion called with:', emotion, 'buttonElement:', buttonElement);
+        
         // Check if emotion is changing
         if (emotion === this.state.currentEmotion && !buttonElement) {
+            console.log('EmotionController: Emotion not changing, returning early');
             return;
         }
 
         // Update state
         this.state.previousEmotion = this.state.currentEmotion;
         this.state.currentEmotion = emotion;
+        console.log('EmotionController: Updated state to:', this.state.currentEmotion);
+
+        // Update global state so display manager can access it
+        if (this.app && this.app.globalState) {
+            console.log('EmotionController: Updating global state to:', emotion);
+            this.app.globalState.set('currentEmotion', emotion);
+        } else {
+            console.warn('EmotionController: Cannot update global state - app:', !!this.app, 'globalState:', !!(this.app && this.app.globalState));
+        }
 
         // Update button states
         this.updateButtonStates(buttonElement || this.findButtonByEmotion(emotion));
@@ -134,10 +146,12 @@ class EmotionController {
 
         // Trigger callbacks
         if (this.onEmotionChange) {
+            console.log('EmotionController: Calling onEmotionChange callback');
             this.onEmotionChange(emotion, this.state.previousEmotion);
         }
 
         if (this.onDisplayUpdate) {
+            console.log('EmotionController: Calling onDisplayUpdate callback');
             this.onDisplayUpdate();
         }
 

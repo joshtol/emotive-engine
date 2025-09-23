@@ -20,8 +20,8 @@ import { DiceRoller } from '../ui/dice-roller.js';
 import { RhythmSyncVisualizer } from '../ui/rhythm-sync-visualizer.js';
 import { NotificationSystem } from '../ui/notification-system.js';
 
-// Import lazy loader for non-critical components
-import { lazyLoader } from '../utils/lazy-loader.js';
+// Import lazy loader for non-critical components (currently unused)
+// import { lazyLoader } from '../utils/lazy-loader.js';
 
 // Import controllers
 import { RandomizerController } from '../controls/randomizer-controller.js';
@@ -143,10 +143,10 @@ export class EmotiveApp {
         // Initialize emotion buttons generator
         this.emotionButtonsGenerator = new EmotionButtonsGenerator(this.emotionButtonsConfig);
         this.emotionButtonsGenerator.init();
-        console.log('EmotionButtonsGenerator initialized');
+        // EmotionButtonsGenerator initialized
 
         // Initialize controllers
-        await this.initControllers();
+        this.initControllers();
 
             // Setup legacy event listeners (for non-delegated events)
             this.setupEventListeners();
@@ -168,7 +168,7 @@ export class EmotiveApp {
     /**
      * Initialize configuration modules
      */
-    async initConfigs() {
+    initConfigs() {
         // UI Strings
         this.uiStrings = new UIStringsConfig();
         this.uiStrings.init();
@@ -195,7 +195,7 @@ export class EmotiveApp {
     /**
      * Initialize the mascot engine
      */
-    async initMascot() {
+    initMascot() {
         // Use the imported MascotEngine ES6 module
         this.engine = MascotEngine;
 
@@ -215,7 +215,7 @@ export class EmotiveApp {
     /**
      * Initialize UI modules
      */
-    async initUIModules() {
+    initUIModules() {
         // Theme Manager
         this.themeManager = new ThemeManager({
             defaultTheme: this.config.defaultTheme,
@@ -253,7 +253,7 @@ export class EmotiveApp {
     /**
      * Initialize controllers
      */
-    async initControllers() {
+    initControllers() {
         // Randomizer Controller
         this.randomizerController = new RandomizerController({
             diceRoller: this.diceRoller
@@ -266,9 +266,10 @@ export class EmotiveApp {
 
         // Undertone Controller
         this.undertoneController = new UndertoneController({
-            mascot: this.mascot
+            mascot: this.mascot,
+            onDisplayUpdate: () => this.updateDisplay()
         });
-        this.undertoneController.init();
+        this.undertoneController.init(this, this.mascot);
 
         // System Controls Controller
         this.systemControlsController = new SystemControlsController({
@@ -282,9 +283,10 @@ export class EmotiveApp {
         this.emotionController = new EmotionController({
             mascot: this.mascot,
             allowToggle: true,
-            defaultEmotion: 'neutral'
+            defaultEmotion: 'neutral',
+            onDisplayUpdate: () => this.updateDisplay()
         });
-        this.emotionController.init();
+        this.emotionController.init(this, this.mascot);
 
         // Shape Morph Controller
         this.shapeMorphController = new ShapeMorphController({
@@ -348,9 +350,13 @@ export class EmotiveApp {
      * Update display based on state
      */
     updateDisplay() {
+        console.log('App updateDisplay called');
         if (this.displayManager) {
+            console.log('App updateDisplay - calling displayManager methods');
             this.displayManager.updateEmotionDisplay(this.globalState.get('currentEmotion'));
             this.displayManager.updateUndertoneDisplay(this.globalState.get('currentUndertone'));
+        } else {
+            console.warn('App updateDisplay - displayManager not found');
         }
     }
 

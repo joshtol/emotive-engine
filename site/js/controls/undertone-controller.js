@@ -139,6 +139,14 @@ class UndertoneController {
             this.state.lastUndertone = mapping.undertone;
             this.state.currentUndertone = mapping.undertone;
 
+            // Update global state so display manager can access it
+            if (this.app && this.app.globalState) {
+                console.log('UndertoneController: Updating global state to:', mapping.undertone);
+                this.app.globalState.set('currentUndertone', mapping.undertone);
+            } else {
+                console.warn('UndertoneController: Cannot update global state - app:', !!this.app, 'globalState:', !!(this.app && this.app.globalState));
+            }
+
             // Debounce the mascot update for smoothness
             this.debouncedMascotUpdate();
         }
