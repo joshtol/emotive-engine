@@ -1,0 +1,14 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="crescent">
+      <circle cx="12" cy="12" r="5"/>
+      <circle cx="14" cy="10" r="3.5" fill="white"/>
+    </clipPath>
+    <mask id="centerCutout">
+      <rect width="24" height="24" fill="white"/>
+      <circle cx="13" cy="10" r="6" fill="black"/>
+    </mask>
+  </defs>
+  <path d="M12 0L9.5 6.5A5.5 5.5 0 0 1 14.5 6.5L12 0zM2 2L6.5 9.5A5.5 5.5 0 0 1 9.5 6.5L2 2zM0 12L6.5 14.5A5.5 5.5 0 0 1 6.5 9.5L0 12zM2 22L9.5 17.5A5.5 5.5 0 0 1 6.5 14.5L2 22zM12 24L14.5 17.5A5.5 5.5 0 0 1 9.5 17.5L12 24zM22 22L17.5 14.5A5.5 5.5 0 0 1 14.5 17.5L22 22zM24 12L17.5 9.5A5.5 5.5 0 0 1 17.5 14.5L24 12zM22 2L14.5 6.5A5.5 5.5 0 0 1 17.5 9.5L22 2z" fill="currentColor" fill-rule="evenodd"/>
+  <circle cx="12" cy="12" r="5" fill="currentColor" clip-path="url(#crescent)" mask="url(#centerCutout)"/>
+</svg>
