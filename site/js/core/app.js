@@ -40,6 +40,7 @@ import { IconsConfig } from '../config/icons-config.js';
 import { FooterConfig } from '../config/footer-config.js';
 import AssetsConfig from '../config/assets-config.js';
 import SystemControlsConfig from '../config/system-controls-config.js';
+import EmotionButtonsConfig from '../config/emotion-buttons-config.js';
 
 // Import mascot engine
 import { MascotEngine } from './mascot-engine-wrapper.js';
@@ -49,6 +50,7 @@ import { eventManager } from './event-manager.js';
 
 // Import UI generators
 import SystemControlsGenerator from '../ui/system-controls-generator.js';
+import EmotionButtonsGenerator from '../ui/emotion-buttons-generator.js';
 
 /**
  * EmotiveApp - Main application controller for the Emotive demo
@@ -138,6 +140,11 @@ export class EmotiveApp {
         this.systemControlsGenerator = new SystemControlsGenerator(this.systemControlsConfig);
         this.systemControlsGenerator.init();
 
+        // Initialize emotion buttons generator
+        this.emotionButtonsGenerator = new EmotionButtonsGenerator(this.emotionButtonsConfig);
+        this.emotionButtonsGenerator.init();
+        console.log('EmotionButtonsGenerator initialized');
+
         // Initialize controllers
         await this.initControllers();
 
@@ -179,6 +186,10 @@ export class EmotiveApp {
         // System Controls config
         this.systemControlsConfig = new SystemControlsConfig();
         this.systemControlsConfig.init();
+
+        // Emotion Buttons config
+        this.emotionButtonsConfig = new EmotionButtonsConfig();
+        this.emotionButtonsConfig.init();
     }
 
     /**

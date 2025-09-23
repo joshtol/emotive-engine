@@ -23,14 +23,24 @@
     will-change: transform, background-color, color;
 }
 
-/* Dice Icon Styling */
-.dice-icon {
+/* Emotion Icon Styling */
+.emotion-icon {
     width: 24px;
     height: 24px;
-    filter: var(--icon-filter, none);
     vertical-align: middle;
     display: inline-block;
 }
+
+.emotion-btn .emotion-icon {
+    width: 8vh;
+    height: 8vh;
+    min-width: 8vh;
+    min-height: 8vh;
+    /* Remove any theme filters - SVG should display exactly as designed */
+    filter: none !important;
+}
+
+/* SVG icons display exactly as designed - no theme modifications */
 
 .sci-fi-btn:hover {
     background: var(--button-hover);

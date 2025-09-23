@@ -37,7 +37,7 @@ class SystemControlsGenerator {
         }
 
         this.generateControls();
-        console.log('SystemControlsGenerator initialized');
+        // SystemControlsGenerator initialized
     }
 
     /**

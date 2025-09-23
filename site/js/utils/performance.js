@@ -104,7 +104,7 @@ export function measureTime(func, name = 'function') {
         const start = performance.now();
         const result = func.apply(this, args);
         const end = performance.now();
-        console.log(`${name} took ${(end - start).toFixed(2)}ms`);
+        // Execution time measured
         return result;
     };
 }
