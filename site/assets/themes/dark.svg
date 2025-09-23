@@ -1,3 +1,9 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 3C7.03 3 3 7.03 3 12C3 16.97 7.03 21 12 21C16.97 21 21 16.97 21 12C21 11.34 20.91 10.7 20.75 10.09C19.84 10.67 18.75 11 17.57 11C14.48 11 12 8.52 12 5.43C12 4.25 12.33 3.16 12.91 2.25C12.61 3.09 12 3 12 3z" fill-rule="evenodd"/>
+  <defs>
+    <mask id="crescent">
+      <rect width="24" height="24" fill="white"/>
+      <circle cx="17" cy="6" r="7" fill="black"/>
+    </mask>
+  </defs>
+  <circle cx="12" cy="12" r="10" fill="currentColor" mask="url(#crescent)"/>
 </svg>
