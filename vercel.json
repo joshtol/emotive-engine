@@ -1,5 +1,17 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "site",
-  "installCommand": "npm install"
+  "buildCommand": "cd site && npm run build",
+  "outputDirectory": "site/.next",
+  "installCommand": "npm install && cd site && npm install",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/site/$1"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "emotive-engine",
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "emotive-engine.firebaseapp.com",
+    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "emotive-engine.appspot.com"
+  }
 }

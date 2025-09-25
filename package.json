@@ -29,8 +29,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "rollup -c --environment NODE_ENV:production && node scripts/copy-built-files.js",
-    "build:dev": "rollup -c --environment NODE_ENV:development && node scripts/copy-built-files.js",
+    "build": "rollup -c --environment NODE_ENV:production",
+    "build:dev": "rollup -c --environment NODE_ENV:development",
     "build:split": "rollup -c rollup.split.config.js --environment NODE_ENV:production",
     "build:demo": "rollup -c rollup.demo.config.js",
     "build:watch": "rollup -c -w --environment NODE_ENV:development",
@@ -121,7 +121,10 @@
   "dependencies": {
     "@babel/runtime": "^7.28.4",
     "firebase": "^12.2.1",
-    "firebase-admin": "^13.5.0"
+    "firebase-admin": "^13.5.0",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "lint-staged": {
     "*.js": [

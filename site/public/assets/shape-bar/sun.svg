@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #fff;
+      }
+
+      .st1 {
+        mask: url(#mask);
+      }
+
+      .st2 {
+        fill-rule: evenodd;
+      }
+    </style>
+    <mask id="mask" x="6.82" y="6.82" width="10.37" height="10.37" maskUnits="userSpaceOnUse">
+      <g id="lunarEclipse">
+        <rect class="st0" x="6.82" y="6.82" width="10.37" height="10.37" transform="translate(24 24) rotate(-180)"/>
+        <circle cx="11.57" cy="11.14" r="2.59"/>
+      </g>
+    </mask>
+  </defs>
+  <path class="st2" d="M12,0l-2.5,6.5c1.57-.8,3.43-.8,5,0L12,0ZM2,2l4.5,7.5c.56-1.36,1.64-2.44,3-3L2,2ZM0,12l6.5,2.5c-.8-1.57-.8-3.43,0-5L0,12ZM2,22l7.5-4.5c-1.36-.56-2.44-1.64-3-3l-4.5,7.5ZM12,24l2.5-6.5c-1.57.8-3.43.8-5,0l2.5,6.5ZM22,22l-4.5-7.5c-.56,1.36-1.64,2.44-3,3l7.5,4.5ZM24,12l-6.5-2.5c.8,1.57.8,3.43,0,5l6.5-2.5ZM22,2l-7.5,4.5c1.36.56,2.44,1.64,3,3l4.5-7.5Z"/>
+  <g class="st1">
+    <circle cx="12" cy="12" r="4.32"/>
+  </g>
+  <circle cx="12" cy="12" r="2.7"/>
+</svg>

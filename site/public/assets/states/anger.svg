@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: url(#linear-gradient1);
+      }
+
+      .st1 {
+        fill: #ffe200;
+        stroke: #000;
+        stroke-width: 42px;
+      }
+
+      .st1, .st2 {
+        stroke-miterlimit: 10;
+      }
+
+      .st2 {
+        fill: #fff;
+        stroke: #231f20;
+        stroke-width: 23px;
+      }
+
+      .st3 {
+        fill: #231f20;
+      }
+
+      .st4 {
+        display: none;
+        fill: #adafb2;
+      }
+
+      .st5 {
+        fill: url(#linear-gradient4);
+      }
+
+      .st6 {
+        fill: url(#linear-gradient2);
+        opacity: .23;
+      }
+
+      .st7 {
+        fill: url(#linear-gradient3);
+      }
+
+      .st8 {
+        fill: url(#linear-gradient);
+        fill-opacity: .58;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="511.9" y1="156.37" x2="511.9" y2="868.54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#adafb2" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient1" x1="290.3" y1="534.68" x2="337.48" y2="616.39" gradientTransform="translate(4618.59 3748.09) rotate(-83.79) scale(8.83 -7.7)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0" stop-color="#cf6b4f"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient2" x1="90.9" y1="438.68" x2="847.4" y2="438.68" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".2" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient3" x1="538.35" y1="121.63" x2="588.17" y2="207.92" gradientTransform="translate(2834.16 -67.19) rotate(-180) scale(4.4 -2.16)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient4" x1="511.86" y1="614.83" x2="511.86" y2="713.98" gradientTransform="translate(0 1308.81) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20"/>
+      <stop offset="1" stop-color="#231f20"/>
+    </linearGradient>
+  </defs>
+  <g id="base-orb">
+    <circle id="theme-color-bg" class="st4" cx="541.9" cy="552.45" r="423.07"/>
+    <circle id="outer-circle" class="st1" cx="511.9" cy="512.45" r="408.5"/>
+    <circle id="bg-gradient" class="st8" cx="511.9" cy="512.45" r="356.09"/>
+    <circle id="tangerine-shadow" class="st0" cx="510.17" cy="514.43" r="374.7"/>
+    <path id="top-inner-shadow" class="st6" d="M189.4,775.95c-38.36-62.24-60.5-135.55-60.5-214.03,0-225.61,182.89-408.5,408.5-408.5,123.99,0,235.08,55.25,310,142.47-71.92-116.68-200.87-194.47-348-194.47-225.61,0-408.5,182.89-408.5,408.5,0,101.61,37.11,194.56,98.5,266.03Z"/>
+    <ellipse id="top-left-highlight" class="st7" cx="354.46" cy="288.18" rx="197.37" ry="110.78" transform="translate(-101.77 264.77) rotate(-36.17)"/>
+  </g>
+  <g id="anger">
+    <g id="left-eye">
+      <circle id="eye-outline" class="st2" cx="364" cy="461" r="106"/>
+      <circle id="pupil" class="st3" cx="404" cy="471" r="52.8"/>
+    </g>
+    <g id="right-eye">
+      <circle id="eye-outline1" data-name="eye-outline" class="st2" cx="664" cy="461" r="106"/>
+      <circle id="pupil1" data-name="pupil" class="st3" cx="624" cy="471" r="52.8"/>
+    </g>
+    <path id="left-eye1" data-name="left-eye" class="st3" d="M351.7,273.8c-3-1.42-16.49.83-18.74,14.3-4.08,24.4,8.48,70.69,43.7,92.94,66.36,41.92,118.86,8.46,114.15-10.33-6.05-24.1-41.75,7.97-87.35-22.44-49.86-33.25-31.3-64.8-51.75-74.47Z"/>
+    <path id="left-eye2" data-name="left-eye" class="st3" d="M676.57,273.8c3-1.42,16.49.83,18.74,14.3,4.08,24.4-8.48,70.69-43.7,92.94-66.36,41.92-118.86,8.46-114.15-10.33,6.05-24.1,41.75,7.97,87.35-22.44,49.86-33.25,31.3-64.8,51.75-74.47Z"/>
+    <path id="mouth" class="st5" d="M386.26,688.01s53.22-41.14,134.79-38.41,120.36,40.06,123.5,41.44c6.72,2.95,17.1,2.28,21.29.3,4.93-2.33,9.69-19.33-4.26-34.78-25.92-28.72-89.55-62.69-147.2-61.7-88.67,1.51-145.01,56.26-145.01,56.26,0,0-23.91,20.27-14.09,35.69s30.97,1.21,30.97,1.21Z"/>
+  </g>
+</svg>
