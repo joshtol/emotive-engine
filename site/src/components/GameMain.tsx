@@ -16,6 +16,7 @@ export default function GameMain({ engine, score, combo }: GameMainProps) {
     { name: 'love', svg: 'love.svg' },
     { name: 'excited', svg: 'excited.svg' },
     { name: 'calm', svg: 'calm.svg' },
+    { name: 'calm', svg: 'calm.svg' },
   ]
 
   const rightEmotionalStates = [
@@ -23,6 +24,7 @@ export default function GameMain({ engine, score, combo }: GameMainProps) {
     { name: 'fear', svg: 'fear.svg' },
     { name: 'sadness', svg: 'sadness.svg' },
     { name: 'disgust', svg: 'disgust.svg' },
+    { name: 'anger', svg: 'anger.svg' },
     { name: 'anger', svg: 'anger.svg' },
   ]
 
