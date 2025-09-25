@@ -408,10 +408,10 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 /* State columns */
-.state-column { position:absolute; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:2vh; z-index:10; }
-.state-column-left { left:3vw; }
-.state-column-right { right:3vw; }
-.state-icon { width: min(calc(100vw * 0.5 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.5 / 9)) / 5); height: min(calc(100vw * 0.5 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.5 / 9)) / 5); display:flex; align-items:center; justify-content:center; background:transparent; border-radius:50%; backdrop-filter: blur(4px); }
+.state-column { position:absolute; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:2vh; z-index:5; }
+.state-column-left { left: 2%; }
+.state-column-right { right: 2%; }
+.state-icon { width: min(calc(100vw * 0.5 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.5 / 9)) / 5); height: min(calc(100vw * 0.5 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.5 / 9)) / 5); display:flex; align-items:center; justify-content:center; background:transparent; border-radius:50%; }
 .state-icon-svg { width:70%; height:70%; }
 
 .shape-selector-bar { display:grid; grid-template-columns: repeat(9, 1fr); align-items:center; justify-content:center; width:100%; height: calc(100vw * 0.5 / 9); }
@@ -426,39 +426,30 @@ input[type="number"] { -moz-appearance: textfield; }
 /* System Controls Bar - Glass Morphism Sci-Fi Premium */
 .system-controls-bar { 
   position: absolute; 
-  top: 2vh; 
+  top: 2%; 
   left: 50%; 
   transform: translateX(-50%); 
   display: flex; 
   align-items: center; 
-  gap: calc(8px + 0.2vw); 
+  justify-content: center;
+  gap: 1vw; 
   z-index: 20; 
-  padding: calc(8px + 0.4vh) calc(16px + 0.6vw); 
-  background: rgba(0, 0, 0, 0.15); 
-  border: 1px solid rgba(255, 255, 255, 0.2); 
-  border-radius: calc(16px + 0.8vw); 
-  backdrop-filter: blur(20px) saturate(180%); 
-  -webkit-backdrop-filter: blur(20px) saturate(180%); 
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  padding: 0; 
+  background: transparent; 
+  border: none; 
+  backdrop-filter: none; 
+  -webkit-backdrop-filter: none; 
+  box-shadow: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 60%;
+  max-width: 60%;
 }
 
-.system-controls-bar:hover {
-  background: rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08);
-}
 
 /* System bar buttons - Glass Morphism */
 .system-controls-bar .sci-fi-btn { 
-  width: clamp(32px, 4vw, 40px); 
-  height: clamp(32px, 4vw, 40px); 
+  width: 4vh; 
+  height: 4vh;
   min-width: auto; 
   min-height: auto; 
   padding: 0; 
@@ -476,6 +467,8 @@ input[type="number"] { -moz-appearance: textfield; }
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
+  aspect-ratio: 1;
 }
 
 .system-controls-bar .sci-fi-btn::before {
@@ -518,8 +511,8 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .system-control-icon { 
-  width: clamp(16px, 2vw, 20px); 
-  height: clamp(16px, 2vw, 20px); 
+  width: 2.4vh; 
+  height: 2.4vh; 
   display: block; 
   margin: 0 auto; 
   filter: brightness(1.1) contrast(1.1);

@@ -34,7 +34,7 @@
     "build:split": "rollup -c rollup.split.config.js --environment NODE_ENV:production",
     "build:demo": "rollup -c rollup.demo.config.js",
     "build:watch": "rollup -c -w --environment NODE_ENV:development",
-    "dev": "vercel dev --port 5000",
+    "dev": "cd site && npm run dev",
     "serve": "cd site && python -m http.server 5000",
     "local": "node scripts/local-server.js",
     "build:analyze": "rollup -c --environment NODE_ENV:production,ANALYZE:true",
