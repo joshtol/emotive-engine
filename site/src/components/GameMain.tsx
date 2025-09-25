@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import SystemControlsBar from './SystemControlsBar'
 import ShapeSelectorBar from './ShapeSelectorBar'
 
@@ -9,10 +9,13 @@ interface GameMainProps {
   score: number
   combo: number
   currentUndertone: string
+  onGesture: (gesture: string) => void
 }
 
-export default function GameMain({ engine, score, combo, currentUndertone }: GameMainProps) {
+export default function GameMain({ engine, score, combo, currentUndertone, onGesture }: GameMainProps) {
   const [currentEmotion, setCurrentEmotion] = useState('neutral')
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const mascotRef = useRef<any>(null)
   
   const getUndertoneLabel = (undertone: string) => {
     const undertoneMap: { [key: string]: string } = {
@@ -43,9 +46,148 @@ export default function GameMain({ engine, score, combo, currentUndertone }: Gam
     { name: 'glitch', svg: 'glitch.svg' },
   ]
 
+  // Initialize Emotive Engine
+  useEffect(() => {
+    const initializeEngine = async () => {
+      if (!canvasRef.current) return
+
+      try {
+        console.log('Starting engine initialization...')
+        console.log('Canvas ref:', canvasRef.current)
+        console.log('Canvas dimensions:', canvasRef.current?.width, 'x', canvasRef.current?.height)
+        console.log('Canvas style:', canvasRef.current?.style.cssText)
+        
+        // Ensure canvas has proper size
+        if (canvasRef.current) {
+          const rect = canvasRef.current.getBoundingClientRect()
+          canvasRef.current.width = rect.width
+          canvasRef.current.height = rect.height
+          console.log('Canvas resized to:', canvasRef.current.width, 'x', canvasRef.current.height)
+          
+          // Wait a bit for CSS to be applied
+          await new Promise(resolve => setTimeout(resolve, 100))
+          
+          // Resize again after CSS is applied
+          const newRect = canvasRef.current.getBoundingClientRect()
+          canvasRef.current.width = newRect.width
+          canvasRef.current.height = newRect.height
+          console.log('Canvas final size:', canvasRef.current.width, 'x', canvasRef.current.height)
+        }
+        
+        // Load the engine script dynamically
+        const script = document.createElement('script')
+        script.src = '/emotive-engine.js'
+        script.async = true
+        
+        await new Promise((resolve, reject) => {
+          script.onload = resolve
+          script.onerror = reject
+          document.head.appendChild(script)
+        })
+        
+        // Access the global EmotiveMascot
+        const EmotiveMascot = (window as any).EmotiveMascot
+        console.log('EmotiveMascot loaded:', EmotiveMascot)
+        
+        if (!EmotiveMascot) {
+          throw new Error('EmotiveMascot not found on window object')
+        }
+        
+        const mascot = new EmotiveMascot({
+          canvasId: 'emotive-canvas',
+          targetFPS: 60,
+          enableAudio: false,
+          soundEnabled: false,
+          maxParticles: 50,
+          defaultEmotion: 'neutral',
+          enableAutoOptimization: true,
+          enableGracefulDegradation: true,
+          renderingStyle: 'classic',
+          enableGazeTracking: false,
+          enableIdleBehaviors: true,
+          classicConfig: {
+            coreColor: '#FFFFFF',
+            coreSizeDivisor: 12,
+            glowMultiplier: 2.5,
+            defaultGlowColor: '#14B8A6'
+          }
+        })
+
+        console.log('Mascot instance created:', mascot)
+        mascotRef.current = mascot
+        
+        // Start the engine
+        mascot.start()
+        console.log('Engine started!')
+        
+        // Check if mascot is actually rendering
+        setTimeout(() => {
+          console.log('Mascot state after 1 second:', {
+            isRunning: mascot.isRunning,
+            canvas: mascot.canvas,
+            particleSystem: mascot.particleSystem,
+            renderer: mascot.renderer
+          })
+        }, 1000)
+        
+        console.log('Emotive Engine initialized successfully!')
+      } catch (error) {
+        console.error('Failed to initialize Emotive Engine:', error)
+      }
+    }
+
+    initializeEngine()
+
+    // Cleanup on unmount
+    return () => {
+      if (mascotRef.current) {
+        mascotRef.current.stop()
+        mascotRef.current = null
+      }
+    }
+  }, [])
+
+  // Update emotion when it changes
+  useEffect(() => {
+    if (mascotRef.current && currentEmotion) {
+      mascotRef.current.setEmotion(currentEmotion)
+    }
+  }, [currentEmotion])
+
+  // Update undertone when it changes
+  useEffect(() => {
+    if (mascotRef.current && currentUndertone) {
+      mascotRef.current.updateUndertone(currentUndertone)
+    }
+  }, [currentUndertone])
+
+  // Handle gesture from parent
+  const handleGesture = (gesture: string) => {
+    if (mascotRef.current) {
+      // Use the correct method name from the available methods
+      if (typeof mascotRef.current.executeGestureDirectly === 'function') {
+        mascotRef.current.executeGestureDirectly(gesture)
+      } else if (typeof mascotRef.current.triggerGesture === 'function') {
+        mascotRef.current.triggerGesture(gesture)
+      } else {
+        console.log('No gesture method found')
+      }
+    }
+    // Also call parent's gesture handler
+    onGesture(gesture)
+  }
+
   return (
     <div className="canvas-container">
       <div className="game-canvas-area">
+        {/* Engine Canvas - Ready for particle system */}
+        <canvas ref={canvasRef} id="emotive-canvas"></canvas>
+        
+        {/* Performance Monitoring */}
+        <div id="fps-counter" className="fps-display">
+          <span className="fps-value">60</span> FPS
+        </div>
+        
         {/* System Controls Bar inside animation frame */}
         <SystemControlsBar />
         
@@ -66,11 +208,9 @@ export default function GameMain({ engine, score, combo, currentUndertone }: Gam
           ))}
         </div>
 
-        <div className="text-center">
-          <div className="bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg" style={{ width: 'clamp(80px, 15vw, 128px)', height: 'clamp(80px, 15vw, 128px)' }}>
-            <span className="text-gray-800" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}>🎵</span>
-          </div>
-        </div>
+            <div className="text-center">
+              {/* Placeholder removed - engine will render the mascot */}
+            </div>
         
         {/* Status indicators inside animation frame */}
         <div className="status-text emotion" data-state={currentEmotion}>emotion: {currentEmotion}</div>

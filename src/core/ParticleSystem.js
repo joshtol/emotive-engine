@@ -777,7 +777,7 @@ class ParticleSystem {
                 
                 // Use depth-adjusted size if particle has the method
                 const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
-                const safeSize = Math.max(0.1, depthSize);
+                let safeSize = Math.max(0.1, depthSize);
                 
                 // Apply firefly effect if sparkle gesture is active
                 let fireflyGlow = 1.0;

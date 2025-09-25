@@ -22,7 +22,7 @@ export default function Home() {
       <EmotiveHeader />
       <div className="emotive-main">
         <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={setCurrentUndertone} />
-        <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} />
+        <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} onGesture={handleGesture} />
         <GameControls onGesture={handleGesture} />
       </div>
       <EmotiveFooter />
