@@ -405,82 +405,75 @@ class AnimationController {
      * @param {number} deltaTime - Time since last frame in milliseconds
      */
     update(deltaTime) {
-        this.errorBoundary.wrap(() => {
-            const currentTime = performance.now();
-            
-            // Update state machine
-            if (this.subsystems.stateMachine) {
-                this.subsystems.stateMachine.update(deltaTime);
-            }
-            
-            // Gesture updates now handled by renderer
-            
-            // Update parent mascot for audio level monitoring
-            if (this.parentMascot && typeof this.parentMascot.update === 'function') {
-                this.parentMascot.update(deltaTime);
-            }
-            
-            // Only handle particles here if NOT in classic rendering mode
-            // Classic mode handles its own particles in EmotiveMascot.render()
-            const isClassicMode = this.parentMascot?.config?.renderingStyle === 'classic';
-            
-            if (!isClassicMode) {
-                // Get current emotional properties and center for particle system (advanced mode only)
-                if (this.subsystems.particleSystem && this.subsystems.stateMachine && this.subsystems.canvasManager) {
-                    const emotionalProps = this.subsystems.stateMachine.getCurrentEmotionalProperties();
-                    const center = this.subsystems.canvasManager.getCenter();
-                    
-                    // Get current gesture info from renderer if available
-                    let gestureMotion = null;
-                    let gestureProgress = 0;
-                    
-                    if (this.subsystems.renderer && this.subsystems.renderer.getCurrentGesture) {
-                        const currentGesture = this.subsystems.renderer.getCurrentGesture();
-                        if (currentGesture && currentGesture.particleMotion) {
-                            gestureMotion = currentGesture.particleMotion;
-                            gestureProgress = currentGesture.progress || 0;
-                        }
+        // Update state machine
+        if (this.subsystems.stateMachine) {
+            this.subsystems.stateMachine.update(deltaTime);
+        }
+        
+        // Gesture updates now handled by renderer
+        
+        // Update parent mascot for audio level monitoring
+        if (this.parentMascot && typeof this.parentMascot.update === 'function') {
+            this.parentMascot.update(deltaTime);
+        }
+        
+        // Only handle particles here if NOT in classic rendering mode
+        // Classic mode handles its own particles in EmotiveMascot.render()
+        const isClassicMode = this.parentMascot?.config?.renderingStyle === 'classic';
+        
+        if (!isClassicMode) {
+            // Get current emotional properties and center for particle system (advanced mode only)
+            if (this.subsystems.particleSystem && this.subsystems.stateMachine && this.subsystems.canvasManager) {
+                const emotionalProps = this.subsystems.stateMachine.getCurrentEmotionalProperties();
+                const center = this.subsystems.canvasManager.getCenter();
+                
+                // Get current gesture info from renderer if available
+                let gestureMotion = null;
+                let gestureProgress = 0;
+                
+                if (this.subsystems.renderer && this.subsystems.renderer.getCurrentGesture) {
+                    const currentGesture = this.subsystems.renderer.getCurrentGesture();
+                    if (currentGesture && currentGesture.particleMotion) {
+                        gestureMotion = currentGesture.particleMotion;
+                        gestureProgress = currentGesture.progress || 0;
                     }
-                    
-                    // Update particle system with current emotional context
-                    this.subsystems.particleSystem.spawn(
-                        emotionalProps.particleBehavior,
-                        this.subsystems.stateMachine.getCurrentState().emotion,
-                        emotionalProps.particleRate,
-                        center.x,
-                        center.y,
-                        deltaTime
-                    );
-                    
-                    // Update particles with gesture motion if available
-                    this.subsystems.particleSystem.update(deltaTime, center.x, center.y, gestureMotion, gestureProgress);
                 }
+                
+                // Update particle system with current emotional context
+                this.subsystems.particleSystem.spawn(
+                    emotionalProps.particleBehavior,
+                    this.subsystems.stateMachine.getCurrentState().emotion,
+                    emotionalProps.particleRate,
+                    center.x,
+                    center.y,
+                    deltaTime
+                );
+                
+                // Update particles with gesture motion if available
+                this.subsystems.particleSystem.update(deltaTime, center.x, center.y, gestureMotion, gestureProgress);
             }
-            
-            // PerformanceMonitor disabled
-            if (this.performanceMonitor) {
-                this.performanceMonitor.updateMetrics({
-                    particleCount: this.subsystems.particleSystem?.getActiveParticleCount?.() || 0,
-                    audioLatency: this.subsystems.soundSystem?.getLatency?.() || 0
-                });
-            }
-            
-        }, 'subsystem-update')();
+        }
+        
+        // PerformanceMonitor disabled
+        if (this.performanceMonitor) {
+            this.performanceMonitor.updateMetrics({
+                particleCount: this.subsystems.particleSystem?.getActiveParticleCount?.() || 0,
+                audioLatency: this.subsystems.soundSystem?.getLatency?.() || 0
+            });
+        }
     }
 
     /**
      * Renders the current frame
      */
     render() {
-        this.errorBoundary.wrap(() => {
-            // Call parent mascot's render method if available
-            if (this.parentMascot && typeof this.parentMascot.render === 'function') {
-                this.parentMascot.render();
-            } else if (this.subsystems.renderer) {
-                // Fallback to direct renderer call
-                this.subsystems.renderer.render();
-            }
-        }, 'frame-render')();
+        // Call parent mascot's render method if available
+        if (this.parentMascot && typeof this.parentMascot.render === 'function') {
+            this.parentMascot.render();
+        } else if (this.subsystems.renderer) {
+            // Fallback to direct renderer call
+            this.subsystems.renderer.render();
+        }
     }
 
 
