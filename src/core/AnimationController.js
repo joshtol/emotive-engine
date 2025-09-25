@@ -378,62 +378,26 @@ class AnimationController {
     }
     
     /**
-     * Main animation loop with deltaTime calculation and performance monitoring
-     * Now called by AnimationLoopManager with centralized frame timing
-     * @param {number} deltaTime - Time since last frame from loop manager
-     * @param {number} timestamp - Current timestamp from loop manager
+     * Main animation loop - SIMPLIFIED for performance
+     * Removed AnimationLoopManager overhead
      */
     animate(deltaTime, timestamp) {
         if (!this.isRunning || this.isPaused) return;
 
-        this.errorBoundary.wrap(() => {
-            // Use deltaTime from AnimationLoopManager if provided, else calculate
-            const currentTime = timestamp || performance.now();
-            this.deltaTime = deltaTime || (currentTime - this.lastFrameTime);
-            
-            // Cap deltaTime to prevent physics instability
-            // Use a consistent cap of 50ms (20 FPS minimum)
-            const skipParticleSpawn = this.deltaTime > 33; // Skip spawning if under 30fps
-            
-            if (this.deltaTime > 50) {
-                // Large gap detected - cap and reset accumulator
-                this.deltaTime = 50;
-                // Reset the accumulator to prevent burst spawning
-                if (this.subsystems?.particleSystem) {
-                    this.subsystems.particleSystem.resetAccumulator();
-                }
-            }
-            
-            // Store skip flag for particle system
-            if (this.subsystems?.particleSystem) {
-                this.subsystems.particleSystem.skipSpawnThisFrame = skipParticleSpawn;
-            }
-            
-            this.lastFrameTime = currentTime;
-            
-            // PerformanceMonitor disabled
-            if (this.performanceMonitor) {
-                this.performanceMonitor.startFrame(currentTime);
-            }
-            
-            // Update simple FPS counter
-            this.fpsCounter.update(currentTime);
-            
-            // Update all subsystems with integrated deltaTime
-            this.update(this.deltaTime);
-            
-            // Render the current frame
-            this.render();
-            
-            // PerformanceMonitor disabled
-            if (this.performanceMonitor) {
-                this.performanceMonitor.endFrame(performance.now());
-            }
-
-            // AnimationLoopManager now handles the loop scheduling
-            // No need to call requestAnimationFrame here
-
-        }, 'animation-loop')();
+        // Simple deltaTime calculation
+        const currentTime = timestamp || performance.now();
+        this.deltaTime = deltaTime || (currentTime - this.lastFrameTime);
+        
+        // Cap deltaTime to prevent huge jumps
+        if (this.deltaTime > 50) {
+            this.deltaTime = 50;
+        }
+        
+        this.lastFrameTime = currentTime;
+        
+        // Simple update and render - no overhead
+        this.update(this.deltaTime);
+        this.render();
     }
 
     /**
@@ -544,7 +508,7 @@ class AnimationController {
      */
     setTargetFPS(fps) {
         // DISABLED - no FPS changes allowed
-        return;
+        
     }
 
     /**
