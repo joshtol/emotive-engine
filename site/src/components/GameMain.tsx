@@ -161,6 +161,28 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
     }
   }, [currentUndertone])
 
+  // Handle window resize to prevent blurry/pixelated mascot
+  useEffect(() => {
+    const handleResize = () => {
+      if (mascotRef.current && canvasRef.current) {
+        // Wait for CSS to update
+        setTimeout(() => {
+          const rect = canvasRef.current!.getBoundingClientRect()
+          canvasRef.current!.width = rect.width
+          canvasRef.current!.height = rect.height
+          
+          // Call engine's resize method
+          if (typeof mascotRef.current.handleResize === 'function') {
+            mascotRef.current.handleResize()
+          }
+        }, 100)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // Handle gesture from parent
   const handleGesture = (gesture: string) => {
     if (mascotRef.current) {
