@@ -169,7 +169,7 @@ class ParticleSystem {
             particle.cachedGradientKey = null;
             // Clear behaviorData properties but keep the object
             if (particle.behaviorData) {
-                for (let key in particle.behaviorData) {
+                for (const key in particle.behaviorData) {
                     delete particle.behaviorData[key];
                 }
             }
@@ -238,7 +238,7 @@ class ParticleSystem {
         
         // Debug logging for excited emotion
         if (emotion === 'excited' && !this._excitedDebugLogged) {
-            console.log('[ParticleSystem] Excited emotion spawn:', {
+            console.warn('[ParticleSystem] Excited emotion spawn:', {
                 behavior,
                 emotion,
                 particleRate,
@@ -344,7 +344,7 @@ class ParticleSystem {
         }
         
         // Calculate spawn position based on behavior
-        let spawnPos = this.getSpawnPosition(behavior, centerX, centerY);
+        const spawnPos = this.getSpawnPosition(behavior, centerX, centerY);
         
         // CLAMP spawn position to canvas boundaries
         const clampedPos = this.clampToCanvas(spawnPos.x, spawnPos.y, centerX, centerY);
@@ -384,8 +384,6 @@ class ParticleSystem {
         const glowRadius = orbRadius * 2.5; // Glow extends this far
         
         // CONSTRAIN spawn positions to stay within canvas boundaries
-        const canvasWidth = centerX * 2;
-        const canvasHeight = centerY * 2;
         const margin = 30; // Keep spawns away from edges
         
         // Spawn particles outside the glow radius so they're visible
@@ -394,82 +392,88 @@ class ParticleSystem {
             centerX - margin, centerY - margin); // Constrain to canvas
         
         switch (behavior) {
-            case 'ambient':
-            case 'resting':
-                // Spawn at edge of glow where particles become visible
-                // They'll move outward to create "emanating from center" effect
-                const ambientAngle = Math.random() * Math.PI * 2;
-                const ambientRadius = glowRadius * 0.9; // Just at glow edge
-                return {
-                    x: centerX + Math.cos(ambientAngle) * ambientRadius,
-                    y: centerY + Math.sin(ambientAngle) * ambientRadius,
-                    angle: ambientAngle  // Pass angle for outward velocity
-                };
+        case 'ambient':
+        case 'resting': {
+            // Spawn at edge of glow where particles become visible
+            // They'll move outward to create "emanating from center" effect
+            const ambientAngle = Math.random() * Math.PI * 2;
+            const ambientRadius = glowRadius * 0.9; // Just at glow edge
+            return {
+                x: centerX + Math.cos(ambientAngle) * ambientRadius,
+                y: centerY + Math.sin(ambientAngle) * ambientRadius,
+                angle: ambientAngle  // Pass angle for outward velocity
+            };
+        }
                 
-            case 'rising':
-            case 'falling':
-                // These can spawn from outside for visibility
-                const angle = Math.random() * Math.PI * 2;
-                const radius = minSpawnRadius + Math.random() * (maxSpawnRadius - minSpawnRadius);
-                return {
-                    x: centerX + Math.cos(angle) * radius,
-                    y: centerY + Math.sin(angle) * radius
-                };
+        case 'rising':
+        case 'falling': {
+            // These can spawn from outside for visibility
+            const angle = Math.random() * Math.PI * 2;
+            const radius = minSpawnRadius + Math.random() * (maxSpawnRadius - minSpawnRadius);
+            return {
+                x: centerX + Math.cos(angle) * radius,
+                y: centerY + Math.sin(angle) * radius
+            };
+        }
                 
-            case 'aggressive':
-                // Spawn just outside the glow for aggressive burst effect
-                const aggressiveAngle = Math.random() * Math.PI * 2;
-                const aggressiveRadius = glowRadius + Math.random() * orbRadius;
-                return {
-                    x: centerX + Math.cos(aggressiveAngle) * aggressiveRadius,
-                    y: centerY + Math.sin(aggressiveAngle) * aggressiveRadius
-                };
+        case 'aggressive': {
+            // Spawn just outside the glow for aggressive burst effect
+            const aggressiveAngle = Math.random() * Math.PI * 2;
+            const aggressiveRadius = glowRadius + Math.random() * orbRadius;
+            return {
+                x: centerX + Math.cos(aggressiveAngle) * aggressiveRadius,
+                y: centerY + Math.sin(aggressiveAngle) * aggressiveRadius
+            };
+        }
                 
-            case 'scattering':
-                // Spawn at center for outward movement (scattering needs this)
+        case 'scattering':
+            // Spawn at center for outward movement (scattering needs this)
+            return { x: centerX, y: centerY };
+                
+        case 'burst': {
+            // Spawn at edge of orb so particles are visible
+            const burstAngle = Math.random() * Math.PI * 2;
+            if (this.currentEmotion === 'suspicion') {
+                const burstRadius = orbRadius * 1.5; // Further outside for suspicion
+                return {
+                    x: centerX + Math.cos(burstAngle) * burstRadius,
+                    y: centerY + Math.sin(burstAngle) * burstRadius
+                };
+            } else if (this.currentEmotion === 'surprise') {
+                // Surprise spawns around the orb edge for visibility
+                const burstRadius = orbRadius * 1.2; // Just outside the orb
+                return {
+                    x: centerX + Math.cos(burstAngle) * burstRadius,
+                    y: centerY + Math.sin(burstAngle) * burstRadius
+                };
+            } else {
+                // Other emotions spawn at center
                 return { x: centerX, y: centerY };
+            }
+        }
                 
-            case 'burst':
-                // Spawn at edge of orb so particles are visible
-                const burstAngle = Math.random() * Math.PI * 2;
-                if (this.currentEmotion === 'suspicion') {
-                    const burstRadius = orbRadius * 1.5; // Further outside for suspicion
-                    return {
-                        x: centerX + Math.cos(burstAngle) * burstRadius,
-                        y: centerY + Math.sin(burstAngle) * burstRadius
-                    };
-                } else if (this.currentEmotion === 'surprise') {
-                    // Surprise spawns around the orb edge for visibility
-                    const burstRadius = orbRadius * 1.2; // Just outside the orb
-                    return {
-                        x: centerX + Math.cos(burstAngle) * burstRadius,
-                        y: centerY + Math.sin(burstAngle) * burstRadius
-                    };
-                } else {
-                    // Other emotions spawn at center
-                    return { x: centerX, y: centerY };
-                }
+        case 'repelling': {
+            // Spawn at edge of glow so particles are visible
+            const repelAngle = Math.random() * Math.PI * 2;
+            const repelRadius = glowRadius * 0.9; // Just at glow edge
+            return {
+                x: centerX + Math.cos(repelAngle) * repelRadius,
+                y: centerY + Math.sin(repelAngle) * repelRadius
+            };
+        }
                 
-            case 'repelling':
-                // Spawn at edge of glow so particles are visible
-                const repelAngle = Math.random() * Math.PI * 2;
-                const repelRadius = glowRadius * 0.9; // Just at glow edge
-                return {
-                    x: centerX + Math.cos(repelAngle) * repelRadius,
-                    y: centerY + Math.sin(repelAngle) * repelRadius
-                };
+        case 'orbiting': {
+            // Spawn at orbital distance outside the glow
+            const orbitAngle = Math.random() * Math.PI * 2;
+            const orbitRadius = glowRadius * 1.2 + Math.random() * glowRadius * 0.5;
+            return {
+                x: centerX + Math.cos(orbitAngle) * orbitRadius,
+                y: centerY + Math.sin(orbitAngle) * orbitRadius
+            };
+        }
                 
-            case 'orbiting':
-                // Spawn at orbital distance outside the glow
-                const orbitAngle = Math.random() * Math.PI * 2;
-                const orbitRadius = glowRadius * 1.2 + Math.random() * glowRadius * 0.5;
-                return {
-                    x: centerX + Math.cos(orbitAngle) * orbitRadius,
-                    y: centerY + Math.sin(orbitAngle) * orbitRadius
-                };
-                
-            default:
-                return { x: centerX, y: centerY };
+        default:
+            return { x: centerX, y: centerY };
         }
     }
     
@@ -510,37 +514,20 @@ class ParticleSystem {
      * Internal update implementation
      */
     _update(deltaTime, centerX, centerY, gestureMotion = null, gestureProgress = 0, undertoneModifier = null) {
-        // Update cleanup timer
-        this.cleanupTimer += deltaTime;
+        // PERFORMANCE OPTIMIZATION: Skip cleanup for small particle counts
+        // 50 particles don't need periodic cleanup overhead
+        // Cleanup is unnecessary for such small numbers
         
-        // Periodic cleanup to prevent memory buildup
-        if (this.cleanupTimer >= this.cleanupInterval) { // Clean up every 5 seconds
-            this.performCleanup();
-            this.cleanupTimer = 0;
-        }
+        // PERFORMANCE OPTIMIZATION: Skip memory leak detection for small particle counts
+        // 50 particles don't need memory tracking overhead
+        // Memory leaks aren't a concern with such small numbers
         
-        // Memory leak detection - log every 30 seconds (reduced frequency)
-        if (Date.now() - this.lastMemoryCheck > 30000) {
-            const leaked = this.totalParticlesCreated - this.totalParticlesDestroyed;
-            // Only warn if leak is significant and growing
-            if (leaked > 200 && leaked > this.lastLeakedCount + 50) {
-                this.lastLeakedCount = leaked;
-            }
-            this.lastMemoryCheck = Date.now();
-        }
-        
-        // Update all particles
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            const particle = this.particles[i];
-            
-            // Update particle with gesture motion and undertone modifier
+        // PERFORMANCE OPTIMIZATION: Use simple filter instead of complex loop
+        // More efficient for small particle counts
+        this.particles = this.particles.filter(particle => {
             particle.update(deltaTime, centerX, centerY, undertoneModifier, gestureMotion, gestureProgress);
-            
-            // Remove dead particles
-            if (!particle.isAlive()) {
-                this.removeParticle(i);
-            }
-        }
+            return particle.isAlive();
+        });
         
         // Enforce particle limit by removing oldest if necessary
         while (this.particles.length > this.maxParticles) {
@@ -700,41 +687,20 @@ class ParticleSystem {
         // Sort particles by rendering properties to minimize state changes
         const visibleParticles = [];
         
-        // First pass: cull off-screen and dead particles
-        const margin = 50;
-        const canvasWidth = ctx.canvas.width;
-        const canvasHeight = ctx.canvas.height;
+        // PERFORMANCE OPTIMIZATION: Skip off-screen culling for small particle counts
+        // Canvas2D handles off-screen rendering efficiently
+        // Culling overhead is unnecessary for 50 particles
         
         for (const particle of this.particles) {
-            // Skip off-screen particles (culling)
-            if (particle.x < -margin || particle.x > canvasWidth + margin ||
-                particle.y < -margin || particle.y > canvasHeight + margin) {
-                continue;
-            }
-            
-            // Skip dead particles
+            // Skip dead particles only
             if (particle.life <= 0) continue;
             
             visibleParticles.push(particle);
         }
         
-        // Sort by render type to minimize state changes
-        // Group: cellShaded first, then by hasGlow, then by color
-        visibleParticles.sort((a, b) => {
-            if (a.isCellShaded !== b.isCellShaded) {
-                return a.isCellShaded ? -1 : 1;
-            }
-            if (a.hasGlow !== b.hasGlow) {
-                return a.hasGlow ? -1 : 1;
-            }
-            // Group by color to reduce fillStyle changes
-            const colorA = a.color || emotionColor;
-            const colorB = b.color || emotionColor;
-            if (colorA !== colorB) {
-                return colorA < colorB ? -1 : 1;
-            }
-            return 0;
-        });
+        // PERFORMANCE OPTIMIZATION: Skip sorting for 50 particles
+        // Sorting is expensive and unnecessary for small particle counts
+        // Canvas2D handles rendering efficiently without sorting
         
         // Actually render the particles
         this._renderParticles(ctx, visibleParticles, emotionColor, gestureTransform);
@@ -823,7 +789,6 @@ class ParticleSystem {
                 
                 // Apply glow effect if glow gesture is active (radiant burst)
                 if (gestureTransform && gestureTransform.glowEffect) {
-                    const envelope = gestureTransform.glowEnvelope || 0;
                     const progress = gestureTransform.glowProgress || 0;
                     const intensity = gestureTransform.particleGlow || 2.0;
 
@@ -906,7 +871,7 @@ class ParticleSystem {
             }
             // Clear behaviorData properties but keep the object
             if (particle.behaviorData) {
-                for (let key in particle.behaviorData) {
+                for (const key in particle.behaviorData) {
                     delete particle.behaviorData[key];
                 }
             }
