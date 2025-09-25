@@ -457,6 +457,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .shape-selector-bar { display:grid; grid-template-columns: repeat(9, 1fr); align-items:center; justify-content:center; width:70%; height: calc(100vw * 0.5 / 9); margin: 0 auto; }
 .shape-selector-inside { position:absolute; left:calc(100vw * 0.5 / 9 / 2); bottom:0; right:calc(100vw * 0.5 / 9 / 2); z-index:20; height: calc(100vw * 0.5 / 9); }
+.shape-selector-outside { position:absolute; left:calc(100vw * 0.5 / 9 / 2); bottom:0; right:calc(100vw * 0.5 / 9 / 2); z-index:20; height: calc(100vw * 0.5 / 9); }
 .shape-selector-button { 
   width: 100%; 
   aspect-ratio: 1; 

@@ -14,6 +14,7 @@ interface GameMainProps {
 
 export default function GameMain({ engine, score, combo, currentUndertone, onGesture }: GameMainProps) {
   const [currentEmotion, setCurrentEmotion] = useState('neutral')
+  const [currentShape, setCurrentShape] = useState('circle')
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
   
@@ -199,6 +200,15 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
     onGesture(gesture)
   }
 
+  // Handle shape change
+  const handleShapeChange = (shape: string) => {
+    if (mascotRef.current && typeof mascotRef.current.morphTo === 'function') {
+      mascotRef.current.morphTo(shape)
+      setCurrentShape(shape)
+      console.log('Shape changed to:', shape)
+    }
+  }
+
   return (
     <div className="canvas-container">
       <div className="game-canvas-area">
@@ -230,18 +240,18 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           ))}
         </div>
 
-            <div className="text-center">
+        <div className="text-center">
               {/* Placeholder removed - engine will render the mascot */}
-            </div>
+        </div>
         
         {/* Status indicators inside animation frame */}
         <div className="status-text emotion" data-state={currentEmotion}>emotion: {currentEmotion}</div>
         <div className="status-text stability" data-undertone={currentUndertone}>{getUndertoneLabel(currentUndertone)}</div>
-        
-        {/* Shape selector anchored to bottom of animation frame */}
-        <div className="shape-selector-inside">
-          <ShapeSelectorBar />
-        </div>
+      </div>
+      
+      {/* Shape selector moved outside canvas area for better performance */}
+      <div className="shape-selector-outside">
+        <ShapeSelectorBar onShapeChange={handleShapeChange} currentShape={currentShape} />
       </div>
     </div>
   )

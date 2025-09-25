@@ -45,46 +45,28 @@ export default {
     },
     
     /**
-     * Generate star shape points matching star.svg geometry
+     * Generate star shape points - simple 5-pointed star
      * @param {number} numPoints - Number of points to generate
      * @returns {Array} Array of normalized points
      */
     generate(numPoints) {
         const points = [];
+        const { points: starPoints, innerRadius, outerRadius } = this.config;
         
-        // Star.svg path coordinates (normalized to 0-1 range)
-        // Original: M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z
-        const starVertices = [
-            { x: 0.5, y: 0.72 },      // 12, 17.27 -> center bottom
-            { x: 0.76, y: 0.875 },    // 18.18, 21 -> top right
-            { x: 0.68, y: 0.21 },     // 16.36, 5.03 -> right middle
-            { x: 0.92, y: 0.385 },    // 22, 9.24 -> top right
-            { x: 0.2, y: 0.36 },      // 4.81, 8.63 -> left middle
-            { x: 0.5, y: 0.083 },     // 12, 2 -> top center
-            { x: 0.38, y: 0.36 },     // 9.19, 8.63 -> left middle
-            { x: 0.083, y: 0.385 },   // 2, 9.24 -> top left
-            { x: 0.23, y: 0.21 },     // 5.46, 5.03 -> left middle
-            { x: 0.24, y: 0.875 }     // 5.82, 21 -> top left
-        ];
-        
-        // Interpolate points along the star perimeter
+        // Simple 5-pointed star generation
         for (let i = 0; i < numPoints; i++) {
             const t = i / numPoints;
-            const vertexCount = starVertices.length;
+            const angle = t * Math.PI * 2 - Math.PI / 2; // Start from top
             
-            // Which edge are we on?
-            const edgeFloat = t * vertexCount;
-            const edgeIndex = Math.floor(edgeFloat) % vertexCount;
-            const nextIndex = (edgeIndex + 1) % vertexCount;
-            const edgeProgress = edgeFloat - Math.floor(edgeFloat);
-            
-            // Linear interpolation between vertices
-            const v1 = starVertices[edgeIndex];
-            const v2 = starVertices[nextIndex];
+            // For a 5-pointed star, we have 10 points total (5 outer + 5 inner)
+            // Alternate between outer and inner radius
+            const pointIndex = Math.floor(t * 10); // 10 points total
+            const isOuterPoint = pointIndex % 2 === 0;
+            const radius = isOuterPoint ? outerRadius : innerRadius;
             
             points.push({
-                x: v1.x + (v2.x - v1.x) * edgeProgress,
-                y: v1.y + (v2.y - v1.y) * edgeProgress
+                x: 0.5 + Math.cos(angle) * radius,
+                y: 0.5 + Math.sin(angle) * radius
             });
         }
         
