@@ -13,6 +13,7 @@ export default function GameControls({ onGesture }: GameControlsProps) {
     <div className="emotive-controls">
       <div className="mb-6">
         <h2 className="section-header">DANCE</h2>
+        <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {danceGestures.map((gesture) => (
             <button key={gesture} onClick={() => onGesture(gesture.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{gesture}</span></button>
@@ -22,7 +23,8 @@ export default function GameControls({ onGesture }: GameControlsProps) {
       </div>
 
       <div className="mb-6">
-        <h2 className="section-header">OVERLAYABLE</h2>
+        <h2 className="section-header">OVERLAY</h2>
+        <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {overlayableGestures.map((gesture) => (
             <button key={gesture} onClick={() => onGesture(gesture.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{gesture}</span></button>

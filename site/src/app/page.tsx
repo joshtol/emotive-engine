@@ -9,6 +9,7 @@ import EmotiveFooter from '@/components/EmotiveFooter'
 
 export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [currentUndertone, setCurrentUndertone] = useState('none')
 
   const handleGesture = (gesture: string) => {
     // placeholder for engine hook
@@ -20,8 +21,8 @@ export default function Home() {
     <div className="emotive-container">
       <EmotiveHeader />
       <div className="emotive-main">
-        <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} />
-        <GameMain engine={null} score={0} combo={0} />
+        <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={setCurrentUndertone} />
+        <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} />
         <GameControls onGesture={handleGesture} />
       </div>
       <EmotiveFooter />
