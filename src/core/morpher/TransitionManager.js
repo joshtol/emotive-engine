@@ -3,6 +3,8 @@
  * @module core/morpher/TransitionManager
  */
 
+// import { shapeCache } from '../cache/ShapeCache.js';
+
 export class TransitionManager {
     constructor(morpher) {
         this.morpher = morpher;
@@ -138,23 +140,23 @@ export class TransitionManager {
         if (!this.shadowConfig) return 0;
         
         switch (this.shadowConfig.type) {
-            case 'bloom':
-                // Expand then fade
-                return progress < 0.5 
-                    ? progress * 2 
-                    : 2 - (progress * 2);
+        case 'bloom':
+            // Expand then fade
+            return progress < 0.5 
+                ? progress * 2 
+                : 2 - (progress * 2);
             
-            case 'burst':
-                // Quick expand and fade
-                return Math.pow(1 - progress, 2);
+        case 'burst':
+            // Quick expand and fade
+            return Math.pow(1 - progress, 2);
             
-            case 'contract':
-            case 'collapse':
-                // Fade in then shrink
-                return Math.sin(progress * Math.PI);
+        case 'contract':
+        case 'collapse':
+            // Fade in then shrink
+            return Math.sin(progress * Math.PI);
             
-            default:
-                return 0;
+        default:
+            return 0;
         }
     }
 
@@ -165,26 +167,26 @@ export class TransitionManager {
      */
     applyEasing(t) {
         switch (this.easingFunction) {
-            case 'linear':
-                return t;
-            case 'easeInQuad':
-                return t * t;
-            case 'easeOutQuad':
-                return t * (2 - t);
-            case 'easeInOutQuad':
-                return t < 0.5 
-                    ? 2 * t * t 
-                    : -1 + (4 - 2 * t) * t;
-            case 'easeInCubic':
-                return t * t * t;
-            case 'easeOutCubic':
-                return (--t) * t * t + 1;
-            case 'easeInOutCubic':
-                return t < 0.5 
-                    ? 4 * t * t * t 
-                    : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-            default:
-                return t;
+        case 'linear':
+            return t;
+        case 'easeInQuad':
+            return t * t;
+        case 'easeOutQuad':
+            return t * (2 - t);
+        case 'easeInOutQuad':
+            return t < 0.5 
+                ? 2 * t * t 
+                : -1 + (4 - 2 * t) * t;
+        case 'easeInCubic':
+            return t * t * t;
+        case 'easeOutCubic':
+            return (--t) * t * t + 1;
+        case 'easeInOutCubic':
+            return t < 0.5 
+                ? 4 * t * t * t 
+                : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+        default:
+            return t;
         }
     }
 

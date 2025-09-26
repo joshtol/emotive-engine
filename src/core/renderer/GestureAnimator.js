@@ -3,7 +3,7 @@
  * @module core/renderer/GestureAnimator
  */
 
-import { getGesture } from '../gestures/index.js';
+import { getGesture, getGestureProperties } from '../gestures/gestureCacheWrapper.js';
 import musicalDuration from '../MusicalDuration.js';
 
 export class GestureAnimator {
@@ -64,8 +64,11 @@ export class GestureAnimator {
      */
     startGesture(gestureName) {
         
-        // Get the gesture configuration
+        // Get the gesture configuration (uses cache if available)
         const gesture = getGesture(gestureName);
+        
+        // Use cached properties for better performance
+        // const cachedProperties = getGestureProperties(gestureName);
         
         // Trigger chromatic aberration for impact gestures
         const impactGestures = ['bounce', 'shake', 'pulse', 'flash', 'jump', 'slam', 'spin', 'flicker'];
@@ -133,7 +136,8 @@ export class GestureAnimator {
                 duration = musicalDuration.toMilliseconds(gesture.config.musicalDuration);
             } else if (gesture.config.duration) {
                 // Use fixed duration
-                duration = gesture.config.duration;
+                const { duration: configDuration } = gesture.config;
+                duration = configDuration;
             }
         }
         
@@ -191,129 +195,129 @@ export class GestureAnimator {
             // Apply gesture-specific transformations
             let gestureTransform = {};
             switch (gestureName) {
-                case 'bounce':
-                    gestureTransform = this.applyBounce(anim, easedProgress);
-                    break;
-                case 'pulse':
-                    gestureTransform = this.applyPulse(anim, easedProgress);
-                    break;
-                case 'shake':
-                    gestureTransform = this.applyShake(anim, easedProgress);
-                    break;
-                case 'spin':
-                    gestureTransform = this.applySpin(anim, easedProgress);
-                    break;
-                case 'nod':
-                    gestureTransform = this.applyNod(anim, easedProgress);
-                    break;
-                case 'tilt':
-                    gestureTransform = this.applyTilt(anim, easedProgress);
-                    break;
-                case 'expand':
-                    gestureTransform = this.applyExpand(anim, easedProgress);
-                    break;
-                case 'contract':
-                    gestureTransform = this.applyContract(anim, easedProgress);
-                    break;
-                case 'flash':
-                    gestureTransform = this.applyFlash(anim, easedProgress);
-                    break;
-                case 'drift':
-                    gestureTransform = this.applyDrift(anim, easedProgress);
-                    break;
-                case 'stretch':
-                    gestureTransform = this.applyStretch(anim, easedProgress);
-                    break;
-                case 'glow':
-                    gestureTransform = this.applyGlow(anim, easedProgress);
-                    break;
-                case 'flicker':
-                    gestureTransform = this.applyFlicker(anim, easedProgress);
-                    break;
-                case 'vibrate':
-                    gestureTransform = this.applyVibrate(anim, easedProgress);
-                    break;
-                case 'orbital':
-                    gestureTransform = this.applyOrbital(anim, easedProgress);
-                    break;
-                case 'hula':
-                    gestureTransform = this.applyHula(anim, easedProgress);
-                    break;
-                case 'wave':
-                    gestureTransform = this.applyWave(anim, easedProgress);
-                    break;
-                case 'breathe':
-                    gestureTransform = this.applyBreathe(anim, easedProgress);
-                    break;
-                case 'morph':
-                    gestureTransform = this.applyMorph(anim, easedProgress);
-                    break;
-                case 'slowBlink':
-                    gestureTransform = this.applySlowBlink(anim, easedProgress);
-                    break;
-                case 'look':
-                    gestureTransform = this.applyLook(anim, easedProgress);
-                    break;
-                case 'settle':
-                    gestureTransform = this.applySettle(anim, easedProgress);
-                    break;
-                case 'breathIn':
-                    gestureTransform = this.applyBreathIn(anim, easedProgress);
-                    break;
-                case 'breathOut':
-                    gestureTransform = this.applyBreathOut(anim, easedProgress);
-                    break;
-                case 'breathHold':
-                    gestureTransform = this.applyBreathHold(anim, easedProgress);
-                    break;
-                case 'breathHoldEmpty':
-                    gestureTransform = this.applyBreathHoldEmpty(anim, easedProgress);
-                    break;
-                case 'jump':
-                    gestureTransform = this.applyJump(anim, easedProgress);
-                    break;
-                case 'sway':
-                    gestureTransform = this.applySway(anim, easedProgress);
-                    break;
-                case 'float':
-                    gestureTransform = this.applyFloat(anim, easedProgress);
-                    break;
-                case 'rain':
-                    gestureTransform = this.applyRain(anim, easedProgress);
-                    break;
-                case 'runningman':
-                    gestureTransform = this.applyRunningMan(anim, easedProgress);
-                    break;
-                case 'charleston':
-                    gestureTransform = this.applyCharleston(anim, easedProgress);
-                    break;
-                case 'sparkle':
-                    gestureTransform = this.applySparkle(anim, easedProgress);
-                    break;
-                case 'shimmer':
-                    gestureTransform = this.applyShimmer(anim, easedProgress);
-                    break;
-                case 'wiggle':
-                    gestureTransform = this.applyWiggle(anim, easedProgress);
-                    break;
-                case 'groove':
-                    gestureTransform = this.applyGroove(anim, easedProgress);
-                    break;
-                case 'point':
-                    gestureTransform = this.applyPoint(anim, easedProgress);
-                    break;
-                case 'lean':
-                    gestureTransform = this.applyLean(anim, easedProgress);
-                    break;
-                case 'reach':
-                    gestureTransform = this.applyReach(anim, easedProgress);
-                    break;
-                case 'headBob':
-                    gestureTransform = this.applyHeadBob(anim, easedProgress);
-                    break;
-                case 'orbit':
-                    gestureTransform = this.applyOrbit(anim, easedProgress);
-                    break;
+            case 'bounce':
+                gestureTransform = this.applyBounce(anim, easedProgress);
+                break;
+            case 'pulse':
+                gestureTransform = this.applyPulse(anim, easedProgress);
+                break;
+            case 'shake':
+                gestureTransform = this.applyShake(anim, easedProgress);
+                break;
+            case 'spin':
+                gestureTransform = this.applySpin(anim, easedProgress);
+                break;
+            case 'nod':
+                gestureTransform = this.applyNod(anim, easedProgress);
+                break;
+            case 'tilt':
+                gestureTransform = this.applyTilt(anim, easedProgress);
+                break;
+            case 'expand':
+                gestureTransform = this.applyExpand(anim, easedProgress);
+                break;
+            case 'contract':
+                gestureTransform = this.applyContract(anim, easedProgress);
+                break;
+            case 'flash':
+                gestureTransform = this.applyFlash(anim, easedProgress);
+                break;
+            case 'drift':
+                gestureTransform = this.applyDrift(anim, easedProgress);
+                break;
+            case 'stretch':
+                gestureTransform = this.applyStretch(anim, easedProgress);
+                break;
+            case 'glow':
+                gestureTransform = this.applyGlow(anim, easedProgress);
+                break;
+            case 'flicker':
+                gestureTransform = this.applyFlicker(anim, easedProgress);
+                break;
+            case 'vibrate':
+                gestureTransform = this.applyVibrate(anim, easedProgress);
+                break;
+            case 'orbital':
+                gestureTransform = this.applyOrbital(anim, easedProgress);
+                break;
+            case 'hula':
+                gestureTransform = this.applyHula(anim, easedProgress);
+                break;
+            case 'wave':
+                gestureTransform = this.applyWave(anim, easedProgress);
+                break;
+            case 'breathe':
+                gestureTransform = this.applyBreathe(anim, easedProgress);
+                break;
+            case 'morph':
+                gestureTransform = this.applyMorph(anim, easedProgress);
+                break;
+            case 'slowBlink':
+                gestureTransform = this.applySlowBlink(anim, easedProgress);
+                break;
+            case 'look':
+                gestureTransform = this.applyLook(anim, easedProgress);
+                break;
+            case 'settle':
+                gestureTransform = this.applySettle(anim, easedProgress);
+                break;
+            case 'breathIn':
+                gestureTransform = this.applyBreathIn(anim, easedProgress);
+                break;
+            case 'breathOut':
+                gestureTransform = this.applyBreathOut(anim, easedProgress);
+                break;
+            case 'breathHold':
+                gestureTransform = this.applyBreathHold(anim, easedProgress);
+                break;
+            case 'breathHoldEmpty':
+                gestureTransform = this.applyBreathHoldEmpty(anim, easedProgress);
+                break;
+            case 'jump':
+                gestureTransform = this.applyJump(anim, easedProgress);
+                break;
+            case 'sway':
+                gestureTransform = this.applySway(anim, easedProgress);
+                break;
+            case 'float':
+                gestureTransform = this.applyFloat(anim, easedProgress);
+                break;
+            case 'rain':
+                gestureTransform = this.applyRain(anim, easedProgress);
+                break;
+            case 'runningman':
+                gestureTransform = this.applyRunningMan(anim, easedProgress);
+                break;
+            case 'charleston':
+                gestureTransform = this.applyCharleston(anim, easedProgress);
+                break;
+            case 'sparkle':
+                gestureTransform = this.applySparkle(anim, easedProgress);
+                break;
+            case 'shimmer':
+                gestureTransform = this.applyShimmer(anim, easedProgress);
+                break;
+            case 'wiggle':
+                gestureTransform = this.applyWiggle(anim, easedProgress);
+                break;
+            case 'groove':
+                gestureTransform = this.applyGroove(anim, easedProgress);
+                break;
+            case 'point':
+                gestureTransform = this.applyPoint(anim, easedProgress);
+                break;
+            case 'lean':
+                gestureTransform = this.applyLean(anim, easedProgress);
+                break;
+            case 'reach':
+                gestureTransform = this.applyReach(anim, easedProgress);
+                break;
+            case 'headBob':
+                gestureTransform = this.applyHeadBob(anim, easedProgress);
+                break;
+            case 'orbit':
+                gestureTransform = this.applyOrbit(anim, easedProgress);
+                break;
             }
             
             // Combine transforms
@@ -468,7 +472,7 @@ export class GestureAnimator {
         for (const gestureName of overrideGestures) {
             const anim = this.gestureAnimations[gestureName];
             if (anim && anim.active) {
-                // Get the actual gesture configuration
+                // Get the actual gesture configuration (uses cache if available)
                 const gesture = getGesture(gestureName);
                 
                 // Use the gesture's config for particleMotion, or create one from gesture type
@@ -479,7 +483,7 @@ export class GestureAnimator {
                 
                 const gestureInfo = {
                     name: gestureName,
-                    particleMotion: particleMotion,
+                    particleMotion,
                     progress: anim.progress || 0,
                     params: anim.params
                 };
@@ -491,7 +495,7 @@ export class GestureAnimator {
         // Then check all other gestures
         for (const [gestureName, anim] of Object.entries(this.gestureAnimations)) {
             if (anim.active) {
-                // Get the actual gesture configuration
+                // Get the actual gesture configuration (uses cache if available)
                 const gesture = getGesture(gestureName);
                 
                 // Use the gesture's config for particleMotion, or params if available
@@ -501,7 +505,7 @@ export class GestureAnimator {
                 
                 const gestureInfo = {
                     name: gestureName,
-                    particleMotion: particleMotion,
+                    particleMotion,
                     progress: anim.progress || 0,
                     params: anim.params
                 };
@@ -522,18 +526,18 @@ export class GestureAnimator {
      */
     applyEasing(progress, easing) {
         switch (easing) {
-            case 'linear':
-                return progress;
-            case 'quad':
-                return progress * progress;
-            case 'cubic':
-                return progress * progress * progress;
-            case 'sine':
-                return Math.sin(progress * Math.PI / 2);
-            case 'back':
-                return progress * progress * (2.7 * progress - 1.7);
-            default:
-                return progress;
+        case 'linear':
+            return progress;
+        case 'quad':
+            return progress * progress;
+        case 'cubic':
+            return progress * progress * progress;
+        case 'sine':
+            return Math.sin(progress * Math.PI / 2);
+        case 'back':
+            return progress * progress * (2.7 * progress - 1.7);
+        default:
+            return progress;
         }
     }
     
@@ -608,7 +612,7 @@ export class GestureAnimator {
         const easedProgress = Math.sin(progress * Math.PI / 2); // Smooth ease-out
         const scale = 1 + (targetScale - 1) * easedProgress;
         return {
-            scale: scale,
+            scale,
             glow: 1 + Math.abs(anim.params.glowAmount || 0.2) * easedProgress
         };
     }
@@ -619,7 +623,7 @@ export class GestureAnimator {
         const easedProgress = Math.sin(progress * Math.PI / 2); // Smooth ease-out
         const scale = 1 + (targetScale - 1) * easedProgress;
         return {
-            scale: scale,
+            scale,
             glow: 1 + (anim.params.glowAmount || -0.2) * easedProgress
         };
     }
@@ -675,7 +679,7 @@ export class GestureAnimator {
         };
     }
     
-    applyFlash(anim, progress) {
+    applyFlashWave(anim, progress) {
         // Wave-like flash that emanates outward
         // Store wave state in the animation object
         if (!anim.flashWave) {
@@ -726,7 +730,7 @@ export class GestureAnimator {
         
         return {
             offsetX: waveX,
-            glow: glow,
+            glow,
             particleGlow: intensity * mainPulse, // Intensity for particles
             flickerTime: time, // Pass time for particle calculations
             flickerEffect: true // Flag to enable flicker effect on particles (shimmer-like)
@@ -790,7 +794,7 @@ export class GestureAnimator {
     
     applyBreathe(anim, progress) {
         // Deliberate, mindful breathing animation
-        const params = anim.params;
+        const {params} = anim;
         const holdPercent = params.particleMotion?.holdPercent || 0.1;
         
         // Create a breathing curve with holds at peaks
@@ -822,9 +826,9 @@ export class GestureAnimator {
         anim.breathPhase = breathPhase;
         
         return {
-            scale: scale,
-            glow: glow,
-            breathPhase: breathPhase // Pass to particles for synchronized motion
+            scale,
+            glow,
+            breathPhase // Pass to particles for synchronized motion
         };
     }
     
@@ -867,26 +871,28 @@ export class GestureAnimator {
             const distance = anim.params.lookDistance * 50 * this.scaleFactor; // Convert to pixels and scale
             
             switch(direction) {
-                case 'left':
-                    anim.targetX = -distance;
-                    anim.targetY = 0;
-                    break;
-                case 'right':
-                    anim.targetX = distance;
-                    anim.targetY = 0;
-                    break;
-                case 'up':
-                    anim.targetX = 0;
-                    anim.targetY = -distance;
-                    break;
-                case 'down':
-                    anim.targetX = 0;
-                    anim.targetY = distance;
-                    break;
-                default: // random
-                    const angle = Math.random() * Math.PI * 2;
-                    anim.targetX = Math.cos(angle) * distance;
-                    anim.targetY = Math.sin(angle) * distance;
+            case 'left':
+                anim.targetX = -distance;
+                anim.targetY = 0;
+                break;
+            case 'right':
+                anim.targetX = distance;
+                anim.targetY = 0;
+                break;
+            case 'up':
+                anim.targetX = 0;
+                anim.targetY = -distance;
+                break;
+            case 'down':
+                anim.targetX = 0;
+                anim.targetY = distance;
+                break;
+            default: { // random
+                const angle = Math.random() * Math.PI * 2;
+                anim.targetX = Math.cos(angle) * distance;
+                anim.targetY = Math.sin(angle) * distance;
+                break;
+            }
             }
         }
         
@@ -971,7 +977,7 @@ export class GestureAnimator {
         
         return {
             offsetY: yOffset,
-            scale: scale
+            scale
         };
     }
     
@@ -992,7 +998,7 @@ export class GestureAnimator {
         return {
             offsetX: swayX,
             offsetY: bobY,
-            rotation: rotation
+            rotation
         };
     }
     
@@ -1162,7 +1168,7 @@ export class GestureAnimator {
         return {
             offsetX: wiggleX,
             offsetY: -bounceY,
-            rotation: rotation
+            rotation
         };
     }
     
@@ -1187,8 +1193,8 @@ export class GestureAnimator {
         return {
             offsetX: grooveX,
             offsetY: grooveY,
-            scale: scale,
-            rotation: rotation
+            scale,
+            rotation
         };
     }
     
@@ -1236,10 +1242,10 @@ export class GestureAnimator {
         const rotation = direction * 5 * scaleProgress; // Tilt 5 degrees in pointing direction
         
         return {
-            offsetX: offsetX,
-            offsetY: offsetY,
-            scale: scale,
-            rotation: rotation
+            offsetX,
+            offsetY,
+            scale,
+            rotation
         };
     }
     
@@ -1256,8 +1262,8 @@ export class GestureAnimator {
         const offsetX = side * 10 * this.scaleFactor * easedProgress;
         
         return {
-            offsetX: offsetX,
-            rotation: rotation
+            offsetX,
+            rotation
         };
     }
     
@@ -1289,9 +1295,9 @@ export class GestureAnimator {
         const scale = 1 + motionProgress * 0.15;
         
         return {
-            offsetX: offsetX,
-            offsetY: offsetY,
-            scale: scale
+            offsetX,
+            offsetY,
+            scale
         };
     }
     
@@ -1316,7 +1322,7 @@ export class GestureAnimator {
         
         return {
             offsetY: bobY,
-            rotation: rotation
+            rotation
         };
     }
     
@@ -1331,8 +1337,8 @@ export class GestureAnimator {
         const offsetY = Math.sin(angle) * radius;
         
         return {
-            offsetX: offsetX,
-            offsetY: offsetY
+            offsetX,
+            offsetY
         };
     }
 
@@ -1405,8 +1411,8 @@ export class GestureAnimator {
         };
     }
     
-    startRunningMan() { this.startGesture('runningman'); }
-    startCharleston() { this.startGesture('charleston'); }
+    startRunningManGesture() { this.startGesture('runningman'); }
+    startCharlestonGesture() { this.startGesture('charleston'); }
 
     /**
      * Pause current animation (called on tab switch)

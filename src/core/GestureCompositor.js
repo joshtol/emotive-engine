@@ -40,7 +40,7 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import { getGesture } from './gestures/index.js';
+import { getGesture, getGestureProperties } from './gestures/gestureCacheWrapper.js';
 import { getEmotionModifiers } from './emotions/index.js';
 import { emotionCache } from './cache/EmotionCache.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
@@ -77,19 +77,19 @@ class GestureCompositor {
      */
     calculateEasing(t, type) {
         switch(type) {
-            case 'ease-in':
-                return t * t;
-            case 'ease-out':
-                return t * (2 - t);
-            case 'ease-in-out':
-                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-            case 'bounce':
-                if (t < 0.363636) return 7.5625 * t * t;
-                if (t < 0.727272) return 7.5625 * (t -= 0.545454) * t + 0.75;
-                if (t < 0.909090) return 7.5625 * (t -= 0.818181) * t + 0.9375;
-                return 7.5625 * (t -= 0.954545) * t + 0.984375;
-            default:
-                return t; // linear
+        case 'ease-in':
+            return t * t;
+        case 'ease-out':
+            return t * (2 - t);
+        case 'ease-in-out':
+            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        case 'bounce':
+            if (t < 0.363636) return 7.5625 * t * t;
+            if (t < 0.727272) return 7.5625 * (t -= 0.545454) * t + 0.75;
+            if (t < 0.909090) return 7.5625 * (t -= 0.818181) * t + 0.9375;
+            return 7.5625 * (t -= 0.954545) * t + 0.984375;
+        default:
+            return t; // linear
         }
     }
     
@@ -125,6 +125,9 @@ class GestureCompositor {
             amplitude: 20,
             easing: 'sine'
         };
+        
+        // Use cached gesture properties if available for better performance
+        // const cachedProperties = getGestureProperties(gesture);
         const emotionMod = emotionCache && emotionCache.isInitialized ? 
             emotionCache.getModifiers(emotion) : getEmotionModifiers(emotion);
         const undertoneMod = getUndertoneModifier(undertone);
@@ -284,53 +287,53 @@ class GestureCompositor {
      */
     applyGestureSpecificMods(result, gesture, emotionMod, undertoneMod) {
         switch(gesture) {
-            case 'bounce':
-                // Angry bounce is more violent
-                if (emotionMod.addShake) {
-                    result.frequency = Math.floor(result.frequency * 1.5);
-                }
-                // Sad bounce barely leaves ground
-                if (emotionMod.addGravity) {
-                    result.amplitude *= 0.6;
-                    result.frequency = 1;
-                }
-                break;
+        case 'bounce':
+            // Angry bounce is more violent
+            if (emotionMod.addShake) {
+                result.frequency = Math.floor(result.frequency * 1.5);
+            }
+            // Sad bounce barely leaves ground
+            if (emotionMod.addGravity) {
+                result.amplitude *= 0.6;
+                result.frequency = 1;
+            }
+            break;
                 
-            case 'pulse':
-                // Love pulse is like a heartbeat
-                if (emotionMod.addWarmth) {
-                    result.frequency = 2; // Double beat
-                    result.glowAmount *= 1.5;
-                }
-                // Nervous pulse is irregular
-                if (undertoneMod.addFlutter) {
-                    result.irregular = true;
-                }
-                break;
+        case 'pulse':
+            // Love pulse is like a heartbeat
+            if (emotionMod.addWarmth) {
+                result.frequency = 2; // Double beat
+                result.glowAmount *= 1.5;
+            }
+            // Nervous pulse is irregular
+            if (undertoneMod.addFlutter) {
+                result.irregular = true;
+            }
+            break;
                 
-            case 'shake':
-                // Fear shake is more intense
-                if (emotionMod.addJitter) {
-                    result.frequency *= 1.5;
-                    result.amplitude *= 1.2;
-                }
-                // Anger shake is violent
-                if (emotionMod.addShake) {
-                    result.amplitude *= 1.5;
-                    result.decay = false; // Sustained shaking
-                }
-                break;
+        case 'shake':
+            // Fear shake is more intense
+            if (emotionMod.addJitter) {
+                result.frequency *= 1.5;
+                result.amplitude *= 1.2;
+            }
+            // Anger shake is violent
+            if (emotionMod.addShake) {
+                result.amplitude *= 1.5;
+                result.decay = false; // Sustained shaking
+            }
+            break;
                 
-            case 'spin':
-                // Joy spin has extra rotations
-                if (emotionMod.addBounce) {
-                    result.rotations *= 1.5;
-                }
-                // Confused spin reverses direction
-                if (emotionMod.addWobble) {
-                    result.wobble = true;
-                }
-                break;
+        case 'spin':
+            // Joy spin has extra rotations
+            if (emotionMod.addBounce) {
+                result.rotations *= 1.5;
+            }
+            // Confused spin reverses direction
+            if (emotionMod.addWobble) {
+                result.wobble = true;
+            }
+            break;
                 
             // Add more gesture-specific modifications as needed
         }

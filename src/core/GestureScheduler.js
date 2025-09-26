@@ -18,7 +18,7 @@
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
-import { getGesture } from './gestures/index.js';
+import { getGesture, getGestureProperties } from './gestures/gestureCacheWrapper.js';
 import rhythmEngine from './rhythm.js';
 import rhythmIntegration from './rhythmIntegration.js';
 import musicalDuration from './MusicalDuration.js';
@@ -52,14 +52,14 @@ class GestureScheduler {
      */
     setupRhythmListeners() {
         // Process queue on every beat
-        rhythmEngine.on('beat', (beatInfo) => {
+        rhythmEngine.on('beat', beatInfo => {
             if (rhythmIntegration.isEnabled()) {
                 this.processQueueOnBeat(beatInfo);
             }
         });
         
         // Process on subdivisions for finer timing
-        rhythmEngine.on('subdivision', (subdivisionInfo) => {
+        rhythmEngine.on('subdivision', subdivisionInfo => {
             if (rhythmIntegration.isEnabled()) {
                 this.processQueueOnSubdivision(subdivisionInfo);
             }
@@ -73,10 +73,14 @@ class GestureScheduler {
      * @returns {Object} Queue item reference
      */
     requestGesture(gestureName, options = {}) {
+        // Use cached gesture if available for better performance
         const gesture = getGesture(gestureName);
         if (!gesture) {
             return null;
         }
+        
+        // Use cached properties for timing calculations
+        // const cachedProperties = getGestureProperties(gestureName);
         
         // If rhythm is not active, play immediately
         if (!rhythmIntegration.isEnabled() || options.immediate) {
@@ -261,50 +265,52 @@ class GestureScheduler {
         let triggerTime;
         
         switch (timingMode) {
-            case 'immediate':
-                // Some gestures like flash might be immediate
-                triggerTime = now;
-                break;
+        case 'immediate':
+            // Some gestures like flash might be immediate
+            triggerTime = now;
+            break;
                 
-            case 'nextBeat':
-                // Trigger on the next beat
-                triggerTime = now + Math.max(50, timeInfo.nextBeatIn); // At least 50ms delay
-                break;
+        case 'nextBeat':
+            // Trigger on the next beat
+            triggerTime = now + Math.max(50, timeInfo.nextBeatIn); // At least 50ms delay
+            break;
                 
-            case 'nextDownbeat':
-                // Trigger on the next downbeat (beat 1 of a bar)
-                triggerTime = now + (timeInfo.beatInBar === 0 ? barDuration : timeToNextBar);
-                break;
+        case 'nextDownbeat':
+            // Trigger on the next downbeat (beat 1 of a bar)
+            triggerTime = now + (timeInfo.beatInBar === 0 ? barDuration : timeToNextBar);
+            break;
                 
-            case 'nextBar':
-                // Trigger at the start of the next bar
-                triggerTime = now + timeToNextBar;
-                break;
+        case 'nextBar':
+            // Trigger at the start of the next bar
+            triggerTime = now + timeToNextBar;
+            break;
                 
-            case 'nextPhrase':
-                // Trigger at the start of the next 4-bar phrase
-                const barsToNextPhrase = (4 - (timeInfo.bar % 4)) % 4 || 4;
-                triggerTime = now + (barsToNextPhrase * barDuration);
-                break;
+        case 'nextPhrase': {
+            // Trigger at the start of the next 4-bar phrase
+            const barsToNextPhrase = (4 - (timeInfo.bar % 4)) % 4 || 4;
+            triggerTime = now + (barsToNextPhrase * barDuration);
+            break;
+        }
                 
-            case 'subdivision':
-                // Snap to nearest subdivision
-                const subdivision = gesture.rhythm?.subdivision || 'eighth';
-                triggerTime = this.calculateNextSubdivision(timeInfo, subdivision);
-                break;
+        case 'subdivision': {
+            // Snap to nearest subdivision
+            const subdivision = gesture.rhythm?.subdivision || 'eighth';
+            triggerTime = this.calculateNextSubdivision(timeInfo, subdivision);
+            break;
+        }
                 
-            case 'swing':
-                // For swing patterns, align with swing points
-                if (rhythmEngine.getPattern() === 'swing') {
-                    triggerTime = this.calculateSwingPoint(timeInfo);
-                } else {
-                    triggerTime = now + Math.max(50, timeInfo.nextBeatIn);
-                }
-                break;
-                
-            default:
-                // Default to next beat
+        case 'swing':
+            // For swing patterns, align with swing points
+            if (rhythmEngine.getPattern() === 'swing') {
+                triggerTime = this.calculateSwingPoint(timeInfo);
+            } else {
                 triggerTime = now + Math.max(50, timeInfo.nextBeatIn);
+            }
+            break;
+                
+        default:
+            // Default to next beat
+            triggerTime = now + Math.max(50, timeInfo.nextBeatIn);
         }
         
         // Apply anticipation if specified (trigger slightly before beat)
@@ -369,6 +375,7 @@ class GestureScheduler {
             return 'immediate';
         }
         
+        // Use cached gesture if available for better performance
         const current = getGesture(this.currentGesture);
         if (!current) {
             return 'immediate';
@@ -515,11 +522,12 @@ class GestureScheduler {
      * Process queue on beat
      * @param {Object} beatInfo - Beat information
      */
-    processQueueOnBeat(beatInfo) {
+    processQueueOnBeat(_beatInfo) {
         const now = performance.now();
 
         // Don't process if we're still executing a gesture that shouldn't be interrupted
         if (this.currentGesture) {
+            // Use cached gesture if available for better performance
             const current = getGesture(this.currentGesture);
             if (current) {
                 const elapsed = now - this.currentGestureStartTime;
@@ -556,7 +564,7 @@ class GestureScheduler {
      * Process queue on subdivision
      * @param {Object} subdivisionInfo - Subdivision information
      */
-    processQueueOnSubdivision(subdivisionInfo) {
+    processQueueOnSubdivision(_subdivisionInfo) {
         const now = performance.now();
         
         // Only process items specifically waiting for subdivisions

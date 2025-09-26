@@ -10,9 +10,9 @@
  * @module core/ShapeMorpher
  */
 
-import { MusicalDuration } from './MusicalDuration.js';
 import { rhythmEngine } from './rhythm.js';
 import { SHAPE_DEFINITIONS } from './shapes/shapeDefinitions.js';
+import { shapeCache } from './cache/ShapeCache.js';
 import arrayPool from '../utils/ArrayPool.js';
 
 // Import modular components
@@ -119,7 +119,7 @@ class ShapeMorpher {
         
         
         commonShapes.forEach(shape => {
-            if (SHAPE_DEFINITIONS[shape]) {
+            if (shapeCache && shapeCache.isInitialized ? shapeCache.hasShape(shape) : SHAPE_DEFINITIONS[shape]) {
                 // Generate and cache the points
                 this.getShapePoints(shape);
             }
@@ -137,14 +137,15 @@ class ShapeMorpher {
      */
     getShapePoints(shapeName) {
         if (!this.shapeCache.has(shapeName)) {
-            const shapeDef = SHAPE_DEFINITIONS[shapeName];
+            const shapeDef = shapeCache && shapeCache.isInitialized ? 
+                shapeCache.getShape(shapeName) : SHAPE_DEFINITIONS[shapeName];
             if (!shapeDef || !shapeDef.points) {
                 const circlePoints = SHAPE_DEFINITIONS.circle.points;
                 this.shapeCache.set(shapeName, circlePoints);
                 return circlePoints;
             }
             // Store reference directly - shapes are immutable
-            const points = shapeDef.points;
+            const {points} = shapeDef;
             this.shapeCache.set(shapeName, points);
             return points;
         }
@@ -609,8 +610,10 @@ class ShapeMorpher {
      * Get transition configuration
      */
     getTransitionConfig(from, to) {
-        const fromShape = SHAPE_DEFINITIONS[from];
-        const toShape = SHAPE_DEFINITIONS[to];
+        const fromShape = shapeCache && shapeCache.isInitialized ? 
+            shapeCache.getShape(from) : SHAPE_DEFINITIONS[from];
+        const toShape = shapeCache && shapeCache.isInitialized ? 
+            shapeCache.getShape(to) : SHAPE_DEFINITIONS[to];
         
         // Special transitions for moon - add a dreamy quality
         if (to === 'moon') {
@@ -714,8 +717,10 @@ class ShapeMorpher {
     getCurrentShadow() {
         // Default to circle if currentShape is somehow null/undefined
         const shapeName = this.currentShape || 'circle';
-        const currentDef = SHAPE_DEFINITIONS[shapeName];
-        const targetDef = this.targetShape ? SHAPE_DEFINITIONS[this.targetShape] : null;
+        const currentDef = shapeCache && shapeCache.isInitialized ? 
+            shapeCache.getShape(shapeName) : SHAPE_DEFINITIONS[shapeName];
+        const targetDef = this.targetShape ? (shapeCache && shapeCache.isInitialized ? 
+            shapeCache.getShape(this.targetShape) : SHAPE_DEFINITIONS[this.targetShape]) : null;
         
         const currentShadow = currentDef?.shadow || { type: 'none' };
         const targetShadow = targetDef?.shadow || null;
@@ -752,7 +757,7 @@ class ShapeMorpher {
                 
                 return {
                     type: 'crescent',
-                    coverage: coverage,
+                    coverage,
                     angle: -30,
                     offset: currentOffset,
                     shadowX: offsetX,
@@ -841,7 +846,7 @@ class ShapeMorpher {
                     shadowX: offsetX * (1 - smoothBlend),
                     shadowY: offsetY * (1 - smoothBlend),
                     diffusion: smoothBlend,
-                    shadowProgress: shadowProgress
+                    shadowProgress
                 };
             }
         }
@@ -906,7 +911,7 @@ class ShapeMorpher {
                         color: `rgba(80, 20, 0, ${0.9 - 0.2 * transformPhase})`,
                         shadowX: Math.cos(angle) * 0.7 * moveStart,
                         shadowY: Math.sin(angle) * 0.7 * moveStart,
-                        diffusion: diffusion
+                        diffusion
                     };
                 } else {
                     // Smooth exit as crescent
@@ -937,7 +942,7 @@ class ShapeMorpher {
             
             return {
                 ...targetShadow,
-                shadowX: shadowX,
+                shadowX,
                 shadowProgress: easedProgress
             };
         } else if (this.transitionConfig.type === 'eclipse_exit') {
@@ -946,7 +951,7 @@ class ShapeMorpher {
             return {
                 ...currentShadow,
                 coverage: currentShadow.coverage * (1 - easedProgress),
-                shadowX: shadowX,
+                shadowX,
                 shadowProgress: 1 - easedProgress
             };
         } else if (this.transitionConfig.type === 'sun_fade') {
@@ -990,7 +995,7 @@ class ShapeMorpher {
             
             return {
                 type: targetShadow.type !== 'none' ? targetShadow.type : currentShadow.type,
-                coverage: coverage,
+                coverage,
                 angle: targetShadow.angle || currentShadow.angle || 0,
                 softness: targetShadow.softness || currentShadow.softness || 0.2,
                 progress: easedProgress
@@ -1016,21 +1021,21 @@ class ShapeMorpher {
     applyEasing(t) {
         const easing = this.transitionConfig?.easing || this.easing || 'linear';
         switch (easing) {
-            case 'linear':
-                return t;
-            case 'easeInQuad':
-                return t * t;
-            case 'easeOutQuad':
-                return t * (2 - t);
-            case 'easeInOutQuad':
-                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-            case 'easeInOutSine':
-                return -(Math.cos(Math.PI * t) - 1) / 2;
-            case 'easeInOutCubic':
-            default:
-                return t < 0.5 
-                    ? 4 * t * t * t 
-                    : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        case 'linear':
+            return t;
+        case 'easeInQuad':
+            return t * t;
+        case 'easeOutQuad':
+            return t * (2 - t);
+        case 'easeInOutQuad':
+            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        case 'easeInOutSine':
+            return -(Math.cos(Math.PI * t) - 1) / 2;
+        case 'easeInOutCubic':
+        default:
+            return t < 0.5 
+                ? 4 * t * t * t 
+                : 1 - Math.pow(-2 * t + 2, 3) / 2;
         }
     }
     

@@ -18,6 +18,8 @@
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
+import { shapeCache } from '../cache/ShapeCache.js';
+
 /**
  * Shape registry - stores all loaded shape modules
  */
@@ -62,6 +64,13 @@ export function registerShape(name, shapeModule) {
  * @returns {Object} Shape module
  */
 export function getShape(name) {
+    // Use cached version if available, otherwise fallback to registry
+    if (shapeCache && shapeCache.isInitialized) {
+        const cachedShape = shapeCache.getShape(name);
+        if (cachedShape) {
+            return cachedShape;
+        }
+    }
     return shapeRegistry.get(name);
 }
 
@@ -86,6 +95,14 @@ export function generateShape(name, numPoints = 64) {
  * @returns {Object} Shadow configuration
  */
 export function getShapeShadow(name) {
+    // Use cached version if available
+    if (shapeCache && shapeCache.isInitialized) {
+        const cachedShape = shapeCache.getShape(name);
+        if (cachedShape && cachedShape.shadow) {
+            return cachedShape.shadow;
+        }
+    }
+    
     const shape = shapeRegistry.get(name);
     if (!shape) {
         return { type: 'none' };
@@ -154,13 +171,13 @@ export async function loadShapes() {
         for (const [name, definition] of Object.entries(SHAPE_DEFINITIONS)) {
             // Create shape module from definition
             const shapeModule = {
-                name: name,
+                name,
                 category: getShapeCategory(name),
                 points: definition.points,
                 shadow: definition.shadow || { type: 'none' },
                 render: definition.customRenderer || null, // Note: using 'render' property for effectRenderers
                 transitions: definition.transitions || {},
-                generate: (numPoints) => {
+                generate: numPoints => {
                     // If shape has its own generate function, use it
                     if (definition.generate) {
                         return definition.generate(numPoints);
