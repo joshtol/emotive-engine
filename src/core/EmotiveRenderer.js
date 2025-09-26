@@ -87,6 +87,7 @@
 import { interpolateHsl, applyUndertoneSaturation, rgbToHex, hexToRgb } from '../utils/colorUtils.js';
 import GestureCompositor from './GestureCompositor.js';
 import { getEmotion } from './emotions/index.js';
+import { emotionCache } from './cache/EmotionCache.js';
 import { getEffect, applyEffect, isEffectActive } from './effects/index.js';
 import { getGesture } from './gestures/index.js';
 import musicalDuration from './MusicalDuration.js';
@@ -2225,7 +2226,8 @@ class EmotiveRenderer {
         
         // Update colors with the new undertone
         if (this.state.emotion) {
-            const emotionConfig = getEmotion(this.state.emotion);
+            const emotionConfig = emotionCache && emotionCache.isInitialized ? 
+                emotionCache.getEmotion(this.state.emotion) : getEmotion(this.state.emotion);
             if (emotionConfig) {
                 const baseColor = emotionConfig.glowColor || this.config.defaultGlowColor;
                 const targetColor = this.applyUndertoneToColor(baseColor, weightedModifier || undertone);

@@ -76,6 +76,7 @@
 import { interpolateHsl } from '../utils/colorUtils.js';
 import { applyEasing, easeInOutCubic } from '../utils/easing.js';
 import { hasEmotion, listEmotions } from './emotions/index.js';
+import { emotionCache } from './cache/EmotionCache.js';
 
 class EmotiveStateMachine {
     constructor(errorBoundary) {
@@ -129,7 +130,46 @@ class EmotiveStateMachine {
      * Initialize all 8 emotional states with their visual properties
      */
     initializeEmotionalStates() {
-        this.emotionalStates = {
+        // Use cached emotion data if available, otherwise fallback to hardcoded values
+        if (emotionCache && emotionCache.isInitialized) {
+            this.emotionalStates = this.loadEmotionalStatesFromCache();
+        } else {
+            this.emotionalStates = this.loadEmotionalStatesFromHardcoded();
+        }
+    }
+
+    /**
+     * Load emotional states from cache
+     */
+    loadEmotionalStatesFromCache() {
+        const states = {};
+        const emotions = ['neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'love', 'suspicion', 'excited', 'resting', 'euphoria', 'focused', 'glitch', 'calm'];
+        
+        emotions.forEach(emotionName => {
+            const visualParams = emotionCache.getVisualParams(emotionName);
+            if (visualParams) {
+                states[emotionName] = {
+                    primaryColor: visualParams.primaryColor || '#B0B0B0',
+                    glowIntensity: visualParams.glowIntensity || 0.7,
+                    particleRate: visualParams.particleRate || 1,
+                    minParticles: visualParams.minParticles || 3,
+                    maxParticles: visualParams.maxParticles || 4,
+                    particleBehavior: visualParams.particleBehavior || 'ambient',
+                    coreSize: visualParams.coreSize || 1.0,
+                    breathRate: visualParams.breathRate || 1.0,
+                    breathDepth: visualParams.breathDepth || 0.1
+                };
+            }
+        });
+        
+        return states;
+    }
+
+    /**
+     * Load emotional states from hardcoded values (fallback)
+     */
+    loadEmotionalStatesFromHardcoded() {
+        return {
             neutral: {
                 primaryColor: '#B0B0B0',
                 glowIntensity: 0.7,

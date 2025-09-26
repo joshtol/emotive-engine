@@ -42,6 +42,7 @@
 
 import { getGesture } from './gestures/index.js';
 import { getEmotionModifiers } from './emotions/index.js';
+import { emotionCache } from './cache/EmotionCache.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
 
 class GestureCompositor {
@@ -124,7 +125,8 @@ class GestureCompositor {
             amplitude: 20,
             easing: 'sine'
         };
-        const emotionMod = getEmotionModifiers(emotion);
+        const emotionMod = emotionCache && emotionCache.isInitialized ? 
+            emotionCache.getModifiers(emotion) : getEmotionModifiers(emotion);
         const undertoneMod = getUndertoneModifier(undertone);
         
         // Compose the final parameters

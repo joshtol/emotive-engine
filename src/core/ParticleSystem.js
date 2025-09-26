@@ -77,6 +77,7 @@ import Particle from './Particle.js';
 import { applyUndertoneSaturationToArray } from '../utils/colorUtils.js';
 import rhythmIntegration from './rhythmIntegration.js';
 import { getEmotion } from './emotions/index.js';
+import { emotionCache } from './cache/EmotionCache.js';
 
 class ParticleSystem {
     constructor(maxParticles = 50, errorBoundary = null) {
@@ -265,7 +266,8 @@ class ParticleSystem {
         // Apply rhythm modulation if enabled
         let rhythmModulatedRate = particleRate;
         if (rhythmIntegration.isEnabled()) {
-            const emotionConfig = getEmotion(emotion);
+            const emotionConfig = emotionCache && emotionCache.isInitialized ? 
+                emotionCache.getEmotion(emotion) : getEmotion(emotion);
             if (emotionConfig) {
                 const modulation = rhythmIntegration.applyParticleRhythm(emotionConfig, this);
                 
