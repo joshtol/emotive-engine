@@ -41,7 +41,7 @@ export default function GameSidebar({ onGesture, isPlaying, currentUndertone, on
             <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {glowEffects.map((effect) => (
-            <button key={effect} onClick={() => onGesture(effect.toLowerCase())} className="sci-fi-btn gesture-btn" disabled={!isPlaying}><span className="btn-label">{effect}</span></button>
+            <button key={effect} onClick={() => onGesture(effect.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{effect}</span></button>
           ))}
         </div>
       </div>
