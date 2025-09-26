@@ -31,7 +31,7 @@ export default function GameSidebar({ onGesture, isPlaying, currentUndertone, on
             <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {chainCombos.map((combo) => (
-            <button key={combo} onClick={() => onGesture(combo.toLowerCase())} className="sci-fi-btn chain-btn" disabled={!isPlaying}><span className="btn-label">{combo}</span></button>
+            <button key={combo} onClick={() => onGesture(combo.toLowerCase())} className="sci-fi-btn chain-btn"><span className="btn-label">{combo}</span></button>
           ))}
         </div>
       </div>

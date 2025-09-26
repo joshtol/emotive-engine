@@ -19,7 +19,14 @@ export default function Home() {
     const gestureMapping: { [key: string]: string } = {
       'headbob': 'headBob',
       'runman': 'runningman', 
-      'charles': 'charleston'
+      'charles': 'charleston',
+      // Chain combo mappings
+      'build': 'expand',
+      'cascade': 'wave',
+      'celebrate': 'burst',
+      'smooth': 'drift',
+      'chaos': 'shake',
+      'custom': 'morph'
     }
     
     // Use mapped name if available, otherwise use original
