@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 type ThemeName = 'dark' | 'light' | 'night'
 
@@ -24,11 +24,11 @@ export default function ThemeToggle() {
     if (typeof window !== 'undefined') localStorage.setItem('emotive-theme', theme)
   }, [theme])
 
-  const onClick = () => {
+  const onClick = useCallback(() => {
     const idx = themeCycle.indexOf(theme)
     const next = themeCycle[(idx + 1) % themeCycle.length]
     setTheme(next)
-  }
+  }, [theme])
 
   const iconSrc = `/assets/themes/${theme}.svg`
 

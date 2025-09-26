@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import GameSidebar from '@/components/GameSidebar'
 import GameMain from '@/components/GameMain'
@@ -12,7 +12,7 @@ export default function Home() {
   const [currentUndertone, setCurrentUndertone] = useState('none')
   const [mascot, setMascot] = useState<any>(null)
 
-  const handleGesture = (gesture: string) => {
+  const handleGesture = useCallback((gesture: string) => {
     // Debug: Gesture triggered
     
     // Map button display names to actual gesture names
@@ -38,18 +38,22 @@ export default function Home() {
     }
     
     setIsPlaying(true)
-  }
+  }, [mascot])
 
-  const handleMascotReady = (mascotInstance: any) => {
+  const handleMascotReady = useCallback((mascotInstance: any) => {
     setMascot(mascotInstance)
     // Debug: Mascot ready
-  }
+  }, [])
+
+  const handleUndertoneChange = useCallback((undertone: string) => {
+    setCurrentUndertone(undertone)
+  }, [])
 
   return (
     <div className="emotive-container">
       <EmotiveHeader />
       <div className="emotive-main">
-        <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={setCurrentUndertone} />
+        <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={handleUndertoneChange} />
         <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} onGesture={handleGesture} onMascotReady={handleMascotReady} />
         <GameControls onGesture={handleGesture} />
       </div>

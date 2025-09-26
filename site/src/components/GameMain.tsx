@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import SystemControlsBar from './SystemControlsBar'
 import ShapeSelectorBar from './ShapeSelectorBar'
 
@@ -199,13 +199,13 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
   }
 
   // Handle shape change
-  const handleShapeChange = (shape: string) => {
+  const handleShapeChange = useCallback((shape: string) => {
     if (mascotRef.current && typeof mascotRef.current.morphTo === 'function') {
       mascotRef.current.morphTo(shape)
       setCurrentShape(shape)
       // Debug: Shape changed
     }
-  }
+  }, [])
 
   return (
     <div className="canvas-container">

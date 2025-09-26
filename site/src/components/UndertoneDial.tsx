@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 interface UndertoneDialProps {
   currentUndertone: string
@@ -29,10 +29,10 @@ export default function UndertoneDial({ currentUndertone, onUndertoneChange }: U
     }
   }, [currentUndertone])
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     setIsDragging(true)
     e.preventDefault()
-  }
+  }, [])
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging || !dialRef.current) return
@@ -58,9 +58,9 @@ export default function UndertoneDial({ currentUndertone, onUndertoneChange }: U
     onUndertoneChange(closestUndertone.name)
   }
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false)
-  }
+  }, [])
 
   useEffect(() => {
     if (isDragging) {
@@ -73,7 +73,7 @@ export default function UndertoneDial({ currentUndertone, onUndertoneChange }: U
     }
   }, [isDragging])
 
-  const handleDialClick = (e: React.MouseEvent) => {
+  const handleDialClick = useCallback((e: React.MouseEvent) => {
     if (!dialRef.current) return
     
     const rect = dialRef.current.getBoundingClientRect()
@@ -95,7 +95,7 @@ export default function UndertoneDial({ currentUndertone, onUndertoneChange }: U
     
     setRotation(closestUndertone.angle)
     onUndertoneChange(closestUndertone.name)
-  }
+  }, [onUndertoneChange])
 
   return (
     <div className="undertone-dial-container">

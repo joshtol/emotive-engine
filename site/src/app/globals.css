@@ -205,7 +205,15 @@ body {
 }
 
 /* Container */
-.emotive-container { height: 100vh; width: 100vw; display: grid; grid-template-rows: 8vh 1fr 5vh; grid-template-areas: 'header' 'main' 'footer'; min-width: 0; }
+.emotive-container { 
+  height: 100vh; 
+  width: 100vw; 
+  display: grid; 
+  grid-template-rows: 8vh 1fr 5vh; 
+  grid-template-areas: 'header' 'main' 'footer'; 
+  min-width: 0; 
+  contain: layout style paint;
+}
 .emotive-header { 
   grid-area: header; 
   display: flex; 
@@ -213,6 +221,7 @@ body {
   justify-content: space-between; 
   padding: calc(0.5vh + 0.2vw) calc(1vw + 0.5vh); 
   background: var(--header-bg);
+  contain: layout style paint;
 }
 .emotive-logo { 
   display: flex; 
@@ -353,21 +362,38 @@ input[type="number"] { -moz-appearance: textfield; }
 @keyframes brake-pulse { 0% { box-shadow:0 0 0 0 currentColor; } 50% { box-shadow:0 0 var(--vp-20px) var(--vp-5px) currentColor; opacity: var(--opacity-80);} 100% { box-shadow:0 0 0 0 currentColor; opacity:1; } }
 
 
-.emotive-sidebar { grid-area: sidebar; overflow-y:auto; overflow-x:hidden; padding:2.0vh 1.8vw; min-width: 0;
+.emotive-sidebar { 
+  grid-area: sidebar; 
+  overflow-y:auto; 
+  overflow-x:hidden; 
+  padding:2.0vh 1.8vw; 
+  min-width: 0;
   /* Grid/button sizing variables (vp only) */
   --cols: 3; /* default columns */
   --gap: 1.0vh; /* grid gap */
   --pad: max(1.4vh, 1.2vw); /* button horizontal padding */
-  background: var(--sidebar-bg); }
-.emotive-controls { grid-area: controls; overflow-y:auto; overflow-x:hidden; padding:2.0vh 1.8vw; min-width: 0;
+  background: var(--sidebar-bg);
+  contain: layout style paint;
+}
+.emotive-controls { 
+  grid-area: controls; 
+  overflow-y:auto; 
+  overflow-x:hidden; 
+  padding:2.0vh 1.8vw; 
+  min-width: 0;
   /* same variables mirrored on right */
   --cols: 3;
   --gap: 1.0vh;
   --pad: max(1.4vh, 1.2vw);
-  background: var(--sidebar-bg); }
+  background: var(--sidebar-bg);
+  contain: layout style paint;
+}
 
 
-.emotive-footer { grid-area: footer; }
+.emotive-footer { 
+  grid-area: footer; 
+  contain: layout style paint;
+}
 .emotive-main { 
   grid-area: main; 
   display: grid; 
@@ -375,6 +401,7 @@ input[type="number"] { -moz-appearance: textfield; }
   grid-template-areas: 'sidebar canvas controls'; 
   min-width: 0; 
   position: relative;
+  contain: layout style paint;
 }
 
 .canvas-container {
@@ -387,6 +414,7 @@ input[type="number"] { -moz-appearance: textfield; }
   width: 100%;
   height: 100%;
   overflow: hidden;
+  contain: layout style paint;
 }
 
 .game-canvas-area { 
@@ -475,7 +503,7 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 .shape-selector-button:hover { background: linear-gradient(135deg, rgba(0,229,255,0.15) 0%, rgba(0,229,255,0.08) 100%); box-shadow: inset 0 0 var(--vp-8px) rgba(255,255,255,0.08), 0 0 var(--vp-15px) rgba(0,229,255,0.18); transform: translateY(var(--vp-1px)); border-color: rgba(0,229,255,0.35); }
 .shape-selector-button[aria-pressed="true"], .shape-selector-button.active, .shape-selector-button:focus-visible { background: linear-gradient(135deg, rgba(0,229,255,0.35) 0%, rgba(0,229,255,0.18) 100%); box-shadow: 0 0 var(--vp-25px) rgba(0,229,255,0.45), inset 0 0 var(--vp-12px) rgba(0,229,255,0.18); border-color: rgba(0,229,255,0.6); outline: none; }
-.shape-selector-icon { width: 60%; height: 60%; display:block; filter: brightness(0) invert(1) opacity(0.7); transition: opacity 0.18s ease; }
+.shape-selector-icon { width: 60%; height: 60%; display:block; filter: brightness(0) invert(1) opacity(0.7); transition: opacity 0.18s ease; will-change: opacity; }
 .shape-selector-button:hover .shape-selector-icon { opacity: 1; }
 .shape-selector-button[aria-pressed="true"] .shape-selector-icon, .shape-selector-button.active .shape-selector-icon, .shape-selector-button:focus-visible .shape-selector-icon { opacity: 1; }
 
@@ -708,6 +736,7 @@ input[type="number"] { -moz-appearance: textfield; }
   width: 100%; 
   min-width: 0; 
   height: auto; /* Let grid size itself */
+  contain: layout style;
 }
 
 /* Responsive grid columns purely by viewport */
