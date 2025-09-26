@@ -13,7 +13,7 @@ export default function Home() {
   const [mascot, setMascot] = useState<any>(null)
 
   const handleGesture = (gesture: string) => {
-    console.log('gesture', gesture)
+    // Debug: Gesture triggered
     
     // Map button display names to actual gesture names
     const gestureMapping: { [key: string]: string } = {
@@ -29,7 +29,7 @@ export default function Home() {
     if (mascot) {
       try {
         mascot.express(actualGestureName)
-        console.log(`Triggered gesture: ${actualGestureName} (from button: ${gesture})`)
+        // Debug: Gesture executed
       } catch (error) {
         console.error(`Failed to trigger gesture ${actualGestureName}:`, error)
       }
@@ -42,7 +42,7 @@ export default function Home() {
 
   const handleMascotReady = (mascotInstance: any) => {
     setMascot(mascotInstance)
-    console.log('Mascot ready for gestures:', mascotInstance)
+    // Debug: Mascot ready
   }
 
   return (

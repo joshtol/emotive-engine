@@ -7,23 +7,23 @@ export class EmotiveEngine {
   async initialize() {
     // TODO: Initialize the actual emotive engine
     this.initialized = true
-    console.log('Emotive Engine initialized')
+    // Debug: Engine initialized
   }
 
   executeGesture(gesture: string) {
     if (!this.initialized) return
     
     // TODO: Execute actual gesture
-    console.log(`Executing gesture: ${gesture}`)
+    // Debug: Executing gesture
   }
 
   play() {
     if (!this.initialized) return
-    console.log('Playing engine')
+    // Debug: Playing engine
   }
 
   pause() {
     if (!this.initialized) return
-    console.log('Pausing engine')
+    // Debug: Pausing engine
   }
 }

@@ -54,17 +54,14 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
       if (!canvasRef.current) return
 
       try {
-        console.log('Starting engine initialization...')
-        console.log('Canvas ref:', canvasRef.current)
-        console.log('Canvas dimensions:', canvasRef.current?.width, 'x', canvasRef.current?.height)
-        console.log('Canvas style:', canvasRef.current?.style.cssText)
+        // Debug: Starting engine initialization
         
         // Ensure canvas has proper size
         if (canvasRef.current) {
           const rect = canvasRef.current.getBoundingClientRect()
           canvasRef.current.width = rect.width
           canvasRef.current.height = rect.height
-          console.log('Canvas resized to:', canvasRef.current.width, 'x', canvasRef.current.height)
+          // Debug: Canvas resized
           
           // Wait a bit for CSS to be applied
           await new Promise(resolve => setTimeout(resolve, 100))
@@ -73,7 +70,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           const newRect = canvasRef.current.getBoundingClientRect()
           canvasRef.current.width = newRect.width
           canvasRef.current.height = newRect.height
-          console.log('Canvas final size:', canvasRef.current.width, 'x', canvasRef.current.height)
+          // Debug: Canvas final size
         }
         
         // Load the engine script dynamically
@@ -89,7 +86,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         
         // Access the global EmotiveMascot
         const EmotiveMascot = (window as any).EmotiveMascot
-        console.log('EmotiveMascot loaded:', EmotiveMascot)
+        // Debug: EmotiveMascot loaded
         
         if (!EmotiveMascot) {
           throw new Error('EmotiveMascot not found on window object')
@@ -115,7 +112,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           }
         })
 
-        console.log('Mascot instance created:', mascot)
+        // Debug: Mascot instance created
         mascotRef.current = mascot
         
         // Pass mascot reference to parent component
@@ -125,19 +122,14 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         
         // Start the engine
         mascot.start()
-        console.log('Engine started!')
+        // Debug: Engine started
         
         // Check if mascot is actually rendering
         setTimeout(() => {
-          console.log('Mascot state after 1 second:', {
-            isRunning: mascot.isRunning,
-            canvas: mascot.canvas,
-            particleSystem: mascot.particleSystem,
-            renderer: mascot.renderer
-          })
+          // Debug: Mascot state check
         }, 1000)
         
-        console.log('Emotive Engine initialized successfully!')
+        // Debug: Engine initialization complete
       } catch (error) {
         console.error('Failed to initialize Emotive Engine:', error)
       }
@@ -199,7 +191,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
       } else if (typeof mascotRef.current.triggerGesture === 'function') {
         mascotRef.current.triggerGesture(gesture)
       } else {
-        console.log('No gesture method found')
+        // Debug: No gesture method found
       }
     }
     // Also call parent's gesture handler
@@ -211,7 +203,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
     if (mascotRef.current && typeof mascotRef.current.morphTo === 'function') {
       mascotRef.current.morphTo(shape)
       setCurrentShape(shape)
-      console.log('Shape changed to:', shape)
+      // Debug: Shape changed
     }
   }
 
