@@ -304,9 +304,9 @@ class AnimationController {
             // Store current time to calculate gap when resuming
             this.pauseTime = performance.now();
 
-            // Stop all active systems
+            // TAB FOCUS FIX: Don't clear particles immediately - let them fade naturally
             if (this.subsystems?.particleSystem) {
-                // Clear spawn accumulator to prevent burst on resume
+                // Just reset accumulator, don't clear particles
                 this.subsystems.particleSystem.resetAccumulator();
                 // Store particle count for debugging
                 this.pausedParticleCount = this.subsystems.particleSystem.particles?.length || 0;
@@ -328,31 +328,49 @@ class AnimationController {
                 const resumeTime = performance.now();
                 const gap = resumeTime - this.pauseTime;
 
-                // Reset timing to prevent huge deltaTime spike
+                // TAB FOCUS FIX: Reset timing more gently
                 this.lastFrameTime = resumeTime;
                 this.frameTimeAccumulator = 0;
 
-                // Clear and reset all systems
+                // TAB FOCUS FIX: Reset FPS counter to prevent false low FPS readings
+                if (this.fpsCounter) {
+                    this.fpsCounter.reset();
+                }
+
+                // TAB FOCUS FIX: Gradual particle recovery instead of clearing all
                 if (this.subsystems?.particleSystem) {
                     // Clear accumulator again to be safe
                     this.subsystems.particleSystem.resetAccumulator();
-                    // Clear any stuck particles if gap was too long
-                    if (gap > 5000) { // More than 5 seconds
+                    
+                    // Only clear particles if gap was VERY long (30+ seconds)
+                    if (gap > 30000) {
                         this.subsystems.particleSystem.particles = [];
+                    } else if (gap > 10000) {
+                        // For medium gaps (10-30s), reduce particle count gradually
+                        const targetCount = Math.max(10, Math.floor(this.pausedParticleCount * 0.5));
+                        while (this.subsystems.particleSystem.particles.length > targetCount) {
+                            this.subsystems.particleSystem.removeParticle(0);
+                        }
                     }
+                    // For short gaps (<10s), keep all particles
                 }
 
-                // Reset canvas context to fix any rendering artifacts
+                // TAB FOCUS FIX: Don't reset canvas context aggressively
                 if (this.renderer) {
-                    this.renderer.resetCanvasContext();
-
+                    // Only reset if gap was very long
+                    if (gap > 30000) {
+                        this.renderer.resetCanvasContext();
+                    }
+                    
                     // Reset any active animations
                     if (this.renderer.gestureAnimator) {
                         this.renderer.gestureAnimator.resumeAnimation?.();
                     }
 
-                    // Force a clean frame
-                    this.renderer.forceCleanRender = true;
+                    // Only force clean render for very long gaps
+                    if (gap > 30000) {
+                        this.renderer.forceCleanRender = true;
+                    }
                 }
 
                 // Reset state machine timing
@@ -371,7 +389,7 @@ class AnimationController {
 
                 // Log for debugging
                 if (this.performanceMonitor) {
-                    console.log(`Resumed after ${(gap/1000).toFixed(1)}s pause. Cleared particles: ${this.pausedParticleCount || 0}`);
+                    console.log(`TAB FOCUS FIX: Resumed after ${(gap/1000).toFixed(1)}s pause. Particles kept: ${this.subsystems?.particleSystem?.particles?.length || 0}/${this.pausedParticleCount || 0}`);
                 }
             }
         }
@@ -388,9 +406,16 @@ class AnimationController {
         const currentTime = timestamp || performance.now();
         this.deltaTime = deltaTime || (currentTime - this.lastFrameTime);
         
-        // Cap deltaTime to prevent huge jumps
-        if (this.deltaTime > 50) {
-            this.deltaTime = 50;
+        // TAB FOCUS FIX: More aggressive deltaTime cap for smooth recovery
+        // After tab focus, browsers can give inconsistent timing
+        if (this.deltaTime > 20) {
+            this.deltaTime = 20; // Reduced from 50ms to 20ms for smoother recovery
+        }
+        
+        // TAB FOCUS FIX: Detect and handle tab focus recovery
+        if (this.deltaTime > 16.67 && this.deltaTime < 20) {
+            // Likely tab focus recovery - use target frame time
+            this.deltaTime = 16.67; // Force 60fps timing
         }
         
         this.lastFrameTime = currentTime;

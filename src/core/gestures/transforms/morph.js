@@ -131,7 +131,7 @@ export default {
      * @param {number} centerY - Orb center Y
      * @param {EmotiveMascot} mascot - The mascot instance for core morphing
      */
-    initialize: function(particle, motion, centerX, centerY, mascot) {
+    initialize(particle, motion, centerX, centerY, _mascot) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -154,66 +154,85 @@ export default {
         const rotation = ((config.rotation || 0) * Math.PI / 180) * rotationDirection;
         
         switch (config.pattern) {
-            case 'star':
-                targetX = centerX;
-                targetY = centerY;
-                this.calculateStarPosition(particle, angle, size, config.points, config.innerRadius, rotation, centerX, centerY);
-                break;
+        case 'star':
+            targetX = centerX;
+            targetY = centerY;
+            this.calculateStarPosition(particle, angle, size, config.points, config.innerRadius, rotation, centerX, centerY);
+            break;
                 
-            case 'heart':
-                this.calculateHeartPosition(particle, angle, size, rotation, centerX, centerY);
-                break;
+        case 'heart':
+            this.calculateHeartPosition(particle, angle, size, rotation, centerX, centerY);
+            break;
                 
-            case 'square':
-                this.calculateSquarePosition(particle, angle, size, rotation, centerX, centerY);
-                break;
+        case 'square':
+            this.calculateSquarePosition(particle, angle, size, rotation, centerX, centerY);
+            break;
                 
-            case 'triangle':
-                this.calculateTrianglePosition(particle, angle, size, rotation, centerX, centerY);
-                break;
+        case 'triangle':
+            this.calculateTrianglePosition(particle, angle, size, rotation, centerX, centerY);
+            break;
                 
-            case 'circle':
-            default:
-                // Simple circle pattern
-                const targetRadius = size;
-                targetX = centerX + Math.cos(angle + rotation) * targetRadius;
-                targetY = centerY + Math.sin(angle + rotation) * targetRadius;
-                break;
+        case 'circle':
+        default: {
+            // Simple circle pattern
+            const targetRadius = size;
+            targetX = centerX + Math.cos(angle + rotation) * targetRadius;
+            targetY = centerY + Math.sin(angle + rotation) * targetRadius;
+            break;
+        }
         }
         
         particle.gestureData.morph = {
-            startX: startX,
-            startY: startY,
+            startX,
+            startY,
             targetX: particle.gestureData.morphTargetX || targetX,
             targetY: particle.gestureData.morphTargetY || targetY,
             originalVx: particle.vx,
             originalVy: particle.vy,
-            rotationDirection: rotationDirection, // Store random rotation direction
+            rotationDirection, // Store random rotation direction
             initialized: true
         };
     },
     
     /**
-     * Calculate star pattern position
+     * Calculate star pattern position - mathematically correct 5-pointed star
      */
-    calculateStarPosition: function(particle, angle, size, points, innerRadius, rotation, centerX, centerY) {
-        const armAngle = (Math.PI * 2) / points;
-        const nearestArm = Math.round(angle / armAngle) * armAngle;
-        const armIndex = Math.round(angle / armAngle) % points;
-        const isOuter = Math.random() > 0.5; // Distribute between inner and outer points
+    calculateStarPosition(particle, angle, size, points, innerRadius, rotation, centerX, centerY) {
+        // Create a proper 5-pointed star using mathematical formula
+        // A 5-pointed star has 5 outer points and 5 inner valleys
         
-        let radius;
+        // Normalize angle to 0-2π
+        const normalizedAngle = ((angle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        
+        // For a 5-pointed star, we need to map to 10 positions
+        // Positions 0,2,4,6,8 are outer points (tips)
+        // Positions 1,3,5,7,9 are inner points (valleys)
+        
+        const totalPositions = 10; // Always 10 for a 5-pointed star
+        const positionIndex = Math.floor((normalizedAngle / (Math.PI * 2)) * totalPositions);
+        
+        // Determine if this is an outer point (tip) or inner point (valley)
+        const isOuterPoint = positionIndex % 2 === 0;
+        const armIndex = Math.floor(positionIndex / 2);
+        
+        // Calculate the angle for this position
+        // Outer points are at: 0°, 72°, 144°, 216°, 288°
+        // Inner points are at: 36°, 108°, 180°, 252°, 324°
         let targetAngle;
         
-        if (isOuter) {
-            // Outer point of star
-            radius = size;
-            targetAngle = armIndex * armAngle + rotation;
+        if (isOuterPoint) {
+            // Outer point (tip of star)
+            targetAngle = (armIndex * 72) * Math.PI / 180; // 72° = 360°/5
         } else {
-            // Inner point of star (between arms)
-            radius = size * innerRadius;
-            targetAngle = armIndex * armAngle + armAngle * 0.5 + rotation;
+            // Inner point (valley between arms)
+            targetAngle = ((armIndex * 72) + 36) * Math.PI / 180; // 36° = 72°/2
         }
+        
+        // Apply rotation
+        targetAngle += rotation;
+        
+        // Use appropriate radius
+        const radius = isOuterPoint ? size : size * innerRadius;
         
         particle.gestureData.morphTargetX = centerX + Math.cos(targetAngle) * radius;
         particle.gestureData.morphTargetY = centerY + Math.sin(targetAngle) * radius;
@@ -222,14 +241,14 @@ export default {
     /**
      * Calculate heart pattern position
      */
-    calculateHeartPosition: function(particle, angle, size, rotation, centerX, centerY) {
+    calculateHeartPosition(particle, angle, size, rotation, centerX, centerY) {
         // Map angle to heart curve parameter
         const t = (angle + Math.PI) / (Math.PI * 2);
         
         // Heart parametric equations
         const scale = size * 0.05;
-        let x = 16 * Math.pow(Math.sin(t * Math.PI * 2), 3);
-        let y = -(13 * Math.cos(t * Math.PI * 2) - 5 * Math.cos(2 * t * Math.PI * 2) - 
+        const x = 16 * Math.pow(Math.sin(t * Math.PI * 2), 3);
+        const y = -(13 * Math.cos(t * Math.PI * 2) - 5 * Math.cos(2 * t * Math.PI * 2) - 
                   2 * Math.cos(3 * t * Math.PI * 2) - Math.cos(4 * t * Math.PI * 2));
         
         // Scale and rotate
@@ -245,7 +264,7 @@ export default {
     /**
      * Calculate square pattern position
      */
-    calculateSquarePosition: function(particle, angle, size, rotation, centerX, centerY) {
+    calculateSquarePosition(particle, angle, size, rotation, centerX, centerY) {
         // Determine which edge the particle should go to
         const rotatedAngle = angle + rotation;
         const normalizedAngle = ((rotatedAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
@@ -285,7 +304,7 @@ export default {
     /**
      * Calculate triangle pattern position
      */
-    calculateTrianglePosition: function(particle, angle, size, rotation, centerX, centerY) {
+    calculateTrianglePosition(particle, angle, size, rotation, centerX, centerY) {
         // Three vertices of equilateral triangle
         const vertices = [
             { x: 0, y: -size },                    // Top
@@ -321,7 +340,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.morph?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -346,8 +365,6 @@ export default {
                 morphProgress = 0.5 + (progress - holdEnd) / (1 - holdEnd) * 0.5;
             }
         }
-        
-        const easeProgress = this.easeInOutCubic(morphProgress);
         
         // Calculate interpolated position
         let targetX, targetY;
@@ -392,7 +409,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.morph) {
             const data = particle.gestureData.morph;
             particle.vx = data.originalVx;
@@ -406,17 +423,17 @@ export default {
     /**
      * Easing functions
      */
-    easeInOutCubic: function(t) {
+    easeInOutCubic(t) {
         return t < 0.5 
             ? 4 * t * t * t 
             : 1 - Math.pow(-2 * t + 2, 3) / 2;
     },
     
-    easeOutQuad: function(t) {
+    easeOutQuad(t) {
         return t * (2 - t);
     },
     
-    easeInQuad: function(t) {
+    easeInQuad(t) {
         return t * t;
     }
 };

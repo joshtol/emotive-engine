@@ -10,9 +10,10 @@ interface GameMainProps {
   combo: number
   currentUndertone: string
   onGesture: (gesture: string) => void
+  onMascotReady?: (mascot: any) => void
 }
 
-export default function GameMain({ engine, score, combo, currentUndertone, onGesture }: GameMainProps) {
+export default function GameMain({ engine, score, combo, currentUndertone, onGesture, onMascotReady }: GameMainProps) {
   const [currentEmotion, setCurrentEmotion] = useState('neutral')
   const [currentShape, setCurrentShape] = useState('circle')
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -116,6 +117,11 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
 
         console.log('Mascot instance created:', mascot)
         mascotRef.current = mascot
+        
+        // Pass mascot reference to parent component
+        if (onMascotReady) {
+          onMascotReady(mascot)
+        }
         
         // Start the engine
         mascot.start()

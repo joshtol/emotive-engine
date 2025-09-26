@@ -57,44 +57,40 @@ function generateMoon(numPoints) {
 }
 
 /**
- * Generate star shape - matching star.svg geometry
+ * Generate star shape - mathematically correct 5-pointed star
  */
-function generateStar(numPoints, starPoints = 5) {
+function generateStar(numPoints, _starPoints = 5) {
     const points = [];
     
-    // Star.svg path coordinates (normalized to 0-1 range)
-    // Original: M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z
-    const starVertices = [
-        { x: 0.5, y: 0.72 },      // 12, 17.27 -> center bottom
-        { x: 0.76, y: 0.875 },    // 18.18, 21 -> top right
-        { x: 0.68, y: 0.21 },     // 16.36, 5.03 -> right middle
-        { x: 0.92, y: 0.385 },    // 22, 9.24 -> top right
-        { x: 0.2, y: 0.36 },      // 4.81, 8.63 -> left middle
-        { x: 0.5, y: 0.083 },     // 12, 2 -> top center
-        { x: 0.38, y: 0.36 },     // 9.19, 8.63 -> left middle
-        { x: 0.083, y: 0.385 },   // 2, 9.24 -> top left
-        { x: 0.23, y: 0.21 },     // 5.46, 5.03 -> left middle
-        { x: 0.24, y: 0.875 }     // 5.82, 21 -> top left
-    ];
+    // Create a proper 5-pointed star using mathematical formula
+    // A 5-pointed star has 10 vertices: 5 outer points + 5 inner valleys
     
-    // Interpolate points along the star perimeter
     for (let i = 0; i < numPoints; i++) {
         const t = i / numPoints;
-        const vertexCount = starVertices.length;
         
-        // Which edge are we on?
-        const edgeFloat = t * vertexCount;
-        const edgeIndex = Math.floor(edgeFloat) % vertexCount;
-        const nextIndex = (edgeIndex + 1) % vertexCount;
-        const edgeProgress = edgeFloat - Math.floor(edgeFloat);
+        // Map to star vertices (10 total for a 5-pointed star)
+        const vertexIndex = Math.floor(t * 10);
+        const isOuterPoint = vertexIndex % 2 === 0;
+        const armIndex = Math.floor(vertexIndex / 2);
         
-        // Linear interpolation between vertices
-        const v1 = starVertices[edgeIndex];
-        const v2 = starVertices[nextIndex];
+        // Calculate angle for this vertex
+        // Outer points: -90°, -18°, 54°, 126°, 198° (rotated to be upright)
+        // Inner points: -54°, 18°, 90°, 162°, 234° (rotated to be upright)
+        let angle;
+        if (isOuterPoint) {
+            angle = (armIndex * 72 - 90) * Math.PI / 180; // 72° = 360°/5, -90° to rotate upright
+        } else {
+            angle = ((armIndex * 72) + 36 - 90) * Math.PI / 180; // 36° = 72°/2, -90° to rotate upright
+        }
+        
+        // Use appropriate radius
+        const outerRadius = 0.5;
+        const innerRadius = 0.2;
+        const radius = isOuterPoint ? outerRadius : innerRadius;
         
         points.push({
-            x: v1.x + (v2.x - v1.x) * edgeProgress,
-            y: v1.y + (v2.y - v1.y) * edgeProgress
+            x: 0.5 + Math.cos(angle) * radius,
+            y: 0.5 + Math.sin(angle) * radius
         });
     }
     
@@ -104,7 +100,7 @@ function generateStar(numPoints, starPoints = 5) {
 /**
  * Generate sun shape - just a circle, rays are visual effects only
  */
-function generateSun(numPoints, numRays = 12) {
+function generateSun(numPoints, _numRays = 12) {
     // Sun is just a circle - the rays are rendered as effects, not part of the shape
     return generateCircle(numPoints);
 }
@@ -151,22 +147,22 @@ function generateSquare(numPoints) {
             let x, y;
             
             switch (side) {
-                case 0: // Top
-                    x = -0.5 + t;
-                    y = -0.5;
-                    break;
-                case 1: // Right
-                    x = 0.5;
-                    y = -0.5 + t;
-                    break;
-                case 2: // Bottom
-                    x = 0.5 - t;
-                    y = 0.5;
-                    break;
-                case 3: // Left
-                    x = -0.5;
-                    y = 0.5 - t;
-                    break;
+            case 0: // Top
+                x = -0.5 + t;
+                y = -0.5;
+                break;
+            case 1: // Right
+                x = 0.5;
+                y = -0.5 + t;
+                break;
+            case 2: // Bottom
+                x = 0.5 - t;
+                y = 0.5;
+                break;
+            case 3: // Left
+                x = -0.5;
+                y = 0.5 - t;
+                break;
             }
             
             points.push({

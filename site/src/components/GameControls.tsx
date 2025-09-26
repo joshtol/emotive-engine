@@ -7,7 +7,7 @@ interface GameControlsProps {
 export default function GameControls({ onGesture }: GameControlsProps) {
   const danceGestures = [ 'BOUNCE','SWAY','HEADBOB','WIGGLE','SPIN','HULA','ORBIT','GROOVE','JUMP','TWIST' ]
   const overlayableGestures = [ 'WAVE','POINT','NOD','SHAKE','LEAN','TILT','REACH','BREATHE','FLOAT' ]
-  const additionalGestures = [ 'RAIN','RUNMAN','CHARLES' ]
+  const additionalGestures = [ 'RAIN','RUNNINGMAN','CHARLESTON' ]
 
   return (
     <div className="emotive-controls">

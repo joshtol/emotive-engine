@@ -45,23 +45,36 @@ export default {
     },
     
     /**
-     * Generate star shape points - simple 5-pointed star
+     * Generate star shape points - mathematically correct 5-pointed star
      * @param {number} numPoints - Number of points to generate
      * @returns {Array} Array of normalized points
      */
     generate(numPoints) {
         const points = [];
-        const { points: starPoints, innerRadius, outerRadius } = this.config;
+        const { innerRadius, outerRadius } = this.config;
         
-        // Simple 5-pointed star generation
+        // Create a proper 5-pointed star outline
+        // A 5-pointed star has 10 vertices: 5 outer points + 5 inner valleys
+        
         for (let i = 0; i < numPoints; i++) {
             const t = i / numPoints;
-            const angle = t * Math.PI * 2 - Math.PI / 2; // Start from top
             
-            // For a 5-pointed star, we have 10 points total (5 outer + 5 inner)
-            // Alternate between outer and inner radius
-            const pointIndex = Math.floor(t * 10); // 10 points total
-            const isOuterPoint = pointIndex % 2 === 0;
+            // Map to star vertices (10 total for a 5-pointed star)
+            const vertexIndex = Math.floor(t * 10);
+            const isOuterPoint = vertexIndex % 2 === 0;
+            const armIndex = Math.floor(vertexIndex / 2);
+            
+            // Calculate angle for this vertex
+            // Outer points: 0°, 72°, 144°, 216°, 288°
+            // Inner points: 36°, 108°, 180°, 252°, 324°
+            let angle;
+            if (isOuterPoint) {
+                angle = (armIndex * 72) * Math.PI / 180; // 72° = 360°/5
+            } else {
+                angle = ((armIndex * 72) + 36) * Math.PI / 180; // 36° = 72°/2
+            }
+            
+            // Use appropriate radius
             const radius = isOuterPoint ? outerRadius : innerRadius;
             
             points.push({
@@ -82,7 +95,7 @@ export default {
      * @param {number} progress - Morph progress (0-1)
      * @param {Object} options - Additional render options
      */
-    render(ctx, x, y, radius, progress, options = {}) {
+    render(ctx, x, y, radius, progress, _options = {}) {
         if (!this.shadow.sparkle || progress < 0.5) return;
         
         const time = Date.now() / 100;

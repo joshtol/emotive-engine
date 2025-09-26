@@ -10,11 +10,39 @@ import EmotiveFooter from '@/components/EmotiveFooter'
 export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentUndertone, setCurrentUndertone] = useState('none')
+  const [mascot, setMascot] = useState<any>(null)
 
   const handleGesture = (gesture: string) => {
-    // placeholder for engine hook
     console.log('gesture', gesture)
+    
+    // Map button display names to actual gesture names
+    const gestureMapping: { [key: string]: string } = {
+      'headbob': 'headBob',
+      'runman': 'runningman', 
+      'charles': 'charleston'
+    }
+    
+    // Use mapped name if available, otherwise use original
+    const actualGestureName = gestureMapping[gesture.toLowerCase()] || gesture.toLowerCase()
+    
+    // Trigger gesture on the engine if mascot is available
+    if (mascot) {
+      try {
+        mascot.express(actualGestureName)
+        console.log(`Triggered gesture: ${actualGestureName} (from button: ${gesture})`)
+      } catch (error) {
+        console.error(`Failed to trigger gesture ${actualGestureName}:`, error)
+      }
+    } else {
+      console.warn('Mascot not ready, gesture not triggered:', actualGestureName)
+    }
+    
     setIsPlaying(true)
+  }
+
+  const handleMascotReady = (mascotInstance: any) => {
+    setMascot(mascotInstance)
+    console.log('Mascot ready for gestures:', mascotInstance)
   }
 
   return (
@@ -22,7 +50,7 @@ export default function Home() {
       <EmotiveHeader />
       <div className="emotive-main">
         <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={setCurrentUndertone} />
-        <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} onGesture={handleGesture} />
+        <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} onGesture={handleGesture} onMascotReady={handleMascotReady} />
         <GameControls onGesture={handleGesture} />
       </div>
       <EmotiveFooter />
