@@ -116,14 +116,14 @@ export class AudioAnalyzer {
             const timeMin = Math.min(...timeData);
             
             if (freqMax > 0 || (timeMax !== 128 || timeMin !== 128)) {
-                console.log('AudioAnalyzer: Got audio data! Freq max:', freqMax, 'Time range:', timeMin, '-', timeMax);
+                console.warn('AudioAnalyzer: Got audio data! Freq max:', freqMax, 'Time range:', timeMin, '-', timeMax);
                 this._debugLogged = true;
             } else {
                 // Log every 60 frames (1 second at 60fps)
                 if (!this._debugCounter) this._debugCounter = 0;
                 this._debugCounter++;
                 if (this._debugCounter % 60 === 0) {
-                    console.log('AudioAnalyzer: No data. Freq all zeros, Time at 128 (silence)');
+                    console.warn('AudioAnalyzer: No data. Freq all zeros, Time at 128 (silence)');
                 }
             }
         }

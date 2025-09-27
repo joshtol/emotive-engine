@@ -389,7 +389,7 @@ class AnimationController {
 
                 // Log for debugging
                 if (this.performanceMonitor) {
-                    console.log(`TAB FOCUS FIX: Resumed after ${(gap/1000).toFixed(1)}s pause. Particles kept: ${this.subsystems?.particleSystem?.particles?.length || 0}/${this.pausedParticleCount || 0}`);
+                    console.warn(`TAB FOCUS FIX: Resumed after ${(gap/1000).toFixed(1)}s pause. Particles kept: ${this.subsystems?.particleSystem?.particles?.length || 0}/${this.pausedParticleCount || 0}`);
                 }
             }
         }

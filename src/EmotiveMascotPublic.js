@@ -64,7 +64,7 @@ class EmotiveMascotPublic {
      * @param {HTMLCanvasElement} canvas - Canvas element to render to
      * @returns {Promise<void>}
      */
-    async init(canvas) {
+    init(canvas) {
         if (this._initialized) {
             return Promise.resolve();
         }
@@ -406,7 +406,8 @@ class EmotiveMascotPublic {
             recordTime = undertoneOrOptions;
         } else if (undertoneOrOptions && typeof undertoneOrOptions === 'object') {
             // It's an options object
-            undertone = undertoneOrOptions.undertone;
+            const {undertone: newUndertone} = undertoneOrOptions;
+            undertone = newUndertone;
         }
         
         // Record if in recording mode
@@ -458,8 +459,9 @@ class EmotiveMascotPublic {
         if (typeof configOrTimestamp === 'number') {
             timestamp = configOrTimestamp;
         } else if (configOrTimestamp && typeof configOrTimestamp === 'object') {
-            config = configOrTimestamp;
-            timestamp = config.timestamp;
+            const {timestamp: newTimestamp, ...restConfig} = configOrTimestamp;
+            config = restConfig;
+            timestamp = newTimestamp;
         }
         
         // Record if in recording mode
@@ -722,7 +724,7 @@ class EmotiveMascotPublic {
      * @param {string} [format='png'] - Image format
      * @returns {Promise<Blob>} Image blob
      */
-    async getFrameBlob(format = 'png') {
+    getFrameBlob(format = 'png') {
         const canvas = this.canvas || this._engine.canvas;
         if (!canvas) return null;
         

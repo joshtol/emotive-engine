@@ -814,7 +814,7 @@ class EmotiveMascot {
                 this.gestureCompatibility.getCompatibleGestures(gestures) :
                 gestures;
 
-            console.log('Executing gesture chord:', compatibleGestures);
+            console.warn('Executing gesture chord:', compatibleGestures);
 
             // Execute all compatible gestures simultaneously
             compatibleGestures.forEach(gestureName => {
@@ -2622,7 +2622,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     connectAudio(audioElement) {
-        return this.errorBoundary.wrap(async () => {
+        return this.errorBoundary.wrap(() => {
             return this.audioHandler.connectAudio(audioElement);
         }, 'connectAudio', this)();
     }
