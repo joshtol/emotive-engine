@@ -42,7 +42,7 @@ export class AudioAnalyzer {
     /**
      * Initialize audio context and analyzer
      */
-    async init() {
+    init() {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();

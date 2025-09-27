@@ -509,7 +509,8 @@ export class AudioLevelProcessor {
                     error,
                     timestamp: performance.now()
                 });
-            } catch (callbackError) {
+            } catch (_callbackError) {
+                // Ignore callback errors
             }
         }
     }

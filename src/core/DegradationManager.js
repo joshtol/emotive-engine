@@ -192,6 +192,7 @@ export class DegradationManager {
         // TEMPORARILY DISABLED - DO NOT MONITOR
         return;
         
+        // eslint-disable-next-line no-unreachable
         if (this.isMonitoring) return;
         
         this.isMonitoring = true;
