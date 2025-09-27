@@ -163,7 +163,7 @@ export class AudioAnalyzer {
         // Return analysis data
         return {
             amplitude: this.currentAmplitude,
-            vocalAmplitude: vocalAmplitude,
+            vocalAmplitude,
             frequencies: this.currentFrequencies,
             rawData: this.dataArray
         };

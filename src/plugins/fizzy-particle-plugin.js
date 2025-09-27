@@ -89,14 +89,14 @@ class FizzyParticlePlugin {
      * @private
      */
     registerFizzyBehavior() {
-        const config = this.config;
+        const {config} = this;
         
         const fizzyBehavior = {
             name: 'fizzy',
             emoji: '🍾',
             description: 'Carbonated bubbles that rise and pop',
             
-            initialize: function(particle) {
+            initialize(particle) {
                 // Bubbles rise straight up with slight horizontal variation
                 particle.vx = (Math.random() - 0.5) * 0.1;
                 particle.vy = -(2.5 + Math.random() * 1.5); // Rising speed
@@ -132,7 +132,7 @@ class FizzyParticlePlugin {
                 };
             },
             
-            update: function(particle, dt, centerX, centerY) {
+            update(particle, dt, centerX, centerY) {
                 const data = particle.behaviorData;
                 
                 // Check for popping
@@ -198,7 +198,7 @@ class FizzyParticlePlugin {
         if (this.mascot.particleSystem) {
             // Allow setting behavior through particle system
             if (!this.mascot.particleSystem.setBehavior) {
-                this.mascot.particleSystem.setBehavior = (behaviorName) => {
+                this.mascot.particleSystem.setBehavior = behaviorName => {
                     if (this.mascot.particleSystem.currentBehavior !== behaviorName) {
                         this.mascot.particleSystem.currentBehavior = behaviorName;
                         // Clear existing particles to apply new behavior

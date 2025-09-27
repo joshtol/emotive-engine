@@ -113,7 +113,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -136,12 +136,12 @@ export default {
             startY: particle.y,
             originalVx: particle.vx,
             originalVy: particle.vy,
-            angle: angle,
-            distance: distance,
-            homeRadius: homeRadius,
+            angle,
+            distance,
+            homeRadius,
             homeX: centerX + Math.cos(angle) * homeRadius,
             homeY: centerY + Math.sin(angle) * homeRadius,
-            role: role, // Variation factor for timing and smoothness
+            role, // Variation factor for timing and smoothness
             initialized: true
         };
     },
@@ -155,7 +155,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.tilt?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -238,7 +238,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.tilt) {
             const data = particle.gestureData.tilt;
             particle.vx = data.originalVx;
@@ -252,7 +252,7 @@ export default {
      * @param {number} t - Progress (0-1)
      * @returns {number} Eased value
      */
-    easeInOutCubic: function(t) {
+    easeInOutCubic(t) {
         return t < 0.5 
             ? 4 * t * t * t 
             : 1 - Math.pow(-2 * t + 2, 3) / 2;

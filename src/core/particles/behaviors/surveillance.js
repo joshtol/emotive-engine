@@ -46,7 +46,7 @@ export default {
     /**
      * Initialize particle state for surveillance behavior
      */
-    initialize: function(particle, config) {
+    initialize(particle, config) {
         // Set particle color from emotion palette
         if (particle.emotionColors && particle.emotionColors.length > 0) {
             particle.color = selectWeightedColor(particle.emotionColors);
@@ -96,7 +96,7 @@ export default {
     /**
      * Update particle physics for surveillance behavior
      */
-    update: function(particle, dt, config) {
+    update(particle, dt, config) {
         const state = particle.behaviorState;
         if (!state) return;
         
@@ -112,18 +112,18 @@ export default {
         
         // Update based on current mode
         switch(state.mode) {
-            case 'scanning':
-                this.updateScanning(particle, dt, state, config);
-                break;
-            case 'darting':
-                this.updateDarting(particle, dt, state, config);
-                break;
-            case 'frozen':
-                this.updateFrozen(particle, dt, state, config);
-                break;
-            case 'patrolling':
-                this.updatePatrolling(particle, dt, state, config);
-                break;
+        case 'scanning':
+            this.updateScanning(particle, dt, state, config);
+            break;
+        case 'darting':
+            this.updateDarting(particle, dt, state, config);
+            break;
+        case 'frozen':
+            this.updateFrozen(particle, dt, state, config);
+            break;
+        case 'patrolling':
+            this.updatePatrolling(particle, dt, state, config);
+            break;
         }
         
         // Apply slight downward drift for weight
@@ -141,7 +141,7 @@ export default {
     /**
      * Scanning mode - slow searchlight sweeps
      */
-    updateScanning: function(particle, dt, state, config) {
+    updateScanning(particle, dt, state, config) {
         // Update scan angle
         if (state.pauseTimer > 0) {
             // Pausing at edge of scan
@@ -170,7 +170,7 @@ export default {
     /**
      * Darting mode - quick repositioning
      */
-    updateDarting: function(particle, dt, state, config) {
+    updateDarting(particle, dt, state, config) {
         const dx = state.dartTarget.x - particle.x;
         const dy = state.dartTarget.y - particle.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -189,7 +189,7 @@ export default {
     /**
      * Frozen mode - watchful stillness
      */
-    updateFrozen: function(particle, dt, state, config) {
+    updateFrozen(particle, dt, state, config) {
         // Almost no movement, just tiny vibrations
         particle.vx *= 0.95;
         particle.vy *= 0.95;
@@ -204,7 +204,7 @@ export default {
     /**
      * Patrolling mode - edge surveillance
      */
-    updatePatrolling: function(particle, dt, state, config) {
+    updatePatrolling(particle, dt, state, config) {
         // Patrol in a circle around the edge
         state.patrolAngle += 0.01 * dt;
         
@@ -222,7 +222,7 @@ export default {
     /**
      * Change behavior mode
      */
-    changeMode: function(particle, state) {
+    changeMode(particle, state) {
         const rand = Math.random();
         
         // Mode transition probabilities based on role

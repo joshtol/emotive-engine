@@ -74,7 +74,7 @@ export default {
         if (!isFinite(x) || !isFinite(y)) return;
         if (progress < 0.1) return;
         
-        const shadow = this.shadow;
+        const {shadow} = this;
         
         ctx.save();
         ctx.translate(x, y);

@@ -26,7 +26,7 @@ export class ColorUtilities {
     applyUndertoneToColor(baseColor, undertone) {
         // Handle weighted modifier for smooth transitions
         if (undertone && typeof undertone === 'object' && undertone.weight !== undefined) {
-            const weight = undertone.weight;
+            const {weight} = undertone;
             const undertoneType = undertone.type || 'clear';
             
             if (undertoneType === 'clear' || weight === 0) {
@@ -86,9 +86,9 @@ export class ColorUtilities {
             s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
             
             switch (max) {
-                case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-                case g: h = ((b - r) / d + 2) / 6; break;
-                case b: h = ((r - g) / d + 4) / 6; break;
+            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+            case g: h = ((b - r) / d + 2) / 6; break;
+            case b: h = ((r - g) / d + 4) / 6; break;
             }
         }
 
@@ -126,7 +126,7 @@ export class ColorUtilities {
 
         const toHex = x => {
             const hex = Math.round(x * 255).toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
+            return hex.length === 1 ? `0${hex}` : hex;
         };
 
         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
@@ -166,7 +166,7 @@ export class ColorUtilities {
     rgbToHex(r, g, b) {
         const toHex = x => {
             const hex = Math.round(x).toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
+            return hex.length === 1 ? `0${hex}` : hex;
         };
         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
@@ -189,7 +189,7 @@ export class ColorUtilities {
             toIntensity: targetIntensity,
             progress: 0,
             startTime: performance.now(),
-            duration: duration
+            duration
         };
     }
 

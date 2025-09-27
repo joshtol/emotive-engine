@@ -54,7 +54,7 @@ const emotionAliases = {
 
 // Register all emotions SYNCHRONOUSLY
 [neutral, joy, sadness, anger, fear, surprise, disgust,
- love, suspicion, excited, resting, euphoria, focused, glitch, calm].forEach(emotion => {
+    love, suspicion, excited, resting, euphoria, focused, glitch, calm].forEach(emotion => {
     if (emotion && emotion.name) {
         emotionRegistry.set(emotion.name, emotion);
     }
@@ -113,7 +113,7 @@ export function getEmotionVisualParams(emotionName) {
     }
     
     // Create a copy of visual properties, excluding functions
-    const visual = emotion.visual;
+    const {visual} = emotion;
     const params = {};
     
     // Copy non-function properties

@@ -89,7 +89,7 @@ export default {
         }
     },
     
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -106,18 +106,18 @@ export default {
         const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 180); // At least 180-360 pixels
         
         particle.gestureData.orbital = {
-            radius: radius,
+            radius,
             targetRadius: radius, // Store target for smooth transitions
             angle: calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx), // Random angle if at center
             originalVx: particle.vx,
             originalVy: particle.vy,
             originalZ: particle.z || 0,  // Store original z-coordinate
             zPhase: Math.random() * Math.PI * 2,  // Random phase for variety
-            direction: direction  // Random orbit direction
+            direction  // Random orbit direction
         };
     },
     
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.orbital) {
             this.initialize(particle, motion, centerX, centerY);
         }
@@ -129,7 +129,7 @@ export default {
         data.angle += speed * dt * data.direction;
         
         // Use the stored radius (which has minimum enforced)
-        let radius = data.radius;
+        let {radius} = data;
         
         if (!motion.maintainRadius) {
             // Allow radius to vary slightly for organic motion
@@ -166,7 +166,7 @@ export default {
         }
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.orbital) {
             const data = particle.gestureData.orbital;
             particle.vx = data.originalVx;

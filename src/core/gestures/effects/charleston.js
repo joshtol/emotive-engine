@@ -42,7 +42,7 @@ export default {
      * Apply charleston motion - handled by GestureAnimator
      * This is a placeholder for the gesture system
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Motion is handled by GestureAnimator.applyCharleston()
         return false;
     },
@@ -50,8 +50,8 @@ export default {
     /**
      * Blend with existing motion
      */
-    blend: function(particle, progress, motion) {
+    blend(particle, progress, motion) {
         // Allow blending with other gestures
         return false;
     }
-}
+};

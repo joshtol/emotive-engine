@@ -77,7 +77,7 @@ export default {
         }
     },
     
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -86,7 +86,7 @@ export default {
         const layer = Math.floor(Math.random() * this.config.layers);
         
         particle.gestureData.scan = {
-            layer: layer,
+            layer,
             phase: Math.random() * Math.PI * 2,  // Random starting phase
             direction: Math.random() < 0.5 ? 1 : -1,  // Start direction
             pauseTimer: 0,
@@ -102,7 +102,7 @@ export default {
         };
     },
     
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.scan) {
             this.initialize(particle, motion, centerX, centerY);
         }
@@ -171,7 +171,7 @@ export default {
         }
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.scan) {
             const data = particle.gestureData.scan;
             // Restore original velocities for smooth exit

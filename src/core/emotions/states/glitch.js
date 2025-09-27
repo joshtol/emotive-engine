@@ -41,14 +41,14 @@ export default {
         flickerChance: 0.05,       // 5% chance per frame to flicker
         rgbShift: true,            // Enable RGB channel separation
         digitalNoise: true,        // Add digital noise pattern
-        getGlowIntensity: function() {
+        getGlowIntensity() {
             // Random intensity flickers
             if (Math.random() < this.flickerChance) {
                 return 0.2 + Math.random() * 2.5;
             }
             return this.glowIntensity;
         },
-        getGlowColor: function() {
+        getGlowColor() {
             // Occasionally shift to random glitch colors
             if (Math.random() < 0.02) {
                 const glitchColors = ['#FF00AA', '#00FFFF', '#FF0099', '#00FFAA', '#FFAA00'];

@@ -39,8 +39,8 @@ export class VisualizationRunner {
             // Spawn initial particles for classic mode
             if (this.mascot.config.renderingStyle === 'classic' && this.mascot.particleSystem) {
                 const currentState = this.mascot.stateMachine.getCurrentState();
-                const emotion = currentState.emotion;
-                const undertone = currentState.undertone;
+                const {emotion} = currentState;
+                const {undertone} = currentState;
                 const emotionParams = getEmotionVisualParams(emotion);
                 
                 // Get the actual orb position from the renderer (includes gaze offset)
@@ -139,7 +139,7 @@ export class VisualizationRunner {
                 const currentEmotion = this.mascot.stateMachine.getCurrentState().emotion;
                 if (currentEmotion === 'suspicion') {
                     // Get mouse position and calculate distance to center
-                    const mousePos = this.mascot.gazeTracker.mousePos;
+                    const {mousePos} = this.mascot.gazeTracker;
                     const centerX = this.mascot.canvas.width / 2;
                     const centerY = this.mascot.canvas.height / 2;
                     const distance = Math.sqrt(

@@ -64,7 +64,7 @@ export default {
      * Initialize fade data
      * Stores particle's original opacity
      */
-    initialize: function(particle) {
+    initialize(particle) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -77,7 +77,7 @@ export default {
      * Apply fade effect to particle
      * Smoothly transitions opacity based on configuration
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.fade) {
             this.initialize(particle);
         }
@@ -113,7 +113,7 @@ export default {
      * Clean up fade effect
      * Restores original opacity values
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.fade) {
             particle.opacity = particle.gestureData.fade.baseOpacity;
             if (particle.life !== undefined) {

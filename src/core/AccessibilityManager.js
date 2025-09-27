@@ -290,14 +290,14 @@ export class AccessibilityManager {
         if (window.matchMedia) {
             // Listen for reduced motion changes
             const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-            motionQuery.addListener((e) => {
+            motionQuery.addListener(e => {
                 this.reducedMotionPreferred = e.matches;
                 this.onPreferenceChange('reducedMotion', e.matches);
             });
             
             // Listen for high contrast changes
             const contrastQuery = window.matchMedia('(prefers-contrast: high)');
-            contrastQuery.addListener((e) => {
+            contrastQuery.addListener(e => {
                 this.highContrastEnabled = e.matches;
                 this.onPreferenceChange('highContrast', e.matches);
             });
@@ -312,23 +312,23 @@ export class AccessibilityManager {
         if (!this.config.enableKeyboardNavigation) return;
         
         switch (event.key) {
-            case 'Tab':
-                event.preventDefault();
-                this.navigateFocus(event.shiftKey ? -1 : 1);
-                break;
-            case 'Enter':
-            case ' ':
-                this.activateCurrentFocus();
-                break;
-            case 'Escape':
-                this.clearFocus();
-                break;
-            case 'ArrowLeft':
-            case 'ArrowRight':
-            case 'ArrowUp':
-            case 'ArrowDown':
-                this.handleArrowNavigation(event.key);
-                break;
+        case 'Tab':
+            event.preventDefault();
+            this.navigateFocus(event.shiftKey ? -1 : 1);
+            break;
+        case 'Enter':
+        case ' ':
+            this.activateCurrentFocus();
+            break;
+        case 'Escape':
+            this.clearFocus();
+            break;
+        case 'ArrowLeft':
+        case 'ArrowRight':
+        case 'ArrowUp':
+        case 'ArrowDown':
+            this.handleArrowNavigation(event.key);
+            break;
         }
         
         this.keyboardNavigationActive = true;
@@ -565,15 +565,15 @@ export class AccessibilityManager {
         const patternCtx = patternCanvas.getContext('2d');
         
         switch (pattern) {
-            case this.patterns.dots:
-                this.createDotPattern(patternCtx, patternCanvas);
-                break;
-            case this.patterns.stripes:
-                this.createStripePattern(patternCtx, patternCanvas);
-                break;
-            case this.patterns.crosshatch:
-                this.createCrosshatchPattern(patternCtx, patternCanvas);
-                break;
+        case this.patterns.dots:
+            this.createDotPattern(patternCtx, patternCanvas);
+            break;
+        case this.patterns.stripes:
+            this.createStripePattern(patternCtx, patternCanvas);
+            break;
+        case this.patterns.crosshatch:
+            this.createCrosshatchPattern(patternCtx, patternCanvas);
+            break;
         }
         
         const canvasPattern = ctx.createPattern(patternCanvas, 'repeat');

@@ -256,11 +256,11 @@ class RhythmEngine {
         
         const beatInfo = {
             beat: beatNumber,
-            beatInBar: beatInBar,
+            beatInBar,
             bar: this.currentBar,
-            accent: accent,
+            accent,
             intensity: this.intensity * accent,
-            humanTiming: humanTiming,
+            humanTiming,
             timestamp: performance.now()
         };
         
@@ -491,15 +491,15 @@ class RhythmEngine {
                 
                 // Apply curve
                 switch(curve) {
-                    case 'ease':
-                        progress = 0.5 - Math.cos(progress * Math.PI) / 2;
-                        break;
-                    case 'bounce':
-                        progress = Math.abs(Math.sin(progress * Math.PI));
-                        break;
-                    case 'pulse':
-                        progress = Math.pow(Math.sin(progress * Math.PI), 2);
-                        break;
+                case 'ease':
+                    progress = 0.5 - Math.cos(progress * Math.PI) / 2;
+                    break;
+                case 'bounce':
+                    progress = Math.abs(Math.sin(progress * Math.PI));
+                    break;
+                case 'pulse':
+                    progress = Math.pow(Math.sin(progress * Math.PI), 2);
+                    break;
                 }
                 
                 return min + (max - min) * progress;
@@ -512,12 +512,12 @@ class RhythmEngine {
             },
             
             // Subscribe to beat events
-            onBeat: (callback) => this.onBeatCallback(callback),
-            onBar: (callback) => this.onBarCallback(callback),
+            onBeat: callback => this.onBeatCallback(callback),
+            onBar: callback => this.onBarCallback(callback),
             
             // Musical time utilities
-            beatsToMs: (beats) => beats * this.beatDuration,
-            msToBeats: (ms) => ms / this.beatDuration,
+            beatsToMs: beats => beats * this.beatDuration,
+            msToBeats: ms => ms / this.beatDuration,
             
             // Current musical state
             isPlaying: () => this.isPlaying,

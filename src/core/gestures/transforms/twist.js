@@ -96,7 +96,7 @@ export default {
     /**
      * Initialize gesture data for a particle
      */
-    initialize: function(particle, motion) {
+    initialize(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -122,7 +122,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.twist?.initialized) {
             this.initialize(particle, { ...motion, centerX, centerY });
@@ -137,8 +137,8 @@ export default {
         const twistAmount = Math.sin(twistProgress) * strength;
 
         // Apply rhythm modulation if present
-        let rotationAngle = config.rotationAngle;
-        let contractionFactor = config.contractionFactor;
+        let {rotationAngle} = config;
+        let {contractionFactor} = config;
 
         if (motion.rhythmModulation) {
             rotationAngle *= (motion.rhythmModulation.amplitudeMultiplier || 1);
@@ -184,7 +184,7 @@ export default {
     /**
      * Clean up gesture data when complete
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.twist) {
             delete particle.gestureData.twist;
         }

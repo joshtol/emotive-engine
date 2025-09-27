@@ -51,7 +51,7 @@ export class RotationBrake {
      * @returns {Promise} Resolves when braking complete
      */
     brakeToTarget(targetAngle, options = {}) {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             const {
                 onProgress = null,
                 onComplete = null
@@ -108,10 +108,10 @@ export class RotationBrake {
             this.brakeDuration = Math.max(500, (angleToTravel / Math.abs(currentVelocity)) * this.DURATION_FACTOR * 5);
 
             console.log('Brake started:', {
-                from: rotation.toFixed(1) + '°',
-                to: this.brakeTargetRotation.toFixed(1) + '°',
+                from: `${rotation.toFixed(1)}°`,
+                to: `${this.brakeTargetRotation.toFixed(1)}°`,
                 velocity: currentVelocity,
-                duration: this.brakeDuration.toFixed(0) + 'ms'
+                duration: `${this.brakeDuration.toFixed(0)}ms`
             });
 
             // Stop adding velocity immediately
@@ -154,8 +154,8 @@ export class RotationBrake {
             this.brakeStartTime = null;
 
             console.log('Brake complete:', {
-                target: this.brakeTargetRotation.toFixed(1) + '°',
-                duration: elapsed.toFixed(0) + 'ms'
+                target: `${this.brakeTargetRotation.toFixed(1)}°`,
+                duration: `${elapsed.toFixed(0)}ms`
             });
 
             this.complete();
@@ -170,7 +170,7 @@ export class RotationBrake {
 
         // Continue braking
         return {
-            rotation: rotation,
+            rotation,
             speed: virtualSpeed,
             complete: false
         };

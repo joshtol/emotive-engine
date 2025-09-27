@@ -119,7 +119,7 @@ export default {
         }
     },
     
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -138,7 +138,7 @@ export default {
      * Apply contraction motion to particle
      * Pulls particles toward center with magnetic-like force
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.contract?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
         }
@@ -166,7 +166,7 @@ export default {
         particle.vy *= 0.95;
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.contract) {
             delete particle.gestureData.contract;
         }

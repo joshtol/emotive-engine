@@ -91,9 +91,9 @@ export default {
             
             // Keep within canvas bounds
             particle.targetX = Math.max(this.config.edgeBuffer, 
-                              Math.min(canvasWidth - this.config.edgeBuffer, particle.targetX));
+                Math.min(canvasWidth - this.config.edgeBuffer, particle.targetX));
             particle.targetY = Math.max(this.config.edgeBuffer, 
-                              Math.min(canvasHeight - this.config.edgeBuffer, particle.targetY));
+                Math.min(canvasHeight - this.config.edgeBuffer, particle.targetY));
         }
         
         // Apply velocity

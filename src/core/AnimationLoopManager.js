@@ -247,7 +247,7 @@ export class AnimationLoopManager {
         const groups = new Map();
 
         for (const [id, callbackData] of this.callbacks) {
-            const priority = callbackData.priority;
+            const {priority} = callbackData;
 
             if (!groups.has(priority)) {
                 groups.set(priority, []);
@@ -322,7 +322,7 @@ export class AnimationLoopManager {
         // Get callback stats by priority
         stats.callbacksByPriority = {};
         for (const [id, callback] of this.callbacks) {
-            const priority = callback.priority;
+            const {priority} = callback;
             if (!stats.callbacksByPriority[priority]) {
                 stats.callbacksByPriority[priority] = {
                     count: 0,

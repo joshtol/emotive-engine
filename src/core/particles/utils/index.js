@@ -42,5 +42,5 @@ import * as easing from './easing.js';
 export default {
     math: mathCache,
     color: colorUtils,
-    easing: easing
+    easing
 };

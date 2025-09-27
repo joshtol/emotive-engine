@@ -95,10 +95,10 @@ export default {
         }
         
         const time = Date.now() / 50; // 2x faster time base for all animations
-        const shadow = this.shadow;
+        const {shadow} = this;
         
         // Use progress as-is - renderer handles any delays
-        let effectiveProgress = Math.max(0, Math.min(1, progress || 0));
+        const effectiveProgress = Math.max(0, Math.min(1, progress || 0));
         
         ctx.save();
         ctx.translate(x, y);

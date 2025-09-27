@@ -40,7 +40,7 @@ export default {
      * @param {Object} state - Renderer state
      * @returns {boolean}
      */
-    shouldActivate: function(state) {
+    shouldActivate(state) {
         return state.emotion === 'zen' || state.zenTransition?.active;
     },
     
@@ -49,7 +49,7 @@ export default {
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {Object} params - Effect parameters
      */
-    apply: function(ctx, params) {
+    apply(ctx, params) {
         const { x, y, radius, intensity = 1.0, deltaTime = 16.67 } = params;
         
         // Update animation state
@@ -74,7 +74,7 @@ export default {
     /**
      * Draw a single spiral arm
      */
-    drawSpiralArm: function(ctx, centerX, centerY, baseRadius, offset) {
+    drawSpiralArm(ctx, centerX, centerY, baseRadius, offset) {
         ctx.beginPath();
         
         const pulseMod = 1 + Math.sin(this.state.pulsePhase) * 0.1;
@@ -102,10 +102,10 @@ export default {
         );
         
         const opacity = this.config.baseOpacity * this.state.intensity;
-        gradient.addColorStop(0, `rgba(147, 112, 219, 0)`);
+        gradient.addColorStop(0, 'rgba(147, 112, 219, 0)');
         gradient.addColorStop(0.3, `rgba(147, 112, 219, ${opacity * 0.5})`);
         gradient.addColorStop(this.config.fadeStart, `rgba(147, 112, 219, ${opacity})`);
-        gradient.addColorStop(1, `rgba(147, 112, 219, 0)`);
+        gradient.addColorStop(1, 'rgba(147, 112, 219, 0)');
         
         ctx.strokeStyle = gradient;
         ctx.lineWidth = this.config.lineWidth;
@@ -115,7 +115,7 @@ export default {
     /**
      * Draw meditation eyes (∩∩)
      */
-    drawMeditationEyes: function(ctx, x, y, radius, intensity) {
+    drawMeditationEyes(ctx, x, y, radius, intensity) {
         ctx.save();
         
         const eyeWidth = radius * 0.4;
@@ -141,7 +141,7 @@ export default {
     /**
      * Reset the effect state
      */
-    reset: function() {
+    reset() {
         this.state.rotation = 0;
         this.state.pulsePhase = 0;
         this.state.intensity = 0;

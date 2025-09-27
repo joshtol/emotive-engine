@@ -112,7 +112,7 @@ export default {
      * @param {Particle} particle - The particle to initialize
      * @param {Object} motion - Gesture motion configuration
      */
-    initialize: function(particle, motion) {
+    initialize(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -130,7 +130,7 @@ export default {
             flickerTimer: 0,
             lastFlicker: 0,
             flickerState: true,
-            isGrouped: isGrouped,
+            isGrouped,
             groupId: isGrouped ? Math.floor(Math.random() * 3) : -1, // Assign to flicker group
             phase: Math.random() * Math.PI * 2,  // Random phase offset
             colorHue: 0,
@@ -147,7 +147,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.flicker?.initialized) {
             this.initialize(particle, motion);
@@ -252,7 +252,7 @@ export default {
      * @param {number} degrees - Degrees to shift hue
      * @returns {string} New hex color
      */
-    shiftHue: function(color, degrees) {
+    shiftHue(color, degrees) {
         // Simple hue shift implementation
         // In production, use a proper color library
         if (!color || !color.startsWith('#')) return color;
@@ -274,19 +274,19 @@ export default {
         const newB = b;
         
         // Convert back to hex
-        const toHex = (n) => {
+        const toHex = n => {
             const val = Math.max(0, Math.min(255, Math.round(n * 255)));
             return val.toString(16).padStart(2, '0');
         };
         
-        return '#' + toHex(newR) + toHex(newG) + toHex(newB);
+        return `#${toHex(newR)}${toHex(newG)}${toHex(newB)}`;
     },
     
     /**
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.flicker) {
             const data = particle.gestureData.flicker;
             particle.opacity = data.baseOpacity;

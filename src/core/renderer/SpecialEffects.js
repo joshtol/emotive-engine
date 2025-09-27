@@ -37,7 +37,7 @@ export class SpecialEffects {
         };
         
         // Helper method references
-        this.scaleValue = (value) => renderer.scaleValue(value);
+        this.scaleValue = value => renderer.scaleValue(value);
         this.hexToRgba = (hex, alpha) => renderer.hexToRgba(hex, alpha);
     }
 
@@ -45,7 +45,7 @@ export class SpecialEffects {
      * Render recording glow effect
      */
     renderRecordingGlow(x, y, radius, intensity) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         const glowSize = radius * 2.5;
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowSize);
         
@@ -207,7 +207,7 @@ export class SpecialEffects {
      * Render zen core effect
      */
     renderZenCore(x, y, radius, time) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         const breathPhase = Math.sin(time * 0.001) * 0.5 + 0.5;
         const zenRadius = radius * (0.9 + breathPhase * 0.1);
         
@@ -290,7 +290,7 @@ export class SpecialEffects {
      * Render all sparkles
      */
     renderSparkles() {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         this.sparkles.forEach(sparkle => {
             const progress = 1 - (sparkle.lifetime / sparkle.maxLifetime);
@@ -412,7 +412,7 @@ export class SpecialEffects {
             return;
         }
         
-        const intensity = this.chromaticAberration.intensity;
+        const {intensity} = this.chromaticAberration;
         const offset = this.scaleValue(this.chromaticAberration.maxOffset * intensity);
         
         // Store current composite operation
@@ -453,7 +453,7 @@ export class SpecialEffects {
             return;
         }
         
-        const intensity = this.chromaticAberration.intensity;
+        const {intensity} = this.chromaticAberration;
         const offset = this.scaleValue(this.chromaticAberration.maxOffset * intensity);
         
         ctx.save();

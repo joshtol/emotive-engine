@@ -37,8 +37,8 @@ export class AgentBPMDetector {
      */
     createAgent(bpm, subdivision = 1) {
         return {
-            bpm: bpm,
-            subdivision: subdivision,
+            bpm,
+            subdivision,
             effectiveBPM: bpm * subdivision,
             phase: 0,
             confidence: 0.5,
@@ -317,7 +317,7 @@ export class AgentBPMDetector {
             const bestAgent = this.agents[0];
 
             // Check BPM range preferences
-            const bpm = bestAgent.bpm;
+            const {bpm} = bestAgent;
             for (const [range, config] of Object.entries(this.subdivisionPreference)) {
                 if (bpm >= config.min && bpm < config.max) {
                     return config.prefer;

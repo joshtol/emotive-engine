@@ -93,7 +93,7 @@ export default {
      * @param {Object} state - Current renderer state
      * @returns {Object} Core rendering configuration
      */
-    getCoreParams: function(state) {
+    getCoreParams(state) {
         return {
             scaleX: 1.0,
             scaleY: 1.0,
@@ -111,7 +111,7 @@ export default {
      * @param {number} radius - Core radius
      * @returns {boolean} True if custom rendering was done
      */
-    renderCore: function(ctx, x, y, radius) {
+    renderCore(ctx, x, y, radius) {
         // Return false to use default rendering
         return false;
     }

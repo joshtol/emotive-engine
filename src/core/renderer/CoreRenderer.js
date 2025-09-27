@@ -22,7 +22,7 @@ export class CoreRenderer {
         this.isMorphing = false;
         
         // Helper method references
-        this.scaleValue = (value) => renderer.scaleValue(value);
+        this.scaleValue = value => renderer.scaleValue(value);
         this.hexToRgba = (hex, alpha) => renderer.hexToRgba(hex, alpha);
     }
 
@@ -34,7 +34,7 @@ export class CoreRenderer {
      * @param {Object} params - Rendering parameters
      */
     renderCore(x, y, radius, params = {}) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         // Extract parameters
         const scaleX = params.scaleX || 1;
@@ -171,7 +171,7 @@ export class CoreRenderer {
      * @param {number} time - Current time for animation
      */
     renderZenCore(x, y, radius, time) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         // Zen breathing effect
         const breathPhase = Math.sin(time * 0.001) * 0.5 + 0.5;
@@ -209,7 +209,7 @@ export class CoreRenderer {
      * @param {number} radius - Core radius
      */
     renderSleepyCore(x, y, radius) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         // Slightly squished for sleepy look
         ctx.save();
@@ -232,7 +232,7 @@ export class CoreRenderer {
      * @param {number} glitchIntensity - Glitch intensity (0-1)
      */
     renderGlitchedCore(x, y, radius, glitchIntensity) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         // Draw multiple offset cores for glitch effect
         const offsets = [

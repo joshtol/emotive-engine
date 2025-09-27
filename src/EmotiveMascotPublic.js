@@ -149,7 +149,7 @@ class EmotiveMascotPublic {
             ownKeys(target) {
                 // Hide internal properties from Object.keys()
                 const allowedKeys = ['canvas', 'start', 'stop', 'pause', 'resume', 
-                                   'setEmotion', 'morphTo', 'express'];
+                    'setEmotion', 'morphTo', 'express'];
                 return allowedKeys.filter(key => key in target);
             }
         });
@@ -376,7 +376,7 @@ class EmotiveMascotPublic {
             this._timeline.push({
                 type: 'gesture',
                 name: gestureName,
-                time: time
+                time
             });
         }
         
@@ -415,14 +415,14 @@ class EmotiveMascotPublic {
             this._timeline.push({
                 type: 'emotion',
                 name: emotion,
-                undertone: undertone,
-                time: time
+                undertone,
+                time
             });
         }
         
         // Set in engine with undertone
         if (undertone) {
-            engine.setEmotion(emotion, { undertone: undertone });
+            engine.setEmotion(emotion, { undertone });
         } else {
             engine.setEmotion(emotion);
         }
@@ -468,8 +468,8 @@ class EmotiveMascotPublic {
             this._timeline.push({
                 type: 'shape',
                 name: shape,
-                time: time,
-                config: config
+                time,
+                config
             });
         }
         
@@ -599,15 +599,15 @@ class EmotiveMascotPublic {
                 if (!engine) return;
                 
                 switch (event.type) {
-                    case 'gesture':
-                        engine.express(event.name);
-                        break;
-                    case 'emotion':
-                        engine.setEmotion(event.name);
-                        break;
-                    case 'shape':
-                        engine.morphTo(event.name);
-                        break;
+                case 'gesture':
+                    engine.express(event.name);
+                    break;
+                case 'emotion':
+                    engine.setEmotion(event.name);
+                    break;
+                case 'shape':
+                    engine.morphTo(event.name);
+                    break;
                 }
             }, event.time);
         });

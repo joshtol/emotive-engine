@@ -319,7 +319,7 @@ export class HealthCheck {
         };
 
         if (typeof navigator !== 'undefined' && navigator.connection) {
-            const connection = navigator.connection;
+            const {connection} = navigator;
             result.details = {
                 effectiveType: connection.effectiveType,
                 downlink: connection.downlink,
@@ -493,27 +493,27 @@ export class HealthCheck {
 
             let score = 0;
             switch (result.status) {
-                case 'healthy':
-                    score = 100;
-                    break;
-                case 'warning':
-                    score = 70;
-                    issues.push({ name, level: 'warning', message: result.message });
-                    break;
-                case 'critical':
-                    score = 30;
-                    issues.push({ name, level: 'critical', message: result.message });
-                    if (check && check.critical) {
-                        criticalFailed = true;
-                    }
-                    break;
-                case 'error':
-                    score = 0;
-                    issues.push({ name, level: 'error', message: result.message });
-                    break;
-                case 'unknown':
-                    score = 50;
-                    break;
+            case 'healthy':
+                score = 100;
+                break;
+            case 'warning':
+                score = 70;
+                issues.push({ name, level: 'warning', message: result.message });
+                break;
+            case 'critical':
+                score = 30;
+                issues.push({ name, level: 'critical', message: result.message });
+                if (check && check.critical) {
+                    criticalFailed = true;
+                }
+                break;
+            case 'error':
+                score = 0;
+                issues.push({ name, level: 'error', message: result.message });
+                break;
+            case 'unknown':
+                score = 50;
+                break;
             }
 
             totalScore += score * weight;
@@ -556,22 +556,22 @@ export class HealthCheck {
             }
 
             switch (newStatus) {
-                case 'healthy':
-                    if (this.callbacks.onHealthy) {
-                        this.callbacks.onHealthy();
-                    }
-                    break;
-                case 'warning':
-                case 'degraded':
-                    if (this.callbacks.onWarning) {
-                        this.callbacks.onWarning(this.lastCheck);
-                    }
-                    break;
-                case 'critical':
-                    if (this.callbacks.onCritical) {
-                        this.callbacks.onCritical(this.lastCheck);
-                    }
-                    break;
+            case 'healthy':
+                if (this.callbacks.onHealthy) {
+                    this.callbacks.onHealthy();
+                }
+                break;
+            case 'warning':
+            case 'degraded':
+                if (this.callbacks.onWarning) {
+                    this.callbacks.onWarning(this.lastCheck);
+                }
+                break;
+            case 'critical':
+                if (this.callbacks.onCritical) {
+                    this.callbacks.onCritical(this.lastCheck);
+                }
+                break;
             }
         }
     }
@@ -646,9 +646,9 @@ export class HealthCheck {
         const report = await this.performHealthCheck();
 
         const statusCode = report.status === 'healthy' ? 200 :
-                          report.status === 'warning' ? 200 :
-                          report.status === 'degraded' ? 503 :
-                          503;
+            report.status === 'warning' ? 200 :
+                report.status === 'degraded' ? 503 :
+                    503;
 
         return {
             statusCode,

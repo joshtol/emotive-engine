@@ -106,10 +106,10 @@ export function hexToRgb(hex) {
  * @returns {string} Hex color string
  */
 export function rgbToHex(r, g, b) {
-    return '#' + [r, g, b].map(x => {
+    return `#${[r, g, b].map(x => {
         const hex = x.toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-    }).join('');
+        return hex.length === 1 ? `0${hex}` : hex;
+    }).join('')}`;
 }
 
 /**

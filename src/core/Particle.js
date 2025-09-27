@@ -243,7 +243,7 @@ class Particle {
     applyUndertoneModifier(dt, modifier) {
         // Undertones no longer affect particles
         // They only affect color saturation and core behaviors
-        return;
+        
     }
 
     /**
@@ -372,7 +372,7 @@ class Particle {
             this.behaviorData = {};
         } else {
             // Clear existing properties
-            for (let key in this.behaviorData) {
+            for (const key in this.behaviorData) {
                 delete this.behaviorData[key];
             }
         }

@@ -25,7 +25,7 @@ export class GlowRenderer {
         this.cachedGlowRadius = 0;
         
         // Helper method references
-        this.scaleValue = (value) => renderer.scaleValue(value);
+        this.scaleValue = value => renderer.scaleValue(value);
         this.hexToRgba = (hex, alpha) => renderer.hexToRgba(hex, alpha);
         
         this.initOffscreenCanvas();
@@ -59,7 +59,7 @@ export class GlowRenderer {
      * @param {Object} params - Additional parameters
      */
     renderGlow(x, y, radius, params = {}) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         const color = params.color || this.glowColor;
         const intensity = params.intensity !== undefined ? params.intensity : this.glowIntensity;
         
@@ -175,7 +175,7 @@ export class GlowRenderer {
      * @param {number} intensity - Glow intensity
      */
     renderRecordingGlow(x, y, radius, intensity) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         const glowSize = radius * 2.5;
         const gradient = gradientCache.getRadialGradient(
             ctx, x, y, 0, x, y, glowSize,
@@ -201,7 +201,7 @@ export class GlowRenderer {
      * @param {number} time - Current time for animation
      */
     renderZenGlow(x, y, radius, time) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         const breathPhase = Math.sin(time * 0.001) * 0.5 + 0.5;
         const zenRadius = radius * (0.9 + breathPhase * 0.1);
         

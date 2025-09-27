@@ -148,7 +148,7 @@ export default {
      * Initialize breathing data for a particle
      * Stores particle's starting position and relationship to center
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -170,7 +170,7 @@ export default {
      * Apply breathing motion to particle
      * Creates expansion/contraction movement synchronized with breath rhythm
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize particle data if needed
         if (!particle.gestureData?.breathe) {
             this.initialize(particle, motion, centerX, centerY);
@@ -231,7 +231,7 @@ export default {
      * Clean up breathing data when gesture completes
      * Removes stored data to free memory
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.breathe) {
             delete particle.gestureData.breathe;
         }

@@ -124,7 +124,7 @@ class MusicalDuration {
         
         return {
             musical: true,
-            beats: beats,
+            beats,
             bars: beats / 4,
             closestSubdivision: closestNote,
             exact: closestDiff < 0.01
@@ -155,9 +155,9 @@ class MusicalDuration {
             
             return {
                 name: phase.name,
-                beats: beats,
-                start: start,
-                end: end,
+                beats,
+                start,
+                end,
                 duration: this.toMilliseconds({ musical: true, beats })
             };
         });
@@ -191,20 +191,20 @@ class MusicalDuration {
         if (!timeInfo) return 100;
         
         switch (boundary) {
-            case 'beat':
-                return timeInfo.nextBeatIn;
-            case 'bar':
-                const beatsInBar = timeInfo.timeSignature[0];
-                const beatsToBar = beatsInBar - timeInfo.beatInBar;
-                return beatsToBar * timeInfo.beatDuration;
-            case 'phrase':
-                // Assume 4-bar phrases
-                const barsInPhrase = 4;
-                const currentBar = timeInfo.bar || 0;
-                const barsToPhrase = barsInPhrase - (currentBar % barsInPhrase);
-                return barsToPhrase * beatsInBar * timeInfo.beatDuration;
-            default:
-                return timeInfo.nextBeatIn;
+        case 'beat':
+            return timeInfo.nextBeatIn;
+        case 'bar':
+            const beatsInBar = timeInfo.timeSignature[0];
+            const beatsToBar = beatsInBar - timeInfo.beatInBar;
+            return beatsToBar * timeInfo.beatDuration;
+        case 'phrase':
+            // Assume 4-bar phrases
+            const barsInPhrase = 4;
+            const currentBar = timeInfo.bar || 0;
+            const barsToPhrase = barsInPhrase - (currentBar % barsInPhrase);
+            return barsToPhrase * beatsInBar * timeInfo.beatDuration;
+        default:
+            return timeInfo.nextBeatIn;
         }
     }
     

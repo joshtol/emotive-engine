@@ -108,7 +108,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -133,7 +133,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.jump?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -236,7 +236,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.jump) {
             const data = particle.gestureData.jump;
             // Restore original properties
@@ -250,17 +250,17 @@ export default {
     /**
      * Easing functions
      */
-    easeOutQuad: function(t) {
+    easeOutQuad(t) {
         return t * (2 - t);
     },
     
-    easeInOutCubic: function(t) {
+    easeInOutCubic(t) {
         return t < 0.5 
             ? 4 * t * t * t 
             : 1 - Math.pow(-2 * t + 2, 3) / 2;
     },
     
-    easeOutBounce: function(t) {
+    easeOutBounce(t) {
         const n1 = 7.5625;
         const d1 = 2.75;
         

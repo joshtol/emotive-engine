@@ -71,7 +71,7 @@ export default {
         }
     },
     
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -88,18 +88,18 @@ export default {
         const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 180); // At least 210-390 pixels
         
         particle.gestureData.hula = {
-            radius: radius,
+            radius,
             angle: calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx), // Random angle if at center
             originalVx: particle.vx,
             originalVy: particle.vy,
             originalZ: particle.z || 0,
             zPhase: Math.random() * Math.PI * 2,
             wobblePhase: Math.random() * Math.PI * 2,
-            direction: direction  // Random hula direction
+            direction  // Random hula direction
         };
     },
     
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.hula) {
             this.initialize(particle, motion, centerX, centerY);
         }
@@ -126,8 +126,8 @@ export default {
         const wobble = Math.sin(data.angle * 2 + data.wobblePhase) * (motion.wobbleAmount || this.config.wobbleAmount) * transitionFactor;
         
         // Calculate elliptical radius with wobble and transition
-        let radiusX = data.radius * (1 + wobble) * transitionFactor;
-        let radiusY = data.radius * (0.7 + wobble) * transitionFactor; // Elliptical shape factor
+        const radiusX = data.radius * (1 + wobble) * transitionFactor;
+        const radiusY = data.radius * (0.7 + wobble) * transitionFactor; // Elliptical shape factor
         
         // Smoothly transition from original position to orbit position
         const targetX = centerX + Math.cos(data.angle) * radiusX;
@@ -185,7 +185,7 @@ export default {
         }
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.hula) {
             const data = particle.gestureData.hula;
             particle.vx = data.originalVx;

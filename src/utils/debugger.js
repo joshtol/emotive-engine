@@ -116,7 +116,7 @@ export class EmotiveDebugger {
         }
 
         // Capture unhandled errors
-        window.addEventListener('error', (event) => {
+        window.addEventListener('error', event => {
             this.trackError('UNHANDLED_ERROR', event.error || new Error(event.message), {
                 filename: event.filename,
                 lineno: event.lineno,
@@ -125,7 +125,7 @@ export class EmotiveDebugger {
         });
 
         // Capture unhandled promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
+        window.addEventListener('unhandledrejection', event => {
             this.trackError('UNHANDLED_REJECTION', event.reason, {
                 promise: event.promise
             });
@@ -179,11 +179,11 @@ export class EmotiveDebugger {
      */
     getConsoleMethod(level) {
         switch (level) {
-            case 'ERROR': return (() => {}).bind(console);
-            case 'WARN': return (() => {}).bind(console);
-            case 'DEBUG': return (() => {}).bind(console);
-            case 'TRACE': return (() => {}).bind(console);
-            default: return (() => {}).bind(console);
+        case 'ERROR': return (() => {}).bind(console);
+        case 'WARN': return (() => {}).bind(console);
+        case 'DEBUG': return (() => {}).bind(console);
+        case 'TRACE': return (() => {}).bind(console);
+        default: return (() => {}).bind(console);
         }
     }
 

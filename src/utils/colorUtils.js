@@ -85,9 +85,9 @@ export function hexToRgb(hex) {
  * @returns {string} Hex color string
  */
 export function rgbToHex(r, g, b) {
-    const toHex = (component) => {
+    const toHex = component => {
         const hex = Math.round(Math.max(0, Math.min(255, component))).toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
+        return hex.length === 1 ? `0${hex}` : hex;
     };
     
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
@@ -116,9 +116,9 @@ export function rgbToHsl(r, g, b) {
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         
         switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
         }
         h /= 6;
     }
@@ -198,9 +198,9 @@ export function interpolateHsl(color1, color2, progress) {
     const hsl2 = rgbToHsl(rgb2.r, rgb2.g, rgb2.b);
     
     // Handle hue interpolation (shortest path around color wheel)
-    let h1 = hsl1.h;
+    const h1 = hsl1.h;
     let h2 = hsl2.h;
-    let hDiff = h2 - h1;
+    const hDiff = h2 - h1;
     
     if (hDiff > 180) {
         h2 -= 360;
@@ -271,7 +271,7 @@ export function getLuminance(hex) {
     const rgb = hexToRgb(hex);
     
     // Convert to linear RGB
-    const toLinear = (component) => {
+    const toLinear = component => {
         const c = component / 255;
         return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     };

@@ -28,11 +28,11 @@ export default {
         scanning: false
     },
     
-    shouldActivate: function(state) {
+    shouldActivate(state) {
         return state.emotion === 'suspicion' || state.suspicious === true;
     },
     
-    apply: function(ctx, params) {
+    apply(ctx, params) {
         const { x, y, radius, deltaTime = 16.67 } = params;
         const now = Date.now();
         
@@ -50,7 +50,7 @@ export default {
         }
     },
     
-    updateSquint: function(deltaTime) {
+    updateSquint(deltaTime) {
         // Set target squint when suspicious
         this.state.targetSquint = this.config.squintAmount;
         
@@ -63,13 +63,13 @@ export default {
         }
     },
     
-    startScan: function() {
+    startScan() {
         this.state.scanning = true;
         this.state.scanStartTime = Date.now();
         this.state.scanPhase = -1; // Start by looking left
     },
     
-    updateScan: function(now, deltaTime) {
+    updateScan(now, deltaTime) {
         const elapsed = now - this.state.scanStartTime;
         const progress = elapsed / this.config.scanDuration;
         
@@ -89,7 +89,7 @@ export default {
         }
     },
     
-    getEyeModifiers: function() {
+    getEyeModifiers() {
         return {
             scaleY: 1 - this.state.currentSquint,  // Narrow vertically
             scaleX: 1 + this.state.currentSquint * 0.3,  // Widen horizontally slightly
@@ -97,7 +97,7 @@ export default {
         };
     },
     
-    drawScanLines: function(ctx, x, y, radius) {
+    drawScanLines(ctx, x, y, radius) {
         if (!this.state.scanning) return;
         
         ctx.save();

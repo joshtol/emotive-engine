@@ -42,7 +42,7 @@ export default {
      * @param {Object} state - Renderer state
      * @returns {boolean}
      */
-    shouldActivate: function(state) {
+    shouldActivate(state) {
         return state.recording === true;
     },
     
@@ -51,7 +51,7 @@ export default {
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {Object} params - Effect parameters
      */
-    apply: function(ctx, params) {
+    apply(ctx, params) {
         const { deltaTime = 16.67 } = params;
         
         // Update pulse animation for the indicator only
@@ -70,7 +70,7 @@ export default {
     /**
      * Draw recording indicator text only
      */
-    drawRecordingIndicator: function(ctx, canvasWidth, canvasHeight) {
+    drawRecordingIndicator(ctx, canvasWidth, canvasHeight) {
         ctx.save();
         
         // Dynamic text size
@@ -106,7 +106,7 @@ export default {
     /**
      * Convert hex to rgba
      */
-    hexToRgba: function(hex, alpha) {
+    hexToRgba(hex, alpha) {
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
@@ -116,7 +116,7 @@ export default {
     /**
      * Reset the effect state
      */
-    reset: function() {
+    reset() {
         this.state.pulsePhase = 0;
         this.state.intensity = 0;
     }

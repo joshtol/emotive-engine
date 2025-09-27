@@ -113,8 +113,8 @@ export class AudioDeformer {
             // Band 4: 3000-3750 Hz
             // Band 5: 3750-4500 Hz
             
-            let vocalPresenceEnergy = 0;
-            let vocalBandCount = 0;
+            const vocalPresenceEnergy = 0;
+            const vocalBandCount = 0;
             
             // SPECTRAL FLUX: Detect onsets in the VOCAL RANGE you identified (bands 4-15, emphasis on 11)
             // This targets the actual vocal/lead frequencies in Electric Glow

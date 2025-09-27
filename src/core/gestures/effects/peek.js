@@ -115,7 +115,7 @@ export default {
         }
     },
     
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize peek data if needed
         if (!particle.gestureData) {
             particle.gestureData = {};
@@ -140,7 +140,7 @@ export default {
         }
         
         const data = particle.gestureData.peek;
-        const config = this.config;
+        const {config} = this;
         
         // Adjust progress for stagger
         const adjustedProgress = Math.max(0, Math.min(1, (progress - data.staggerDelay) / (1 - data.staggerDelay)));
@@ -160,27 +160,27 @@ export default {
         let targetOffset = 0;
         
         switch (data.phase) {
-            case 'peeking':
-                // Smooth peek out
-                const peekProgress = adjustedProgress / 0.3;
-                targetOffset = this.easeOutCubic(peekProgress) * config.peekDistance;
-                break;
+        case 'peeking':
+            // Smooth peek out
+            const peekProgress = adjustedProgress / 0.3;
+            targetOffset = this.easeOutCubic(peekProgress) * config.peekDistance;
+            break;
                 
-            case 'holding':
-                // Hold at peek position
-                targetOffset = config.peekDistance;
-                // Add slight tremor while holding
-                if (Math.random() < 0.1) {
-                    data.peekOffset.x += (Math.random() - 0.5) * 2;
-                    data.peekOffset.y += (Math.random() - 0.5) * 2;
-                }
-                break;
+        case 'holding':
+            // Hold at peek position
+            targetOffset = config.peekDistance;
+            // Add slight tremor while holding
+            if (Math.random() < 0.1) {
+                data.peekOffset.x += (Math.random() - 0.5) * 2;
+                data.peekOffset.y += (Math.random() - 0.5) * 2;
+            }
+            break;
                 
-            case 'hiding':
-                // Quick hide back
-                const hideProgress = (adjustedProgress - 0.6) / 0.4;
-                targetOffset = (1 - this.easeInCubic(hideProgress)) * config.peekDistance;
-                break;
+        case 'hiding':
+            // Quick hide back
+            const hideProgress = (adjustedProgress - 0.6) / 0.4;
+            targetOffset = (1 - this.easeInCubic(hideProgress)) * config.peekDistance;
+            break;
         }
         
         // Apply the peek offset
@@ -208,15 +208,15 @@ export default {
     },
     
     // Easing functions
-    easeOutCubic: function(t) {
+    easeOutCubic(t) {
         return 1 - Math.pow(1 - t, 3);
     },
     
-    easeInCubic: function(t) {
+    easeInCubic(t) {
         return t * t * t;
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.peek) {
             // Restore original position
             particle.x = particle.gestureData.peek.originalX;

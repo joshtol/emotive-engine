@@ -69,7 +69,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Store original values on first frame
         if (!particle.gestureData) {
             particle.gestureData = {};
@@ -111,7 +111,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         // Reset to original values
         if (particle.gestureData?.float) {
             particle.opacity = particle.gestureData.float.originalOpacity;

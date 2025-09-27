@@ -32,13 +32,13 @@ export default {
         ],
         // Dynamic threat level properties
         threatLevel: 0,             // 0-1 scale, updated by gaze distance
-        getGlowIntensity: function() {
+        getGlowIntensity() {
             return 0.3 + (this.threatLevel * 0.7);
         },
-        getParticleSpeed: function() {
+        getParticleSpeed() {
             return 0.2 + (this.threatLevel * 0.8);
         },
-        getGlowColor: function() {
+        getGlowColor() {
             // Color shifts from purple to red as threat increases
             const baseColor = { r: 107, g: 70, b: 193 };  // #6B46C1
             const alertColor = { r: 220, g: 38, b: 127 }; // #DC267F (magenta-red)
@@ -50,7 +50,7 @@ export default {
             const b = Math.round(baseColor.b + (alertColor.b - baseColor.b) * t);
             
             // Convert to hex
-            const toHex = (val) => val.toString(16).padStart(2, '0');
+            const toHex = val => val.toString(16).padStart(2, '0');
             return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
         }
     },

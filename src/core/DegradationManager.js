@@ -148,7 +148,7 @@ export class DegradationManager {
      */
     assessAvailableFeatures() {
         const features = browserCompatibility.featureDetection.getFeatures();
-        const capabilities = browserCompatibility.capabilities;
+        const {capabilities} = browserCompatibility;
         
         return {
             audio: features.webAudio && features.audioContext,
@@ -417,16 +417,16 @@ export class DegradationManager {
         const currentLevel = this.getCurrentLevel();
         
         switch (feature) {
-            case 'audio':
-                return this.availableFeatures.audio && currentLevel.audioEnabled;
-            case 'particles':
-                return this.availableFeatures.particles && currentLevel.particleLimit > 0;
-            case 'fullEffects':
-                return this.availableFeatures.fullQuality && currentLevel.fullEffects;
-            case 'animations':
-                return this.availableFeatures.animations;
-            default:
-                return this.availableFeatures[feature] || false;
+        case 'audio':
+            return this.availableFeatures.audio && currentLevel.audioEnabled;
+        case 'particles':
+            return this.availableFeatures.particles && currentLevel.particleLimit > 0;
+        case 'fullEffects':
+            return this.availableFeatures.fullQuality && currentLevel.fullEffects;
+        case 'animations':
+            return this.availableFeatures.animations;
+        default:
+            return this.availableFeatures[feature] || false;
         }
     }
 

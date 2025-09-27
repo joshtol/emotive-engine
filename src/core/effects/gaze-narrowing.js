@@ -25,11 +25,11 @@ export default {
         targetScaleY: 1
     },
     
-    shouldActivate: function(state) {
+    shouldActivate(state) {
         return state.gazeIntensity > 0 || state.gazeLocked;
     },
     
-    apply: function(ctx, params) {
+    apply(ctx, params) {
         const { gazeIntensity = 0, deltaTime = 16.67 } = params;
         
         // Calculate target scales based on gaze intensity
@@ -48,7 +48,7 @@ export default {
         this.animateScales(deltaTime);
     },
     
-    animateScales: function(deltaTime) {
+    animateScales(deltaTime) {
         const speed = this.config.smoothing * (deltaTime / 16.67);
         
         // Animate X scale
@@ -64,14 +64,14 @@ export default {
         }
     },
     
-    getEyeScales: function() {
+    getEyeScales() {
         return {
             scaleX: this.state.currentScaleX,
             scaleY: this.state.currentScaleY
         };
     },
     
-    drawFocusIndicator: function(ctx, x, y, radius, intensity) {
+    drawFocusIndicator(ctx, x, y, radius, intensity) {
         if (intensity < this.config.focusThreshold) return;
         
         ctx.save();

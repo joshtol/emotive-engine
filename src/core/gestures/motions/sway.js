@@ -60,7 +60,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         const config = { ...this.config, ...motion };
         const amplitude = config.amplitude || this.config.amplitude;
         const frequency = config.frequency || this.config.frequency;
@@ -80,7 +80,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         // No cleanup needed for sway
     }
 };

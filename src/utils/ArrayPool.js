@@ -34,14 +34,14 @@ class ArrayPool {
         // Create new array if pool is empty
         let newArray;
         switch (type) {
-            case 'float32':
-                newArray = new Float32Array(size);
-                break;
-            case 'uint8':
-                newArray = new Uint8Array(size);
-                break;
-            default:
-                newArray = new Array(size).fill(0);
+        case 'float32':
+            newArray = new Float32Array(size);
+            break;
+        case 'uint8':
+            newArray = new Uint8Array(size);
+            break;
+        default:
+            newArray = new Array(size).fill(0);
         }
         
         this.inUse.add(newArray);

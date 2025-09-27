@@ -94,7 +94,7 @@ export default {
         }
     },
     
-    initialize: function(particle) {
+    initialize(particle) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -110,7 +110,7 @@ export default {
      * Apply hold effect to particle
      * Freezes or slows particle movement based on configuration
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.hold) {
             this.initialize(particle);
         }
@@ -138,7 +138,7 @@ export default {
         }
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.hold) {
             const data = particle.gestureData.hold;
             particle.vx = data.originalVx;

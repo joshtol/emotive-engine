@@ -123,7 +123,7 @@ export function initializeOrbiting(particle) {
     particle.behaviorData = {
         angle: Math.random() * PHYSICS.TWO_PI,
         radius: baseRadius,
-        baseRadius: baseRadius,
+        baseRadius,
         angularVelocity: 0.0008 + Math.random() * 0.0017,  // Varied rotation speeds
         swayAmount: 3 + Math.random() * 7,  // Gentle floating sway
         swaySpeed: 0.2 + Math.random() * 0.5,  // Varied sway rhythm

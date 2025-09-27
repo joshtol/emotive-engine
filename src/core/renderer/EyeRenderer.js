@@ -21,7 +21,7 @@ export class EyeRenderer {
         this.eyeOpen = null;
         
         // Helper method references
-        this.scaleValue = (value) => renderer.scaleValue(value);
+        this.scaleValue = value => renderer.scaleValue(value);
         this.hexToRgba = (hex, alpha) => renderer.hexToRgba(hex, alpha);
     }
 
@@ -84,7 +84,7 @@ export class EyeRenderer {
      * @param {Object} params - Eye parameters
      */
     drawEyes(x, y, radius, emotion, params = {}) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         // Get eye parameters
         const eyeOpenness = params.eyeOpenness || 1;
@@ -109,30 +109,30 @@ export class EyeRenderer {
         
         // Draw based on expression
         switch (eyeExpression) {
-            case 'happy':
-                this.drawHappyEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-                break;
-            case 'sad':
-                this.drawSadEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-                break;
-            case 'angry':
-                this.drawAngryEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-                break;
-            case 'surprised':
-                this.drawSurprisedEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-                break;
-            case 'focused':
-                this.drawFocusedEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-                break;
-            case 'sleepy':
-                this.drawSleepyEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-                break;
-            case 'suspicious':
-                this.drawSuspiciousEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-                break;
-            default:
-                // No eyes for neutral
-                break;
+        case 'happy':
+            this.drawHappyEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+            break;
+        case 'sad':
+            this.drawSadEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+            break;
+        case 'angry':
+            this.drawAngryEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+            break;
+        case 'surprised':
+            this.drawSurprisedEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+            break;
+        case 'focused':
+            this.drawFocusedEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+            break;
+        case 'sleepy':
+            this.drawSleepyEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+            break;
+        case 'suspicious':
+            this.drawSuspiciousEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+            break;
+        default:
+            // No eyes for neutral
+            break;
         }
         
         ctx.restore();

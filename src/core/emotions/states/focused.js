@@ -54,7 +54,7 @@ export default {
     },
     
     // Core appearance parameters
-    getCoreParams: function(state) {
+    getCoreParams(state) {
         return {
             scaleX: 1.1,              // Slightly widened awareness
             scaleY: 0.7,              // Narrowed for concentration

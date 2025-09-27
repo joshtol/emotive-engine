@@ -208,7 +208,7 @@ export class MobileOptimization {
         canvas.addEventListener('touchcancel', this.handleTouchCancel, { passive: false });
         
         // Prevent context menu on long press
-        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
     }
     
     /**
@@ -275,7 +275,7 @@ export class MobileOptimization {
      */
     setupOrientationHandlers() {
         if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', (event) => {
+            window.addEventListener('deviceorientation', event => {
                 this.handleDeviceOrientation(event);
             });
         }

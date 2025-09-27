@@ -156,7 +156,7 @@ export default {
     /**
      * Get core rendering parameters for joy
      */
-    getCoreParams: function(state) {
+    getCoreParams(state) {
         return {
             scaleX: 1.0,
             scaleY: 1.0,

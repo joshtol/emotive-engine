@@ -128,7 +128,7 @@ export default {
      * @param {Particle} particle - The particle to initialize
      * @param {Object} motion - Gesture motion configuration
      */
-    initialize: function(particle, motion) {
+    initialize(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -151,7 +151,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.bounce?.initialized) {
             this.initialize(particle, motion);
@@ -164,7 +164,7 @@ export default {
         const easeProgress = this.easeInOutCubic(progress);
         
         // Calculate oscillation
-        let frequency = config.frequency;
+        let {frequency} = config;
         const phase = motion.phase || 0;
         
         // Apply rhythm modulation if present
@@ -214,7 +214,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.bounce) {
             delete particle.gestureData.bounce;
         }
@@ -225,7 +225,7 @@ export default {
      * @param {number} t - Progress (0-1)
      * @returns {number} Eased value
      */
-    easeInOutCubic: function(t) {
+    easeInOutCubic(t) {
         return t < 0.5 
             ? 4 * t * t * t 
             : 1 - Math.pow(-2 * t + 2, 3) / 2;

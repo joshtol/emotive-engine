@@ -235,9 +235,9 @@ export class PluginSystem {
         // Create a limited execution environment
         const sandbox = {
             // Safe global objects
-            Math: Math,
-            Date: Date,
-            JSON: JSON,
+            Math,
+            Date,
+            JSON,
             
             // Limited console
             console: {
@@ -447,7 +447,7 @@ export class PluginSystem {
         // Check type-specific conflicts
         if (plugin.type === 'emotion' || plugin.type === 'gesture') {
             // Check for name collisions
-            this.plugins.forEach((existingPlugin) => {
+            this.plugins.forEach(existingPlugin => {
                 if (existingPlugin.type === plugin.type) {
                     const existingName = existingPlugin[plugin.type]?.name;
                     const newName = plugin[plugin.type]?.name;

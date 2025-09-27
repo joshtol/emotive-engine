@@ -183,29 +183,29 @@ class ErrorBoundary {
     validateInput(value, type, defaultValue) {
         try {
             switch (type) {
-                case 'emotion':
-                    const validEmotions = ['neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'love', 'euphoria'];
-                    return validEmotions.includes(value) ? value : defaultValue;
+            case 'emotion':
+                const validEmotions = ['neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'love', 'euphoria'];
+                return validEmotions.includes(value) ? value : defaultValue;
                 
-                case 'undertone':
-                    const validUndertones = ['nervous', 'confident', 'tired', 'intense', 'subdued'];
-                    return value === null || validUndertones.includes(value) ? value : null;
+            case 'undertone':
+                const validUndertones = ['nervous', 'confident', 'tired', 'intense', 'subdued'];
+                return value === null || validUndertones.includes(value) ? value : null;
                 
-                case 'gesture':
-                    const validGestures = ['bounce', 'pulse', 'shake', 'spin', 'nod', 'tilt', 'expand', 'contract', 'flash', 'drift'];
-                    return validGestures.includes(value) ? value : defaultValue;
+            case 'gesture':
+                const validGestures = ['bounce', 'pulse', 'shake', 'spin', 'nod', 'tilt', 'expand', 'contract', 'flash', 'drift'];
+                return validGestures.includes(value) ? value : defaultValue;
                 
-                case 'number':
-                    return typeof value === 'number' && !isNaN(value) ? value : defaultValue;
+            case 'number':
+                return typeof value === 'number' && !isNaN(value) ? value : defaultValue;
                 
-                case 'string':
-                    return typeof value === 'string' ? value : defaultValue;
+            case 'string':
+                return typeof value === 'string' ? value : defaultValue;
                 
-                case 'boolean':
-                    return typeof value === 'boolean' ? value : defaultValue;
+            case 'boolean':
+                return typeof value === 'boolean' ? value : defaultValue;
                 
-                default:
-                    return value !== undefined && value !== null ? value : defaultValue;
+            default:
+                return value !== undefined && value !== null ? value : defaultValue;
             }
         } catch (error) {
             this.logError(error, 'input-validation');

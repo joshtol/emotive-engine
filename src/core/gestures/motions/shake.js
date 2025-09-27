@@ -111,7 +111,7 @@ export default {
      * @param {Particle} particle - The particle to initialize
      * @param {Object} motion - Gesture motion configuration
      */
-    initialize: function(particle, motion) {
+    initialize(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -134,7 +134,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.shake?.initialized) {
             this.initialize(particle, motion);
@@ -145,8 +145,8 @@ export default {
         const strength = config.strength || this.config.strength || 1.0;
         
         // Apply rhythm modulation if present
-        let amplitude = config.amplitude;
-        let frequency = config.frequency;
+        let {amplitude} = config;
+        let {frequency} = config;
         if (motion.rhythmModulation) {
             amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
             amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
@@ -175,7 +175,7 @@ export default {
      * @param {number} seed - Seed value
      * @returns {number} Pseudo-random value between 0 and 1
      */
-    pseudoRandom: function(seed) {
+    pseudoRandom(seed) {
         const x = Math.sin(seed) * 10000;
         return x - Math.floor(x);
     },
@@ -184,7 +184,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.shake) {
             // Restore original position
             particle.x = particle.gestureData.shake.originalX;

@@ -71,7 +71,7 @@ export default {
         }
     },
     
-    initialize: function(particle, motion) {
+    initialize(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -82,7 +82,7 @@ export default {
         };
     },
     
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.vibrate?.initialized) {
             this.initialize(particle, motion);
         }
@@ -92,8 +92,8 @@ export default {
         const strength = config.strength || this.config.strength || 1.0;
         
         // Apply rhythm modulation if present
-        let amplitude = config.amplitude;
-        let frequency = config.frequency;
+        let {amplitude} = config;
+        let {frequency} = config;
         if (motion.rhythmModulation) {
             amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
             amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
@@ -125,7 +125,7 @@ export default {
         }
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.vibrate) {
             delete particle.gestureData.vibrate;
         }

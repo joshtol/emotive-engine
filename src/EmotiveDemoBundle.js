@@ -14,7 +14,7 @@ const protectedRhythmIntegration = {
     initialize: () => rhythmIntegration.initialize(),
     start: (bpm, pattern) => rhythmIntegration.start(bpm, pattern),
     stop: () => rhythmIntegration.stop(),
-    setBPM: (bpm) => rhythmIntegration.setBPM(bpm),
+    setBPM: bpm => rhythmIntegration.setBPM(bpm),
     getBPM: () => rhythmIntegration.getBPM()
 };
 

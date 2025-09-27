@@ -49,7 +49,7 @@ export default {
      */
     generate(numPoints) {
         const points = [];
-        const cornerRadius = this.config.cornerRadius;
+        const {cornerRadius} = this.config;
         const rotation = (this.config.rotation || 0) * Math.PI / 180;
         
         // Points per side
@@ -62,22 +62,22 @@ export default {
                 let x, y;
                 
                 switch (side) {
-                    case 0: // Top
-                        x = -0.5 + t;
-                        y = -0.5;
-                        break;
-                    case 1: // Right
-                        x = 0.5;
-                        y = -0.5 + t;
-                        break;
-                    case 2: // Bottom
-                        x = 0.5 - t;
-                        y = 0.5;
-                        break;
-                    case 3: // Left
-                        x = -0.5;
-                        y = 0.5 - t;
-                        break;
+                case 0: // Top
+                    x = -0.5 + t;
+                    y = -0.5;
+                    break;
+                case 1: // Right
+                    x = 0.5;
+                    y = -0.5 + t;
+                    break;
+                case 2: // Bottom
+                    x = 0.5 - t;
+                    y = 0.5;
+                    break;
+                case 3: // Left
+                    x = -0.5;
+                    y = 0.5 - t;
+                    break;
                 }
                 
                 // Apply corner rounding

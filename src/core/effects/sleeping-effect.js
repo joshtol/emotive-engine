@@ -27,11 +27,11 @@ export default {
         zParticles: []
     },
     
-    shouldActivate: function(state) {
+    shouldActivate(state) {
         return state.sleeping === true || state.emotion === 'resting';
     },
     
-    apply: function(ctx, params) {
+    apply(ctx, params) {
         const { x, y, radius, deltaTime = 16.67 } = params;
         const now = Date.now();
         
@@ -57,7 +57,7 @@ export default {
         this.drawZParticles(ctx, deltaTime);
     },
     
-    drawZParticles: function(ctx, deltaTime) {
+    drawZParticles(ctx, deltaTime) {
         ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -96,18 +96,18 @@ export default {
         ctx.restore();
     },
     
-    getEyeOpenness: function() {
+    getEyeOpenness() {
         return this.config.eyeClosedScale;
     },
     
-    getBreathingModifiers: function() {
+    getBreathingModifiers() {
         return {
             rate: this.config.breathingRate,
             depth: this.config.breathingDepth
         };
     },
     
-    getDimmingValues: function() {
+    getDimmingValues() {
         return {
             orbDimming: this.config.orbDimming,
             glowDimming: this.config.glowDimming

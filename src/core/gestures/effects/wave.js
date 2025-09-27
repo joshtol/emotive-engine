@@ -173,7 +173,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -193,11 +193,11 @@ export default {
             originalVx: particle.vx,
             originalVy: particle.vy,
             baseOpacity: particle.opacity || particle.life || 1,
-            angle: angle,
-            radius: radius,
+            angle,
+            radius,
             offset: Math.random() * Math.PI * 2, // Random phase offset
             role: Math.random(), // 0-1 for variation
-            direction: direction, // Random wave direction
+            direction, // Random wave direction
             initialized: true
         };
     },
@@ -211,7 +211,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.wave?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -300,7 +300,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.wave) {
             const data = particle.gestureData.wave;
             particle.vx = data.originalVx;
@@ -318,7 +318,7 @@ export default {
      * @param {number} t - Progress (0-1)
      * @returns {number} Eased value
      */
-    easeInOutSine: function(t) {
+    easeInOutSine(t) {
         return -(Math.cos(Math.PI * t) - 1) / 2;
     }
 };

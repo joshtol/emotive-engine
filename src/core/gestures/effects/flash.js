@@ -79,7 +79,7 @@ export default {
         }
     },
     
-    initialize: function(particle, motion) {
+    initialize(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -94,7 +94,7 @@ export default {
      * Apply flash effect to particle
      * Creates bright burst with size expansion and outward motion
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.flash?.initialized) {
             this.initialize(particle, motion);
         }
@@ -130,7 +130,7 @@ export default {
         particle.vy *= (1 - config.particleMotion.decay * 0.1);
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.flash) {
             particle.opacity = particle.gestureData.flash.originalOpacity;
             particle.size = particle.gestureData.flash.originalSize;

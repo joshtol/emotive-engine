@@ -124,7 +124,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -146,7 +146,7 @@ export default {
             originalY: particle.y,
             originalVx: particle.vx,
             originalVy: particle.vy,
-            direction: direction, // Store chosen direction
+            direction, // Store chosen direction
             initialized: true
         };
     },
@@ -160,7 +160,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.spin?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -171,8 +171,8 @@ export default {
         const strength = motion.strength || 1.0;
         
         // Apply rhythm modulation if present
-        let rotations = config.rotations;
-        let radiusMultiplier = config.radiusMultiplier;
+        let {rotations} = config;
+        let {radiusMultiplier} = config;
         if (motion.rhythmModulation) {
             if (motion.rhythmModulation.rotationMultiplier) {
                 rotations *= motion.rhythmModulation.rotationMultiplier;
@@ -234,7 +234,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.spin) {
             // Restore original velocities
             const data = particle.gestureData.spin;
@@ -249,7 +249,7 @@ export default {
      * @param {number} t - Progress (0-1)
      * @returns {number} Eased value
      */
-    easeInQuad: function(t) {
+    easeInQuad(t) {
         return t * t;
     },
     
@@ -258,7 +258,7 @@ export default {
      * @param {number} t - Progress (0-1)
      * @returns {number} Eased value
      */
-    easeOutQuad: function(t) {
+    easeOutQuad(t) {
         return t * (2 - t);
     }
 };

@@ -87,7 +87,7 @@ class CustomParticlePlugin {
             emoji: '✨',
             description: 'Magical fireflies that blink and wander',
             
-            initialize: function(particle) {
+            initialize(particle) {
                 // Gentle random movement
                 particle.vx = (Math.random() - 0.5) * 0.3;
                 particle.vy = (Math.random() - 0.5) * 0.3;
@@ -114,7 +114,7 @@ class CustomParticlePlugin {
                 };
             },
             
-            update: function(particle, dt, centerX, centerY) {
+            update(particle, dt, centerX, centerY) {
                 const data = particle.behaviorData;
                 
                 // Random wandering
@@ -145,7 +145,7 @@ class CustomParticlePlugin {
             emoji: '❄️',
             description: 'Gentle falling snow with realistic drift',
             
-            initialize: function(particle) {
+            initialize(particle) {
                 // Start at top, fall downward
                 particle.vx = (Math.random() - 0.5) * 0.2;
                 particle.vy = 0.3 + Math.random() * 0.5;
@@ -172,7 +172,7 @@ class CustomParticlePlugin {
                 };
             },
             
-            update: function(particle, dt, centerX, centerY) {
+            update(particle, dt, centerX, centerY) {
                 const data = particle.behaviorData;
                 
                 // Gentle sway while falling
@@ -198,7 +198,7 @@ class CustomParticlePlugin {
             emoji: '💻',
             description: 'Digital rain effect like The Matrix',
             
-            initialize: function(particle) {
+            initialize(particle) {
                 // Fast downward movement
                 particle.vx = 0;
                 particle.vy = 2 + Math.random() * 2;
@@ -224,7 +224,7 @@ class CustomParticlePlugin {
                 };
             },
             
-            update: function(particle, dt, centerX, centerY) {
+            update(particle, dt, centerX, centerY) {
                 const data = particle.behaviorData;
                 
                 // Accelerating fall
@@ -267,7 +267,7 @@ class CustomParticlePlugin {
         
         // Add convenience method to particle system
         if (this.mascot.particleSystem) {
-            this.mascot.particleSystem.setBehavior = (behaviorName) => {
+            this.mascot.particleSystem.setBehavior = behaviorName => {
                 // This will work with both core and plugin behaviors
                 if (this.mascot.particleSystem.currentBehavior !== behaviorName) {
                     this.mascot.particleSystem.currentBehavior = behaviorName;

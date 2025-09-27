@@ -124,7 +124,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -137,7 +137,7 @@ export default {
         
         particle.gestureData.pulse = {
             baseDistance: distance,
-            angle: angle,
+            angle,
             startX: particle.x,
             startY: particle.y,
             initialized: true
@@ -153,7 +153,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.pulse?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -168,8 +168,8 @@ export default {
         
         // Calculate pulse with optional peak hold
         let pulseValue;
-        let frequency = config.frequency;
-        let amplitude = config.amplitude;
+        let {frequency} = config;
+        let {amplitude} = config;
         
         // Apply rhythm modulation if present
         if (motion.rhythmModulation) {
@@ -215,7 +215,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.pulse) {
             delete particle.gestureData.pulse;
         }
@@ -226,7 +226,7 @@ export default {
      * @param {number} t - Progress (0-1)
      * @returns {number} Eased value
      */
-    easeInOutSine: function(t) {
+    easeInOutSine(t) {
         return -(Math.cos(Math.PI * t) - 1) / 2;
     }
 };

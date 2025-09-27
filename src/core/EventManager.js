@@ -217,7 +217,7 @@ export class EventManager {
      * @returns {string} Listener ID
      */
     once(target, eventType, handler, options = {}) {
-        const wrappedHandler = (event) => {
+        const wrappedHandler = event => {
             handler(event);
             this.removeEventListener(id);
         };
@@ -239,7 +239,7 @@ export class EventManager {
     debounced(target, eventType, handler, delay = 250, options = {}) {
         let timeoutId;
 
-        const debouncedHandler = (event) => {
+        const debouncedHandler = event => {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => handler(event), delay);
         };
@@ -259,7 +259,7 @@ export class EventManager {
     throttled(target, eventType, handler, limit = 100, options = {}) {
         let inThrottle = false;
 
-        const throttledHandler = (event) => {
+        const throttledHandler = event => {
             if (!inThrottle) {
                 handler(event);
                 inThrottle = true;

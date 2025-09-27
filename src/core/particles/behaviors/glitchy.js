@@ -98,7 +98,7 @@ export default {
     /**
      * Initialize particle state for glitchy behavior
      */
-    initialize: function(particle, config, centerX, centerY) {
+    initialize(particle, config, centerX, centerY) {
         // Set particle color from emotion palette
         if (particle.emotionColors && particle.emotionColors.length > 0) {
             particle.color = selectWeightedColor(particle.emotionColors);
@@ -154,7 +154,7 @@ export default {
     /**
      * Update particle physics for glitchy behavior
      */
-    update: function(particle, dt, centerX, centerY) {
+    update(particle, dt, centerX, centerY) {
         const state = particle.behaviorState;
         if (!state) return;
         

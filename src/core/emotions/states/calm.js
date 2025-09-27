@@ -110,7 +110,7 @@ export default {
      * @param {Object} state - Current renderer state
      * @returns {Object} Core rendering configuration
      */
-    getCoreParams: function(state) {
+    getCoreParams(state) {
         const time = state.time || Date.now();
         const breathPhase = Math.sin(time * 0.0006) * 0.5 + 0.5; // Very slow breathing
 
@@ -132,7 +132,7 @@ export default {
      * @param {Object} particle - Particle to update
      * @param {number} deltaTime - Time since last update
      */
-    updateParticle: function(particle, deltaTime) {
+    updateParticle(particle, deltaTime) {
         // Super slow drift
         particle.x += Math.sin(particle.life * 0.001) * 0.1;
         particle.y -= deltaTime * 0.02; // Very slow rise
@@ -152,7 +152,7 @@ export default {
      * @param {number} radius - Core radius
      * @returns {boolean} True if custom rendering was done
      */
-    renderCore: function(ctx, x, y, radius) {
+    renderCore(ctx, x, y, radius) {
         // Return false to use default rendering with parameters
         return false;
     }

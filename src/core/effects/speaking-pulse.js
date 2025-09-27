@@ -25,11 +25,11 @@ export default {
         rings: []  // Array of expanding rings
     },
     
-    shouldActivate: function(state) {
+    shouldActivate(state) {
         return state.speaking === true;
     },
     
-    apply: function(ctx, params) {
+    apply(ctx, params) {
         const { x, y, radius, audioLevel = 0, deltaTime = 16.67 } = params;
         
         // Smooth audio level
@@ -38,7 +38,7 @@ export default {
         // Create expanding rings on audio peaks
         if (audioLevel > 0.5 && this.state.audioLevel <= 0.5) {
             this.state.rings.push({
-                radius: radius,
+                radius,
                 opacity: 0.5,
                 speed: 2
             });
@@ -53,7 +53,7 @@ export default {
         this.state.audioLevel = audioLevel;
     },
     
-    drawRings: function(ctx, x, y, deltaTime) {
+    drawRings(ctx, x, y, deltaTime) {
         ctx.save();
         ctx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
         ctx.lineWidth = 2;
@@ -82,7 +82,7 @@ export default {
         ctx.restore();
     },
     
-    getScaleModifier: function() {
+    getScaleModifier() {
         return 1 + (this.state.smoothedLevel * this.config.scaleMultiplier);
     }
 };

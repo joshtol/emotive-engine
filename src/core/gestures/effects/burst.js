@@ -111,7 +111,7 @@ export default {
      * Apply explosive burst motion to particle
      * Pushes particles radially outward with decaying force
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Calculate force decay over gesture duration
         const decay = motion.decay || this.config.decay;
         const strength = (motion.strength || this.config.strength) * (1 - progress * decay);

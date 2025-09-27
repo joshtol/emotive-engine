@@ -233,7 +233,7 @@ export class GestureCompatibility {
         const used = new Set();
 
         // Normalize to gesture names
-        const normalizeGesture = (g) => typeof g === 'string' ? g : g.gestureName;
+        const normalizeGesture = g => typeof g === 'string' ? g : g.gestureName;
 
         // Sort by priority
         const sorted = [...gestures].sort((a, b) => {

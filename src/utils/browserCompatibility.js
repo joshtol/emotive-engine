@@ -296,7 +296,7 @@ export function polyfillRequestAnimationFrame() {
         window.oRequestAnimationFrame ||
         window.msRequestAnimationFrame ||
         function(callback) {
-            return window.setTimeout(function() {
+            return window.setTimeout(() => {
                 callback(Date.now());
             }, 1000 / 60); // 60 FPS fallback
         };
@@ -339,15 +339,15 @@ export function polyfillWebAudio() {
         this.sampleRate = 44100;
         this.currentTime = 0;
         this.destination = {
-            connect: function() {},
-            disconnect: function() {}
+            connect() {},
+            disconnect() {}
         };
 
         this.createGain = function() {
             return {
                 gain: { value: 1 },
-                connect: function() {},
-                disconnect: function() {}
+                connect() {},
+                disconnect() {}
             };
         };
 
@@ -355,10 +355,10 @@ export function polyfillWebAudio() {
             return {
                 frequency: { value: 440 },
                 type: 'sine',
-                start: function() {},
-                stop: function() {},
-                connect: function() {},
-                disconnect: function() {}
+                start() {},
+                stop() {},
+                connect() {},
+                disconnect() {}
             };
         };
 
@@ -366,14 +366,14 @@ export function polyfillWebAudio() {
             return {
                 fftSize: 2048,
                 frequencyBinCount: 1024,
-                getByteFrequencyData: function(array) {
+                getByteFrequencyData(array) {
                     // Fill with zeros
                     for (let i = 0; i < array.length; i++) {
                         array[i] = 0;
                     }
                 },
-                connect: function() {},
-                disconnect: function() {}
+                connect() {},
+                disconnect() {}
             };
         };
 
@@ -413,7 +413,7 @@ export class CanvasContextRecovery {
      * Set up context loss and recovery handling
      */
     setupContextLossHandling() {
-        this.canvas.addEventListener('webglcontextlost', (event) => {
+        this.canvas.addEventListener('webglcontextlost', event => {
             event.preventDefault();
             this.isContextLost = true;
             // Canvas context lost
@@ -521,7 +521,7 @@ export class BrowserOptimizations {
      * @returns {Object} Browser information
      */
     detectBrowser() {
-        const userAgent = navigator.userAgent;
+        const {userAgent} = navigator;
         
         let name = 'unknown';
         let version = 'unknown';

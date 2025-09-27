@@ -155,7 +155,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -180,8 +180,8 @@ export default {
             originalVx: particle.vx,
             originalVy: particle.vy,
             baseOpacity: particle.opacity || particle.life || 1,
-            driftAngle: driftAngle,
-            angleOffset: angleOffset,
+            driftAngle,
+            angleOffset,
             homeRadius: homeRadius * particle.scaleFactor,
             homeX: centerX + Math.cos(driftAngle) * homeRadius,
             homeY: centerY + Math.sin(driftAngle) * homeRadius,
@@ -200,7 +200,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.drift?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -305,7 +305,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.drift) {
             const data = particle.gestureData.drift;
             particle.vx = data.originalVx;
@@ -321,13 +321,13 @@ export default {
     /**
      * Easing functions
      */
-    easeInOutCubic: function(t) {
+    easeInOutCubic(t) {
         return t < 0.5 
             ? 4 * t * t * t 
             : 1 - Math.pow(-2 * t + 2, 3) / 2;
     },
     
-    easeOutQuad: function(t) {
+    easeOutQuad(t) {
         return t * (2 - t);
     }
 };

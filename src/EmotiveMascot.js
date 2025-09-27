@@ -124,7 +124,7 @@ class EmotiveMascot {
     initialize(config) {
         // Get browser-specific optimizations
         const browserOpts = browserCompatibility.browserOptimizations.getOptimizations();
-        const capabilities = browserCompatibility.capabilities;
+        const {capabilities} = browserCompatibility;
         
         // Default configuration with browser-specific optimizations
         const defaults = {
@@ -165,7 +165,7 @@ class EmotiveMascot {
         
         // Set up canvas context recovery
         this.contextRecovery = new CanvasContextRecovery(this.canvas);
-        this.contextRecovery.onRecovery((context) => {
+        this.contextRecovery.onRecovery(context => {
             // Canvas context recovered, reinitializing renderer
             if (this.renderer) {
                 this.renderer.handleContextRecovery(context);
@@ -236,7 +236,7 @@ class EmotiveMascot {
             });
             
             // Connect idle behavior callbacks to renderer
-            this.idleBehavior.setCallback('onBlink', (data) => {
+            this.idleBehavior.setCallback('onBlink', data => {
                 if (this.renderer && this.renderer.state) {
                     this.renderer.state.blinking = data.phase === 'start';
                 }
@@ -434,23 +434,23 @@ class EmotiveMascot {
      */
     handleDegradationEvent(event, data) {
         switch (event) {
-            case 'degradationApplied':
-                // Silently handle performance degradation
-                this.applyDegradationSettings(data.settings);
-                this.emit('performanceDegradation', data);
-                break;
+        case 'degradationApplied':
+            // Silently handle performance degradation
+            this.applyDegradationSettings(data.settings);
+            this.emit('performanceDegradation', data);
+            break;
                 
-            case 'recoveryApplied':
-                // Silently handle performance recovery
-                this.applyDegradationSettings(data.settings);
-                this.emit('performanceRecovery', data);
-                break;
+        case 'recoveryApplied':
+            // Silently handle performance recovery
+            this.applyDegradationSettings(data.settings);
+            this.emit('performanceRecovery', data);
+            break;
                 
-            case 'levelChanged':
-                // Silently handle degradation level change
-                this.applyDegradationSettings(data.settings);
-                this.emit('degradationLevelChanged', data);
-                break;
+        case 'levelChanged':
+            // Silently handle degradation level change
+            this.applyDegradationSettings(data.settings);
+            this.emit('degradationLevelChanged', data);
+            break;
         }
     }
 
@@ -490,7 +490,7 @@ class EmotiveMascot {
      */
     setupAudioLevelProcessorCallbacks() {
         // Handle audio level updates
-        this.audioLevelProcessor.onLevelUpdate((data) => {
+        this.audioLevelProcessor.onLevelUpdate(data => {
             // Update renderer with current audio level
             this.renderer.updateAudioLevel(data.level);
             
@@ -503,7 +503,7 @@ class EmotiveMascot {
         });
         
         // Handle volume spikes for gesture triggering
-        this.audioLevelProcessor.onVolumeSpike((spikeData) => {
+        this.audioLevelProcessor.onVolumeSpike(spikeData => {
             // Trigger pulse gesture if not already active
             // Check if any particle has an active gesture
             const hasActiveGesture = this.particleSystem.particles.some(p => p.gestureProgress < 1);
@@ -536,7 +536,7 @@ class EmotiveMascot {
         });
         
         // Handle audio processing errors
-        this.audioLevelProcessor.onError((errorData) => {
+        this.audioLevelProcessor.onError(errorData => {
             // AudioLevelProcessor error
             this.emit('audioProcessingError', errorData);
         });
@@ -638,8 +638,8 @@ class EmotiveMascot {
             // Performance marker: Gesture start
             const gestureStartTime = performance.now();
             const gestureName = Array.isArray(gesture) ? 'chord' :
-                               (typeof gesture === 'object' && gesture.type === 'chord') ? 'chord' :
-                               gesture;
+                (typeof gesture === 'object' && gesture.type === 'chord') ? 'chord' :
+                    gesture;
 
             if (this.performanceMonitor) {
                 this.performanceMonitor.markGestureStart(gestureName);
@@ -1033,7 +1033,7 @@ class EmotiveMascot {
                 // TTS ended
             };
             
-            utterance.onerror = (error) => {
+            utterance.onerror = error => {
                 this.tts.speaking = false;
                 this.tts.currentUtterance = null;
                 
@@ -1042,7 +1042,7 @@ class EmotiveMascot {
             };
             
             // Add word boundary events for more dynamic animation
-            utterance.onboundary = (event) => {
+            utterance.onboundary = event => {
                 if (event.name === 'word') {
                     // Subtle pulse on each word
                     if (Math.random() < 0.3) { // 30% chance per word
@@ -1396,47 +1396,47 @@ class EmotiveMascot {
             
             // Determine current phase and scale
             switch (pattern.currentPhase) {
-                case 'inhale':
-                    if (phaseElapsed >= pattern.inhale) {
-                        nextPhase = 'hold1';
-                        pattern.phaseStartTime = now;
-                        this.emit('hold-start', { type: 'post-inhale' });
-                    } else {
-                        // Scale up during inhale
-                        const progress = phaseElapsed / pattern.inhale;
-                        scale = 1.0 + (0.3 * progress); // Expand to 1.3x
-                    }
-                    break;
+            case 'inhale':
+                if (phaseElapsed >= pattern.inhale) {
+                    nextPhase = 'hold1';
+                    pattern.phaseStartTime = now;
+                    this.emit('hold-start', { type: 'post-inhale' });
+                } else {
+                    // Scale up during inhale
+                    const progress = phaseElapsed / pattern.inhale;
+                    scale = 1.0 + (0.3 * progress); // Expand to 1.3x
+                }
+                break;
                     
-                case 'hold1':
-                    if (phaseElapsed >= pattern.hold1) {
-                        nextPhase = 'exhale';
-                        pattern.phaseStartTime = now;
-                        this.emit('exhale-start');
-                    }
-                    scale = 1.3; // Stay expanded
-                    break;
+            case 'hold1':
+                if (phaseElapsed >= pattern.hold1) {
+                    nextPhase = 'exhale';
+                    pattern.phaseStartTime = now;
+                    this.emit('exhale-start');
+                }
+                scale = 1.3; // Stay expanded
+                break;
                     
-                case 'exhale':
-                    if (phaseElapsed >= pattern.exhale) {
-                        nextPhase = 'hold2';
-                        pattern.phaseStartTime = now;
-                        this.emit('hold-start', { type: 'post-exhale' });
-                    } else {
-                        // Scale down during exhale
-                        const progress = phaseElapsed / pattern.exhale;
-                        scale = 1.3 - (0.4 * progress); // Contract to 0.9x
-                    }
-                    break;
+            case 'exhale':
+                if (phaseElapsed >= pattern.exhale) {
+                    nextPhase = 'hold2';
+                    pattern.phaseStartTime = now;
+                    this.emit('hold-start', { type: 'post-exhale' });
+                } else {
+                    // Scale down during exhale
+                    const progress = phaseElapsed / pattern.exhale;
+                    scale = 1.3 - (0.4 * progress); // Contract to 0.9x
+                }
+                break;
                     
-                case 'hold2':
-                    if (phaseElapsed >= pattern.hold2) {
-                        nextPhase = 'inhale';
-                        pattern.phaseStartTime = now;
-                        this.emit('inhale-start');
-                    }
-                    scale = 0.9; // Stay contracted
-                    break;
+            case 'hold2':
+                if (phaseElapsed >= pattern.hold2) {
+                    nextPhase = 'inhale';
+                    pattern.phaseStartTime = now;
+                    this.emit('inhale-start');
+                }
+                scale = 0.9; // Stay contracted
+                break;
             }
             
             // Update phase
@@ -1878,7 +1878,7 @@ class EmotiveMascot {
                 const suspicionEmotion = getEmotion('suspicion');
                 if (suspicionEmotion && suspicionEmotion.visual) {
                     const gazeState = this.gazeTracker.getState();
-                    const mousePos = this.gazeTracker.mousePos;
+                    const {mousePos} = this.gazeTracker;
                     const centerX = this.canvasManager.width / 2;
                     const centerY = this.canvasManager.height / 2 - this.config.topOffset;
                     
@@ -1900,7 +1900,7 @@ class EmotiveMascot {
             }
             
             // For Emotive style, convert emotion to visual params (AFTER updating threat level)
-            let emotionParams = getEmotionVisualParams(renderState.emotion);
+            const emotionParams = getEmotionVisualParams(renderState.emotion);
             
             this.renderer.setEmotionalState(renderState.emotion, emotionParams, renderState.undertone);
             
@@ -1921,7 +1921,7 @@ class EmotiveMascot {
             let particleBehavior = emotionParams.particleBehavior || 'ambient';
             let particleRate = emotionParams.particleRate || 15;
             // Use emotionParams min/max if available, otherwise fall back to stateProps
-            let minParticles = emotionParams.minParticles !== undefined ? emotionParams.minParticles : (stateProps.minParticles || 0);
+            const minParticles = emotionParams.minParticles !== undefined ? emotionParams.minParticles : (stateProps.minParticles || 0);
             let maxParticles = emotionParams.maxParticles !== undefined ? emotionParams.maxParticles : (stateProps.maxParticles || 10);
             
             
@@ -2099,7 +2099,7 @@ class EmotiveMascot {
             const padding = 8;
             let maxWidth = 0;
             lines.forEach(line => {
-                const width = ctx.measureText(line).width;
+                const {width} = ctx.measureText(line);
                 if (width > maxWidth) maxWidth = width;
             });
             
@@ -2633,13 +2633,13 @@ class EmotiveMascot {
             this.emit('tts:end');
         };
         
-        utterance.onerror = (event) => {
+        utterance.onerror = event => {
             // TTS: Speech error
             this.setTTSSpeaking(false);
             this.emit('tts:error', { error: event });
         };
         
-        utterance.onboundary = (event) => {
+        utterance.onboundary = event => {
             // Word/sentence boundaries for potential lip-sync
             this.emit('tts:boundary', { 
                 name: event.name,
@@ -2712,8 +2712,8 @@ class EmotiveMascot {
         
         // Trigger a state update to recalculate all visual parameters
         if (this.stateMachine) {
-            const currentEmotion = this.stateMachine.currentEmotion;
-            const currentUndertone = this.stateMachine.currentUndertone;
+            const {currentEmotion} = this.stateMachine;
+            const {currentUndertone} = this.stateMachine;
             
             // Re-apply current emotion to trigger fresh calculations
             if (currentEmotion) {

@@ -97,7 +97,7 @@ export function createLegacyAdapter(legacyBehavior) {
         emoji: '🔄',
         description: legacyBehavior.description || 'Legacy plugin behavior',
         
-        initialize: function(particle) {
+        initialize(particle) {
             // Apply legacy configuration
             if (legacyBehavior.size) {
                 particle.size = typeof legacyBehavior.size === 'object' ?
@@ -144,44 +144,44 @@ export function createLegacyAdapter(legacyBehavior) {
             };
         },
         
-        update: function(particle, dt, centerX, centerY) {
+        update(particle, dt, centerX, centerY) {
             const data = particle.behaviorData;
             
             // Apply movement based on type
             switch (data.movementType) {
-                case 'wander':
-                    // Random wandering
-                    particle.vx += (Math.random() - 0.5) * data.turbulence * dt;
-                    particle.vy += (Math.random() - 0.5) * data.turbulence * dt;
-                    break;
+            case 'wander':
+                // Random wandering
+                particle.vx += (Math.random() - 0.5) * data.turbulence * dt;
+                particle.vy += (Math.random() - 0.5) * data.turbulence * dt;
+                break;
                     
-                case 'fall':
-                    // Falling with drift
-                    particle.vy += 0.1 * dt; // Gravity
-                    particle.vx += (Math.random() - 0.5) * data.drift * dt;
-                    break;
+            case 'fall':
+                // Falling with drift
+                particle.vy += 0.1 * dt; // Gravity
+                particle.vx += (Math.random() - 0.5) * data.drift * dt;
+                break;
                     
-                case 'rain':
-                    // Digital rain effect
-                    particle.vy += data.acceleration * dt;
-                    break;
+            case 'rain':
+                // Digital rain effect
+                particle.vy += data.acceleration * dt;
+                break;
                     
-                case 'orbit':
-                    // Orbital motion
-                    const dx = particle.x - centerX;
-                    const dy = particle.y - centerY;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist > 0) {
-                        const angle = Math.atan2(dy, dx) + 0.02 * dt;
-                        particle.x = centerX + Math.cos(angle) * dist;
-                        particle.y = centerY + Math.sin(angle) * dist;
-                    }
-                    break;
+            case 'orbit':
+                // Orbital motion
+                const dx = particle.x - centerX;
+                const dy = particle.y - centerY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                    const angle = Math.atan2(dy, dx) + 0.02 * dt;
+                    particle.x = centerX + Math.cos(angle) * dist;
+                    particle.y = centerY + Math.sin(angle) * dist;
+                }
+                break;
                     
-                case 'linear':
-                default:
-                    // Simple linear motion (already handled by velocity)
-                    break;
+            case 'linear':
+            default:
+                // Simple linear motion (already handled by velocity)
+                break;
             }
             
             // Call custom update if provided

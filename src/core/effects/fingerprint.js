@@ -54,14 +54,14 @@ export default {
      * @param {Object} state - Renderer state
      * @returns {boolean}
      */
-    shouldActivate: function(state) {
+    shouldActivate(state) {
         return state.biometric === true || state.fingerprint === true || state.authenticating === true;
     },
     
     /**
      * Initialize fingerprint pattern
      */
-    initialize: function() {
+    initialize() {
         // Generate random breaks for each ring
         this.state.breaks = [];
         for (let i = 0; i < this.config.rings; i++) {
@@ -85,7 +85,7 @@ export default {
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {Object} params - Effect parameters
      */
-    apply: function(ctx, params) {
+    apply(ctx, params) {
         const { x, y, radius, deltaTime = 16.67, scanning = false, authResult = null } = params;
         
         // Initialize on first run
@@ -133,7 +133,7 @@ export default {
     /**
      * Draw the fingerprint pattern
      */
-    drawFingerprintPattern: function(ctx, centerX, centerY, baseRadius) {
+    drawFingerprintPattern(ctx, centerX, centerY, baseRadius) {
         const pulse = Math.sin(this.state.pulsePhase) * 0.1 + 1;
         
         for (let ring = 0; ring < this.config.rings; ring++) {
@@ -205,7 +205,7 @@ export default {
     /**
      * Draw scanning line
      */
-    drawScanLine: function(ctx, x, y, radius) {
+    drawScanLine(ctx, x, y, radius) {
         const scanY = y + this.state.scanPosition * radius;
         
         // Create gradient for scan line
@@ -231,7 +231,7 @@ export default {
     /**
      * Show authentication result
      */
-    showAuthResult: function(ctx, x, y, radius, result) {
+    showAuthResult(ctx, x, y, radius, result) {
         const color = result === 'success' ? this.config.successColor : this.config.failColor;
         const text = result === 'success' ? '✓ AUTHENTICATED' : '✗ ACCESS DENIED';
         
@@ -255,7 +255,7 @@ export default {
     /**
      * Start authentication scan
      */
-    startScan: function() {
+    startScan() {
         this.state.isScanning = true;
         this.state.scanPosition = -1;
         this.state.scanDirection = 1;
@@ -265,7 +265,7 @@ export default {
     /**
      * Complete authentication scan
      */
-    completeScan: function(success = true) {
+    completeScan(success = true) {
         this.state.isScanning = false;
         this.state.scanResult = success ? 'success' : 'fail';
         
@@ -278,7 +278,7 @@ export default {
     /**
      * Reset the effect state
      */
-    reset: function() {
+    reset() {
         this.state.rotation = 0;
         this.state.pulsePhase = 0;
         this.state.scanPosition = 0;

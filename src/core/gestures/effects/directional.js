@@ -118,7 +118,7 @@ export default {
      * Initialize directional movement data
      * Stores particle's starting position for return motion
      */
-    initialize: function(particle) {
+    initialize(particle) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -132,7 +132,7 @@ export default {
      * Apply directional force to particle
      * Pushes particles in specified direction with optional return
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.directional) {
             this.initialize(particle);
         }

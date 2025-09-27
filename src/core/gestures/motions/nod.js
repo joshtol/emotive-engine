@@ -85,7 +85,7 @@ export default {
         }
     },
     
-    initialize: function(particle, motion) {
+    initialize(particle, motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -95,15 +95,15 @@ export default {
         };
     },
     
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         if (!particle.gestureData?.nod?.initialized) {
             this.initialize(particle, motion);
         }
         
         const config = { ...this.config, ...motion };
         const strength = config.strength || this.config.strength || 1.0;
-        let frequency = config.frequency;
-        let amplitude = config.amplitude;
+        let {frequency} = config;
+        let {amplitude} = config;
         
         // Apply rhythm modulation if present
         if (motion.rhythmModulation) {
@@ -126,7 +126,7 @@ export default {
         }
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.nod) {
             delete particle.gestureData.nod;
         }

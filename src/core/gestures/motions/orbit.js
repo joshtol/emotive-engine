@@ -74,7 +74,7 @@ export function applyOrbit(particle, gestureData, config, progress, strength, ce
     }
     
     // Apply rhythm modulation if present
-    let rotations = config.rotations;
+    let {rotations} = config;
     let radiusPulseAmount = 0.05;
     if (config.rhythmModulation) {
         if (config.rhythmModulation.speedMultiplier) {

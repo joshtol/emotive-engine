@@ -71,7 +71,7 @@ export default {
         }
     },
     
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize twitch data if needed
         if (!particle.gestureData) {
             particle.gestureData = {};
@@ -89,9 +89,9 @@ export default {
         }
         
         const data = particle.gestureData.twitch;
-        const config = this.config;
+        const {config} = this;
         let intensity = motion.intensity || config.intensity;
-        let frequency = config.frequency;
+        let {frequency} = config;
         
         // Apply rhythm modulation if present
         if (motion.rhythmModulation) {
@@ -137,7 +137,7 @@ export default {
             
             if (data.twitchTimer > 0) {
                 // Sharp movement toward target
-                const sharpness = config.sharpness;
+                const {sharpness} = config;
                 data.twitchOffset.x += (data.targetOffset.x - data.twitchOffset.x) * sharpness;
                 data.twitchOffset.y += (data.targetOffset.y - data.twitchOffset.y) * sharpness;
             } else {
@@ -161,7 +161,7 @@ export default {
         }
     },
     
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.twitch) {
             delete particle.gestureData.twitch;
         }

@@ -601,8 +601,8 @@ class EmotiveRenderer {
      */
     updateOffscreenSize() {
         if (this.offscreenCanvas && this.canvasManager) {
-            const width = this.canvasManager.canvas.width;
-            const height = this.canvasManager.canvas.height;
+            const {width} = this.canvasManager.canvas;
+            const {height} = this.canvasManager.canvas;
             
             if (this.offscreenCanvas.width !== width || this.offscreenCanvas.height !== height) {
                 this.offscreenCanvas.width = width;
@@ -778,7 +778,7 @@ class EmotiveRenderer {
             // Normal breathing behavior
             // Zen uses full breath depth regardless of breathRate
             const effectiveBreathDepth = this.state.emotion === 'zen' ? this.state.breathDepth : 
-                                         this.state.breathDepth * this.state.breathRate;
+                this.state.breathDepth * this.state.breathRate;
             // Get breathing scale from BreathingAnimator
             const breathingScale = this.breathingAnimator.getBreathingScale();
             coreBreathFactor = breathingScale;
@@ -830,31 +830,31 @@ class EmotiveRenderer {
                 
                 // Set episode parameters based on undertone type
                 switch(this.currentUndertone) {
-                    case 'nervous':
-                        episode.duration = 500 + Math.random() * 500; // 0.5-1 second
-                        episode.intensity = 2 + Math.random(); // 2-3px flutter
-                        episode.nextTrigger = now + 3000 + Math.random() * 2000; // 3-5 seconds
-                        break;
-                    case 'confident':
-                        episode.duration = 1000 + Math.random() * 1000; // 1-2 seconds
-                        episode.intensity = 0.15; // 15% size expansion
-                        episode.nextTrigger = now + 4000 + Math.random() * 2000; // 4-6 seconds
-                        break;
-                    case 'tired':
-                        episode.duration = 1000 + Math.random() * 2000; // 1-3 seconds
-                        episode.intensity = 0.2; // 20% size reduction
-                        episode.nextTrigger = now + 5000 + Math.random() * 2000; // 5-7 seconds
-                        break;
-                    case 'intense':
-                        episode.duration = 500 + Math.random() * 500; // 0.5-1 second
-                        episode.intensity = 0.5; // 50% glow boost, 5% size shrink
-                        episode.nextTrigger = now + 3000 + Math.random() * 3000; // 3-6 seconds
-                        break;
-                    case 'subdued':
-                        episode.duration = 2000 + Math.random() * 1000; // 2-3 seconds
-                        episode.intensity = 0.3; // 30% glow dim, 10% size shrink
-                        episode.nextTrigger = now + 4000 + Math.random() * 3000; // 4-7 seconds
-                        break;
+                case 'nervous':
+                    episode.duration = 500 + Math.random() * 500; // 0.5-1 second
+                    episode.intensity = 2 + Math.random(); // 2-3px flutter
+                    episode.nextTrigger = now + 3000 + Math.random() * 2000; // 3-5 seconds
+                    break;
+                case 'confident':
+                    episode.duration = 1000 + Math.random() * 1000; // 1-2 seconds
+                    episode.intensity = 0.15; // 15% size expansion
+                    episode.nextTrigger = now + 4000 + Math.random() * 2000; // 4-6 seconds
+                    break;
+                case 'tired':
+                    episode.duration = 1000 + Math.random() * 2000; // 1-3 seconds
+                    episode.intensity = 0.2; // 20% size reduction
+                    episode.nextTrigger = now + 5000 + Math.random() * 2000; // 5-7 seconds
+                    break;
+                case 'intense':
+                    episode.duration = 500 + Math.random() * 500; // 0.5-1 second
+                    episode.intensity = 0.5; // 50% glow boost, 5% size shrink
+                    episode.nextTrigger = now + 3000 + Math.random() * 3000; // 3-6 seconds
+                    break;
+                case 'subdued':
+                    episode.duration = 2000 + Math.random() * 1000; // 2-3 seconds
+                    episode.intensity = 0.3; // 30% glow dim, 10% size shrink
+                    episode.nextTrigger = now + 4000 + Math.random() * 3000; // 4-7 seconds
+                    break;
                 }
             }
             
@@ -867,43 +867,43 @@ class EmotiveRenderer {
                     
                     // Apply different effects based on undertone
                     switch(this.currentUndertone) {
-                        case 'nervous':
-                            // Quick shiver that settles
-                            const damping = 1 - progress;
-                            const frequency = 15;
-                            const flutter = Math.sin(progress * Math.PI * frequency) * damping;
-                            jitterX = flutter * episode.intensity;
-                            jitterY = flutter * episode.intensity * 0.7;
-                            break;
+                    case 'nervous':
+                        // Quick shiver that settles
+                        const damping = 1 - progress;
+                        const frequency = 15;
+                        const flutter = Math.sin(progress * Math.PI * frequency) * damping;
+                        jitterX = flutter * episode.intensity;
+                        jitterY = flutter * episode.intensity * 0.7;
+                        break;
                             
-                        case 'confident':
-                            // Smooth chest puff that settles
-                            const puffCurve = Math.sin(progress * Math.PI); // Smooth rise and fall
-                            coreRadius *= (1 + episode.intensity * puffCurve);
-                            glowRadius *= (1 + episode.intensity * 0.5 * puffCurve);
-                            break;
+                    case 'confident':
+                        // Smooth chest puff that settles
+                        const puffCurve = Math.sin(progress * Math.PI); // Smooth rise and fall
+                        coreRadius *= (1 + episode.intensity * puffCurve);
+                        glowRadius *= (1 + episode.intensity * 0.5 * puffCurve);
+                        break;
                             
-                        case 'tired':
-                            // Drowsy sag with slow recovery
-                            const sagCurve = Math.sin(progress * Math.PI * 0.5); // Slow droop
-                            coreRadius *= (1 - episode.intensity * sagCurve);
-                            // Also affect vertical position slightly
-                            jitterY += sagCurve * 5; // Slight downward sag
-                            break;
+                    case 'tired':
+                        // Drowsy sag with slow recovery
+                        const sagCurve = Math.sin(progress * Math.PI * 0.5); // Slow droop
+                        coreRadius *= (1 - episode.intensity * sagCurve);
+                        // Also affect vertical position slightly
+                        jitterY += sagCurve * 5; // Slight downward sag
+                        break;
                             
-                        case 'intense':
-                            // Sharp contraction with glow surge
-                            const focusCurve = 1 - Math.cos(progress * Math.PI); // Quick in-out
-                            coreRadius *= (1 - 0.05 * focusCurve); // 5% shrink
-                            glowRadius *= (1 + episode.intensity * focusCurve); // 50% glow boost
-                            break;
+                    case 'intense':
+                        // Sharp contraction with glow surge
+                        const focusCurve = 1 - Math.cos(progress * Math.PI); // Quick in-out
+                        coreRadius *= (1 - 0.05 * focusCurve); // 5% shrink
+                        glowRadius *= (1 + episode.intensity * focusCurve); // 50% glow boost
+                        break;
                             
-                        case 'subdued':
-                            // Gentle inward pull
-                            const withdrawCurve = Math.sin(progress * Math.PI * 0.5); // Slow pull
-                            coreRadius *= (1 - 0.1 * withdrawCurve); // 10% shrink
-                            glowRadius *= (1 - episode.intensity * withdrawCurve); // 30% glow dim
-                            break;
+                    case 'subdued':
+                        // Gentle inward pull
+                        const withdrawCurve = Math.sin(progress * Math.PI * 0.5); // Slow pull
+                        coreRadius *= (1 - 0.1 * withdrawCurve); // 10% shrink
+                        glowRadius *= (1 - episode.intensity * withdrawCurve); // 30% glow dim
+                        break;
                     }
                 } else {
                     // Episode finished
@@ -975,7 +975,7 @@ class EmotiveRenderer {
         // Render flash wave if present
         if (gestureTransforms && gestureTransforms.flashWave) {
             const wave = gestureTransforms.flashWave;
-            const ctx = this.ctx;
+            const {ctx} = this;
             
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
@@ -1057,7 +1057,7 @@ class EmotiveRenderer {
             scaleX: 1,
             scaleY: 1,
             rotation: totalRotation,
-            shapePoints: shapePoints
+            shapePoints
         });
         
         // Update and render sparkles BEFORE moon shadow so they don't cover it
@@ -1106,8 +1106,8 @@ class EmotiveRenderer {
             
             if (this.shapeMorpher) {
                 morphProgress = this.shapeMorpher.getProgress();
-                const currentShape = this.shapeMorpher.currentShape;
-                const targetShape = this.shapeMorpher.targetShape;
+                const {currentShape} = this.shapeMorpher;
+                const {targetShape} = this.shapeMorpher;
                 const fromLunar = currentShape === 'lunar' || currentShape === 'eclipse';
                 const toLunar = targetShape === 'lunar' || targetShape === 'eclipse';
                 
@@ -1233,7 +1233,7 @@ class EmotiveRenderer {
      * Render drop shadow for depth
      */
     renderDropShadow(x, y, radius, shapePoints) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         // Skip shadow during rapid animations for better performance
         const isAnimating = this.shapeMorpher && this.shapeMorpher.isTransitioning;
@@ -1286,7 +1286,7 @@ class EmotiveRenderer {
      * Render sun effects (corona, rays, etc)
      */
     renderSunEffects(x, y, radius, shadow) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         const time = Date.now() / 100;
         
         ctx.save();
@@ -1482,7 +1482,7 @@ class EmotiveRenderer {
      * Render Bailey's Beads for solar eclipse
      */
     renderBaileysBeads(x, y, radius, shadowOffsetX, shadowOffsetY, morphProgress, isTransitioningToSolar, hasSunRays) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         // NEVER show beads if there are no sun rays visible
         if (!hasSunRays) {
@@ -1612,7 +1612,7 @@ class EmotiveRenderer {
      * @param {number} rotation - Rotation angle to apply
      */
     renderMoonShadow(x, y, radius, shadow, shapePoints, isSolarOverlay = false, rotation = 0) {
-        const ctx = this.ctx;
+        const {ctx} = this;
         
         ctx.save();
         ctx.translate(x, y);
@@ -1628,8 +1628,8 @@ class EmotiveRenderer {
             
             if (this.shapeMorpher) {
                 const morphProgress = this.shapeMorpher.getProgress();
-                const currentShape = this.shapeMorpher.currentShape;
-                const targetShape = this.shapeMorpher.targetShape;
+                const {currentShape} = this.shapeMorpher;
+                const {targetShape} = this.shapeMorpher;
                 
                 // Animate shadow sliding in when morphing TO moon (and shadow.offset is not being controlled)
                 if (targetShape === 'moon' && morphProgress !== undefined && morphProgress < 1 && !shadow.shadowX) {
@@ -1703,8 +1703,8 @@ class EmotiveRenderer {
             
             if (this.shapeMorpher) {
                 const morphProgress = this.shapeMorpher.getProgress();
-                const currentShape = this.shapeMorpher.currentShape;
-                const targetShape = this.shapeMorpher.targetShape;
+                const {currentShape} = this.shapeMorpher;
+                const {targetShape} = this.shapeMorpher;
                 
                 // Don't skip animation for moon-solar transitions anymore
                 
@@ -1760,14 +1760,14 @@ class EmotiveRenderer {
                 penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(0, 0, 0, ${baseOpacity * 0.95})`);
                 penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(0, 0, 0, ${baseOpacity * 0.8})`);
                 penumbraGradient.addColorStop(0.85, `rgba(0, 0, 0, ${baseOpacity * 0.4})`);
-                penumbraGradient.addColorStop(1, `rgba(0, 0, 0, 0)`);
+                penumbraGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
             } else {
                 // Default reddish lunar eclipse colors
                 penumbraGradient.addColorStop(0, `rgba(10, 2, 0, ${baseOpacity})`);
                 penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(20, 5, 0, ${baseOpacity * 0.95})`);
                 penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(40, 10, 5, ${baseOpacity * 0.8})`);
                 penumbraGradient.addColorStop(0.85, `rgba(60, 15, 10, ${baseOpacity * 0.4})`);
-                penumbraGradient.addColorStop(1, `rgba(80, 20, 15, 0)`);
+                penumbraGradient.addColorStop(1, 'rgba(80, 20, 15, 0)');
             }
             
             ctx.fillStyle = penumbraGradient;
@@ -1868,7 +1868,7 @@ class EmotiveRenderer {
                 gradient.addColorStop(0, `rgba(184, 134, 11, ${0.8})`); // Dark goldenrod core
                 gradient.addColorStop(0.3, `rgba(153, 101, 21, ${0.6})`); // Darker gold
                 gradient.addColorStop(0.6, `rgba(139, 69, 19, ${0.4})`); // Saddle brown
-                gradient.addColorStop(1, `rgba(101, 67, 33, 0)`); // Dark brown edge
+                gradient.addColorStop(1, 'rgba(101, 67, 33, 0)'); // Dark brown edge
             } else {
                 // Full brightness only when fully in zen
                 gradient.addColorStop(0, `rgba(255, 255, 255, ${1.0 * zenPulse})`); // Pure white core
@@ -1880,7 +1880,7 @@ class EmotiveRenderer {
                 gradient.addColorStop(0.8, `rgba(255, 215, 0, ${0.3 * zenPulse})`); // Softer edge
                 gradient.addColorStop(0.9, `rgba(255, 215, 0, ${0.15 * zenPulse})`); // Very soft
                 gradient.addColorStop(0.95, `rgba(255, 215, 0, ${0.05 * zenPulse})`); // Almost gone
-                gradient.addColorStop(1, `rgba(255, 215, 0, 0)`); // Fully transparent edge
+                gradient.addColorStop(1, 'rgba(255, 215, 0, 0)'); // Fully transparent edge
             }
             
             this.ctx.fillStyle = gradient;
@@ -1918,43 +1918,43 @@ class EmotiveRenderer {
                 );
                 
                 if (morph > 0.3) { // Only show side petals after some morphing
-                const sidePetalAlpha = (morph - 0.3) / 0.7; // Fade in from 30% to 100%
+                    const sidePetalAlpha = (morph - 0.3) / 0.7; // Fade in from 30% to 100%
                 
-                // Left petal - fades in and spreads
-                this.ctx.moveTo(-radius * 0.1 * sidePetalAlpha, radius * 0.2); 
-                this.ctx.bezierCurveTo(
-                    -radius * (0.1 + 0.4 * sidePetalAlpha * spread), radius * 0.1,    
-                    -radius * (0.2 + 0.5 * sidePetalAlpha * spread), -radius * (0.1 + 0.2 * sidePetalAlpha),   
-                    -radius * (0.1 + 0.4 * sidePetalAlpha * spread), -radius * (0.2 + 0.45 * sidePetalAlpha)   
-                );
-                this.ctx.bezierCurveTo(
-                    -radius * (0.05 + 0.15 * sidePetalAlpha), -radius * (0.1 + 0.4 * sidePetalAlpha),   
-                    -radius * 0.05 * sidePetalAlpha, radius * 0.1,   
-                    -radius * 0.1 * sidePetalAlpha, radius * 0.2     
-                );
+                    // Left petal - fades in and spreads
+                    this.ctx.moveTo(-radius * 0.1 * sidePetalAlpha, radius * 0.2); 
+                    this.ctx.bezierCurveTo(
+                        -radius * (0.1 + 0.4 * sidePetalAlpha * spread), radius * 0.1,    
+                        -radius * (0.2 + 0.5 * sidePetalAlpha * spread), -radius * (0.1 + 0.2 * sidePetalAlpha),   
+                        -radius * (0.1 + 0.4 * sidePetalAlpha * spread), -radius * (0.2 + 0.45 * sidePetalAlpha)   
+                    );
+                    this.ctx.bezierCurveTo(
+                        -radius * (0.05 + 0.15 * sidePetalAlpha), -radius * (0.1 + 0.4 * sidePetalAlpha),   
+                        -radius * 0.05 * sidePetalAlpha, radius * 0.1,   
+                        -radius * 0.1 * sidePetalAlpha, radius * 0.2     
+                    );
                 
-                // Right petal - fades in and spreads
-                this.ctx.moveTo(radius * 0.1 * sidePetalAlpha, radius * 0.2); 
-                this.ctx.bezierCurveTo(
-                    radius * (0.1 + 0.4 * sidePetalAlpha * spread), radius * 0.1,     
-                    radius * (0.2 + 0.5 * sidePetalAlpha * spread), -radius * (0.1 + 0.2 * sidePetalAlpha),    
-                    radius * (0.1 + 0.4 * sidePetalAlpha * spread), -radius * (0.2 + 0.45 * sidePetalAlpha)    
-                );
-                this.ctx.bezierCurveTo(
-                    radius * (0.05 + 0.15 * sidePetalAlpha), -radius * (0.1 + 0.4 * sidePetalAlpha),    
-                    radius * 0.05 * sidePetalAlpha, radius * 0.1,    
-                    radius * 0.1 * sidePetalAlpha, radius * 0.2      
-                );
-            }
+                    // Right petal - fades in and spreads
+                    this.ctx.moveTo(radius * 0.1 * sidePetalAlpha, radius * 0.2); 
+                    this.ctx.bezierCurveTo(
+                        radius * (0.1 + 0.4 * sidePetalAlpha * spread), radius * 0.1,     
+                        radius * (0.2 + 0.5 * sidePetalAlpha * spread), -radius * (0.1 + 0.2 * sidePetalAlpha),    
+                        radius * (0.1 + 0.4 * sidePetalAlpha * spread), -radius * (0.2 + 0.45 * sidePetalAlpha)    
+                    );
+                    this.ctx.bezierCurveTo(
+                        radius * (0.05 + 0.15 * sidePetalAlpha), -radius * (0.1 + 0.4 * sidePetalAlpha),    
+                        radius * 0.05 * sidePetalAlpha, radius * 0.1,    
+                        radius * 0.1 * sidePetalAlpha, radius * 0.2      
+                    );
+                }
             
-            // Bottom smile - morphs from straight to curved smile
-            if (smile > 0) {
-                const smileDepth = radius * 0.2 * smile; // How deep the smile curves
-                this.ctx.moveTo(-radius * 0.6, radius * (0.5 - 0.1 * smile));   // Corners rise with smile
-                this.ctx.quadraticCurveTo(
-                    0, radius * (0.5 + 0.1 * smile),     // Center dips for smile
-                    radius * 0.6, radius * (0.5 - 0.1 * smile)  // Right corner rises
-                );
+                // Bottom smile - morphs from straight to curved smile
+                if (smile > 0) {
+                    const smileDepth = radius * 0.2 * smile; // How deep the smile curves
+                    this.ctx.moveTo(-radius * 0.6, radius * (0.5 - 0.1 * smile));   // Corners rise with smile
+                    this.ctx.quadraticCurveTo(
+                        0, radius * (0.5 + 0.1 * smile),     // Center dips for smile
+                        radius * 0.6, radius * (0.5 - 0.1 * smile)  // Right corner rises
+                    );
                 }
             }
             
@@ -2014,8 +2014,8 @@ class EmotiveRenderer {
             
             // Very subtle gradient during transition to see lotus clearly
             const coreGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            coreGradient.addColorStop(0, `rgba(255, 255, 255, 0.2)`);
-            coreGradient.addColorStop(0.5, `rgba(255, 250, 230, 0.1)`);
+            coreGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            coreGradient.addColorStop(0.5, 'rgba(255, 250, 230, 0.1)');
             coreGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
             this.ctx.fillStyle = coreGradient;
             this.ctx.fill();
@@ -2089,7 +2089,7 @@ class EmotiveRenderer {
     applyUndertoneModifiers(undertone) {
         // Handle weighted modifier from state machine
         if (undertone && typeof undertone === 'object' && undertone.weight !== undefined) {
-            const weight = undertone.weight;
+            const {weight} = undertone;
             
             // Apply weighted modifiers for smooth transitions
             // Use default value of 1.0 if property is undefined
@@ -2219,7 +2219,7 @@ class EmotiveRenderer {
         
         // Get weighted undertone modifier from state machine if available
         const weightedModifier = this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers ? 
-                                this.stateMachine.getWeightedUndertoneModifiers() : null;
+            this.stateMachine.getWeightedUndertoneModifiers() : null;
         
         // Apply all undertone modifiers (visual, breathing only - no particles)
         this.applyUndertoneModifiers(weightedModifier || undertone);
@@ -2254,7 +2254,7 @@ class EmotiveRenderer {
         
         // Get weighted undertone modifier from state machine if available
         const weightedModifier = this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers ? 
-                                this.stateMachine.getWeightedUndertoneModifiers() : null;
+            this.stateMachine.getWeightedUndertoneModifiers() : null;
         
         // Apply all undertone modifiers (visual, breathing, particles)
         this.applyUndertoneModifiers(weightedModifier || undertone);
@@ -2687,11 +2687,11 @@ class EmotiveRenderer {
                 this.zenTransition.smileCurve = Math.sin(lotusProgress * Math.PI / 2); // Smooth ease
                 
                 // Register with AnimationLoopManager
-        this.loopCallbackIds.zenEnter = animationLoopManager.register(
-            animate,
-            AnimationPriority.MEDIUM, // Zen animations are medium priority
-            this
-        );
+                this.loopCallbackIds.zenEnter = animationLoopManager.register(
+                    animate,
+                    AnimationPriority.MEDIUM, // Zen animations are medium priority
+                    this
+                );
             } else {
                 // Final state - in meditation with full lotus, then start floating
                 this.zenTransition.phase = 'in';
@@ -2774,11 +2774,11 @@ class EmotiveRenderer {
                 }
                 
                 // Register with AnimationLoopManager
-        this.loopCallbackIds.zenExit = animationLoopManager.register(
-            animate,
-            AnimationPriority.MEDIUM, // Zen animations are medium priority
-            this
-        );
+                this.loopCallbackIds.zenExit = animationLoopManager.register(
+                    animate,
+                    AnimationPriority.MEDIUM, // Zen animations are medium priority
+                    this
+                );
             } else if (elapsed < straightenDuration + awakeDuration) {
                 // Phase 2: Awakening gestures
                 const awakeProgress = (elapsed - straightenDuration) / awakeDuration;
@@ -2808,11 +2808,11 @@ class EmotiveRenderer {
                 }
                 
                 // Register with AnimationLoopManager
-        this.loopCallbackIds.zenExit = animationLoopManager.register(
-            animate,
-            AnimationPriority.MEDIUM, // Zen animations are medium priority
-            this
-        );
+                this.loopCallbackIds.zenExit = animationLoopManager.register(
+                    animate,
+                    AnimationPriority.MEDIUM, // Zen animations are medium priority
+                    this
+                );
             } else if (elapsed < straightenDuration + awakeDuration + expandDuration) {
                 // Phase 3: Horizontal expansion (sunrise)
                 const expandProgress = (elapsed - straightenDuration - awakeDuration) / expandDuration;
@@ -2824,11 +2824,11 @@ class EmotiveRenderer {
                 this.state.glowIntensity = 1.5 - (0.5 * expandProgress); // Normal glow
                 
                 // Register with AnimationLoopManager
-        this.loopCallbackIds.zenExit = animationLoopManager.register(
-            animate,
-            AnimationPriority.MEDIUM, // Zen animations are medium priority
-            this
-        );
+                this.loopCallbackIds.zenExit = animationLoopManager.register(
+                    animate,
+                    AnimationPriority.MEDIUM, // Zen animations are medium priority
+                    this
+                );
             } else if (elapsed < straightenDuration + awakeDuration + expandDuration + settleDuration) {
                 // Phase 4: Final settle pulse
                 const settleProgress = (elapsed - straightenDuration - awakeDuration - expandDuration) / settleDuration;
@@ -2838,11 +2838,11 @@ class EmotiveRenderer {
                 this.zenTransition.scaleY = 1.0 + (pulse * 0.05);
                 
                 // Register with AnimationLoopManager
-        this.loopCallbackIds.zenExit = animationLoopManager.register(
-            animate,
-            AnimationPriority.MEDIUM, // Zen animations are medium priority
-            this
-        );
+                this.loopCallbackIds.zenExit = animationLoopManager.register(
+                    animate,
+                    AnimationPriority.MEDIUM, // Zen animations are medium priority
+                    this
+                );
             } else {
                 // Complete - reset to normal
                 this.zenTransition.active = false;
@@ -2925,7 +2925,7 @@ class EmotiveRenderer {
         // Always set up listeners once
         if (this.gazeTrackingInitialized) return;
 
-        this.handleMouseMove = (e) => {
+        this.handleMouseMove = e => {
             if (!this.state.gazeTrackingEnabled) return;
 
             const rect = this.canvas.getBoundingClientRect();
@@ -2941,7 +2941,7 @@ class EmotiveRenderer {
             };
         };
 
-        this.handleTouchMove = (e) => {
+        this.handleTouchMove = e => {
             if (!this.state.gazeTrackingEnabled) return;
 
             if (e.touches.length > 0) {
@@ -2987,8 +2987,8 @@ class EmotiveRenderer {
         if (!this.canvas || !this.ctx) return;
 
         // Save current dimensions
-        const width = this.canvas.width;
-        const height = this.canvas.height;
+        const {width} = this.canvas;
+        const {height} = this.canvas;
 
         // Reset all canvas state
         this.ctx.setTransform(1, 0, 0, 1, 0, 0);

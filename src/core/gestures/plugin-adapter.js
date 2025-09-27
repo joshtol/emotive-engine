@@ -108,7 +108,7 @@ export function createLegacyAdapter(legacyGesture) {
         description: legacyGesture.description || 'Plugin gesture',
         config: legacyGesture.config || {},
         
-        apply: function(particle, progress, motion, dt, centerX, centerY) {
+        apply(particle, progress, motion, dt, centerX, centerY) {
             // Adapt old plugin format to new format
             if (legacyGesture.animate) {
                 // Old plugins might use 'animate' instead of 'apply'

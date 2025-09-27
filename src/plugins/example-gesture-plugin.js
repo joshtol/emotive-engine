@@ -134,19 +134,19 @@ class CustomGesturePlugin {
                         animation.progress = progress;
                         
                         switch (name) {
-                            case 'wobble':
-                                this.applyWobbleToParticle(particle, animation, progress);
-                                break;
-                            case 'figure8':
-                                this.applyFigure8ToParticle(particle, animation, progress);
-                                break;
-                            case 'heartbeat':
-                                this.applyHeartbeatToParticle(particle, animation, progress);
-                                break;
+                        case 'wobble':
+                            this.applyWobbleToParticle(particle, animation, progress);
+                            break;
+                        case 'figure8':
+                            this.applyFigure8ToParticle(particle, animation, progress);
+                            break;
+                        case 'heartbeat':
+                            this.applyHeartbeatToParticle(particle, animation, progress);
+                            break;
                         }
                     }
                 },
-                cleanup: (particle) => {
+                cleanup: particle => {
                     // Clean up any gesture-specific data
                     if (particle.gestureData && particle.gestureData[name]) {
                         delete particle.gestureData[name];
@@ -219,15 +219,15 @@ class CustomGesturePlugin {
             
             // Apply gesture-specific animations
             switch (gestureName) {
-                case 'wobble':
-                    this.updateWobble(animation, progress);
-                    break;
-                case 'figure8':
-                    this.updateFigure8(animation, progress);
-                    break;
-                case 'heartbeat':
-                    this.updateHeartbeat(animation, progress);
-                    break;
+            case 'wobble':
+                this.updateWobble(animation, progress);
+                break;
+            case 'figure8':
+                this.updateFigure8(animation, progress);
+                break;
+            case 'heartbeat':
+                this.updateHeartbeat(animation, progress);
+                break;
             }
             
             // Mark complete when done
@@ -416,16 +416,16 @@ class CustomGesturePlugin {
      */
     applyEasing(t, easing) {
         switch (easing) {
-            case 'linear':
-                return t;
-            case 'easeInQuad':
-                return t * t;
-            case 'easeOutQuad':
-                return t * (2 - t);
-            case 'easeInOutQuad':
-                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-            default:
-                return t;
+        case 'linear':
+            return t;
+        case 'easeInQuad':
+            return t * t;
+        case 'easeOutQuad':
+            return t * (2 - t);
+        case 'easeInOutQuad':
+            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        default:
+            return t;
         }
     }
     

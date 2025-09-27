@@ -109,7 +109,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -131,7 +131,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.glow?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -145,8 +145,8 @@ export default {
 
         // Calculate glow pulse with peak hold
         let glowValue;
-        let frequency = config.frequency;
-        let glowAmount = config.glowAmount;
+        let {frequency} = config;
+        let {glowAmount} = config;
 
         // Apply rhythm modulation if present
         if (motion.rhythmModulation) {
@@ -188,7 +188,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.glow) {
             // Reset any glow properties
             particle.glowIntensity = 1;
@@ -201,7 +201,7 @@ export default {
      * @param {number} t - Progress (0-1)
      * @returns {number} Eased value
      */
-    easeInOutSine: function(t) {
+    easeInOutSine(t) {
         return -(Math.cos(Math.PI * t) - 1) / 2;
     }
 };

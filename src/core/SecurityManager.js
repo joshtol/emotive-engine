@@ -129,9 +129,9 @@ export class SecurityManager {
 
         try {
             const policy = window.trustedTypes.createPolicy('emotive-engine', {
-                createHTML: (string) => this.sanitizeHTML(string),
-                createScript: (string) => this.sanitizeScript(string),
-                createScriptURL: (url) => this.sanitizeURL(url)
+                createHTML: string => this.sanitizeHTML(string),
+                createScript: string => this.sanitizeScript(string),
+                createScriptURL: url => this.sanitizeURL(url)
             });
 
             window.EmotiveEngineTrustedPolicy = policy;
@@ -144,7 +144,7 @@ export class SecurityManager {
         if (typeof window === 'undefined') return;
 
         // Listen for CSP violations
-        window.addEventListener('securitypolicyviolation', (event) => {
+        window.addEventListener('securitypolicyviolation', event => {
             this.handleViolation(event);
         });
 
@@ -206,7 +206,7 @@ export class SecurityManager {
         // Monitor innerHTML usage
         const originalInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
         Object.defineProperty(Element.prototype, 'innerHTML', {
-            set: function(value) {
+            set(value) {
                 if (typeof value === 'string' && value.includes('<script')) {
                     console.warn('Potential XSS: Script tag in innerHTML');
                     if (this.strict) {
@@ -252,7 +252,7 @@ export class SecurityManager {
             /document\.cookie/g
         ];
 
-        let sanitized = script;
+        const sanitized = script;
         for (const pattern of dangerous) {
             if (pattern.test(sanitized)) {
                 console.warn('Dangerous pattern detected in script:', pattern);

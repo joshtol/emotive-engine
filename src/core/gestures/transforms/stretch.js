@@ -112,7 +112,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize: function(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -141,7 +141,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply: function(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, centerX, centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.stretch?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
@@ -152,8 +152,8 @@ export default {
         const strength = motion.strength || 1.0;
         
         // Calculate scale factors
-        let scaleX = config.scaleX;
-        let scaleY = config.scaleY;
+        let {scaleX} = config;
+        let {scaleY} = config;
         
         // Apply area preservation if enabled
         if (config.preserveArea && scaleX !== 1 && scaleY !== 1) {
@@ -219,7 +219,7 @@ export default {
      * @param {Object} config - Configuration with elastic settings
      * @returns {number} Modified progress value
      */
-    getElasticProgress: function(progress, config) {
+    getElasticProgress(progress, config) {
         if (!config.elastic) {
             return this.easeInOutCubic(progress);
         }
@@ -247,7 +247,7 @@ export default {
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
      */
-    cleanup: function(particle) {
+    cleanup(particle) {
         if (particle.gestureData?.stretch) {
             const data = particle.gestureData.stretch;
             particle.vx = data.originalVx;
@@ -259,13 +259,13 @@ export default {
     /**
      * Easing functions
      */
-    easeInOutCubic: function(t) {
+    easeInOutCubic(t) {
         return t < 0.5 
             ? 4 * t * t * t 
             : 1 - Math.pow(-2 * t + 2, 3) / 2;
     },
     
-    easeInElastic: function(t, overshoot) {
+    easeInElastic(t, overshoot) {
         if (t === 0) return 0;
         if (t === 1) return 1;
         const p = 0.3;
@@ -273,7 +273,7 @@ export default {
         return -(Math.pow(2, 10 * (t - 1)) * Math.sin((t - 1 - s) * (2 * Math.PI) / p)) * (1 + overshoot);
     },
     
-    easeOutElastic: function(t, overshoot) {
+    easeOutElastic(t, overshoot) {
         if (t === 0) return 0;
         if (t === 1) return 1;
         const p = 0.3;

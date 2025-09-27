@@ -74,7 +74,7 @@ export class AudioHandler {
             this.mascot.shapeMorpher.audioAnalyzer = this.mascot.audioAnalyzer;
             
             // Set up beat detection callback for glitches and rhythm detection
-            this.mascot.audioAnalyzer.onBeat((amplitude) => {
+            this.mascot.audioAnalyzer.onBeat(amplitude => {
                 if (this.mascot.shapeMorpher) {
                     // Feed beat to music detector for BPM detection
                     if (this.mascot.shapeMorpher.musicDetector) {

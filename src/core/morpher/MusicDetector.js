@@ -172,13 +172,13 @@ export class MusicDetector {
         const candidates = [];
         
         // Test different interval groupings (1x, 2x, 4x) for beat patterns
-        for (let multiplier of [1, 2, 4]) {
+        for (const multiplier of [1, 2, 4]) {
             const testIntervals = intervals.map(i => i * multiplier);
             
             // Find clusters of similar intervals
             const clusters = this.clusterIntervals(testIntervals);
             
-            for (let cluster of clusters) {
+            for (const cluster of clusters) {
                 const avgInterval = cluster.intervals.reduce((a, b) => a + b, 0) / cluster.intervals.length;
                 const actualInterval = avgInterval / multiplier;
                 
@@ -193,7 +193,7 @@ export class MusicDetector {
                     candidates.push({
                         interval: actualInterval,
                         strength: strength + commonBPMBonus,
-                        multiplier: multiplier
+                        multiplier
                     });
                 }
             }
@@ -226,7 +226,7 @@ export class MusicDetector {
                     
                     clusters.push({
                         intervals: currentCluster,
-                        consistency: consistency
+                        consistency
                     });
                 }
                 currentCluster = [sorted[i]];
@@ -240,7 +240,7 @@ export class MusicDetector {
             const consistency = 1 / (1 + variance / (avg * avg));
             clusters.push({
                 intervals: currentCluster,
-                consistency: consistency
+                consistency
             });
         }
         
@@ -294,7 +294,7 @@ export class MusicDetector {
         if (recentOnsets.length === 0) return this.timeSignature;
         const startTime = recentOnsets[0].time;
         
-        for (let onset of recentOnsets) {
+        for (const onset of recentOnsets) {
             const timeSinceStart = onset.time - startTime;
             const beatPosition = (timeSinceStart / beatInterval) % measureLength;
             const binIndex = Math.round(beatPosition) % measureLength;
@@ -306,7 +306,7 @@ export class MusicDetector {
         
         // Normalize bins
         let maxStrength = 0;
-        for (let bin of beatBins) {
+        for (const bin of beatBins) {
             if (bin.count > 0) {
                 bin.strength /= bin.count;
                 bin.bassWeight /= bin.count;
@@ -339,14 +339,14 @@ export class MusicDetector {
         const minReadings = this.forceFastDetection ? 2 : 3;
         if (this.timeSignatureHistory.length >= minReadings) {
             const counts = {};
-            for (let sig of this.timeSignatureHistory) {
+            for (const sig of this.timeSignatureHistory) {
                 counts[sig] = (counts[sig] || 0) + 1;
             }
             
             // Find most common
             let mostCommon = '4/4';
             let maxCount = 0;
-            for (let [sig, count] of Object.entries(counts)) {
+            for (const [sig, count] of Object.entries(counts)) {
                 if (count > maxCount) {
                     maxCount = count;
                     mostCommon = sig;

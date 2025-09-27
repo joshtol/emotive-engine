@@ -61,7 +61,7 @@ export class APIValidator {
 
         // Validate options
         const optionsSchema = {
-            duration: (value) => {
+            duration: value => {
                 if (value === undefined) return ErrorResponse.success(1000);
                 return Validator.validateNumber(value, {
                     min: 0,
@@ -70,7 +70,7 @@ export class APIValidator {
                 });
             },
             
-            intensity: (value) => {
+            intensity: value => {
                 if (value === undefined) return ErrorResponse.success(1.0);
                 return Validator.validateNumber(value, {
                     min: 0,
@@ -79,7 +79,7 @@ export class APIValidator {
                 });
             },
             
-            easing: (value) => {
+            easing: value => {
                 if (value === undefined) return ErrorResponse.success('ease-in-out');
                 const validEasings = ['linear', 'ease-in', 'ease-out', 'ease-in-out', 'bounce'];
                 return Validator.validateString(value, {
@@ -89,7 +89,7 @@ export class APIValidator {
                     : ErrorResponse.failure(ErrorTypes.INVALID_PARAMETER, `Invalid easing: ${value}`, { validEasings });
             },
             
-            undertone: (value) => {
+            undertone: value => {
                 if (value === undefined) return ErrorResponse.success(null);
                 const validUndertones = ['subtle', 'moderate', 'strong'];
                 return validUndertones.includes(value)
@@ -136,7 +136,7 @@ export class APIValidator {
 
         // Validate options
         const optionsSchema = {
-            duration: (value) => {
+            duration: value => {
                 if (value === undefined) return ErrorResponse.success(500);
                 return Validator.validateNumber(value, {
                     min: 100,
@@ -145,7 +145,7 @@ export class APIValidator {
                 });
             },
             
-            intensity: (value) => {
+            intensity: value => {
                 if (value === undefined) return ErrorResponse.success(1.0);
                 return Validator.validateNumber(value, {
                     min: 0.1,
@@ -154,7 +154,7 @@ export class APIValidator {
                 });
             },
             
-            repeat: (value) => {
+            repeat: value => {
                 if (value === undefined) return ErrorResponse.success(1);
                 return Validator.validateNumber(value, {
                     min: 1,
@@ -164,7 +164,7 @@ export class APIValidator {
                 });
             },
             
-            delay: (value) => {
+            delay: value => {
                 if (value === undefined) return ErrorResponse.success(0);
                 return Validator.validateNumber(value, {
                     min: 0,
@@ -228,7 +228,7 @@ export class APIValidator {
 
         // Validate options
         const optionsSchema = {
-            timing: (value) => {
+            timing: value => {
                 if (value === undefined) return ErrorResponse.success('sequential');
                 const validTimings = ['sequential', 'parallel', 'staggered'];
                 return validTimings.includes(value)
@@ -236,7 +236,7 @@ export class APIValidator {
                     : ErrorResponse.failure(ErrorTypes.INVALID_PARAMETER, `Invalid timing: ${value}`, { validTimings });
             },
             
-            interval: (value) => {
+            interval: value => {
                 if (value === undefined) return ErrorResponse.success(200);
                 return Validator.validateNumber(value, {
                     min: 0,
@@ -245,7 +245,7 @@ export class APIValidator {
                 });
             },
             
-            loop: (value) => {
+            loop: value => {
                 if (value === undefined) return ErrorResponse.success(false);
                 return Validator.validateBoolean(value, false, 'loop');
             }
@@ -511,30 +511,30 @@ export class APIValidator {
 
         // Context-specific validation
         switch (context) {
-            case 'emotion':
-                const emotionResult = Validator.validateEmotion(sanitized);
-                return emotionResult.success 
-                    ? ErrorResponse.success(emotionResult.data)
-                    : ErrorResponse.failure(ErrorTypes.INVALID_EMOTION, 'Invalid emotion after sanitization', { original: input, sanitized });
+        case 'emotion':
+            const emotionResult = Validator.validateEmotion(sanitized);
+            return emotionResult.success 
+                ? ErrorResponse.success(emotionResult.data)
+                : ErrorResponse.failure(ErrorTypes.INVALID_EMOTION, 'Invalid emotion after sanitization', { original: input, sanitized });
 
-            case 'gesture':
-                const gestureResult = Validator.validateGesture(sanitized);
-                return gestureResult.success
-                    ? ErrorResponse.success(gestureResult.data)
-                    : ErrorResponse.failure(ErrorTypes.INVALID_GESTURE, 'Invalid gesture after sanitization', { original: input, sanitized });
+        case 'gesture':
+            const gestureResult = Validator.validateGesture(sanitized);
+            return gestureResult.success
+                ? ErrorResponse.success(gestureResult.data)
+                : ErrorResponse.failure(ErrorTypes.INVALID_GESTURE, 'Invalid gesture after sanitization', { original: input, sanitized });
 
-            case 'event':
-                if (sanitized.length > 50) {
-                    return ErrorResponse.failure(ErrorTypes.INVALID_PARAMETER, 'Event name too long after sanitization');
-                }
-                return ErrorResponse.success(sanitized);
+        case 'event':
+            if (sanitized.length > 50) {
+                return ErrorResponse.failure(ErrorTypes.INVALID_PARAMETER, 'Event name too long after sanitization');
+            }
+            return ErrorResponse.success(sanitized);
 
-            default:
-                // General sanitization - limit length and remove dangerous content
-                if (sanitized.length > 1000) {
-                    sanitized = sanitized.substring(0, 1000);
-                }
-                return ErrorResponse.success(sanitized);
+        default:
+            // General sanitization - limit length and remove dangerous content
+            if (sanitized.length > 1000) {
+                sanitized = sanitized.substring(0, 1000);
+            }
+            return ErrorResponse.success(sanitized);
         }
     }
 
