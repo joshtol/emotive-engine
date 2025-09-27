@@ -266,7 +266,8 @@ export class MobileOptimization {
             
             // Initial battery optimization
             this.onBatteryChange();
-        } catch (error) {
+        } catch (_error) {
+            // Ignore battery optimization errors
         }
     }
     

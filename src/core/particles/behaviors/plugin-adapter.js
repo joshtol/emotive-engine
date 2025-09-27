@@ -31,6 +31,7 @@ const pluginBehaviors = new Map();
  */
 export function registerPluginBehavior(name, behaviorDef) {
     if (pluginBehaviors.has(name)) {
+        // Behavior already exists, could log warning
     }
     
     // Validate behavior definition

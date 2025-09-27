@@ -214,7 +214,7 @@ class MusicTheory {
      */
     noteToMidi(note) {
         const noteName = note.slice(0, -1);
-        const octave = parseInt(note.slice(-1));
+        const octave = parseInt(note.slice(-1), 10);
         const noteIndex = this.NOTES.indexOf(noteName);
         
         if (noteIndex === -1) {

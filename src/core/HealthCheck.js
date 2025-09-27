@@ -45,16 +45,16 @@ export class HealthCheck {
 
     registerDefaultChecks() {
         // System checks
-        this.registerCheck('memory', async () => this.checkMemory());
-        this.registerCheck('performance', async () => this.checkPerformance());
-        this.registerCheck('errors', async () => this.checkErrors());
-        this.registerCheck('dom', async () => this.checkDOM());
-        this.registerCheck('animation', async () => this.checkAnimation());
-        this.registerCheck('state', async () => this.checkState());
-        this.registerCheck('events', async () => this.checkEvents());
-        this.registerCheck('storage', async () => this.checkStorage());
-        this.registerCheck('network', async () => this.checkNetwork());
-        this.registerCheck('browser', async () => this.checkBrowser());
+        this.registerCheck('memory', () => this.checkMemory());
+        this.registerCheck('performance', () => this.checkPerformance());
+        this.registerCheck('errors', () => this.checkErrors());
+        this.registerCheck('dom', () => this.checkDOM());
+        this.registerCheck('animation', () => this.checkAnimation());
+        this.registerCheck('state', () => this.checkState());
+        this.registerCheck('events', () => this.checkEvents());
+        this.registerCheck('storage', () => this.checkStorage());
+        this.registerCheck('network', () => this.checkNetwork());
+        this.registerCheck('browser', () => this.checkBrowser());
     }
 
     registerCheck(name, checkFn, options = {}) {
@@ -68,7 +68,7 @@ export class HealthCheck {
         });
     }
 
-    checkMemory() {
+    async checkMemory() {
         const result = {
             status: 'healthy',
             details: {}

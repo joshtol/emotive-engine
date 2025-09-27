@@ -50,6 +50,7 @@ export function registerPluginGesture(name, gestureDef) {
     pluginGestures.set(name, gestureDef);
     
     if (typeof window !== 'undefined' && window.DEBUG_GESTURES) {
+        // Debug logging would go here
     }
     
     return true;
@@ -64,6 +65,7 @@ export function unregisterPluginGesture(name) {
         pluginGestures.delete(name);
         
         if (typeof window !== 'undefined' && window.DEBUG_GESTURES) {
+            // Debug logging would go here
         }
         
         return true;

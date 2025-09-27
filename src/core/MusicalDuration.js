@@ -201,6 +201,7 @@ class MusicalDuration {
         case 'phrase': {
             // Assume 4-bar phrases
             const barsInPhrase = 4;
+            const beatsInBar = timeInfo.timeSignature[0];
             const currentBar = timeInfo.bar || 0;
             const barsToPhrase = barsInPhrase - (currentBar % barsInPhrase);
             return barsToPhrase * beatsInBar * timeInfo.beatDuration;
