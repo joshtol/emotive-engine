@@ -124,7 +124,7 @@ class EmotiveMascot {
     initialize(config) {
         // Get browser-specific optimizations
         const browserOpts = browserCompatibility.browserOptimizations.getOptimizations();
-        const {capabilities} = browserCompatibility;
+        const {capabilities: _capabilities} = browserCompatibility;
         
         // Default configuration with browser-specific optimizations
         const defaults = {
@@ -298,7 +298,7 @@ class EmotiveMascot {
             this.animationController = new AnimationController(this.errorBoundary, {
                 targetFPS: this.config.targetFPS
             });
-        } catch (error) {
+        } catch (_error) {
             // Failed to initialize AnimationController
             // Fallback: create a minimal animation controller interface
             this.animationController = {
@@ -508,7 +508,7 @@ class EmotiveMascot {
             // Check if any particle has an active gesture
             const hasActiveGesture = this.particleSystem.particles.some(p => p.gestureProgress < 1);
             if (!hasActiveGesture) {
-                const emotionalContext = {
+                const _emotionalContext = {
                     emotion: this.stateMachine.getCurrentState().emotion,
                     properties: this.stateMachine.getCurrentEmotionalProperties()
                 };

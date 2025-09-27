@@ -179,17 +179,6 @@ export class ContextStateManager {
         this.stats.restores++;
     }
 
-    /**
-     * Reset to default state without save/restore
-     */
-    reset() {
-        this.setFillStyle('#000000');
-        this.setStrokeStyle('#000000');
-        this.setGlobalAlpha(1);
-        this.setGlobalCompositeOperation('source-over');
-        this.setLineWidth(1);
-        this.clearShadow();
-    }
 
     /**
      * Get performance statistics
