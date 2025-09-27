@@ -88,6 +88,7 @@ export class AudioAnalyzer {
                 this.isAnalyzing = true;
                 this.analyze();
             } else {
+                // Audio context not available
             }
         }
     }
@@ -253,7 +254,9 @@ export class AudioAnalyzer {
         if (this.gainNode) {
             try {
                 this.gainNode.disconnect();
-            } catch (e) {}
+            } catch (_e) {
+                // Ignore disconnect errors
+            }
             this.gainNode = null;
         }
         
@@ -261,7 +264,7 @@ export class AudioAnalyzer {
         if (this.elementSource && this.connectedElement) {
             try {
                 this.elementSource.connect(this.analyser);
-            } catch (e) {
+            } catch (_e) {
                 // Already connected, that's fine
             }
             this.source = this.elementSource;

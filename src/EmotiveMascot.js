@@ -2409,7 +2409,7 @@ class EmotiveMascot {
      * @param {Object} plugin - Plugin to register
      * @returns {Promise<boolean>} Success status
      */
-    async registerPlugin(plugin) {
+    registerPlugin(plugin) {
         return this.pluginSystem.registerPlugin(plugin);
     }
     
@@ -2623,7 +2623,7 @@ class EmotiveMascot {
      */
     connectAudio(audioElement) {
         return this.errorBoundary.wrap(async () => {
-            return await this.audioHandler.connectAudio(audioElement);
+            return this.audioHandler.connectAudio(audioElement);
         }, 'connectAudio', this)();
     }
     
