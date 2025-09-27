@@ -130,8 +130,8 @@ class AmbientDanceAnimator {
                     transform.y += Math.abs(Math.sin(elapsed / 250 * animation.frequency)) * 5 * animation.intensity;
                     break;
                 }
+                }
             }
-        }
         }
 
         return transform;

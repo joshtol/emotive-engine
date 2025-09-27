@@ -251,26 +251,26 @@ export class FeatureFlags {
         const attrValue = attributes[attribute];
 
         switch (operator) {
-            case 'equals':
-                return attrValue === value;
-            case 'not_equals':
-                return attrValue !== value;
-            case 'contains':
-                return String(attrValue).includes(value);
-            case 'not_contains':
-                return !String(attrValue).includes(value);
-            case 'greater_than':
-                return Number(attrValue) > Number(value);
-            case 'less_than':
-                return Number(attrValue) < Number(value);
-            case 'in':
-                return value.includes(attrValue);
-            case 'not_in':
-                return !value.includes(attrValue);
-            case 'matches':
-                return new RegExp(value).test(String(attrValue));
-            default:
-                return false;
+        case 'equals':
+            return attrValue === value;
+        case 'not_equals':
+            return attrValue !== value;
+        case 'contains':
+            return String(attrValue).includes(value);
+        case 'not_contains':
+            return !String(attrValue).includes(value);
+        case 'greater_than':
+            return Number(attrValue) > Number(value);
+        case 'less_than':
+            return Number(attrValue) < Number(value);
+        case 'in':
+            return value.includes(attrValue);
+        case 'not_in':
+            return !value.includes(attrValue);
+        case 'matches':
+            return new RegExp(value).test(String(attrValue));
+        default:
+            return false;
         }
     }
 
