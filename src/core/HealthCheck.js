@@ -68,7 +68,7 @@ export class HealthCheck {
         });
     }
 
-    async checkMemory() {
+    checkMemory() {
         const result = {
             status: 'healthy',
             details: {}

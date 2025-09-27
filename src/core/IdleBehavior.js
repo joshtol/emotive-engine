@@ -400,7 +400,7 @@ class IdleBehavior {
      * Set callback for behavior events
      */
     setCallback(event, callback) {
-        if (this.callbacks.hasOwnProperty(event)) {
+        if (Object.prototype.hasOwnProperty.call(this.callbacks, event)) {
             this.callbacks[event] = callback;
         }
     }

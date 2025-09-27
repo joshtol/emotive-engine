@@ -363,7 +363,7 @@ export class ErrorTracker {
         }
 
         // In production, you would send this to your error tracking service
-        console.log('Error report generated:', report);
+        console.warn('Error report generated:', report);
 
         return report;
     }

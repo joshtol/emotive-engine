@@ -145,7 +145,9 @@ class ErrorBoundary {
 
         // Log to console with appropriate level based on frequency
         if (count < 3) {
+            // Log first few occurrences normally
         } else if (count === 3) {
+            // Log threshold reached
         }
     }
 
@@ -170,7 +172,7 @@ class ErrorBoundary {
             'state-management': this.defaults.emotion
         };
 
-        return contextDefaults.hasOwnProperty(context) ? contextDefaults[context] : null;
+        return Object.prototype.hasOwnProperty.call(contextDefaults, context) ? contextDefaults[context] : null;
     }
 
     /**

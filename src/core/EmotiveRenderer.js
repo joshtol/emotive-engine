@@ -111,6 +111,7 @@ class EmotiveRenderer {
         this.ctx = canvasManager.getContext();
         
         if (!this.ctx) {
+            // Canvas context not available
         }
         
         // Gesture compositor for emotion/undertone modulation
@@ -590,6 +591,7 @@ class EmotiveRenderer {
         });
         
         if (!this.offscreenCtx) {
+            // Offscreen context not available
         }
         
         // Match dimensions
@@ -2389,7 +2391,7 @@ class EmotiveRenderer {
     setGazeOffset(gazeData) {
         // Handle both old format (just offset) and new format (full data)
         if (typeof gazeData === 'object' && gazeData !== null) {
-            if (gazeData.hasOwnProperty('x') && gazeData.hasOwnProperty('y')) {
+            if (Object.prototype.hasOwnProperty.call(gazeData, 'x') && Object.prototype.hasOwnProperty.call(gazeData, 'y')) {
                 // Old format - just offset
                 this.state.gazeOffset = gazeData;
             } else {

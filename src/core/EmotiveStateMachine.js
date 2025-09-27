@@ -367,14 +367,14 @@ class EmotiveStateMachine {
             this.interpolationCache.cachedRenderState = null;
             
             // Validate emotion using modular system
-            if (!hasEmotion(emotion) && !this.emotionalStates.hasOwnProperty(emotion)) {
+            if (!hasEmotion(emotion) && !Object.prototype.hasOwnProperty.call(this.emotionalStates, emotion)) {
                 const validEmotions = [...Object.keys(this.emotionalStates), ...listEmotions()];
                 const uniqueEmotions = [...new Set(validEmotions)];
                 throw new Error(`Invalid emotion: ${emotion}. Valid emotions: ${uniqueEmotions.join(', ')}`);
             }
 
             // Validate undertone
-            if (undertone !== null && !this.undertoneModifiers.hasOwnProperty(undertone)) {
+            if (undertone !== null && !Object.prototype.hasOwnProperty.call(this.undertoneModifiers, undertone)) {
                 throw new Error(`Invalid undertone: ${undertone}. Valid undertones: ${Object.keys(this.undertoneModifiers).join(', ')}`);
             }
 
@@ -439,7 +439,7 @@ class EmotiveStateMachine {
      * @returns {Object} Modified properties
      */
     applyUndertone(baseProperties, undertone) {
-        if (!undertone || !this.undertoneModifiers.hasOwnProperty(undertone)) {
+        if (!undertone || !Object.prototype.hasOwnProperty.call(this.undertoneModifiers, undertone)) {
             return { ...baseProperties };
         }
 
@@ -665,7 +665,7 @@ class EmotiveStateMachine {
     applyUndertoneModifier(undertone) {
         return this.errorBoundary.wrap(() => {
             // Validate undertone
-            if (undertone !== null && !this.undertoneModifiers.hasOwnProperty(undertone)) {
+            if (undertone !== null && !Object.prototype.hasOwnProperty.call(this.undertoneModifiers, undertone)) {
                 throw new Error(`Invalid undertone: ${undertone}. Valid undertones: ${Object.keys(this.undertoneModifiers).join(', ')}`);
             }
 
@@ -698,7 +698,7 @@ class EmotiveStateMachine {
             }
             
             // Fallback to local modifiers
-            if (!undertone || !this.undertoneModifiers.hasOwnProperty(undertone)) {
+            if (!undertone || !Object.prototype.hasOwnProperty.call(this.undertoneModifiers, undertone)) {
                 return null;
             }
             // Ensure essential properties exist in fallback
@@ -763,7 +763,7 @@ class EmotiveStateMachine {
      * @returns {boolean} True if valid
      */
     isValidEmotion(emotion) {
-        return this.emotionalStates.hasOwnProperty(emotion);
+        return Object.prototype.hasOwnProperty.call(this.emotionalStates, emotion);
     }
 
     /**
@@ -772,7 +772,7 @@ class EmotiveStateMachine {
      * @returns {boolean} True if valid
      */
     isValidUndertone(undertone) {
-        return undertone === null || this.undertoneModifiers.hasOwnProperty(undertone);
+        return undertone === null || Object.prototype.hasOwnProperty.call(this.undertoneModifiers, undertone);
     }
 
     /**

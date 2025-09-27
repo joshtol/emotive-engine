@@ -182,9 +182,9 @@ export class ErrorLogger {
         case ErrorSeverity.WARNING:
             return 'warn';
         case ErrorSeverity.INFO:
-            return 'info';
+            return 'warn';
         default:
-            return 'log';
+            return 'warn';
         }
     }
 

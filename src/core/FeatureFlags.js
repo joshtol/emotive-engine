@@ -445,16 +445,16 @@ export class FeatureFlags {
                 variants: {}
             };
 
-            for (const eval of evals) {
-                if (!analytics.summary.byVariant[eval.variant]) {
-                    analytics.summary.byVariant[eval.variant] = 0;
+            for (const evaluation of evals) {
+                if (!analytics.summary.byVariant[evaluation.variant]) {
+                    analytics.summary.byVariant[evaluation.variant] = 0;
                 }
-                analytics.summary.byVariant[eval.variant]++;
+                analytics.summary.byVariant[evaluation.variant]++;
 
-                if (!analytics.summary.byFlag[flagKey].variants[eval.variant]) {
-                    analytics.summary.byFlag[flagKey].variants[eval.variant] = 0;
+                if (!analytics.summary.byFlag[flagKey].variants[evaluation.variant]) {
+                    analytics.summary.byFlag[flagKey].variants[evaluation.variant] = 0;
                 }
-                analytics.summary.byFlag[flagKey].variants[eval.variant]++;
+                analytics.summary.byFlag[flagKey].variants[evaluation.variant]++;
             }
         }
 
