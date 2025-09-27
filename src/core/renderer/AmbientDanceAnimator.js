@@ -132,6 +132,7 @@ class AmbientDanceAnimator {
                 }
             }
         }
+        }
 
         return transform;
     }

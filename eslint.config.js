@@ -6,6 +6,7 @@ export default [
 
     // Global configuration for all files
     {
+        ignores: ['**/_template.js', '**/*template*.js'],
         languageOptions: {
             ecmaVersion: 2021,
             sourceType: 'module',

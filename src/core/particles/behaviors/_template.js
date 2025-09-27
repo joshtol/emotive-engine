@@ -51,7 +51,7 @@ import { PLAYGROUND } from '../config/playground.js';
  * 
  * @param {Particle} particle - The particle to initialize
  */
-export function initialize[YourBehavior](particle) {
+export function initializeYourBehavior(particle) {
     // Set particle lifespan
     particle.lifeDecay = 0.01; // Adjust based on how long particles should last
     
@@ -84,7 +84,7 @@ export function initialize[YourBehavior](particle) {
  * @param {number} centerX - Orb center X position
  * @param {number} centerY - Orb center Y position
  */
-export function update[YourBehavior](particle, dt, centerX, centerY) {
+export function updateYourBehavior(particle, dt, centerX, centerY) {
     const data = particle.behaviorData;
     
     // YOUR UPDATE LOGIC HERE
@@ -112,6 +112,6 @@ export default {
     name: '[behaviorname]', // MUST match filename (without .js)
     emoji: '🎯',           // Pick a fun emoji for your behavior
     description: '[One line description of what this does]',
-    initialize: initialize[YourBehavior],
-    update: update[YourBehavior]
+    initialize: initializeYourBehavior,
+    update: updateYourBehavior
 };
