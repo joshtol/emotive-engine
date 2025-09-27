@@ -867,7 +867,7 @@ class EmotiveRenderer {
                     
                     // Apply different effects based on undertone
                     switch(this.currentUndertone) {
-                    case 'nervous':
+                    case 'nervous': {
                         // Quick shiver that settles
                         const damping = 1 - progress;
                         const frequency = 15;
@@ -875,35 +875,40 @@ class EmotiveRenderer {
                         jitterX = flutter * episode.intensity;
                         jitterY = flutter * episode.intensity * 0.7;
                         break;
+                    }
                             
-                    case 'confident':
+                    case 'confident': {
                         // Smooth chest puff that settles
                         const puffCurve = Math.sin(progress * Math.PI); // Smooth rise and fall
                         coreRadius *= (1 + episode.intensity * puffCurve);
                         glowRadius *= (1 + episode.intensity * 0.5 * puffCurve);
                         break;
+                    }
                             
-                    case 'tired':
+                    case 'tired': {
                         // Drowsy sag with slow recovery
                         const sagCurve = Math.sin(progress * Math.PI * 0.5); // Slow droop
                         coreRadius *= (1 - episode.intensity * sagCurve);
                         // Also affect vertical position slightly
                         jitterY += sagCurve * 5; // Slight downward sag
                         break;
+                    }
                             
-                    case 'intense':
+                    case 'intense': {
                         // Sharp contraction with glow surge
                         const focusCurve = 1 - Math.cos(progress * Math.PI); // Quick in-out
                         coreRadius *= (1 - 0.05 * focusCurve); // 5% shrink
                         glowRadius *= (1 + episode.intensity * focusCurve); // 50% glow boost
                         break;
+                    }
                             
-                    case 'subdued':
+                    case 'subdued': {
                         // Gentle inward pull
                         const withdrawCurve = Math.sin(progress * Math.PI * 0.5); // Slow pull
                         coreRadius *= (1 - 0.1 * withdrawCurve); // 10% shrink
                         glowRadius *= (1 - episode.intensity * withdrawCurve); // 30% glow dim
                         break;
+                    }
                     }
                 } else {
                     // Episode finished

@@ -105,19 +105,21 @@ class AmbientDanceAnimator {
                     transform.scale *= 1 + Math.sin(elapsed / 400 * animation.frequency) * 0.03 * animation.intensity;
                     break;
 
-                case 'grooveFlow':
+                case 'grooveFlow': {
                     const t = elapsed / 1000 * animation.frequency;
                     transform.x += Math.sin(t) * Math.cos(t * 2) * 20 * animation.intensity;
                     transform.y += Math.cos(t) * Math.sin(t * 2) * 10 * animation.intensity;
                     transform.rotation += Math.sin(t * 2) * 8 * animation.intensity;
                     break;
+                }
 
-                case 'groovePulse':
+                case 'groovePulse': {
                     transform.scale *= 1 + Math.sin(elapsed / 250 * animation.frequency) * 0.05 * animation.intensity;
                     transform.opacity *= 0.9 + Math.sin(elapsed / 250 * animation.frequency) * 0.1 * animation.intensity;
                     break;
+                }
 
-                case 'grooveStep':
+                case 'grooveStep': {
                     const stepPhase = Math.floor(elapsed / 500 * animation.frequency) % 4;
                     const stepProgress = (elapsed / 500 * animation.frequency) % 1;
                     const smoothStep = this.smoothStep(stepProgress);

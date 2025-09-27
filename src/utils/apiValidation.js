@@ -511,17 +511,19 @@ export class APIValidator {
 
         // Context-specific validation
         switch (context) {
-        case 'emotion':
+        case 'emotion': {
             const emotionResult = Validator.validateEmotion(sanitized);
             return emotionResult.success 
                 ? ErrorResponse.success(emotionResult.data)
                 : ErrorResponse.failure(ErrorTypes.INVALID_EMOTION, 'Invalid emotion after sanitization', { original: input, sanitized });
+        }
 
-        case 'gesture':
+        case 'gesture': {
             const gestureResult = Validator.validateGesture(sanitized);
             return gestureResult.success
                 ? ErrorResponse.success(gestureResult.data)
                 : ErrorResponse.failure(ErrorTypes.INVALID_GESTURE, 'Invalid gesture after sanitization', { original: input, sanitized });
+        }
 
         case 'event':
             if (sanitized.length > 50) {

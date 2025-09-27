@@ -698,7 +698,6 @@ class EmotiveMascot {
                 'slowBlink': 'startSlowBlink',
                 'look': 'startLook',
                 'settle': 'startSettle',
-                'orbit': 'startOrbital',
                 'orbital': 'startOrbital',  // Alias for backwards compatibility
                 'hula': 'startHula',
                 'sway': 'startSway',
@@ -964,128 +963,7 @@ class EmotiveMascot {
         }, 'speech-stop', this)();
     }
 
-    /**
-     * Speaks text using the Web Speech API with visual feedback
-     * @param {string} text - Text to speak
-     * @param {Object} options - Speech options (rate, pitch, volume, voice)
-     * @returns {EmotiveMascot} This instance for chaining
-     */
-    speak(text, options = {}) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.tts.available) {
-                // Text-to-Speech is not available in this browser
-                return this;
-            }
-            
-            if (!text || typeof text !== 'string') {
-                // Invalid text provided to speak()
-                return this;
-            }
-            
-            // Cancel any ongoing speech
-            if (this.tts.speaking) {
-                window.speechSynthesis.cancel();
-            }
-            
-            // Create utterance
-            const utterance = new SpeechSynthesisUtterance(text);
-            
-            // Apply options
-            utterance.rate = options.rate || 1.0;
-            utterance.pitch = options.pitch || 1.0;
-            utterance.volume = options.volume || 1.0;
-            
-            // Select voice if specified
-            if (options.voice) {
-                const voices = window.speechSynthesis.getVoices();
-                const selectedVoice = voices.find(v => v.name === options.voice);
-                if (selectedVoice) {
-                    utterance.voice = selectedVoice;
-                }
-            }
-            
-            // Store current utterance
-            this.tts.currentUtterance = utterance;
-            
-            // Handle speech events
-            utterance.onstart = () => {
-                this.tts.speaking = true;
-                
-                // Trigger speaking gesture
-                this.express('pulse');
-                
-                // Emit TTS start event
-                this.emit('ttsStarted', { text, options });
-                
-                // TTS started
-            };
-            
-            utterance.onend = () => {
-                this.tts.speaking = false;
-                this.tts.currentUtterance = null;
-                
-                // Return to neutral
-                this.express('nod');
-                
-                // Emit TTS end event
-                this.emit('ttsEnded', { text });
-                
-                // TTS ended
-            };
-            
-            utterance.onerror = error => {
-                this.tts.speaking = false;
-                this.tts.currentUtterance = null;
-                
-                // TTS error
-                this.emit('ttsError', { error, text });
-            };
-            
-            // Add word boundary events for more dynamic animation
-            utterance.onboundary = event => {
-                if (event.name === 'word') {
-                    // Subtle pulse on each word
-                    if (Math.random() < 0.3) { // 30% chance per word
-                        // Trigger micro pulse gesture
-                        this.express('pulse');
-                    }
-                }
-            };
-            
-            // Start speaking
-            window.speechSynthesis.speak(utterance);
-            
-            return this;
-        }, 'tts-speak', this)();
-    }
     
-    /**
-     * Stops any ongoing text-to-speech
-     * @returns {EmotiveMascot} This instance for chaining
-     */
-    stopTTS() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.tts.available) {
-                return this;
-            }
-            
-            if (this.tts.speaking) {
-                window.speechSynthesis.cancel();
-                this.tts.speaking = false;
-                this.tts.currentUtterance = null;
-                
-                // Return to neutral
-                this.express('nod');
-                
-                // Emit TTS stopped event
-                this.emit('ttsStopped');
-                
-                // TTS stopped by user
-            }
-            
-            return this;
-        }, 'tts-stop', this)();
-    }
     
     /**
      * Start recording state (listening/capturing mode)
@@ -1660,20 +1538,6 @@ class EmotiveMascot {
         return this.contextRecovery.isLost();
     }
 
-    /**
-     * Enable or disable debug mode
-     * @param {boolean} enabled - Whether to enable debug mode
-     */
-    setDebugMode(enabled) {
-        this.debugMode = enabled;
-        
-        if (enabled) {
-            emotiveDebugger.log('INFO', 'Debug mode enabled');
-            emotiveDebugger.takeMemorySnapshot('debug-mode-enabled');
-        } else {
-            emotiveDebugger.log('INFO', 'Debug mode disabled');
-        }
-    }
 
     /**
      * Get comprehensive debug report
@@ -2195,13 +2059,6 @@ class EmotiveMascot {
         return this.stateMachine.getAvailableUndertones();
     }
 
-    /**
-     * Gets the current audio level (0-1 range)
-     * @returns {number} Current audio level
-     */
-    getAudioLevel() {
-        return this.audioLevelProcessor.getCurrentLevel();
-    }
 
     /**
      * Gets audio level processing statistics

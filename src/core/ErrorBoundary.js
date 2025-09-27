@@ -183,17 +183,20 @@ class ErrorBoundary {
     validateInput(value, type, defaultValue) {
         try {
             switch (type) {
-            case 'emotion':
+            case 'emotion': {
                 const validEmotions = ['neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'love', 'euphoria'];
                 return validEmotions.includes(value) ? value : defaultValue;
+            }
                 
-            case 'undertone':
+            case 'undertone': {
                 const validUndertones = ['nervous', 'confident', 'tired', 'intense', 'subdued'];
                 return value === null || validUndertones.includes(value) ? value : null;
+            }
                 
-            case 'gesture':
+            case 'gesture': {
                 const validGestures = ['bounce', 'pulse', 'shake', 'spin', 'nod', 'tilt', 'expand', 'contract', 'flash', 'drift'];
                 return validGestures.includes(value) ? value : defaultValue;
+            }
                 
             case 'number':
                 return typeof value === 'number' && !isNaN(value) ? value : defaultValue;

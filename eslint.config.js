@@ -27,6 +27,7 @@ export default [
                 Image: 'readonly',
                 Audio: 'readonly',
                 AudioContext: 'readonly',
+                SpeechSynthesisUtterance: 'readonly',
                 XMLHttpRequest: 'readonly',
                 fetch: 'readonly',
                 URL: 'readonly',

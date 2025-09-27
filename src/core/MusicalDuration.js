@@ -193,16 +193,18 @@ class MusicalDuration {
         switch (boundary) {
         case 'beat':
             return timeInfo.nextBeatIn;
-        case 'bar':
+        case 'bar': {
             const beatsInBar = timeInfo.timeSignature[0];
             const beatsToBar = beatsInBar - timeInfo.beatInBar;
             return beatsToBar * timeInfo.beatDuration;
-        case 'phrase':
+        }
+        case 'phrase': {
             // Assume 4-bar phrases
             const barsInPhrase = 4;
             const currentBar = timeInfo.bar || 0;
             const barsToPhrase = barsInPhrase - (currentBar % barsInPhrase);
             return barsToPhrase * beatsInBar * timeInfo.beatDuration;
+        }
         default:
             return timeInfo.nextBeatIn;
         }

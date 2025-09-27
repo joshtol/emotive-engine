@@ -166,7 +166,7 @@ export function createLegacyAdapter(legacyBehavior) {
                 particle.vy += data.acceleration * dt;
                 break;
                     
-            case 'orbit':
+            case 'orbit': {
                 // Orbital motion
                 const dx = particle.x - centerX;
                 const dy = particle.y - centerY;
@@ -177,6 +177,7 @@ export function createLegacyAdapter(legacyBehavior) {
                     particle.y = centerY + Math.sin(angle) * dist;
                 }
                 break;
+            }
                     
             case 'linear':
             default:
