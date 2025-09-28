@@ -5,9 +5,8 @@ interface GameControlsProps {
 }
 
 export default function GameControls({ onGesture }: GameControlsProps) {
-  const danceGestures = [ 'BOUNCE','SWAY','HEADBOB','WIGGLE','SPIN','HULA','ORBIT','GROOVE','JUMP','TWIST' ]
-  const overlayableGestures = [ 'WAVE','POINT','NOD','SHAKE','LEAN','TILT','REACH','BREATHE','FLOAT' ]
-  const additionalGestures = [ 'RAIN','RUNNINGMAN','CHARLESTON' ]
+  const danceGestures = [ 'HEADBOB','WIGGLE','ORBIT','GROOVE','POINT','LEAN','REACH','RUNNINGMAN','CHARLESTON' ]
+  const overlayableGestures = [ 'BOUNCE','SWAY','SPIN','HULA','JUMP','TWIST','WAVE','NOD','SHAKE','TILT','BREATHE','FLOAT' ]
 
   return (
     <div className="emotive-controls">
@@ -29,13 +28,6 @@ export default function GameControls({ onGesture }: GameControlsProps) {
           {overlayableGestures.map((gesture) => (
             <button key={gesture} onClick={() => onGesture(gesture.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{gesture}</span></button>
           ))}
-        </div>
-        <div className="mt-2">
-          <div className="button-grid button-grid-3">
-            {additionalGestures.map((gesture) => (
-              <button key={gesture} onClick={() => onGesture(gesture.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{gesture}</span></button>
-            ))}
-          </div>
         </div>
       </div>
     </div>

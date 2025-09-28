@@ -23,14 +23,14 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
   
   const getUndertoneLabel = (undertone: string) => {
     const undertoneMap: { [key: string]: string } = {
-      'none': 'CLEAR',
-      'nervous': 'NERVOUS',
-      'confident': 'CONFIDENT',
-      'tired': 'TIRED',
-      'intense': 'INTENSE',
-      'subdued': 'SUBDUED'
+      'none': 'clear',
+      'nervous': 'nervous',
+      'confident': 'confident',
+      'tired': 'tired',
+      'intense': 'intense',
+      'subdued': 'subdued'
     }
-    return undertoneMap[undertone] || 'CLEAR'
+    return undertoneMap[undertone] || 'clear'
   }
 
   // Fade-out functionality for status indicators

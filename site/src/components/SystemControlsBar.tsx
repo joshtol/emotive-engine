@@ -91,8 +91,8 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     'flash', 'drift', 'stretch', 'glow', 'flicker', 'vibrate', 'orbital', 
     'hula', 'wave', 'breathe', 'morph', 'slowBlink', 'look', 'settle', 
     'breathIn', 'breathOut', 'breathHold', 'breathHoldEmpty', 'jump', 'sway', 
-    'float', 'rain', 'runningman', 'charleston', 'sparkle', 'shimmer', 
-    'wiggle', 'groove', 'point', 'lean', 'reach', 'headBob', 'orbit'
+    'float', 'runningman', 'charleston', 'sparkle', 'shimmer', 
+    'wiggle', 'groove', 'point', 'lean', 'reach', 'headBob', 'orbit', 'twist'
   ]
   
   const availableShapes = [
