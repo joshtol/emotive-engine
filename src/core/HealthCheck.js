@@ -277,7 +277,7 @@ export class HealthCheck {
         return result;
     }
 
-    checkStorage() {
+    async checkStorage() {
         const result = {
             status: 'healthy',
             details: {}
@@ -303,7 +303,7 @@ export class HealthCheck {
                     result.status = 'warning';
                     result.message = `Storage usage high: ${percentage.toFixed(1)}%`;
                 }
-            } catch (error) {
+            } catch (_error) {
                 result.status = 'unknown';
                 result.message = 'Storage API error';
             }
@@ -312,7 +312,7 @@ export class HealthCheck {
         return result;
     }
 
-    checkNetwork() {
+    async checkNetwork() {
         const result = {
             status: 'healthy',
             details: {}
@@ -354,7 +354,7 @@ export class HealthCheck {
                 result.status = 'warning';
                 result.message = `Slow response time: ${responseTime.toFixed(0)}ms`;
             }
-        } catch (error) {
+        } catch (_error) {
             result.details.online = navigator.onLine;
             if (!navigator.onLine) {
                 result.status = 'critical';
@@ -409,7 +409,7 @@ export class HealthCheck {
         const allElements = document.querySelectorAll('*');
 
         for (const element of allElements) {
-            const listeners = getEventListeners ? getEventListeners(element) : {};
+            const listeners = (typeof getEventListeners !== 'undefined' && getEventListeners) ? getEventListeners(element) : {};
             for (const event in listeners) {
                 count += listeners[event].length;
             }
@@ -446,7 +446,7 @@ export class HealthCheck {
         const results = {};
         const promises = [];
 
-        for (const [name, check] of this.checks) {
+        for (const [name, _check] of this.checks) {
             promises.push(
                 this.runCheck(name).then(result => {
                     results[name] = result;
@@ -642,7 +642,7 @@ export class HealthCheck {
     }
 
     // Endpoint for external health checks
-    async handleHealthRequest(req, res) {
+    async handleHealthRequest(_req, _res) {
         const report = await this.performHealthCheck();
 
         const statusCode = report.status === 'healthy' ? 200 :

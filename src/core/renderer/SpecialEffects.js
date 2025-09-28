@@ -506,7 +506,7 @@ export class SpecialEffects {
                 this.chromaticAberration.intensity = 0;
                 this.chromaticAberration.active = false;
                 this.chromaticAberration.targetIntensity = 0;
-                console.log('[CSS Chromatic] Effect completed');
+                console.warn('[CSS Chromatic] Effect completed');
             }
         }
     }

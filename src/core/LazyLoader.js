@@ -45,7 +45,7 @@ export class LazyLoader {
     checkDynamicImport() {
         try {
             // Check if dynamic import is supported without using Function constructor
-            return typeof import === 'function';
+            return typeof window !== 'undefined' && typeof window.import === 'function';
         } catch {
             return false;
         }
@@ -77,7 +77,7 @@ export class LazyLoader {
         }
     }
 
-    async _loadModule(moduleName) {
+    _loadModule(moduleName) {
         const loader = this.moduleMap.get(moduleName);
 
         if (loader) {
@@ -188,7 +188,7 @@ export class LazyLoader {
         }
     }
 
-    async loadFeature(featureName) {
+    loadFeature(featureName) {
         const featureMap = {
             particles: ['particles'],
             audio: ['audio'],
@@ -206,7 +206,7 @@ export class LazyLoader {
         return Promise.all(loadPromises);
     }
 
-    async whenReady(moduleNames) {
+    whenReady(moduleNames) {
         if (!Array.isArray(moduleNames)) {
             moduleNames = [moduleNames];
         }
@@ -255,8 +255,8 @@ export class LazyLoader {
 export const lazyLoader = new LazyLoader();
 
 // Helper function for easy loading
-export async function lazyLoad(moduleName) {
-    return await lazyLoader.load(moduleName);
+export function lazyLoad(moduleName) {
+    return lazyLoader.load(moduleName);
 }
 
 // Helper function for preloading

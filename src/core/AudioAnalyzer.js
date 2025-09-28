@@ -40,21 +40,44 @@ export class AudioAnalyzer {
     }
     
     /**
-     * Initialize audio context and analyzer
+     * Initialize audio context and analyzer (only after user interaction)
      */
     init() {
         try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // Only create AudioContext if we don't already have one
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // Resume context if it's suspended (common after user interaction)
+            if (this.audioContext.state === 'suspended') {
+                return this.audioContext.resume().then(() => {
+                    this.createAnalyser();
+                    return true;
+                }).catch(() => false);
+            } else {
+                this.createAnalyser();
+                return true;
+            }
+        } catch (error) {
+            console.warn('AudioAnalyzer init failed:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Create analyser node and related components
+     */
+    createAnalyser() {
+        if (!this.audioContext) return;
+        
+        if (!this.analyser) {
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 2048; // Good balance of frequency/time resolution
             this.analyser.smoothingTimeConstant = 0.5; // Moderate smoothing
             
             const bufferLength = this.analyser.frequencyBinCount;
             this.dataArray = new Uint8Array(bufferLength);
-            
-            return true;
-        } catch (error) {
-            return false;
         }
     }
     

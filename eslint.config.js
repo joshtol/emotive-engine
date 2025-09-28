@@ -58,7 +58,7 @@ export default [
         },
         rules: {
             'indent': ['error', 4],
-            'linebreak-style': ['error', 'unix'],
+            'linebreak-style': 'off', // Disabled for Windows development
             'quotes': ['error', 'single', { avoidEscape: true }],
             'semi': ['error', 'always'],
             'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
@@ -138,6 +138,7 @@ export default [
             'dist/',
             'node_modules/',
             'site/dist/',
+            'site/public/emotive-engine.js',
             'coverage/',
             '*.min.js',
             '*.old.js'

@@ -61,9 +61,23 @@ export class AudioHandler {
             return this.mascot;
         }
         
-        // Initialize audio context if needed
+        // Initialize audio context if needed - this will only happen after user interaction
         if (!this.mascot.audioAnalyzer.audioContext) {
-            await this.mascot.audioAnalyzer.init();
+            try {
+                await this.mascot.audioAnalyzer.init();
+            } catch (error) {
+                console.warn('Failed to initialize AudioContext:', error);
+                return this.mascot;
+            }
+        }
+        
+        // Resume AudioContext if it's suspended (common after user interaction)
+        if (this.mascot.audioAnalyzer.audioContext && this.mascot.audioAnalyzer.audioContext.state === 'suspended') {
+            try {
+                await this.mascot.audioAnalyzer.audioContext.resume();
+            } catch (error) {
+                console.warn('Failed to resume AudioContext:', error);
+            }
         }
         
         // Connect the audio element
