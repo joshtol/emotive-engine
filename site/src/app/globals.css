@@ -597,7 +597,6 @@ input[type="number"] { -moz-appearance: textfield; }
   contain: layout style paint;
   isolation: isolate;
   aspect-ratio: 1;
-}
   width: min(calc(100vw - 50vw), calc(100vh - 8vh - 5vh));
   height: min(calc(100vw - 50vw), calc(100vh - 8vh - 5vh));
   flex-shrink: 0;
