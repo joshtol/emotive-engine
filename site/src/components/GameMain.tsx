@@ -16,8 +16,10 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
   const [currentEmotion, setCurrentEmotion] = useState('neutral')
   const [currentShape, setCurrentShape] = useState('circle')
   const [mascot, setMascot] = useState<any>(null) // Added state for mascot
+  const [showStatusIndicators, setShowStatusIndicators] = useState(true)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
+  const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   const getUndertoneLabel = (undertone: string) => {
     const undertoneMap: { [key: string]: string } = {
@@ -30,6 +32,28 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
     }
     return undertoneMap[undertone] || 'CLEAR'
   }
+
+  // Fade-out functionality for status indicators
+  const resetFadeTimer = useCallback(() => {
+    setShowStatusIndicators(true)
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current)
+    }
+    fadeTimeoutRef.current = setTimeout(() => {
+      setShowStatusIndicators(false)
+    }, 4000) // Fade out after 4 seconds
+  }, [])
+
+  const handleStatusHover = useCallback(() => {
+    setShowStatusIndicators(true)
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current)
+    }
+  }, [])
+
+  const handleStatusLeave = useCallback(() => {
+    resetFadeTimer()
+  }, [resetFadeTimer])
   const leftEmotionalStates = [
     { name: 'neutral', svg: 'neutral.svg' },
     { name: 'joy', svg: 'joy.svg' },
@@ -47,6 +71,16 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
     { name: 'anger', svg: 'anger.svg' },
     { name: 'glitch', svg: 'glitch.svg' },
   ]
+
+  // Initialize fade timer on mount
+  useEffect(() => {
+    resetFadeTimer()
+    return () => {
+      if (fadeTimeoutRef.current) {
+        clearTimeout(fadeTimeoutRef.current)
+      }
+    }
+  }, [resetFadeTimer])
 
   // Initialize Emotive Engine
   useEffect(() => {
@@ -152,14 +186,16 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
     if (mascotRef.current && currentEmotion) {
       mascotRef.current.setEmotion(currentEmotion)
     }
-  }, [currentEmotion])
+    resetFadeTimer() // Reset fade timer when emotion changes
+  }, [currentEmotion, resetFadeTimer])
 
   // Update undertone when it changes
   useEffect(() => {
     if (mascotRef.current && currentUndertone) {
       mascotRef.current.updateUndertone(currentUndertone)
     }
-  }, [currentUndertone])
+    resetFadeTimer() // Reset fade timer when undertone changes
+  }, [currentUndertone, resetFadeTimer])
 
   // Handle window resize to prevent blurry/pixelated mascot
   useEffect(() => {
@@ -244,8 +280,22 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         </div>
         
         {/* Status indicators inside animation frame */}
-        <div className="status-text emotion" data-state={currentEmotion}>{currentEmotion}</div>
-        <div className="status-text stability" data-undertone={currentUndertone}>{getUndertoneLabel(currentUndertone)}</div>
+        <div 
+          className={`status-text emotion ${showStatusIndicators ? 'fade-in' : 'fade-out'}`}
+          data-state={currentEmotion}
+          onMouseEnter={handleStatusHover}
+          onMouseLeave={handleStatusLeave}
+        >
+          {currentEmotion}
+        </div>
+        <div 
+          className={`status-text stability ${showStatusIndicators ? 'fade-in' : 'fade-out'}`}
+          data-undertone={currentUndertone}
+          onMouseEnter={handleStatusHover}
+          onMouseLeave={handleStatusLeave}
+        >
+          {getUndertoneLabel(currentUndertone)}
+        </div>
       </div>
     </div>
   )

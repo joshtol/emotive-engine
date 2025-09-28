@@ -1046,39 +1046,64 @@ h2.section-header {
   position: absolute;
   top: 5%;
   left: 10%;
-  width: 4vw;
-  height: 4vw;
-  min-width: 3vw;
-  max-width: 6vw;
+  width: 3vw;
+  height: 3vw;
+  min-width: 2.5vw;
+  max-width: 4vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--button-bg);
-  background-image: var(--gradient-primary);
+  background: rgba(0, 0, 0, 0.2);
+  background-image: linear-gradient(135deg, rgba(221, 74, 154, 0.05) 0%, rgba(64, 144, 206, 0.03) 100%);
   border-radius: 50%;
   white-space: nowrap;
-  font-size: clamp(0.7rem, 1vw, 1rem);
-  border: 1px solid var(--border-muted);
-  box-shadow: 0 0 var(--vp-10px) var(--glow-subtle);
+  font-size: clamp(0.6rem, 0.8vw, 0.9rem);
+  border: 1px solid rgba(221, 74, 154, 0.1);
+  box-shadow: 0 0 var(--vp-5px) rgba(221, 74, 154, 0.08);
+  opacity: 0.4;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+  transform: translateZ(0);
 }
 
 .status-text.stability {
   position: absolute;
   top: 5%;
   right: 10%;
-  width: 4vw;
-  height: 4vw;
-  min-width: 3vw;
-  max-width: 6vw;
+  width: 3vw;
+  height: 3vw;
+  min-width: 2.5vw;
+  max-width: 4vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--button-bg);
-  background-image: var(--gradient-secondary);
+  background: rgba(0, 0, 0, 0.2);
+  background-image: linear-gradient(45deg, rgba(50, 172, 226, 0.05) 0%, rgba(132, 207, 197, 0.03) 100%);
   border-radius: 50%;
-  font-size: clamp(0.7rem, 1vw, 1rem);
-  border: 1px solid var(--border-muted);
-  box-shadow: 0 0 var(--vp-10px) var(--glow-subtle);
+  font-size: clamp(0.6rem, 0.8vw, 0.9rem);
+  border: 1px solid rgba(50, 172, 226, 0.1);
+  box-shadow: 0 0 var(--vp-5px) rgba(50, 172, 226, 0.08);
+  opacity: 0.4;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+  transform: translateZ(0);
+}
+
+/* Status indicator hover and fade states */
+.status-text.emotion:hover,
+.status-text.stability:hover {
+  opacity: 0.8;
+  transform: scale(1.05) translateZ(0);
+}
+
+.status-text.emotion.fade-out,
+.status-text.stability.fade-out {
+  opacity: 0.1;
+  transform: scale(0.95) translateZ(0);
+}
+
+.status-text.emotion.fade-in,
+.status-text.stability.fade-in {
+  opacity: 0.6;
+  transform: scale(1.02) translateZ(0);
 }
 
 
