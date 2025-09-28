@@ -32,12 +32,18 @@ export default function Home() {
       'runman': 'runningman', 
       'charles': 'charleston',
       // Chain combo mappings
-      'build': 'expand',
-      'cascade': 'wave',
-      'celebrate': 'burst',
-      'smooth': 'drift',
+      'rise': 'expand',
+      'flow': 'wave',
+      'burst': 'burst',
+      'drift': 'drift',
       'chaos': 'shake',
-      'custom': 'morph'
+      'morph': 'morph',
+      'pulse': 'pulse',
+      'swirl': 'orbital',
+      'dance': 'groove',
+      'glow': 'glow',
+      'spark': 'sparkle',
+      'wave': 'wave'
     }
     
     // Use mapped name if available, otherwise use original

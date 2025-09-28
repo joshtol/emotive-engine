@@ -12,8 +12,10 @@ interface GameSidebarProps {
 
 export default function GameSidebar({ onGesture, isPlaying, currentUndertone, onUndertoneChange }: GameSidebarProps) {
   
-  const chainCombos = [ 'BUILD', 'CASCADE', 'CELEBRATE', 'SMOOTH', 'CHAOS', 'CUSTOM' ]
-  const glowEffects = [ 'SPARKLE', 'PULSE', 'GLOW', 'FLASH', 'SHIMMER', 'FLICKER' ]
+  const chainCombos = [ 
+    'RISE', 'FLOW', 'BURST', 'DRIFT', 'CHAOS', 'MORPH',
+    'PULSE', 'SWIRL', 'DANCE', 'GLOW', 'SPARK', 'WAVE'
+  ]
 
   return (
     <div className="emotive-sidebar">
@@ -31,17 +33,7 @@ export default function GameSidebar({ onGesture, isPlaying, currentUndertone, on
             <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {chainCombos.map((combo) => (
-            <button key={combo} onClick={() => onGesture(combo.toLowerCase())} className="sci-fi-btn chain-btn"><span className="btn-label">{combo}</span></button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-6">
-            <h2 className="section-header">GLOW</h2>
-            <div className="single-fade-rule"></div>
-        <div className="button-grid button-grid-3">
-          {glowEffects.map((effect) => (
-            <button key={effect} onClick={() => onGesture(effect.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{effect}</span></button>
+            <button key={combo} onClick={() => onGesture(combo.toLowerCase())} className="sci-fi-btn chain-btn" data-chain={combo.toLowerCase()}><span className="btn-label">{combo}</span></button>
           ))}
         </div>
       </div>
