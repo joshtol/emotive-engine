@@ -53,7 +53,12 @@ export default [
                 __filename: 'readonly',
                 require: 'readonly',
                 module: 'readonly',
-                exports: 'readonly'
+                exports: 'readonly',
+                // Browser debugging globals
+                getEventListeners: 'readonly',
+                crypto: 'readonly',
+                Element: 'readonly',
+                DOMPurify: 'readonly'
             }
         },
         rules: {

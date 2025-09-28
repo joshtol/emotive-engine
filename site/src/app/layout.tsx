@@ -8,6 +8,14 @@ const montserrat = Montserrat({ subsets: ['latin'], weight: ['300','400','500','
 export const metadata: Metadata = {
   title: 'Emotive Engine - Rhythm Game',
   description: 'Interactive rhythm-based animation engine with musical time synchronization',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

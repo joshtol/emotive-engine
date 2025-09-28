@@ -160,11 +160,12 @@ export default {
         let targetOffset = 0;
         
         switch (data.phase) {
-        case 'peeking':
+        case 'peeking': {
             // Smooth peek out
             const peekProgress = adjustedProgress / 0.3;
             targetOffset = this.easeOutCubic(peekProgress) * config.peekDistance;
             break;
+        }
                 
         case 'holding':
             // Hold at peek position
@@ -176,11 +177,12 @@ export default {
             }
             break;
                 
-        case 'hiding':
+        case 'hiding': {
             // Quick hide back
             const hideProgress = (adjustedProgress - 0.6) / 0.4;
             targetOffset = (1 - this.easeInCubic(hideProgress)) * config.peekDistance;
             break;
+        }
         }
         
         // Apply the peek offset

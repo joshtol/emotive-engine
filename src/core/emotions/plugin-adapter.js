@@ -62,6 +62,7 @@ export function registerPluginEmotion(name, emotionDef) {
     pluginEmotions.set(name, emotionDef);
     
     if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
+        // Debug logging would go here
     }
     
     return true;
@@ -76,6 +77,7 @@ export function unregisterPluginEmotion(name) {
         pluginEmotions.delete(name);
         
         if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
+            // Debug logging would go here
         }
         
         return true;

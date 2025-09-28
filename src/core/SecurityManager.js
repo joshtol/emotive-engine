@@ -194,7 +194,9 @@ export class SecurityManager {
 
     monitorXSSAttempts() {
         // Override dangerous methods to monitor usage
+        // eslint-disable-next-line no-eval
         const originalEval = window.eval;
+        // eslint-disable-next-line no-eval
         window.eval = (...args) => {
             console.warn('eval() usage detected:', args);
             if (this.strict) {
@@ -294,7 +296,7 @@ export class SecurityManager {
 
     validateInput(input, type = 'text') {
         const validators = {
-            text: /^[\w\s\-\.@]+$/,
+            text: /^[\w\s\-@.]+$/,
             email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
             number: /^\d+$/,
             alphanumeric: /^[a-zA-Z0-9]+$/,

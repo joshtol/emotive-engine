@@ -92,7 +92,7 @@ export class SoundSystem {
    * Initialize Web Audio API and create node architecture
    * @returns {boolean} Success status
    */
-    async initialize() {
+    initialize() {
         try {
             // Check for Web Audio API support
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;

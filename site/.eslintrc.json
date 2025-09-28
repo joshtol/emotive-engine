@@ -1,6 +1,26 @@
-module.exports = {
-  extends: ['next/core-web-vitals'],
-  rules: {
-    // Add custom rules here
+{
+  "extends": ["next/core-web-vitals"],
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
   },
+  "globals": {
+    "React": "readonly"
+  },
+  "rules": {
+    "no-console": "off",
+    "linebreak-style": "off",
+    "indent": "off",
+    "semi": "off",
+    "quotes": "off",
+    "no-unused-vars": "warn",
+    "prefer-const": "warn",
+    "no-useless-return": "warn",
+    "arrow-parens": "off",
+    "@next/next/no-img-element": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "prefer-destructuring": "warn",
+    "require-await": "warn"
+  }
 }

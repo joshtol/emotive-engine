@@ -125,19 +125,19 @@ export function getEmotionVisualParams(emotionName) {
     
     // Evaluate dynamic functions if they exist and override static values
     if (typeof visual.getGlowIntensity === 'function') {
-        params.glowIntensity = visual.getGlowIntensity.call(visual);
+        params.glowIntensity = visual.getGlowIntensity();
     }
     
     if (typeof visual.getParticleSpeed === 'function') {
-        params.particleSpeed = visual.getParticleSpeed.call(visual);
+        params.particleSpeed = visual.getParticleSpeed();
     }
     
     if (typeof visual.getParticleRate === 'function') {
-        params.particleRate = visual.getParticleRate.call(visual);
+        params.particleRate = visual.getParticleRate();
     }
     
     if (typeof visual.getGlowColor === 'function') {
-        params.glowColor = visual.getGlowColor.call(visual);
+        params.glowColor = visual.getGlowColor();
     }
     
     return params;

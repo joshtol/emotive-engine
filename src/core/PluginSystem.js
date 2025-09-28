@@ -496,7 +496,7 @@ export class PluginSystem {
      * @param {string} dependencyName - Dependency name
      * @returns {boolean} Success status
      */
-    async tryLoadDependency(dependencyName) {
+    tryLoadDependency(dependencyName) {
         // This would attempt to load the dependency
         // For now, just check if it exists
         return this.plugins.has(dependencyName);
