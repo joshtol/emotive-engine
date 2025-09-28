@@ -58,7 +58,16 @@ export default function Home() {
 
   return (
     <div className="emotive-container">
-      <EmotiveHeader />
+      <EmotiveHeader 
+        mascot={mascot}
+        currentShape="circle"
+        onAudioLoad={(audioElement) => {
+          console.log('Audio loaded:', audioElement)
+        }}
+        onPlayStateChange={(isPlaying) => {
+          console.log('Play state changed:', isPlaying)
+        }}
+      />
       <div className="emotive-main">
         <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={handleUndertoneChange} />
         <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} onGesture={handleGesture} onMascotReady={handleMascotReady} />

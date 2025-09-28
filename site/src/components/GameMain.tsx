@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import SystemControlsBar from './SystemControlsBar'
 import ShapeSelectorBar from './ShapeSelectorBar'
 
 interface GameMainProps {
@@ -16,6 +15,7 @@ interface GameMainProps {
 export default function GameMain({ engine, score, combo, currentUndertone, onGesture, onMascotReady }: GameMainProps) {
   const [currentEmotion, setCurrentEmotion] = useState('neutral')
   const [currentShape, setCurrentShape] = useState('circle')
+  const [mascot, setMascot] = useState<any>(null) // Added state for mascot
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
   
@@ -114,6 +114,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
 
         // Debug: Mascot instance created
         mascotRef.current = mascot
+        setMascot(mascot) // Set mascot state
         
         // Pass mascot reference to parent component
         if (onMascotReady) {
@@ -217,9 +218,6 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         <div id="fps-counter" className="fps-display">
           <span className="fps-value">60</span> FPS
         </div>
-        
-        {/* System Controls Bar inside animation frame */}
-        <SystemControlsBar />
         
         {/* State columns inside animation frame */}
         <div className="state-column state-column-left">
