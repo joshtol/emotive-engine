@@ -151,14 +151,30 @@ export class GestureCompatibility {
         // Chain definitions with simultaneous markers
         // '+' means simultaneous, '>' means sequential
         this.chains = {
+            // Original chains renamed
+            rise: 'pulse > pulse > bounce+sparkle > spin+flash',
+            flow: 'wave > lean > tilt > spin > bounce+glow',
+            burst: 'bounce+sparkle > spin > jump+flash > headBob+pulse',
+            drift: 'sway+breathe > float > orbit+shimmer > sway+glow',
+            chaos: 'wiggle > shake+flash > spin+sparkle > bounce+pulse > twist',
+            morph: 'expand > contract > morph > expand+glow',
+            
+            // New chains
+            pulse: 'pulse > pulse+pulse > pulse+sparkle > pulse+glow',
+            swirl: 'orbit > spin > orbit+sparkle > spin+glow > orbit',
+            dance: 'headBob > bounce+pulse > spin > sway+glow > headBob+sparkle',
+            glow: 'glow > glow+sparkle > glow+pulse > glow+shimmer',
+            spark: 'sparkle > sparkle+flash > sparkle+pulse > sparkle+glow',
+            wave: 'wave > wave+glow > wave+pulse > wave+sparkle',
+            
+            // Legacy names for backward compatibility
             buildup: 'pulse > pulse > bounce+sparkle > spin+flash',
             cascade: 'wave > lean > tilt > spin > bounce+glow',
             celebrate: 'bounce+sparkle > spin > jump+flash > headBob+pulse',
             smooth: 'sway+breathe > float > orbit+shimmer > sway+glow',
-            chaos: 'wiggle > shake+flash > spin+sparkle > bounce+pulse > twist',
+            custom: 'expand > contract > morph > expand+glow',
             greeting: 'wave+glow > nod+pulse > wave',
-            mystical: 'float+shimmer > orbit+breathe > spin+sparkle > float+glow',
-            dance: 'headBob > bounce+pulse > spin > sway+glow > headBob+sparkle'
+            mystical: 'float+shimmer > orbit+breathe > spin+sparkle > float+glow'
         };
     }
 

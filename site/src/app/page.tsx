@@ -52,7 +52,15 @@ export default function Home() {
     // Trigger gesture on the engine if mascot is available
     if (mascot) {
       try {
-        mascot.express(actualGestureName)
+        // Check if this is a chain combo (should use chain method)
+        const chainCombos = ['rise', 'flow', 'burst', 'drift', 'chaos', 'morph', 'pulse', 'swirl', 'dance', 'glow', 'spark', 'wave']
+        if (chainCombos.includes(gesture.toLowerCase())) {
+          // Execute as chain combo
+          mascot.chain(gesture.toLowerCase())
+        } else {
+          // Execute as regular gesture
+          mascot.express(actualGestureName)
+        }
       } catch (error) {
         console.error(`Failed to trigger gesture ${actualGestureName}:`, error)
       }
