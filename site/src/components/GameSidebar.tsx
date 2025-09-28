@@ -14,7 +14,7 @@ export default function GameSidebar({ onGesture, isPlaying, currentUndertone, on
   
   const chainCombos = [ 
     'RISE', 'FLOW', 'BURST', 'DRIFT', 'CHAOS', 'MORPH',
-    'PULSE', 'SWIRL', 'DANCE', 'GLOW', 'SPARK', 'WAVE'
+    'RHYTHM', 'SPIRAL', 'ROUTINE', 'RADIANCE', 'SHIMMER', 'CURRENT'
   ]
 
   return (

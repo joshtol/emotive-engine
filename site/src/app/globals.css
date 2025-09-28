@@ -1514,12 +1514,12 @@ h2.section-header {
 .chain-btn[data-chain="drift"]{ --chain-hue: 90deg; }
 .chain-btn[data-chain="chaos"]{ --chain-hue: 120deg; }
 .chain-btn[data-chain="morph"]{ --chain-hue: 150deg; }
-.chain-btn[data-chain="pulse"]{ --chain-hue: 180deg; }
-.chain-btn[data-chain="swirl"]{ --chain-hue: 210deg; }
-.chain-btn[data-chain="dance"]{ --chain-hue: 240deg; }
-.chain-btn[data-chain="glow"]{ --chain-hue: 270deg; }
-.chain-btn[data-chain="spark"]{ --chain-hue: 300deg; }
-.chain-btn[data-chain="wave"]{ --chain-hue: 330deg; }
+.chain-btn[data-chain="rhythm"]{ --chain-hue: 180deg; }
+.chain-btn[data-chain="spiral"]{ --chain-hue: 210deg; }
+.chain-btn[data-chain="routine"]{ --chain-hue: 240deg; }
+.chain-btn[data-chain="radiance"]{ --chain-hue: 270deg; }
+.chain-btn[data-chain="shimmer"]{ --chain-hue: 300deg; }
+.chain-btn[data-chain="current"]{ --chain-hue: 330deg; }
 .chain-btn.pulsing { animation: chainFlash 0.3s ease-out; }
 @keyframes chainFlash { 0%{ background: var(--button-bg); box-shadow:none; filter:hue-rotate(0deg);} 50%{ background: var(--accent-primary); box-shadow:0 0 var(--vp-20px) var(--accent-glow); transform:scale(1.05); filter:hue-rotate(var(--chain-hue,0deg)) brightness(1.5);} 100%{ background:var(--button-bg); box-shadow:none; transform:scale(1); filter:hue-rotate(0deg);} }
 

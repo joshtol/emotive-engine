@@ -159,13 +159,13 @@ export class GestureCompatibility {
             chaos: 'wiggle+shake > spin+flash > bounce+pulse > twist+sparkle > shake+glow',
             morph: 'expand > contract > morph > expand+glow',
             
-            // New chains
-            pulse: 'pulse > pulse+pulse > pulse+sparkle > pulse+glow',
-            swirl: 'orbit > spin > orbit+sparkle > spin+glow > orbit',
-            dance: 'headBob > bounce+pulse > spin > sway+glow > headBob+sparkle',
-            glow: 'glow > glow+sparkle > glow+pulse > glow+shimmer',
-            spark: 'sparkle > sparkle+flash > sparkle+pulse > sparkle+glow',
-            wave: 'wave > wave+glow > wave+pulse > wave+sparkle',
+            // New chains - NO CONFLICTS WITH GESTURE NAMES
+            rhythm: 'pulse > pulse+pulse > pulse+sparkle > pulse+glow',
+            spiral: 'orbit > spin > orbit+sparkle > spin+glow > orbit',
+            routine: 'headBob > bounce+pulse > spin > sway+glow > headBob+sparkle',
+            radiance: 'glow > glow+sparkle > glow+pulse > glow+shimmer',
+            shimmer: 'sparkle > sparkle+flash > sparkle+pulse > sparkle+glow',
+            current: 'wave > wave+glow > wave+pulse > wave+sparkle',
             
             // Legacy names for backward compatibility
             buildup: 'pulse > pulse > bounce+sparkle > spin+flash',

@@ -53,7 +53,7 @@ export default function Home() {
     if (mascot) {
       try {
         // Check if this is a chain combo (should use chain method)
-        const chainCombos = ['rise', 'flow', 'burst', 'drift', 'chaos', 'morph', 'pulse', 'swirl', 'dance', 'glow', 'spark', 'wave']
+        const chainCombos = ['rise', 'flow', 'burst', 'drift', 'chaos', 'morph', 'rhythm', 'spiral', 'routine', 'radiance', 'shimmer', 'current']
         if (chainCombos.includes(gesture.toLowerCase())) {
           // Execute as chain combo
           mascot.chain(gesture.toLowerCase())
