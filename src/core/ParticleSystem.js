@@ -474,6 +474,26 @@ class ParticleSystem {
             };
         }
                 
+        case 'glitchy': {
+            // Spawn glitch particles at various distances from center for wide spread
+            const glitchAngle = Math.random() * Math.PI * 2;
+            const glitchRadius = glowRadius * 3 + Math.random() * glowRadius * 4; // Much wider spread (3-7x glow radius)
+            return {
+                x: centerX + Math.cos(glitchAngle) * glitchRadius,
+                y: centerY + Math.sin(glitchAngle) * glitchRadius
+            };
+        }
+                
+        case 'spaz': {
+            // Spawn spaz particles in a wide ring around the center for explosive effect
+            const spazAngle = Math.random() * Math.PI * 2;
+            const spazRadius = glowRadius * 2 + Math.random() * glowRadius * 3; // Very wide spread (2-5x glow radius)
+            return {
+                x: centerX + Math.cos(spazAngle) * spazRadius,
+                y: centerY + Math.sin(spazAngle) * spazRadius
+            };
+        }
+                
         default:
             return { x: centerX, y: centerY };
         }

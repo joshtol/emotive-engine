@@ -411,15 +411,6 @@ body {
   height: calc(2/3 * min(8vh, max(5vh, 4vh + 0.5vw)));
 }
 
-.auth-guest-label {
-  font-size: clamp(10px, 1.2vw, 14px);
-  font-weight: 500;
-  color: var(--text-white);
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  margin-right: calc(0.5vw + 0.3vh);
-}
-
 .auth-signin-btn {
   font-size: clamp(10px, 1.2vw, 14px);
   font-weight: 600;
@@ -617,11 +608,33 @@ input[type="number"] { -moz-appearance: textfield; }
 .state-icon:active { background: rgba(255, 255, 255, 0.2); transform: scale(0.95); }
 .state-icon-svg { width:90%; height:90%; }
 
-.shape-selector-bar { display:grid; grid-template-columns: repeat(9, 1fr); align-items:center; justify-content:center; width:70%; height: calc(100vw * 0.5 / 9); margin: 0 auto; }
+/* Dual Shape Selector Bars */
+.shape-selector-bar { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 2vw;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+}
+
+.shape-selector-bar-top {
+  top: 5%;
+}
+
+.shape-selector-bar-bottom {
+  bottom: 5%;
+}
+
 .shape-selector-inside { position:absolute; left:calc(100vw * 0.5 / 9 / 2); bottom:0; right:calc(100vw * 0.5 / 9 / 2); z-index:20; height: calc(100vw * 0.5 / 9); }
 .shape-selector-outside { position:absolute; left:calc(100vw * 0.5 / 9 / 2); bottom:0; right:calc(100vw * 0.5 / 9 / 2); z-index:20; height: calc(100vw * 0.5 / 9); }
 .shape-selector-button { 
-  width: 100%; 
+  width: 4vw; 
+  height: 4vw;
+  min-width: 3vw;
+  max-width: 5vw;
   aspect-ratio: 1; 
   display:flex; 
   align-items:center; 
@@ -974,29 +987,35 @@ h2.section-header {
 
 .status-text.emotion {
   position: absolute;
-  bottom: 14%;
-  left: 25%;
-  width: min(calc(100vw * 0.5 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.5 / 9)) / 5);
-  height: min(calc(100vw * 0.5 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.5 / 9)) / 5);
+  top: 5%;
+  left: 10%;
+  width: 4vw;
+  height: 4vw;
+  min-width: 3vw;
+  max-width: 6vw;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border-radius: 50%;
   white-space: nowrap;
+  font-size: clamp(0.7rem, 1vw, 1rem);
 }
 
 .status-text.stability {
   position: absolute;
-  bottom: 14%;
-  right: 25%;
-  width: min(calc(100vw * 0.5 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.5 / 9)) / 5);
-  height: min(calc(100vw * 0.5 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.5 / 9)) / 5);
+  top: 5%;
+  right: 10%;
+  width: 4vw;
+  height: 4vw;
+  min-width: 3vw;
+  max-width: 6vw;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border-radius: 50%;
+  font-size: clamp(0.7rem, 1vw, 1rem);
 }
 
 

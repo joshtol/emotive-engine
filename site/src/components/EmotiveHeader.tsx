@@ -8,9 +8,10 @@ interface EmotiveHeaderProps {
   currentShape?: string
   onAudioLoad?: (audioElement: HTMLAudioElement) => void
   onPlayStateChange?: (isPlaying: boolean) => void
+  onMessage?: (type: string, content: string, duration?: number) => void
 }
 
-export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPlayStateChange }: EmotiveHeaderProps) {
+export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPlayStateChange, onMessage }: EmotiveHeaderProps) {
   return (
     <div className="emotive-header">
       <div className="emotive-logo">
@@ -24,13 +25,13 @@ export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPla
           currentShape={currentShape}
           onAudioLoad={onAudioLoad}
           onPlayStateChange={onPlayStateChange}
+          onMessage={onMessage}
         />
       </div>
       
       <div className="user-status" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <ThemeToggle />
         <div className="auth-pill">
-          <span className="auth-guest-label">GUEST</span>
           <button className="auth-signin-btn" aria-label="Sign in">SIGN IN</button>
         </div>
       </div>

@@ -7,9 +7,10 @@ interface SystemControlsBarProps {
   currentShape?: string
   onAudioLoad?: (audioElement: HTMLAudioElement) => void
   onPlayStateChange?: (isPlaying: boolean) => void
+  onMessage?: (type: string, content: string, duration?: number) => void
 }
 
-export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, onPlayStateChange }: SystemControlsBarProps) {
+export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, onPlayStateChange, onMessage }: SystemControlsBarProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<string | null>(null)
@@ -31,6 +32,7 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
   const toggleBlinking = useCallback(() => {
     if (!mascot) {
       console.log('⚠️ No mascot available for blinking toggle')
+      onMessage?.('warning', 'Mascot not ready', 3000)
       return
     }
     
@@ -41,18 +43,22 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
       if (mascot.renderer && mascot.renderer.setBlinkingEnabled) {
         mascot.renderer.setBlinkingEnabled(newBlinkingState)
         console.log(`👁️ Blinking ${newBlinkingState ? 'enabled' : 'disabled'}`)
+        onMessage?.('info', `Blinking ${newBlinkingState ? 'enabled' : 'disabled'}`, 2000)
       } else {
         console.log('⚠️ Mascot renderer does not support blinking control')
+        onMessage?.('warning', 'Blinking control not available', 3000)
       }
     } catch (error) {
       console.error('❌ Error toggling blinking:', error)
+      onMessage?.('error', 'Failed to toggle blinking', 4000)
     }
-  }, [mascot, isBlinkingEnabled])
+  }, [mascot, isBlinkingEnabled, onMessage])
 
   // Toggle gaze tracking
   const toggleGazeTracking = useCallback(() => {
     if (!mascot) {
       console.log('⚠️ No mascot available for gaze tracking toggle')
+      onMessage?.('warning', 'Mascot not ready', 3000)
       return
     }
     
@@ -63,13 +69,16 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
       if (mascot.setGazeTracking) {
         mascot.setGazeTracking(newGazeState)
         console.log(`👀 Gaze tracking ${newGazeState ? 'enabled' : 'disabled'}`)
+        onMessage?.('info', `Gaze tracking ${newGazeState ? 'enabled' : 'disabled'}`, 2000)
       } else {
         console.log('⚠️ Mascot does not support gaze tracking control')
+        onMessage?.('warning', 'Gaze tracking not available', 3000)
       }
     } catch (error) {
       console.error('❌ Error toggling gaze tracking:', error)
+      onMessage?.('error', 'Failed to toggle gaze tracking', 4000)
     }
-  }, [mascot, isGazeTrackingEnabled])
+  }, [mascot, isGazeTrackingEnabled, onMessage])
 
   // Random selection arrays
   const availableEmotions = [

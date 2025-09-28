@@ -1784,6 +1784,17 @@ class EmotiveMascot {
             // Apply undertone modifiers to particle behavior
             let particleBehavior = emotionParams.particleBehavior || 'ambient';
             let particleRate = emotionParams.particleRate || 15;
+            
+            // Debug logging for glitch emotion
+            if (renderState.emotion === 'glitch') {
+                console.log('🔍 Glitch emotion debug:', {
+                    emotion: renderState.emotion,
+                    emotionParams,
+                    particleBehavior,
+                    hasParticleBehavior: 'particleBehavior' in emotionParams,
+                    particleBehaviorValue: emotionParams.particleBehavior
+                });
+            }
             // Use emotionParams min/max if available, otherwise fall back to stateProps
             const minParticles = emotionParams.minParticles !== undefined ? emotionParams.minParticles : (stateProps.minParticles || 0);
             let maxParticles = emotionParams.maxParticles !== undefined ? emotionParams.maxParticles : (stateProps.maxParticles || 10);

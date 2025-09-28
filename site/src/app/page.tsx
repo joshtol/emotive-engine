@@ -6,11 +6,22 @@ import GameSidebar from '@/components/GameSidebar'
 import GameMain from '@/components/GameMain'
 import GameControls from '@/components/GameControls'
 import EmotiveFooter from '@/components/EmotiveFooter'
+import MessageHUD from '@/components/MessageHUD'
 
 export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentUndertone, setCurrentUndertone] = useState('none')
   const [mascot, setMascot] = useState<any>(null)
+  const [messages, setMessages] = useState<any[]>([])
+
+  const addMessage = useCallback((type: string, content: string, duration = 3000) => {
+    const id = Date.now().toString()
+    setMessages(prev => [...prev, { id, type, content, duration, dismissible: true }])
+  }, [])
+
+  const removeMessage = useCallback((id: string) => {
+    setMessages(prev => prev.filter(msg => msg.id !== id))
+  }, [])
 
   const handleGesture = useCallback((gesture: string) => {
     // Debug: Gesture triggered
@@ -36,7 +47,6 @@ export default function Home() {
     if (mascot) {
       try {
         mascot.express(actualGestureName)
-        // Debug: Gesture executed
       } catch (error) {
         console.error(`Failed to trigger gesture ${actualGestureName}:`, error)
       }
@@ -49,7 +59,6 @@ export default function Home() {
 
   const handleMascotReady = useCallback((mascotInstance: any) => {
     setMascot(mascotInstance)
-    // Debug: Mascot ready
   }, [])
 
   const handleUndertoneChange = useCallback((undertone: string) => {
@@ -58,6 +67,7 @@ export default function Home() {
 
   return (
     <div className="emotive-container">
+      <MessageHUD messages={messages} onMessageDismiss={removeMessage} />
       <EmotiveHeader 
         mascot={mascot}
         currentShape="circle"
@@ -67,6 +77,7 @@ export default function Home() {
         onPlayStateChange={(isPlaying) => {
           console.log('Play state changed:', isPlaying)
         }}
+        onMessage={addMessage}
       />
       <div className="emotive-main">
         <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={handleUndertoneChange} />

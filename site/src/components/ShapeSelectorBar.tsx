@@ -6,20 +6,37 @@ interface ShapeSelectorBarProps {
 }
 
 export default function ShapeSelectorBar({ onShapeChange, currentShape }: ShapeSelectorBarProps) {
-  const shapes = ['circle','triangle','square','heart','star','sun','solar','moon','lunar']
+  const basicShapes = ['circle', 'triangle', 'square', 'star', 'heart']
+  const astronomicalShapes = ['sun', 'solar', 'moon', 'lunar']
   
   return (
-    <div className="shape-selector-bar">
-      {shapes.map((shape) => (
-        <button 
-          key={shape} 
-          className={`shape-selector-button ${currentShape === shape ? 'active' : ''}`}
-          onClick={() => onShapeChange(shape)}
-        >
-          <img src={`/assets/shape-bar/${shape}.svg`} alt={shape} className="shape-selector-icon" />
-        </button>
-      ))}
-    </div>
+    <>
+      {/* Top Bar - Astronomical Shapes */}
+      <div className="shape-selector-bar shape-selector-bar-top">
+        {astronomicalShapes.map((shape) => (
+          <button 
+            key={shape} 
+            className={`shape-selector-button ${currentShape === shape ? 'active' : ''}`}
+            onClick={() => onShapeChange(shape)}
+          >
+            <img src={`/assets/shape-bar/${shape}.svg`} alt={shape} className="shape-selector-icon" />
+          </button>
+        ))}
+      </div>
+      
+      {/* Bottom Bar - Basic Shapes */}
+      <div className="shape-selector-bar shape-selector-bar-bottom">
+        {basicShapes.map((shape) => (
+          <button 
+            key={shape} 
+            className={`shape-selector-button ${currentShape === shape ? 'active' : ''}`}
+            onClick={() => onShapeChange(shape)}
+          >
+            <img src={`/assets/shape-bar/${shape}.svg`} alt={shape} className="shape-selector-icon" />
+          </button>
+        ))}
+      </div>
+    </>
   )
 }
 

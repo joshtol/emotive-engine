@@ -105,9 +105,9 @@ export default {
         }
         
         particle.behaviorState = {
-            // Orbital properties (tighter orbit to stay centered)
+            // Orbital properties (spread out from center)
             orbitAngle: Math.random() * Math.PI * 2,
-            orbitRadius: 30 + Math.random() * 40,  // Reduced from 40-120 to 30-70
+            orbitRadius: 300 + Math.random() * 400,  // Dramatically increased to 300-700 for very wide spread
             orbitSpeed: 0.01 + Math.random() * 0.02,
             
             // Glitch properties
@@ -145,10 +145,8 @@ export default {
         
         // Special properties for glitch
         particle.lifeDecay = 0.0015; // Slower decay for trails
-        particle.hasGlow = Math.random() < 0.5; // More glow for digital effect
-        if (particle.hasGlow) {
-            particle.glowSizeMultiplier = 2.0 + Math.random(); // Bigger glows
-        }
+        particle.hasGlow = true; // Always glow for digital effect
+        particle.glowSizeMultiplier = 3.0 + Math.random() * 2; // Much bigger glows for visibility
     },
     
     /**
@@ -180,10 +178,10 @@ export default {
                 state.stutterTimer = 0;
                 state.nextStutter = 100 + Math.random() * 300;
                 
-                // Sometimes jump on unfreeze (smaller jumps to stay centered)
+                // Sometimes jump on unfreeze (larger jumps to maintain spread)
                 if (Math.random() < 0.3) {
-                    particle.x += (Math.random() - 0.5) * 20;  // Reduced from 50
-                    particle.y += (Math.random() - 0.5) * 20;  // Reduced from 50
+                    particle.x += (Math.random() - 0.5) * 60;  // Increased from 20 to 60
+                    particle.y += (Math.random() - 0.5) * 60;  // Increased from 20 to 60
                 }
             }
         }
@@ -193,8 +191,8 @@ export default {
             state.isGlitching = true;
             state.glitchDuration = 50 + Math.random() * 100;
             state.glitchOffset = {
-                x: (Math.random() - 0.5) * 30,  // Reduced from 100 to keep particles closer
-                y: (Math.random() - 0.5) * 30   // Reduced from 100 to keep particles closer
+                x: (Math.random() - 0.5) * 80,  // Increased from 30 to 80 for wider spread
+                y: (Math.random() - 0.5) * 80   // Increased from 30 to 80 for wider spread
             };
             state.glitchTimer = 0;
             
@@ -235,10 +233,10 @@ export default {
             let targetX = centerX + Math.cos(state.orbitAngle) * wobbleRadius;
             let targetY = centerY + Math.sin(state.orbitAngle) * wobbleRadius * 0.6; // Elliptical
             
-            // Apply glitch offset (smaller random factor to stay closer)
+            // Apply glitch offset (stronger effect for wider spread)
             if (state.isGlitching) {
-                targetX += state.glitchOffset.x * Math.random() * 0.5;  // Reduced effect
-                targetY += state.glitchOffset.y * Math.random() * 0.5;  // Reduced effect
+                targetX += state.glitchOffset.x * Math.random() * 0.8;  // Increased from 0.5 to 0.8
+                targetY += state.glitchOffset.y * Math.random() * 0.8;  // Increased from 0.5 to 0.8
             }
             
             // RGB split effect
@@ -249,14 +247,14 @@ export default {
                 state.rgbPhase += 0.1 * dt;
             }
             
-            // Digital noise bursts on drops (smaller to stay centered)
+            // Digital noise bursts on drops (larger to maintain spread)
             if (state.dropIntensity > 0.8 && Math.random() < 0.1) {
-                targetX += (Math.random() - 0.5) * 10;  // Reduced from 20
-                targetY += (Math.random() - 0.5) * 10;  // Reduced from 20
+                targetX += (Math.random() - 0.5) * 30;  // Increased from 10 to 30
+                targetY += (Math.random() - 0.5) * 30;  // Increased from 10 to 30
             }
             
-            // Stronger pull to center to prevent wandering
-            const smoothing = state.isGlitching ? 0.05 : 0.08;  // Increased from 0.02/0.05
+            // Minimal pull to center to allow maximum spread
+            const smoothing = state.isGlitching ? 0.02 : 0.03;  // Further reduced from 0.03/0.05
             particle.vx = (targetX - particle.x) * smoothing;
             particle.vy = (targetY - particle.y) * smoothing;
             

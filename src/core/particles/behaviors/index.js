@@ -41,6 +41,7 @@ import erratic from './erratic.js';
 import cautious from './cautious.js';
 import surveillance from './surveillance.js';
 import glitchy from './glitchy.js';
+import spaz from './spaz.js';
 import directed from './directed.js';
 import fizzy from './fizzy.js';
 import zen from './zen.js';
@@ -69,6 +70,7 @@ const BEHAVIORS = [
     cautious,
     surveillance,
     glitchy,
+    spaz,
     zen
 ];
 
@@ -80,6 +82,10 @@ export const BEHAVIOR_REGISTRY = {};
 // Build the registry from the behaviors array - SYNCHRONOUSLY
 BEHAVIORS.forEach(behavior => {
     BEHAVIOR_REGISTRY[behavior.name] = behavior;
+    // Debug logging for spaz behavior
+    if (behavior.name === 'spaz') {
+        console.log('🎆 Spaz behavior registered:', behavior);
+    }
 });
 
 /**
@@ -109,11 +115,16 @@ export function getBehavior(name) {
 export function initializeBehavior(particle, behaviorName) {
     const behavior = getBehavior(behaviorName);
     if (behavior && behavior.initialize) {
+        // Debug logging for spaz behavior
+        if (behaviorName === 'spaz') {
+            console.log('🎆 Initializing spaz behavior:', behavior);
+        }
         behavior.initialize(particle);
         return true;
     }
     // Fallback to ambient if behavior not found
     if (behaviorName !== 'ambient') {
+        console.warn(`⚠️ Behavior '${behaviorName}' not found, falling back to ambient`);
         return initializeBehavior(particle, 'ambient');
     }
     return false;

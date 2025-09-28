@@ -19,7 +19,7 @@ export default {
         particleRate: 30,           // High rate for glitchy effect
         minParticles: 12,           // Constant digital noise
         maxParticles: 20,           // Maximum chaos
-        particleBehavior: 'glitchy', // New glitch behavior
+        particleBehavior: 'spaz', // New spaz behavior for explosive effect
         particleSpeed: 1.5,         // Fast, erratic speeds
         breathRate: 0.3,            // Rapid, stuttering breaths
         breathDepth: 0.08,          // Shallow, digital hiccups

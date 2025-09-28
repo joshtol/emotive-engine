@@ -214,6 +214,9 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         {/* Engine Canvas - Ready for particle system */}
         <canvas ref={canvasRef} id="emotive-canvas"></canvas>
         
+        {/* Shape selector bars positioned within canvas area */}
+        <ShapeSelectorBar onShapeChange={handleShapeChange} currentShape={currentShape} />
+        
         {/* Performance Monitoring */}
         <div id="fps-counter" className="fps-display">
           <span className="fps-value">60</span> FPS
@@ -241,13 +244,8 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         </div>
         
         {/* Status indicators inside animation frame */}
-        <div className="status-text emotion" data-state={currentEmotion}>emotion: {currentEmotion}</div>
+        <div className="status-text emotion" data-state={currentEmotion}>{currentEmotion}</div>
         <div className="status-text stability" data-undertone={currentUndertone}>{getUndertoneLabel(currentUndertone)}</div>
-      </div>
-      
-      {/* Shape selector moved outside canvas area for better performance */}
-      <div className="shape-selector-outside">
-        <ShapeSelectorBar onShapeChange={handleShapeChange} currentShape={currentShape} />
       </div>
     </div>
   )

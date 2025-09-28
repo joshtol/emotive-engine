@@ -1,0 +1,241 @@
+/* Message HUD System - CSS Only Implementation */
+
+/* Message Container */
+.message-hud {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 90vw;
+  width: 100%;
+}
+
+/* Message Items */
+.message-item {
+  background: var(--message-bg, #1a1a1a);
+  color: var(--message-text, #ffffff);
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+  max-width: 400px;
+  opacity: 0;
+  transform: translateY(-100px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+  font-family: var(--font-primary, 'Poppins', sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.message-item.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.message-item.hide {
+  opacity: 0;
+  transform: translateY(-100px);
+}
+
+/* Message Content */
+.message-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.message-text {
+  flex: 1;
+  margin: 0;
+}
+
+.message-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-dismiss:hover {
+  opacity: 1;
+}
+
+/* Message Type Styles */
+.message-info {
+  --message-bg: rgba(59, 130, 246, 0.9);
+  --message-text: #ffffff;
+}
+
+.message-error {
+  --message-bg: rgba(239, 68, 68, 0.9);
+  --message-text: #ffffff;
+}
+
+.message-success {
+  --message-bg: rgba(16, 185, 129, 0.9);
+  --message-text: #ffffff;
+}
+
+.message-warning {
+  --message-bg: rgba(245, 158, 11, 0.9);
+  --message-text: #ffffff;
+}
+
+.message-login {
+  --message-bg: rgba(139, 92, 246, 0.9);
+  --message-text: #ffffff;
+}
+
+.message-interaction {
+  --message-bg: rgba(107, 114, 128, 0.9);
+  --message-text: #ffffff;
+}
+
+/* Auto-dismiss Animation */
+.message-item.auto-dismiss {
+  animation: slideInFromTop 0.3s ease, slideOutToTop 0.3s ease 2.7s;
+  animation-fill-mode: both;
+}
+
+/* Keyframe Animations */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToTop {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+}
+
+/* Hover Effects */
+.message-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.message-item.show:hover {
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .message-hud {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    max-width: none;
+  }
+  
+  .message-item {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .message-icon {
+    font-size: 14px;
+    width: 18px;
+  }
+  
+  .message-dismiss {
+    font-size: 16px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .message-item {
+    max-width: 400px;
+  }
+}
+
+/* Theme Variations */
+.light .message-item {
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.night .message-item {
+  border-color: rgba(255, 150, 50, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Accessibility */
+.message-item:focus-visible {
+  outline: 2px solid var(--accent-primary, #00e5ff);
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .message-item {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .message-item {
+    transition: opacity 0.2s ease;
+  }
+  
+  .message-item.auto-dismiss {
+    animation: none;
+  }
+  
+  @keyframes slideInFromTop {
+    from, to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOutToTop {
+    from, to {
+      transform: translateY(0);
+      opacity: 0;
+    }
+  }
+}
