@@ -352,8 +352,8 @@ export class SpecialEffects {
                             document.querySelector('canvas') || 
                             this.canvas;
         
-        console.log('[Chromatic] Visible canvas element:', visibleCanvas);
-        console.log('[Chromatic] Canvas ID:', visibleCanvas?.id);
+        console.warn('[Chromatic] Visible canvas element:', visibleCanvas);
+        console.warn('[Chromatic] Canvas ID:', visibleCanvas?.id);
         
         if (visibleCanvas) {
             // Remove any existing animation

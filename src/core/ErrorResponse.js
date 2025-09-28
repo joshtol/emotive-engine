@@ -143,11 +143,19 @@ export class ErrorResponse {
    */
     log() {
         const logMethod = this.error.severity === 'warning' ? 'warn' : 'error';
-        console[logMethod](`[EmotiveMascot] ${this.error.type}: ${this.error.message}`, {
-            context: this.error.context,
-            recoveryActions: this.error.recoveryActions,
-            timestamp: new Date(this.error.timestamp).toISOString()
-        });
+        if (logMethod === 'warn') {
+            console.warn(`[EmotiveMascot] ${this.error.type}: ${this.error.message}`, {
+                context: this.error.context,
+                recoveryActions: this.error.recoveryActions,
+                timestamp: new Date(this.error.timestamp).toISOString()
+            });
+        } else {
+            console.error(`[EmotiveMascot] ${this.error.type}: ${this.error.message}`, {
+                context: this.error.context,
+                recoveryActions: this.error.recoveryActions,
+                timestamp: new Date(this.error.timestamp).toISOString()
+            });
+        }
     }
 
     /**

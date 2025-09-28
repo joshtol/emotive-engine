@@ -574,7 +574,8 @@ export class RuntimeCapabilities {
             return typeof async !== 'undefined' || 
                    (function() { 
                        try { 
-                           return Function('return async function(){}')().constructor.name === 'AsyncFunction'; 
+                           // Check if async functions are supported without using Function constructor
+                           return typeof (async function(){}).constructor === 'function'; 
                        } catch(e) { 
                            return false; 
                        } 

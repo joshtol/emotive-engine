@@ -68,7 +68,7 @@ export class HealthCheck {
         });
     }
 
-    async checkMemory() {
+    checkMemory() {
         const result = {
             status: 'healthy',
             details: {}
@@ -101,7 +101,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkPerformance() {
+    checkPerformance() {
         const result = {
             status: 'healthy',
             details: {}
@@ -130,7 +130,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkErrors() {
+    checkErrors() {
         const result = {
             status: 'healthy',
             details: {}
@@ -163,7 +163,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkDOM() {
+    checkDOM() {
         const result = {
             status: 'healthy',
             details: {}
@@ -194,7 +194,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkAnimation() {
+    checkAnimation() {
         const result = {
             status: 'healthy',
             details: {}
@@ -223,7 +223,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkState() {
+    checkState() {
         const result = {
             status: 'healthy',
             details: {}
@@ -247,7 +247,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkEvents() {
+    checkEvents() {
         const result = {
             status: 'healthy',
             details: {}
@@ -277,7 +277,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkStorage() {
+    checkStorage() {
         const result = {
             status: 'healthy',
             details: {}
@@ -312,7 +312,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkNetwork() {
+    checkNetwork() {
         const result = {
             status: 'healthy',
             details: {}
@@ -365,7 +365,7 @@ export class HealthCheck {
         return result;
     }
 
-    async checkBrowser() {
+    checkBrowser() {
         const result = {
             status: 'healthy',
             details: {}

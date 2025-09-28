@@ -70,7 +70,7 @@ export class EmotionCache {
             this.stats.loadTime = performance.now() - this.loadStartTime;
             this.stats.cacheSize = this.emotionCache.size;
             
-            console.log(`[EmotionCache] Initialized with ${this.emotionCache.size} emotions in ${this.stats.loadTime.toFixed(2)}ms`);
+            console.warn(`[EmotionCache] Initialized with ${this.emotionCache.size} emotions in ${this.stats.loadTime.toFixed(2)}ms`);
             
         } catch (error) {
             console.error('[EmotionCache] Initialization failed:', error);

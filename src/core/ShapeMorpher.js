@@ -237,7 +237,7 @@ class ShapeMorpher {
                 }
                 // Log once if we start getting data
                 if (hasNonZero && !this._loggedAudioData) {
-                    console.log('ShapeMorpher: Receiving audio frequency data');
+                    console.warn('ShapeMorpher: Receiving audio frequency data');
                     this._loggedAudioData = true;
                 }
             }

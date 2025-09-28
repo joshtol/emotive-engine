@@ -157,15 +157,27 @@ export class ErrorLogger {
         const logMethod = this.getConsoleMethod(logEntry.severity);
         const timestamp = new Date(logEntry.timestamp).toISOString();
     
-        console[logMethod](
-            `[EmotiveMascot] ${timestamp} ${logEntry.type}: ${logEntry.message}`,
-            {
-                severity: logEntry.severity,
-                context: logEntry.context,
-                recoveryActions: logEntry.recoveryActions,
-                errorCount: logEntry.errorCount
-            }
-        );
+        if (logMethod === 'warn') {
+            console.warn(
+                `[EmotiveMascot] ${timestamp} ${logEntry.type}: ${logEntry.message}`,
+                {
+                    severity: logEntry.severity,
+                    context: logEntry.context,
+                    recoveryActions: logEntry.recoveryActions,
+                    errorCount: logEntry.errorCount
+                }
+            );
+        } else {
+            console.error(
+                `[EmotiveMascot] ${timestamp} ${logEntry.type}: ${logEntry.message}`,
+                {
+                    severity: logEntry.severity,
+                    context: logEntry.context,
+                    recoveryActions: logEntry.recoveryActions,
+                    errorCount: logEntry.errorCount
+                }
+            );
+        }
     }
 
     /**

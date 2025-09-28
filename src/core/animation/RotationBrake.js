@@ -107,7 +107,7 @@ export class RotationBrake {
             const angleToTravel = Math.abs(this.brakeTargetRotation - this.brakeStartRotation);
             this.brakeDuration = Math.max(500, (angleToTravel / Math.abs(currentVelocity)) * this.DURATION_FACTOR * 5);
 
-            console.log('Brake started:', {
+            console.warn('Brake started:', {
                 from: `${rotation.toFixed(1)}°`,
                 to: `${this.brakeTargetRotation.toFixed(1)}°`,
                 velocity: currentVelocity,
@@ -153,7 +153,7 @@ export class RotationBrake {
             // Stop the animation when braking is complete
             this.brakeStartTime = null;
 
-            console.log('Brake complete:', {
+            console.warn('Brake complete:', {
                 target: `${this.brakeTargetRotation.toFixed(1)}°`,
                 duration: `${elapsed.toFixed(0)}ms`
             });

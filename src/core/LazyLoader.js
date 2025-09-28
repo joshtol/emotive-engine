@@ -44,8 +44,8 @@ export class LazyLoader {
 
     checkDynamicImport() {
         try {
-            new Function('import("")');
-            return true;
+            // Check if dynamic import is supported without using Function constructor
+            return typeof import === 'function';
         } catch {
             return false;
         }
@@ -82,21 +82,21 @@ export class LazyLoader {
 
         if (loader) {
             // Use dynamic import
-            return await loader();
+            return loader();
         }
 
         // Fallback to URL-based loading
         const url = `${this.baseUrl}${moduleName}.js`;
 
         if (this.features.dynamicImport) {
-            return await import(url);
+            return import(url);
         }
 
         // Fallback for older browsers
-        return await this._loadScript(url);
+        return this._loadScript(url);
     }
 
-    async _loadScript(url) {
+    _loadScript(url) {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.type = 'module';
@@ -203,7 +203,7 @@ export class LazyLoader {
         }
 
         const loadPromises = modules.map(m => this.load(m));
-        return await Promise.all(loadPromises);
+        return Promise.all(loadPromises);
     }
 
     async whenReady(moduleNames) {
@@ -221,7 +221,7 @@ export class LazyLoader {
             return this.load(name);
         });
 
-        return await Promise.all(promises);
+        return Promise.all(promises);
     }
 
     isLoaded(moduleName) {
