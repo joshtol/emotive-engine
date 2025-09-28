@@ -1,94 +1,64 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Glitch Emotion
+ *    ●●  ENGINE - Glitch Emotion (Simplified)
  *  └─○═╝                                                                             
  * ═══════════════════════════════════════════════════════════════════════════════════════
  */
 
 export default {
     name: 'glitch',
-    emoji: '⚡',
-    description: 'Digital distortion with erratic particle stutters',
+    emoji: '🌈',
+    description: 'Surprised sadness with rainbow colors and glitch wiggle',
     
-    // Visual properties
+    // Visual properties - simplified combination of surprise + sadness
     visual: {
-        primaryColor: '#00FFAA',    // Bright digital cyan-green
-        glowColor: '#00FFAA',       // Bright digital cyan-green
-        glowIntensity: 2.2,         // Intense, flickering energy
-        particleRate: 30,           // High rate for glitchy effect
-        minParticles: 12,           // Constant digital noise
-        maxParticles: 20,           // Maximum chaos
-        particleBehavior: 'spaz', // New spaz behavior for explosive effect
-        particleSpeed: 1.5,         // Fast, erratic speeds
-        breathRate: 0.3,            // Rapid, stuttering breaths
-        breathDepth: 0.08,          // Shallow, digital hiccups
-        coreJitter: 0.04,           // Constant digital tremor
-        coreSize: 1.1,              // Slightly enlarged core
-        eyeOpenness: 1.0,           // Wide open eyes
+        primaryColor: '#FF6B9D',    // Pink surprise
+        glowColor: '#4169E1',       // Blue sadness
+        glowIntensity: 1.2,         // Moderate intensity (surprise + sadness)
+        particleRate: 20,           // Moderate rate
+        minParticles: 5,            // Some constant presence
+        maxParticles: 15,           // Moderate burst
+        particleBehavior: 'burst',  // Simplified from spaz to burst
+        particleSpeed: 1.0,         // Moderate speed
+        breathRate: 0.4,            // Between surprise (0.3) and sadness (0.6)
+        breathDepth: 0.15,          // Between surprise (0.18) and sadness (0.12)
+        coreJitter: false,          // No core shake
+        coreSize: 1.0,              // Normal size
+        eyeOpenness: 0.8,           // Wide but not fully open
         particleColors: [
-            { color: '#00FFAA', weight: 25 },  // Bright cyan-green
-            { color: '#FF00AA', weight: 20 },  // Hot magenta
-            { color: '#00FF00', weight: 15 },  // Pure digital green
-            { color: '#FF0099', weight: 15 },  // Neon pink
-            { color: '#00FFFF', weight: 10 },  // Electric cyan
-            { color: '#FFAA00', weight: 8 },   // Digital amber warning
-            { color: '#FF00FF', weight: 5 },   // Pure magenta glitch
-            { color: '#FFFFFF', weight: 2 }    // Rare white static
+            // Enhanced rainbow colors - more vibrant and balanced
+            { color: '#FF0080', weight: 18 },  // Bright magenta
+            { color: '#00FF80', weight: 18 },  // Bright green
+            { color: '#8000FF', weight: 18 },  // Bright purple
+            { color: '#FF8000', weight: 15 },  // Bright orange
+            { color: '#0080FF', weight: 15 },  // Bright blue
+            { color: '#FFFF00', weight: 10 },  // Bright yellow
+            { color: '#FF6B9D', weight: 6 }    // Pink surprise
         ],
-        // Glitch-specific properties
-        glitchIntensity: 0.8,      // How intense the glitching is
-        flickerChance: 0.05,       // 5% chance per frame to flicker
-        rgbShift: true,            // Enable RGB channel separation
-        digitalNoise: true,        // Add digital noise pattern
-        getGlowIntensity() {
-            // Random intensity flickers
-            if (Math.random() < this.flickerChance) {
-                return 0.2 + Math.random() * 2.5;
-            }
-            return this.glowIntensity;
-        },
-        getGlowColor() {
-            // Occasionally shift to random glitch colors
-            if (Math.random() < 0.02) {
-                const glitchColors = ['#FF00AA', '#00FFFF', '#FF0099', '#00FFAA', '#FFAA00'];
-                return glitchColors[Math.floor(Math.random() * glitchColors.length)];
-            }
-            return this.glowColor;
-        }
+        // Glitch wiggle effect for particles
+        particleGlitchWiggle: true,
+        glitchWiggleIntensity: 0.3,
+        glitchWiggleFrequency: 0.1
     },
     
-    // Gesture modifiers
+    // Gesture modifiers - simplified
     modifiers: {
-        speed: 2.0,         // Hyper-speed movements
-        amplitude: 0.8,     // Constrained but erratic
-        intensity: 1.8,     // High energy bursts
-        smoothness: 0.1,    // Extremely jerky, stuttering motion
-        regularity: 0.1,    // Completely unpredictable
-        focus: 0.5,         // Scattered, unfocused
-        addGlitch: true,    // Special glitch modifier
-        addStutter: true    // Stuttering motion effect
+        speed: 1.1,         // Moderate speed
+        amplitude: 1.0,      // Normal range
+        intensity: 1.1,      // Slightly elevated
+        smoothness: 0.8,     // Somewhat jerky
+        regularity: 0.7,     // Somewhat erratic
+        focus: 0.6           // Somewhat scattered
     },
     
-    // Typical gestures for glitch
-    typicalGestures: ['twitch', 'jitter', 'breathe', 'pulse', 'shake', 'flicker'],
+    // Typical gestures - simplified
+    typicalGestures: ['bounce', 'sway', 'pulse', 'drift', 'flash'],
     
-    // Transition configuration
+    // Transition configuration - simplified
     transitions: { 
-        duration: 100,          // Instant, jarring transitions
-        easing: 'linear',       // No smoothing - digital snap
-        priority: 7,            // High priority disruption
-        glitchIn: true          // Special glitch transition effect
-    },
-    
-    // Special glitch properties
-    special: {
-        stutterInterval: 50,        // Stutter every 50ms
-        stutterDuration: 20,        // Each stutter lasts 20ms
-        rgbOffset: 3,               // Pixel offset for RGB separation
-        scanlineEffect: true,       // Add CRT scanlines
-        datamoshChance: 0.01,       // 1% chance to datamosh
-        corruptionZones: 3,         // Number of corruption areas
-        digitalTearHeight: 10       // Height of digital tears
+        duration: 300,          // Moderate transition
+        easing: 'easeInOut',    // Smooth transition
+        priority: 5             // Medium priority
     }
 };

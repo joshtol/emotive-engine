@@ -30,20 +30,8 @@ export default function Home() {
     const gestureMapping: { [key: string]: string } = {
       'headbob': 'headBob',
       'runman': 'runningman', 
-      'charles': 'charleston',
-      // Chain combo mappings
-      'rise': 'expand',
-      'flow': 'wave',
-      'burst': 'burst',
-      'drift': 'drift',
-      'chaos': 'shake',
-      'morph': 'morph',
-      'pulse': 'pulse',
-      'swirl': 'orbital',
-      'dance': 'groove',
-      'glow': 'glow',
-      'spark': 'sparkle',
-      'wave': 'wave'
+      'charles': 'charleston'
+      // Chain combos are handled separately below - no mapping needed
     }
     
     // Use mapped name if available, otherwise use original
@@ -53,7 +41,7 @@ export default function Home() {
     if (mascot) {
       try {
         // Check if this is a chain combo (should use chain method)
-        const chainCombos = ['rise', 'flow', 'burst', 'drift', 'chaos', 'morph', 'rhythm', 'spiral', 'routine', 'radiance', 'shimmer', 'current']
+        const chainCombos = ['rise', 'flow', 'burst', 'drift', 'chaos', 'morph', 'rhythm', 'spiral', 'routine', 'radiance', 'twinkle', 'stream']
         if (chainCombos.includes(gesture.toLowerCase())) {
           // Execute as chain combo
           mascot.chain(gesture.toLowerCase())

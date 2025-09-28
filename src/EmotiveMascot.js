@@ -887,23 +887,54 @@ class EmotiveMascot {
     chain(...gestures) {
         // Parse the chain using GestureCompatibility if available
         if (this.gestureCompatibility) {
-            const steps = this.gestureCompatibility.parseChain(gestures.join('>'));
-            // Execute first step (which might be a chord)
-            if (steps.length > 0) {
-                const firstStep = steps[0];
-                if (firstStep.length > 1) {
-                    this.expressChord(firstStep);
-                } else {
-                    this.express(firstStep[0]);
-                }
-            }
+            const chainString = gestures.join('>');
+            const steps = this.gestureCompatibility.parseChain(chainString);
+            
+            // Execute all steps with proper timing
+            this.executeChainSequence(steps);
         } else {
+            console.warn('🔗 No gestureCompatibility available, falling back to first gesture');
             // Fallback: execute first gesture
             if (gestures.length > 0) {
                 this.express(gestures[0]);
             }
         }
         return this;
+    }
+
+    /**
+     * Execute a sequence of gesture steps with proper timing
+     * @param {Array<Array<string>>} steps - Array of steps, each containing simultaneous gestures
+     */
+    executeChainSequence(steps) {
+        if (!steps || steps.length === 0) return;
+
+        let currentStep = 0;
+        const stepDuration = 800; // Base duration per step (ms)
+
+        const executeStep = () => {
+            if (currentStep >= steps.length) return;
+
+            const step = steps[currentStep];
+            
+            if (step.length === 1) {
+                // Single gesture
+                this.express(step[0]);
+            } else {
+                // Multiple simultaneous gestures
+                this.expressChord(step);
+            }
+
+            currentStep++;
+            
+            // Schedule next step
+            if (currentStep < steps.length) {
+                setTimeout(executeStep, stepDuration);
+            }
+        };
+
+        // Start the sequence
+        executeStep();
     }
 
     /**

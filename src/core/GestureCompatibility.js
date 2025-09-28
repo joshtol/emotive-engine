@@ -151,26 +151,26 @@ export class GestureCompatibility {
         // Chain definitions with simultaneous markers
         // '+' means simultaneous, '>' means sequential
         this.chains = {
-            // Original chains renamed
-            rise: 'pulse > pulse > bounce+sparkle > spin+flash',
-            flow: 'wave > lean > tilt > spin > bounce+glow',
-            burst: 'expand > bounce+sparkle > jump+flash > burst+glow',
-            drift: 'sway+breathe > float+shimmer > orbit+glow > drift+pulse',
-            chaos: 'wiggle+shake > spin+flash > bounce+pulse > twist+sparkle > shake+glow',
-            morph: 'expand > contract > morph > expand+glow',
+            // Original chains renamed - USING REAL GESTURES ONLY
+            rise: 'breathe > sway+lean+tilt',
+            flow: 'sway > lean+tilt > spin > bounce',
+            burst: 'jump > nod > shake > flash',
+            drift: 'sway+breathe+float+drift',
+            chaos: 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
+            morph: 'expand > contract > morph+glow > expand+flash',
             
             // New chains - NO CONFLICTS WITH GESTURE NAMES
-            rhythm: 'pulse > pulse+pulse > pulse+sparkle > pulse+glow',
-            spiral: 'orbit > spin > orbit+sparkle > spin+glow > orbit',
-            routine: 'headBob > bounce+pulse > spin > sway+glow > headBob+sparkle',
-            radiance: 'glow > glow+sparkle > glow+pulse > glow+shimmer',
-            shimmer: 'sparkle > sparkle+flash > sparkle+pulse > sparkle+glow',
-            current: 'wave > wave+glow > wave+pulse > wave+sparkle',
+            rhythm: 'pulse > pulse+sparkle > pulse+flicker',
+            spiral: 'spin > orbital > twist > orbital+sparkle',
+            routine: 'nod > bounce > spin+sparkle > sway+pulse > nod+flash',
+            radiance: 'sparkle > pulse+flicker > shimmer',
+            twinkle: 'sparkle > flash > pulse+sparkle > shimmer+flicker',
+            stream: 'wave > nod+pulse > sparkle > flash',
             
             // Legacy names for backward compatibility
             buildup: 'pulse > pulse > bounce+sparkle > spin+flash',
             cascade: 'wave > lean > tilt > spin > bounce+glow',
-            celebrate: 'bounce+sparkle > spin > jump+flash > headBob+pulse',
+            celebrate: 'bounce+sparkle > spin > jump+flash > nod+pulse',
             smooth: 'sway+breathe > float > orbit+shimmer > sway+glow',
             custom: 'expand > contract > morph > expand+glow',
             greeting: 'wave+glow > nod+pulse > wave',

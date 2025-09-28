@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import TrackSelectionModal from './TrackSelectionModal'
 
 interface SystemControlsBarProps {
   mascot?: any
@@ -17,6 +18,7 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
   const [isMenuExpanded, setIsMenuExpanded] = useState(false)
   const [isBlinkingEnabled, setIsBlinkingEnabled] = useState(true)
   const [isGazeTrackingEnabled, setIsGazeTrackingEnabled] = useState(false)
+  const [showTrackModal, setShowTrackModal] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -253,13 +255,56 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     }
   }, [onAudioLoad, disconnectAudioFromMascot])
 
+  // Handle track selection from modal
+  const handleTrackSelect = useCallback(async (trackPath: string) => {
+    try {
+      setIsLoading(true)
+      
+      if (audioRef.current) {
+        audioRef.current.pause()
+        disconnectAudioFromMascot()
+        URL.revokeObjectURL(audioRef.current.src)
+      }
+
+      const audio = new Audio()
+      audio.preload = 'auto'
+      audioRef.current = audio
+      
+      audio.src = trackPath
+      setCurrentAudio(trackPath)
+      
+      if (onAudioLoad) {
+        onAudioLoad(audio)
+      }
+      
+      // Reset playing state when new audio is loaded
+      setIsPlaying(false)
+      
+      // Auto-play the loaded audio
+      try {
+        await audio.play()
+        console.log('🎵 Auto-playing selected track:', trackPath)
+        // Immediately update state to show pause button
+        setIsPlaying(true)
+      } catch (error) {
+        console.log('⚠️ Auto-play failed (user interaction required):', error.message)
+      }
+      
+    } catch (error) {
+      console.error('❌ Error loading track:', error)
+      onMessage?.('error', 'Failed to load track', 3000)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [onAudioLoad, disconnectAudioFromMascot, onMessage])
+
   const handleButtonClick = useCallback((icon: string) => {
     switch (icon) {
       case 'play':
         handlePlayPause()
         break
       case 'music':
-        fileInputRef.current?.click()
+        setShowTrackModal(true)
         break
       case 'eye':
         toggleBlinking()
@@ -402,7 +447,7 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
               disabled={isLoading}
               title={
                 icon === 'music' 
-                  ? 'Upload Music' 
+                  ? 'Select Demo Track' 
                   : icon === 'eye'
                   ? `Blinking ${isBlinkingEnabled ? 'Enabled' : 'Disabled'}`
                   : icon === 'eyes'
@@ -433,6 +478,12 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
           <div className="spinner"></div>
         </div>
       )}
+      
+      <TrackSelectionModal
+        isOpen={showTrackModal}
+        onClose={() => setShowTrackModal(false)}
+        onTrackSelect={handleTrackSelect}
+      />
     </div>
   )
 }
