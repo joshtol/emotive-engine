@@ -154,9 +154,9 @@ export class GestureCompatibility {
             // Original chains renamed
             rise: 'pulse > pulse > bounce+sparkle > spin+flash',
             flow: 'wave > lean > tilt > spin > bounce+glow',
-            burst: 'bounce+sparkle > spin > jump+flash > headBob+pulse',
-            drift: 'sway+breathe > float > orbit+shimmer > sway+glow',
-            chaos: 'wiggle > shake+flash > spin+sparkle > bounce+pulse > twist',
+            burst: 'expand > bounce+sparkle > jump+flash > burst+glow',
+            drift: 'sway+breathe > float+shimmer > orbit+glow > drift+pulse',
+            chaos: 'wiggle+shake > spin+flash > bounce+pulse > twist+sparkle > shake+glow',
             morph: 'expand > contract > morph > expand+glow',
             
             // New chains
