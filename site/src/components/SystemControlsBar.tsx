@@ -22,7 +22,7 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const icons = ['music','eye','eyes','random','record']
+  const icons = ['music','eye','eyes','random']
 
   // Toggle menu with animation
   const toggleMenu = useCallback(() => {
@@ -255,28 +255,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     }
   }, [onAudioLoad, disconnectAudioFromMascot])
 
-  // Handle track recording from modal
-  const handleRecordTrack = useCallback(async (trackPath: string, trackName: string) => {
-    // Dispatch countdown start event
-    window.dispatchEvent(new CustomEvent('startCountdown'))
-
-    // Start recording after countdown, but play track FIRST
-    setTimeout(async () => {
-      console.log('🎵 Starting audio playback before recording...')
-      
-      // Play the track FIRST, then wait for audio to be ready
-      handleTrackSelect(trackPath)
-      
-      // Wait a bit for audio to start playing
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Dispatch recording start event AFTER audio is playing
-      window.dispatchEvent(new CustomEvent('startRecording', {
-        detail: { trackPath, trackName }
-      }))
-    }, 3000) // 3 second countdown
-  }, [])
-
   // Handle track selection from modal
   const handleTrackSelect = useCallback(async (trackPath: string) => {
     try {
@@ -336,9 +314,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
         break
       case 'random':
         triggerRandomCombo()
-        break
-      case 'record':
-        console.log('🎙️ Record button clicked')
         break
       case 'menu':
         toggleMenu()
@@ -404,31 +379,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
       audio.removeEventListener('ended', handleEnded)
     }
   }, [mascot, onPlayStateChange, connectAudioToMascot, disconnectAudioFromMascot, audioRef.current])
-
-  // Listen for stop audio event from recording
-  useEffect(() => {
-    const handleStopAudio = () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.currentTime = 0
-        console.log('🎵 Audio stopped by recording event')
-        
-        // Update state
-        setIsPlaying(false)
-        if (onPlayStateChange) {
-          onPlayStateChange(false)
-        }
-        
-        // Disconnect mascot audio
-        disconnectAudioFromMascot()
-      }
-    }
-
-    window.addEventListener('stopAudio', handleStopAudio)
-    return () => {
-      window.removeEventListener('stopAudio', handleStopAudio)
-    }
-  }, [onPlayStateChange, disconnectAudioFromMascot])
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -530,7 +480,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
         isOpen={showTrackModal}
         onClose={() => setShowTrackModal(false)}
         onTrackSelect={handleTrackSelect}
-        onRecordTrack={handleRecordTrack}
       />
     </div>
   )

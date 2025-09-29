@@ -57,18 +57,3 @@ coverage/
 # Temporary folders
 tmp/
 temp/
-
-# FFmpeg and Canvas dependencies (large binaries)
-node_modules/ffmpeg-static/vendor/
-node_modules/canvas/build/
-
-# Recording processing temporary files
-/media/processed-videos/
-/temp/emotive-recording/
-
-# Test files
-test-api.js
-
-# Documentation files (optional - remove if you want to commit them)
-INTEGRATION_GUIDE.md
-DEPLOYMENT_CHECKLIST.md

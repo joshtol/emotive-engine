@@ -31,9 +31,6 @@ export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPla
       
       <div className="user-status" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <ThemeToggle />
-        <div className="auth-pill">
-          <button className="auth-signin-btn" aria-label="Sign in">SIGN IN</button>
-        </div>
       </div>
     </div>
   )
