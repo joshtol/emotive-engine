@@ -1914,6 +1914,48 @@ h2.section-header {
 /* Visual-only buttons from legacy site (vp units, no layout) */
 .dice-icon { width: var(--vp-24px); height: var(--vp-24px); filter: var(--icon-filter, none); vertical-align: middle; display: inline-block; }
 
+/* Gesture menus wrapper - transparent in landscape */
+.gesture-menus-wrapper {
+  display: contents;
+}
+
+/* Portrait orientation layout */
+@media (orientation: portrait) {
+  .emotive-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    grid-template-areas: 
+      'canvas'
+      'gesture-menus';
+  }
+  
+  .game-canvas-area {
+    grid-area: canvas;
+    width: min(100vw, calc(100vh - 8vh - 5vh - 25vh));
+    height: min(100vw, calc(100vh - 8vh - 5vh - 25vh));
+    aspect-ratio: 1;
+  }
+  
+  .gesture-menus-wrapper {
+    grid-area: gesture-menus;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 'sidebar controls';
+    gap: 1rem;
+    padding: 1rem;
+    height: 25vh;
+    min-height: 200px;
+  }
+  
+  .gesture-menus-wrapper .emotive-sidebar {
+    grid-area: sidebar;
+  }
+  
+  .gesture-menus-wrapper .emotive-controls {
+    grid-area: controls;
+  }
+}
+
 /* Chain Combo Buttons */
 .chain-btn { background: var(--button-bg); border: var(--border-thin); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
 .chain-btn:hover { background: var(--button-hover); border-color: var(--accent-primary); box-shadow: 0 0 var(--vp-1px) var(--accent-glow); }

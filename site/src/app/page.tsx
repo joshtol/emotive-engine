@@ -82,9 +82,11 @@ export default function Home() {
         onMessage={addMessage}
       />
       <div className="emotive-main">
-        <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={handleUndertoneChange} />
+        <div className="gesture-menus-wrapper">
+          <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={handleUndertoneChange} />
+          <GameControls onGesture={handleGesture} />
+        </div>
         <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} onGesture={handleGesture} onMascotReady={handleMascotReady} />
-        <GameControls onGesture={handleGesture} />
       </div>
       <EmotiveFooter />
     </div>
