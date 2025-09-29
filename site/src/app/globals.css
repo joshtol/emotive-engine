@@ -1954,6 +1954,35 @@ h2.section-header {
   .gesture-menus-wrapper .emotive-controls {
     grid-area: controls;
   }
+  
+  /* Increase state columns size in portrait */
+  .state-icon {
+    width: calc(min(calc(100vw * 0.45 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.45 / 9)) / 5) * 2.1) !important;
+    height: calc(min(calc(100vw * 0.45 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.45 / 9)) / 5) * 2.1) !important;
+  }
+  
+  /* Increase shape bars size in portrait */
+  .shape-selector-button {
+    width: calc(4vw * 2.8) !important;
+    height: calc(4vw * 2.8) !important;
+    min-width: calc(3vw * 2.8) !important;
+    max-width: calc(5vw * 2.8) !important;
+  }
+  
+  /* Move state columns away from edges in portrait */
+  .state-column-left {
+    left: 3% !important;
+  }
+  
+  .state-column-right {
+    right: 3% !important;
+  }
+  
+  /* Position indicators 10% from top of canvas area in portrait */
+  .status-text.emotion,
+  .status-text.stability {
+    top: 10% !important;
+  }
 }
 
 /* Chain Combo Buttons */
