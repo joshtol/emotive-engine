@@ -428,6 +428,21 @@ body {
   background: rgba(255, 255, 255, 0.1) !important;
   transform: scale(1.1) !important;
 }
+
+/* Gesture button highlighting for combos */
+.sci-fi-btn.active-gesture {
+  background: rgba(132, 207, 197, 0.3) !important;
+  box-shadow: 0 0 20px rgba(132, 207, 197, 0.6) !important;
+  transform: scale(1.05) !important;
+  border-color: rgba(132, 207, 197, 0.8) !important;
+}
+
+.sci-fi-btn.active-gesture-combo {
+  background: rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.6) !important;
+  transform: scale(1.05) !important;
+  border-color: rgba(59, 130, 246, 0.8) !important;
+}
 .emotive-logo { 
   position: absolute;
   left: 20%;

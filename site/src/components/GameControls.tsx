@@ -2,9 +2,10 @@
 
 interface GameControlsProps {
   onGesture: (gesture: string) => void
+  activeGestures: Set<string>
 }
 
-export default function GameControls({ onGesture }: GameControlsProps) {
+export default function GameControls({ onGesture, activeGestures }: GameControlsProps) {
   const danceGestures = [ 'HEADBOB','WIGGLE','ORBIT','GROOVE','POINT','LEAN','REACH','RUNNINGMAN','CHARLESTON' ]
   const overlayableGestures = [ 'BOUNCE','SWAY','SPIN','HULA','JUMP','TWIST','WAVE','NOD','SHAKE','TILT','BREATHE','FLOAT' ]
   const glowEffects = [ 'SPARKLE','PULSE','GLOW','FLASH','SHIMMER','FLICKER' ]
@@ -16,7 +17,16 @@ export default function GameControls({ onGesture }: GameControlsProps) {
         <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {danceGestures.map((gesture) => (
-            <button key={gesture} onClick={() => onGesture(gesture.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{gesture}</span></button>
+            <button 
+              key={gesture} 
+              onClick={() => onGesture(gesture.toLowerCase())} 
+              className={`sci-fi-btn gesture-btn ${
+                activeGestures.has(gesture + '_COMBO') ? 'active-gesture-combo' : 
+                activeGestures.has(gesture) ? 'active-gesture' : ''
+              }`}
+            >
+              <span className="btn-label">{gesture}</span>
+            </button>
           ))}
         </div>
         
@@ -27,7 +37,16 @@ export default function GameControls({ onGesture }: GameControlsProps) {
         <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {overlayableGestures.map((gesture) => (
-            <button key={gesture} onClick={() => onGesture(gesture.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{gesture}</span></button>
+            <button 
+              key={gesture} 
+              onClick={() => onGesture(gesture.toLowerCase())} 
+              className={`sci-fi-btn gesture-btn ${
+                activeGestures.has(gesture + '_COMBO') ? 'active-gesture-combo' : 
+                activeGestures.has(gesture) ? 'active-gesture' : ''
+              }`}
+            >
+              <span className="btn-label">{gesture}</span>
+            </button>
           ))}
         </div>
       </div>
@@ -37,7 +56,16 @@ export default function GameControls({ onGesture }: GameControlsProps) {
         <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {glowEffects.map((effect) => (
-            <button key={effect} onClick={() => onGesture(effect.toLowerCase())} className="sci-fi-btn gesture-btn"><span className="btn-label">{effect}</span></button>
+            <button 
+              key={effect} 
+              onClick={() => onGesture(effect.toLowerCase())} 
+              className={`sci-fi-btn gesture-btn ${
+                activeGestures.has(effect + '_COMBO') ? 'active-gesture-combo' : 
+                activeGestures.has(effect) ? 'active-gesture' : ''
+              }`}
+            >
+              <span className="btn-label">{effect}</span>
+            </button>
           ))}
         </div>
       </div>

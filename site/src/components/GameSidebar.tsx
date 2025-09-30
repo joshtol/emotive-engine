@@ -8,9 +8,10 @@ interface GameSidebarProps {
   isPlaying: boolean
   currentUndertone: string
   onUndertoneChange: (undertone: string) => void
+  activeGestures: Set<string>
 }
 
-export default function GameSidebar({ onGesture, isPlaying, currentUndertone, onUndertoneChange }: GameSidebarProps) {
+export default function GameSidebar({ onGesture, isPlaying, currentUndertone, onUndertoneChange, activeGestures }: GameSidebarProps) {
   
   const chainCombos = [ 
     'RISE', 'FLOW', 'BURST', 'DRIFT', 'CHAOS', 'MORPH',
@@ -33,7 +34,14 @@ export default function GameSidebar({ onGesture, isPlaying, currentUndertone, on
             <div className="single-fade-rule"></div>
         <div className="button-grid button-grid-3">
           {chainCombos.map((combo) => (
-            <button key={combo} onClick={() => onGesture(combo.toLowerCase())} className="sci-fi-btn chain-btn" data-chain={combo.toLowerCase()}><span className="btn-label">{combo}</span></button>
+            <button 
+              key={combo} 
+              onClick={() => onGesture(combo.toLowerCase())} 
+              className={`sci-fi-btn chain-btn ${activeGestures.has(combo) ? 'active-gesture-combo' : ''}`} 
+              data-chain={combo.toLowerCase()}
+            >
+              <span className="btn-label">{combo}</span>
+            </button>
           ))}
         </div>
       </div>
