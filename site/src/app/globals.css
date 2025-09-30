@@ -673,12 +673,16 @@ input[type="number"] { -moz-appearance: textfield; }
   height: 100%;
   will-change: transform;
   transform: translateZ(0);
-  image-rendering: optimizeSpeed;
+  image-rendering: auto;
+  image-rendering: smooth;
   position: absolute;
   top: 0;
   left: 0;
   z-index: 1;
   display: block;
+  /* Force 1:1 pixel ratio on mobile to prevent scaling issues */
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Performance Monitoring */
@@ -1938,10 +1942,28 @@ h2.section-header {
 /* Mobile visuals */
 @media (max-width: 768px) {
   .rhythm-sync-wrapper { padding: 0 var(--spacing-xs); gap: var(--spacing-xs); }
-  .rhythm-speed-single { }
-  .rhythm-speed-double { }
+  .rhythm-speed-single { opacity: 0.7; }
+  .rhythm-speed-double { opacity: 0.4; }
   .rhythm-bpm-display { padding: 0 var(--spacing-xs); margin-left: var(--spacing-xs); }
   .rhythm-beats-container { gap: calc(var(--spacing-base) * 0.25); padding: 0 var(--spacing-xs); }
+  
+  /* Mobile canvas rendering fixes - enable smooth rendering */
+  #emotive-canvas {
+    image-rendering: auto;
+    image-rendering: smooth;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Force 1:1 pixel ratio to prevent glow divisions */
+    width: 100% !important;
+    height: 100% !important;
+    /* Enable smooth rendering on mobile */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Force hardware acceleration */
+    will-change: transform;
+  }
 }
 
 /* Visual-only buttons from legacy site (vp units, no layout) */
@@ -2033,6 +2055,24 @@ h2.section-header {
       'canvas'
       'gesture-menus';
     z-index: auto !important;
+  }
+  
+  /* Fix mobile canvas rendering - enable smooth rendering */
+  #emotive-canvas {
+    image-rendering: auto;
+    image-rendering: smooth;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Force 1:1 pixel ratio to prevent glow divisions */
+    width: 100% !important;
+    height: 100% !important;
+    /* Enable smooth rendering on mobile */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Force hardware acceleration */
+    will-change: transform;
   }
   
   .game-canvas-area {
@@ -2149,8 +2189,18 @@ h2.section-header {
   /* Override canvas stacking context in portrait */
   #emotive-canvas {
     z-index: auto !important;
-    transform: none !important;
-    will-change: auto !important;
+    transform: translateZ(0) !important;
+    will-change: transform !important;
+    image-rendering: auto !important;
+    image-rendering: smooth !important;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+    /* Force 1:1 pixel ratio to prevent glow divisions */
+    width: 100% !important;
+    height: 100% !important;
+    /* Enable smooth rendering on mobile */
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
   }
   
   /* Override canvas container stacking context in portrait */

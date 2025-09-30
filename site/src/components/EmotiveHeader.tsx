@@ -1,6 +1,5 @@
 'use client'
 
-import ThemeToggle from './ThemeToggle'
 import SystemControlsBar from './SystemControlsBar'
 
 interface EmotiveHeaderProps {
@@ -29,10 +28,6 @@ export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPla
           onMessage={onMessage}
           flashMusicButton={flashMusicButton}
         />
-      </div>
-      
-      <div className="user-status" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <ThemeToggle />
       </div>
     </div>
   )

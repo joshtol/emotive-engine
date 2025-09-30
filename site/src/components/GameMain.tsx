@@ -90,21 +90,22 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
       try {
         // Debug: Starting engine initialization
         
-        // Ensure canvas has proper size
-        if (canvasRef.current) {
-          const rect = canvasRef.current.getBoundingClientRect()
-          canvasRef.current.width = rect.width
-          canvasRef.current.height = rect.height
-          // Debug: Canvas resized
+        // Measure canvas area and calculate 2x supersampling
+        const canvasArea = document.querySelector('.game-canvas-area')
+        if (canvasArea && canvasRef.current) {
+          const areaWidth = canvasArea.clientWidth
+          const areaHeight = canvasArea.clientHeight
           
-          // Wait a bit for CSS to be applied
-          await new Promise(resolve => setTimeout(resolve, 100))
+          // Calculate 2x supersampling dimensions
+          const renderWidth = areaWidth * 2
+          const renderHeight = areaHeight * 2
           
-          // Resize again after CSS is applied
-          const newRect = canvasRef.current.getBoundingClientRect()
-          canvasRef.current.width = newRect.width
-          canvasRef.current.height = newRect.height
-          // Debug: Canvas final size
+          // Set CSS display size to match area
+          canvasRef.current.style.width = '100%'
+          canvasRef.current.style.height = '100%'
+          
+          // Store render dimensions for engine initialization
+          ;(canvasRef.current as any).renderSize = { width: renderWidth, height: renderHeight }
         }
         
         // Load the engine script dynamically
@@ -126,6 +127,9 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           throw new Error('EmotiveMascot not found on window object')
         }
         
+        // Get render size from canvas element
+        const renderSize = (canvasRef.current as any).renderSize
+        
         const mascot = new EmotiveMascot({
           canvasId: 'emotive-canvas',
           targetFPS: 60,
@@ -138,6 +142,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           renderingStyle: 'classic',
           enableGazeTracking: false,
           enableIdleBehaviors: true,
+          renderSize, // 2x supersampling
           classicConfig: {
             coreColor: '#FFFFFF',
             coreSizeDivisor: 12,
@@ -201,18 +206,11 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
   // Handle window resize to prevent blurry/pixelated mascot
   useEffect(() => {
     const handleResize = () => {
-      if (mascotRef.current && canvasRef.current) {
-        // Wait for CSS to update
-        setTimeout(() => {
-          const rect = canvasRef.current!.getBoundingClientRect()
-          canvasRef.current!.width = rect.width
-          canvasRef.current!.height = rect.height
-          
-          // Call engine's resize method
-          if (typeof mascotRef.current.handleResize === 'function') {
-            mascotRef.current.handleResize()
-          }
-        }, 100)
+      if (mascotRef.current) {
+        // Canvas size is fixed by attributes, just call engine resize
+        if (typeof mascotRef.current.handleResize === 'function') {
+          mascotRef.current.handleResize()
+        }
       }
     }
 
