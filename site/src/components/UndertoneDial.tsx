@@ -4,11 +4,11 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 
 interface UndertoneDialProps {
   currentUndertone: string
-  onUndertoneChange: (undertone: string) => void
+  onUndertoneChange: (undertone: string | null) => void
 }
 
 const UNDERTONES = [
-  { name: 'none', label: 'CLEAR', saturation: 0, angle: 0 },
+  { name: 'clear', label: 'CLEAR', saturation: 0, angle: 0 },
   { name: 'nervous', label: 'NERVOUS', saturation: 15, angle: 60 },
   { name: 'confident', label: 'CONFIDENT', saturation: 30, angle: 120 },
   { name: 'tired', label: 'TIRED', saturation: -20, angle: 180 },
@@ -55,7 +55,7 @@ export default function UndertoneDial({ currentUndertone, onUndertoneChange }: U
     })
 
     setRotation(angle)
-    onUndertoneChange(closestUndertone.name)
+    onUndertoneChange(closestUndertone.name === 'clear' ? null : closestUndertone.name)
   }
 
   const handleMouseUp = useCallback(() => {
@@ -94,7 +94,7 @@ export default function UndertoneDial({ currentUndertone, onUndertoneChange }: U
     })
     
     setRotation(closestUndertone.angle)
-    onUndertoneChange(closestUndertone.name)
+    onUndertoneChange(closestUndertone.name === 'clear' ? null : closestUndertone.name)
   }, [onUndertoneChange])
 
   return (

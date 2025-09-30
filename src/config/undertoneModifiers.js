@@ -74,6 +74,15 @@ export const UNDERTONE_MODIFIERS = {
         regularity: 1.0
     },
     
+    // Clear undertone - no modification
+    clear: {
+        speed: 1.0,
+        amplitude: 1.0,
+        intensity: 1.0,
+        smoothness: 1.0,
+        regularity: 1.0
+    },
+    
     nervous: {
         speed: 1.2,        // 20% faster
         amplitude: 0.9,    // 10% smaller (contained)
@@ -131,8 +140,8 @@ export const UNDERTONE_MODIFIERS = {
  * @returns {Object} Modifier object with default values if undertone not found
  */
 export function getUndertoneModifier(undertone) {
-    if (!undertone || undertone === '') {
-        return UNDERTONE_MODIFIERS.none;
+    if (!undertone || undertone === '' || undertone === 'clear') {
+        return UNDERTONE_MODIFIERS.clear;
     }
-    return UNDERTONE_MODIFIERS[undertone] || UNDERTONE_MODIFIERS.none;
+    return UNDERTONE_MODIFIERS[undertone] || UNDERTONE_MODIFIERS.clear;
 }

@@ -10,7 +10,7 @@ import MessageHUD from '@/components/MessageHUD'
 
 export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentUndertone, setCurrentUndertone] = useState('none')
+  const [currentUndertone, setCurrentUndertone] = useState('clear')
   const [mascot, setMascot] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
 
@@ -61,10 +61,25 @@ export default function Home() {
 
   const handleMascotReady = useCallback((mascotInstance: any) => {
     setMascot(mascotInstance)
+    
+    // Fire hula and sparkle gestures on page load
+    setTimeout(() => {
+      try {
+        // Trigger hula gesture
+        mascotInstance.express('hula')
+        
+        // Trigger sparkle gesture
+        mascotInstance.express('sparkle')
+        
+        console.log('✨ Hula and sparkle gestures triggered on page load')
+      } catch (error) {
+        console.error('❌ Error triggering page load effects:', error)
+      }
+    }, 1000) // Delay to ensure mascot is fully ready
   }, [])
 
-  const handleUndertoneChange = useCallback((undertone: string) => {
-    setCurrentUndertone(undertone)
+  const handleUndertoneChange = useCallback((undertone: string | null) => {
+    setCurrentUndertone(undertone || 'clear')
   }, [])
 
   return (

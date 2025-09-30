@@ -191,8 +191,9 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
 
   // Update undertone when it changes
   useEffect(() => {
-    if (mascotRef.current && currentUndertone) {
-      mascotRef.current.updateUndertone(currentUndertone)
+    if (mascotRef.current) {
+      const undertoneToPass = currentUndertone === 'clear' ? null : currentUndertone
+      mascotRef.current.updateUndertone(undertoneToPass)
     }
     resetFadeTimer() // Reset fade timer when undertone changes
   }, [currentUndertone, resetFadeTimer])
