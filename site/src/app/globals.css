@@ -437,8 +437,8 @@ body {
 
 /* Theme toggle - dynamic scaling with 1:1 aspect ratio */
 .theme-toggle-button {
-  width: calc(2/3 * min(8vh, max(5vh, 4vh + 0.5vw)));
-  height: calc(2/3 * min(8vh, max(5vh, 4vh + 0.5vw)));
+  width: calc(1/2 * min(8vh, max(5vh, 4vh + 0.5vw)));
+  height: calc(1/2 * min(8vh, max(5vh, 4vh + 0.5vw)));
   aspect-ratio: 1;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -508,7 +508,7 @@ body {
 
 
 /* Header Typography */
-.emotive-logo-svg { height: clamp(28px, 4vh, 42px); width:auto; filter: invert(1) brightness(1) contrast(1.1); drop-shadow: 0 0 8px rgba(255,107,53,.3); }
+.emotive-logo-svg { height: clamp(28px, 4vh, 42px); width:auto; filter: none; }
 
 /* Global utilities (visuals only) */
 /* Focus visible */
@@ -1927,6 +1927,7 @@ h2.section-header {
     grid-template-areas: 
       'canvas'
       'gesture-menus';
+    z-index: auto !important;
   }
   
   .game-canvas-area {
@@ -1934,6 +1935,7 @@ h2.section-header {
     width: min(100vw, calc(100vh - 8vh - 5vh - 25vh));
     height: min(100vw, calc(100vh - 8vh - 5vh - 25vh));
     aspect-ratio: 1;
+    z-index: auto !important;
   }
   
   .gesture-menus-wrapper {
@@ -1942,8 +1944,7 @@ h2.section-header {
     grid-template-columns: 1fr 1fr;
     grid-template-areas: 'sidebar controls';
     gap: 1rem;
-    padding: 1rem;
-    height: 25vh;
+    padding: 0 1rem 1rem 1rem;
     min-height: 200px;
   }
   
@@ -1982,6 +1983,68 @@ h2.section-header {
   .status-text.emotion,
   .status-text.stability {
     top: 10% !important;
+  }
+  
+  /* Reduce header height and content size in portrait */
+  .emotive-container {
+    grid-template-rows: 5vh 1fr 5vh !important;
+  }
+  
+  .emotive-header {
+    height: 5vh !important;
+    z-index: 100000 !important;
+    position: relative !important;
+  }
+  
+  .emotive-logo-svg {
+    height: 3.5vh !important;
+    width: auto !important;
+    filter: none !important;
+  }
+  
+  .header-system-controls .sci-fi-btn,
+  .user-status .theme-toggle-button {
+    height: 3.5vh !important;
+    width: 3.5vh !important;
+  }
+  
+  .header-system-controls .sci-fi-btn img,
+  .user-status img {
+    height: 2.5vh !important;
+    width: 2.5vh !important;
+  }
+  
+  /* Center messages in game canvas area in portrait */
+  .message-hud {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 1000 !important;
+  }
+  
+  
+  /* Override canvas stacking context in portrait */
+  #emotive-canvas {
+    z-index: auto !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+  
+  /* Override canvas container stacking context in portrait */
+  .canvas-container {
+    position: static !important;
+    z-index: auto !important;
+  }
+  
+  .game-canvas-area {
+    position: static !important;
+    z-index: auto !important;
+  }
+  
+  /* Reduce space between buttons within the three-dot menu in portrait */
+  .expanded-menu {
+    gap: 0 !important;
   }
 }
 
