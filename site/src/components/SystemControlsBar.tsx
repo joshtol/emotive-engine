@@ -9,9 +9,10 @@ interface SystemControlsBarProps {
   onAudioLoad?: (audioElement: HTMLAudioElement) => void
   onPlayStateChange?: (isPlaying: boolean) => void
   onMessage?: (type: string, content: string, duration?: number) => void
+  flashMusicButton?: boolean
 }
 
-export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, onPlayStateChange, onMessage }: SystemControlsBarProps) {
+export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, onPlayStateChange, onMessage, flashMusicButton }: SystemControlsBarProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<string | null>(null)
@@ -380,6 +381,14 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     }
   }, [mascot, onPlayStateChange, connectAudioToMascot, disconnectAudioFromMascot, audioRef.current])
 
+  // Auto-expand menu when music button should flash
+  useEffect(() => {
+    if (flashMusicButton) {
+      console.log('🎵 Flash music button triggered, expanding menu')
+      setIsMenuExpanded(true)
+    }
+  }, [flashMusicButton])
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -439,7 +448,7 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
                 (icon === 'eye' && !isBlinkingEnabled) || 
                 (icon === 'eyes' && isGazeTrackingEnabled) 
                   ? 'active' : ''
-              }`}
+              } ${icon === 'music' && flashMusicButton ? 'flash' : ''}`}
               onClick={() => handleButtonClick(icon)}
               disabled={isLoading}
               title={

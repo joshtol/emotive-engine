@@ -13,6 +13,8 @@ export default function Home() {
   const [currentUndertone, setCurrentUndertone] = useState('clear')
   const [mascot, setMascot] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
+  const [tutorialStarted, setTutorialStarted] = useState(false)
+  const [flashMusicButton, setFlashMusicButton] = useState(false)
 
   const addMessage = useCallback((type: string, content: string, duration = 3000) => {
     const id = Date.now().toString()
@@ -61,26 +63,48 @@ export default function Home() {
 
   const handleMascotReady = useCallback((mascotInstance: any) => {
     setMascot(mascotInstance)
-    
-    // Fire hula and sparkle gestures on page load
-    setTimeout(() => {
-      try {
-        // Trigger hula gesture
-        mascotInstance.express('hula')
-        
-        // Trigger sparkle gesture
-        mascotInstance.express('sparkle')
-        
-        console.log('✨ Hula and sparkle gestures triggered on page load')
-      } catch (error) {
-        console.error('❌ Error triggering page load effects:', error)
-      }
-    }, 1000) // Delay to ensure mascot is fully ready
   }, [])
 
   const handleUndertoneChange = useCallback((undertone: string | null) => {
     setCurrentUndertone(undertone || 'clear')
   }, [])
+
+  // Tutorial effect - runs once when mascot is ready
+  useEffect(() => {
+    if (mascot && !tutorialStarted) {
+      setTutorialStarted(true)
+      
+      setTimeout(() => {
+        try {
+          // Trigger hula and sparkle gestures
+          mascot.express('hula')
+          mascot.express('sparkle')
+          
+          // Start tutorial messages
+          addMessage('info', 'Welcome to the Emotive Engine! 🎭', 4000)
+          
+          setTimeout(() => {
+            addMessage('info', 'Try the emotion buttons and gesture controls!', 4000)
+          }, 2000)
+          
+          setTimeout(() => {
+            addMessage('info', '🎵 Check out the music demos in the system bar!', 4000)
+            // Flash the music button
+            console.log('🎵 Setting flashMusicButton to true')
+            setFlashMusicButton(true)
+            setTimeout(() => {
+              console.log('🎵 Setting flashMusicButton to false')
+              setFlashMusicButton(false)
+            }, 3000)
+          }, 4000)
+          
+          console.log('✨ Tutorial sequence started')
+        } catch (error) {
+          console.error('❌ Error starting tutorial:', error)
+        }
+      }, 1000) // Delay to ensure mascot is fully ready
+    }
+  }, [mascot, tutorialStarted, addMessage])
 
   return (
     <div className="emotive-container">
@@ -95,6 +119,7 @@ export default function Home() {
           console.log('Play state changed:', isPlaying)
         }}
         onMessage={addMessage}
+        flashMusicButton={flashMusicButton}
       />
       <div className="emotive-main">
         <div className="gesture-menus-wrapper">

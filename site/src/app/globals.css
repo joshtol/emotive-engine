@@ -422,6 +422,12 @@ body {
   height: 7.2vh;
   object-fit: contain;
 }
+
+/* Flash animation for tutorial - uses hover effect */
+.expanded-menu .sci-fi-btn.flash {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.1) !important;
+}
 .emotive-logo { 
   position: absolute;
   left: 20%;

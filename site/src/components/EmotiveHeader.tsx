@@ -9,9 +9,10 @@ interface EmotiveHeaderProps {
   onAudioLoad?: (audioElement: HTMLAudioElement) => void
   onPlayStateChange?: (isPlaying: boolean) => void
   onMessage?: (type: string, content: string, duration?: number) => void
+  flashMusicButton?: boolean
 }
 
-export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPlayStateChange, onMessage }: EmotiveHeaderProps) {
+export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPlayStateChange, onMessage, flashMusicButton }: EmotiveHeaderProps) {
   return (
     <div className="emotive-header">
       <div className="emotive-logo">
@@ -26,6 +27,7 @@ export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPla
           onAudioLoad={onAudioLoad}
           onPlayStateChange={onPlayStateChange}
           onMessage={onMessage}
+          flashMusicButton={flashMusicButton}
         />
       </div>
       
