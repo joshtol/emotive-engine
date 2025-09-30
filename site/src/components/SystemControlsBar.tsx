@@ -27,14 +27,12 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
 
   // Toggle menu with animation
   const toggleMenu = useCallback(() => {
-    console.log('🎛️ Toggling menu:', !isMenuExpanded)
     setIsMenuExpanded(!isMenuExpanded)
   }, [isMenuExpanded])
 
   // Toggle mascot blinking
   const toggleBlinking = useCallback(() => {
     if (!mascot) {
-      console.log('⚠️ No mascot available for blinking toggle')
       onMessage?.('warning', 'Mascot not ready', 3000)
       return
     }
@@ -45,14 +43,11 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     try {
       if (mascot.renderer && mascot.renderer.setBlinkingEnabled) {
         mascot.renderer.setBlinkingEnabled(newBlinkingState)
-        console.log(`👁️ Blinking ${newBlinkingState ? 'enabled' : 'disabled'}`)
         onMessage?.('info', `Blinking ${newBlinkingState ? 'enabled' : 'disabled'}`, 2000)
       } else {
-        console.log('⚠️ Mascot renderer does not support blinking control')
         onMessage?.('warning', 'Blinking control not available', 3000)
       }
     } catch (error) {
-      console.error('❌ Error toggling blinking:', error)
       onMessage?.('error', 'Failed to toggle blinking', 4000)
     }
   }, [mascot, isBlinkingEnabled, onMessage])
@@ -60,7 +55,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
   // Toggle gaze tracking
   const toggleGazeTracking = useCallback(() => {
     if (!mascot) {
-      console.log('⚠️ No mascot available for gaze tracking toggle')
       onMessage?.('warning', 'Mascot not ready', 3000)
       return
     }
@@ -71,14 +65,11 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     try {
       if (mascot.setGazeTracking) {
         mascot.setGazeTracking(newGazeState)
-        console.log(`👀 Gaze tracking ${newGazeState ? 'enabled' : 'disabled'}`)
         onMessage?.('info', `Gaze tracking ${newGazeState ? 'enabled' : 'disabled'}`, 2000)
       } else {
-        console.log('⚠️ Mascot does not support gaze tracking control')
         onMessage?.('warning', 'Gaze tracking not available', 3000)
       }
     } catch (error) {
-      console.error('❌ Error toggling gaze tracking:', error)
       onMessage?.('error', 'Failed to toggle gaze tracking', 4000)
     }
   }, [mascot, isGazeTrackingEnabled, onMessage])
@@ -106,7 +97,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
   // Random selection function
   const triggerRandomCombo = useCallback(() => {
     if (!mascot) {
-      console.log('⚠️ No mascot available for random combo')
       return
     }
     
@@ -116,16 +106,12 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
       const randomGesture = availableGestures[Math.floor(Math.random() * availableGestures.length)]
       const randomShape = availableShapes[Math.floor(Math.random() * availableShapes.length)]
       
-      console.log(`🎲 Random combo: ${randomEmotion} + ${randomGesture} + ${randomShape}`)
-      
       // Apply the random selections
       mascot.setEmotion(randomEmotion)
       mascot.express(randomGesture)
       mascot.morphTo(randomShape)
-      
-      console.log('✨ Random combo applied successfully!')
     } catch (error) {
-      console.error('❌ Error applying random combo:', error)
+      // Random combo failed
     }
   }, [mascot])
 
@@ -133,15 +119,7 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
   const connectAudioToMascot = useCallback(async (audioElement: HTMLAudioElement) => {
     if (mascot && audioElement) {
       try {
-        console.log('🎵 Attempting to connect audio to mascot...', { 
-          mascot: !!mascot, 
-          audioElement: !!audioElement,
-          hasConnectAudio: typeof mascot.connectAudio === 'function',
-          mascotMethods: Object.getOwnPropertyNames(mascot).filter(name => typeof mascot[name] === 'function')
-        })
-        
         if (typeof mascot.connectAudio !== 'function') {
-          console.error('❌ mascot.connectAudio is not a function!')
           return
         }
         
@@ -149,18 +127,14 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
         if (mascot.audioHandler && mascot.audioHandler.mascot && mascot.audioHandler.mascot.audioAnalyzer) {
           const analyzer = mascot.audioHandler.mascot.audioAnalyzer
           if (analyzer.audioContext && analyzer.audioContext.state === 'suspended') {
-            console.log('🎵 Resuming suspended AudioContext...')
             await analyzer.resume()
           }
         }
         
         await mascot.connectAudio(audioElement)
-        console.log('✅ Audio connected successfully!')
       } catch (error) {
-        console.error('❌ Failed to connect audio to mascot:', error)
+        // Audio connection failed
       }
-    } else {
-      console.log('⚠️ Cannot connect audio:', { mascot: !!mascot, audioElement: !!audioElement })
     }
   }, [mascot])
 
@@ -177,7 +151,7 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
           mascot.morphTo(shapeToReset)
         }
       } catch (error) {
-        console.error('❌ Failed to disconnect audio from mascot:', error)
+        // Audio disconnection failed
       }
     }
   }, [mascot, currentShape])
@@ -205,7 +179,7 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
         }
       }
     } catch (error) {
-      console.error('❌ Error handling play/pause:', error)
+      // Play/pause failed
     } finally {
       setIsLoading(false)
     }
@@ -242,15 +216,14 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
       // Auto-play the loaded audio
       try {
         await audio.play()
-        console.log('🎵 Auto-playing loaded audio')
         // Immediately update state to show pause button
         setIsPlaying(true)
       } catch (error) {
-        console.log('⚠️ Auto-play failed (user interaction required):', error.message)
+        // Auto-play failed (user interaction required)
       }
       
     } catch (error) {
-      console.error('❌ Error loading audio file:', error)
+      // Audio loading failed
     } finally {
       setIsLoading(false)
     }
@@ -284,15 +257,13 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
       // Auto-play the loaded audio
       try {
         await audio.play()
-        console.log('🎵 Auto-playing selected track:', trackPath)
         // Immediately update state to show pause button
         setIsPlaying(true)
       } catch (error) {
-        console.log('⚠️ Auto-play failed (user interaction required):', error.message)
+        // Auto-play failed (user interaction required)
       }
       
     } catch (error) {
-      console.error('❌ Error loading track:', error)
       onMessage?.('error', 'Failed to load track', 3000)
     } finally {
       setIsLoading(false)
@@ -328,13 +299,9 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     if (!audio) return
 
     const handlePlay = () => {
-      console.log('🎵 Audio play event triggered')
       setIsPlaying(true)
       if (mascot) {
-        console.log('🎵 Mascot available, connecting audio...')
         connectAudioToMascot(audio)
-      } else {
-        console.log('⚠️ No mascot available for audio connection')
       }
       if (onPlayStateChange) {
         onPlayStateChange(true)
@@ -342,7 +309,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     }
 
     const handlePause = () => {
-      console.log('🎵 Audio pause event triggered')
       setIsPlaying(false)
       if (mascot) {
         disconnectAudioFromMascot()
@@ -353,7 +319,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
     }
 
     const handleEnded = () => {
-      console.log('🎵 Audio ended event triggered')
       setIsPlaying(false)
       setCurrentAudio(null) // Hide play button when audio ends
       if (mascot) {
@@ -384,7 +349,6 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
   // Auto-expand menu when music button should flash
   useEffect(() => {
     if (flashMusicButton) {
-      console.log('🎵 Flash music button triggered, expanding menu')
       setIsMenuExpanded(true)
     }
   }, [flashMusicButton])

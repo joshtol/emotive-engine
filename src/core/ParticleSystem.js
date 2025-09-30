@@ -237,20 +237,7 @@ class ParticleSystem {
         // Store emotion for particle initialization
         this.currentEmotion = emotion;
         
-        // Debug logging for excited emotion
-        if (emotion === 'excited' && !this._excitedDebugLogged) {
-            console.warn('[ParticleSystem] Excited emotion spawn:', {
-                behavior,
-                emotion,
-                particleRate,
-                minParticles,
-                maxParticles,
-                emotionColors,
-                currentParticleCount: this.particles.length
-            });
-            this._excitedDebugLogged = true;
-            setTimeout(() => { this._excitedDebugLogged = false; }, 5000); // Reset after 5 seconds
-        }
+        // Debug logging removed for production
         
         // Store base colors and undertone separately to ensure consistent application
         this.baseEmotionColors = emotionColors;

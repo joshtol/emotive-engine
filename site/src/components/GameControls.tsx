@@ -21,7 +21,7 @@ export default function GameControls({ onGesture, activeGestures }: GameControls
               key={gesture} 
               onClick={() => onGesture(gesture.toLowerCase())} 
               className={`sci-fi-btn gesture-btn ${
-                activeGestures.has(gesture + '_COMBO') ? 'active-gesture-combo' : 
+                activeGestures.has(`${gesture}_COMBO`) ? 'active-gesture-combo' : 
                 activeGestures.has(gesture) ? 'active-gesture' : ''
               }`}
             >
@@ -41,7 +41,7 @@ export default function GameControls({ onGesture, activeGestures }: GameControls
               key={gesture} 
               onClick={() => onGesture(gesture.toLowerCase())} 
               className={`sci-fi-btn gesture-btn ${
-                activeGestures.has(gesture + '_COMBO') ? 'active-gesture-combo' : 
+                activeGestures.has(`${gesture}_COMBO`) ? 'active-gesture-combo' : 
                 activeGestures.has(gesture) ? 'active-gesture' : ''
               }`}
             >
@@ -60,7 +60,7 @@ export default function GameControls({ onGesture, activeGestures }: GameControls
               key={effect} 
               onClick={() => onGesture(effect.toLowerCase())} 
               className={`sci-fi-btn gesture-btn ${
-                activeGestures.has(effect + '_COMBO') ? 'active-gesture-combo' : 
+                activeGestures.has(`${effect}_COMBO`) ? 'active-gesture-combo' : 
                 activeGestures.has(effect) ? 'active-gesture' : ''
               }`}
             >

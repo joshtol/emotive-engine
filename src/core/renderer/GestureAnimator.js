@@ -86,7 +86,7 @@ export class GestureAnimator {
             };
             const intensity = intensities[gestureName] || 0.8;
             this.renderer.specialEffects.triggerChromaticAberration(intensity);
-            console.warn(`[Chromatic Aberration] Triggered for ${gestureName} with intensity ${intensity}`);
+            // Chromatic aberration logging removed for production
         }
         
         // Get composed parameters based on current emotion and undertone

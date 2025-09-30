@@ -352,8 +352,7 @@ export class SpecialEffects {
                             document.querySelector('canvas') || 
                             this.canvas;
         
-        console.warn('[Chromatic] Visible canvas element:', visibleCanvas);
-        console.warn('[Chromatic] Canvas ID:', visibleCanvas?.id);
+        // Chromatic aberration logging removed for production
         
         if (visibleCanvas) {
             // Remove any existing animation
@@ -506,7 +505,7 @@ export class SpecialEffects {
                 this.chromaticAberration.intensity = 0;
                 this.chromaticAberration.active = false;
                 this.chromaticAberration.targetIntensity = 0;
-                console.warn('[CSS Chromatic] Effect completed');
+                // CSS Chromatic effect completion logging removed for production
             }
         }
     }

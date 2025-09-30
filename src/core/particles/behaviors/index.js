@@ -82,10 +82,7 @@ export const BEHAVIOR_REGISTRY = {};
 // Build the registry from the behaviors array - SYNCHRONOUSLY
 BEHAVIORS.forEach(behavior => {
     BEHAVIOR_REGISTRY[behavior.name] = behavior;
-    // Debug logging for spaz behavior
-    if (behavior.name === 'spaz') {
-        console.log('🎆 Spaz behavior registered:', behavior);
-    }
+    // Debug logging removed for production
 });
 
 /**
@@ -115,10 +112,7 @@ export function getBehavior(name) {
 export function initializeBehavior(particle, behaviorName) {
     const behavior = getBehavior(behaviorName);
     if (behavior && behavior.initialize) {
-        // Debug logging for spaz behavior
-        if (behaviorName === 'spaz') {
-            console.log('🎆 Initializing spaz behavior:', behavior);
-        }
+        // Debug logging removed for production
         behavior.initialize(particle);
         return true;
     }

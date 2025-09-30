@@ -76,7 +76,7 @@ class RhythmIntegration {
 
                 // Trigger the rhythm sync visualizer to show BPM
                 if (window.rhythmSyncVisualizer && !window.rhythmSyncVisualizer.state.active) {
-                    console.log('RhythmIntegration: Auto-starting rhythm sync visualizer with BPM:', newBPM);
+                    // Rhythm integration logging removed for production
                     window.rhythmSyncVisualizer.start();
                 }
 
@@ -343,7 +343,7 @@ class RhythmIntegration {
         // Update the locked BPM if manually changed
         if (this.bpmLocked) {
             this.lockedBPM = bpm;
-            console.log('🔒 BPM manually updated to:', bpm);
+            // BPM locking logging removed for production
         }
     }
     
@@ -351,7 +351,7 @@ class RhythmIntegration {
      * Resample BPM - unlocks detection for one update
      */
     resampleBPM() {
-        console.log('🔓 Unlocking BPM for resampling');
+        // BPM resampling logging removed for production
         this.bpmLocked = false;
         this.lockedBPM = null;
     }

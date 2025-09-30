@@ -19,7 +19,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
   const [showStatusIndicators, setShowStatusIndicators] = useState(true)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
-  const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   
   const getUndertoneLabel = (undertone: string) => {
     const undertoneMap: { [key: string]: string } = {
@@ -166,7 +166,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         
         // Debug: Engine initialization complete
       } catch (error) {
-        console.error('Failed to initialize Emotive Engine:', error)
+        // Engine initialization failed
       }
     }
 

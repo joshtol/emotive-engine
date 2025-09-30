@@ -99,7 +99,7 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Error downloading license:', error)
+      // Download failed
     } finally {
       setIsDownloading(false)
     }
@@ -147,12 +147,12 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA
             </div>
 
             <div className="license-section">
-              <h3>2. Definition of "Artist"</h3>
+              <h3>2. Definition of &quot;Artist&quot;</h3>
               <p>For the purposes of this license:</p>
               <ul>
                 <li><strong>Artist</strong> means an <strong>individual human creator</strong> using the Emotive Engine in their own capacity, <strong>not acting on behalf of, or under contract with, a company, brand, institution, or organization</strong></li>
                 <li>Work created by an Artist must be <strong>non-commercial in nature</strong>, including personal art, experimental media, cultural installations, or independent social content</li>
-                <li>If an Artist's work <strong>directly supports a company, brand, or revenue-generating activity</strong>, that use is considered <strong>Commercial Use</strong>, regardless of job title, employment, or self-identification</li>
+                <li>If an Artist&apos;s work <strong>directly supports a company, brand, or revenue-generating activity</strong>, that use is considered <strong>Commercial Use</strong>, regardless of job title, employment, or self-identification</li>
               </ul>
             </div>
 
@@ -172,16 +172,16 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA
 
             <div className="license-section">
               <h3>4. Trademark</h3>
-              <p>The name <strong>"Emotive Engine™"</strong> is claimed as a trademark of the author under common law rights.</p>
+              <p>The name <strong>&quot;Emotive Engine™&quot;</strong> is claimed as a trademark of the author under common law rights.</p>
               <ul>
-                <li>You may use the name "Emotive Engine" in factual references (e.g., "built with Emotive Engine"), but <strong>you may not use the name or any associated branding in promotional, commercial, or derivative works without written permission</strong></li>
-                <li>If and when <strong>"Emotive Engine"</strong> is federally registered as a trademark, all rights and protections of registration will apply retroactively</li>
+                <li>You may use the name &quot;Emotive Engine&quot; in factual references (e.g., &quot;built with Emotive Engine&quot;), but <strong>you may not use the name or any associated branding in promotional, commercial, or derivative works without written permission</strong></li>
+                <li>If and when <strong>&quot;Emotive Engine&quot;</strong> is federally registered as a trademark, all rights and protections of registration will apply retroactively</li>
               </ul>
             </div>
 
             <div className="license-section">
               <h3>5. Warranty & Liability</h3>
-              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.</p>
+              <p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT ANY WARRANTY, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.</p>
               <p>IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM USE OF THE SOFTWARE.</p>
             </div>
 
@@ -211,7 +211,7 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA
             </div>
 
             <div className="license-footer">
-              <p>© 2025 Joshua Tollette. "Emotive Engine™" is a claimed trademark of the author. All rights reserved.</p>
+              <p>© 2025 Joshua Tollette. &quot;Emotive Engine™&quot; is a claimed trademark of the author. All rights reserved.</p>
             </div>
           </div>
         </div>

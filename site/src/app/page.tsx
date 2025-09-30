@@ -50,7 +50,7 @@ export default function Home() {
           mascot.chain(gesture.toLowerCase())
           
           // Highlight the combo button itself
-          setActiveGestures(prev => new Set([...prev, gesture.toUpperCase()]))
+          setActiveGestures(prev => new Set([...Array.from(prev), gesture.toUpperCase()]))
           setTimeout(() => {
             setActiveGestures(prev => {
               const newSet = new Set(prev)
@@ -88,7 +88,7 @@ export default function Home() {
               // Highlight all gestures simultaneously in BLUE (combo style)
               setTimeout(() => {
                 simultaneousGestures.forEach(gestureName => {
-                  setActiveGestures(prev => new Set([...prev, gestureName.toUpperCase() + '_COMBO']))
+                  setActiveGestures(prev => new Set([...Array.from(prev), `${gestureName.toUpperCase()}_COMBO`]))
                 })
                 
                 // Remove all gestures after 1 second
@@ -96,7 +96,7 @@ export default function Home() {
                   setActiveGestures(prev => {
                     const newSet = new Set(prev)
                     simultaneousGestures.forEach(gestureName => {
-                      newSet.delete(gestureName.toUpperCase() + '_COMBO')
+                      newSet.delete(`${gestureName.toUpperCase()}_COMBO`)
                     })
                     return newSet
                   })
@@ -125,7 +125,7 @@ export default function Home() {
                 // Highlight all gestures in this group simultaneously
                 setTimeout(() => {
                   simultaneousGestures.forEach(gestureName => {
-                    setActiveGestures(prev => new Set([...prev, gestureName.toUpperCase() + suffix]))
+                    setActiveGestures(prev => new Set([...Array.from(prev), `${gestureName.toUpperCase()}${suffix}`]))
                   })
                   
                   // Remove all gestures in this group after 1 second
@@ -133,7 +133,7 @@ export default function Home() {
                     setActiveGestures(prev => {
                       const newSet = new Set(prev)
                       simultaneousGestures.forEach(gestureName => {
-                        newSet.delete(gestureName.toUpperCase() + suffix)
+                        newSet.delete(`${gestureName.toUpperCase()}${suffix}`)
                       })
                       return newSet
                     })
@@ -147,7 +147,7 @@ export default function Home() {
           mascot.express(actualGestureName)
           
           // Highlight the individual gesture
-          setActiveGestures(prev => new Set([...prev, gesture.toUpperCase()]))
+          setActiveGestures(prev => new Set([...Array.from(prev), gesture.toUpperCase()]))
           setTimeout(() => {
             setActiveGestures(prev => {
               const newSet = new Set(prev)
@@ -157,10 +157,10 @@ export default function Home() {
           }, 1000) // Highlight for 1 second
         }
       } catch (error) {
-        console.error(`Failed to trigger gesture ${actualGestureName}:`, error)
+        // Gesture failed to trigger
       }
     } else {
-      console.warn('Mascot not ready, gesture not triggered:', actualGestureName)
+      // Mascot not ready
     }
     
     setIsPlaying(true)
@@ -195,17 +195,12 @@ export default function Home() {
           setTimeout(() => {
             addMessage('info', '🎵 Check out the music demos in the system bar!', 4000)
             // Flash the music button
-            console.log('🎵 Setting flashMusicButton to true')
             setFlashMusicButton(true)
-            setTimeout(() => {
-              console.log('🎵 Setting flashMusicButton to false')
-              setFlashMusicButton(false)
-            }, 3000)
+            setTimeout(() => setFlashMusicButton(false), 3000)
           }, 4000)
           
-          console.log('✨ Tutorial sequence started')
         } catch (error) {
-          console.error('❌ Error starting tutorial:', error)
+          // Tutorial failed to start
         }
       }, 1000) // Delay to ensure mascot is fully ready
     }
@@ -217,11 +212,11 @@ export default function Home() {
       <EmotiveHeader 
         mascot={mascot}
         currentShape="circle"
-        onAudioLoad={(audioElement) => {
-          console.log('Audio loaded:', audioElement)
+        onAudioLoad={(_audioElement) => {
+          // Audio loaded
         }}
-        onPlayStateChange={(isPlaying) => {
-          console.log('Play state changed:', isPlaying)
+        onPlayStateChange={(_isPlaying) => {
+          // Play state changed
         }}
         onMessage={addMessage}
         flashMusicButton={flashMusicButton}

@@ -29,7 +29,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "rollup -c --environment NODE_ENV:production",
+    "build": "rollup -c --environment NODE_ENV:production && node scripts/copy-built-files.js",
     "build:dev": "rollup -c --environment NODE_ENV:development",
     "build:split": "rollup -c rollup.split.config.js --environment NODE_ENV:production",
     "build:demo": "rollup -c rollup.demo.config.js",
@@ -38,7 +38,7 @@
     "serve": "cd site && python -m http.server 5000",
     "local": "node scripts/local-server.js",
     "build:analyze": "rollup -c --environment NODE_ENV:production,ANALYZE:true",
-    "build:all": "npm run build && npm run build:split && npm run build:demo",
+    "copy-files": "node scripts/copy-built-files.js",
     "build:docs": "node scripts/build-docs.js",
     "optimize": "node scripts/optimize-bundle.js",
     "docs": "jsdoc -c jsdoc.json",
