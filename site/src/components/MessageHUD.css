@@ -18,14 +18,14 @@
 
 /* Message Items */
 .message-item {
-  background: var(--message-bg, #1a1a1a);
-  color: var(--message-text, #ffffff);
+  background: rgba(30, 41, 59, 0.3);
+  color: var(--brand-white, #ffffff);
   padding: 12px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -42,7 +42,7 @@
 }
 
 .message-item.show {
-  opacity: 1;
+  opacity: 0.6;
   transform: translateY(0);
 }
 
@@ -88,33 +88,39 @@
 
 /* Message Type Styles */
 .message-info {
-  --message-bg: rgba(59, 130, 246, 0.9);
-  --message-text: #ffffff;
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: var(--brand-white, #ffffff);
 }
 
 .message-error {
-  --message-bg: rgba(239, 68, 68, 0.9);
-  --message-text: #ffffff;
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--brand-white, #ffffff);
 }
 
 .message-success {
-  --message-bg: rgba(16, 185, 129, 0.9);
-  --message-text: #ffffff;
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--brand-white, #ffffff);
 }
 
 .message-warning {
-  --message-bg: rgba(245, 158, 11, 0.9);
-  --message-text: #ffffff;
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--brand-white, #ffffff);
 }
 
 .message-login {
-  --message-bg: rgba(139, 92, 246, 0.9);
-  --message-text: #ffffff;
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: var(--brand-white, #ffffff);
 }
 
 .message-interaction {
-  --message-bg: rgba(107, 114, 128, 0.9);
-  --message-text: #ffffff;
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(148, 163, 184, 0.3);
+  color: var(--brand-white, #ffffff);
 }
 
 /* Auto-dismiss Animation */

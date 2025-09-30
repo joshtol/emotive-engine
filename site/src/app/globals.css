@@ -435,33 +435,43 @@ body {
   filter: invert(1) brightness(1);
 }
 
-/* Theme toggle - dynamic scaling with 1:1 aspect ratio */
-.theme-toggle-button {
-  width: calc(1/2 * min(8vh, max(5vh, 4vh + 0.5vw)));
-  height: calc(1/2 * min(8vh, max(5vh, 4vh + 0.5vw)));
-  aspect-ratio: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.theme-toggle-button:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
 
 .theme-icon {
   width: 60%;
   height: 60%;
   filter: brightness(1.1) contrast(1.1);
+}
+
+/* Theme toggle - smaller button and SVG */
+.theme-toggle-button {
+  width: 2.5vh;
+  height: 2.5vh;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(55, 65, 81, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.theme-toggle-button:hover {
+  background: rgba(55, 65, 81, 0.8);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-button:active {
+  transform: translateY(0);
+  background: rgba(55, 65, 81, 0.9);
+}
+
+.theme-toggle-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* Auth section - Screenshot Style */
@@ -1950,10 +1960,16 @@ h2.section-header {
   
   .gesture-menus-wrapper .emotive-sidebar {
     grid-area: sidebar;
+    max-height: 40vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   
   .gesture-menus-wrapper .emotive-controls {
     grid-area: controls;
+    max-height: 40vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   
   /* Increase state columns size in portrait */
@@ -2002,11 +2018,11 @@ h2.section-header {
     filter: none !important;
   }
   
-  .header-system-controls .sci-fi-btn,
-  .user-status .theme-toggle-button {
+  .header-system-controls .sci-fi-btn {
     height: 3.5vh !important;
     width: 3.5vh !important;
   }
+  
   
   .header-system-controls .sci-fi-btn img,
   .user-status img {
@@ -2014,12 +2030,12 @@ h2.section-header {
     width: 2.5vh !important;
   }
   
-  /* Center messages in game canvas area in portrait */
+  /* Position messages above mascot in portrait */
   .message-hud {
     position: absolute !important;
-    top: 50% !important;
+    top: 20% !important;
     left: 50% !important;
-    transform: translate(-50%, -50%) !important;
+    transform: translateX(-50%) !important;
     z-index: 1000 !important;
   }
   

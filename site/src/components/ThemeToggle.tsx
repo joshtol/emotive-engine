@@ -33,8 +33,8 @@ export default function ThemeToggle() {
   const iconSrc = `/assets/themes/${theme}.svg`
 
   return (
-    <button onClick={onClick} aria-label="Toggle theme" style={{ display:'flex', alignItems:'center', justifyContent:'center', width:'36px', height:'36px', borderRadius:'9999px', background:'rgba(55,65,81,.6)', border:'1px solid rgba(255,255,255,.08)' }}>
-      <img src={iconSrc} width={18} height={18} alt={theme} />
+    <button onClick={onClick} aria-label="Toggle theme" className="theme-toggle-button">
+      <img src={iconSrc} alt={theme} />
     </button>
   )
 }
