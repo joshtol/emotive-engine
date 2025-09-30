@@ -277,6 +277,14 @@ body {
   gap: 1rem;
 }
 
+/* Make SVG icons fill header buttons with minimal padding */
+.header-system-controls .sci-fi-btn img,
+.user-status img {
+  height: 90%;
+  width: 90%;
+  object-fit: contain;
+}
+
 .user-status {
   position: absolute;
   right: calc(20% - 4rem);
@@ -379,13 +387,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 1.5vh;
-  background: rgba(255, 255, 255, 0.15) !important;
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+  background: transparent !important;
+  border: none !important;
   transition: all 0.18s ease;
   box-sizing: border-box;
   will-change: transform;
@@ -396,11 +399,8 @@ body {
 }
 
 .expanded-menu .sci-fi-btn:hover {
-  background: var(--button-bg-hover);
-  background-image: var(--gradient-secondary);
-  box-shadow: inset 0 0 var(--vp-8px) rgba(255,255,255,0.08), 0 0 var(--vp-15px) var(--glow-subtle); 
-  transform: translateY(var(--vp-1px)); 
-  border-color: var(--border-primary); 
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.1);
 }
 
 .expanded-menu .sci-fi-btn:active {
@@ -408,17 +408,19 @@ body {
 }
 
 .expanded-menu .sci-fi-btn.active {
-  background: var(--button-bg-active);
-  background-image: var(--gradient-primary);
-  box-shadow: 0 0 var(--vp-25px) var(--glow-intense), inset 0 0 var(--vp-12px) var(--button-bg-active); 
-  border-color: var(--button-primary); 
+  background: rgba(255, 255, 255, 0.2) !important;
 }
 
 .expanded-menu .sci-fi-btn.active:hover {
-  background: var(--button-bg-active);
-  background-image: var(--gradient-secondary);
-  box-shadow: 0 0 var(--vp-25px) var(--glow-intense), inset 0 0 var(--vp-12px) var(--button-bg-active); 
-  border-color: var(--button-primary); 
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.1);
+}
+
+/* Make SVG icons in expanded menu 90% of header height */
+.expanded-menu .sci-fi-btn img {
+  width: 7.2vh;
+  height: 7.2vh;
+  object-fit: contain;
 }
 .emotive-logo { 
   position: absolute;
@@ -1929,6 +1931,78 @@ h2.section-header {
   display: contents;
 }
 
+/* Make gesture menus scrollable in landscape when needed */
+.emotive-sidebar,
+.emotive-controls {
+  max-height: calc(100vh - 8vh - 5vh); /* Account for header and footer */
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Chevron animation keyframes */
+@keyframes fadeInPulseOut {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  40% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.2);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+  }
+}
+
+/* Chevron indicators for landscape mode */
+.emotive-sidebar::after {
+  content: '▼';
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--brand-white, #ffffff);
+  font-size: 24px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 10;
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: fadeInPulseOut 4s ease forwards;
+}
+
+.emotive-controls::after {
+  content: '▼';
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--brand-white, #ffffff);
+  font-size: 24px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 10;
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: fadeInPulseOut 4s ease forwards;
+}
+
 /* Portrait orientation layout */
 @media (orientation: portrait) {
   .emotive-main {
@@ -1963,6 +2037,15 @@ h2.section-header {
     max-height: 40vh;
     overflow-y: auto;
     overflow-x: hidden;
+    position: relative;
+  }
+  
+  .gesture-menus-wrapper .emotive-sidebar {
+    grid-area: sidebar;
+    max-height: 40vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
   }
   
   .gesture-menus-wrapper .emotive-controls {
@@ -1970,7 +2053,9 @@ h2.section-header {
     max-height: 40vh;
     overflow-y: auto;
     overflow-x: hidden;
+    position: relative;
   }
+  
   
   /* Increase state columns size in portrait */
   .state-icon {
@@ -2026,8 +2111,8 @@ h2.section-header {
   
   .header-system-controls .sci-fi-btn img,
   .user-status img {
-    height: 2.5vh !important;
-    width: 2.5vh !important;
+    height: 3vh !important;
+    width: 3vh !important;
   }
   
   /* Position messages above mascot in portrait */
