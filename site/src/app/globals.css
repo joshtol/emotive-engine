@@ -354,10 +354,17 @@ body {
   flex-direction: row;
   align-items: center;
   gap: 0.75rem;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.95));
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border-radius: 25px;
+  background: linear-gradient(135deg, 
+    transparent 0%, 
+    rgba(221, 74, 154, 0.15) 15%, 
+    rgba(64, 144, 206, 0.12) 25%, 
+    rgba(132, 207, 197, 0.08) 50%, 
+    rgba(221, 74, 154, 0.10) 75%, 
+    rgba(64, 144, 206, 0.15) 85%, 
+    transparent 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 0;
   padding: 0.75rem 1rem 0.75rem 0.75rem;
   margin-right: 0.75rem;
   opacity: 0;
@@ -366,8 +373,7 @@ body {
   pointer-events: none;
   z-index: 5;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 

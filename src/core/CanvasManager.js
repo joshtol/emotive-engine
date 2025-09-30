@@ -57,6 +57,9 @@ class CanvasManager {
         this.centerX = 0;
         this.centerY = 0;
         
+        // Render size configuration
+        this.renderSize = null;  // { width: number, height: number } - if set, use exact dimensions
+        
         // Resize callbacks
         this.resizeCallbacks = [];
         
@@ -72,10 +75,19 @@ class CanvasManager {
      * Handles canvas resizing with proper high-DPI support
      */
     resize() {
-        // Check if canvas has explicit width/height attributes
-        const hasExplicitSize = this.canvas.hasAttribute('width') && this.canvas.hasAttribute('height');
-        
-        if (hasExplicitSize) {
+        // Check if render size is explicitly set
+        if (this.renderSize && this.renderSize.width && this.renderSize.height) {
+            // Use exact render dimensions
+            this.width = this.renderSize.width;
+            this.height = this.renderSize.height;
+            
+            // Set actual canvas buffer size (no DPR scaling for fixed render size)
+            this.canvas.width = this.width;
+            this.canvas.height = this.height;
+            
+            // No DPR scaling needed for fixed render size
+            // The browser will handle the scaling automatically
+        } else if (this.canvas.hasAttribute('width') && this.canvas.hasAttribute('height')) {
             // Use the explicit canvas dimensions from attributes
             // This prevents the canvas from changing size when DevTools opens
             const attrWidth = parseInt(this.canvas.getAttribute('width'), 10);
@@ -141,8 +153,19 @@ class CanvasManager {
     handleResize() {
         clearTimeout(this.resizeTimeout);
         this.resizeTimeout = setTimeout(() => {
-            this.resize();
+            // Only resize if render size is not explicitly set
+            if (!this.renderSize || !this.renderSize.width || !this.renderSize.height) {
+                this.resize();
+            }
         }, 100);
+    }
+
+    /**
+     * Sets the render size for the canvas
+     */
+    setRenderSize(width, height) {
+        this.renderSize = { width, height };
+        this.resize(); // Apply the new size immediately
     }
 
     /**

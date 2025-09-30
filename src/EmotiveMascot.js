@@ -140,6 +140,7 @@ class EmotiveMascot {
             renderingStyle: 'classic',  // 'classic' (Emotive) or 'advanced' (3-layer)
             enableGazeTracking: true,
             enableIdleBehaviors: true,
+            renderSize: null,  // { width: number, height: number } - if set, engine renders at this exact size
             classicConfig: {
                 coreColor: '#FFFFFF',
                 coreSizeDivisor: 12,      // Core radius = canvas_size / 12 (original Emotive)
@@ -162,6 +163,11 @@ class EmotiveMascot {
 
         // Initialize core systems with browser compatibility
         this.canvasManager = new CanvasManager(this.canvas);
+        
+        // Set render size if specified in config
+        if (this.config.renderSize && this.config.renderSize.width && this.config.renderSize.height) {
+            this.canvasManager.setRenderSize(this.config.renderSize.width, this.config.renderSize.height);
+        }
         
         // Set up canvas context recovery
         this.contextRecovery = new CanvasContextRecovery(this.canvas);
