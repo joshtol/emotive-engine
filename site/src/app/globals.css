@@ -708,7 +708,7 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 /* State columns */
-.state-column { position:absolute; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; z-index:5; }
+.state-column { position:absolute; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; z-index:10; }
 .state-column-left { left: 2%; }
 .state-column-right { right: 2%; }
 .state-icon { 
@@ -2162,7 +2162,7 @@ h2.section-header {
     grid-template-areas: 
       'canvas'
       'gesture-menus';
-    z-index: auto !important;
+    z-index: 1 !important;
     min-height: 0;
   }
   
@@ -2189,7 +2189,7 @@ h2.section-header {
     width: min(100vw, calc(100vh - 5vh - 4vh - 25vh));
     height: min(100vw, calc(100vh - 5vh - 4vh - 25vh));
     aspect-ratio: 1;
-    z-index: auto !important;
+    z-index: 2 !important;
   }
   
   .gesture-menus-wrapper {
@@ -2200,6 +2200,7 @@ h2.section-header {
     gap: 1rem;
     padding: 0 1rem 1rem 1rem;
     min-height: 200px;
+    z-index: 1;
   }
   
   .gesture-menus-wrapper .emotive-sidebar {
@@ -2208,14 +2209,7 @@ h2.section-header {
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
-  }
-  
-  .gesture-menus-wrapper .emotive-sidebar {
-    grid-area: sidebar;
-    max-height: 40vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    position: relative;
+    z-index: 1;
   }
   
   .gesture-menus-wrapper .emotive-controls {
@@ -2224,6 +2218,7 @@ h2.section-header {
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
+    z-index: 1;
   }
   
   
@@ -2330,13 +2325,13 @@ h2.section-header {
   /* Override canvas container stacking context in portrait */
   .canvas-container {
     position: static !important;
-    z-index: auto !important;
+    z-index: 2 !important;
     overflow: visible !important;
   }
   
   .game-canvas-area {
     position: static !important;
-    z-index: auto !important;
+    z-index: 2 !important;
     overflow: visible !important;
   }
   
