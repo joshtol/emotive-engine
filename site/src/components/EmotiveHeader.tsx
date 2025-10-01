@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import SystemControlsBar from './SystemControlsBar'
 
 interface EmotiveHeaderProps {
@@ -12,10 +14,30 @@ interface EmotiveHeaderProps {
 }
 
 export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPlayStateChange, onMessage, flashMusicButton }: EmotiveHeaderProps) {
+  const pathname = usePathname()
+
   return (
     <div className="emotive-header">
       <div className="emotive-logo">
-        <img src="/assets/emotive-engine-full-BW.svg" alt="Emotive Engine" className="emotive-logo-svg" />
+        <Link href="/">
+          <img src="/assets/emotive-engine-full-BW.svg" alt="Emotive Engine" className="emotive-logo-svg" />
+        </Link>
+      </div>
+      
+      {/* Navigation Links */}
+      <div className="header-navigation">
+        <Link 
+          href="/" 
+          className={`nav-link ${pathname === '/' ? 'active' : ''}`}
+        >
+          Demo
+        </Link>
+        <Link 
+          href="/use-cases" 
+          className={`nav-link ${pathname === '/use-cases' ? 'active' : ''}`}
+        >
+          Use Cases
+        </Link>
       </div>
       
       {/* System Controls Bar in Header */}

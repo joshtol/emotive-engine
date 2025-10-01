@@ -47,6 +47,7 @@ import GazeTracker from './core/GazeTracker.js';
 import IdleBehavior from './core/IdleBehavior.js';
 import { getEmotionVisualParams, getEmotion } from './core/emotions/index.js';
 import { getGesture } from './core/gestures/index.js';
+import PositionController from './utils/PositionController.js';
 import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
@@ -141,6 +142,9 @@ class EmotiveMascot {
             enableGazeTracking: true,
             enableIdleBehaviors: true,
             renderSize: null,  // { width: number, height: number } - if set, engine renders at this exact size
+            offsetX: 0,        // X offset for eccentric positioning
+            offsetY: 0,        // Y offset for eccentric positioning
+            offsetZ: 0,        // Z offset for pseudo-3D scaling
             classicConfig: {
                 coreColor: '#FFFFFF',
                 coreSizeDivisor: 12,      // Core radius = canvas_size / 12 (original Emotive)
@@ -163,6 +167,19 @@ class EmotiveMascot {
 
         // Initialize core systems with browser compatibility
         this.canvasManager = new CanvasManager(this.canvas);
+        
+        // Initialize position controller for eccentric positioning
+        this.positionController = new PositionController({
+            offsetX: this.config.offsetX,
+            offsetY: this.config.offsetY,
+            offsetZ: this.config.offsetZ,
+            onUpdate: (effectiveCenter) => {
+                // Update renderer with new effective center
+                if (this.renderer) {
+                    this.renderer.updateEffectiveCenter(effectiveCenter);
+                }
+            }
+        });
         
         // Set render size if specified in config
         if (this.config.renderSize && this.config.renderSize.width && this.config.renderSize.height) {
@@ -187,10 +204,11 @@ class EmotiveMascot {
         this.stateMachine = new EmotiveStateMachine(this.errorBoundary);
         this.particleSystem = new ParticleSystem(this.config.maxParticles, this.errorBoundary);
         
-        // Always use EmotiveRenderer, pass full config including topOffset
+        // Always use EmotiveRenderer, pass full config including topOffset and position controller
         this.renderer = new EmotiveRenderer(this.canvasManager, {
             ...this.config.classicConfig,
-            topOffset: this.config.topOffset || 0
+            topOffset: this.config.topOffset || 0,
+            positionController: this.positionController
         });
         
         // Initialize shape morphing and audio analysis early
@@ -1805,9 +1823,10 @@ class EmotiveMascot {
             
             this.renderer.setEmotionalState(renderState.emotion, emotionParams, renderState.undertone);
             
-            // Always use center for particle spawning (not gaze-adjusted position)
-            const orbX = this.canvasManager.width / 2;
-            let orbY = this.canvasManager.height / 2 - this.config.topOffset;
+            // Always use effective center for particle spawning (with position offsets applied)
+            const effectiveCenter = this.renderer.getEffectiveCenter();
+            const orbX = effectiveCenter.x;
+            let orbY = effectiveCenter.y - this.config.topOffset;
 
             // Spawn new particles based on emotion at ORB position
             // Get min/max from state machine
@@ -2686,6 +2705,46 @@ class EmotiveMascot {
     }
     
     /**
+     * Set offset values for eccentric positioning
+     * @param {number} x - X offset
+     * @param {number} y - Y offset  
+     * @param {number} z - Z offset (for pseudo-3D scaling)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setOffset(x, y, z = 0) {
+        return this.errorBoundary.wrap(() => {
+            this.positionController.setOffset(x, y, z);
+            return this;
+        }, 'offset-setting', this)();
+    }
+    
+    /**
+     * Get current offset values
+     * @returns {Object} Current offset {x, y, z}
+     */
+    getOffset() {
+        return this.errorBoundary.wrap(() => {
+            return this.positionController.getOffset();
+        }, 'offset-getting', this)();
+    }
+    
+    /**
+     * Animate to new offset values
+     * @param {number} x - Target X offset
+     * @param {number} y - Target Y offset
+     * @param {number} z - Target Z offset
+     * @param {number} duration - Animation duration in ms
+     * @param {string} easing - Easing function name
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    animateOffset(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
+        return this.errorBoundary.wrap(() => {
+            this.positionController.animateOffset(x, y, z, duration, easing);
+            return this;
+        }, 'offset-animation', this)();
+    }
+    
+    /**
      * Get available shapes for morphing
      * @returns {Array} List of available shape names
      */
@@ -2709,6 +2768,11 @@ class EmotiveMascot {
             // Destroy animation controller
             if (this.animationController) {
                 this.animationController.destroy();
+            }
+            
+            // Destroy position controller
+            if (this.positionController) {
+                this.positionController.destroy();
             }
             
             // Clean up all subsystems

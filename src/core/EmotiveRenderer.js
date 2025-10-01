@@ -142,7 +142,8 @@ class EmotiveRenderer {
             renderingStyle: options.renderingStyle || 'classic',
             baseScale: options.baseScale || 1.0,  // Global scale multiplier for entire system
             referenceSize: 400,  // Reference canvas size for scale calculations
-            topOffset: options.topOffset || 0  // Vertical offset to align with layout
+            topOffset: options.topOffset || 0,  // Vertical offset to align with layout
+            positionController: options.positionController || null  // Position controller for eccentric positioning
         };
         
         // Initialize scaleFactor based on current canvas size
@@ -171,6 +172,7 @@ class EmotiveRenderer {
             gazeTrackingEnabled: false,  // Whether to track mouse/touch
             gazeTarget: { x: 0, y: 0 },  // Target position for gaze (-1 to 1)
             zenVortexIntensity: 1.0,  // Adjustable whirlpool intensity for zen
+            effectiveCenter: { x: 0, y: 0, scale: 1.0 },  // Effective center with position offsets
             // Suspicion state
             squintAmount: 0,         // 0-1, how much the eye is narrowed
             targetSquintAmount: 0,   // Target squint amount to animate to
@@ -614,6 +616,26 @@ class EmotiveRenderer {
     }
     
     /**
+     * Update effective center coordinates from position controller
+     * @param {Object} effectiveCenter - {x, y, scale} coordinates
+     */
+    updateEffectiveCenter(effectiveCenter) {
+        this.state.effectiveCenter = effectiveCenter;
+    }
+    
+    /**
+     * Get effective center coordinates (with position offsets applied)
+     * @returns {Object} Effective center {x, y, scale}
+     */
+    getEffectiveCenter() {
+        const baseCenter = this.canvasManager.getCenter();
+        if (this.config.positionController) {
+            return this.config.positionController.getEffectiveCenter(baseCenter.x, baseCenter.y);
+        }
+        return { x: baseCenter.x, y: baseCenter.y, scale: 1.0 };
+    }
+    
+    /**
      * Main render method
      */
     render(state, deltaTime, gestureTransform = null) {
@@ -696,16 +718,19 @@ class EmotiveRenderer {
         
         // Calculate dimensions - using logical size for proper scaling
         const canvasSize = Math.min(logicalWidth, logicalHeight);
-        let centerX = logicalWidth / 2;
-        let centerY = logicalHeight / 2 - this.config.topOffset;
+        
+        // Get effective center coordinates (with position offsets applied)
+        const effectiveCenter = this.getEffectiveCenter();
+        let centerX = effectiveCenter.x;
+        let centerY = effectiveCenter.y - this.config.topOffset;
         
         // Apply vertical offset for certain emotions (like excited for exclamation mark)
         if (state.properties && state.properties.verticalOffset) {
-            centerY = (logicalHeight / 2 - this.config.topOffset) + (logicalHeight * state.properties.verticalOffset);
+            centerY = effectiveCenter.y - this.config.topOffset + (logicalHeight * state.properties.verticalOffset);
         }
         
-        // Calculate global scale factor based on canvas size and baseScale config
-        this.scaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale;
+        // Calculate global scale factor based on canvas size, baseScale config, and Z scaling
+        this.scaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale * effectiveCenter.scale;
         
         // Apply gesture transform if present
         let scaleMultiplier = 1;
