@@ -1834,7 +1834,7 @@ class EmotiveMascot {
 
             // Apply vertical offset for certain emotions (like excited for exclamation mark)
             if (stateProps.verticalOffset) {
-                orbY = (this.canvasManager.height / 2 - this.config.topOffset) + (this.canvasManager.height * stateProps.verticalOffset);
+                orbY = effectiveCenter.y - this.config.topOffset + (this.canvasManager.height * stateProps.verticalOffset);
             }
             
             // Apply undertone modifiers to particle behavior

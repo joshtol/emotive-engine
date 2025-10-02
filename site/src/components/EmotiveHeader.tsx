@@ -30,13 +30,13 @@ export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPla
           href="/" 
           className={`nav-link ${pathname === '/' ? 'active' : ''}`}
         >
-          Demo
+          Home
         </Link>
         <Link 
-          href="/use-cases" 
-          className={`nav-link ${pathname === '/use-cases' ? 'active' : ''}`}
+          href="/demo" 
+          className={`nav-link ${pathname === '/demo' ? 'active' : ''}`}
         >
-          Use Cases
+          Demo
         </Link>
       </div>
       

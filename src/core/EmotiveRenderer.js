@@ -629,10 +629,18 @@ class EmotiveRenderer {
      */
     getEffectiveCenter() {
         const baseCenter = this.canvasManager.getCenter();
+        let effectiveCenter;
         if (this.config.positionController) {
-            return this.config.positionController.getEffectiveCenter(baseCenter.x, baseCenter.y);
+            effectiveCenter = this.config.positionController.getEffectiveCenter(baseCenter.x, baseCenter.y);
+        } else {
+            effectiveCenter = { x: baseCenter.x, y: baseCenter.y, scale: 1.0 };
         }
-        return { x: baseCenter.x, y: baseCenter.y, scale: 1.0 };
+        
+        // Include gaze offset so particles spawn from the same center as the visual mascot
+        effectiveCenter.x += this.state.gazeOffset.x;
+        effectiveCenter.y += this.state.gazeOffset.y;
+        
+        return effectiveCenter;
     }
     
     /**

@@ -1,21 +1,23 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
-import GameSidebar from '@/components/GameSidebar'
-import GameMain from '@/components/GameMain'
-import GameControls from '@/components/GameControls'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import MessageHUD from '@/components/MessageHUD'
+import HeroMascot from '@/components/HeroMascot'
+import HeroSection from '@/components/sections/HeroSection'
+import RetailSection from '@/components/sections/RetailSection'
+import SmartHomeSection from '@/components/sections/SmartHomeSection'
+import MusicSection from '@/components/sections/MusicSection'
+import ServiceSection from '@/components/sections/ServiceSection'
 
-export default function Home() {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentUndertone, setCurrentUndertone] = useState('clear')
+export default function HomePage() {
   const [mascot, setMascot] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
-  const [tutorialStarted, setTutorialStarted] = useState(false)
-  const [flashMusicButton, setFlashMusicButton] = useState(false)
-  const [activeGestures, setActiveGestures] = useState<Set<string>>(new Set())
+  const [scrollY, setScrollY] = useState(0)
+  const [activeSection, setActiveSection] = useState(0)
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const addMessage = useCallback((type: string, content: string, duration = 3000) => {
     const id = Date.now().toString()
@@ -26,185 +28,160 @@ export default function Home() {
     setMessages(prev => prev.filter(msg => msg.id !== id))
   }, [])
 
-  const handleGesture = useCallback((gesture: string) => {
-    // Debug: Gesture triggered
-    
-    // Map button display names to actual gesture names
-    const gestureMapping: { [key: string]: string } = {
-      'headbob': 'headBob',
-      'runman': 'runningman', 
-      'charles': 'charleston'
-      // Chain combos are handled separately below - no mapping needed
-    }
-    
-    // Use mapped name if available, otherwise use original
-    const actualGestureName = gestureMapping[gesture.toLowerCase()] || gesture.toLowerCase()
-    
-    // Trigger gesture on the engine if mascot is available
-    if (mascot) {
-      try {
-        // Check if this is a chain combo (should use chain method)
-        const chainCombos = ['rise', 'flow', 'burst', 'drift', 'chaos', 'morph', 'rhythm', 'spiral', 'routine', 'radiance', 'twinkle', 'stream']
-        if (chainCombos.includes(gesture.toLowerCase())) {
-          // Execute as chain combo
-          mascot.chain(gesture.toLowerCase())
-          
-          // Highlight the combo button itself
-          setActiveGestures(prev => new Set([...Array.from(prev), gesture.toUpperCase()]))
-          setTimeout(() => {
-            setActiveGestures(prev => {
-              const newSet = new Set(prev)
-              newSet.delete(gesture.toUpperCase())
-              return newSet
-            })
-          }, 2000) // Highlight combo button for 2 seconds
-          
-          // Parse chain combo to highlight individual gestures
-          const chainDefinitions: { [key: string]: string } = {
-            'rise': 'breathe > sway+lean+tilt',
-            'flow': 'sway > lean+tilt > spin > bounce',
-            'burst': 'jump > nod > shake > flash',
-            'drift': 'sway+breathe+float+drift',
-            'chaos': 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
-            'morph': 'expand > contract > morph+glow > expand+flash',
-            'rhythm': 'pulse > pulse+sparkle > pulse+flicker',
-            'spiral': 'spin > orbital > twist > orbital+sparkle',
-            'routine': 'nod > bounce > spin+sparkle > sway+pulse > nod+flash',
-            'radiance': 'sparkle > pulse+flicker > shimmer',
-            'twinkle': 'sparkle > flash > pulse+sparkle > shimmer+flicker',
-            'stream': 'wave > nod+pulse > sparkle > flash'
-          }
-          
-          const chainDefinition = chainDefinitions[gesture.toLowerCase()]
-          if (chainDefinition) {
-            // Check if this is a simultaneous combo (no '>' separator)
-            if (!chainDefinition.includes('>')) {
-              // All gestures fire simultaneously (like DRIFT: sway+breathe+float+drift)
-              const simultaneousGestures = chainDefinition
-                .split('+')
-                .map(g => g.trim())
-                .filter(g => g.length > 0)
-              
-              // Highlight all gestures simultaneously in BLUE (combo style)
-              setTimeout(() => {
-                simultaneousGestures.forEach(gestureName => {
-                  setActiveGestures(prev => new Set([...Array.from(prev), `${gestureName.toUpperCase()}_COMBO`]))
-                })
-                
-                // Remove all gestures after 1 second
-                setTimeout(() => {
-                  setActiveGestures(prev => {
-                    const newSet = new Set(prev)
-                    simultaneousGestures.forEach(gestureName => {
-                      newSet.delete(`${gestureName.toUpperCase()}_COMBO`)
-                    })
-                    return newSet
-                  })
-                }, 1000) // Highlight for 1 second
-              }, 500) // Start after combo button highlight
-            } else {
-              // Sequential combo with groups (like CHAOS: shake+shake > spin+flash > bounce+pulse > twist+sparkle)
-              const gestureGroups = chainDefinition
-                .split('>')
-                .map(group => group.trim())
-                .filter(group => group.length > 0)
-              
-              // Highlight each gesture group in sequence
-              gestureGroups.forEach((group, groupIndex) => {
-                // Split simultaneous gestures (separated by +)
-                const simultaneousGestures = group
-                  .split('+')
-                  .map(g => g.trim())
-                  .filter(g => g.length > 0)
-                
-                // If only one gesture, highlight in ORANGE (individual)
-                // If multiple gestures, highlight in BLUE (combo)
-                const isCombo = simultaneousGestures.length > 1
-                const suffix = isCombo ? '_COMBO' : ''
-                
-                // Highlight all gestures in this group simultaneously
-                setTimeout(() => {
-                  simultaneousGestures.forEach(gestureName => {
-                    setActiveGestures(prev => new Set([...Array.from(prev), `${gestureName.toUpperCase()}${suffix}`]))
-                  })
-                  
-                  // Remove all gestures in this group after 1 second
-                  setTimeout(() => {
-                    setActiveGestures(prev => {
-                      const newSet = new Set(prev)
-                      simultaneousGestures.forEach(gestureName => {
-                        newSet.delete(`${gestureName.toUpperCase()}${suffix}`)
-                      })
-                      return newSet
-                    })
-                  }, 1000) // Highlight for 1 second
-                }, (groupIndex + 1) * 500) // Stagger groups by 500ms, start after combo button highlight
-              })
-            }
-          }
-        } else {
-          // Execute as regular gesture
-          mascot.express(actualGestureName)
-          
-          // Highlight the individual gesture
-          setActiveGestures(prev => new Set([...Array.from(prev), gesture.toUpperCase()]))
-          setTimeout(() => {
-            setActiveGestures(prev => {
-              const newSet = new Set(prev)
-              newSet.delete(gesture.toUpperCase())
-              return newSet
-            })
-          }, 1000) // Highlight for 1 second
-        }
-      } catch (error) {
-        // Gesture failed to trigger
-      }
-    } else {
-      // Mascot not ready
-    }
-    
-    setIsPlaying(true)
-  }, [mascot])
-
   const handleMascotReady = useCallback((mascotInstance: any) => {
     setMascot(mascotInstance)
   }, [])
 
-  const handleUndertoneChange = useCallback((undertone: string | null) => {
-    setCurrentUndertone(undertone || 'clear')
+  // Define sections with mascot positions
+  const sections = [
+    {
+      id: 'hero',
+      title: 'GET EMOTIVE',
+      subtitle: 'Universal Communication',
+      position: { x: 0.25, y: 0.2 } // Top-right for hero
+    },
+    {
+      id: 'retail',
+      title: 'Retail Checkout AI',
+      subtitle: 'Interface',
+      position: { x: 0.75, y: 0.5 } // Right-center for retail
+    },
+    {
+      id: 'smart-home',
+      title: 'Smart Home Hub',
+      subtitle: 'Interface',
+      position: { x: 0.25, y: 0.8 } // Left-bottom for smart home
+    },
+    {
+      id: 'music',
+      title: 'Music Platform',
+      subtitle: 'Interface',
+      position: { x: 0.75, y: 0.3 } // Right-top for music
+    },
+    {
+      id: 'service',
+      title: 'Customer Service',
+      subtitle: 'Robot Face',
+      position: { x: 0.5, y: 0.6 } // Center for service
+    }
+  ]
+
+  // Handle scroll events
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      setScrollY(scrollY)
+
+      // Calculate which section is active based on scroll position
+      const sectionHeight = window.innerHeight
+      const activeIndex = Math.min(Math.floor(scrollY / sectionHeight), sections.length - 1)
+      setActiveSection(activeIndex)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [sections.length])
+
+  // Update mascot position based on active section (disabled for now - keeping original positioning)
+  // useEffect(() => {
+  //   if (mascot && sections[activeSection]) {
+  //     const section = sections[activeSection]
+  //     const canvasWidth = window.innerWidth
+  //     const canvasHeight = window.innerHeight
+
+  //     // Calculate mascot position based on section's desired position
+  //     const targetX = canvasWidth * section.position.x
+  //     const targetY = canvasHeight * section.position.y
+
+  //     // Adjust for mascot's center positioning
+  //     mascot.setOffset(targetX - (canvasWidth / 2), targetY - (canvasHeight / 2), 0)
+  //   }
+  // }, [mascot, activeSection, sections])
+
+  const handleDemoClick = useCallback((demoType: string) => {
+    setActiveDemo(demoType)
+    
+    if (mascot) {
+      try {
+        // Different demo scenarios based on use case
+        switch (demoType) {
+          case 'retail':
+            mascot.setEmotion('joy')
+            mascot.express('bounce')
+            addMessage('info', 'Welcome! Let me help you check out.', 3000)
+            break
+          case 'home':
+            mascot.setEmotion('calm')
+            mascot.express('breathe')
+            addMessage('info', 'Smart home system ready. How can I help?', 3000)
+            break
+          case 'music':
+            mascot.setEmotion('excited')
+            mascot.express('pulse')
+            addMessage('info', 'Music detected! Dancing to the beat.', 3000)
+            break
+          case 'service':
+            mascot.setEmotion('neutral')
+            mascot.express('nod')
+            addMessage('info', 'Customer service ready. How may I assist you?', 3000)
+            break
+        }
+      } catch (error) {
+        // Demo failed
+      }
+    }
+  }, [mascot, addMessage])
+
+  // Parallax scroll effect
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Tutorial effect - runs once when mascot is ready
-  useEffect(() => {
-    if (mascot && !tutorialStarted) {
-      setTutorialStarted(true)
-      
-      setTimeout(() => {
-        try {
-          // Trigger hula and sparkle gestures
-          mascot.express('hula')
-          mascot.express('sparkle')
-          
-          // Start tutorial messages
-          addMessage('info', 'Welcome to the Emotive Engine! 🎭', 4000)
-          
-          setTimeout(() => {
-            addMessage('info', 'Try the emotion buttons and gesture controls!', 4000)
-          }, 2000)
-          
-          setTimeout(() => {
-            addMessage('info', '🎵 Check out the music demos in the system bar!', 4000)
-            // Flash the music button
-            setFlashMusicButton(true)
-            setTimeout(() => setFlashMusicButton(false), 3000)
-          }, 4000)
-          
-        } catch (error) {
-          // Tutorial failed to start
-        }
-      }, 1000) // Delay to ensure mascot is fully ready
+  const useCases = [
+    {
+      id: 'retail',
+      title: 'Retail Checkout AI',
+      subtitle: 'Interface',
+      description: 'Guide customers through self-checkout with emotional intelligence and real-time assistance.',
+      features: ['POS Integration', 'Payment Processing', 'Customer Guidance', 'Error Handling'],
+      target: 'Walmart, Home Depot, Amazon'
+    },
+    {
+      id: 'home',
+      title: 'Smart Home Hub',
+      subtitle: 'Interface',
+      description: 'Central control interface for smart home systems with voice commands and status monitoring.',
+      features: ['IoT Integration', 'Voice Control', 'Status Monitoring', 'Automation'],
+      target: 'Apple, Amazon, Nvidia'
+    },
+    {
+      id: 'music',
+      title: 'Music Platform',
+      subtitle: 'Interface',
+      description: 'Interactive music experience with real-time BPM detection and audio-reactive animations.',
+      features: ['BPM Detection', 'Audio Analysis', 'Visual Sync', 'Groove Templates'],
+      target: 'Spotify, Disney, Apple'
+    },
+    {
+      id: 'service',
+      title: 'Customer Service',
+      subtitle: 'Robot Face',
+      description: 'Emotional AI interface for customer service robots with natural language processing.',
+      features: ['Voice Recognition', 'NLP Integration', 'Emotional AI', 'CRM Integration'],
+      target: 'Amazon, Walmart, Disney'
     }
-  }, [mascot, tutorialStarted, addMessage])
+  ]
+
+  const additionalUseCases = [
+    { name: 'Robot Face', icon: '🤖' },
+    { name: 'Server Monitor', icon: '📊' },
+    { name: 'DJ Interface', icon: '🎧' },
+    { name: 'Paint Station', icon: '🎨' },
+    { name: 'Search & Rescue', icon: '🚁' },
+    { name: 'Autism Communicator', icon: '💙' }
+  ]
 
   return (
     <div className="emotive-container">
@@ -212,25 +189,59 @@ export default function Home() {
       <EmotiveHeader 
         mascot={mascot}
         currentShape="circle"
-        onAudioLoad={(_audioElement) => {
-          // Audio loaded
-        }}
-        onPlayStateChange={(_isPlaying) => {
-          // Play state changed
-        }}
+        onAudioLoad={() => {}}
+        onPlayStateChange={() => {}}
         onMessage={addMessage}
-        flashMusicButton={flashMusicButton}
+        flashMusicButton={false}
       />
-      <div className="emotive-main">
-        <div className="gesture-menus-wrapper">
-          <GameSidebar onGesture={handleGesture} isPlaying={isPlaying} currentUndertone={currentUndertone} onUndertoneChange={handleUndertoneChange} activeGestures={activeGestures} />
-          <GameControls onGesture={handleGesture} activeGestures={activeGestures} />
+      
+      <div className="parallax-main">
+        {/* Full Document Mascot Canvas */}
+        <div className="full-vp-mascot-area">
+          <HeroMascot onMascotReady={handleMascotReady} />
         </div>
-        <GameMain engine={null} score={0} combo={0} currentUndertone={currentUndertone} onGesture={handleGesture} onMascotReady={handleMascotReady} />
+
+        {/* Parallax Sections */}
+        <div
+          ref={el => sectionRefs.current[0] = el}
+          className="parallax-section"
+        >
+          <HeroSection mascot={mascot} />
+        </div>
+
+        {/* Spacer to ensure next section doesn't start until Try Demo button fades */}
+        <div style={{ height: '200px' }}></div>
+
+        <div
+          ref={el => sectionRefs.current[1] = el}
+          className="parallax-section"
+        >
+          <RetailSection />
+        </div>
+
+        <div
+          ref={el => sectionRefs.current[2] = el}
+          className="parallax-section"
+        >
+          <SmartHomeSection />
+        </div>
+
+        <div
+          ref={el => sectionRefs.current[3] = el}
+          className="parallax-section"
+        >
+          <MusicSection />
+        </div>
+
+        <div
+          ref={el => sectionRefs.current[4] = el}
+          className="parallax-section"
+        >
+          <ServiceSection />
+        </div>
       </div>
+
       <EmotiveFooter />
     </div>
   )
 }
-
-

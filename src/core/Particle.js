@@ -179,8 +179,10 @@ class Particle {
         }
         
         // HARD BOUNDARY CONSTRAINTS - particles NEVER leave canvas
+        // For homepage (use-cases), use much larger boundaries to allow particles to flow
+        const isHomepage = window.location && (window.location.pathname === '/' || window.location.pathname === '/use-cases')
         const canvasWidth = centerX * 2;
-        const canvasHeight = centerY * 2;
+        const canvasHeight = isHomepage ? centerY * 6 : centerY * 2; // 3x height for homepage
         const margin = 20;
         
         // Bounce off boundaries

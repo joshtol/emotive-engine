@@ -128,10 +128,30 @@ export default function UseCasesPage() {
           <HeroMascot onMascotReady={handleMascotReady} />
         </div>
         
-        {/* Use Cases Content - Clean Slate */}
-        <div style={{ padding: '2rem', color: 'white', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-          <h1>Use Cases</h1>
-          <p>Coming soon...</p>
+        {/* Hero Text */}
+        <div className="hero-text-container" style={{ 
+          position: 'fixed', 
+          top: '10%', 
+          left: 'max(5%, 2rem)', 
+          zIndex: 1000, 
+          color: 'white',
+          fontSize: '4rem',
+          fontWeight: 'bold'
+        }}>
+          <div style={{ 
+            color: 'transparent',
+            WebkitTextStroke: '2px white',
+            textStroke: '2px white',
+            marginBottom: '-0.1em'
+          }}>GET</div>
+          <div className="hero-text-emotive">EMOTIVE</div>
+          <div style={{
+            fontSize: '1.2rem',
+            fontWeight: '400',
+            marginTop: '0.5rem',
+            opacity: 0.8,
+            letterSpacing: '0.1em'
+          }}>Universal Communication</div>
         </div>
       </div>
 

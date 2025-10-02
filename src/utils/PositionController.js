@@ -180,14 +180,16 @@ class PositionController {
                 return 1 - Math.pow(1 - t, 3);
             case 'easeInOutCubic':
                 return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-            case 'easeInBack':
+            case 'easeInBack': {
                 const c1 = 1.70158;
                 const c3 = c1 + 1;
                 return c3 * t * t * t - c1 * t * t;
-            case 'easeOutBack':
+            }
+            case 'easeOutBack': {
                 const c1_back = 1.70158;
                 const c3_back = c1_back + 1;
                 return 1 + c3_back * Math.pow(t - 1, 3) + c1_back * Math.pow(t - 1, 2);
+            }
             default:
                 return t;
         }
