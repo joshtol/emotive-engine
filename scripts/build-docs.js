@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -21,12 +21,7 @@ const __dirname = path.dirname(__filename);
 const config = {
     source: {
         include: [
-            './site/src',
-            './src',
-            './site/js/core',
-            './site/js/controls',
-            './site/js/ui',
-            './site/js/utils',
+            './docs',
             './README.md'
         ],
         exclude: [
@@ -34,11 +29,12 @@ const config = {
             './site/src/**/*.test.js',
             './site/src/**/*.spec.js',
             './node_modules/**',
-            './test/**'
+            './test/**',
+            './dist/**'
         ]
     },
     destination: './docs/api',
-    template: 'node_modules/docdash',
+    template: 'templates/default',
     readme: './README.md'
 };
 
@@ -82,26 +78,26 @@ const jsdocConfig = {
  * Clean the documentation directory
  */
 function cleanDocsDirectory() {
-    console.log('🧹 Cleaning documentation directory...');
+    console.log('ðŸ§¹ Cleaning documentation directory...');
 
     if (fs.existsSync(config.destination)) {
         fs.rmSync(config.destination, { recursive: true, force: true });
     }
 
     fs.mkdirSync(config.destination, { recursive: true });
-    console.log('✅ Documentation directory cleaned');
+    console.log('âœ… Documentation directory cleaned');
 }
 
 /**
  * Generate JSDoc configuration file
  */
 function generateJSDocConfig() {
-    console.log('📝 Generating JSDoc configuration...');
+    console.log('ðŸ“ Generating JSDoc configuration...');
 
     const configPath = path.join(__dirname, 'jsdoc.json');
     fs.writeFileSync(configPath, JSON.stringify(jsdocConfig, null, 2));
 
-    console.log('✅ JSDoc configuration generated');
+    console.log('âœ… JSDoc configuration generated');
     return configPath;
 }
 
@@ -109,14 +105,14 @@ function generateJSDocConfig() {
  * Build the documentation
  */
 function buildDocs(configPath) {
-    console.log('🔨 Building documentation...');
+    console.log('ðŸ”¨ Building documentation...');
 
     try {
         // Check if jsdoc is installed
         try {
             execSync('npx jsdoc --version', { stdio: 'ignore' });
         } catch {
-            console.log('📦 Installing JSDoc...');
+            console.log('ðŸ“¦ Installing JSDoc...');
             execSync('npm install --save-dev jsdoc docdash', { stdio: 'inherit' });
         }
 
@@ -125,9 +121,9 @@ function buildDocs(configPath) {
         console.log(`Running: ${command}`);
         execSync(command, { stdio: 'inherit' });
 
-        console.log('✅ Documentation built successfully');
+        console.log('âœ… Documentation built successfully');
     } catch (error) {
-        console.error('❌ Error building documentation:', error.message);
+        console.error('âŒ Error building documentation:', error.message);
         process.exit(1);
     }
 }
@@ -136,7 +132,7 @@ function buildDocs(configPath) {
  * Generate markdown API documentation
  */
 function generateMarkdownDocs() {
-    console.log('📄 Generating markdown documentation...');
+    console.log('ðŸ“„ Generating markdown documentation...');
 
     const apiDocs = [];
 
@@ -285,14 +281,14 @@ function generateMarkdownDocs() {
     const markdownPath = path.join(config.destination, 'API_REFERENCE.md');
     fs.writeFileSync(markdownPath, markdown);
 
-    console.log('✅ Markdown documentation generated');
+    console.log('âœ… Markdown documentation generated');
 }
 
 /**
  * Copy additional documentation files
  */
 function copyAdditionalDocs() {
-    console.log('📋 Copying additional documentation...');
+    console.log('ðŸ“‹ Copying additional documentation...');
 
     const docsToCopy = [
         { src: './docs/GETTING_STARTED.md', dest: 'GETTING_STARTED.md' },
@@ -308,18 +304,18 @@ function copyAdditionalDocs() {
         if (fs.existsSync(src)) {
             const destPath = path.join(config.destination, dest);
             fs.copyFileSync(src, destPath);
-            console.log(`  ✅ Copied ${dest}`);
+            console.log(`  âœ… Copied ${dest}`);
         }
     });
 
-    console.log('✅ Additional documentation copied');
+    console.log('âœ… Additional documentation copied');
 }
 
 /**
  * Generate index page
  */
 function generateIndexPage() {
-    console.log('🏠 Generating index page...');
+    console.log('ðŸ  Generating index page...');
 
     const indexContent = `
 <!DOCTYPE html>
@@ -368,80 +364,80 @@ function generateIndexPage() {
     </style>
 </head>
 <body>
-    <h1>🎭 Emotive Engine Documentation</h1>
+    <h1>ðŸŽ­ Emotive Engine Documentation</h1>
     <p>Welcome to the comprehensive documentation for the Emotive Engine!</p>
 
-    <h2>📚 Getting Started</h2>
+    <h2>ðŸ“š Getting Started</h2>
     <div class="grid">
         <div class="card">
             <h3>Quick Start</h3>
             <p>Get up and running quickly with our step-by-step guide.</p>
-            <a href="GETTING_STARTED.md">Getting Started Guide →</a>
+            <a href="GETTING_STARTED.md">Getting Started Guide â†’</a>
         </div>
         <div class="card">
             <h3>Examples</h3>
             <p>Interactive examples demonstrating engine features.</p>
-            <a href="../examples/basic-usage.html">View Examples →</a>
+            <a href="../examples/basic-usage.html">View Examples â†’</a>
         </div>
     </div>
 
-    <h2>📖 API Documentation</h2>
+    <h2>ðŸ“– API Documentation</h2>
     <div class="grid">
         <div class="card">
             <h3>Public API Reference</h3>
             <p>Complete reference for all public methods and properties.</p>
-            <a href="PUBLIC_API.md">API Reference →</a>
+            <a href="PUBLIC_API.md">API Reference â†’</a>
         </div>
         <div class="card">
             <h3>Events Documentation</h3>
             <p>All events emitted by the engine with examples.</p>
-            <a href="EVENTS.md">Events Guide →</a>
+            <a href="EVENTS.md">Events Guide â†’</a>
         </div>
         <div class="card">
             <h3>JSDoc API</h3>
             <p>Auto-generated API documentation from source code.</p>
-            <a href="index.html">Browse JSDoc →</a>
+            <a href="index.html">Browse JSDoc â†’</a>
         </div>
     </div>
 
-    <h2>🎮 Feature Guides</h2>
+    <h2>ðŸŽ® Feature Guides</h2>
     <div class="grid">
         <div class="card">
             <h3>Gesture System</h3>
             <p>Learn about all available gestures and how to create custom ones.</p>
-            <a href="GESTURE_GUIDE.md">Gesture Guide →</a>
+            <a href="GESTURE_GUIDE.md">Gesture Guide â†’</a>
         </div>
         <div class="card">
             <h3>Rhythm Synchronization</h3>
             <p>Make your mascot dance to the beat with rhythm sync.</p>
-            <a href="RHYTHM_SYNC.md">Rhythm Guide →</a>
+            <a href="RHYTHM_SYNC.md">Rhythm Guide â†’</a>
         </div>
         <div class="card">
             <h3>Firebase Integration</h3>
             <p>Add social features and cloud persistence.</p>
-            <a href="FIREBASE_INTEGRATION.md">Firebase Guide →</a>
+            <a href="FIREBASE_INTEGRATION.md">Firebase Guide â†’</a>
         </div>
     </div>
 
-    <h2>🏗️ Architecture</h2>
+    <h2>ðŸ—ï¸ Architecture</h2>
     <div class="card">
         <h3>Module Architecture</h3>
         <p>Understand the engine's modular architecture and design patterns.</p>
-        <a href="MODULE_ARCHITECTURE.md">Architecture Documentation →</a>
+        <a href="MODULE_ARCHITECTURE.md">Architecture Documentation â†’</a>
     </div>
 
-    <h2>🔧 Development</h2>
+    <h2>ðŸ”§ Development</h2>
     <div class="grid">
         <div class="card">
             <h3>Testing</h3>
             <p>Run the comprehensive test suite.</p>
-            <a href="../test/index.html">Test Runner →</a>
+            <a href="../test/index.html">Test Runner â†’</a>
             <span class="badge">52+ Tests</span>
         </div>
         <div class="card">
             <h3>Contributing</h3>
             <p>Guidelines for contributing to the project.</p>
-            <a href="../CONTRIBUTING.md">Contribution Guide →</a>
+            <a href="../CONTRIBUTING.md">Contribution Guide â†’</a>
         </div>
     </div>
 
@@ -455,14 +451,14 @@ function generateIndexPage() {
     const indexPath = path.join(config.destination, 'documentation.html');
     fs.writeFileSync(indexPath, indexContent);
 
-    console.log('✅ Index page generated');
+    console.log('âœ… Index page generated');
 }
 
 /**
  * Main build function
  */
 function build() {
-    console.log('🚀 Starting documentation build...\n');
+    console.log('ðŸš€ Starting documentation build...\n');
 
     const startTime = Date.now();
 
@@ -489,12 +485,12 @@ function build() {
         fs.unlinkSync(configPath);
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-        console.log(`\n✨ Documentation build completed in ${elapsed}s`);
-        console.log(`📁 Output: ${path.resolve(config.destination)}`);
-        console.log(`🌐 Open ${path.resolve(config.destination, 'documentation.html')} to view`);
+        console.log(`\nâœ¨ Documentation build completed in ${elapsed}s`);
+        console.log(`ðŸ“ Output: ${path.resolve(config.destination)}`);
+        console.log(`ðŸŒ Open ${path.resolve(config.destination, 'documentation.html')} to view`);
 
     } catch (error) {
-        console.error('\n❌ Build failed:', error);
+        console.error('\nâŒ Build failed:', error);
         process.exit(1);
     }
 }
@@ -505,3 +501,4 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
 }
 
 export { build };
+

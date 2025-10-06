@@ -1,31 +1,6 @@
 /**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Position Controller
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Core positioning controller with modular positioning system
- * @author Emotive Engine Team
- * @module PositionController
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Handles eccentric positioning and animation for mascot. Manages offset           
- * ║ positioning, smooth animations, and z-depth scaling. Integrates with modular     
- * ║ positioning system for advanced targeting capabilities.                           
- * ║                                                                                   
- * ║ 🎯 POSITIONING SYSTEM:                                                             
- * ║ Use getPositioning() to access the modular positioning system with methods like:  
- * ║ - moveToElement('.button', 'right', {x: 20, y: 0})                               
- * ║ - moveToMouse({x: 20, y: 20})                                                     
- * ║ - moveToGravity({x: 0, y: 0}, 0.1)                                               
- * ║ - moveToPath([{x: 100, y: 100}], 1)                                              
- * ║ - moveToResponsive({mobile: {x: 100, y: 100}})                                   
- * ║                                                                                   
- * ║ See src/core/positioning/README.md for complete documentation.                    
- * ╚═══════════════════════════════════════════════════════════════════════════════════
+ * PositionController manages mascot offsets, pseudo-3D scaling, easing, and access to advanced positioning.
+ * @module utils/PositionController
  */
 
 import PositioningSystem from '../core/positioning/index.js';
