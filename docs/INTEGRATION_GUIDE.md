@@ -18,20 +18,17 @@
 ### Basic Setup
 
 ```javascript
-import { EmotiveMascot } from 'emotive-communication-engine';
+import { EmotiveMascot } from '@joshtol/emotive-engine';
 
-// Initialize the mascot
 const mascot = new EmotiveMascot({
-    canvas: document.getElementById('my-canvas'),
+    canvasId: 'my-canvas',
     enableAudio: true,
-    targetFPS: 60,
+    enableAutoOptimization: true,
     maxParticles: 50
 });
 
-// Start the animation
 mascot.start();
 
-// Express emotions and gestures
 mascot.setEmotion('joy')
       .express('bounce')
       .chain('pulse', 'spin');
@@ -41,18 +38,13 @@ mascot.setEmotion('joy')
 
 ```javascript
 const config = {
-    canvas: canvasElement,          // Canvas element or ID
-    targetFPS: 60,                  // Target frame rate (15-120)
-    enableAudio: true,              // Enable ambient sounds and effects
-    masterVolume: 0.5,              // Audio volume (0.0-1.0)
-    maxParticles: 50,               // Maximum particle count (10-200)
-    initialEmotion: 'neutral',      // Initial emotional state
-    performanceMonitoring: true,    // Enable performance tracking
-    autoOptimize: true,             // Enable automatic optimization
-    accessibility: {                // Accessibility options
-        reducedMotion: 'auto',      // Respect user preferences
-        highContrast: 'auto'
-    }
+    canvasId: canvasElement,          // Canvas element or element reference
+    enableAudio: true,                // Enable ambient sounds and effects
+    enableAutoOptimization: true,     // Dynamically adjust quality
+    enableGracefulDegradation: true,  // Automatically recover from slow frames
+    masterVolume: 0.5,                // Audio volume (0.0-1.0)
+    maxParticles: 120,                // Maximum particle count
+    defaultEmotion: 'neutral'         // Initial emotional state
 };
 ```
 
@@ -64,7 +56,7 @@ const config = {
 
 ```jsx
 import React, { useEffect, useRef, useState } from 'react';
-import { EmotiveMascot } from 'emotive-communication-engine';
+import { EmotiveMascot } from '@joshtol/emotive-engine';
 
 function MascotComponent({ 
     emotion = 'neutral', 
@@ -84,10 +76,10 @@ function MascotComponent({
         if (canvasRef.current && !mascotRef.current) {
             try {
                 mascotRef.current = new EmotiveMascot({
-                    canvas: canvasRef.current,
+                    canvasId: canvasRef.current,
                     enableAudio,
-                    autoStart: true,
-                    performanceMonitoring: true
+                    enableAutoOptimization: true,
+                    enableGracefulDegradation: true
                 });
 
                 // Handle ready event
@@ -182,7 +174,7 @@ function useMascot(canvasRef, options = {}) {
         if (canvasRef.current && !mascot) {
             try {
                 const newMascot = new EmotiveMascot({
-                    canvas: canvasRef.current,
+                    canvasId: canvasRef.current,
                     ...options
                 });
 
@@ -335,7 +327,7 @@ export const useMascotContext = () => {
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
-import { EmotiveMascot } from 'emotive-communication-engine';
+import { EmotiveMascot } from '@joshtol/emotive-engine';
 
 // Props
 const props = defineProps({
@@ -380,10 +372,10 @@ const initializeMascot = () => {
 
   try {
     mascot.value = new EmotiveMascot({
-      canvas: mascotCanvas.value,
+      canvasId: mascotCanvas.value,
       enableAudio: props.enableAudio,
-      autoStart: true,
-      performanceMonitoring: true
+      enableAutoOptimization: true,
+      enableGracefulDegradation: true
     });
 
     mascot.value.on('ready', () => {
@@ -498,7 +490,7 @@ defineExpose({
 </template>
 
 <script>
-import { EmotiveMascot } from 'emotive-communication-engine';
+import { EmotiveMascot } from '@joshtol/emotive-engine';
 
 export default {
   name: 'MascotComponent',
@@ -550,9 +542,9 @@ export default {
     initializeMascot() {
       try {
         this.mascot = new EmotiveMascot({
-          canvas: this.$refs.mascotCanvas,
+          canvasId: this.$refs.mascotCanvas,
           enableAudio: this.enableAudio,
-          autoStart: true
+          enableAutoOptimization: true
         });
 
         this.mascot.on('ready', () => {
@@ -622,7 +614,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef
 } from '@angular/core';
-import { EmotiveMascot } from 'emotive-communication-engine';
+import { EmotiveMascot } from '@joshtol/emotive-engine';
 
 @Component({
   selector: 'app-mascot',
@@ -692,10 +684,10 @@ export class MascotComponent implements OnInit, OnDestroy, OnChanges {
   private initializeMascot() {
     try {
       this.mascot = new EmotiveMascot({
-        canvas: this.canvasRef.nativeElement,
+        canvasId: this.canvasRef.nativeElement,
         enableAudio: this.enableAudio,
-        autoStart: true,
-        performanceMonitoring: true
+        enableAutoOptimization: true,
+        enableGracefulDegradation: true
       });
 
       this.mascot.on('ready', () => {
@@ -764,7 +756,7 @@ export class MascotComponent implements OnInit, OnDestroy, OnChanges {
 ```typescript
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { EmotiveMascot } from 'emotive-communication-engine';
+import { EmotiveMascot } from '@joshtol/emotive-engine';
 
 interface MascotState {
   emotion: string;
@@ -840,7 +832,7 @@ export class MascotService {
 ```svelte
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { EmotiveMascot } from 'emotive-communication-engine';
+  import { EmotiveMascot } from '@joshtol/emotive-engine';
 
   export let emotion = 'neutral';
   export let width = 300;
@@ -866,10 +858,10 @@ export class MascotService {
   function initializeMascot() {
     try {
       mascot = new EmotiveMascot({
-        canvas: canvas,
+        canvasId: canvas,
         enableAudio: enableAudio,
-        autoStart: true,
-        performanceMonitoring: true
+        enableAutoOptimization: true,
+        enableGracefulDegradation: true
       });
 
       mascot.on('ready', () => {
@@ -987,7 +979,7 @@ class ResponsiveEmotiveMascot {
         
         this.canvas = this.createResponsiveCanvas();
         this.mascot = new EmotiveMascot({
-            canvas: this.canvas,
+            canvasId: this.canvas,
             ...options
         });
         
@@ -1384,7 +1376,7 @@ fetch('/path/to/custom-sound.wav')
 class AudioReactiveMascot {
     constructor(canvas, options = {}) {
         this.mascot = new EmotiveMascot({
-            canvas: canvas,
+            canvasId: canvas,
             enableAudio: true,
             ...options
         });
@@ -1887,10 +1879,10 @@ class RobustEmotiveMascot {
 
 // Usage
 const robustMascot = new RobustEmotiveMascot({
-    canvas: document.getElementById('mascot-canvas'),
+    canvasId: document.getElementById('mascot-canvas'),
     enableAudio: true,
     maxParticles: 50,
-    performanceMonitoring: true
+    enableGracefulDegradation: true
 });
 ```
 

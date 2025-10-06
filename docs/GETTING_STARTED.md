@@ -27,7 +27,7 @@ The fastest way to get started is with this minimal example:
 
     <!-- Load and initialize -->
     <script type="module">
-        import EmotiveMascot from './site/src/EmotiveMascotPublic.js';
+        import EmotiveMascot from '@joshtol/emotive-engine';
 
         // Create and initialize
         const mascot = new EmotiveMascot();
@@ -40,18 +40,20 @@ The fastest way to get started is with this minimal example:
         mascot.triggerGesture('bounce');
 
         // Set emotion
-        mascot.setEmotion('happy');
+        mascot.setEmotion('joy');
     </script>
 </body>
 </html>
 ```
+> The default export exposes the sandboxed `EmotiveMascotPublic` API. Import `{ EmotiveMascot }` when you need direct access to renderer internals.
+
 
 ## Installation
 
 ### Option 1: Direct Module Import
 
 ```javascript
-import EmotiveMascot from './site/src/EmotiveMascotPublic.js';
+import EmotiveMascot from '@joshtol/emotive-engine';
 ```
 
 ### Option 2: Using the Build
@@ -75,7 +77,7 @@ npm install emotive-engine
 ### 1. Initialization
 
 ```javascript
-import EmotiveMascot from './site/src/EmotiveMascotPublic.js';
+import EmotiveMascot from '@joshtol/emotive-engine';
 
 // Create instance with optional configuration
 const mascot = new EmotiveMascot({
@@ -116,32 +118,36 @@ mascot.triggerGesture('pulse');
 
 ```javascript
 // Basic emotion
-mascot.setEmotion('happy');
+mascot.setEmotion('joy');
 
 // Emotion with undertone
 mascot.setEmotion('happy', 'energetic');
 
-// Available emotions:
-// Base: happy, sad, excited, calm, neutral, curious, confused, angry, sleepy, love
-// Undertones: energetic, mellow, playful, focused, dreamy, intense, gentle, wild
-```
+// Available emotions (core registry):
+// neutral, joy, sadness, anger, fear, surprise, disgust, love, suspicion, excited, resting, euphoria, focused, glitch, calm
+// Undertones (renderer modifiers): energetic, subdued, intense, tired, nervous, confident
 
-### 4. Rhythm Synchronization
+
+### 4. Manual Rotation and Brake Control
 
 ```javascript
-// Enable rhythm sync
-mascot.enableRhythmSync();
+import { EmotiveMascot } from '@joshtol/emotive-engine';
 
-// Set specific BPM
-mascot.setBPM(120);
+const mascot = new EmotiveMascot({ canvasId: 'mascot-canvas' });
 
-// Use tap tempo
-mascot.tap(); // Call repeatedly to detect tempo
+// Spin clockwise at five degrees per frame
+mascot.setRotationSpeed(5);
 
-// Get current BPM
-const bpm = mascot.getCurrentBPM();
+// Brake back to upright when you are ready
+await mascot.renderer.rotationBrake.brakeToUpright();
+
+// Snap to the nearest quarter turn
+await mascot.renderer.rotationBrake.brakeToNearest(90);
 ```
 
+> The rotation API works in degrees per frame. Speeds between -10 and 10 feel natural, and the brake helper automatically resets `rotationSpeed` to zero when it finishes.
+
+### 5. Recording and Playback
 ### 5. Recording and Playback
 
 ```javascript
@@ -172,25 +178,17 @@ await mascot.playRecording(importedRecording);
 
 ```javascript
 const mascot = new EmotiveMascot({
-    // Visual settings
-    particleIntensity: 1.0,      // 0.0 - 1.0
-    glowIntensity: 0.8,          // 0.0 - 1.0
-    maxParticles: 100,           // Maximum particle count
-
-    // Behavior settings
-    startingEmotion: 'neutral',   // Initial emotion
-    emotionalResponsiveness: 0.8, // How quickly emotions change
-
-    // Audio settings
-    audioEnabled: true,           // Enable audio features
-
-    // Debug settings
-    debugMode: false,             // Enable debug logging
-
-    // Performance
-    renderMode: 'default'         // 'default', 'performance', 'quality'
+    canvasId: 'mascot-canvas',
+    defaultEmotion: 'neutral',
+    enableAudio: true,
+    enableAutoOptimization: true,
+    enableGracefulDegradation: true,
+    maxParticles: 120,
+    renderingStyle: 'classic',
+    topOffset: 0
 });
 ```
+
 
 ### URL Parameters
 
@@ -218,7 +216,7 @@ The engine automatically detects and optimizes for:
 ```javascript
 // React to button clicks
 document.getElementById('happy-btn').addEventListener('click', () => {
-    mascot.setEmotion('happy');
+    mascot.setEmotion('joy');
     mascot.triggerGesture('bounce');
 });
 

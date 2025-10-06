@@ -173,7 +173,7 @@ class EmotiveMascot {
             offsetX: this.config.offsetX,
             offsetY: this.config.offsetY,
             offsetZ: this.config.offsetZ,
-            onUpdate: (effectiveCenter) => {
+            onUpdate: effectiveCenter => {
                 // Update renderer with new effective center
                 if (this.renderer) {
                     this.renderer.updateEffectiveCenter(effectiveCenter);
@@ -596,8 +596,9 @@ class EmotiveMascot {
     }
     
     /**
-     * Set BPM for core rotation (record player effect)
-     * @param {number} bpm - Beats per minute
+     * Set BPM for rhythm-linked subsystems
+     * @param {number} bpm - Beats per minute (forwarded to audio/rhythm helpers)
+     * @note Manual rotation now uses degrees per frame; BPM no longer drives rotation speed directly.
      * @returns {EmotiveMascot} This instance for chaining
      */
     setBPM(bpm) {
@@ -611,7 +612,8 @@ class EmotiveMascot {
 
     /**
      * Set manual rotation speed for the shape
-     * @param {number} speed - Rotation speed (-1 to 1, negative for reverse)
+     * @param {number} speed - Rotation speed in degrees per frame (negative for reverse)
+     * @note Speeds between -10 and 10 feel natural; higher values may cause motion blur.
      * @returns {EmotiveMascot} This instance for chaining
      */
     setRotationSpeed(speed) {
@@ -625,7 +627,7 @@ class EmotiveMascot {
 
     /**
      * Set manual rotation angle directly (for scratching)
-     * @param {number} angle - Rotation angle in radians
+     * @param {number} angle - Rotation angle in degrees
      * @returns {EmotiveMascot} This instance for chaining
      */
     setRotationAngle(angle) {

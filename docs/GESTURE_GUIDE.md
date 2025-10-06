@@ -228,6 +228,15 @@ mascot.triggerGesture('flash');
 - **Best for**: Surprise, realization, impact
 - **Combines well with**: `jump`, `excited` emotion
 
+### chromaticAberration
+**Description**: Temporary red/cyan separation applied to the entire canvas for high-impact gestures.
+```javascript
+mascot.renderer.specialEffects.triggerChromaticAberration(0.9);
+```
+- **Duration**: 300-500ms fade depending on intensity
+- **Auto triggers**: bounce, shake, pulse, flash, jump, slam, spin, flicker
+- **Tuning tips**: Use intensities between 0.4 and 1.0; pair with sparkle or glow for highlight moments
+
 ### flicker
 **Description**: Rapid opacity flickering
 ```javascript
@@ -493,14 +502,17 @@ mascot.registerGesture(compositeGesture);
 
 ### Optimize for Mobile
 ```javascript
-// Detect mobile and adjust
-if (isMobile()) {
-    mascot.setConfig({
-        maxParticles: 50,      // Reduce particles
-        particleIntensity: 0.5, // Lower intensity
-        renderMode: 'performance'
-    });
-}
+import { EmotiveMascot } from '@joshtol/emotive-engine';
+
+const config = {
+    canvasId: 'mascot-canvas',
+    enableAudio: true,
+    enableAutoOptimization: true,
+    enableGracefulDegradation: true,
+    maxParticles: isMobile() ? 50 : 140
+};
+
+const mascot = new EmotiveMascot(config);
 ```
 
 ### Gesture Queue Management
