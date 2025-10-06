@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
@@ -18,6 +18,8 @@ export default function HomePage() {
   const [scrollY, setScrollY] = useState(0)
   const [activeSection, setActiveSection] = useState(0)
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([])
+  const pathCleanupRef = useRef<(() => void) | null>(null)
+  const lastTargetIdRef = useRef<string | null>(null)
 
   const addMessage = useCallback((type: string, content: string, duration = 3000) => {
     const id = Date.now().toString()
@@ -33,39 +35,43 @@ export default function HomePage() {
   }, [])
 
   // Define sections with mascot positions
-  const sections = [
+  const sections = useMemo(() => [
     {
       id: 'hero',
       title: 'GET EMOTIVE',
       subtitle: 'Universal Communication',
-      position: { x: 0.25, y: 0.2 } // Top-right for hero
+      pathAnchor: 0.82,
+      offset: { x: 160, y: -140 }
     },
     {
       id: 'retail',
       title: 'Retail Checkout AI',
       subtitle: 'Interface',
-      position: { x: 0.75, y: 0.5 } // Right-center for retail
+      pathAnchor: 0.78,
+      offset: { x: 140, y: -40 }
     },
     {
       id: 'smart-home',
       title: 'Smart Home Hub',
       subtitle: 'Interface',
-      position: { x: 0.25, y: 0.8 } // Left-bottom for smart home
+      pathAnchor: 0.25,
+      offset: { x: -160, y: 60 }
     },
     {
       id: 'music',
       title: 'Music Platform',
       subtitle: 'Interface',
-      position: { x: 0.75, y: 0.3 } // Right-top for music
+      pathAnchor: 0.74,
+      offset: { x: 120, y: -20 }
     },
     {
       id: 'service',
       title: 'Customer Service',
       subtitle: 'Robot Face',
-      position: { x: 0.5, y: 0.6 } // Center for service
+      pathAnchor: 0.5,
+      offset: { x: 0, y: 40 }
     }
-  ]
-
+  ], [])
   // Handle scroll events
   useEffect(() => {
     const handleScroll = () => {
@@ -97,6 +103,100 @@ export default function HomePage() {
   //     mascot.setOffset(targetX - (canvasWidth / 2), targetY - (canvasHeight / 2), 0)
   //   }
   // }, [mascot, activeSection, sections])
+
+  useEffect(() => {
+    if (!mascot) {
+      return
+    }
+
+    const targetMeta = sections[activeSection]
+    const targetElement = sectionRefs.current[activeSection]
+    if (!targetMeta || !targetElement) {
+      return
+    }
+
+    const elementTargeting = mascot.positionController?.getElementTargeting?.()
+    if (!elementTargeting || typeof elementTargeting.moveToElementWithPath !== 'function') {
+      return
+    }
+
+    const targetId = targetMeta.id
+    if (!targetId) {
+      return
+    }
+
+    if (lastTargetIdRef.current === targetId && pathCleanupRef.current) {
+      return
+    }
+
+    if (pathCleanupRef.current) {
+      pathCleanupRef.current()
+      pathCleanupRef.current = null
+    }
+
+    const viewportWidth = window.innerWidth || 1
+    const viewportHeight = window.innerHeight || 1
+    const anchorFraction = targetMeta.pathAnchor ?? 0.8
+    const boundedAnchor = Math.min(0.92, Math.max(0.08, anchorFraction))
+    const horizontalAnchor = Math.min(viewportWidth - 80, Math.max(80, viewportWidth * boundedAnchor))
+
+    const pathPoints: Array<{ x: number; y: number }> = []
+    const currentOffset = mascot.positionController?.getOffset?.()
+
+    if (currentOffset && typeof currentOffset.x === 'number' && typeof currentOffset.y === 'number') {
+      pathPoints.push({
+        x: horizontalAnchor,
+        y: currentOffset.y + viewportHeight / 2
+      })
+    } else {
+      pathPoints.push({
+        x: horizontalAnchor,
+        y: viewportHeight * 0.3
+      })
+    }
+
+    const targetRect = targetElement.getBoundingClientRect()
+    const targetMidY = targetRect.top + targetRect.height / 2
+
+    pathPoints.push({
+      x: horizontalAnchor,
+      y: targetMidY
+    })
+
+    const approachFromLeft = horizontalAnchor < targetRect.left + (targetRect.width / 2)
+    const approachX = approachFromLeft
+      ? targetRect.left + targetRect.width * 0.35
+      : targetRect.left + targetRect.width * 0.65
+
+    pathPoints.push({
+      x: approachX,
+      y: targetMidY
+    })
+
+    const cleanup = elementTargeting.moveToElementWithPath(
+      `#${targetId}`,
+      pathPoints,
+      'center',
+      targetMeta.offset ?? { x: 0, y: 0 },
+      {
+        coordinateSystem: 'viewport',
+        speed: targetMeta.speed ?? 320,
+        easing: 'easeInOutCubic'
+      }
+    )
+
+    pathCleanupRef.current = typeof cleanup === 'function' ? cleanup : null
+    lastTargetIdRef.current = targetId
+  }, [mascot, activeSection, sections])
+
+  useEffect(() => {
+    return () => {
+      if (pathCleanupRef.current) {
+        pathCleanupRef.current()
+        pathCleanupRef.current = null
+      }
+    }
+  }, [])
 
   const handleDemoClick = useCallback((demoType: string) => {
     setActiveDemo(demoType)
@@ -204,6 +304,7 @@ export default function HomePage() {
         {/* Parallax Sections */}
         <div
           ref={el => sectionRefs.current[0] = el}
+          id={sections[0].id}
           className="parallax-section"
         >
           <HeroSection mascot={mascot} />
@@ -214,6 +315,7 @@ export default function HomePage() {
 
         <div
           ref={el => sectionRefs.current[1] = el}
+          id={sections[1].id}
           className="parallax-section"
         >
           <RetailSection />
@@ -221,6 +323,7 @@ export default function HomePage() {
 
         <div
           ref={el => sectionRefs.current[2] = el}
+          id={sections[2].id}
           className="parallax-section"
         >
           <SmartHomeSection />
@@ -228,6 +331,7 @@ export default function HomePage() {
 
         <div
           ref={el => sectionRefs.current[3] = el}
+          id={sections[3].id}
           className="parallax-section"
         >
           <MusicSection />
@@ -235,6 +339,7 @@ export default function HomePage() {
 
         <div
           ref={el => sectionRefs.current[4] = el}
+          id={sections[4].id}
           className="parallax-section"
         >
           <ServiceSection />

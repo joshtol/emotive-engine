@@ -1,10 +1,35 @@
 /**
- * PositionController - Handles eccentric positioning and animation for mascot
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Position Controller
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Core positioning controller with modular positioning system
+ * @author Emotive Engine Team
+ * @module PositionController
  * 
- * This utility manages offset positioning, smooth animations, and z-depth scaling
- * to allow clients to position the mascot anywhere within the canvas and animate
- * it coming into frame, leaving, or changing pseudo-3D depth.
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Handles eccentric positioning and animation for mascot. Manages offset           
+ * ║ positioning, smooth animations, and z-depth scaling. Integrates with modular     
+ * ║ positioning system for advanced targeting capabilities.                           
+ * ║                                                                                   
+ * ║ 🎯 POSITIONING SYSTEM:                                                             
+ * ║ Use getPositioning() to access the modular positioning system with methods like:  
+ * ║ - moveToElement('.button', 'right', {x: 20, y: 0})                               
+ * ║ - moveToMouse({x: 20, y: 20})                                                     
+ * ║ - moveToGravity({x: 0, y: 0}, 0.1)                                               
+ * ║ - moveToPath([{x: 100, y: 100}], 1)                                              
+ * ║ - moveToResponsive({mobile: {x: 100, y: 100}})                                   
+ * ║                                                                                   
+ * ║ See src/core/positioning/README.md for complete documentation.                    
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
+
+import PositioningSystem from '../core/positioning/index.js';
+import { ElementTargetingAll } from '../core/positioning/elementTargeting/index.js';
 
 class PositionController {
     constructor(config = {}) {
@@ -30,6 +55,15 @@ class PositionController {
         this.minScale = config.minScale || 0.5;
         this.maxScale = config.maxScale || 2.0;
         this.zScaleRange = config.zScaleRange || 1000; // Z units for full scale range
+        
+        // Global scale multiplier (independent of Z-depth)
+        this.globalScale = 1.0;
+        
+        // Initialize modular positioning system
+        this.positioning = new PositioningSystem(this);
+        
+        // Initialize element targeting system
+        this.elementTargeting = new ElementTargetingAll(this);
     }
     
     /**
@@ -55,6 +89,21 @@ class PositionController {
             x: this.offsetX,
             y: this.offsetY,
             z: this.offsetZ
+        };
+    }
+    
+    /**
+     * Get current position (offset + effective center)
+     * @param {number} centerX - Base center X (default: viewport center)
+     * @param {number} centerY - Base center Y (default: viewport center)
+     * @returns {Object} Current position {x, y, z, scale}
+     */
+    getPosition(centerX = window.innerWidth / 2, centerY = window.innerHeight / 2) {
+        return {
+            x: centerX + this.offsetX,
+            y: centerY + this.offsetY,
+            z: this.offsetZ,
+            scale: this.getZScale()
         };
     }
     
@@ -94,7 +143,7 @@ class PositionController {
      * Start animation loop
      */
     startAnimation() {
-        const animate = (currentTime) => {
+        const animate = currentTime => {
             if (!this.isAnimating) return;
             
             const elapsed = currentTime - this.animationStartTime;
@@ -144,7 +193,19 @@ class PositionController {
         // Convert Z offset to scale (negative Z = closer/larger, positive Z = farther/smaller)
         const normalizedZ = -this.offsetZ / this.zScaleRange; // Negative for intuitive behavior
         const clampedZ = Math.max(-1, Math.min(1, normalizedZ));
-        return this.lerp(this.minScale, this.maxScale, (clampedZ + 1) / 2);
+        const baseZScale = this.lerp(this.minScale, this.maxScale, (clampedZ + 1) / 2);
+        
+        // Apply global scale multiplier
+        return baseZScale * this.globalScale;
+    }
+    
+    /**
+     * Set global scale multiplier for the entire mascot
+     * @param {number} scale - Global scale factor (1.0 = normal size)
+     */
+    setGlobalScale(scale) {
+        this.globalScale = Math.max(0.1, scale); // Prevent zero/negative scale
+        this.onUpdate(this.getEffectiveCenter());
     }
     
     /**
@@ -166,40 +227,74 @@ class PositionController {
      */
     applyEasing(t, easing) {
         switch (easing) {
-            case 'linear':
-                return t;
-            case 'easeInQuad':
-                return t * t;
-            case 'easeOutQuad':
-                return 1 - (1 - t) * (1 - t);
-            case 'easeInOutQuad':
-                return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-            case 'easeInCubic':
-                return t * t * t;
-            case 'easeOutCubic':
-                return 1 - Math.pow(1 - t, 3);
-            case 'easeInOutCubic':
-                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-            case 'easeInBack': {
-                const c1 = 1.70158;
-                const c3 = c1 + 1;
-                return c3 * t * t * t - c1 * t * t;
-            }
-            case 'easeOutBack': {
-                const c1_back = 1.70158;
-                const c3_back = c1_back + 1;
-                return 1 + c3_back * Math.pow(t - 1, 3) + c1_back * Math.pow(t - 1, 2);
-            }
-            default:
-                return t;
+        case 'linear':
+            return t;
+        case 'easeInQuad':
+            return t * t;
+        case 'easeOutQuad':
+            return 1 - (1 - t) * (1 - t);
+        case 'easeInOutQuad':
+            return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        case 'easeInCubic':
+            return t * t * t;
+        case 'easeOutCubic':
+            return 1 - Math.pow(1 - t, 3);
+        case 'easeInOutCubic':
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        case 'easeInBack': {
+            const c1 = 1.70158;
+            const c3 = c1 + 1;
+            return c3 * t * t * t - c1 * t * t;
+        }
+        case 'easeOutBack': {
+            const c1_back = 1.70158;
+            const c3_back = c1_back + 1;
+            return 1 + c3_back * Math.pow(t - 1, 3) + c1_back * Math.pow(t - 1, 2);
+        }
+        default:
+            return t;
         }
     }
     
+    /**
+     * Get the positioning system for advanced targeting
+     * @returns {PositioningSystem} The positioning system instance
+     */
+    getPositioning() {
+        return this.positioning;
+    }
+
+    /**
+     * Get the element targeting system for DOM element targeting
+     * @returns {ElementTargetingAll} The element targeting system instance
+     */
+    getElementTargeting() {
+        return this.elementTargeting;
+    }
+
+    /**
+     * Call a positioning method by name
+     * @param {string} methodName - Name of the method to call
+     * @param {...any} args - Arguments to pass to the method
+     * @returns {any} Result of the method call
+     */
+    callPositioning(methodName, ...args) {
+        return this.positioning.call(methodName, ...args);
+    }
+
     /**
      * Destroy the controller and clean up
      */
     destroy() {
         this.stopAnimation();
+        if (this.positioning) {
+            this.positioning.destroy();
+            this.positioning = null;
+        }
+        if (this.elementTargeting) {
+            this.elementTargeting.destroy();
+            this.elementTargeting = null;
+        }
         this.onUpdate = null;
         this.onAnimationComplete = null;
     }

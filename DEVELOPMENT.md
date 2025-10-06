@@ -1,6 +1,7 @@
 # Emotive Engine Development Guide
 
-Welcome to the Emotive Engine development team! This guide will help you get started with developing and contributing to the Emotive Engine.
+Welcome to the Emotive Engine development team! This guide will help you get
+started with developing and contributing to the Emotive Engine.
 
 ## 📋 Prerequisites
 
@@ -13,7 +14,7 @@ Welcome to the Emotive Engine development team! This guide will help you get sta
 
 ### 1. Clone the Repository
 
-```bash
+```bashSWe
 git clone https://github.com/joshtol/emotive-engine.git
 cd emotive-engine
 ```
@@ -121,14 +122,15 @@ export default {
     output: {
         file: 'dist/emotive-engine.min.js',
         format: 'umd',
-        name: 'EmotiveEngine'
-    }
-}
+        name: 'EmotiveEngine',
+    },
+};
 ```
 
 ### TypeScript Configuration
 
-TypeScript is configured in `tsconfig.json` for type checking and declaration generation.
+TypeScript is configured in `tsconfig.json` for type checking and declaration
+generation.
 
 ### Test Configuration
 
@@ -181,12 +183,9 @@ Centralized animation loop that replaced 39 separate RAF calls:
 ```javascript
 import { animationLoopManager, AnimationPriority } from './src/index.js';
 
-const id = animationLoopManager.register(
-    (deltaTime) => {
-        // Your animation code
-    },
-    AnimationPriority.HIGH
-);
+const id = animationLoopManager.register(deltaTime => {
+    // Your animation code
+}, AnimationPriority.HIGH);
 
 // Later...
 animationLoopManager.unregister(id);
@@ -201,7 +200,11 @@ import { eventManager } from './src/index.js';
 
 // Add listener
 const id = eventManager.addEventListener(
-    window, 'resize', handleResize, {}, 'myComponent'
+    window,
+    'resize',
+    handleResize,
+    {},
+    'myComponent'
 );
 
 // Remove all listeners for a component
@@ -246,18 +249,21 @@ console.log(`FPS: ${stats.fps.current}`);
 ### Performance Issues
 
 1. Check the Performance Monitor:
+
 ```javascript
 const stats = performanceMonitor.getStats();
 console.log('Performance:', stats);
 ```
 
 2. Check Animation Loop Stats:
+
 ```javascript
 const loopStats = animationLoopManager.getStats();
 console.log('Animation Loop:', loopStats);
 ```
 
 3. Check for Memory Leaks:
+
 ```javascript
 const leaks = eventManager.analyzeLeaks();
 console.log('Potential Leaks:', leaks);
@@ -378,14 +384,14 @@ refactor: Optimize render pipeline
 
 ### Common Issues
 
-**Q: Build fails with "module not found"**
-A: Run `npm install` to ensure all dependencies are installed
+**Q: Build fails with "module not found"** A: Run `npm install` to ensure all
+dependencies are installed
 
-**Q: Tests fail with timeout errors**
-A: Increase the timeout in test configuration or check for infinite loops
+**Q: Tests fail with timeout errors** A: Increase the timeout in test
+configuration or check for infinite loops
 
-**Q: Performance is poor in development**
-A: Use production build (`npm run build`) for performance testing
+**Q: Performance is poor in development** A: Use production build
+(`npm run build`) for performance testing
 
 ## 📈 Monitoring
 
@@ -404,6 +410,111 @@ The project uses GitHub Actions for CI:
 - Critical systems: > 90%
 - New code: > 85%
 
+## 🎯 Positioning System
+
+The Emotive Engine includes a comprehensive positioning system for dynamic
+mascot targeting.
+
+### Architecture
+
+The positioning system is modular and located in `src/core/positioning/`:
+
+- **`ElementTargeting.js`** - Position relative to DOM elements (buttons, forms,
+  modals, etc.)
+- **`InputTracking.js`** - Follow user input (mouse, touch, audio levels)
+- **`Physics.js`** - Physics-based movement (gravity, magnetism, avoidance)
+- **`Animation.js`** - Animation-based positioning (paths, time, scroll)
+- **`Responsive.js`** - Responsive positioning (breakpoints, accessibility)
+- **`index.js`** - Main orchestrator that combines all modules
+
+### Usage
+
+```javascript
+// Get positioning system
+const positioning = mascot.positionController.getPositioning();
+
+// Element targeting (most common use case)
+positioning.call('moveToElement', '.try-demo-button', 'right', { x: 20, y: 0 });
+positioning.call('moveToButton', 'button', 'right', { x: 20, y: 0 });
+positioning.call('watchElement', '.checkout-button', 'right', { x: 20, y: 0 });
+
+// Input tracking
+positioning.call('moveToMouse', { x: 20, y: 20 });
+positioning.call('moveToTouch', { x: 20, y: 20 });
+
+// Physics
+positioning.call('moveToGravity', { x: 0, y: 0 }, 0.1);
+positioning.call('moveToMagnetic', ['.button1', '.button2'], 0.05);
+
+// Animation
+positioning.call(
+    'moveToPath',
+    [
+        { x: 100, y: 100 },
+        { x: 200, y: 200 },
+    ],
+    1
+);
+positioning.call('moveToScroll', 0.5, { x: 0, y: 0 });
+
+// Responsive
+positioning.call('moveToResponsive', {
+    mobile: { x: 100, y: 100 },
+    desktop: { x: 200, y: 200 },
+});
+```
+
+### Benefits
+
+- **Dynamic targeting** - Always follows current element position
+- **No hardcoding** - Position calculated from live DOM
+- **Responsive** - Adapts to layout changes automatically
+- **Developer-friendly** - Simple API for targeting elements
+- **Extensible** - Easy to add new positioning methods
+
+### Available Methods
+
+**Element Targeting:**
+
+- `moveToElement(targetSelector, position, offset)`
+- `moveToButton(selector, position, offset)`
+- `moveToForm(selector, position, offset)`
+- `moveToModal(selector, position, offset)`
+- `moveToNavigation(selector, position, offset)`
+- `moveToContent(selector, position, offset)`
+- `moveToSidebar(selector, position, offset)`
+- `moveToHeader(selector, position, offset)`
+- `moveToFooter(selector, position, offset)`
+- `watchElement(targetSelector, position, offset)`
+
+**Input Tracking:**
+
+- `moveToMouse(offset, options)`
+- `moveToTouch(offset, options)`
+- `moveToAudio(level, sensitivity, options)`
+- `moveToViewport(position, offset)`
+
+**Physics:**
+
+- `moveToGrid(x, y, offset, options)`
+- `moveToGravity(center, strength, options)`
+- `moveToMagnetic(targets, strength, options)`
+- `moveToAvoid(obstacles, distance, options)`
+- `moveToRandom(bounds, frequency, options)`
+
+**Animation:**
+
+- `moveToPath(points, speed, options)`
+- `moveToTime(duration, easing, options)`
+- `moveToScroll(progress, offset, options)`
+- `animateTo(x, y, duration, easing)`
+
+**Responsive:**
+
+- `moveToResponsive(breakpoints, options)`
+- `moveToGroup(elements, position, offset)`
+- `moveToAccessibility(announcements, position, options)`
+
 ## 🎉 Ready to Code!
 
 You're all set! Start by:
@@ -417,5 +528,5 @@ Happy coding! 🚀
 
 ---
 
-*Last Updated: ${new Date().toISOString()}*
-*Engine Version: 2.4.0*
+_Last Updated: ${new Date().toISOString()}_ _Engine Version: 2.4.0_ _Positioning
+System: Complete modular architecture_

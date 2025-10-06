@@ -44,10 +44,9 @@ export default function HeroMascot({ onMascotReady }: HeroMascotProps) {
       const mascotArea = document.querySelector(mascotAreaSelector)
       if (!mascotArea) {
         console.warn('Mascot area not found, using viewport dimensions')
-        // Fallback to viewport dimensions
-        const isDesktop = window.innerWidth > 1024
-        const newOffsetX = isDesktop ? (window.innerWidth * 0.25) : (window.innerWidth * 0.33) - mascotRadius
-        const newOffsetY = isDesktop ? -(window.innerHeight * 0.15) - mascotRadius + (window.innerHeight * 0.2) : -(window.innerHeight * 0.35) - mascotRadius
+        // Fallback to viewport dimensions - center the mascot
+        const newOffsetX = window.innerWidth * 0.5 - mascotRadius
+        const newOffsetY = window.innerHeight * 0.5 - mascotRadius
         mascotRef.current.setOffset(newOffsetX, newOffsetY, 0)
         return
       }
@@ -55,16 +54,29 @@ export default function HeroMascot({ onMascotReady }: HeroMascotProps) {
       const areaRect = mascotArea.getBoundingClientRect()
       console.log('Mascot area dimensions:', areaRect.width, 'x', areaRect.height)
       console.log('Mascot radius:', mascotRadius)
+      console.log('Viewport dimensions:', window.innerWidth, 'x', window.innerHeight)
       
-        // Position so the CENTER of the mascot is at 1/6 from top
-        // Center horizontally on desktop, right-side on mobile
-        const isDesktop = window.innerWidth > 1024
-        const newOffsetX = isDesktop ? (areaRect.width * 0.25) : (areaRect.width * 0.33) - mascotRadius
-        // Add more offset on desktop to clear the header
-        const newOffsetY = isDesktop ? -(areaRect.height * 0.15) - mascotRadius + (areaRect.height * 0.2) : -(areaRect.height * 0.35) - mascotRadius + (areaRect.height * 0.08)
+        // Position mascot in center of viewport for visibility
+        // Use simple center positioning
+        const newOffsetX = window.innerWidth * 0.5 - mascotRadius
+        const newOffsetY = window.innerHeight * 0.5 - mascotRadius
       
-      console.log('Setting mascot offset:', newOffsetX, newOffsetY)
-      mascotRef.current.setOffset(newOffsetX, newOffsetY, 0)
+      console.log('Calculated center position:', newOffsetX, newOffsetY)
+      console.log('Canvas element exists:', !!canvasRef.current)
+      console.log('Mascot instance exists:', !!mascotRef.current)
+      console.log('setOffset method exists:', typeof mascotRef.current?.setOffset === 'function')
+      
+      if (mascotRef.current && typeof mascotRef.current.setOffset === 'function') {
+        mascotRef.current.setOffset(newOffsetX, newOffsetY, 0)
+        console.log('Successfully called setOffset')
+        
+        // Check if mascot is actually positioned
+        setTimeout(() => {
+          console.log('Mascot position after setOffset:', mascotRef.current?.getPosition?.())
+        }, 100)
+      } else {
+        console.error('Cannot call setOffset - mascot or method not available')
+      }
     }
   }, [calculateMascotRadius])
 
@@ -219,8 +231,8 @@ export default function HeroMascot({ onMascotReady }: HeroMascotProps) {
           enableGazeTracking: false,
           enableIdleBehaviors: true,
           renderSize: { width: window.innerWidth, height: window.innerHeight }, // Keep viewport size for rendering
-          offsetX: window.innerWidth > 1024 ? (areaWidth * 0.25) : (areaWidth * 0.33) - mascotRadius, // Top-right on desktop, right-side on mobile
-          offsetY: window.innerWidth > 1024 ? -(areaHeight * 0.15) - mascotRadius + (areaHeight * 0.2) : -(areaHeight * 0.35) - mascotRadius + (areaHeight * 0.08), // Higher up on screen
+          offsetX: window.innerWidth * 0.8 - mascotRadius, // Position in top right area
+          offsetY: window.innerHeight * 0.2 - mascotRadius, // Position near top
           offsetZ: 0, // No Z offset initially
           classicConfig: {
             coreColor: '#FFFFFF',
@@ -232,6 +244,17 @@ export default function HeroMascot({ onMascotReady }: HeroMascotProps) {
         })
 
         mascotRef.current = mascot
+        console.log('🎭 Mascot created successfully:', !!mascot)
+        console.log('🎯 PositionController available:', !!mascot.positionController)
+        
+        // Detailed initial position tracking
+        const initialPos = mascot.getPosition?.()
+        console.log('📍 INITIAL POSITION:', {
+          position: initialPos,
+          offsetCalculated: `${window.innerWidth * 0.5 - mascotRadius}, ${window.innerHeight * 0.5 - mascotRadius}`,
+          viewport: `${window.innerWidth}x${window.innerHeight}`,
+          mascotRadius
+        })
         onMascotReady?.(mascot)
 
 
@@ -239,11 +262,29 @@ export default function HeroMascot({ onMascotReady }: HeroMascotProps) {
         setTimeout(() => {
           // Try to manually start the mascot
           if (typeof mascot.start === 'function') {
+            console.log('Starting mascot animation')
             mascot.start()
+          } else {
+            console.warn('Mascot start method not available')
           }
           
-          // Set initial state
+          // Set initial state - prevent movement until Element Targeting takes over
           mascot.setEmotion('neutral')
+          
+          // Ensure mascot starts in circle shape (not star)
+          if (typeof mascot.morphTo === 'function') {
+            mascot.morphTo('circle')
+          }
+          
+          // Prevent mascot from moving initially - position stays static
+          if (typeof mascot.animateOffset === 'function') {
+            // Lock position in top right area - mascot stays put
+            mascot.setOffset(window.innerWidth * 0.8 - mascotRadius, window.innerHeight * 0.2 - mascotRadius, 0)
+            console.log('🔒 POSITION LOCKED:', {
+              lockedAt: mascot.getPosition?.(),
+              reason: 'Mascot positioned in top right - no movement'
+            })
+          }
           
         // Disable gaze tracking to test particle center fix
         if (typeof mascot.setGazeTracking === 'function') {

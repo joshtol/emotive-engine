@@ -1,344 +1,331 @@
-'use client'
-
-import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import HeroMascot from '../HeroMascot'
 
 interface HeroSectionProps {
-  onMascotPosition?: (x: number, y: number) => void
-  mascot?: any
+  onMascotPosition: (position: { x: number, y: number, visible: boolean }) => void
+  mascot: any
 }
 
 export default function HeroSection({ onMascotPosition, mascot }: HeroSectionProps) {
   const [scrollY, setScrollY] = useState(0)
-  const [hasTriggeredDemo, setHasTriggeredDemo] = useState(false)
-  const [buttonPosition, setButtonPosition] = useState<{x: number, y: number} | null>(null)
-  const [originalPosition, setOriginalPosition] = useState<{x: number, y: number} | null>(null)
 
-  // Capture button position and original mascot position when component mounts
-  useEffect(() => {
-    const captureButtonPosition = () => {
-      // Look for the Try Demo button specifically in the hero section, not the nav
-      const demoButton = document.querySelector('.hero-text-container a[href="/demo"]') as HTMLElement
-      if (demoButton) {
-        const buttonRect = demoButton.getBoundingClientRect()
-        const buttonCenterX = buttonRect.left + buttonRect.width / 2
-        const buttonCenterY = buttonRect.top + buttonRect.height / 2
-        setButtonPosition({ x: buttonCenterX, y: buttonCenterY })
-      } else {
-        const allDemoLinks = document.querySelectorAll('a[href="/demo"]')
-      }
-    }
-    
-    const captureOriginalPosition = () => {
-      if (mascot && mascot.positionController && !originalPosition) {
-        const x = mascot.positionController.offsetX
-        const y = mascot.positionController.offsetY
-        setOriginalPosition({ x, y })
-      }
-    }
-    
-    // Try multiple times with increasing delays
-    setTimeout(captureButtonPosition, 100)
-    setTimeout(captureButtonPosition, 500)
-    setTimeout(captureButtonPosition, 1000)
-    
-    setTimeout(captureOriginalPosition, 100)
-    setTimeout(captureOriginalPosition, 500)
-  }, [mascot, originalPosition])
-
+  // Simple scroll tracking for component state only
   useEffect(() => {
     const handleScroll = () => {
-      const newScrollY = window.scrollY
-      setScrollY(newScrollY)
-      
-      
-      // Gradually move mascot toward Try Demo button with parallax (reversible)
-      if (mascot && buttonPosition) {
-        // Calculate progress from 50px to 300px scroll (when button starts fading)
-        const startScroll = 50
-        const endScroll = 300
-        const progress = Math.min(Math.max((newScrollY - startScroll) / (endScroll - startScroll), 0), 1)
-        
-        // Get mascot's current actual position (matches HeroMascot positioning logic)
-        const isDesktop = window.innerWidth > 1024
-        const mascotRadius = 50 // Approximate radius for positioning
-        
-        // Use captured original position if available, otherwise calculate expected position
-        const originalX = originalPosition?.x ?? (isDesktop ? (window.innerWidth * 0.25) : (window.innerWidth * 0.33) - mascotRadius)
-        const originalY = originalPosition?.y ?? (isDesktop ? -(window.innerHeight * 0.25) - mascotRadius + (window.innerHeight * 0.15) : -(window.innerHeight * 0.35) - mascotRadius + (window.innerHeight * 0.08))
-        
-        if (newScrollY < startScroll) {
-          // When scrolled back above start point, reset to exact original position
-          mascot.setOffset(originalX, originalY, 0)
-          
-          // Reset scale to 100%
-          if (typeof mascot.setScale === 'function') {
-            mascot.setScale(1.0)
-          }
-          
-          // Reset to original state
-          if (hasTriggeredDemo) {
-            setHasTriggeredDemo(false)
-            mascot.setEmotion('neutral')
-            
-            // Return to circle shape
-            if (typeof mascot.setShape === 'function') {
-              mascot.setShape('circle')
-            } else if (typeof mascot.morphTo === 'function') {
-              mascot.morphTo('circle')
-            }
-          }
-        } else {
-          // Normal animation when scrolling down
-          // Target position (to the right of Try Demo button)
-          const buttonOffset = 80 // Hover 80px to the right of the button
-          const targetX = (buttonPosition.x + buttonOffset) - window.innerWidth / 2
-          const targetY = buttonPosition.y - window.innerHeight / 2
-          
-          // Interpolate between original and target positions
-          const currentX = originalX + (targetX - originalX) * progress
-          const currentY = originalY + (targetY - originalY) * progress
-          
-          // Calculate size scaling (100% to 60% as it approaches button)
-          const currentScale = 1.0 - (progress * 0.4) // Scale from 1.0 to 0.6
-          
-          
-          // Move mascot to interpolated position
-          mascot.setOffset(currentX, currentY, 0)
-          
-          
-          
-          // Apply size scaling
-          if (typeof mascot.setScale === 'function') {
-            mascot.setScale(currentScale)
-          }
-          
-          // Start nod immediately when movement begins, but save euphoria for the button
-          if (!hasTriggeredDemo) {
-            setHasTriggeredDemo(true)
-            mascot.express('nod')
-          }
-          
-          // Trigger euphoria when reaching the button (80% progress)
-          if (progress >= 0.8) {
-            mascot.setEmotion('euphoria')
-          }
-          
-          // Change to sun shape as it moves
-          if (typeof mascot.setShape === 'function') {
-            mascot.setShape('sun')
-          } else if (typeof mascot.morphTo === 'function') {
-            mascot.morphTo('sun')
-          }
-        }
-      }
+      setScrollY(window.scrollY)
     }
-    
+
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [hasTriggeredDemo, mascot, buttonPosition])
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Calculate container dimensions
+  const glassContainerHeight = 'clamp(240px, 44vw, 560px)'
+  
   return (
-    <section className="hero-section" style={{ height: '100vh', position: 'relative' }}>
-      {/* Hero Text */}
-      <div className="hero-text-container" style={{
-        position: 'fixed',
-        top: '15%',
-        left: 'max(5%, 2rem)',
-        zIndex: 1000,
-        pointerEvents: 'auto'
-      }}>
-        {/* Hero Text with Chromatic Aberration */}
-        <div style={{ position: 'relative' }}>
-          {/* GET - fades out with EMOTIVE */}
-          <img 
-            src="/assets/misc/hero/get.svg" 
-            alt="GET"
+    <section className="hero-section">
+      {/* Hero Mascot - positioned in top right */}
+      <HeroMascot onMascotPosition={onMascotPosition} />
+
+      {/* Main hero content container */}
+      <div className="hero-content">
+        {/* Glass container 1 - GET EMOTIVE text */}
+        <div 
+          className="glass-container glass-container-1"
+          style={{
+            height: 'clamp(320px, 60vw, 760px)',
+            transition: 'all 0.5s ease'
+          }}
+        >
+          {/* EMOTIVE outline 1 */}
+          <div 
+            className="emotive-outline emotive-outline-1"
             style={{
-              width: 'clamp(150px, 20vw, 300px)', // Much smaller than EMOTIVE
-              height: 'auto',
-              display: 'block',
-              marginBottom: '-0.1em',
-              opacity: Math.max(1 - Math.max(scrollY - 450, 0) / 200, 0) // Fade out slightly after EMOTIVE
+              top: `${Math.min(scrollY * 0.8, 200)}px`,
+              transform: `scale(${1 + Math.min(scrollY / 400, 0.1)})`,
+              transformOrigin: 'left top',
+              transition: 'all 0.5s ease'
             }}
           />
-          
-          {/* EMOTIVE with chromatic aberration effect */}
-          <div style={{ position: 'relative' }}>
-            {/* First outline - slides straight down, evenly spaced */}
-            <img 
-              src="/assets/misc/hero/emotive-outline.svg" 
-              alt=""
-              style={{
-                position: 'absolute',
-                top: `${Math.min(scrollY * 0.6, 120)}px`, // Move to 120px down
-                left: '0px', // Stay centered
-                width: 'clamp(300px, 40vw, 600px)',
-                height: 'auto',
-                opacity: Math.min(scrollY / 100 * 0.6, 0.6) * Math.max(1 - Math.max(scrollY - 400, 0) / 200, 0), // Faster fade in
-                zIndex: -2,
-                pointerEvents: 'none'
-              }}
-            />
+
+          {/* EMOTIVE outline 2 */}
+          in
+          <div 
+            className="emotive-outline emotive-outline-2"
+            style={{
+              top: `${Math.min(scrollY * 0.4, 100)}px`,
+              transform: `scale(${1 + Math.min(scrollY / 500, 0.05)})`,
+              transformOrigin: 'left top',
+              transition: 'all 0.5s ease'
+            }}
+          />
+
+          {/* GET EMOTIVE text container */}
+          <div className="hero-text-container">
+            <div className="hero-text-main">
+              <img 
+                src="/assets/icons/get.svg" 
+                alt="GET" 
+                className="get-text"
+                style={{ marginBottom: '0.5em' }}
+              />
+              <img 
+                src="/assets/icons/emotive-sm.svg" 
+                alt="EMOTIVE" 
+                className="emotive-text"
+              />
+            </div>
             
-            {/* Second outline - slides straight down, evenly spaced */}
-            <img 
-              src="/assets/misc/hero/emotive-outline.svg" 
-              alt=""
-              style={{
-                position: 'absolute',
-                top: `${Math.min(scrollY * 0.3, 60)}px`, // Move to 60px down (half of first outline)
-                left: '0px', // Stay centered
-                width: 'clamp(300px, 40vw, 600px)',
-                height: 'auto',
-                opacity: Math.min(scrollY / 150 * 0.4, 0.4) * Math.max(1 - Math.max(scrollY - 400, 0) / 200, 0), // Faster fade in
-                zIndex: -1,
-                pointerEvents: 'none'
-              }}
-            />
-            
-            {/* Main EMOTIVE with gradient - fades out with Try Demo button */}
-            <img 
-              src="/assets/misc/hero/emotive-gradient.svg" 
-              alt="EMOTIVE"
-              style={{
-                width: 'clamp(300px, 40vw, 600px)',
-                height: 'auto',
-                display: 'block',
-                position: 'relative',
-                zIndex: 1,
-                opacity: Math.max(1 - Math.max(scrollY - 400, 0) / 200, 0) // Fade out with Try Demo button
-              }}
-            />
+            {/* Tagline */}
+            <div className="hero-tagline">
+              AI Communication without Uncanny Valley
+            </div>
+
+            {/* Selling points */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 'clamp(0.8rem, 2vw, 1.2rem)',
+              fontSize: 'clamp(0.9rem, 2.2vw, 1rem)',
+              opacity: 0.8,
+              marginBottom: 'clamp(1rem, 3vw, 1.5rem)'
+            }}>
+              <span>✨ Real-time Response</span>
+              <span>🎭 15 Core Emotions</span>
+              <span>🌐 Cross-platform</span>
+              <span>🔋 Battery-Optimized</span>
+              <span>🎪 50+ Gesture Animations</span>
+              <span>📱 No GPU Required</span>
+            </div>
+            <div style={{
+              fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
+              opacity: 0.7,
+              marginTop: 'clamp(0.5rem, 1.5vw, 0.8rem)',
+              textAlign: 'center',
+              fontStyle: 'italic'
+            }}>
+              <span>∞ Unlimited Animation Combinations</span>
+            </div>
           </div>
         </div>
-        {/* Tagline - fades out early */}
-        <div style={{
-          fontSize: '1.2rem',
-          fontWeight: '400',
-          marginTop: '0.5rem',
-          opacity: Math.max(0.8 - scrollY / 250, 0), // Fade out early
-          letterSpacing: '0.1em',
-          color: 'white'
-        }}>Universal Communication</div>
 
-        {/* Value Proposition - fades out early */}
-        <div style={{
-          marginTop: '2rem',
-          maxWidth: '500px',
-          color: 'white',
-          opacity: Math.max(0.9 - scrollY / 250, 0) // Fade out early
-        }}>
-          <p style={{
-            fontSize: '1.1rem',
-            lineHeight: '1.6',
-            marginBottom: '1rem'
+        {/* Glass container 2 - CTAs and features */}
+        <div 
+          className="glass-container glass-container-2"
+          style={{
+            height: glassContainerHeight,
+            zIndex: 101
+          }}
+        >
+          {/* Try Demo Button */}
+          <div className="demo-button-container" style={{ marginTop: 'clamp(1rem, 3vw, 2rem)' }}>
+            <button className="cta-button demo-button">
+              Try Demo
+            </button>
+          </div>
+
+          {/* Feature tagline */}
+          <div className="feature-tagline" style={{
+            fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
+            margin: 'clamp(1rem, 3vw, 1.5rem) 0 clamp(0.8rem, 2vw, 1.2rem) 0',
+            textAlign: 'center',
+            fontWeight: '600',
+            opacity: 0.9
           }}>
-            Emotional AI that bridges human communication without the uncanny valley.
-          </p>
-          <div style={{
-            display: 'flex',
-            gap: '1.5rem',
-            flexWrap: 'wrap',
-            fontSize: '0.9rem',
+            Perfect for Everything User-Facing
+          </div>
+
+          {/* Feature grid */}
+          <div className="feature-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: 'clamp(0.8rem, 2vw, 1rem)',
+            fontSize: 'clamp(0.8rem, 1.8vw, 0.95rem)',
+            marginBottom: 'clamp(0.8rem, 2.5vw, 1.2rem)',
             opacity: 0.8
           }}>
-            <span>✨ Real-time Response</span>
-            <span>🎭 50+ Emotions</span>
-            <span>🌐 Cross-platform</span>
+            <span>🤖 AI Interfaces</span>
+            <span>📱 Mobile Apps</span>
+            <span>🌐 Web Platforms</span>
+            <span>💻 Desktop Apps</span>
+            <span>🎮 Gaming UIs</span>
+            <span>🏪 Retail Systems</span>
+          </div>
+
+          {/* Feature text */}
+          <div className="feature-text" style={{
+            fontSize: 'clamp(0.85rem, 2vw, 1rem)',
+            marginBottom: 'clamp(1rem, 3vw, 1.5rem)',
+            textAlign: 'center',
+            opacity: 0.8,
+            lineHeight: '1.4'
+          }}>
+            Canvas2D + VanillaJS. Universal compatibility. Battery optimized for mobile.
+            {/* Commented out: ∞ 1.2 Quintillion Animation Combinations */}
+            <br />
+            <strong style={{ opacity: 0.9 }}>Instant deployment. Zero dependencies.</strong>
+          </div>
+
+          {/* Usage examples */}
+          <div className="usage-examples" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gap: 'clamp(0.6rem, 1.5vw, 0.8rem)',
+            fontSize: 'clamp(0.75rem, 1.6vw, 0.9rem)',
+            marginBottom: 'clamp(1.2rem, 3.5vw, 2rem)',
+            opacity: 0.7
+          }}>
+            <span>💬 Chat Widgets</span>
+            <span>🎯 Call-to-Actions</span>
+            <span>⚡ Loading States</span>
+            <span>🔔 Notifications</span>
+            <span>📊 Progress Bars</span>
+            <span>🎨 Brand Characters</span>
           </div>
         </div>
 
-        {/* CTA Button - fades out late, after user scrolls past it */}
-        <Link href="/demo" style={{
-          display: 'inline-block',
-          marginTop: '2rem',
-          padding: '1rem 2rem',
-          backgroundColor: 'var(--brand-primary)',
-          color: 'white',
-          textDecoration: 'none',
-          borderRadius: '0.5rem',
-          fontSize: '1.1rem',
-          fontWeight: '600',
-          letterSpacing: '0.05em',
-          transition: 'all 0.3s ease',
-          boxShadow: '0 4px 15px rgba(221, 74, 154, 0.3)',
-          pointerEvents: 'auto',
-          position: 'relative',
-          zIndex: 1100, // Above mascot (500) and hero text (1000)
-          opacity: Math.max(1 - Math.max(scrollY - 400, 0) / 200, 0) // Start fading after 400px scroll
-        }}>Try Demo</Link>
-      </div>
-
-      {/* Use Case Preview Cards Teaser */}
-      <div style={{
-        position: 'absolute',
-        bottom: '4rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '90%',
-        maxWidth: '1200px',
-        height: '200px',
-        pointerEvents: 'none'
-      }}>
-        {/* Preview Cards */}
-        {[
-          { title: 'Retail Checkout AI', color: '#FF6B9D', delay: 0 },
-          { title: 'Smart Home Hub', color: '#4ECDC4', delay: 0.2 },
-          { title: 'Music Platform', color: '#45B7D1', delay: 0.4 },
-          { title: 'Customer Service', color: '#96CEB4', delay: 0.6 },
-          { title: 'Gaming Interface', color: '#FFEAA7', delay: 0.8 }
-        ].map((card, index) => (
-          <div
-            key={card.title}
-            style={{
-              position: 'absolute',
-              left: `${20 + index * 15}%`, // Spread horizontally
-              top: `${Math.sin(scrollY * 0.01 + card.delay) * 10 + 50}%`, // Floating effect
-              transform: `
-                translateX(-50%) 
-                translateY(-50%) 
-                rotate(${Math.sin(scrollY * 0.005 + card.delay) * 5}deg)
-                scale(${0.8 + Math.sin(scrollY * 0.008 + card.delay) * 0.1})
-              `, // Rotation and scale animation
-              width: '180px',
-              height: '120px',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '12px',
-              border: `2px solid ${card.color}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              textAlign: 'center',
-              opacity: (0.7 + Math.sin(scrollY * 0.01 + card.delay) * 0.2) * Math.max(1 - scrollY / 150, 0), // Fade out faster
-              boxShadow: `0 8px 32px rgba(${card.color.slice(1).match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ')}, 0.3)`,
-              zIndex: 5 - index, // Stack order
-              transition: 'all 0.3s ease'
-            }}
-          >
-            {card.title}
-          </div>
-        ))}
-        
-        {/* Teaser Text */}
-        <div style={{
-          position: 'absolute',
-          bottom: '-3rem',
+        {/* Scroll indicator */}
+        <div className="scroll-indicator" style={{ 
+          position: 'fixed',
+          bottom: '2vh',
           left: '50%',
           transform: 'translateX(-50%)',
           color: 'white',
-          opacity: 0.6 * Math.max(1 - scrollY / 150, 0), // Fade out faster
-          fontSize: '0.9rem',
-          letterSpacing: '0.1em',
-          textAlign: 'center',
-          animation: 'bounce 2s infinite'
+          fontSize: '2rem',
+          zIndex: 1100,
+          animation: 'bounce 2s infinite',
+          pointerEvents: 'none'
         }}>
-          Discover Use Cases ↓
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 9L12 15L6 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <div style={{
+            fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)',
+            marginTop: '0.5rem',
+            opacity: 0.6
+          }}>
+            Discover Use Cases
+          </div>
+        </div>
+
+        {/* Use case carousel */}
+        <div 
+          className="carousel-container"
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '200px',
+            bottom: '90vh',
+            transform: `translateY(${scrollY > 100 ? 50 : 0}px)`,
+            transition: 'all 0.5s ease',
+            zIndex: scrollY > 100 ? 400 : 1100,
+            opacity: 1
+          }}
+        >
+          {/* Carousel teaser */}
+          <div className="carousel-teaser" style={{
+            position: 'absolute',
+            bottom: '-1rem',
+            left: '0',
+            width: '100%',
+            textAlign: 'center',
+            color: '#FFFFFF',
+            fontSize: 'clamp(0.8rem, 2vw, 1rem)',
+            zIndex: 1101,
+            opacity: 0.6
+          }}>
+            Real-world applications powered by Emotive Engine
+          </div>
+
+          {/* Carousel cards */}
+          {mascot && [
+            { title: 'Retail Checkout AI', color: '#FF6B9D', emotion: 'neutral', icon: '💳', delay: 0 },
+            { title: 'Smart Home Hub', color: '#4ECDC4', emotion: 'calm', icon: '🏠', delay: 0.2 },
+            { title: 'Music Platform', color: '#45B7D1', emotion: 'excitement', icon: '🎵', delay: 0.4 },
+            { title: 'Customer Service', color: '#96CEB4', emotion: 'joy', icon: '🎧', delay: 0.6 },
+            { title: 'Gaming Interface', color: '#FFEAA7', emotion: 'euphoria', icon: '🕹️', delay: 0.8 }
+          ]
+          .slice(0, window.innerWidth <= 768 ? 3 : 5)
+          .map((card, index, array) => {
+            const scrollThreshold = 50
+            const carouselDuration = 1000
+            const cardDuration = carouselDuration / array.length
+            
+            const normalizedScroll = Math.max(0, (scrollY - scrollThreshold)) * 0.5
+            const activeCardIndex = Math.floor(normalizedScroll / cardDuration) % array.length
+            const isActiveCard = activeCardIndex === index
+            
+            if (isActiveCard && mascot) {
+              setTimeout(() => {
+                mascot.setEmotion(card.emotion)
+                mascot.express('nod')
+              }, 100)
+            }
+            
+            return (
+              <div
+                key={card.title}
+                className={`carousel-card ${card.title.toLowerCase().replace(/\s+/g, '-')}`}
+                style={{
+                  position: 'absolute',
+                  left: `${10 + index * (80 / (array.length - 1))}%`,
+                  top: `${Math.sin(scrollY * 0.01 + card.delay) * 10 + 50 - scrollY * 0.05}%`,
+                  transform: `
+                    translateX(-50%) 
+                    translateY(-50%) 
+                    rotate(${isActiveCard ? Math.sin(scrollY * 0.005 + card.delay) * 8 : Math.sin(scrollY * 0.005 + card.delay) * 5}deg)
+                    scale(${isActiveCard ? 0.95 : 0.8 + Math.sin(scrollY * 0.008 + card.delay) * 0.1})
+                  `,
+                  width: window.innerWidth <= 768 ? 'clamp(200px, 25vw, 250px)' : '180px',
+                  height: window.innerWidth <= 768 ? 'clamp(140px, 18vw, 180px)' : '120px',
+                  backgroundColor: isActiveCard ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.15)',
+                  backdropFilter: 'blur(15px)',
+                  borderRadius: '16px',
+                  border: `2px solid ${card.color}`,
+                  boxShadow: isActiveCard 
+                    ? `0 12px 40px rgba(${card.color.slice(1).match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ')}, 0.4), 0 0 30px ${card.color}60`
+                    : `0 8px 32px rgba(${card.color.slice(1).match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ')}, 0.3)`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: window.innerWidth <= 768 ? 'clamp(0.9rem, 2.5vw, 1.1rem)' : '0.9rem',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  opacity: isActiveCard ? 1.0 : (0.7 + Math.sin(scrollY * 0.01 + card.delay) * 0.2),
+                  zIndex: isActiveCard ? 10 : (5 - index),
+                  transition: 'all 0.5s ease'
+                }}
+              >
+                <div style={{ fontSize: '1.5em', marginBottom: '0.5em' }}>{card.icon}</div>
+                <div>{card.title}</div>
+              </div>
+            )
+          })}
         </div>
       </div>
+
+      {/* Backdrop blur layer */}
+      <div className="backdrop-blur-layer" />
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% {
+            transform: translateX(-50%) translateY(0);
+          }
+          40% {
+            transform: translateX(-50%) translateY(-10px);
+          }
+          60% {
+            transform: translateX(-50%) translateY(-5px);
+          }
+        }
+      `}</style>
     </section>
   )
 }
