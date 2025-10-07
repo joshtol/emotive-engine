@@ -7,7 +7,14 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ onMascotPosition, mascot }: HeroSectionProps) {
-  const [scrollY, setScrollY] = useState(0)
+  const [scrollY, setScrollY] = useState(0)\r\n\r\n  const heroHighlights = [\r\n    'Real-time Response',\r\n    '15 Core Emotions',\r\n    'Cross-platform',\r\n    'Battery-optimized',\r\n    '50+ Gesture Animations',\r\n    'No GPU Required'\r\n  ];\r\n\r\n  const heroUseCases = [\r\n    'AI Interfaces',\r\n    'Mobile Apps',\r\n    'Web Platforms',\r\n    'Desktop Apps',\r\n    'Gaming UIs',\r\n    'Retail Systems'\r\n  ];\r\n\r\n  const heroApplications = [\r\n    'Chat Widgets',\r\n    'Call-to-Actions',\r\n    'Loading States',\r\n    'Notifications',\r\n    'Progress Bars',\r\n    'Brand Characters'\r\n  ];\r\n\r\n  const carouselCards = [
+    { title: 'Retail Checkout AI', color: '#FF6B9D', emotion: 'neutral', delay: 0 },
+    { title: 'Smart Home Hub', color: '#4ECDC4', emotion: 'calm', delay: 0.2 },
+    { title: 'Music Platform', color: '#45B7D1', emotion: 'excited', delay: 0.4 },
+    { title: 'Customer Service', color: '#96CEB4', emotion: 'joy', delay: 0.6 },
+    { title: 'Gaming Interface', color: '#FFEAA7', emotion: 'euphoria', delay: 0.8 },
+    { title: 'Healthcare Assistant', color: '#FFAA85', emotion: 'calm', delay: 1.0 }
+  ];
 
   // Simple scroll tracking for component state only
   useEffect(() => {
@@ -52,7 +59,7 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
           />
 
           {/* EMOTIVE outline 2 */}
-          in
+
           <div 
             className="emotive-outline emotive-outline-2"
             style={{
@@ -67,13 +74,13 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
           <div className="hero-text-container">
             <div className="hero-text-main">
               <img 
-                src="/assets/icons/get.svg" 
+                src="/assets/misc/hero/get.svg" 
                 alt="GET" 
                 className="get-text"
                 style={{ marginBottom: '0.5em' }}
               />
               <img 
-                src="/assets/icons/emotive-sm.svg" 
+                src="/assets/misc/hero/emotive-outline.svg" 
                 alt="EMOTIVE" 
                 className="emotive-text"
               />
@@ -93,12 +100,9 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
               opacity: 0.8,
               marginBottom: 'clamp(1rem, 3vw, 1.5rem)'
             }}>
-              <span>✨ Real-time Response</span>
-              <span>🎭 15 Core Emotions</span>
-              <span>🌐 Cross-platform</span>
-              <span>🔋 Battery-Optimized</span>
-              <span>🎪 50+ Gesture Animations</span>
-              <span>📱 No GPU Required</span>
+              {heroHighlights.map(item => (
+                <span key={item}>{item}</span>
+              ))}
             </div>
             <div style={{
               fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
@@ -107,7 +111,7 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
               textAlign: 'center',
               fontStyle: 'italic'
             }}>
-              <span>∞ Unlimited Animation Combinations</span>
+              <span>Unlimited Animation Combinations</span>
             </div>
           </div>
         </div>
@@ -147,12 +151,9 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
             marginBottom: 'clamp(0.8rem, 2.5vw, 1.2rem)',
             opacity: 0.8
           }}>
-            <span>🤖 AI Interfaces</span>
-            <span>📱 Mobile Apps</span>
-            <span>🌐 Web Platforms</span>
-            <span>💻 Desktop Apps</span>
-            <span>🎮 Gaming UIs</span>
-            <span>🏪 Retail Systems</span>
+            {heroUseCases.map(item => (
+              <span key={item}>{item}</span>
+            ))}
           </div>
 
           {/* Feature text */}
@@ -164,7 +165,7 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
             lineHeight: '1.4'
           }}>
             Canvas2D + VanillaJS. Universal compatibility. Battery optimized for mobile.
-            {/* Commented out: ∞ 1.2 Quintillion Animation Combinations */}
+           
             <br />
             <strong style={{ opacity: 0.9 }}>Instant deployment. Zero dependencies.</strong>
           </div>
@@ -178,16 +179,12 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
             marginBottom: 'clamp(1.2rem, 3.5vw, 2rem)',
             opacity: 0.7
           }}>
-            <span>💬 Chat Widgets</span>
-            <span>🎯 Call-to-Actions</span>
-            <span>⚡ Loading States</span>
-            <span>🔔 Notifications</span>
-            <span>📊 Progress Bars</span>
-            <span>🎨 Brand Characters</span>
+            {heroApplications.map(item => (
+              <span key={item}>{item}</span>
+            ))}
           </div>
-        </div>
 
-        {/* Scroll indicator */}
+{/* Scroll indicator */}
         <div className="scroll-indicator" style={{ 
           position: 'fixed',
           bottom: '2vh',
@@ -241,15 +238,7 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
           </div>
 
           {/* Carousel cards */}
-          {mascot && [
-            { title: 'Retail Checkout AI', color: '#FF6B9D', emotion: 'neutral', icon: '💳', delay: 0 },
-            { title: 'Smart Home Hub', color: '#4ECDC4', emotion: 'calm', icon: '🏠', delay: 0.2 },
-            { title: 'Music Platform', color: '#45B7D1', emotion: 'excitement', icon: '🎵', delay: 0.4 },
-            { title: 'Customer Service', color: '#96CEB4', emotion: 'joy', icon: '🎧', delay: 0.6 },
-            { title: 'Gaming Interface', color: '#FFEAA7', emotion: 'euphoria', icon: '🕹️', delay: 0.8 }
-          ]
-          .slice(0, window.innerWidth <= 768 ? 3 : 5)
-          .map((card, index, array) => {
+          {mascot && carouselCards.slice(0, window.innerWidth <= 768 ? 3 : 5).map((card, index, array) => {
             const scrollThreshold = 50
             const carouselDuration = 1000
             const cardDuration = carouselDuration / array.length
@@ -329,3 +318,6 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
     </section>
   )
 }
+
+
+

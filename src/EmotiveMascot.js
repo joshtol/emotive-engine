@@ -640,6 +640,24 @@ class EmotiveMascot {
     }
 
     /**
+     * Get the current position information
+     * @returns {Object|null} Current position metadata or null if not available
+     */
+    getPosition() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.positionController || typeof this.positionController.getPosition !== 'function') {
+                return null;
+            }
+
+            const hasWindow = typeof window !== 'undefined';
+            const centerX = hasWindow ? window.innerWidth / 2 : 0;
+            const centerY = hasWindow ? window.innerHeight / 2 : 0;
+
+            return this.positionController.getPosition(centerX, centerY);
+        }, 'get-position', this)();
+    }
+
+    /**
      * Enable or disable gaze tracking
      * @param {boolean} enabled - Whether to enable gaze tracking
      * @returns {EmotiveMascot} This instance for chaining
