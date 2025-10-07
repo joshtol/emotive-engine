@@ -7,7 +7,36 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ onMascotPosition, mascot }: HeroSectionProps) {
-  const [scrollY, setScrollY] = useState(0)\r\n\r\n  const heroHighlights = [\r\n    'Real-time Response',\r\n    '15 Core Emotions',\r\n    'Cross-platform',\r\n    'Battery-optimized',\r\n    '50+ Gesture Animations',\r\n    'No GPU Required'\r\n  ];\r\n\r\n  const heroUseCases = [\r\n    'AI Interfaces',\r\n    'Mobile Apps',\r\n    'Web Platforms',\r\n    'Desktop Apps',\r\n    'Gaming UIs',\r\n    'Retail Systems'\r\n  ];\r\n\r\n  const heroApplications = [\r\n    'Chat Widgets',\r\n    'Call-to-Actions',\r\n    'Loading States',\r\n    'Notifications',\r\n    'Progress Bars',\r\n    'Brand Characters'\r\n  ];\r\n\r\n  const carouselCards = [
+  const [scrollY, setScrollY] = useState(0)
+
+  const heroHighlights = [
+    'Real-time Response',
+    '15 Core Emotions',
+    'Cross-platform',
+    'Battery-optimized',
+    '50+ Gesture Animations',
+    'No GPU Required'
+  ];
+
+  const heroUseCases = [
+    'AI Interfaces',
+    'Mobile Apps',
+    'Web Platforms',
+    'Desktop Apps',
+    'Gaming UIs',
+    'Retail Systems'
+  ];
+
+  const heroApplications = [
+    'Chat Widgets',
+    'Call-to-Actions',
+    'Loading States',
+    'Notifications',
+    'Progress Bars',
+    'Brand Characters'
+  ];
+
+  const carouselCards = [
     { title: 'Retail Checkout AI', color: '#FF6B9D', emotion: 'neutral', delay: 0 },
     { title: 'Smart Home Hub', color: '#4ECDC4', emotion: 'calm', delay: 0.2 },
     { title: 'Music Platform', color: '#45B7D1', emotion: 'excited', delay: 0.4 },
@@ -260,7 +289,7 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
                 className={`carousel-card ${card.title.toLowerCase().replace(/\s+/g, '-')}`}
                 style={{
                   position: 'absolute',
-                  left: `${10 + index * (80 / (array.length - 1))}%`,
+                  left: `${10 + index * (80 / Math.max(array.length - 1, 1))}%`,
                   top: `${Math.sin(scrollY * 0.01 + card.delay) * 10 + 50 - scrollY * 0.05}%`,
                   transform: `
                     translateX(-50%) 
@@ -290,7 +319,6 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
                   transition: 'all 0.5s ease'
                 }}
               >
-                <div style={{ fontSize: '1.5em', marginBottom: '0.5em' }}>{card.icon}</div>
                 <div>{card.title}</div>
               </div>
             )
