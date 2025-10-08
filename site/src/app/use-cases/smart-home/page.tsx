@@ -75,8 +75,8 @@ export default function SmartHomePage() {
             margin: '0 auto 2rem auto',
             lineHeight: 1.6
           }}>
-            Unified IoT control with emotional AI that understands context and responds
-            naturally to voice commands. Makes smart homes truly intelligent.
+            Transform smart homes with unified IoT control that understands context and responds
+            naturally to voice commands—making intelligent homes truly intuitive.
           </p>
         </div>
 
@@ -321,7 +321,7 @@ export default function SmartHomePage() {
                 🎤 Natural Voice Control
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Understands context and intent, not just keywords. Feels like talking to a friend.
+                Understands context, intent, and nuance—not just keywords. Natural conversation that feels genuinely human.
               </p>
             </div>
             <div style={{
@@ -347,7 +347,7 @@ export default function SmartHomePage() {
                 📊 Smart Automation
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Learns routines and preferences. Proactively suggests adjustments.
+                Learns daily routines and personal preferences—proactively suggesting optimizations that enhance comfort and efficiency.
               </p>
             </div>
             <div style={{
@@ -373,7 +373,7 @@ export default function SmartHomePage() {
                 🔌 Universal Integration
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Works with any IoT device. One interface for everything.
+                Seamlessly integrates with any IoT device or platform—one unified, intuitive interface for your entire home.
               </p>
             </div>
           </div>
@@ -399,7 +399,7 @@ export default function SmartHomePage() {
             opacity: 0.8,
             marginBottom: '2rem'
           }}>
-            🎯 Apple HomeKit • Amazon Alexa • Google Home • Nvidia • Samsung SmartThings
+            🎯 Apple HomeKit • Amazon Alexa • Google Home • Samsung SmartThings • Nvidia
           </p>
         </div>
 

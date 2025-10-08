@@ -80,8 +80,8 @@ export default function HealthcarePage() {
             margin: '0 auto 2rem auto',
             lineHeight: 1.6
           }}>
-            Make medical forms less stressful with emotional AI that provides encouragement
-            and support throughout the patient intake process.
+            Reduce patient anxiety with empathetic guidance through medical intake forms
+            and complex healthcare workflows—transforming stress into confidence.
           </p>
         </div>
 
@@ -294,7 +294,7 @@ export default function HealthcarePage() {
                 🤝 Empathetic Guidance
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Provides encouragement and support as patients navigate complex medical forms.
+                Delivers compassionate encouragement and reassurance as patients navigate complex medical forms and sensitive questions.
               </p>
             </div>
             <div style={{
@@ -320,7 +320,7 @@ export default function HealthcarePage() {
                 📊 Progress Tracking
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Visual progress indicators reduce anxiety by showing how much is left to complete.
+                Clear visual progress indicators reduce anxiety by showing exactly how much remains—making lengthy forms feel manageable.
               </p>
             </div>
             <div style={{
@@ -346,7 +346,7 @@ export default function HealthcarePage() {
                 🔒 Privacy Focused
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Reassures patients about data privacy and HIPAA compliance throughout the process.
+                Proactively reassures patients about data privacy and HIPAA compliance at every step of the healthcare journey.
               </p>
             </div>
           </div>
@@ -372,7 +372,7 @@ export default function HealthcarePage() {
             opacity: 0.8,
             marginBottom: '2rem'
           }}>
-            🎯 Clinic Management Platforms • EMR Vendors • Healthcare Apps
+            🎯 Epic Systems • Cerner • Clinic Management Platforms • EMR Vendors • Patient Portals
           </p>
         </div>
 

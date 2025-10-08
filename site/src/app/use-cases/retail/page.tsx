@@ -78,8 +78,8 @@ export default function RetailPage() {
             margin: '0 auto 2rem auto',
             lineHeight: 1.6
           }}>
-            Reduce cart abandonment and customer frustration with emotional intelligence
-            that guides shoppers through self-checkout with patience and understanding.
+            Reduce cart abandonment with empathetic AI that guides shoppers through checkout
+            with patience and understanding, turning frustration into satisfaction.
           </p>
         </div>
 
@@ -215,7 +215,7 @@ export default function RetailPage() {
                 🔍 Real-time Assistance
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Detects scanning errors and provides immediate, patient guidance to correct them.
+                Detects scanning errors instantly and provides patient, step-by-step guidance to resolve issues without stress.
               </p>
             </div>
             <div style={{
@@ -241,7 +241,7 @@ export default function RetailPage() {
                 😊 Emotion Detection
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Recognizes customer frustration and responds with empathy and encouragement.
+                Recognizes customer frustration in real-time and responds with genuine empathy, encouragement, and helpful solutions.
               </p>
             </div>
             <div style={{
@@ -267,7 +267,7 @@ export default function RetailPage() {
                 💳 Payment Flow
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Guides customers through payment options with clear, friendly instructions.
+                Simplifies payment with clear, friendly guidance through all payment options and methods.
               </p>
             </div>
           </div>
@@ -304,17 +304,17 @@ export default function RetailPage() {
             <div>
               <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>📊</div>
               <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Reduce Cart Abandonment</div>
-              <div style={{ opacity: 0.7 }}>Lower frustration = fewer abandoned carts</div>
+              <div style={{ opacity: 0.7 }}>Empathetic guidance reduces frustration and abandoned transactions</div>
             </div>
             <div>
               <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>⭐</div>
               <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Improve Satisfaction</div>
-              <div style={{ opacity: 0.7 }}>Empathetic AI creates positive experiences</div>
+              <div style={{ opacity: 0.7 }}>Emotional intelligence creates memorable positive experiences</div>
             </div>
             <div>
               <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>⚡</div>
               <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Faster Checkouts</div>
-              <div style={{ opacity: 0.7 }}>Reduce errors and wait times</div>
+              <div style={{ opacity: 0.7 }}>Intelligent assistance reduces errors and wait times</div>
             </div>
           </div>
         </div>

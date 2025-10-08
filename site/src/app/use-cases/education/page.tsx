@@ -93,8 +93,8 @@ export default function EducationPage() {
             margin: '0 auto 2rem auto',
             lineHeight: 1.6
           }}>
-            Adaptive AI tutor that provides encouragement, hints, and emotional support
-            during learning. Makes difficult subjects less intimidating.
+            Adaptive AI tutor that provides personalized encouragement, progressive hints, and emotional support
+            tailored to each learner—transforming difficult subjects into achievable challenges.
           </p>
         </div>
 
@@ -302,7 +302,7 @@ export default function EducationPage() {
                 💡 Adaptive Hints
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Provides progressive hints based on struggle level without giving away answers.
+                Delivers progressive hints calibrated to each student's struggle level—guiding discovery without revealing answers.
               </p>
             </div>
             <div style={{
@@ -328,7 +328,7 @@ export default function EducationPage() {
                 🎯 Personalized Pacing
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Adjusts difficulty and speed based on student's emotional state and performance.
+                Dynamically adjusts difficulty and pacing based on real-time assessment of emotional state and performance patterns.
               </p>
             </div>
             <div style={{
@@ -354,7 +354,7 @@ export default function EducationPage() {
                 🌟 Encouragement
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Celebrates successes and provides emotional support during challenges.
+                Celebrates every success and provides genuine emotional support during challenges—building confidence with each interaction.
               </p>
             </div>
           </div>
@@ -380,7 +380,7 @@ export default function EducationPage() {
             opacity: 0.8,
             marginBottom: '2rem'
           }}>
-            🎯 EdTech Platforms • Online Learning Companies • Khan Academy • Duolingo
+            🎯 EdTech Platforms • Khan Academy • Duolingo • Coursera • Udemy
           </p>
         </div>
 

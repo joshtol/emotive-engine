@@ -53,8 +53,8 @@ export default function HomePage() {
           lineHeight: '1.7',
           letterSpacing: '0.01em'
         }}>
-          Real-time emotional intelligence for apps, interfaces, and interactive experiences.
-          No uncanny valley. Just genuine connection.
+          Real-time emotional intelligence that creates genuine human connection.
+          No uncanny valley—just authentic, responsive experiences.
         </p>
 
         {/* Use Case Grid */}
@@ -123,11 +123,11 @@ export default function HomePage() {
               ᏣᎳᎩ Cherokee Language Learning
             </h2>
             <p style={{ opacity: 0.9, lineHeight: 1.6, fontSize: '1.1rem', marginBottom: '1rem' }}>
-              Interactive syllabary learning with cultural context and emotional engagement.
-              Shape morphing brings Cherokee characters to life.
+              Preserve and teach indigenous languages through interactive syllabary learning with cultural context.
+              Shape-morphing animations bring each character to life with emotional resonance.
             </p>
             <p style={{ opacity: 0.7, fontSize: '0.9rem', fontStyle: 'italic' }}>
-              🎯 Target: Cherokee Nation Heritage Center, Cultural Institutions
+              🎯 Cherokee Nation Heritage Center • Cultural Preservation Institutions
             </p>
           </Link>
 
@@ -165,10 +165,10 @@ export default function HomePage() {
               🛒 Retail Checkout AI
             </h2>
             <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-              Empathetic self-service interface that reduces cart abandonment and frustration.
+              Reduce cart abandonment with empathetic AI that guides shoppers through checkout with patience and understanding.
             </p>
             <p style={{ opacity: 0.6, fontSize: '0.85rem', marginTop: '0.8rem' }}>
-              🎯 Walmart, Home Depot, Amazon
+              🎯 Walmart • Home Depot • Amazon • Target
             </p>
           </Link>
 
@@ -206,10 +206,10 @@ export default function HomePage() {
               🏠 Smart Home Hub
             </h2>
             <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-              Unified IoT control with voice commands and emotional awareness.
+              Transform smart homes with unified IoT control that understands context and responds naturally to voice commands.
             </p>
             <p style={{ opacity: 0.6, fontSize: '0.85rem', marginTop: '0.8rem' }}>
-              🎯 Apple, Amazon, Nvidia
+              🎯 Apple • Amazon • Google • Nvidia
             </p>
           </Link>
 
@@ -247,10 +247,10 @@ export default function HomePage() {
               🏥 Healthcare Forms
             </h2>
             <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-              Patient intake with empathy. Makes medical forms less stressful.
+              Reduce patient anxiety with empathetic guidance through medical intake forms and complex healthcare workflows.
             </p>
             <p style={{ opacity: 0.6, fontSize: '0.85rem', marginTop: '0.8rem' }}>
-              🎯 Clinic Management, EMR Vendors
+              🎯 Healthcare Systems • EMR Vendors • Telehealth
             </p>
           </Link>
 
@@ -288,10 +288,10 @@ export default function HomePage() {
               📚 Education Tutor
             </h2>
             <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-              Personalized emotional support during learning. Adaptive hints and encouragement.
+              Adaptive AI tutor that provides personalized encouragement, progressive hints, and emotional support tailored to each learner.
             </p>
             <p style={{ opacity: 0.6, fontSize: '0.85rem', marginTop: '0.8rem' }}>
-              🎯 EdTech Platforms, Online Learning
+              🎯 EdTech Platforms • Khan Academy • Duolingo
             </p>
           </Link>
         </div>
@@ -320,7 +320,7 @@ export default function HomePage() {
             maxWidth: '600px',
             margin: '0 auto 2rem auto'
           }}>
-            Try our rhythm game demo to experience the Emotive Engine in action
+            Experience the Emotive Engine through our interactive rhythm game—see emotional AI respond in real-time
           </p>
           <Link
             href="/demo"
@@ -421,7 +421,7 @@ export default function HomePage() {
             maxWidth: '700px',
             margin: '0 auto 2rem auto'
           }}>
-            Open source, platform agnostic, and easy to integrate
+            Open source, platform-agnostic, and designed for seamless integration into any stack
           </p>
           <div style={{
             display: 'flex',

@@ -97,8 +97,8 @@ export default function CherokeePage() {
             margin: '0 auto 2rem auto',
             lineHeight: 1.6
           }}>
-            Interactive syllabary learning with emotional AI and cultural context.
-            Experience the beauty of Cherokee script through shape-morphing animations.
+            Preserve indigenous language and culture through interactive syllabary learning powered by emotional AI.
+            Watch Cherokee characters come alive through expressive shape-morphing animations.
           </p>
         </div>
 
@@ -127,7 +127,7 @@ export default function CherokeePage() {
             marginBottom: '3rem',
             fontSize: '1rem'
           }}>
-            Click a character to see its pronunciation and hear the sound
+            Click any character to explore its pronunciation and sound
           </p>
 
           <div style={{
@@ -212,10 +212,10 @@ export default function CherokeePage() {
                 You selected: <strong style={{ color: '#DAA520', fontSize: '2rem' }}>{selectedChar}</strong>
               </div>
               <p style={{ opacity: 0.7, fontSize: '0.95rem' }}>
-                🎵 Audio pronunciation coming in Phase 2
+                🎵 Native speaker audio pronunciation coming in Phase 2
               </p>
               <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '0.5rem' }}>
-                🎭 Shape morphing animation coming in Phase 2
+                🎭 Expressive shape-morphing animation coming in Phase 2
               </p>
             </div>
           )}
@@ -247,8 +247,8 @@ export default function CherokeePage() {
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
                 Created by Sequoyah in 1821, the Cherokee syllabary is one of the few
-                writing systems invented by a single person. It revolutionized Cherokee
-                literacy and cultural preservation.
+                writing systems invented by a single individual—revolutionizing Cherokee
+                literacy and enabling unprecedented cultural preservation.
               </p>
             </div>
             <div>
@@ -256,9 +256,9 @@ export default function CherokeePage() {
                 🎯 Structure
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                The syllabary contains 85 characters, each representing a syllable
-                (consonant + vowel). It's remarkably efficient and can be learned
-                in a matter of days.
+                The syllabary contains 85 characters, each representing a complete syllable
+                (consonant + vowel). Its remarkable efficiency allows learners to achieve
+                literacy in a matter of days rather than years.
               </p>
             </div>
             <div>
@@ -266,9 +266,9 @@ export default function CherokeePage() {
                 💡 Cultural Impact
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                The syllabary enabled the Cherokee Nation to achieve one of the highest
-                literacy rates in the world during the 19th century and remains vital
-                for language preservation today.
+                Within years of its creation, the Cherokee Nation achieved one of the highest
+                literacy rates in the world. Today, the syllabary remains essential for
+                preserving Cherokee language and cultural identity.
               </p>
             </div>
           </div>
@@ -298,22 +298,22 @@ export default function CherokeePage() {
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎵</div>
               <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Audio Integration</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Native speaker pronunciations</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Authentic native speaker pronunciations</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎭</div>
               <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Shape Morphing</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Character transformation animations</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Expressive character animations</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎨</div>
               <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Cultural Theming</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>7-clan colors and patterns</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Traditional 7-clan colors and patterns</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📖</div>
               <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Word Building</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Combine characters into words</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Interactive syllable combinations</div>
             </div>
           </div>
         </div>
