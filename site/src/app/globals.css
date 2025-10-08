@@ -125,13 +125,30 @@
   --radius-xl:  var(--vp-15px);
   --radius-round: 50%;
 
-  /* Spacing */
-  --spacing-xs:   var(--vp-2px);
-  --spacing-sm:   var(--vp-4px);
-  --spacing-base: var(--vp-8px);
-  --spacing-md:   var(--vp-10px);
-  --spacing-lg:   var(--vp-16px);
-  --spacing-xl:   var(--vp-20px);
+  /* Spacing - Mobile-first responsive (8px grid) */
+  --spacing-xs:   clamp(0.5rem, 1vw, 0.75rem);      /* 8px → 12px */
+  --spacing-sm:   clamp(0.75rem, 1.5vw, 1rem);      /* 12px → 16px */
+  --spacing-base: clamp(1rem, 2vw, 1.5rem);         /* 16px → 24px */
+  --spacing-md:   clamp(1.5rem, 3vw, 2rem);         /* 24px → 32px */
+  --spacing-lg:   clamp(2rem, 4vw, 3rem);           /* 32px → 48px */
+  --spacing-xl:   clamp(3rem, 6vw, 5rem);           /* 48px → 80px */
+  --spacing-2xl:  clamp(4rem, 8vw, 6rem);           /* 64px → 96px */
+
+  /* Container padding (safe margins from screen edges) */
+  --container-padding: clamp(1rem, 3vw, 2rem);      /* 16px → 32px */
+  --container-padding-sm: clamp(0.75rem, 2vw, 1.5rem); /* 12px → 24px */
+
+  /* Card padding */
+  --card-padding: clamp(1rem, 2.5vw, 2rem);         /* 16px → 32px */
+  --card-padding-lg: clamp(1.5rem, 3vw, 2.5rem);   /* 24px → 40px */
+
+  /* Grid gaps */
+  --grid-gap: clamp(1rem, 2vw, 2rem);               /* 16px → 32px */
+  --grid-gap-sm: clamp(0.75rem, 1.5vw, 1.5rem);    /* 12px → 24px */
+
+  /* Section spacing */
+  --section-gap: clamp(2rem, 5vw, 4rem);            /* 32px → 64px */
+  --section-gap-lg: clamp(3rem, 6vw, 6rem);         /* 48px → 96px */
 
   /* Typography families - Premium Apple Style */
   --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

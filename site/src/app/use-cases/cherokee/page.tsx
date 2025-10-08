@@ -26,7 +26,7 @@ export default function CherokeePage() {
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
       color: 'white',
-      padding: '2rem'
+      padding: 'var(--container-padding)'
     }}>
       <div style={{
         maxWidth: '1200px',
@@ -115,7 +115,7 @@ export default function CherokeePage() {
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           borderRadius: '20px',
-          padding: '3rem 2rem',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
           border: '1px solid rgba(218,165,32,0.25)',
           marginBottom: '4rem',
           boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
@@ -140,8 +140,8 @@ export default function CherokeePage() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            gap: '2rem',
-            marginBottom: '2rem'
+            gap: 'var(--grid-gap)',
+            marginBottom: 'var(--spacing-md)'
           }}>
             {syllabary.map((item) => (
               <div
@@ -232,7 +232,7 @@ export default function CherokeePage() {
         <div style={{
           background: 'rgba(255,255,255,0.03)',
           borderRadius: '16px',
-          padding: '3rem 2rem',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
           border: '1px solid rgba(255,255,255,0.1)',
           marginBottom: '4rem'
         }}>
@@ -246,7 +246,7 @@ export default function CherokeePage() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '2rem'
+            gap: 'var(--grid-gap)'
           }}>
             <div>
               <h4 style={{ fontSize: '1.2rem', marginBottom: '0.8rem', color: '#DAA520' }}>
@@ -285,7 +285,7 @@ export default function CherokeePage() {
         <div style={{
           background: 'rgba(218,165,32,0.1)',
           borderRadius: '16px',
-          padding: '3rem 2rem',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
           border: '1px solid rgba(218,165,32,0.3)',
           textAlign: 'center'
         }}>
@@ -299,7 +299,7 @@ export default function CherokeePage() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1.5rem',
+            gap: 'var(--grid-gap-sm)',
             marginTop: '2rem'
           }}>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>

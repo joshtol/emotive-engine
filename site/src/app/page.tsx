@@ -13,7 +13,7 @@ export default function HomePage() {
         minHeight: '100vh',
         background: 'linear-gradient(180deg, #0a0a0a 0%, #050505 50%, #0a0a0a 100%)',
         color: 'white',
-        padding: '2rem'
+        padding: 'var(--container-padding)'
       }}>
       {/* Hero Section */}
       <div style={{
@@ -76,16 +76,16 @@ export default function HomePage() {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '2rem',
-          marginTop: '3rem',
-          marginBottom: '4rem'
+          gap: 'var(--grid-gap)',
+          marginTop: 'var(--spacing-lg)',
+          marginBottom: 'var(--section-gap)'
         }}>
           {/* Cherokee Language Learning - FLAGSHIP */}
           <Link
             href="/use-cases/cherokee"
             className="cherokee-flagship-card use-case-card"
             style={{
-              padding: '2.5rem 2rem',
+              padding: 'var(--card-padding-lg) var(--card-padding)',
               background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
@@ -118,7 +118,7 @@ export default function HomePage() {
               padding: '0.3rem 0.8rem',
               background: 'rgba(218,165,32,0.8)',
               borderRadius: '4px',
-              fontSize: '0.75rem',
+              fontSize: '0.9rem',
               fontWeight: '600',
               textTransform: 'uppercase',
               letterSpacing: '0.5px'
@@ -142,7 +142,7 @@ export default function HomePage() {
             href="/use-cases/retail"
             className="use-case-card"
             style={{
-              padding: '2rem',
+              padding: 'var(--card-padding)',
               background: 'rgba(255,107,157,0.08)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
@@ -173,7 +173,7 @@ export default function HomePage() {
             <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
               Reduce cart abandonment with empathetic AI that guides shoppers through checkout with patience and understanding.
             </p>
-            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.85rem', fontWeight: '400', marginTop: '0.8rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.9rem', fontWeight: '400', marginTop: '0.8rem' }}>
               🎯 Walmart • Home Depot • Amazon • Target
             </p>
           </Link>
@@ -214,7 +214,7 @@ export default function HomePage() {
             <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
               Transform smart homes with unified IoT control that understands context and responds naturally to voice commands.
             </p>
-            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.85rem', fontWeight: '400', marginTop: '0.8rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.9rem', fontWeight: '400', marginTop: '0.8rem' }}>
               🎯 Apple • Amazon • Google • Nvidia
             </p>
           </Link>
@@ -255,7 +255,7 @@ export default function HomePage() {
             <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
               Reduce patient anxiety with empathetic guidance through medical intake forms and complex healthcare workflows.
             </p>
-            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.85rem', fontWeight: '400', marginTop: '0.8rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.9rem', fontWeight: '400', marginTop: '0.8rem' }}>
               🎯 Healthcare Systems • EMR Vendors • Telehealth
             </p>
           </Link>
@@ -296,7 +296,7 @@ export default function HomePage() {
             <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
               Adaptive AI tutor that provides personalized encouragement, progressive hints, and emotional support tailored to each learner.
             </p>
-            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.85rem', fontWeight: '400', marginTop: '0.8rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.9rem', fontWeight: '400', marginTop: '0.8rem' }}>
               🎯 EdTech Platforms • Khan Academy • Duolingo
             </p>
           </Link>
@@ -304,8 +304,8 @@ export default function HomePage() {
 
         {/* Rhythm Game Demo */}
         <div style={{
-          marginTop: '5rem',
-          padding: '3rem 2rem',
+          marginTop: 'var(--section-gap-lg)',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
           background: 'rgba(255,255,255,0.05)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
@@ -362,10 +362,10 @@ export default function HomePage() {
 
         {/* How It Works */}
         <div style={{
-          marginTop: '6rem',
+          marginTop: 'var(--section-gap-lg)',
           textAlign: 'left',
           maxWidth: '900px',
-          margin: '6rem auto 0 auto'
+          margin: 'var(--section-gap-lg) auto 0 auto'
         }}>
           <h2 style={{
             fontFamily: 'var(--font-primary)',
@@ -380,8 +380,8 @@ export default function HomePage() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '2rem',
-            marginTop: '2rem'
+            gap: 'var(--grid-gap)',
+            marginTop: 'var(--spacing-md)'
           }}>
             <div>
               <h3 style={{ fontFamily: 'var(--font-heading)', color: '#667eea', fontSize: '1.3rem', fontWeight: '600', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>⚡ Real-time Emotion Engine</h3>
@@ -412,8 +412,8 @@ export default function HomePage() {
 
         {/* For Developers */}
         <div style={{
-          marginTop: '6rem',
-          padding: '3rem 2rem',
+          marginTop: 'var(--section-gap-lg)',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
           background: 'rgba(255,255,255,0.05)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',

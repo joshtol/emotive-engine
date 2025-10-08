@@ -26,7 +26,7 @@ export default function HealthcarePage() {
         minHeight: '100vh',
         background: 'linear-gradient(180deg, #0f3a2e 0%, #0a261d 100%)',
         color: 'white',
-        padding: '2rem'
+        padding: 'var(--container-padding)'
       }}>
       <div style={{
         maxWidth: '1200px',
@@ -91,7 +91,7 @@ export default function HealthcarePage() {
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           borderRadius: '20px',
-          padding: '3rem 2rem',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
           border: '1px solid rgba(150,206,180,0.25)',
           marginBottom: '4rem',
           boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
@@ -256,7 +256,7 @@ export default function HealthcarePage() {
 
         {/* Key Features */}
         <div style={{
-          marginBottom: '4rem'
+          marginBottom: 'var(--section-gap)'
         }}>
           <h3 style={{
             fontSize: 'clamp(1.5rem, 3vw, 2rem)',
@@ -269,7 +269,7 @@ export default function HealthcarePage() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '2rem'
+            gap: 'var(--grid-gap)'
           }}>
             <div style={{
               padding: '2rem',
@@ -356,7 +356,7 @@ export default function HealthcarePage() {
         <div style={{
           background: 'rgba(255,255,255,0.03)',
           borderRadius: '16px',
-          padding: '3rem 2rem',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
           border: '1px solid rgba(255,255,255,0.1)',
           textAlign: 'center'
         }}>
