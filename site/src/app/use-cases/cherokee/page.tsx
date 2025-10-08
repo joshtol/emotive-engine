@@ -6,17 +6,51 @@ import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 
 export default function CherokeePage() {
-  const [selectedChar, setSelectedChar] = useState<string | null>(null)
+  const [selectedDirection, setSelectedDirection] = useState<string | null>(null)
 
-  // MVP: 6 syllabary characters for Phase 1
-  // Each character themed with Cherokee sacred colors (East=Red/Success, South=White/Peace, North=Blue, West=Black)
-  const syllabary = [
-    { char: 'Ꭰ', name: 'a', sound: 'ah', color: '#C4433C', bgColor: 'rgba(196,67,60,0.15)', borderColor: 'rgba(196,67,60,0.4)', direction: 'East (Red)' },
-    { char: 'Ꭱ', name: 'e', sound: 'eh', color: '#E8DCC5', bgColor: 'rgba(232,220,197,0.12)', borderColor: 'rgba(232,220,197,0.35)', direction: 'South (White)' },
-    { char: 'Ꭲ', name: 'i', sound: 'ee', color: '#5B8CA8', bgColor: 'rgba(91,140,168,0.15)', borderColor: 'rgba(91,140,168,0.4)', direction: 'North (Blue)' },
-    { char: 'Ꭳ', name: 'o', sound: 'oh', color: '#C4433C', bgColor: 'rgba(196,67,60,0.15)', borderColor: 'rgba(196,67,60,0.4)', direction: 'East (Red)' },
-    { char: 'Ꭴ', name: 'u', sound: 'oo', color: '#E8DCC5', bgColor: 'rgba(232,220,197,0.12)', borderColor: 'rgba(232,220,197,0.35)', direction: 'South (White)' },
-    { char: 'Ꭵ', name: 'v', sound: 'uh', color: '#5B8CA8', bgColor: 'rgba(91,140,168,0.15)', borderColor: 'rgba(91,140,168,0.4)', direction: 'North (Blue)' },
+  // Four Sacred Directions in Cherokee
+  // Each direction with its Cherokee word, syllabary, sacred color, and cultural meaning
+  const directions = [
+    {
+      direction: 'East',
+      cherokee: 'ᎧᎸᎬ',
+      pronunciation: 'ka-lv-gv',
+      meaning: 'Success, Power, Triumph',
+      color: '#C4433C',
+      bgColor: 'rgba(196,67,60,0.15)',
+      borderColor: 'rgba(196,67,60,0.4)',
+      arrow: '→'
+    },
+    {
+      direction: 'South',
+      cherokee: 'ᎤᎦᎾᏛ',
+      pronunciation: 'u-ga-na-wv',
+      meaning: 'Peace, Happiness, Warmth',
+      color: '#E8DCC5',
+      bgColor: 'rgba(232,220,197,0.12)',
+      borderColor: 'rgba(232,220,197,0.35)',
+      arrow: '↓'
+    },
+    {
+      direction: 'North',
+      cherokee: 'ᎤᏴᏝ',
+      pronunciation: 'u-yv-tlv',
+      meaning: 'Introspection, Coldness, Challenge',
+      color: '#5B8CA8',
+      bgColor: 'rgba(91,140,168,0.15)',
+      borderColor: 'rgba(91,140,168,0.4)',
+      arrow: '↑'
+    },
+    {
+      direction: 'West',
+      cherokee: 'ᏭᏕᎵᎬ',
+      pronunciation: 'wu-de-li-gv',
+      meaning: 'Transformation, Endings, Death',
+      color: '#888',
+      bgColor: 'rgba(100,100,100,0.12)',
+      borderColor: 'rgba(136,136,136,0.35)',
+      arrow: '←'
+    },
   ]
 
   return (
@@ -94,7 +128,7 @@ export default function CherokeePage() {
             opacity: 0.9,
             letterSpacing: '-0.01em'
           }}>
-            Cherokee Language Learning
+            Sacred Directions & Language Learning
           </h2>
           <p style={{
             fontFamily: 'var(--font-heading)',
@@ -105,12 +139,12 @@ export default function CherokeePage() {
             margin: '0 auto 2rem auto',
             lineHeight: 1.6
           }}>
-            Preserve indigenous language and culture through interactive syllabary learning powered by emotional AI.
-            Watch Cherokee characters come alive through expressive shape-morphing animations.
+            Learn Cherokee through the four sacred directions—connecting language, cosmology, and cultural wisdom.
+            Each direction teaches syllabary characters through their traditional meanings and symbolism.
           </p>
         </div>
 
-        {/* Syllabary Grid */}
+        {/* Sacred Directions Grid */}
         <div style={{
           background: 'rgba(218,165,32,0.08)',
           backdropFilter: 'blur(10px)',
@@ -127,7 +161,7 @@ export default function CherokeePage() {
             textAlign: 'center',
             color: '#DAA520'
           }}>
-            Cherokee Syllabary (MVP: 6 Characters)
+            Four Sacred Directions
           </h3>
           <p style={{
             textAlign: 'center',
@@ -135,47 +169,47 @@ export default function CherokeePage() {
             marginBottom: '3rem',
             fontSize: '1rem'
           }}>
-            Click any character to explore its pronunciation and sound
+            Click any direction to learn its Cherokee word, syllabary, and cultural meaning
           </p>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: 'var(--grid-gap)',
             marginBottom: 'var(--spacing-md)'
           }}>
-            {syllabary.map((item) => (
+            {directions.map((item) => (
               <div
-                key={item.char}
-                onClick={() => setSelectedChar(item.char)}
+                key={item.direction}
+                onClick={() => setSelectedDirection(item.direction)}
                 style={{
                   padding: '2rem',
-                  background: selectedChar === item.char
+                  background: selectedDirection === item.direction
                     ? item.bgColor
                     : 'rgba(255,255,255,0.05)',
                   backdropFilter: 'blur(8px)',
                   WebkitBackdropFilter: 'blur(8px)',
                   borderRadius: '16px',
-                  border: selectedChar === item.char
+                  border: selectedDirection === item.direction
                     ? `2px solid ${item.borderColor}`
                     : '1px solid rgba(255,255,255,0.15)',
                   cursor: 'pointer',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   textAlign: 'center',
                   willChange: 'transform',
-                  boxShadow: selectedChar === item.char
+                  boxShadow: selectedDirection === item.direction
                     ? `0 12px 40px ${item.borderColor}`
                     : '0 4px 16px rgba(31, 38, 135, 0.1)'
                 }}
                 onMouseEnter={(e) => {
-                  if (selectedChar !== item.char) {
+                  if (selectedDirection !== item.direction) {
                     e.currentTarget.style.background = item.bgColor.replace('0.15', '0.08').replace('0.12', '0.06')
                     e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
                     e.currentTarget.style.boxShadow = `0 8px 24px ${item.borderColor}`
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (selectedChar !== item.char) {
+                  if (selectedDirection !== item.direction) {
                     e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
                     e.currentTarget.style.transform = 'translateY(0) scale(1)'
                     e.currentTarget.style.boxShadow = '0 4px 16px rgba(31, 38, 135, 0.1)'
@@ -183,32 +217,40 @@ export default function CherokeePage() {
                 }}
               >
                 <div style={{
-                  fontSize: '4rem',
+                  fontSize: '3rem',
+                  marginBottom: '0.75rem',
+                  color: item.color
+                }}>
+                  {item.arrow}
+                </div>
+                <div style={{
+                  fontSize: '1.3rem',
+                  fontWeight: '600',
+                  marginBottom: '0.75rem',
+                  color: item.color
+                }}>
+                  {item.direction}
+                </div>
+                <div style={{
+                  fontSize: '2rem',
                   marginBottom: '0.5rem',
                   color: item.color
                 }}>
-                  {item.char}
+                  {item.cherokee}
                 </div>
                 <div style={{
-                  fontSize: '1.2rem',
-                  opacity: 0.8,
-                  marginBottom: '0.3rem'
-                }}>
-                  {item.name}
-                </div>
-                <div style={{
-                  fontSize: '0.9rem',
-                  opacity: 0.6,
+                  fontSize: '0.95rem',
+                  opacity: 0.7,
                   fontStyle: 'italic'
                 }}>
-                  "{item.sound}"
+                  {item.pronunciation}
                 </div>
               </div>
             ))}
           </div>
 
-          {selectedChar && (() => {
-            const selected = syllabary.find(item => item.char === selectedChar)
+          {selectedDirection && (() => {
+            const selected = directions.find(item => item.direction === selectedDirection)
             return selected ? (
               <div style={{
                 marginTop: '2rem',
@@ -220,27 +262,31 @@ export default function CherokeePage() {
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)'
               }}>
-                <div style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
-                  You selected: <strong style={{ color: selected.color, fontSize: '2rem' }}>{selectedChar}</strong>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem', color: selected.color }}>
+                  {selected.arrow} {selected.cherokee}
                 </div>
-                <div style={{ fontSize: '1rem', opacity: 0.8, marginBottom: '1rem' }}>
-                  <strong>{selected.name.toUpperCase()}</strong> - sounds like "{selected.sound}"
+                <div style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: selected.color }}>
+                  {selected.direction}
+                </div>
+                <div style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '1.5rem', fontStyle: 'italic' }}>
+                  Pronunciation: <strong>{selected.pronunciation}</strong>
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
-                  opacity: 0.7,
-                  marginTop: '0.5rem',
-                  padding: '0.75rem',
+                  fontSize: '1rem',
+                  opacity: 0.85,
+                  marginTop: '1rem',
+                  padding: '1rem',
                   background: 'rgba(0,0,0,0.2)',
                   borderRadius: '8px'
                 }}>
-                  Sacred Direction: <strong style={{ color: selected.color }}>{selected.direction}</strong>
+                  <strong style={{ color: selected.color }}>Cultural Meaning:</strong><br />
+                  {selected.meaning}
                 </div>
-                <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '1rem' }}>
+                <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '1.5rem' }}>
                   🎵 Native speaker audio pronunciation coming in Phase 2
                 </p>
                 <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '0.5rem' }}>
-                  🎭 Expressive shape-morphing animation coming in Phase 2
+                  🎭 Shape-morphing animation between syllabary characters coming in Phase 2
                 </p>
               </div>
             ) : null
