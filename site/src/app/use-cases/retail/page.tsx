@@ -85,12 +85,15 @@ export default function RetailPage() {
 
         {/* Interactive Demo */}
         <div style={{
-          background: 'rgba(255,107,157,0.1)',
-          borderRadius: '16px',
+          background: 'rgba(255,107,157,0.08)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: '20px',
           padding: '3rem 2rem',
-          border: '1px solid rgba(255,107,157,0.3)',
+          border: '1px solid rgba(255,107,157,0.25)',
           marginBottom: '4rem',
-          textAlign: 'center'
+          textAlign: 'center',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
         }}>
           <h3 style={{
             fontSize: 'clamp(1.5rem, 3vw, 2rem)',

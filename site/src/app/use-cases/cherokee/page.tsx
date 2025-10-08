@@ -104,11 +104,14 @@ export default function CherokeePage() {
 
         {/* Syllabary Grid */}
         <div style={{
-          background: 'rgba(255,255,255,0.05)',
-          borderRadius: '16px',
+          background: 'rgba(218,165,32,0.08)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: '20px',
           padding: '3rem 2rem',
-          border: '1px solid rgba(218,165,32,0.3)',
-          marginBottom: '4rem'
+          border: '1px solid rgba(218,165,32,0.25)',
+          marginBottom: '4rem',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
         }}>
           <h3 style={{
             fontSize: 'clamp(1.5rem, 3vw, 2rem)',
@@ -140,24 +143,34 @@ export default function CherokeePage() {
                 style={{
                   padding: '2rem',
                   background: selectedChar === item.char
-                    ? 'rgba(218,165,32,0.3)'
+                    ? 'rgba(218,165,32,0.25)'
                     : 'rgba(255,255,255,0.05)',
-                  borderRadius: '12px',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  borderRadius: '16px',
                   border: selectedChar === item.char
                     ? '2px solid rgba(218,165,32,0.6)'
-                    : '1px solid rgba(255,255,255,0.1)',
+                    : '1px solid rgba(255,255,255,0.15)',
                   cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  textAlign: 'center'
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  textAlign: 'center',
+                  willChange: 'transform',
+                  boxShadow: selectedChar === item.char
+                    ? '0 12px 40px rgba(218,165,32,0.3)'
+                    : '0 4px 16px rgba(31, 38, 135, 0.1)'
                 }}
                 onMouseEnter={(e) => {
                   if (selectedChar !== item.char) {
                     e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(218,165,32,0.2)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedChar !== item.char) {
                     e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(31, 38, 135, 0.1)'
                   }
                 }}
               >

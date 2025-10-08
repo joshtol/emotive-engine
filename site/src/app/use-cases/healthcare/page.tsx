@@ -87,11 +87,14 @@ export default function HealthcarePage() {
 
         {/* Interactive Demo */}
         <div style={{
-          background: 'rgba(150,206,180,0.1)',
-          borderRadius: '16px',
+          background: 'rgba(150,206,180,0.08)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: '20px',
           padding: '3rem 2rem',
-          border: '1px solid rgba(150,206,180,0.3)',
-          marginBottom: '4rem'
+          border: '1px solid rgba(150,206,180,0.25)',
+          marginBottom: '4rem',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
         }}>
           <h3 style={{
             fontSize: 'clamp(1.5rem, 3vw, 2rem)',

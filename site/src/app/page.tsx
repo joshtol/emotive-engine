@@ -24,29 +24,34 @@ export default function HomePage() {
       }}>
         <h1 style={{
           fontSize: 'clamp(3rem, 8vw, 6rem)',
-          fontWeight: 'bold',
-          marginBottom: '1rem',
-          lineHeight: 1.1
+          fontWeight: '700',
+          marginBottom: '1.5rem',
+          lineHeight: 1.1,
+          letterSpacing: '-0.02em'
         }}>
           Emotive Engine
         </h1>
 
         <p style={{
           fontSize: 'clamp(1.2rem, 3vw, 2rem)',
-          color: 'rgba(255,255,255,0.8)',
+          color: 'rgba(255,255,255,0.9)',
           marginBottom: '1rem',
           maxWidth: '800px',
-          margin: '0 auto 3rem auto'
+          margin: '0 auto 1.5rem auto',
+          fontWeight: '500',
+          letterSpacing: '-0.01em'
         }}>
           Emotional AI for Human Experiences
         </p>
 
         <p style={{
-          fontSize: 'clamp(1rem, 2vw, 1.3rem)',
-          color: 'rgba(255,255,255,0.6)',
+          fontSize: 'clamp(1rem, 2vw, 1.125rem)',
+          color: 'rgba(255,255,255,0.7)',
           marginBottom: '4rem',
           maxWidth: '700px',
-          margin: '0 auto 4rem auto'
+          margin: '0 auto 4rem auto',
+          lineHeight: '1.7',
+          letterSpacing: '0.01em'
         }}>
           Real-time emotional intelligence for apps, interfaces, and interactive experiences.
           No uncanny valley. Just genuine connection.
@@ -72,27 +77,32 @@ export default function HomePage() {
           {/* Cherokee Language Learning - FLAGSHIP */}
           <Link
             href="/use-cases/cherokee"
-            className="cherokee-flagship-card"
+            className="cherokee-flagship-card use-case-card"
             style={{
               padding: '2.5rem 2rem',
-              background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.05) 100%)',
-              borderRadius: '16px',
-              border: '2px solid rgba(218,165,32,0.4)',
+              background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(218,165,32,0.3)',
               textDecoration: 'none',
               color: 'white',
-              transition: 'all 0.3s',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              willChange: 'transform'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(218,165,32,0.3) 0%, rgba(218,165,32,0.1) 100%)'
-              e.currentTarget.style.transform = 'translateY(-4px)'
-              e.currentTarget.style.boxShadow = '0 12px 40px rgba(218,165,32,0.3)'
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(218,165,32,0.25) 0%, rgba(218,165,32,0.1) 100%)'
+              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
+              e.currentTarget.style.boxShadow = '0 20px 60px rgba(218,165,32,0.4)'
+              e.currentTarget.style.borderColor = 'rgba(218,165,32,0.5)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.05) 100%)'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)'
+              e.currentTarget.style.transform = 'translateY(0) scale(1)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(31, 38, 135, 0.15)'
+              e.currentTarget.style.borderColor = 'rgba(218,165,32,0.3)'
             }}
           >
             <div style={{
@@ -124,22 +134,31 @@ export default function HomePage() {
           {/* Retail Checkout AI */}
           <Link
             href="/use-cases/retail"
+            className="use-case-card"
             style={{
               padding: '2rem',
-              background: 'rgba(255,107,157,0.1)',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,107,157,0.3)',
+              background: 'rgba(255,107,157,0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(255,107,157,0.25)',
               textDecoration: 'none',
               color: 'white',
-              transition: 'all 0.3s'
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              willChange: 'transform',
+              boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(255,107,157,0.15)'
-              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
+              e.currentTarget.style.boxShadow = '0 20px 60px rgba(255,107,157,0.3)'
+              e.currentTarget.style.borderColor = 'rgba(255,107,157,0.4)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,107,157,0.1)'
-              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.background = 'rgba(255,107,157,0.08)'
+              e.currentTarget.style.transform = 'translateY(0) scale(1)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(31, 38, 135, 0.15)'
+              e.currentTarget.style.borderColor = 'rgba(255,107,157,0.25)'
             }}
           >
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#FF6B9D' }}>
@@ -156,22 +175,31 @@ export default function HomePage() {
           {/* Smart Home Hub */}
           <Link
             href="/use-cases/smart-home"
+            className="use-case-card"
             style={{
               padding: '2rem',
-              background: 'rgba(78,205,196,0.1)',
-              borderRadius: '12px',
-              border: '1px solid rgba(78,205,196,0.3)',
+              background: 'rgba(78,205,196,0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(78,205,196,0.25)',
               textDecoration: 'none',
               color: 'white',
-              transition: 'all 0.3s'
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              willChange: 'transform',
+              boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(78,205,196,0.15)'
-              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
+              e.currentTarget.style.boxShadow = '0 20px 60px rgba(78,205,196,0.3)'
+              e.currentTarget.style.borderColor = 'rgba(78,205,196,0.4)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(78,205,196,0.1)'
-              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.background = 'rgba(78,205,196,0.08)'
+              e.currentTarget.style.transform = 'translateY(0) scale(1)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(31, 38, 135, 0.15)'
+              e.currentTarget.style.borderColor = 'rgba(78,205,196,0.25)'
             }}
           >
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#4ECDC4' }}>
@@ -188,22 +216,31 @@ export default function HomePage() {
           {/* Healthcare Assistant */}
           <Link
             href="/use-cases/healthcare"
+            className="use-case-card"
             style={{
               padding: '2rem',
-              background: 'rgba(150,206,180,0.1)',
-              borderRadius: '12px',
-              border: '1px solid rgba(150,206,180,0.3)',
+              background: 'rgba(150,206,180,0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(150,206,180,0.25)',
               textDecoration: 'none',
               color: 'white',
-              transition: 'all 0.3s'
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              willChange: 'transform',
+              boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(150,206,180,0.15)'
-              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
+              e.currentTarget.style.boxShadow = '0 20px 60px rgba(150,206,180,0.3)'
+              e.currentTarget.style.borderColor = 'rgba(150,206,180,0.4)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(150,206,180,0.1)'
-              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.background = 'rgba(150,206,180,0.08)'
+              e.currentTarget.style.transform = 'translateY(0) scale(1)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(31, 38, 135, 0.15)'
+              e.currentTarget.style.borderColor = 'rgba(150,206,180,0.25)'
             }}
           >
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#96CEB4' }}>
@@ -220,22 +257,31 @@ export default function HomePage() {
           {/* Education Tutor */}
           <Link
             href="/use-cases/education"
+            className="use-case-card"
             style={{
               padding: '2rem',
-              background: 'rgba(69,183,209,0.1)',
-              borderRadius: '12px',
-              border: '1px solid rgba(69,183,209,0.3)',
+              background: 'rgba(69,183,209,0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(69,183,209,0.25)',
               textDecoration: 'none',
               color: 'white',
-              transition: 'all 0.3s'
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              willChange: 'transform',
+              boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(69,183,209,0.15)'
-              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
+              e.currentTarget.style.boxShadow = '0 20px 60px rgba(69,183,209,0.3)'
+              e.currentTarget.style.borderColor = 'rgba(69,183,209,0.4)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(69,183,209,0.1)'
-              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.background = 'rgba(69,183,209,0.08)'
+              e.currentTarget.style.transform = 'translateY(0) scale(1)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(31, 38, 135, 0.15)'
+              e.currentTarget.style.borderColor = 'rgba(69,183,209,0.25)'
             }}
           >
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#45B7D1' }}>
@@ -457,6 +503,23 @@ export default function HomePage() {
           :global(.cherokee-flagship-card) {
             grid-column: span 2;
           }
+        }
+
+        /* Focus states for accessibility */
+        :global(.use-case-card:focus-visible) {
+          outline: 2px solid rgba(255, 255, 255, 0.8);
+          outline-offset: 4px;
+          border-radius: 20px;
+        }
+
+        :global(.cherokee-flagship-card:focus-visible) {
+          outline: 2px solid rgba(218, 165, 32, 0.9);
+          outline-offset: 4px;
+        }
+
+        /* Smooth default shadow on cards */
+        :global(.use-case-card) {
+          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
         }
       `}</style>
     </div>
