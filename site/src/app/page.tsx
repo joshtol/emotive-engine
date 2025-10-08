@@ -23,6 +23,7 @@ export default function HomePage() {
         textAlign: 'center'
       }}>
         <h1 style={{
+          fontFamily: 'var(--font-primary)',
           fontSize: 'clamp(3rem, 8vw, 6rem)',
           fontWeight: '700',
           marginBottom: '1.5rem',
@@ -33,6 +34,7 @@ export default function HomePage() {
         </h1>
 
         <p style={{
+          fontFamily: 'var(--font-primary)',
           fontSize: 'clamp(1.2rem, 3vw, 2rem)',
           color: 'rgba(255,255,255,0.9)',
           marginBottom: '1rem',
@@ -45,12 +47,14 @@ export default function HomePage() {
         </p>
 
         <p style={{
+          fontFamily: 'var(--font-heading)',
           fontSize: 'clamp(1rem, 2vw, 1.125rem)',
           color: 'rgba(255,255,255,0.7)',
           marginBottom: '4rem',
           maxWidth: '700px',
           margin: '0 auto 4rem auto',
           lineHeight: '1.7',
+          fontWeight: '400',
           letterSpacing: '0.01em'
         }}>
           Real-time emotional intelligence that creates genuine human connection.
@@ -59,10 +63,12 @@ export default function HomePage() {
 
         {/* Use Case Grid */}
         <h2 style={{
+          fontFamily: 'var(--font-primary)',
           fontSize: 'clamp(2rem, 5vw, 3rem)',
           fontWeight: '600',
           marginBottom: '2rem',
-          marginTop: '4rem'
+          marginTop: '4rem',
+          letterSpacing: '-0.015em'
         }}>
           Use Cases
         </h2>
@@ -119,14 +125,14 @@ export default function HomePage() {
             }}>
               Flagship
             </div>
-            <h2 style={{ fontSize: '2rem', marginBottom: '0.8rem', color: '#DAA520' }}>
+            <h2 style={{ fontFamily: 'var(--font-primary)', fontSize: '2rem', fontWeight: '600', marginBottom: '0.8rem', color: '#DAA520', letterSpacing: '-0.01em' }}>
               ᏣᎳᎩ Cherokee Language Learning
             </h2>
-            <p style={{ opacity: 0.9, lineHeight: 1.6, fontSize: '1.1rem', marginBottom: '1rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.9, lineHeight: 1.6, fontSize: '1.1rem', fontWeight: '400', marginBottom: '1rem' }}>
               Preserve and teach indigenous languages through interactive syllabary learning with cultural context.
               Shape-morphing animations bring each character to life with emotional resonance.
             </p>
-            <p style={{ opacity: 0.7, fontSize: '0.9rem', fontStyle: 'italic' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.7, fontSize: '0.9rem', fontWeight: '400', fontStyle: 'italic' }}>
               🎯 Cherokee Nation Heritage Center • Cultural Preservation Institutions
             </p>
           </Link>
@@ -161,13 +167,13 @@ export default function HomePage() {
               e.currentTarget.style.borderColor = 'rgba(255,107,157,0.25)'
             }}
           >
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#FF6B9D' }}>
+            <h2 style={{ fontFamily: 'var(--font-primary)', fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: '#FF6B9D', letterSpacing: '-0.01em' }}>
               🛒 Retail Checkout AI
             </h2>
-            <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
               Reduce cart abandonment with empathetic AI that guides shoppers through checkout with patience and understanding.
             </p>
-            <p style={{ opacity: 0.6, fontSize: '0.85rem', marginTop: '0.8rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.85rem', fontWeight: '400', marginTop: '0.8rem' }}>
               🎯 Walmart • Home Depot • Amazon • Target
             </p>
           </Link>
@@ -202,13 +208,13 @@ export default function HomePage() {
               e.currentTarget.style.borderColor = 'rgba(78,205,196,0.25)'
             }}
           >
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#4ECDC4' }}>
+            <h2 style={{ fontFamily: 'var(--font-primary)', fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: '#4ECDC4', letterSpacing: '-0.01em' }}>
               🏠 Smart Home Hub
             </h2>
-            <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
               Transform smart homes with unified IoT control that understands context and responds naturally to voice commands.
             </p>
-            <p style={{ opacity: 0.6, fontSize: '0.85rem', marginTop: '0.8rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.85rem', fontWeight: '400', marginTop: '0.8rem' }}>
               🎯 Apple • Amazon • Google • Nvidia
             </p>
           </Link>
@@ -243,13 +249,13 @@ export default function HomePage() {
               e.currentTarget.style.borderColor = 'rgba(150,206,180,0.25)'
             }}
           >
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#96CEB4' }}>
+            <h2 style={{ fontFamily: 'var(--font-primary)', fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: '#96CEB4', letterSpacing: '-0.01em' }}>
               🏥 Healthcare Forms
             </h2>
-            <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
               Reduce patient anxiety with empathetic guidance through medical intake forms and complex healthcare workflows.
             </p>
-            <p style={{ opacity: 0.6, fontSize: '0.85rem', marginTop: '0.8rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.85rem', fontWeight: '400', marginTop: '0.8rem' }}>
               🎯 Healthcare Systems • EMR Vendors • Telehealth
             </p>
           </Link>
@@ -284,13 +290,13 @@ export default function HomePage() {
               e.currentTarget.style.borderColor = 'rgba(69,183,209,0.25)'
             }}
           >
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#45B7D1' }}>
+            <h2 style={{ fontFamily: 'var(--font-primary)', fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: '#45B7D1', letterSpacing: '-0.01em' }}>
               📚 Education Tutor
             </h2>
-            <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
               Adaptive AI tutor that provides personalized encouragement, progressive hints, and emotional support tailored to each learner.
             </p>
-            <p style={{ opacity: 0.6, fontSize: '0.85rem', marginTop: '0.8rem' }}>
+            <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.6, fontSize: '0.85rem', fontWeight: '400', marginTop: '0.8rem' }}>
               🎯 EdTech Platforms • Khan Academy • Duolingo
             </p>
           </Link>
@@ -308,14 +314,19 @@ export default function HomePage() {
           boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
         }}>
           <h2 style={{
+            fontFamily: 'var(--font-primary)',
             fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
-            marginBottom: '1rem'
+            fontWeight: '600',
+            marginBottom: '1rem',
+            letterSpacing: '-0.015em'
           }}>
             Interactive Demo
           </h2>
           <p style={{
+            fontFamily: 'var(--font-heading)',
             fontSize: 'clamp(1rem, 2vw, 1.2rem)',
             opacity: 0.8,
+            fontWeight: '400',
             marginBottom: '2rem',
             maxWidth: '600px',
             margin: '0 auto 2rem auto'
@@ -357,9 +368,12 @@ export default function HomePage() {
           margin: '6rem auto 0 auto'
         }}>
           <h2 style={{
+            fontFamily: 'var(--font-primary)',
             fontSize: 'clamp(2rem, 5vw, 3rem)',
+            fontWeight: '600',
             marginBottom: '2rem',
-            textAlign: 'center'
+            textAlign: 'center',
+            letterSpacing: '-0.015em'
           }}>
             How It Works
           </h2>
@@ -370,26 +384,26 @@ export default function HomePage() {
             marginTop: '2rem'
           }}>
             <div>
-              <h3 style={{ color: '#667eea', fontSize: '1.3rem', marginBottom: '0.5rem' }}>⚡ Real-time Emotion Engine</h3>
-              <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', color: '#667eea', fontSize: '1.3rem', fontWeight: '600', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>⚡ Real-time Emotion Engine</h3>
+              <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
                 15 core emotions with smooth transitions. Responds instantly to user interactions and context.
               </p>
             </div>
             <div>
-              <h3 style={{ color: '#667eea', fontSize: '1.3rem', marginBottom: '0.5rem' }}>🎭 Shape Morphing</h3>
-              <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', color: '#667eea', fontSize: '1.3rem', fontWeight: '600', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>🎭 Shape Morphing</h3>
+              <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
                 Transform between any shapes. Perfect for logos, characters, or abstract forms.
               </p>
             </div>
             <div>
-              <h3 style={{ color: '#667eea', fontSize: '1.3rem', marginBottom: '0.5rem' }}>🎨 50+ Gesture Animations</h3>
-              <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', color: '#667eea', fontSize: '1.3rem', fontWeight: '600', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>🎨 50+ Gesture Animations</h3>
+              <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
                 Chain gestures for unlimited combinations. Build complex emotional sequences.
               </p>
             </div>
             <div>
-              <h3 style={{ color: '#667eea', fontSize: '1.3rem', marginBottom: '0.5rem' }}>🔋 Battery Optimized</h3>
-              <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', color: '#667eea', fontSize: '1.3rem', fontWeight: '600', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>🔋 Battery Optimized</h3>
+              <p style={{ fontFamily: 'var(--font-heading)', opacity: 0.8, lineHeight: 1.6, fontWeight: '400' }}>
                 No GPU required. Runs smoothly on any device, from phones to desktops.
               </p>
             </div>
@@ -409,14 +423,19 @@ export default function HomePage() {
           boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
         }}>
           <h2 style={{
+            fontFamily: 'var(--font-primary)',
             fontSize: 'clamp(2rem, 5vw, 3rem)',
-            marginBottom: '1.5rem'
+            fontWeight: '600',
+            marginBottom: '1.5rem',
+            letterSpacing: '-0.015em'
           }}>
             For Developers
           </h2>
           <p style={{
+            fontFamily: 'var(--font-heading)',
             fontSize: 'clamp(1rem, 2vw, 1.2rem)',
             opacity: 0.8,
+            fontWeight: '400',
             marginBottom: '2rem',
             maxWidth: '700px',
             margin: '0 auto 2rem auto'

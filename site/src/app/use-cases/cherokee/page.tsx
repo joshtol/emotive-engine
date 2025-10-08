@@ -76,23 +76,30 @@ export default function CherokeePage() {
           marginBottom: '4rem'
         }}>
           <h1 style={{
+            fontFamily: 'var(--font-primary)',
             fontSize: 'clamp(3rem, 8vw, 5rem)',
             fontWeight: 'bold',
             marginBottom: '1rem',
-            color: '#DAA520'
+            color: '#DAA520',
+            letterSpacing: '-0.02em'
           }}>
             ᏣᎳᎩ ᎦᏬᏂᎯᏍᏗ
           </h1>
           <h2 style={{
+            fontFamily: 'var(--font-primary)',
             fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+            fontWeight: '600',
             marginBottom: '1rem',
-            opacity: 0.9
+            opacity: 0.9,
+            letterSpacing: '-0.01em'
           }}>
             Cherokee Language Learning
           </h2>
           <p style={{
+            fontFamily: 'var(--font-heading)',
             fontSize: 'clamp(1rem, 2vw, 1.3rem)',
             opacity: 0.7,
+            fontWeight: '400',
             maxWidth: '700px',
             margin: '0 auto 2rem auto',
             lineHeight: 1.6
