@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import EmotiveHeader from '@/components/EmotiveHeader'
+import EmotiveFooter from '@/components/EmotiveFooter'
 
 export default function CherokeePage() {
   const [selectedChar, setSelectedChar] = useState<string | null>(null)
@@ -17,7 +19,10 @@ export default function CherokeePage() {
   ]
 
   return (
-    <div style={{
+    <div className="emotive-container">
+      <EmotiveHeader />
+
+      <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
       color: 'white',
@@ -303,7 +308,8 @@ export default function CherokeePage() {
         {/* Footer Navigation */}
         <div style={{
           marginTop: '4rem',
-          textAlign: 'center'
+          textAlign: 'center',
+          marginBottom: '2rem'
         }}>
           <Link
             href="/"
@@ -329,6 +335,9 @@ export default function CherokeePage() {
           </Link>
         </div>
       </div>
+    </div>
+
+      <EmotiveFooter />
     </div>
   )
 }

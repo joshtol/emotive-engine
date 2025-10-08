@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import EmotiveHeader from '@/components/EmotiveHeader'
+import EmotiveFooter from '@/components/EmotiveFooter'
 
 export default function HealthcarePage() {
   const [formStep, setFormStep] = useState(0)
@@ -18,12 +20,14 @@ export default function HealthcarePage() {
   ]
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(180deg, #0f3a2e 0%, #0a261d 100%)',
-      color: 'white',
-      padding: '2rem'
-    }}>
+    <div className="emotive-container">
+      <EmotiveHeader />
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #0f3a2e 0%, #0a261d 100%)',
+        color: 'white',
+        padding: '2rem'
+      }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto'
@@ -333,7 +337,8 @@ export default function HealthcarePage() {
         {/* Footer Navigation */}
         <div style={{
           marginTop: '4rem',
-          textAlign: 'center'
+          textAlign: 'center',
+          marginBottom: '2rem'
         }}>
           <Link
             href="/"
@@ -359,6 +364,8 @@ export default function HealthcarePage() {
           </Link>
         </div>
       </div>
+    </div>
+      <EmotiveFooter />
     </div>
   )
 }

@@ -1,15 +1,20 @@
 'use client'
 
 import Link from 'next/link'
+import EmotiveHeader from '@/components/EmotiveHeader'
+import EmotiveFooter from '@/components/EmotiveFooter'
 
 export default function HomePage() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(180deg, #000000 0%, #0a0a0a 100%)',
-      color: 'white',
-      padding: '2rem'
-    }}>
+    <div className="emotive-container">
+      <EmotiveHeader />
+
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #000000 0%, #0a0a0a 100%)',
+        color: 'white',
+        padding: '2rem'
+      }}>
       {/* Hero Section */}
       <div style={{
         maxWidth: '1200px',
@@ -442,6 +447,9 @@ export default function HomePage() {
         {/* Footer spacing */}
         <div style={{ height: '4rem' }} />
       </div>
+      </div>
+
+      <EmotiveFooter />
 
       {/* Styles */}
       <style jsx>{`

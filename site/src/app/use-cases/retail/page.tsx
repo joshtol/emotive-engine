@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import EmotiveHeader from '@/components/EmotiveHeader'
+import EmotiveFooter from '@/components/EmotiveFooter'
 
 export default function RetailPage() {
   const [cartItems, setCartItems] = useState(0)
@@ -16,7 +18,9 @@ export default function RetailPage() {
   }
 
   return (
-    <div style={{
+    <div className="emotive-container">
+      <EmotiveHeader />
+      <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #2d0a1f 0%, #1a0612 100%)',
       color: 'white',
@@ -270,7 +274,8 @@ export default function RetailPage() {
         {/* Footer Navigation */}
         <div style={{
           marginTop: '4rem',
-          textAlign: 'center'
+          textAlign: 'center',
+          marginBottom: '2rem'
         }}>
           <Link
             href="/"
@@ -296,6 +301,8 @@ export default function RetailPage() {
           </Link>
         </div>
       </div>
+    </div>
+      <EmotiveFooter />
     </div>
   )
 }

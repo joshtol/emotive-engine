@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import EmotiveHeader from '@/components/EmotiveHeader'
+import EmotiveFooter from '@/components/EmotiveFooter'
+
 
 export default function SmartHomePage() {
   const [devices, setDevices] = useState({
@@ -12,12 +15,14 @@ export default function SmartHomePage() {
   })
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(180deg, #1e3a3a 0%, #0f1d1d 100%)',
-      color: 'white',
-      padding: '2rem'
-    }}>
+    <div className="emotive-container">
+      <EmotiveHeader />
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #1e3a3a 0%, #0f1d1d 100%)',
+        color: 'white',
+        padding: '2rem'
+      }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto'
@@ -359,7 +364,8 @@ export default function SmartHomePage() {
         {/* Footer Navigation */}
         <div style={{
           marginTop: '4rem',
-          textAlign: 'center'
+          textAlign: 'center',
+          marginBottom: '2rem'
         }}>
           <Link
             href="/"
@@ -385,6 +391,8 @@ export default function SmartHomePage() {
           </Link>
         </div>
       </div>
+    </div>
+      <EmotiveFooter />
     </div>
   )
 }
