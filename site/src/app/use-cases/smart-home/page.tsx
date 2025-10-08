@@ -300,10 +300,23 @@ export default function SmartHomePage() {
           }}>
             <div style={{
               padding: '2rem',
-              background: 'rgba(78,205,196,0.05)',
-              borderRadius: '12px',
-              border: '1px solid rgba(78,205,196,0.2)'
-            }}>
+              background: 'rgba(78,205,196,0.08)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(78,205,196,0.25)',
+              boxShadow: '0 4px 20px rgba(31, 38, 135, 0.1)',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(78,205,196,0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(31, 38, 135, 0.1)'
+            }}
+            >
               <h4 style={{ fontSize: '1.3rem', marginBottom: '0.8rem', color: '#4ECDC4' }}>
                 🎤 Natural Voice Control
               </h4>
@@ -313,10 +326,23 @@ export default function SmartHomePage() {
             </div>
             <div style={{
               padding: '2rem',
-              background: 'rgba(78,205,196,0.05)',
-              borderRadius: '12px',
-              border: '1px solid rgba(78,205,196,0.2)'
-            }}>
+              background: 'rgba(78,205,196,0.08)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(78,205,196,0.25)',
+              boxShadow: '0 4px 20px rgba(31, 38, 135, 0.1)',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(78,205,196,0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(31, 38, 135, 0.1)'
+            }}
+            >
               <h4 style={{ fontSize: '1.3rem', marginBottom: '0.8rem', color: '#4ECDC4' }}>
                 📊 Smart Automation
               </h4>
@@ -326,10 +352,23 @@ export default function SmartHomePage() {
             </div>
             <div style={{
               padding: '2rem',
-              background: 'rgba(78,205,196,0.05)',
-              borderRadius: '12px',
-              border: '1px solid rgba(78,205,196,0.2)'
-            }}>
+              background: 'rgba(78,205,196,0.08)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(78,205,196,0.25)',
+              boxShadow: '0 4px 20px rgba(31, 38, 135, 0.1)',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(78,205,196,0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(31, 38, 135, 0.1)'
+            }}
+            >
               <h4 style={{ fontSize: '1.3rem', marginBottom: '0.8rem', color: '#4ECDC4' }}>
                 🔌 Universal Integration
               </h4>

@@ -11,7 +11,7 @@ export default function HomePage() {
 
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #000000 0%, #0a0a0a 100%)',
+        background: 'linear-gradient(180deg, #0a0a0a 0%, #050505 50%, #0a0a0a 100%)',
         color: 'white',
         padding: '2rem'
       }}>
@@ -301,8 +301,11 @@ export default function HomePage() {
           marginTop: '5rem',
           padding: '3rem 2rem',
           background: 'rgba(255,255,255,0.05)',
-          borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.1)'
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: '20px',
+          border: '1px solid rgba(255,255,255,0.15)',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
         }}>
           <h2 style={{
             fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
@@ -330,15 +333,16 @@ export default function HomePage() {
               color: 'white',
               fontSize: '1.2rem',
               fontWeight: '600',
-              transition: 'all 0.3s'
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              willChange: 'transform'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(102,126,234,0.4)'
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
+              e.currentTarget.style.boxShadow = '0 12px 40px rgba(102,126,234,0.5)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.transform = 'translateY(0) scale(1)'
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(102,126,234,0.2)'
             }}
           >
             🎵 Play Rhythm Game Demo
@@ -396,10 +400,13 @@ export default function HomePage() {
         <div style={{
           marginTop: '6rem',
           padding: '3rem 2rem',
-          background: 'rgba(255,255,255,0.03)',
-          borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.1)',
-          textAlign: 'center'
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: '20px',
+          border: '1px solid rgba(255,255,255,0.15)',
+          textAlign: 'center',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
         }}>
           <h2 style={{
             fontSize: 'clamp(2rem, 5vw, 3rem)',
@@ -429,18 +436,26 @@ export default function HomePage() {
               rel="noopener noreferrer"
               style={{
                 padding: '1rem 2rem',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                borderRadius: '12px',
                 textDecoration: 'none',
                 color: 'white',
                 fontSize: '1.1rem',
-                transition: 'all 0.3s'
+                border: '1px solid rgba(255,255,255,0.15)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'transform'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,255,255,0.15)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
               }}
             >
               📦 GitHub
@@ -451,18 +466,26 @@ export default function HomePage() {
               rel="noopener noreferrer"
               style={{
                 padding: '1rem 2rem',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                borderRadius: '12px',
                 textDecoration: 'none',
                 color: 'white',
                 fontSize: '1.1rem',
-                transition: 'all 0.3s'
+                border: '1px solid rgba(255,255,255,0.15)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'transform'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,255,255,0.15)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
               }}
             >
               📘 NPM Package
@@ -471,18 +494,26 @@ export default function HomePage() {
               href="https://emotive-mascot.web.app"
               style={{
                 padding: '1rem 2rem',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                borderRadius: '12px',
                 textDecoration: 'none',
                 color: 'white',
                 fontSize: '1.1rem',
-                transition: 'all 0.3s'
+                border: '1px solid rgba(255,255,255,0.15)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'transform'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,255,255,0.15)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
               }}
             >
               📖 Documentation

@@ -138,18 +138,19 @@ export default function RetailPage() {
                 border: 'none',
                 borderRadius: '12px',
                 cursor: scanning ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s',
-                opacity: scanning ? 0.6 : 1
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: scanning ? 0.6 : 1,
+                willChange: 'transform'
               }}
               onMouseEnter={(e) => {
                 if (!scanning) {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,107,157,0.4)'
+                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(255,107,157,0.5)'
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(255,107,157,0.2)'
               }}
             >
               {scanning ? '⏳ Scanning...' : '📦 Scan Item'}
@@ -159,9 +160,14 @@ export default function RetailPage() {
               <div style={{
                 marginTop: '1rem',
                 padding: '1rem 2rem',
-                background: 'rgba(255,107,157,0.2)',
-                borderRadius: '8px',
-                fontSize: '1.1rem'
+                background: 'rgba(255,107,157,0.15)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                borderRadius: '12px',
+                fontSize: '1.1rem',
+                border: '1px solid rgba(255,107,157,0.3)',
+                boxShadow: '0 4px 16px rgba(255,107,157,0.2)',
+                animation: 'slideInUp 0.3s ease-out'
               }}>
                 😊 Great job! Keep scanning your items.
               </div>
@@ -188,10 +194,23 @@ export default function RetailPage() {
           }}>
             <div style={{
               padding: '2rem',
-              background: 'rgba(255,107,157,0.05)',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,107,157,0.2)'
-            }}>
+              background: 'rgba(255,107,157,0.08)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255,107,157,0.25)',
+              boxShadow: '0 4px 20px rgba(31, 38, 135, 0.1)',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(255,107,157,0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(31, 38, 135, 0.1)'
+            }}
+            >
               <h4 style={{ fontSize: '1.3rem', marginBottom: '0.8rem', color: '#FF6B9D' }}>
                 🔍 Real-time Assistance
               </h4>
@@ -201,10 +220,23 @@ export default function RetailPage() {
             </div>
             <div style={{
               padding: '2rem',
-              background: 'rgba(255,107,157,0.05)',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,107,157,0.2)'
-            }}>
+              background: 'rgba(255,107,157,0.08)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255,107,157,0.25)',
+              boxShadow: '0 4px 20px rgba(31, 38, 135, 0.1)',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(255,107,157,0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(31, 38, 135, 0.1)'
+            }}
+            >
               <h4 style={{ fontSize: '1.3rem', marginBottom: '0.8rem', color: '#FF6B9D' }}>
                 😊 Emotion Detection
               </h4>
@@ -214,10 +246,23 @@ export default function RetailPage() {
             </div>
             <div style={{
               padding: '2rem',
-              background: 'rgba(255,107,157,0.05)',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,107,157,0.2)'
-            }}>
+              background: 'rgba(255,107,157,0.08)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255,107,157,0.25)',
+              boxShadow: '0 4px 20px rgba(31, 38, 135, 0.1)',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(255,107,157,0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(31, 38, 135, 0.1)'
+            }}
+            >
               <h4 style={{ fontSize: '1.3rem', marginBottom: '0.8rem', color: '#FF6B9D' }}>
                 💳 Payment Flow
               </h4>
