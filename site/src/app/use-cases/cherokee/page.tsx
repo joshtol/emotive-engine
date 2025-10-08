@@ -9,13 +9,14 @@ export default function CherokeePage() {
   const [selectedChar, setSelectedChar] = useState<string | null>(null)
 
   // MVP: 6 syllabary characters for Phase 1
+  // Each character themed with Cherokee sacred colors (East=Red/Success, South=White/Peace, North=Blue, West=Black)
   const syllabary = [
-    { char: 'Ꭰ', name: 'a', sound: 'ah' },
-    { char: 'Ꭱ', name: 'e', sound: 'eh' },
-    { char: 'Ꭲ', name: 'i', sound: 'ee' },
-    { char: 'Ꭳ', name: 'o', sound: 'oh' },
-    { char: 'Ꭴ', name: 'u', sound: 'oo' },
-    { char: 'Ꭵ', name: 'v', sound: 'uh' },
+    { char: 'Ꭰ', name: 'a', sound: 'ah', color: '#C4433C', bgColor: 'rgba(196,67,60,0.15)', borderColor: 'rgba(196,67,60,0.4)', direction: 'East (Red)' },
+    { char: 'Ꭱ', name: 'e', sound: 'eh', color: '#E8DCC5', bgColor: 'rgba(232,220,197,0.12)', borderColor: 'rgba(232,220,197,0.35)', direction: 'South (White)' },
+    { char: 'Ꭲ', name: 'i', sound: 'ee', color: '#5B8CA8', bgColor: 'rgba(91,140,168,0.15)', borderColor: 'rgba(91,140,168,0.4)', direction: 'North (Blue)' },
+    { char: 'Ꭳ', name: 'o', sound: 'oh', color: '#C4433C', bgColor: 'rgba(196,67,60,0.15)', borderColor: 'rgba(196,67,60,0.4)', direction: 'East (Red)' },
+    { char: 'Ꭴ', name: 'u', sound: 'oo', color: '#E8DCC5', bgColor: 'rgba(232,220,197,0.12)', borderColor: 'rgba(232,220,197,0.35)', direction: 'South (White)' },
+    { char: 'Ꭵ', name: 'v', sound: 'uh', color: '#5B8CA8', bgColor: 'rgba(91,140,168,0.15)', borderColor: 'rgba(91,140,168,0.4)', direction: 'North (Blue)' },
   ]
 
   return (
@@ -150,27 +151,27 @@ export default function CherokeePage() {
                 style={{
                   padding: '2rem',
                   background: selectedChar === item.char
-                    ? 'rgba(218,165,32,0.25)'
+                    ? item.bgColor
                     : 'rgba(255,255,255,0.05)',
                   backdropFilter: 'blur(8px)',
                   WebkitBackdropFilter: 'blur(8px)',
                   borderRadius: '16px',
                   border: selectedChar === item.char
-                    ? '2px solid rgba(218,165,32,0.6)'
+                    ? `2px solid ${item.borderColor}`
                     : '1px solid rgba(255,255,255,0.15)',
                   cursor: 'pointer',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   textAlign: 'center',
                   willChange: 'transform',
                   boxShadow: selectedChar === item.char
-                    ? '0 12px 40px rgba(218,165,32,0.3)'
+                    ? `0 12px 40px ${item.borderColor}`
                     : '0 4px 16px rgba(31, 38, 135, 0.1)'
                 }}
                 onMouseEnter={(e) => {
                   if (selectedChar !== item.char) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                    e.currentTarget.style.background = item.bgColor.replace('0.15', '0.08').replace('0.12', '0.06')
                     e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(218,165,32,0.2)'
+                    e.currentTarget.style.boxShadow = `0 8px 24px ${item.borderColor}`
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -184,7 +185,7 @@ export default function CherokeePage() {
                 <div style={{
                   fontSize: '4rem',
                   marginBottom: '0.5rem',
-                  color: '#DAA520'
+                  color: item.color
                 }}>
                   {item.char}
                 </div>
@@ -206,26 +207,122 @@ export default function CherokeePage() {
             ))}
           </div>
 
-          {selectedChar && (
-            <div style={{
-              marginTop: '2rem',
-              padding: '2rem',
-              background: 'rgba(218,165,32,0.1)',
-              borderRadius: '12px',
-              textAlign: 'center',
-              border: '1px solid rgba(218,165,32,0.3)'
-            }}>
-              <div style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
-                You selected: <strong style={{ color: '#DAA520', fontSize: '2rem' }}>{selectedChar}</strong>
+          {selectedChar && (() => {
+            const selected = syllabary.find(item => item.char === selectedChar)
+            return selected ? (
+              <div style={{
+                marginTop: '2rem',
+                padding: '2rem',
+                background: selected.bgColor,
+                borderRadius: '12px',
+                textAlign: 'center',
+                border: `1px solid ${selected.borderColor}`,
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)'
+              }}>
+                <div style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
+                  You selected: <strong style={{ color: selected.color, fontSize: '2rem' }}>{selectedChar}</strong>
+                </div>
+                <div style={{ fontSize: '1rem', opacity: 0.8, marginBottom: '1rem' }}>
+                  <strong>{selected.name.toUpperCase()}</strong> - sounds like "{selected.sound}"
+                </div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  opacity: 0.7,
+                  marginTop: '0.5rem',
+                  padding: '0.75rem',
+                  background: 'rgba(0,0,0,0.2)',
+                  borderRadius: '8px'
+                }}>
+                  Sacred Direction: <strong style={{ color: selected.color }}>{selected.direction}</strong>
+                </div>
+                <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '1rem' }}>
+                  🎵 Native speaker audio pronunciation coming in Phase 2
+                </p>
+                <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '0.5rem' }}>
+                  🎭 Expressive shape-morphing animation coming in Phase 2
+                </p>
               </div>
-              <p style={{ opacity: 0.7, fontSize: '0.95rem' }}>
-                🎵 Native speaker audio pronunciation coming in Phase 2
-              </p>
-              <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '0.5rem' }}>
-                🎭 Expressive shape-morphing animation coming in Phase 2
-              </p>
+            ) : null
+          })()}
+        </div>
+
+        {/* Sacred Colors */}
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          borderRadius: '16px',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          marginBottom: '4rem'
+        }}>
+          <h3 style={{
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            marginBottom: '2rem',
+            textAlign: 'center',
+            color: '#DAA520'
+          }}>
+            Cherokee Sacred Colors & Directions
+          </h3>
+          <p style={{
+            textAlign: 'center',
+            opacity: 0.8,
+            marginBottom: '2rem',
+            fontSize: '1rem',
+            maxWidth: '800px',
+            margin: '0 auto 2rem auto'
+          }}>
+            Each character is colored according to the Cherokee sacred directions—honoring the traditional symbolism that connects language, land, and spirit.
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 'var(--grid-gap)'
+          }}>
+            <div style={{
+              padding: '1.5rem',
+              background: 'rgba(196,67,60,0.12)',
+              border: '1px solid rgba(196,67,60,0.3)',
+              borderRadius: '12px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#C4433C' }}>→</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#C4433C' }}>East - Red</div>
+              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5 }}>Success, Power, Triumph</div>
             </div>
-          )}
+            <div style={{
+              padding: '1.5rem',
+              background: 'rgba(232,220,197,0.08)',
+              border: '1px solid rgba(232,220,197,0.25)',
+              borderRadius: '12px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#E8DCC5' }}>↓</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#E8DCC5' }}>South - White</div>
+              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5 }}>Peace, Happiness, Purity</div>
+            </div>
+            <div style={{
+              padding: '1.5rem',
+              background: 'rgba(91,140,168,0.12)',
+              border: '1px solid rgba(91,140,168,0.3)',
+              borderRadius: '12px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#5B8CA8' }}>↑</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#5B8CA8' }}>North - Blue</div>
+              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5 }}>Defeat, Trouble, Introspection</div>
+            </div>
+            <div style={{
+              padding: '1.5rem',
+              background: 'rgba(40,40,40,0.4)',
+              border: '1px solid rgba(100,100,100,0.3)',
+              borderRadius: '12px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#888' }}>←</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#AAA' }}>West - Black</div>
+              <div style={{ opacity: 0.7, fontSize: '0.95rem', lineHeight: 1.5 }}>Death, Endings, Transformation</div>
+            </div>
+          </div>
         </div>
 
         {/* Cultural Context */}
