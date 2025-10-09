@@ -7,6 +7,27 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### ✨ Public API Enhancements
+
+#### Instant Emotion Transitions
+- **Added** duration parameter support to `setEmotion()` method in EmotiveMascotPublic
+  - Accepts duration as second parameter: `setEmotion('joy', 0)` for instant transitions
+  - Supports three parameter formats:
+    - Undertone string: `setEmotion('joy', 'warm')`
+    - Duration number: `setEmotion('joy', 0)` for instant (no particle artifacts)
+    - Options object: `setEmotion('joy', { undertone: 'warm', duration: 0 })`
+  - Default transition duration remains 500ms for backwards compatibility
+
+- **Fixed** particle transition artifacts when rapidly switching emotion states
+  - Instant transitions (0ms) eliminate errant particles from previous states
+  - Particularly useful for card carousels and rapid UI interactions
+  - Cherokee language learning demo updated to use instant transitions
+
+#### Documentation
+- **Updated** API.md with comprehensive setEmotion() parameter documentation
+- **Added** examples for all parameter formats
+- **Documented** use case for instant transitions to prevent particle artifacts
+
 ## [2.6.0] - 2025-01-14
 
 ### 🎯 Rotation & Braking System Overhaul

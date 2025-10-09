@@ -25,8 +25,8 @@ export default {
     shadow: {
         type: 'crescent',
         coverage: 0.85,      // Strong shadow for sharp crescent
-        angle: -30,          // Shadow from upper left  
-        softness: 0.05,      // Very sharp edge for crisp crescent
+        angle: -30,          // Shadow from upper left
+        softness: 0.05,      // Sharp dark edge for dramatic crescent
         offset: 0.7          // How far to offset the shadow circle
     },
     

@@ -51,12 +51,16 @@ mascot.resize(800, 600);
 
 ## Emotion Control
 
-### `setEmotion(emotionName, intensity)`
-Sets the current emotional state.
+### `setEmotion(emotionName, optionsOrDuration, timestamp)`
+Sets the current emotional state with optional transition duration.
 
 **Parameters:**
 - `emotionName` (string): Name of the emotion
-- `intensity` (number, optional): Emotion intensity (0-1), default: 1
+- `optionsOrDuration` (string|number|Object, optional):
+  - **string**: Undertone name (e.g., 'warm', 'cold')
+  - **number**: Transition duration in milliseconds (default: 500)
+  - **Object**: Options object with `{undertone: string, duration: number}`
+- `timestamp` (number, optional): Timestamp for recording mode
 
 **Available Emotions:**
 - `neutral`, `joy`, `sadness`, `anger`, `fear`, `surprise`, `disgust`
@@ -64,9 +68,27 @@ Sets the current emotional state.
 - `serenity`, `pride`, `embarrassment`, `amusement`, `awe`
 - `satisfaction`, `sympathy`, `triumph`, `speaking`, `suspicion`
 
+**Examples:**
 ```javascript
-mascot.setEmotion('joy', 0.8);
+// Basic emotion change with default 500ms transition
+mascot.setEmotion('joy');
+
+// Instant emotion change (0ms transition)
+// Useful for preventing particle artifacts when rapidly switching states
+mascot.setEmotion('joy', 0);
+
+// Emotion with undertone
+mascot.setEmotion('joy', 'energetic');
+
+// Emotion with custom transition duration
+mascot.setEmotion('joy', 1000); // 1 second transition
+
+// Emotion with undertone and duration via options object
+mascot.setEmotion('joy', { undertone: 'energetic', duration: 0 });
 ```
+
+**Note on Instant Transitions:**
+Use `duration: 0` for instant emotion changes when rapidly switching between states (e.g., card carousels, quick interactions). This prevents particle systems from the previous emotion state from creating visual artifacts during the transition.
 
 ### `addUndertone(undertone)`
 Adds an emotional undertone that modifies the primary emotion.

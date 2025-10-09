@@ -179,10 +179,12 @@ class Particle {
         }
         
         // HARD BOUNDARY CONSTRAINTS - particles NEVER leave canvas
-        // For homepage (use-cases), use much larger boundaries to allow particles to flow
-        const isHomepage = window.location && (window.location.pathname === '/' || window.location.pathname === '/use-cases')
-        const canvasWidth = centerX * 2;
-        const canvasHeight = isHomepage ? centerY * 6 : centerY * 2; // 3x height for homepage
+        // Get actual canvas dimensions from the DOM
+        const canvas = document.getElementById('card-mascot') ||
+                      document.getElementById('cherokee-guide-mascot') ||
+                      document.querySelector('canvas');
+        const canvasWidth = canvas ? canvas.width : centerX * 2;
+        const canvasHeight = canvas ? canvas.height : centerY * 2;
         const margin = 20;
         
         // Bounce off boundaries

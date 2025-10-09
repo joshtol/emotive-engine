@@ -125,6 +125,7 @@ Edit `site/src/app/page.tsx` and add to `useCases` array:
 
 ### Emotions
 ```typescript
+// Standard emotion change (500ms transition)
 mascot.setEmotion('joy')        // Happy, positive
 mascot.setEmotion('calm')       // Relaxed, neutral
 mascot.setEmotion('curious')    // Interested, attentive
@@ -132,6 +133,18 @@ mascot.setEmotion('encouraging') // Supportive
 mascot.setEmotion('empathetic') // Understanding
 mascot.setEmotion('concerned')  // Worried
 mascot.setEmotion('focused')    // Concentrating
+
+// Instant emotion change (0ms transition)
+// Use for rapid UI interactions to prevent particle artifacts
+mascot.setEmotion('joy', 0)     // Instant transition
+mascot.setEmotion('calm', 0)    // No transition delay
+
+// Custom transition duration
+mascot.setEmotion('joy', 1000)  // 1 second transition
+
+// With undertone
+mascot.setEmotion('joy', 'energetic')  // Emotion + undertone
+mascot.setEmotion('joy', { undertone: 'energetic', duration: 0 })  // All options
 ```
 
 ### Gestures

@@ -390,29 +390,37 @@ class EmotiveMascotPublic {
     /**
      * Set emotion state
      * @param {string} emotion - Emotion name
-     * @param {string|Object} [undertoneOrOptions] - Undertone string or options object
+     * @param {string|number|Object} [undertoneOrDurationOrOptions] - Undertone string, duration number, or options object
      * @param {number} [timestamp] - Optional timestamp for recording
      */
-    setEmotion(emotion, undertoneOrOptions, timestamp) {
+    setEmotion(emotion, undertoneOrDurationOrOptions, timestamp) {
         const engine = this._getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
+
         // Handle different parameter formats
         let undertone = null;
+        let duration = 500; // Default 500ms transition
         let recordTime = timestamp;
-        
-        if (typeof undertoneOrOptions === 'string') {
+
+        if (typeof undertoneOrDurationOrOptions === 'string') {
             // It's an undertone
-            undertone = undertoneOrOptions;
-        } else if (typeof undertoneOrOptions === 'number') {
-            // It's a timestamp (no undertone provided)
-            recordTime = undertoneOrOptions;
-        } else if (undertoneOrOptions && typeof undertoneOrOptions === 'object') {
+            undertone = undertoneOrDurationOrOptions;
+        } else if (typeof undertoneOrDurationOrOptions === 'number') {
+            // Could be duration or timestamp - check if timestamp param is provided
+            if (timestamp !== undefined) {
+                // It's duration, timestamp is separate
+                duration = undertoneOrDurationOrOptions;
+            } else {
+                // It's a timestamp (backwards compatibility)
+                recordTime = undertoneOrDurationOrOptions;
+            }
+        } else if (undertoneOrDurationOrOptions && typeof undertoneOrDurationOrOptions === 'object') {
             // It's an options object
-            const {undertone: newUndertone} = undertoneOrOptions;
+            const {undertone: newUndertone, duration: newDuration} = undertoneOrDurationOrOptions;
             undertone = newUndertone;
+            if (newDuration !== undefined) duration = newDuration;
         }
-        
+
         // Record if in recording mode
         if (this._isRecording) {
             const time = recordTime || (Date.now() - this._recordingStartTime);
@@ -423,12 +431,12 @@ class EmotiveMascotPublic {
                 time
             });
         }
-        
-        // Set in engine with undertone
+
+        // Set in engine with undertone and duration
         if (undertone) {
-            engine.setEmotion(emotion, { undertone });
+            engine.setEmotion(emotion, { undertone }, duration);
         } else {
-            engine.setEmotion(emotion);
+            engine.setEmotion(emotion, null, duration);
         }
     }
 

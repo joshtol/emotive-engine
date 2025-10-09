@@ -1653,12 +1653,13 @@ class EmotiveRenderer {
      */
     renderMoonShadow(x, y, radius, shadow, shapePoints, isSolarOverlay = false, rotation = 0) {
         const {ctx} = this;
-        
+
         ctx.save();
+        ctx.globalAlpha = 1; // Always render shadow at full opacity, even in resting state
         ctx.translate(x, y);
-        
+
         // Don't apply rotation - we're already in rotated coordinate space
-        
+
         if (shadow.type === 'crescent') {
             // Crescent moon - smooth shadow without pixelation
             

@@ -76,15 +76,24 @@ await mascot.renderer.rotationBrake.brakeToUpright();
 
 ### Emotional States
 
-Set emotions with optional undertones for nuanced expression:
+Set emotions with optional undertones and transition duration:
 
 ```javascript
-// Basic emotion
+// Basic emotion (default 500ms transition)
 mascot.setEmotion('joy');
 
+// Instant emotion change (prevents particle artifacts)
+mascot.setEmotion('joy', 0);
+
+// Custom transition duration
+mascot.setEmotion('joy', 1000);  // 1 second transition
+
 // With undertone
-mascot.setEmotion('anger', { undertone: 'intense' });
-mascot.setEmotion('love', { undertone: 'subdued' });
+mascot.setEmotion('anger', 'intense');
+mascot.setEmotion('love', 'subdued');
+
+// Undertone + instant transition
+mascot.setEmotion('joy', { undertone: 'energetic', duration: 0 });
 
 // Available emotions
 const emotions = [
@@ -197,7 +206,9 @@ new EmotiveMascot(config)
 - `reset()` - Reset to initial state
 
 #### Emotional Control
-- `setEmotion(emotion, options)` - Change emotional state
+- `setEmotion(emotion, optionsOrDuration)` - Change emotional state
+  - `emotion` (string) - Emotion name
+  - `optionsOrDuration` (string|number|Object) - Undertone string, duration (ms), or options object
 - `express(gesture)` - Trigger gesture(s)
 - `morphTo(shape, options)` - Transform shape
 

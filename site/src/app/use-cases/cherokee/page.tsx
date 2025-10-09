@@ -20,7 +20,11 @@ export default function CherokeePage() {
   const mascotRef = useRef<any>(null)
   const firstCardRef = useRef<HTMLDivElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
-  const [hasScrolled, setHasScrolled] = useState(false)
+  const hasNoddedRef = useRef<boolean>(false)
+  const lastScrollDirection = useRef<'down' | 'up' | null>(null)
+  const lastScrollY = useRef<number>(0)
+  const cardMascotRef = useRef<any>(null)
+  const cardCanvasRef = useRef<HTMLCanvasElement>(null)
 
   // Initialize mascot
   useEffect(() => {
@@ -65,8 +69,8 @@ export default function CherokeePage() {
             const offsetX = targetX - viewportCenterX
             const offsetY = targetY - viewportCenterY
 
-            // Set position BEFORE starting (no visual jump)
-            mascot.setPosition(offsetX, offsetY, 0)
+            // Set position BEFORE starting (no visual jump, full size)
+            mascot.setPosition(offsetX, offsetY, 1)
           }
 
           // NOW start rendering - mascot already in correct position
@@ -95,40 +99,330 @@ export default function CherokeePage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Scroll detection and mascot targeting
+  // Initialize card mascot when a phrase is selected
+  useEffect(() => {
+    if (typeof window === 'undefined' || !selectedPhrase || !cardCanvasRef.current) return
+
+    const initCardMascot = async () => {
+      // Wait for EmotiveMascot to be available
+      while (!window.EmotiveMascot) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      const canvas = cardCanvasRef.current
+      if (!canvas) return
+
+      // Clean up existing mascot if any
+      if (cardMascotRef.current) {
+        cardMascotRef.current.stop?.()
+        cardMascotRef.current.destroy?.()
+      }
+
+      // Set canvas resolution to match its displayed size BEFORE creating mascot
+      // This ensures particle boundaries match the modal size
+      const rect = canvas.getBoundingClientRect()
+      canvas.width = rect.width
+      canvas.height = rect.height
+
+      try {
+        const cardMascot = new window.EmotiveMascot({
+          canvasId: 'card-mascot',
+          enableAudio: false,
+          soundEnabled: false,
+          defaultEmotion: 'joy',
+          enableGazeTracking: false,
+          enableIdleBehaviors: true,
+        })
+
+        cardMascotRef.current = cardMascot
+
+        // Set emotion and gesture chain based on card
+        const selected = greetings.find(g => g.english === selectedPhrase)
+
+        // Start the mascot
+        cardMascot.start()
+
+        // Position mascot to the left of English content
+        // Canvas fills full modal, mascot offset to left
+        if (cardMascot.setPosition) {
+          // Offset to left for horizontal layout with English content
+          cardMascot.setPosition(-150, -120, 0) // Left offset, move up
+        }
+
+        // Wait for mascot to initialize, then trigger gestures
+        setTimeout(() => {
+          // Define unique gesture chains for each card
+          const gestureChains: Record<string, () => void> = {
+            'Hello': () => {
+              // State: surprise, Chain: hula+reach > nod
+              if (cardMascot.setEmotion) cardMascot.setEmotion('surprise', 0)
+              setTimeout(() => {
+                if (cardMascot.express) cardMascot.express('hula')
+                setTimeout(() => {
+                  if (cardMascot.express) cardMascot.express('nod')
+                }, 800)
+              }, 300)
+            },
+            'Hello (informal)': () => {
+              // State: surprise, Chain: wiggle
+              if (cardMascot.setEmotion) cardMascot.setEmotion('surprise', 0)
+              setTimeout(() => {
+                if (cardMascot.express) cardMascot.express('wiggle')
+              }, 300)
+            },
+            'Thank you': () => {
+              // State: love, Chain: glow+pulse
+              if (cardMascot.setEmotion) cardMascot.setEmotion('love', 0)
+              setTimeout(() => {
+                if (cardMascot.express) cardMascot.express('glow')
+                setTimeout(() => {
+                  if (cardMascot.express) cardMascot.express('pulse')
+                }, 500)
+              }, 300)
+            },
+            'How are you?': () => {
+              // State: neutral, Chain: point+bounce
+              if (cardMascot.setEmotion) cardMascot.setEmotion('neutral', 0)
+              setTimeout(() => {
+                if (cardMascot.express) cardMascot.express('point')
+                setTimeout(() => {
+                  if (cardMascot.express) cardMascot.express('bounce')
+                }, 600)
+              }, 300)
+            },
+            'Good': () => {
+              // State: calm, Chain: pulse+flash
+              if (cardMascot.setEmotion) cardMascot.setEmotion('calm', 0)
+              setTimeout(() => {
+                if (cardMascot.express) cardMascot.express('pulse')
+                setTimeout(() => {
+                  if (cardMascot.express) cardMascot.express('flash')
+                }, 500)
+              }, 300)
+            },
+            'Good morning': () => {
+              // State: euphoria, Core: sun, Chain: breathe
+              if (cardMascot.setEmotion) cardMascot.setEmotion('euphoria', 0)
+              if (cardMascot.morphTo) cardMascot.morphTo('sun')
+              setTimeout(() => {
+                if (cardMascot.express) cardMascot.express('breathe')
+              }, 300)
+            },
+            '\'Til we meet again': () => {
+              // State: neutral, Core: solar, Chain: groove+float
+              if (cardMascot.setEmotion) cardMascot.setEmotion('neutral', 0)
+              if (cardMascot.morphTo) cardMascot.morphTo('solar')
+              setTimeout(() => {
+                if (cardMascot.express) cardMascot.express('groove')
+                setTimeout(() => {
+                  if (cardMascot.express) cardMascot.express('float')
+                }, 400)
+              }, 300)
+            },
+            'Good night': () => {
+              // State: resting, Core: moon, Chain: wiggle+shimmer
+              if (cardMascot.setEmotion) cardMascot.setEmotion('resting', 0)
+              if (cardMascot.morphTo) cardMascot.morphTo('moon')
+              setTimeout(() => {
+                if (cardMascot.express) cardMascot.express('wiggle')
+                setTimeout(() => {
+                  if (cardMascot.express) cardMascot.express('shimmer')
+                }, 600)
+              }, 300)
+            }
+          }
+
+          // Trigger the appropriate gesture chain
+          const gestureChain = gestureChains[selectedPhrase]
+          if (gestureChain) {
+            gestureChain()
+          }
+        }, 100) // Wait 100ms for mascot to initialize
+      } catch (err) {
+        console.error('Failed to initialize card mascot:', err)
+      }
+    }
+
+    initCardMascot()
+
+    // Cleanup when phrase changes or modal closes
+    return () => {
+      if (cardMascotRef.current) {
+        cardMascotRef.current.stop?.()
+        cardMascotRef.current.destroy?.()
+        cardMascotRef.current = null
+      }
+    }
+  }, [selectedPhrase])
+
+  // Scroll-locked mascot movement: spawn location → first card
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const handleScroll = () => {
-      const scrollY = window.scrollY
+    let spawnPosition: { x: number; y: number } | null = null
+    let targetPosition: { x: number; y: number } | null = null
+    let ticking = false
 
-      // Trigger movement after scrolling 100px
-      if (scrollY > 100 && !hasScrolled) {
-        setHasScrolled(true)
+    // Calculate positions once on mount
+    const calculatePositions = () => {
+      const viewportCenterX = window.innerWidth / 2
+      const viewportCenterY = window.innerHeight / 2
 
-        // Target the first greeting card
-        if (mascotRef.current && firstCardRef.current && mascotRef.current.animateToPosition) {
-          const cardRect = firstCardRef.current.getBoundingClientRect()
+      // Get spawn position (20px above heading)
+      if (headingRef.current) {
+        const headingRect = headingRef.current.getBoundingClientRect()
+        const absoluteSpawnY = headingRect.top + window.scrollY - 20
+        spawnPosition = {
+          x: headingRect.left + headingRect.width / 2,
+          y: absoluteSpawnY
+        }
+      }
 
-          // Calculate absolute screen position for card center
-          const targetX = cardRect.left + cardRect.width / 2
-          const targetY = cardRect.top + cardRect.height / 2
-
-          // Calculate offsets from viewport center
-          const viewportCenterX = window.innerWidth / 2
-          const viewportCenterY = window.innerHeight / 2
-          const offsetX = targetX - viewportCenterX
-          const offsetY = targetY - viewportCenterY
-
-          // Animate to the card position over 2 seconds
-          mascotRef.current.animateToPosition(offsetX, offsetY, 0, 2000, 'easeOutCubic')
+      // Get first card position
+      if (firstCardRef.current) {
+        const cardRect = firstCardRef.current.getBoundingClientRect()
+        targetPosition = {
+          x: cardRect.left + cardRect.width / 2,
+          y: cardRect.top + window.scrollY + cardRect.height / 2
         }
       }
     }
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [hasScrolled])
+    const updateMascotPosition = () => {
+      if (!mascotRef.current || !mascotRef.current.setPosition) return
+      if (!spawnPosition || !targetPosition) {
+        calculatePositions()
+        if (!spawnPosition || !targetPosition) return
+      }
+
+      const scrollY = window.scrollY
+
+      // Detect scroll direction
+      const currentDirection = scrollY > lastScrollY.current ? 'down' : 'up'
+      lastScrollY.current = scrollY
+
+      // Define scroll ranges
+      const scrollStart = 0
+      const scrollReachCard = 600      // Mascot reaches the card
+      const scrollNodTrigger = 500     // Trigger nod gesture
+      const scrollFadeStart = 620      // Start fading out immediately after reaching card
+      const scrollFadeEnd = 800        // Fully transparent (faster disappear)
+
+      const viewportCenterX = window.innerWidth / 2
+      const viewportCenterY = window.innerHeight / 2
+
+      let viewportX: number
+      let viewportY: number
+      let opacity = 1
+      let scale = 1
+
+      if (scrollY <= scrollReachCard) {
+        // Phase 1: Moving from spawn to first card & shrinking
+        let progress = (scrollY - scrollStart) / (scrollReachCard - scrollStart)
+        progress = Math.max(0, Math.min(1, progress))
+
+        // Ease the progress for smoother motion (easeInOutCubic)
+        const easedProgress = progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2
+
+        // Interpolate absolute page position
+        const absoluteX = spawnPosition.x + (targetPosition.x - spawnPosition.x) * easedProgress
+        const absoluteY = spawnPosition.y + (targetPosition.y - spawnPosition.y) * easedProgress
+
+        // Interpolate scale from 1 to 0.333 (1/3 size)
+        scale = 1 - (easedProgress * 0.667) // 1 → 0.333
+
+        // Convert absolute page coordinates to viewport coordinates
+        viewportX = absoluteX
+        viewportY = absoluteY - scrollY
+        opacity = 1
+
+        // Trigger nod gesture when approaching card (scrolling down)
+        if (currentDirection === 'down' && scrollY >= scrollNodTrigger && !hasNoddedRef.current) {
+          hasNoddedRef.current = true
+          if (mascotRef.current.express) {
+            mascotRef.current.express('nod')
+          }
+        }
+
+        // Reset nod flag when scrolling back up past trigger
+        if (currentDirection === 'up' && scrollY < scrollNodTrigger && hasNoddedRef.current) {
+          hasNoddedRef.current = false
+        }
+      } else if (scrollY <= scrollFadeStart) {
+        // Phase 2: Stuck to the card - fully visible at 1/3 size
+        if (!firstCardRef.current) return
+
+        const cardRect = firstCardRef.current.getBoundingClientRect()
+        viewportX = cardRect.left + cardRect.width / 2
+        viewportY = cardRect.top + cardRect.height / 2
+        opacity = 1
+        scale = 0.333
+      } else if (scrollY <= scrollFadeEnd) {
+        // Phase 3: Disappearing into card - fading out at 1/3 size
+        if (!firstCardRef.current) return
+
+        const cardRect = firstCardRef.current.getBoundingClientRect()
+        viewportX = cardRect.left + cardRect.width / 2
+        viewportY = cardRect.top + cardRect.height / 2
+
+        // Calculate fade progress
+        const fadeProgress = (scrollY - scrollFadeStart) / (scrollFadeEnd - scrollFadeStart)
+        opacity = 1 - fadeProgress
+        scale = 0.333
+      } else {
+        // Phase 4: Fully disappeared into card
+        if (!firstCardRef.current) return
+
+        const cardRect = firstCardRef.current.getBoundingClientRect()
+        viewportX = cardRect.left + cardRect.width / 2
+        viewportY = cardRect.top + cardRect.height / 2
+        opacity = 0
+        scale = 0.333
+      }
+
+      // Convert to viewport-relative offsets
+      const offsetX = viewportX - viewportCenterX
+      const offsetY = viewportY - viewportCenterY
+
+      // Update mascot position
+      mascotRef.current.setPosition(offsetX, offsetY, 0)
+
+      // Update canvas opacity and scale
+      if (canvasRef.current) {
+        canvasRef.current.style.opacity = opacity.toString()
+        // Apply scale transform at the mascot's current position to avoid shifting
+        const canvasWidth = canvasRef.current.width
+        const canvasHeight = canvasRef.current.height
+        const mascotScreenX = viewportCenterX + offsetX
+        const mascotScreenY = viewportCenterY + offsetY
+
+        canvasRef.current.style.transform = `scale(${scale})`
+        canvasRef.current.style.transformOrigin = `${mascotScreenX}px ${mascotScreenY}px`
+      }
+
+      ticking = false
+    }
+
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(updateMascotPosition)
+        ticking = true
+      }
+    }
+
+    // Initial position calculation after a brief delay for layout
+    setTimeout(calculatePositions, 100)
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', calculatePositions)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', calculatePositions)
+    }
+  }, [])
 
   // Handle swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -154,6 +448,10 @@ export default function CherokeePage() {
         setSelectedPhrase(greetings[currentIndex - 1].english)
       }
     }
+
+    // Reset touch state after handling
+    setTouchStart(0)
+    setTouchEnd(0)
   }
 
   // Navigate to next/previous greeting
@@ -193,28 +491,6 @@ export default function CherokeePage() {
       emoji: '😊'
     },
     {
-      english: 'Thank you',
-      cherokee: 'ᏩᏙ',
-      pronunciation: 'wah-doh',
-      meaning: 'Expression of gratitude',
-      context: 'Shows respect and appreciation',
-      color: '#98D8C8',
-      bgColor: 'rgba(152,216,200,0.15)',
-      borderColor: 'rgba(152,216,200,0.4)',
-      emoji: '🙏'
-    },
-    {
-      english: 'How are you?',
-      cherokee: 'ᏙᎯᏧ',
-      pronunciation: 'doh-hee-choo',
-      meaning: 'Asking about someone\'s wellbeing',
-      context: 'Common conversation starter',
-      color: '#F7DC6F',
-      bgColor: 'rgba(247,220,111,0.15)',
-      borderColor: 'rgba(247,220,111,0.4)',
-      emoji: '💬'
-    },
-    {
       english: 'Good',
       cherokee: 'ᎣᏍᏓ',
       pronunciation: 'oh-s-dah',
@@ -237,15 +513,26 @@ export default function CherokeePage() {
       emoji: '🌅'
     },
     {
-      english: '\'Til we meet again',
-      cherokee: 'ᏙᎾᏓᎪᎲᎢ',
-      pronunciation: 'doh-nah-dah-goh-huh-ee',
-      meaning: 'There is no word for "goodbye" in Cherokee',
-      context: 'Reflects belief in continued connection',
-      color: '#C39BD3',
-      bgColor: 'rgba(195,155,211,0.15)',
-      borderColor: 'rgba(195,155,211,0.4)',
-      emoji: '🤝'
+      english: 'How are you?',
+      cherokee: 'ᏙᎯᏧ',
+      pronunciation: 'doh-hee-choo',
+      meaning: 'Asking about someone\'s wellbeing',
+      context: 'Common conversation starter',
+      color: '#F7DC6F',
+      bgColor: 'rgba(247,220,111,0.15)',
+      borderColor: 'rgba(247,220,111,0.4)',
+      emoji: '💬'
+    },
+    {
+      english: 'Thank you',
+      cherokee: 'ᏩᏙ',
+      pronunciation: 'wah-doh',
+      meaning: 'Expression of gratitude',
+      context: 'Shows respect and appreciation',
+      color: '#98D8C8',
+      bgColor: 'rgba(152,216,200,0.15)',
+      borderColor: 'rgba(152,216,200,0.4)',
+      emoji: '🙏'
     },
     {
       english: 'Good night',
@@ -257,6 +544,17 @@ export default function CherokeePage() {
       bgColor: 'rgba(155,89,182,0.15)',
       borderColor: 'rgba(155,89,182,0.4)',
       emoji: '🌙'
+    },
+    {
+      english: '\'Til we meet again',
+      cherokee: 'ᏙᎾᏓᎪᎲᎢ',
+      pronunciation: 'doh-nah-dah-goh-huh-ee',
+      meaning: 'There is no word for "goodbye" in Cherokee',
+      context: 'Reflects belief in continued connection',
+      color: '#C39BD3',
+      bgColor: 'rgba(195,155,211,0.15)',
+      borderColor: 'rgba(195,155,211,0.4)',
+      emoji: '🤝'
     },
   ]
 
@@ -520,61 +818,10 @@ export default function CherokeePage() {
             ))}
           </div>
 
-          {/* Desktop: Inline detail panel */}
-          {!isMobile && selectedPhrase && (() => {
-            const selected = greetings.find(item => item.english === selectedPhrase)
-            return selected ? (
-              <div style={{
-                marginTop: '2rem',
-                padding: '2rem',
-                background: selected.bgColor,
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: `2px solid ${selected.borderColor}`,
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)'
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-                  {selected.emoji} {selected.cherokee}
-                </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: selected.color }}>
-                  {selected.english}
-                </div>
-                <div style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '1.5rem', fontStyle: 'italic' }}>
-                  Pronunciation: <strong>{selected.pronunciation}</strong>
-                </div>
-                <div style={{
-                  fontSize: '1rem',
-                  opacity: 0.85,
-                  marginTop: '1rem',
-                  padding: '1rem',
-                  background: 'rgba(0,0,0,0.2)',
-                  borderRadius: '8px'
-                }}>
-                  <strong style={{ color: selected.color }}>Meaning:</strong><br />
-                  {selected.meaning}
-                </div>
-                <div style={{
-                  fontSize: '0.95rem',
-                  opacity: 0.75,
-                  marginTop: '1rem',
-                  padding: '1rem',
-                  background: 'rgba(0,0,0,0.15)',
-                  borderRadius: '8px',
-                  fontStyle: 'italic'
-                }}>
-                  💡 <strong>Cultural Context:</strong> {selected.context}
-                </div>
-                <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '1.5rem' }}>
-                  🎵 Native speaker audio pronunciation coming in Phase 2
-                </p>
-              </div>
-            ) : null
-          })()}
         </div>
 
-        {/* Mobile: Full-screen modal */}
-        {isMobile && selectedPhrase && (() => {
+        {/* Modal for all screen sizes */}
+        {selectedPhrase && (() => {
           const selected = greetings.find(item => item.english === selectedPhrase)
           const currentIndex = greetings.findIndex(g => g.english === selectedPhrase)
 
@@ -594,7 +841,7 @@ export default function CherokeePage() {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                padding: '2rem',
+                padding: isMobile ? '2rem' : '4rem',
                 animation: 'fadeIn 0.3s ease-out'
               }}
               onClick={() => setSelectedPhrase(null)}
@@ -605,16 +852,33 @@ export default function CherokeePage() {
               <div
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  maxWidth: '500px',
+                  maxWidth: isMobile ? '500px' : '800px',
                   width: '100%',
                   background: selected.bgColor,
                   borderRadius: '20px',
-                  padding: '2.5rem 2rem',
+                  padding: isMobile ? '2.5rem 2rem' : '3rem 2.5rem',
                   border: `2px solid ${selected.borderColor}`,
                   textAlign: 'center',
-                  position: 'relative'
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
               >
+                {/* Full-modal mascot canvas for free particle movement */}
+                <canvas
+                  ref={cardCanvasRef}
+                  id="card-mascot"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                    filter: 'none' // Prevent CSS filters from washing out canvas shadows
+                  }}
+                />
+
                 {/* Close button */}
                 <button
                   onClick={() => setSelectedPhrase(null)}
@@ -632,21 +896,65 @@ export default function CherokeePage() {
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    zIndex: 10
                   }}
                 >
                   ×
                 </button>
 
-                {/* Content */}
-                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
-                  {selected.emoji} {selected.cherokee}
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: '600', marginBottom: '0.5rem', color: selected.color }}>
-                  {selected.english}
-                </div>
-                <div style={{ fontSize: '1.2rem', opacity: 0.8, marginBottom: '2rem', fontStyle: 'italic' }}>
-                  Pronunciation: <strong>{selected.pronunciation}</strong>
+                {/* Cherokee glyph heading */}
+                <div style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  marginBottom: '2rem',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: 'clamp(3rem, 12vw, 5rem)',
+                    lineHeight: 1,
+                    marginBottom: '2rem',
+                    color: selected.color,
+                    fontWeight: '600'
+                  }}>
+                    {selected.cherokee}
+                  </div>
+
+                  {/* Mascot + English content (horizontal layout) */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '2rem',
+                    marginBottom: '2rem'
+                  }}>
+                    {/* Left: Mascot - 1:1 aspect ratio */}
+                    <div style={{
+                      width: '150px',
+                      height: '150px',
+                      flexShrink: 0,
+                      position: 'relative'
+                    }} />
+
+                    {/* Right: English content */}
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{
+                        fontSize: '2rem',
+                        fontWeight: '600',
+                        marginBottom: '0.5rem',
+                        color: selected.color
+                      }}>
+                        {selected.english}
+                      </div>
+                      <div style={{
+                        fontSize: '1.1rem',
+                        opacity: 0.8,
+                        fontStyle: 'italic'
+                      }}>
+                        <strong>{selected.pronunciation}</strong>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div style={{
                   fontSize: '1.1rem',
@@ -654,7 +962,9 @@ export default function CherokeePage() {
                   marginTop: '1rem',
                   padding: '1.2rem',
                   background: 'rgba(0,0,0,0.2)',
-                  borderRadius: '12px'
+                  borderRadius: '12px',
+                  position: 'relative',
+                  zIndex: 2
                 }}>
                   <strong style={{ color: selected.color }}>Meaning:</strong><br />
                   {selected.meaning}
@@ -666,7 +976,9 @@ export default function CherokeePage() {
                   padding: '1.2rem',
                   background: 'rgba(0,0,0,0.15)',
                   borderRadius: '12px',
-                  fontStyle: 'italic'
+                  fontStyle: 'italic',
+                  position: 'relative',
+                  zIndex: 2
                 }}>
                   💡 <strong>Cultural Context:</strong> {selected.context}
                 </div>
@@ -676,7 +988,9 @@ export default function CherokeePage() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   marginTop: '2rem',
-                  gap: '1rem'
+                  gap: '1rem',
+                  position: 'relative',
+                  zIndex: 2
                 }}>
                   <button
                     onClick={() => navigateGreeting('prev')}
