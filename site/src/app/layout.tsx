@@ -21,6 +21,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <script src="/emotive-engine.js" defer></script>
+      </head>
       <body className={`${poppins.variable} ${montserrat.variable}`}>
         <div className="emotive-container">{children}</div>
       </body>

@@ -1,8 +1,8 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import HeroMascot from '../HeroMascot';
+import { useScrollExperience } from '@/components/hooks/useScrollExperience';
 
 interface HeroSectionProps {
-    onMascotPosition: (position: { x: number; y: number; visible: boolean }) => void;
     mascot: any;
 }
 
@@ -42,7 +42,9 @@ const CAROUSEL_CARDS = [
     { title: 'Healthcare Assistant', color: '#FFAA85', emotion: 'calm', delay: 1.0 },
 ];
 
-export default function HeroSection({ onMascotPosition, mascot }: HeroSectionProps) {
+export default function HeroSection({ mascot }: HeroSectionProps) {
+    const { lock } = useScrollExperience();
+    const isLocked = lock.locked && lock.sectionId === 'hero';
     const [scrollY, setScrollY] = useState(0);
 
     useEffect(() => {
@@ -58,8 +60,8 @@ export default function HeroSection({ onMascotPosition, mascot }: HeroSectionPro
     );
 
     return (
-        <section className="hero-section">
-            <HeroMascot onMascotPosition={onMascotPosition} />
+        <section className="hero-section" data-scroll-locked={isLocked ? 'true' : 'false'}>
+            <HeroMascot />
 
             <div className="hero-content">
                 <div

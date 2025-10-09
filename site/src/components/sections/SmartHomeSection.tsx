@@ -1,12 +1,17 @@
 'use client'
 
+import { useScrollExperience } from '@/components/hooks/useScrollExperience'
+
 interface SmartHomeSectionProps {
   onMascotPosition?: (x: number, y: number) => void
 }
 
 export default function SmartHomeSection({ onMascotPosition }: SmartHomeSectionProps) {
+  const { lock } = useScrollExperience()
+  const isLocked = lock.locked && lock.sectionId === 'smart-home'
+
   return (
-    <section className="smart-home-section" style={{ 
+    <section className="smart-home-section" data-scroll-locked={isLocked ? 'true' : 'false'} style={{ 
       height: '100vh', 
       position: 'relative',
       display: 'flex',

@@ -30,8 +30,8 @@ export function useFitGridFont(containerRef: React.RefObject<HTMLElement | null>
 
     const measureAndFit = () => {
       // Candidate font size range (in viewport units). We'll try decreasing until the longest fits.
-      let currentVh = Math.min(maxVh, Math.max(minVh, maxVh))
-      let currentVw = Math.min(maxVw, Math.max(minVw, maxVw))
+      const currentVh = Math.min(maxVh, Math.max(minVh, maxVh))
+      const currentVw = Math.min(maxVw, Math.max(minVw, maxVw))
 
       const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('.emotive-sidebar button, .emotive-controls button'))
       if (buttons.length === 0) return

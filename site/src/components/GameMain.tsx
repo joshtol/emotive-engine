@@ -120,7 +120,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         })
         
         // Access the global EmotiveMascot
-        const EmotiveMascot = (window as any).EmotiveMascot
+        const {EmotiveMascot} = (window as any)
         // Debug: EmotiveMascot loaded
         
         if (!EmotiveMascot) {
@@ -128,7 +128,7 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
         }
         
         // Get render size from canvas element
-        const renderSize = (canvasRef.current as any).renderSize
+        const {renderSize} = (canvasRef.current as any)
         
         const mascot = new EmotiveMascot({
           canvasId: 'emotive-canvas',

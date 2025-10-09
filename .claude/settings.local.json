@@ -134,7 +134,13 @@
       "Bash(for:*)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(tail:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run start:*)",
+      "Bash(start http://localhost:3003)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

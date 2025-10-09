@@ -1,466 +1,327 @@
-# Emotive Engine Site Integration Master Plan
+# Emotive Engine: Use Case Portfolio Strategy
 
-## Phase 0 · Alignment & Setup
-- [ ] [SITE] Confirm spec baseline (<code>site-reimagine.md</code>) and document gaps vs original request.
-  - Notes: Align Claude structure with Tailwind utility workflow; plan to replace single CSS file with Tailwind  modules and component-level styles.
-- [ ] [SITE] Inventory current site routes/components; capture screenshots or screen recordings.
-  - Notes: Routes: / (home), /demo, /use-cases; key UI in site/src/components (HeroMascot, sections, HUD) with layouts under site/src/app. Capture visuals later if required.
-- [ ] [ENGINE] Validate engine build currently served at <code>site/public/emotive-engine.js</code> and identify SDK delta.
-  - Notes: Confirm bundle originates from root build (Rollup config) and that replacing with SDK export keeps demo intact; plan to rerun npm run build after modifications.
-- [ ] [ALL] Align expectations on success metrics (demo flow, avatar behavior, analytics).
-  - Notes: ______________________________________________________________________
+## Vision
 
-## Phase 1 · Scroll Intent & Lock System
-- [ ] [SITE] Draft event model (velocity sampling, dwell window, thresholds).
-  - Notes: Sample scroll every 100ms; track last 60 events; classify intents as Exploring (<1200px/s), Seeking (1200-4000px/s or >400px delta), Skimming (>4000px/s or >2000px delta); include ±100px buffer for lock dwell and hard break after 100px beyond buffer.
-- [ ] [SITE] Implement <code>useScrollIntent</code> hook returning intent, velocity, confidence.
-  - Notes: Hook reads passive scroll listener + rAF sampler, returns state {intent, velocity, distance, confidence}; expose event timestamps for lock manager; Debounce updates to 60fps and provide cleanup. 
-- [ ] [SITE] Implement <code>useScrollLock</code> hook managing section lock/release, buffer windows.
-  - Notes: Maintain state machine (flowing vs locked); accept lockThreshold=100, buffer=±100; expose lock(), unlock(), onHardBreak callback; integrate with intent (seeking/skimming triggers unlock).
-- [ ] [SITE] Create Quick Navigation controller (overlay toggle, section metadata).
-  - Notes: Controller consumes sections registry {id,title,waypoint}; listens to intent (skimming) + keyboard to toggle; ensures focus trap + Tailwind overlay components.*
-- [ ] [SITE] Integrate hooks into <code>HomePage</code> replacing direct <code>window.scroll</code> wiring.
-  - Notes: Replace manual scroll listener with useScrollIntent/useScrollLock providers; share context for sections + pass to Avatar controller; ensure cleanup on unmount.
-- [ ] [SITE] QA scenarios: slow explore, rapid skim, keyboard nav, touch scroll.
-  - Notes: Test desktop wheel vs trackpad, mobile touch inertia, keyboard PgUp/PgDn, summary overlay activation, lock break thresholds across breakpoints.
+Transform from a **feature demo** into a **use case portfolio** where each implementation is a standalone, shareable experience demonstrating real-world applications of emotional AI.
 
-## Phase 2 · Avatar Orchestration Layer
-- [ ] [SITE] Specify API contract for <code>AvatarController</code> (path, gestures, emotions, callbacks).
-  - Notes: ______________________________________________________________________
-- [ ] [ENGINE] Implement controller wrapper in the engine SDK with forward/reverse path support.
-  - Notes: Provide EmotiveEngine.SiteController class bridging to pathTo/pathReverse; accept waypoints config, maintain cleanup, expose async init returning engine instance. Ensure compatibility with existing demo initialization.
-  - **Pause:** Confirm desired method names, return types, and scene callbacks before coding the wrapper.
-- [ ] [SITE] Refactor <code>HeroMascot</code> into canvas host plus controller bootstrap.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Migrate section targeting logic into controller waypoint registry.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Add watchdog for cleanup (<code>stop</code>, <code>destroy</code>, route transitions).
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Validate: resume on focus, window resize, mobile orientation.
-  - Notes: ______________________________________________________________________
+## Strategic Pivot
 
-## Phase 3 · Scene System & Canvas Demos
-- [ ] [SITE] Define scene interface (<code>init</code>, <code>update</code>, <code>handleIntent</code>, <code>dispose</code>).
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Implement base scene manager with lifecycle tied to scroll lock states.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Build individual scenes:
-  - **Pause:** Align on interaction beats, UI references, and success criteria for each scene before implementation.
-  - [ ] [SITE] Retail Checkout Canvas demo.
-    - Notes: _________________________________________________________________
-  - [ ] [SITE] Healthcare Form Canvas demo.
-    - Notes: _________________________________________________________________
-  - [ ] [SITE] Education Tutor Canvas demo.
-    - Notes: _________________________________________________________________
-  - [ ] [SITE] Smart Home Dashboard Canvas demo.
-    - Notes: _________________________________________________________________
-  - [ ] [SITE] Automotive Dashboard Canvas demo.
-    - Notes: _________________________________________________________________
-- [ ] [SITE] Wire scene completion to scroll unlock plus avatar call-to-action.
-  - Notes: ______________________________________________________________________
-- [ ] [ALL] Performance test (FPS, memory) across scenes.
-  - Notes: ______________________________________________________________________
+### From: Generic Demo Site
+- Single scrolling page showing "what it can do"
+- Abstract capabilities without context
+- One URL for everything
 
-## Phase 4 · Experience Layer & UI Enhancements
-- [ ] [SITE] Implement Scroll Hint plus avatar prompt alignment.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Build Quick Nav overlay (sections, progress ring, jump actions).
-  - Notes: ______________________________________________________________________
-  - **Pause:** Confirm overlay layout, activation triggers, and keyboard behaviour before wiring UI state.
-- [ ] [SITE] Translate Claude's CSS concepts into Tailwind utility classes and modular @layer files (avoid a single monolithic stylesheet).
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Add Summary button (60s mode) with condensed scene playback.
-  - Notes: ______________________________________________________________________
-  - **Pause:** Define exact summary script, gestures, and timing expectations before implementation.
-- [ ] [SITE] Create progress indicator or timeline synced with intent state.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Integrate MessageHUD with intent updates, avatar cues.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Accessibility review (focus order, ARIA roles, reduced motion).
-  - Notes: ______________________________________________________________________
+### To: Portfolio of Direct-Linkable Use Cases
+- Each use case is a complete, focused experience
+- Real-world context with specific audience
+- Individual URLs you can send directly to prospects
+- Cherokee language learning as flagship example
 
-## Phase 5 · Engine Enhancements Required
-- [ ] [ENGINE] Publish typed SDK module (<code>src/sdk/site-controller.ts</code>).
-  - Notes: ______________________________________________________________________
-  - **Pause:** Lock in exported API surface (class vs factory, init flow) so we stay aligned with the demo requirements.
-- [ ] [ENGINE] Add timeline-aware <code>pathTo</code> with reversal and easing presets.
-  - Notes: ______________________________________________________________________
-- [ ] [ENGINE] Expose intent listeners (<code>onScrollIntentChange</code>, <code>onSceneState</code>).
-  - Notes: ______________________________________________________________________
-- [ ] [ENGINE] Provide scene helper API (resource pooling, RAF scheduling).
-  - Notes: ______________________________________________________________________
-- [ ] [ENGINE] Extend configuration registry for quick nav or lock thresholds.
-  - Notes: ______________________________________________________________________
-- [ ] [ENGINE] Regression test rhythm demo and legacy integrations.
-  - Notes: ______________________________________________________________________
+## Architecture Strategy
 
-## Phase 6 · Content & Documentation
-- [ ] [SITE] Update acquisition demo spec with implemented architecture plus deltas.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Create contributor guide: scroll-intent, avatar controller, scenes.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Produce <code>_template.ts</code> files for scenes, intent-aware sections.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Record walkthrough (video or GIF) demonstrating flows.
-  - Notes: ______________________________________________________________________
-- [ ] [ENGINE] Document engine upgrades in <code>ENGINE_CONFIG</code> and SDK README.
-  - Notes: ______________________________________________________________________
+### Route Structure
+```
+/                           → Portfolio landing page
+/use-cases/cherokee         → Cherokee language learning (FLAGSHIP)
+/use-cases/retail           → Retail checkout assistant
+/use-cases/healthcare       → Patient intake form
+/use-cases/education        → Math tutor
+/use-cases/smart-home       → Dashboard control
+```
 
-## Phase 7 · Validation & Launch
-- [ ] [SITE] Automated tests (unit for hooks, integration for controller).
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Manual QA matrix (desktop, tablet, mobile, throttled network).
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Verify analytics or events (scroll intent, scene completions).
-  - Notes: ______________________________________________________________________
-  - **Pause:** Choose event names, payloads, and logging target before instrumenting.
-- [ ] [ALL] Prepare rollback plan (feature flag, import toggle).
-  - Notes: ______________________________________________________________________
-- [ ] [ALL] Final review and personal sign-off.
-  - Notes: ______________________________________________________________________
-- [ ] [SITE] Deploy preview, collect feedback, launch production.
-  - Notes: ______________________________________________________________________
+### Why This Works
 
----
+**For You:**
+- Send `/use-cases/cherokee` to Cherokee Nation Heritage Center
+- Send `/use-cases/retail` to Point of Sale vendors
+- Send `/use-cases/healthcare` to clinic management platforms
+- Each demo speaks directly to that audience's pain points
 
-# Build & Run Checklist
-- After any **[ENGINE]** change: from repo root run <code>npm run build</code> and confirm <code>site/public/emotive-engine.js</code> updates.
-- After any **[SITE]** change: in <code>site/</code> run <code>npm run dev</code> (or restart the dev server) and verify updates in the browser.
+**For Prospects:**
+- See their specific use case, not a generic demo
+- Immediate "this solves MY problem" moment
+- Can share internally without context loss
+- Bookmark-able, memorable
 
----
-# Reference Implementation Snippets (Claude Spec)
-*Note: adapt these layouts to Tailwind utility classes and scoped  files rather than a single global stylesheet.*
+**For Development:**
+- Each use case is isolated component
+- Add new examples without affecting others
+- A/B test different approaches per use case
+- Easier to maintain and iterate
 
+## Flagship Use Case: Cherokee Language Learning
 
-## File Structure
-~~~text
-/emotive-demo/
-├── index.html
-├── css/
-│   └── styles.css
-├── js/
-│   ├── scroll-intent-detector.js
-│   ├── avatar-controller.js
-│   ├── scene-manager.js
-│   ├── scenes/
-│   │   ├── retail-scene.js
-│   │   ├── healthcare-scene.js
-│   │   ├── education-scene.js
-│   │   ├── smart-home-scene.js
-│   │   └── automotive-scene.js
-│   └── main.js
-└── README.md
-~~~
+### Context
+- **Target:** Cherokee Nation Heritage Center ($50M renovation, completion 2028)
+- **Goal:** Interactive language learning installation
+- **Your Edge:** Dual citizenship = authentic cultural partnership
+- **Technical Fit:** Shape morphing perfect for syllabary characters
 
-## HTML Skeleton (index.html)
-~~~html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emotive Engine - Real-Time Emotional AI</title>
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-    <div id="avatar-container">
-        <div id="avatar">🤖</div>
-        <div id="avatar-speech" class="avatar-speech"></div>
-        <div id="gesture-indicator" class="gesture-indicator"></div>
-    </div>
-    <nav id="quick-nav" class="quick-nav hidden">
-        <h3>Quick Navigation</h3>
-        <ul id="nav-list"></ul>
-    </nav>
-    <div id="scroll-hint" class="scroll-hint">
-        <div class="scroll-hint-text">Scroll to explore</div>
-        <div class="scroll-arrow">↓</div>
-    </div>
-    <header class="header">
-        <div class="logo">
-            <div class="logo-mark">E</div>
-            <span>Emotive Engine</span>
-        </div>
-        <button id="summary-btn" class="summary-btn hidden">60s Summary</button>
-    </header>
-    <section id="section-0" class="section hero" data-waypoint="0" data-scene-type="intro">
-        <div class="hero-badge">REAL-TIME EMOTIONAL AI</div>
-        <h1>Meet Your AI Guide</h1>
-        <p class="subtitle">I'll show you around. Try scrolling—I respond to your pace and can interact with everything you see.</p>
-        <p class="subtitle-hint">Scroll fast to skip ahead, or take your time to explore each demo.</p>
-    </section>
-    <!-- Additional sections omitted for brevity -->
-    <script src="js/main.js" type="module"></script>
-</body>
-</html>
-~~~
+### User Experience
+1. **Welcome Screen**: Mascot greets in Cherokee (ᎣᏏᏲ / Osiyo)
+2. **Syllabary Explorer**: Click characters → mascot morphs into that glyph
+3. **Word Building**: Combine glyphs → compound animations → meaning revealed
+4. **Conversation Practice**: Simple phrases with emotional feedback
+5. **Cultural Context**: 7-clan color system, basketry patterns, water animations
 
-## Scroll Intent Detector (js/scroll-intent-detector.js)
-~~~javascript
-export class ScrollIntentDetector {
-    constructor({ onIntentChange, onScroll, samplingInterval = 100 } = {}) {
-        this.onIntentChange = onIntentChange;
-        this.onScroll = onScroll;
-        this.samplingInterval = samplingInterval;
-        this.scrollPositions = [];
-        this.lastIntent = 'EXPLORING';
-        this.isLocked = false;
-        this.init();
-    }
+### Technical Features Showcased
+- Shape morphing (syllabary transformation)
+- Emotional responses (joy, encouragement, pride)
+- Cultural theming (colors, patterns, sounds)
+- Educational progression (gamification)
+- Accessibility (reduced motion, audio options)
 
-    init() {
-        window.addEventListener('scroll', this.handleScroll.bind(this), { passive: true });
-        this.sampler = setInterval(() => this.sampleScroll(), this.samplingInterval);
-    }
+### Measurable Outcomes
+- **Engagement**: Time spent, phrases completed
+- **Learning**: Pre/post knowledge assessment
+- **Emotional**: Self-reported connection to language
+- **Cultural**: Visitor feedback on authenticity
 
-    handleScroll() {
-        const position = window.scrollY;
-        const timestamp = performance.now();
-        this.scrollPositions.push({ position, timestamp });
-        if (this.scrollPositions.length > 60) {
-            this.scrollPositions.shift();
-        }
-        this.onScroll?.(position);
-    }
+## Core Use Cases
 
-    sampleScroll() {
-        if (this.scrollPositions.length < 2) return;
-        const latest = this.scrollPositions[this.scrollPositions.length - 1];
-        const previous = this.scrollPositions[0];
-        const distance = latest.position - previous.position;
-        const time = (latest.timestamp - previous.timestamp) / 1000;
-        const velocity = distance / Math.max(time, 0.01);
-        const intent = this.classifyIntent(velocity, distance);
-        if (intent !== this.lastIntent) {
-            this.lastIntent = intent;
-            this.onIntentChange?.(intent, { velocity, distance });
-        }
-    }
+### 1. Cherokee Language Learning `/use-cases/cherokee` [FLAGSHIP]
+**Audience:** Cultural institutions, language preservation orgs, Cherokee Nation
+**Value:** Engaging, emotional connection to endangered language
+**Demo:** Interactive syllabary learning with cultural context
+**Duration:** 3-5 minutes
 
-    classifyIntent(velocity, distance) {
-        const absVelocity = Math.abs(velocity);
-        const absDistance = Math.abs(distance);
-        if (absVelocity > 4000 || absDistance > 2000) return 'SKIMMING';
-        if (absVelocity > 1200 || absDistance > 400) return 'SEEKING';
-        return 'EXPLORING';
-    }
+### 2. Retail Checkout `/use-cases/retail`
+**Audience:** POS vendors, retail tech companies
+**Value:** Reduces checkout anxiety, increases satisfaction
+**Demo:** Product scanning with celebratory emotions
+**Duration:** 60 seconds
 
-    destroy() {
-        window.removeEventListener('scroll', this.handleScroll);
-        clearInterval(this.sampler);
-    }
-}
-~~~
+### 3. Healthcare Intake `/use-cases/healthcare`
+**Audience:** Clinic management platforms, EMR vendors
+**Value:** Makes form-filling less stressful
+**Demo:** Multi-step patient intake with encouraging feedback
+**Duration:** 90 seconds
 
-## Avatar Controller (js/avatar-controller.js)
-~~~javascript
-export class AvatarController {
-    constructor({ engine, scenes, scrollIntentDetector }) {
-        this.engine = engine;
-        this.scenes = scenes;
-        this.scrollIntentDetector = scrollIntentDetector;
-        this.currentWaypoint = 0;
-        this.isLocked = false;
-        this.pathHistory = [];
-        this.init();
-    }
+### 4. Education Tutor `/use-cases/education`
+**Audience:** EdTech platforms, online learning companies
+**Value:** Personalized emotional support during learning
+**Demo:** Math problem solving with adaptive hints
+**Duration:** 2 minutes
 
-    async init() {
-        await this.engine.initialize();
-        this.bindEvents();
-        this.gotoWaypoint(0);
-    }
+### 5. Smart Home Control `/use-cases/smart-home`
+**Audience:** IoT platforms, home automation vendors
+**Value:** Friendly interface for complex systems
+**Demo:** Device control dashboard with status animations
+**Duration:** 60 seconds
 
-    bindEvents() {
-        this.scrollIntentDetector.onIntentChange = (intent, meta) => {
-            switch (intent) {
-                case 'EXPLORING':
-                    this.handleExploring(meta);
-                    break;
-                case 'SEEKING':
-                    this.handleSeeking(meta);
-                    break;
-                case 'SKIMMING':
-                    this.handleSkimming(meta);
-                    break;
-            }
-        };
-    }
+## Landing Page Strategy (`/`)
 
-    gotoWaypoint(index, reverse = false) {
-        const waypoint = waypoints[index];
-        if (!waypoint) return;
-        this.currentWaypoint = index;
-        this.engine.moveTo(waypoint.position, { reverse, easing: 'easeInOutCubic' });
-        this.engine.setEmotion(waypoint.emotion);
-        this.engine.performGesture(waypoint.gesture);
-        if (waypoint.scene) {
-            this.scenes.activate(waypoint.scene, { reverse });
-        }
-    }
+### Purpose
+Gateway to portfolio, not the demo itself
 
-    handleExploring(_meta) {
-        if (!this.isLocked) {
-            this.engine.setTempo?.('normal');
-        }
-    }
+### Structure
+```
+Hero
+├─ "Emotional AI for Human Experiences"
+├─ One-sentence value prop
+└─ "Explore Use Cases" CTA
 
-    handleSeeking(_meta) {
-        if (!this.isLocked) {
-            this.gotoWaypoint(this.currentWaypoint + 1);
-        }
-    }
+Use Case Grid
+├─ Cherokee Language Learning (Featured/Large)
+├─ Retail Checkout
+├─ Healthcare Forms
+├─ Education Tutor
+└─ Smart Home Control
 
-    handleSkimming(_meta) {
-        this.scenes.deactivateCurrent?.();
-        this.engine.cancelLocks?.();
-    }
-}
-~~~
+How It Works (Technical)
+├─ Real-time emotion engine
+├─ Shape morphing
+├─ Gesture system
+└─ Platform agnostic
 
-## Scene Manager (js/scene-manager.js)
-~~~javascript
-export class SceneManager {
-    constructor({ canvasContainer }) {
-        this.canvasContainer = canvasContainer;
-        this.activeScene = null;
-        this.scenes = new Map();
-    }
+For Developers
+├─ GitHub link
+├─ NPM package
+├─ Documentation
+└─ API reference
+```
 
-    register(name, sceneFactory) {
-        this.scenes.set(name, sceneFactory);
-    }
+### Landing Page Content Priorities
+1. **Visual impact** (30% Cherokee demo preview, 70% use case cards)
+2. **Clear navigation** (big buttons to each use case)
+3. **Credibility** (Cherokee Nation partnership, if applicable)
+4. **Technical depth** (for developers, fold below)
 
-    activate(name, options = {}) {
-        if (this.activeScene) {
-            this.activeScene.dispose();
-        }
-        const factory = this.scenes.get(name);
-        if (!factory) return;
-        this.activeScene = factory();
-        this.activeScene.init(this.canvasContainer, options);
-    }
+## Implementation Phases
 
-    deactivateCurrent() {
-        if (this.activeScene) {
-            this.activeScene.dispose();
-            this.activeScene = null;
-        }
-    }
-}
-~~~
+### Phase 1: Architecture Foundation (Week 1) ✅ COMPLETE
+- [x] Current site analysis (DONE - you just saw it)
+- [x] Create `/use-cases/*` route structure
+- [x] Build reusable use case template component (UseCaseLayout)
+- [x] Migrate existing scenes to new routes
+- [x] Update navigation/routing (new portfolio landing page)
+- [x] Cherokee MVP with 6 syllabary characters
+- [x] All 5 use cases fully functional and interactive
 
-## Main Application Controller (js/main.js)
-~~~javascript
-import { ScrollIntentDetector } from './scroll-intent-detector.js';
-import { AvatarController } from './avatar-controller.js';
-import { SceneManager } from './scene-manager.js';
-import { createRetailScene } from './scenes/retail-scene.js';
-import { createHealthcareScene } from './scenes/healthcare-scene.js';
-import { createEducationScene } from './scenes/education-scene.js';
-import { createSmartHomeScene } from './scenes/smart-home-scene.js';
-import { createAutomotiveScene } from './scenes/automotive-scene.js';
+### Phase 2: Cherokee Flagship (Week 2-3)
+- [ ] Cherokee syllabary SVG library (85 characters)
+- [ ] Morphing animation system (character transformations)
+- [ ] Audio integration (Cherokee pronunciations)
+- [ ] Cultural theming (7-clan colors, patterns)
+- [ ] Word-building interaction flow
+- [ ] Progress tracking system
 
-const canvasContainer = document.querySelector('#avatar-container');
-const sceneManager = new SceneManager({ canvasContainer });
-sceneManager.register('retail', createRetailScene);
-sceneManager.register('healthcare', createHealthcareScene);
-sceneManager.register('education', createEducationScene);
-sceneManager.register('smart-home', createSmartHomeScene);
-sceneManager.register('automotive', createAutomotiveScene);
+### Phase 3: Polish & Complete (Week 4)
+- [x] Landing page redesign (portfolio gateway with use case grid)
+- [x] Optimize each use case for direct-linking (all routes work standalone)
+- [ ] Analytics per use case
+- [ ] Meta tags / Open Graph for social sharing
+- [x] Documentation for each use case (PHASE1-COMPLETE.md)
 
-const scrollIntentDetector = new ScrollIntentDetector();
-const emotiveEngine = new EmotiveEngine({ canvas: canvasContainer });
-const avatarController = new AvatarController({
-    engine: emotiveEngine,
-    scenes: sceneManager,
-    scrollIntentDetector
-});
+### Phase 4: Launch & Outreach (Week 5)
+- [ ] Deploy to production
+- [ ] Create pitch deck per use case
+- [ ] Reach out to Cherokee Heritage Center
+- [ ] Share with relevant communities
+- [ ] Gather feedback, iterate
 
-scrollIntentDetector.onIntentChange = (intent) => {
-    document.body.dataset.scrollIntent = intent.toLowerCase();
-};
-~~~
+## Technical Requirements
 
-## Retail Scene Example (js/scenes/retail-scene.js)
-~~~javascript
-export function createRetailScene() {
-    let ctx;
-    let animationFrame;
+### Engine Capabilities Needed
+- ✅ Shape morphing (already exists)
+- ✅ Emotional states (already exists)
+- ✅ Gesture system (already exists)
+- ✅ Particle effects (already exists)
+- ⚠️ Custom SVG path morphing (needs enhancement for syllabary)
+- ⚠️ Audio sync (needs integration for pronunciation)
+- ⚠️ Progress persistence (needs localStorage/database)
 
-    return {
-        init(container) {
-            const canvas = document.createElement('canvas');
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-            container.appendChild(canvas);
-            ctx = canvas.getContext('2d');
-            this.animate();
-        },
+### New Components Needed
+```typescript
+// Shared
+UseCase Layout wrapper
+UseCaseHero component
+Progress tracker
+Share/embed buttons
 
-        animate() {
-            animationFrame = requestAnimationFrame(() => this.animate());
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.fillStyle = '#FF6B9D';
-            ctx.fillRect(100, 100, 200, 300);
-        },
+// Cherokee-specific
+SyllabaryGrid component
+CharacterMorpher component
+WordBuilder component
+PronunciationPlayer component
+CulturalTheme provider
+```
 
-        handleIntent(intent) {
-            if (intent === 'SKIMMING') {
-                this.fastForward();
-            }
-        },
+### Content Requirements
 
-        fastForward() {
-            // Implement accelerated animations
-        },
+**Cherokee Use Case:**
+- [ ] Cherokee syllabary SVG paths (85 characters)
+- [ ] Pronunciation audio files (Native speakers)
+- [ ] 50+ common words/phrases with translations
+- [ ] Cultural color palette (7 clans)
+- [ ] Basketry pattern assets
+- [ ] Educational content (how syllabary works)
 
-        dispose() {
-            cancelAnimationFrame(animationFrame);
-            ctx?.canvas.remove();
-        }
-    };
-}
-~~~
+**Other Use Cases:**
+- [x] Retail product icons/images
+- [x] Healthcare form fields
+- [x] Education problem sets
+- [x] Smart home device icons
 
-## Configuration Hook (excerpt)
-~~~javascript
-const waypoints = [
-    {
-        id: 'hero',
-        selector: '#section-0',
-        gesture: 'wave',
-        emotion: 'friendly',
-        scene: 'intro',
-        lock: true
-    },
-    {
-        id: 'retail',
-        selector: '#section-1',
-        gesture: 'point',
-        emotion: 'confident',
-        scene: 'retail',
-        lock: true
-    },
-    // ...additional waypoints
-];
-~~~
+## Success Metrics
 
-## Scroll Lock Threshold
-~~~javascript
-const LOCK_THRESHOLD = 100; // Pixels before breaking lock
-~~~
+### Cherokee Use Case
+- **Cultural Impact**: Cherokee Nation partnership secured
+- **Engagement**: Avg 3+ minutes time on page
+- **Learning**: 70%+ phrase completion rate
+- **Sharing**: 100+ social shares
+- **Funding**: Grant application submitted
 
-## Avatar Path Integration Snippet
-~~~javascript
-moveTo(x, y, immediate) {
-    emotiveEngine.pathTo(x, y, {
-        duration: immediate ? 0 : 600,
-        easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
-    });
-}
-~~~
+### Portfolio Overall
+- **Traffic**: Direct links > landing page visits
+- **Conversion**: 40%+ explore second use case
+- **Developer Interest**: GitHub stars, NPM downloads
+- **Business Leads**: 5+ qualified partnership inquiries
+- **Press**: 3+ publications cover Cherokee use case
+
+## Risk Mitigation
+
+### Cultural Sensitivity (Cherokee)
+- **Risk**: Appropriation concerns, misrepresentation
+- **Mitigation**:
+  - Partner with Cherokee language experts
+  - Get Nation approval before public launch
+  - Your dual citizenship + transparent collaboration
+  - Revenue sharing model if commercialized
+
+### Technical Complexity
+- **Risk**: Syllabary morphing too hard to implement
+- **Mitigation**:
+  - Start with simple letter animations
+  - MVP: 10 characters, then expand
+  - Fallback to fade transitions if morphing fails
+
+### Market Validation
+- **Risk**: No interest from target audiences
+- **Mitigation**:
+  - Cherokee use case = built-in audience (Nation members)
+  - Multiple use cases = multiple shots on goal
+  - Each stands alone, failure of one ≠ failure of all
+
+## Next Steps
+
+**Immediate (This Week):**
+1. ✅ Strategy alignment (this document)
+2. Create use case route structure
+3. Build reusable layout template
+4. Research Cherokee syllabary resources
+5. Contact Cherokee Nation cultural dept (informally)
+
+**Next Week:**
+1. Cherokee syllabary SVG library
+2. Character morphing prototype
+3. Audio pipeline setup
+4. Cultural theming system
+5. Landing page wireframes
+
+**Following Weeks:**
+1. Complete Cherokee use case
+2. Refine other use cases for new structure
+3. Deploy beta for feedback
+4. Formal Cherokee Nation outreach
+5. Public launch
+
+## Questions to Answer
+
+Before proceeding, clarify:
+
+1. **Cherokee Resources**: Do you have access to syllabary fonts/SVGs? Audio recordings?
+2. **Cherokee Nation Contact**: Any existing relationships with cultural/language dept?
+3. **Timeline**: Hard deadline for Heritage Center pitch, or build-then-propose?
+4. **Scope**: Cherokee only for now, or parallel development on other use cases?
+5. **Funding**: Self-funded passion project, or seeking grants/partnerships?
 
 ---
 
-*Use this document as the working blueprint; check items off, capture decisions in the notes fields, and reference the Claude-generated snippets while adapting them to the Next.js site and engine SDK.*
+## Why This Strategy Wins
+
+### For Cherokee Language Learning
+- **Authentic**: Your heritage = credibility
+- **Timely**: $50M renovation = budget + urgency
+- **Impactful**: Language preservation = measurable cultural value
+- **Fundable**: Grants love tech + education + culture
+
+### For Your Business
+- **Differentiated**: "Emotional AI for language learning" > "generic emotion engine"
+- **Concrete**: Real use case > abstract demo
+- **Scalable**: "Works for Cherokee → works for any language/culture"
+- **Memorable**: People remember stories, not features
+
+### For The Technology
+- **Showcases Strengths**: Morphing, emotion, cultural theming
+- **Proves Value**: Education outcomes > tech specs
+- **Attracts Partners**: Cultural institutions, EdTech, museums
+- **Inspires Developers**: "I want to build something like this"
+
+---
+
+**This is a pivot from "cool tech demo" to "meaningful cultural impact."**
+
+That's how you get funding, partnerships, and press.
+
+Let's build it. 🎯

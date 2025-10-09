@@ -1,12 +1,17 @@
 'use client'
 
+import { useScrollExperience } from '@/components/hooks/useScrollExperience'
+
 interface ServiceSectionProps {
   onMascotPosition?: (x: number, y: number) => void
 }
 
 export default function ServiceSection({ onMascotPosition }: ServiceSectionProps) {
+  const { lock } = useScrollExperience()
+  const isLocked = lock.locked && lock.sectionId === 'service'
+
   return (
-    <section className="service-section" style={{ 
+    <section className="service-section" data-scroll-locked={isLocked ? 'true' : 'false'} style={{ 
       height: '100vh', 
       position: 'relative',
       display: 'flex',

@@ -46,15 +46,14 @@ export default function CherokeePage() {
         })
 
         mascotRef.current = mascot
-        mascot.start()
 
-        // Set euphoria emotion
+        // Set euphoria emotion before starting
         if (mascot.setEmotion) {
           mascot.setEmotion('euphoria', 0.7)
         }
 
-        // Position mascot directly above the heading after layout is ready
-        setTimeout(() => {
+        // Wait for layout, then set position BEFORE starting render loop
+        requestAnimationFrame(() => {
           if (headingRef.current && mascot.setPosition) {
             const headingRect = headingRef.current.getBoundingClientRect()
             const targetX = headingRect.left + headingRect.width / 2
@@ -66,15 +65,13 @@ export default function CherokeePage() {
             const offsetX = targetX - viewportCenterX
             const offsetY = targetY - viewportCenterY
 
-            // Set position immediately (no animation)
+            // Set position BEFORE starting (no visual jump)
             mascot.setPosition(offsetX, offsetY, 0)
-
-            // Clear particles spawned at old center position
-            if (mascot.clearParticles) {
-              mascot.clearParticles()
-            }
           }
-        }, 200)
+
+          // NOW start rendering - mascot already in correct position
+          mascot.start()
+        })
       } catch (err) {
         console.error('Failed to initialize Cherokee mascot:', err)
       }

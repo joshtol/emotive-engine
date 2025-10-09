@@ -1,12 +1,17 @@
 'use client'
 
+import { useScrollExperience } from '@/components/hooks/useScrollExperience'
+
 interface MusicSectionProps {
   onMascotPosition?: (x: number, y: number) => void
 }
 
 export default function MusicSection({ onMascotPosition }: MusicSectionProps) {
+  const { lock } = useScrollExperience()
+  const isLocked = lock.locked && lock.sectionId === 'music'
+
   return (
-    <section className="music-section" style={{ 
+    <section className="music-section" data-scroll-locked={isLocked ? 'true' : 'false'} style={{ 
       height: '100vh', 
       position: 'relative',
       display: 'flex',
