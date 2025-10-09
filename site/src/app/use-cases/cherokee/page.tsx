@@ -522,7 +522,7 @@ export default function CherokeePage() {
     {
       english: 'Good morning',
       cherokee: 'ᎣᏍᏓ ᏌᎾᎴᎢ',
-      pronunciation: 'oh-s-dah sah-nah-leh-ee',
+      pronunciation: 'oh-s-dah sah-nah-lay-ee',
       meaning: 'Morning greeting',
       context: 'Used until midday',
       color: '#F8B739',
@@ -554,8 +554,8 @@ export default function CherokeePage() {
     },
     {
       english: 'Good night',
-      cherokee: 'ᎣᏍᏓ ᏒᏃᏱ',
-      pronunciation: 'oh-s-dah eh-noh-yee',
+      cherokee: 'ᎣᏍᏓ ᎤᏒᎢ',
+      pronunciation: 'oh-s-dah oo-sv-ee',
       meaning: 'Evening farewell',
       context: 'Used when parting in the evening',
       color: '#9B59B6',
