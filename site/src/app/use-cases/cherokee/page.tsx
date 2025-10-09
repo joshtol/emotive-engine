@@ -6,50 +6,87 @@ import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 
 export default function CherokeePage() {
-  const [selectedDirection, setSelectedDirection] = useState<string | null>(null)
+  const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null)
 
-  // Four Sacred Directions in Cherokee
-  // Each direction with its Cherokee word, syllabary, sacred color, and cultural meaning
-  const directions = [
+  // Cherokee Greetings & Common Phrases
+  // Verified from official Cherokee Nation sources (cherokee.org, Cherokee Nation social media)
+  const greetings = [
     {
-      direction: 'East',
-      cherokee: 'ᎧᎸᎬ',
-      pronunciation: 'ka-lv-gv',
-      meaning: 'Success, Power, Triumph',
-      color: '#C4433C',
-      bgColor: 'rgba(196,67,60,0.15)',
-      borderColor: 'rgba(196,67,60,0.4)',
-      arrow: '→'
+      english: 'Hello',
+      cherokee: 'ᎣᏏᏲ',
+      pronunciation: 'oh-see-yoh',
+      meaning: 'It\'s good to see you',
+      context: 'Universal greeting for all occasions',
+      color: '#DAA520',
+      bgColor: 'rgba(218,165,32,0.15)',
+      borderColor: 'rgba(218,165,32,0.4)',
+      emoji: '👋'
     },
     {
-      direction: 'South',
-      cherokee: 'ᎤᎦᎾᏛ',
-      pronunciation: 'u-ga-na-wv',
-      meaning: 'Peace, Happiness, Warmth',
-      color: '#E8DCC5',
-      bgColor: 'rgba(232,220,197,0.12)',
-      borderColor: 'rgba(232,220,197,0.35)',
-      arrow: '↓'
+      english: 'Hello (informal)',
+      cherokee: 'ᏏᏲ',
+      pronunciation: 'see-yoh',
+      meaning: 'Hi / Hey',
+      context: 'Casual greeting among friends',
+      color: '#FFB347',
+      bgColor: 'rgba(255,179,71,0.15)',
+      borderColor: 'rgba(255,179,71,0.4)',
+      emoji: '😊'
     },
     {
-      direction: 'North',
-      cherokee: 'ᎤᏴᏝ',
-      pronunciation: 'u-yv-tlv',
-      meaning: 'Introspection, Coldness, Challenge',
-      color: '#5B8CA8',
-      bgColor: 'rgba(91,140,168,0.15)',
-      borderColor: 'rgba(91,140,168,0.4)',
-      arrow: '↑'
+      english: 'Thank you',
+      cherokee: 'ᏩᏙ',
+      pronunciation: 'wah-doh',
+      meaning: 'Expression of gratitude',
+      context: 'Shows respect and appreciation',
+      color: '#98D8C8',
+      bgColor: 'rgba(152,216,200,0.15)',
+      borderColor: 'rgba(152,216,200,0.4)',
+      emoji: '🙏'
     },
     {
-      direction: 'West',
-      cherokee: 'ᏭᏕᎵᎬ',
-      pronunciation: 'wu-de-li-gv',
-      meaning: 'Transformation, Endings, Death',
-      color: '#888',
-      bgColor: 'rgba(100,100,100,0.12)',
-      borderColor: 'rgba(136,136,136,0.35)',
-      arrow: '←'
+      english: 'How are you?',
+      cherokee: 'ᏙᎯᏧ',
+      pronunciation: 'doh-hee-choo',
+      meaning: 'Asking about someone\'s wellbeing',
+      context: 'Common conversation starter',
+      color: '#F7DC6F',
+      bgColor: 'rgba(247,220,111,0.15)',
+      borderColor: 'rgba(247,220,111,0.4)',
+      emoji: '💬'
+    },
+    {
+      english: 'Good',
+      cherokee: 'ᎣᏍᏓ',
+      pronunciation: 'oh-s-dah',
+      meaning: 'Response to "How are you?"',
+      context: 'Can also mean "I\'m good"',
+      color: '#82C4C3',
+      bgColor: 'rgba(130,196,195,0.15)',
+      borderColor: 'rgba(130,196,195,0.4)',
+      emoji: '✨'
+    },
+    {
+      english: 'Good morning',
+      cherokee: 'ᎣᏍᏓ ᏌᎾᎴᎢ',
+      pronunciation: 'oh-s-dah sah-nah-leh-ee',
+      meaning: 'Morning greeting',
+      context: 'Used until midday',
+      color: '#F8B739',
+      bgColor: 'rgba(248,183,57,0.15)',
+      borderColor: 'rgba(248,183,57,0.4)',
+      emoji: '🌅'
+    },
+    {
+      english: '\'Til we meet again',
+      cherokee: 'ᏙᎾᏓᎪᎲᎢ',
+      pronunciation: 'doh-nah-dah-goh-huh-ee',
+      meaning: 'There is no word for "goodbye" in Cherokee',
+      context: 'Reflects belief in continued connection',
+      color: '#C39BD3',
+      bgColor: 'rgba(195,155,211,0.15)',
+      borderColor: 'rgba(195,155,211,0.4)',
+      emoji: '🤝'
     },
   ]
 
@@ -128,7 +165,7 @@ export default function CherokeePage() {
             opacity: 0.9,
             letterSpacing: '-0.01em'
           }}>
-            Sacred Directions & Language Learning
+            Cherokee Language Learning
           </h2>
           <p style={{
             fontFamily: 'var(--font-heading)',
@@ -139,12 +176,12 @@ export default function CherokeePage() {
             margin: '0 auto 2rem auto',
             lineHeight: 1.6
           }}>
-            Learn Cherokee through the four sacred directions—connecting language, cosmology, and cultural wisdom.
-            Each direction teaches syllabary characters through their traditional meanings and symbolism.
+            Learn essential Cherokee greetings and phrases with authentic syllabary characters and pronunciation.
+            All content verified through official Cherokee Nation sources.
           </p>
         </div>
 
-        {/* Sacred Directions Grid */}
+        {/* Cherokee Greetings Grid */}
         <div style={{
           background: 'rgba(218,165,32,0.08)',
           backdropFilter: 'blur(10px)',
@@ -161,7 +198,7 @@ export default function CherokeePage() {
             textAlign: 'center',
             color: '#DAA520'
           }}>
-            Four Sacred Directions
+            Common Cherokee Greetings
           </h3>
           <p style={{
             textAlign: 'center',
@@ -169,47 +206,47 @@ export default function CherokeePage() {
             marginBottom: '3rem',
             fontSize: '1rem'
           }}>
-            Click any direction to learn its Cherokee word, syllabary, and cultural meaning
+            Click any phrase to see the syllabary, pronunciation, and cultural context
           </p>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: 'var(--grid-gap)',
             marginBottom: 'var(--spacing-md)'
           }}>
-            {directions.map((item) => (
+            {greetings.map((item) => (
               <div
-                key={item.direction}
-                onClick={() => setSelectedDirection(item.direction)}
+                key={item.english}
+                onClick={() => setSelectedPhrase(item.english)}
                 style={{
                   padding: '2rem',
-                  background: selectedDirection === item.direction
+                  background: selectedPhrase === item.english
                     ? item.bgColor
                     : 'rgba(255,255,255,0.05)',
                   backdropFilter: 'blur(8px)',
                   WebkitBackdropFilter: 'blur(8px)',
                   borderRadius: '16px',
-                  border: selectedDirection === item.direction
+                  border: selectedPhrase === item.english
                     ? `2px solid ${item.borderColor}`
                     : '1px solid rgba(255,255,255,0.15)',
                   cursor: 'pointer',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   textAlign: 'center',
                   willChange: 'transform',
-                  boxShadow: selectedDirection === item.direction
+                  boxShadow: selectedPhrase === item.english
                     ? `0 12px 40px ${item.borderColor}`
                     : '0 4px 16px rgba(31, 38, 135, 0.1)'
                 }}
                 onMouseEnter={(e) => {
-                  if (selectedDirection !== item.direction) {
-                    e.currentTarget.style.background = item.bgColor.replace('0.15', '0.08').replace('0.12', '0.06')
-                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
+                  if (selectedPhrase !== item.english) {
+                    e.currentTarget.style.background = item.bgColor.replace('0.15', '0.08')
+                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)'
                     e.currentTarget.style.boxShadow = `0 8px 24px ${item.borderColor}`
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (selectedDirection !== item.direction) {
+                  if (selectedPhrase !== item.english) {
                     e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
                     e.currentTarget.style.transform = 'translateY(0) scale(1)'
                     e.currentTarget.style.boxShadow = '0 4px 16px rgba(31, 38, 135, 0.1)'
@@ -218,18 +255,17 @@ export default function CherokeePage() {
               >
                 <div style={{
                   fontSize: '3rem',
-                  marginBottom: '0.75rem',
-                  color: item.color
+                  marginBottom: '0.75rem'
                 }}>
-                  {item.arrow}
+                  {item.emoji}
                 </div>
                 <div style={{
-                  fontSize: '1.3rem',
+                  fontSize: '1.1rem',
                   fontWeight: '600',
                   marginBottom: '0.75rem',
-                  color: item.color
+                  opacity: 0.9
                 }}>
-                  {item.direction}
+                  {item.english}
                 </div>
                 <div style={{
                   fontSize: '2rem',
@@ -249,8 +285,8 @@ export default function CherokeePage() {
             ))}
           </div>
 
-          {selectedDirection && (() => {
-            const selected = directions.find(item => item.direction === selectedDirection)
+          {selectedPhrase && (() => {
+            const selected = greetings.find(item => item.english === selectedPhrase)
             return selected ? (
               <div style={{
                 marginTop: '2rem',
@@ -258,15 +294,15 @@ export default function CherokeePage() {
                 background: selected.bgColor,
                 borderRadius: '12px',
                 textAlign: 'center',
-                border: `1px solid ${selected.borderColor}`,
+                border: `2px solid ${selected.borderColor}`,
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)'
               }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem', color: selected.color }}>
-                  {selected.arrow} {selected.cherokee}
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+                  {selected.emoji} {selected.cherokee}
                 </div>
                 <div style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: selected.color }}>
-                  {selected.direction}
+                  {selected.english}
                 </div>
                 <div style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '1.5rem', fontStyle: 'italic' }}>
                   Pronunciation: <strong>{selected.pronunciation}</strong>
@@ -279,21 +315,29 @@ export default function CherokeePage() {
                   background: 'rgba(0,0,0,0.2)',
                   borderRadius: '8px'
                 }}>
-                  <strong style={{ color: selected.color }}>Cultural Meaning:</strong><br />
+                  <strong style={{ color: selected.color }}>Meaning:</strong><br />
                   {selected.meaning}
+                </div>
+                <div style={{
+                  fontSize: '0.95rem',
+                  opacity: 0.75,
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  background: 'rgba(0,0,0,0.15)',
+                  borderRadius: '8px',
+                  fontStyle: 'italic'
+                }}>
+                  💡 <strong>Cultural Context:</strong> {selected.context}
                 </div>
                 <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '1.5rem' }}>
                   🎵 Native speaker audio pronunciation coming in Phase 2
-                </p>
-                <p style={{ opacity: 0.7, fontSize: '0.95rem', marginTop: '0.5rem' }}>
-                  🎭 Shape-morphing animation between syllabary characters coming in Phase 2
                 </p>
               </div>
             ) : null
           })()}
         </div>
 
-        {/* Sacred Colors */}
+        {/* Why Learn Cherokee */}
         <div style={{
           background: 'rgba(255,255,255,0.03)',
           borderRadius: '16px',
@@ -307,66 +351,52 @@ export default function CherokeePage() {
             textAlign: 'center',
             color: '#DAA520'
           }}>
-            Cherokee Sacred Colors & Directions
+            Why Learn Cherokee?
           </h3>
-          <p style={{
-            textAlign: 'center',
-            opacity: 0.8,
-            marginBottom: '2rem',
-            fontSize: '1rem',
-            maxWidth: '800px',
-            margin: '0 auto 2rem auto'
-          }}>
-            Each character is colored according to the Cherokee sacred directions—honoring the traditional symbolism that connects language, land, and spirit.
-          </p>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 'var(--grid-gap)'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: 'var(--grid-gap)',
+            marginTop: '2rem'
           }}>
             <div style={{
               padding: '1.5rem',
-              background: 'rgba(196,67,60,0.12)',
-              border: '1px solid rgba(196,67,60,0.3)',
+              background: 'rgba(218,165,32,0.08)',
+              border: '1px solid rgba(218,165,32,0.2)',
               borderRadius: '12px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#C4433C' }}>→</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#C4433C' }}>East - Red</div>
-              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5 }}>Success, Power, Triumph</div>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🌍</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.75rem', color: '#DAA520' }}>Cultural Preservation</div>
+              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.6 }}>
+                Help preserve one of America's indigenous languages spoken by over 450,000 Cherokee Nation citizens
+              </div>
             </div>
             <div style={{
               padding: '1.5rem',
-              background: 'rgba(232,220,197,0.08)',
-              border: '1px solid rgba(232,220,197,0.25)',
+              background: 'rgba(218,165,32,0.08)',
+              border: '1px solid rgba(218,165,32,0.2)',
               borderRadius: '12px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#E8DCC5' }}>↓</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#E8DCC5' }}>South - White</div>
-              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5 }}>Peace, Happiness, Purity</div>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>💡</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.75rem', color: '#DAA520' }}>Unique Writing System</div>
+              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.6 }}>
+                Learn the syllabary created by Sequoyah in 1821—one of few writing systems invented by a single person
+              </div>
             </div>
             <div style={{
               padding: '1.5rem',
-              background: 'rgba(91,140,168,0.12)',
-              border: '1px solid rgba(91,140,168,0.3)',
+              background: 'rgba(218,165,32,0.08)',
+              border: '1px solid rgba(218,165,32,0.2)',
               borderRadius: '12px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#5B8CA8' }}>↑</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#5B8CA8' }}>North - Blue</div>
-              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5 }}>Defeat, Trouble, Introspection</div>
-            </div>
-            <div style={{
-              padding: '1.5rem',
-              background: 'rgba(40,40,40,0.4)',
-              border: '1px solid rgba(100,100,100,0.3)',
-              borderRadius: '12px',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#888' }}>←</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#AAA' }}>West - Black</div>
-              <div style={{ opacity: 0.7, fontSize: '0.95rem', lineHeight: 1.5 }}>Death, Endings, Transformation</div>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🤝</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.75rem', color: '#DAA520' }}>Cultural Respect</div>
+              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.6 }}>
+                Show respect by learning greetings and phrases that honor Cherokee tradition and connection
+              </div>
             </div>
           </div>
         </div>
@@ -434,11 +464,21 @@ export default function CherokeePage() {
         }}>
           <h3 style={{
             fontSize: 'clamp(1.5rem, 3vw, 2rem)',
-            marginBottom: '1.5rem',
+            marginBottom: '1rem',
             color: '#DAA520'
           }}>
-            Coming in Phase 2
+            Coming with Cherokee Nation Partnership
           </h3>
+          <p style={{
+            opacity: 0.8,
+            fontSize: '1rem',
+            marginBottom: '2rem',
+            maxWidth: '700px',
+            margin: '0 auto 2rem auto'
+          }}>
+            This demo showcases the Emotive Engine's potential for culturally respectful language learning.
+            Full implementation requires official Cherokee Nation approval and collaboration.
+          </p>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -447,23 +487,23 @@ export default function CherokeePage() {
           }}>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎵</div>
-              <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Audio Integration</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Authentic native speaker pronunciations</div>
+              <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Native Speaker Audio</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Authentic pronunciations from Cherokee Nation language department</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎭</div>
-              <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Shape Morphing</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Expressive character animations</div>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>😊</div>
+              <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Emotional Feedback</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Characters react to learner's pronunciation with encouragement</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎨</div>
-              <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Cultural Theming</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Traditional 7-clan colors and patterns</div>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📚</div>
+              <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Expanded Vocabulary</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Family words, animals, nature—approved by Cherokee educators</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📖</div>
-              <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Word Building</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Interactive syllable combinations</div>
+              <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Interactive Conversations</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Practice full dialogues with emotionally responsive AI</div>
             </div>
           </div>
         </div>
