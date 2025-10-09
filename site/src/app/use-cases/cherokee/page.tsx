@@ -19,7 +19,7 @@ export default function CherokeePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
   const firstCardRef = useRef<HTMLDivElement>(null)
-  const headingRef = useRef<HTMLHeadingElement>(null)
+  const guideRef = useRef<HTMLDivElement>(null)
   const hasNoddedRef = useRef<boolean>(false)
   const lastScrollDirection = useRef<'down' | 'up' | null>(null)
   const lastScrollY = useRef<number>(0)
@@ -58,19 +58,26 @@ export default function CherokeePage() {
 
         // Wait for layout, then set position BEFORE starting render loop
         requestAnimationFrame(() => {
-          if (headingRef.current && mascot.setPosition) {
-            const headingRect = headingRef.current.getBoundingClientRect()
-            const targetX = headingRect.left + headingRect.width / 2
-            const targetY = headingRect.top - 20 // 20px above the heading
-
-            // Calculate offsets from viewport center
+          if (mascot.setPosition && guideRef.current && canvasRef.current) {
+            // Position mascot INSIDE the "Let's Learn Together" section at the top
+            const guideRect = guideRef.current.getBoundingClientRect()
             const viewportCenterX = window.innerWidth / 2
             const viewportCenterY = window.innerHeight / 2
+
+            // Position inside the guide section, centered horizontally, near the top
+            const targetX = viewportCenterX
+            const targetY = guideRect.top + 100 // 100px from top of guide section
+
             const offsetX = targetX - viewportCenterX
             const offsetY = targetY - viewportCenterY
 
-            // Set position BEFORE starting (no visual jump, full size)
             mascot.setPosition(offsetX, offsetY, 1)
+
+            // Apply initial scale immediately
+            const isDesktop = window.innerWidth >= 768
+            const initialScale = isDesktop ? 0.35 : 1
+            canvasRef.current.style.transform = `scale(${initialScale})`
+            canvasRef.current.style.transformOrigin = `${targetX}px ${targetY}px`
           }
 
           // NOW start rendering - mascot already in correct position
@@ -267,16 +274,19 @@ export default function CherokeePage() {
 
     // Calculate positions once on mount
     const calculatePositions = () => {
-      const viewportCenterX = window.innerWidth / 2
-      const viewportCenterY = window.innerHeight / 2
-
-      // Get spawn position (20px above heading)
-      if (headingRef.current) {
-        const headingRect = headingRef.current.getBoundingClientRect()
-        const absoluteSpawnY = headingRect.top + window.scrollY - 20
+      // Spawn position: inside the guide section at the top
+      if (guideRef.current) {
+        const guideRect = guideRef.current.getBoundingClientRect()
+        const viewportCenterX = window.innerWidth / 2
         spawnPosition = {
-          x: headingRect.left + headingRect.width / 2,
-          y: absoluteSpawnY
+          x: viewportCenterX,
+          y: guideRect.top + window.scrollY + 100 // 100px from top of guide section
+        }
+      } else {
+        // Fallback: centered in viewport
+        spawnPosition = {
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2 + window.scrollY
         }
       }
 
@@ -400,7 +410,10 @@ export default function CherokeePage() {
         const mascotScreenX = viewportCenterX + offsetX
         const mascotScreenY = viewportCenterY + offsetY
 
-        canvasRef.current.style.transform = `scale(${scale})`
+        // Apply initial scale (0.35 on desktop, 1 on mobile) multiplied by scroll animation scale
+        const isDesktop = window.innerWidth >= 768
+        const initialScale = isDesktop ? 0.35 : 1
+        canvasRef.current.style.transform = `scale(${initialScale * scale})`
         canvasRef.current.style.transformOrigin = `${mascotScreenX}px ${mascotScreenY}px`
       }
 
@@ -415,7 +428,10 @@ export default function CherokeePage() {
     }
 
     // Initial position calculation after a brief delay for layout
-    setTimeout(calculatePositions, 100)
+    setTimeout(() => {
+      calculatePositions()
+      updateMascotPosition() // Set initial scale
+    }, 100)
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     window.addEventListener('resize', calculatePositions)
@@ -678,48 +694,44 @@ export default function CherokeePage() {
         </div>
 
         {/* Guide Section (Mascot positioned here initially via targeting) */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '1.5rem',
-          marginBottom: '3rem',
-          padding: '2rem',
-          background: 'rgba(218,165,32,0.08)',
-          borderRadius: '16px',
-          border: '1px solid rgba(218,165,32,0.2)',
-          textAlign: 'center',
-          minHeight: '400px'
-        }}>
-          <div style={{
+        <div
+          ref={guideRef}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            marginBottom: '3rem',
+            padding: '2rem',
+            background: 'rgba(218,165,32,0.08)',
+            borderRadius: '16px',
+            border: '1px solid rgba(218,165,32,0.2)',
+            minHeight: '400px'
+          }}
+        >
+          <h3 style={{
+            fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)',
+            marginBottom: '0.75rem',
+            color: '#DAA520',
+            fontWeight: '600'
+          }}>
+            ᎣᏏᏲ! Let&apos;s Learn Together
+          </h3>
+          <p style={{
+            fontSize: 'clamp(1rem, 2vw, 1.2rem)',
+            opacity: 0.85,
+            lineHeight: 1.5,
             maxWidth: '600px'
           }}>
-            <h3
-              ref={headingRef}
-              style={{
-                fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)',
-                marginBottom: '0.75rem',
-                color: '#DAA520',
-                fontWeight: '600'
-              }}
-            >
-              ᎣᏏᏲ! Let&apos;s Learn Together
-            </h3>
-            <p style={{
-              fontSize: 'clamp(1rem, 2vw, 1.2rem)',
-              opacity: 0.85,
-              lineHeight: 1.5
-            }}>
-              Click any greeting card below to explore its meaning, pronunciation, and cultural significance. I&apos;ll guide you through each phrase!
-            </p>
-            <div style={{
-              marginTop: '1rem',
-              fontSize: '2rem',
-              animation: 'bounce 2s ease-in-out infinite'
-            }}>
-              👇
-            </div>
+            Click any greeting card below to explore its meaning, pronunciation, and cultural significance. I&apos;ll guide you through each phrase!
+          </p>
+          <div style={{
+            marginTop: '1rem',
+            fontSize: '2rem',
+            animation: 'bounce 2s ease-in-out infinite'
+          }}>
+            👇
           </div>
         </div>
 
