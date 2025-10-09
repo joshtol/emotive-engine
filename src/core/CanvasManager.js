@@ -106,16 +106,20 @@ class CanvasManager {
         } else {
             // For responsive canvases, use the bounding rect
             const rect = this.canvas.getBoundingClientRect();
-            
+
             // Set display size (CSS pixels)
             this.width = rect.width;
             this.height = rect.height;
-            
+
             // Set actual size in memory (scaled for high-DPI)
             this.canvas.width = this.width * this.dpr;
             this.canvas.height = this.height * this.dpr;
-            
-            // Scale the drawing context for high-DPI
+
+            // CRITICAL: Reset context transform before applying DPI scale
+            // This prevents cumulative scaling on resize
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            // Scale the drawing context for high-DPI rendering
             this.ctx.scale(this.dpr, this.dpr);
         }
         

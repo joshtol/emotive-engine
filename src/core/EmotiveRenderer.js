@@ -607,10 +607,18 @@ class EmotiveRenderer {
         if (this.offscreenCanvas && this.canvasManager) {
             const {width} = this.canvasManager.canvas;
             const {height} = this.canvasManager.canvas;
-            
+
             if (this.offscreenCanvas.width !== width || this.offscreenCanvas.height !== height) {
                 this.offscreenCanvas.width = width;
                 this.offscreenCanvas.height = height;
+
+                // CRITICAL: Reset and scale offscreen context to match main canvas DPR
+                // The main canvas dimensions are already DPR-scaled, so we need to
+                // scale the offscreen context by the same DPR factor
+                if (this.offscreenCtx && this.canvasManager.dpr) {
+                    this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
+                    this.offscreenCtx.scale(this.canvasManager.dpr, this.canvasManager.dpr);
+                }
             }
         }
     }

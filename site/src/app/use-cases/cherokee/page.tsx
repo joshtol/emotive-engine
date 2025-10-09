@@ -127,9 +127,17 @@ export default function CherokeePage() {
 
       // Set canvas resolution to match its displayed size BEFORE creating mascot
       // This ensures particle boundaries match the modal size
+      // CRITICAL: Use devicePixelRatio for crisp rendering on high-DPI displays
       const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width
-      canvas.height = rect.height
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+
+      // Scale context for high-DPI rendering
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.scale(dpr, dpr)
+      }
 
       try {
         const cardMascot = new window.EmotiveMascot({
