@@ -136,6 +136,17 @@ export default function CherokeePage() {
       borderColor: 'rgba(195,155,211,0.4)',
       emoji: '🤝'
     },
+    {
+      english: 'Good night',
+      cherokee: 'ᎣᏍᏓ ᏒᏃᏱ',
+      pronunciation: 'oh-s-dah eh-noh-yee',
+      meaning: 'Evening farewell',
+      context: 'Used when parting in the evening',
+      color: '#9B59B6',
+      bgColor: 'rgba(155,89,182,0.15)',
+      borderColor: 'rgba(155,89,182,0.4)',
+      emoji: '🌙'
+    },
   ]
 
   return (
