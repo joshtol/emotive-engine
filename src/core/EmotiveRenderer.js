@@ -612,12 +612,17 @@ class EmotiveRenderer {
                 this.offscreenCanvas.width = width;
                 this.offscreenCanvas.height = height;
 
-                // CRITICAL: Reset and scale offscreen context to match main canvas DPR
-                // The main canvas dimensions are already DPR-scaled, so we need to
-                // scale the offscreen context by the same DPR factor
-                if (this.offscreenCtx && this.canvasManager.dpr) {
+                // CRITICAL: Only scale offscreen context if main canvas context is DPR-scaled
+                // For fixed-size canvases (with width/height attributes), CanvasManager doesn't
+                // apply DPR scaling, so we shouldn't scale the offscreen context either
+                // Check if canvas is DPR-scaled: canvas.width > logical width means DPR scaling is applied
+                const isDprScaled = this.canvasManager.canvas.width > this.canvasManager.width;
+
+                if (this.offscreenCtx) {
                     this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
-                    this.offscreenCtx.scale(this.canvasManager.dpr, this.canvasManager.dpr);
+                    if (isDprScaled && this.canvasManager.dpr) {
+                        this.offscreenCtx.scale(this.canvasManager.dpr, this.canvasManager.dpr);
+                    }
                 }
             }
         }
@@ -1227,8 +1232,10 @@ class EmotiveRenderer {
         // Restore original context AFTER all rendering is done
         this.ctx = originalCtx;
 
-        // Simple blit - chromatic aberration is now handled via CSS filters
-        originalCtx.drawImage(this.offscreenCanvas, 0, 0);
+        // Blit offscreen canvas to main canvas
+        // CRITICAL: Specify dimensions to properly scale DPR-sized offscreen canvas
+        // back to logical size on the main canvas
+        originalCtx.drawImage(this.offscreenCanvas, 0, 0, logicalWidth, logicalHeight);
         
         // Draw recording indicator on TOP of everything, with no transforms
         if (isEffectActive('recording-glow', this.state)) {

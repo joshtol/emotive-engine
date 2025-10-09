@@ -248,7 +248,7 @@ export default function HealthcarePage() {
                 borderRadius: '8px',
                 fontSize: '1.1rem'
               }}>
-                🎉 Excellent work! You've completed the intake form.
+                🎉 Excellent work! You&apos;ve completed the intake form.
               </div>
             )}
           </div>

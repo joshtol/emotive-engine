@@ -125,18 +125,16 @@ export default function CherokeePage() {
         cardMascotRef.current.destroy?.()
       }
 
-      // Set canvas resolution to match its displayed size BEFORE creating mascot
-      // This ensures particle boundaries match the modal size
-      // CRITICAL: Use devicePixelRatio for crisp rendering on high-DPI displays
+      // CRITICAL: Reset canvas to clear any leftover state from previous mascot
+      // This ensures CanvasManager starts fresh on each card
       const rect = canvas.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
-      canvas.width = rect.width * dpr
-      canvas.height = rect.height * dpr
+      canvas.width = rect.width
+      canvas.height = rect.height
 
-      // Scale context for high-DPI rendering
+      // Clear the canvas to remove any artifacts
       const ctx = canvas.getContext('2d')
       if (ctx) {
-        ctx.scale(dpr, dpr)
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
       }
 
       try {

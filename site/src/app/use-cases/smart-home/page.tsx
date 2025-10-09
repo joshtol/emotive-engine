@@ -273,7 +273,7 @@ export default function SmartHomePage() {
             border: '1px solid rgba(78,205,196,0.3)'
           }}>
             <div style={{ fontSize: '1.1rem', opacity: 0.9 }}>
-              💬 "Hey assistant, {devices.lights ? 'turn off' : 'turn on'} the lights"
+              💬 &quot;Hey assistant, {devices.lights ? 'turn off' : 'turn on'} the lights&quot;
             </div>
             <div style={{ fontSize: '0.9rem', opacity: 0.6, marginTop: '0.5rem' }}>
               Voice commands with emotional context coming soon

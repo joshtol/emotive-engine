@@ -223,7 +223,7 @@ export default function EducationPage() {
                 fontSize: '1.1rem',
                 border: '2px solid rgba(255,200,87,0.5)'
               }}>
-                🤔 Not quite. Think about it step by step. You're doing great!
+                🤔 Not quite. Think about it step by step. You&apos;re doing great!
               </div>
             )}
 
@@ -237,7 +237,7 @@ export default function EducationPage() {
                 border: '2px solid rgba(69,183,209,0.5)'
               }}>
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</div>
-                <div>All problems complete! You're amazing!</div>
+                <div>All problems complete! You&apos;re amazing!</div>
                 <button
                   onClick={() => {
                     setProblemIndex(0)
@@ -302,7 +302,7 @@ export default function EducationPage() {
                 💡 Adaptive Hints
               </h4>
               <p style={{ opacity: 0.8, lineHeight: 1.6 }}>
-                Delivers progressive hints calibrated to each student's struggle level—guiding discovery without revealing answers.
+                Delivers progressive hints calibrated to each student&apos;s struggle level—guiding discovery without revealing answers.
               </p>
             </div>
             <div style={{
