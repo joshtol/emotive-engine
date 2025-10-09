@@ -26,6 +26,9 @@ class EmotiveMascotPublic {
         this.stop = this.stop.bind(this);
         this.pause = this.pause.bind(this);
         this.resume = this.resume.bind(this);
+        this.setPosition = this.setPosition.bind(this);
+        this.animateToPosition = this.animateToPosition.bind(this);
+        this.clearParticles = this.clearParticles.bind(this);
     }
 
     /**
@@ -513,6 +516,56 @@ class EmotiveMascotPublic {
             // Update the mouse position directly
             engine.gazeTracker.mousePos = { x, y };
             engine.gazeTracker.updateTargetGaze();
+        }
+    }
+
+    /**
+     * Set mascot position offset from viewport center
+     * @param {number} x - X offset from center
+     * @param {number} y - Y offset from center
+     * @param {number} z - Z offset for scaling (optional)
+     */
+    setPosition(x, y, z = 0) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        if (engine.positionController) {
+            // Ensure onUpdate callback exists
+            if (!engine.positionController.onUpdate) {
+                engine.positionController.onUpdate = () => {};
+            }
+            engine.positionController.setOffset(x, y, z);
+        }
+    }
+
+    /**
+     * Animate mascot to position offset from viewport center
+     * @param {number} x - Target X offset from center
+     * @param {number} y - Target Y offset from center
+     * @param {number} z - Target Z offset for scaling (optional)
+     * @param {number} duration - Animation duration in milliseconds
+     * @param {string} easing - Easing function name (optional)
+     */
+    animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        if (engine.positionController) {
+            // Ensure onUpdate callback exists
+            if (!engine.positionController.onUpdate) {
+                engine.positionController.onUpdate = () => {};
+            }
+            engine.positionController.animateOffset(x, y, z, duration, easing);
+        }
+    }
+
+    /**
+     * Clear all particles from the particle system
+     * Useful when repositioning mascot to remove particles from old position
+     */
+    clearParticles() {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        if (engine.particleSystem) {
+            engine.particleSystem.clear();
         }
     }
 

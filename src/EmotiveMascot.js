@@ -2328,6 +2328,56 @@ class EmotiveMascot {
     }
 
     /**
+     * Set mascot position offset from viewport center
+     * @param {number} x - X offset from center
+     * @param {number} y - Y offset from center
+     * @param {number} z - Z offset for scaling (optional)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setPosition(x, y, z = 0) {
+        if (this.positionController) {
+            // Ensure onUpdate callback exists
+            if (!this.positionController.onUpdate) {
+                this.positionController.onUpdate = () => {};
+            }
+            this.positionController.setOffset(x, y, z);
+        }
+        return this;
+    }
+
+    /**
+     * Animate mascot to position offset from viewport center
+     * @param {number} x - Target X offset from center
+     * @param {number} y - Target Y offset from center
+     * @param {number} z - Target Z offset for scaling (optional)
+     * @param {number} duration - Animation duration in milliseconds
+     * @param {string} easing - Easing function name (optional)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
+        if (this.positionController) {
+            // Ensure onUpdate callback exists
+            if (!this.positionController.onUpdate) {
+                this.positionController.onUpdate = () => {};
+            }
+            this.positionController.animateOffset(x, y, z, duration, easing);
+        }
+        return this;
+    }
+
+    /**
+     * Clear all particles from the particle system
+     * Useful when repositioning mascot to remove particles from old position
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    clearParticles() {
+        if (this.particleSystem) {
+            this.particleSystem.clear();
+        }
+        return this;
+    }
+
+    /**
      * Forces performance degradation mode (for testing)
      * @param {boolean} enabled - Whether to enable degradation mode
      * @returns {EmotiveMascot} This instance for chaining

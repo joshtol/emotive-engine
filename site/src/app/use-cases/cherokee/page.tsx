@@ -1,15 +1,94 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
+
+declare global {
+  interface Window {
+    EmotiveMascot?: any
+  }
+}
 
 export default function CherokeePage() {
   const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const mascotRef = useRef<any>(null)
+  const firstCardRef = useRef<HTMLDivElement>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  const [hasScrolled, setHasScrolled] = useState(false)
+
+  // Initialize mascot
+  useEffect(() => {
+    if (typeof window === 'undefined' || !canvasRef.current) return
+
+    const initMascot = async () => {
+      // Wait for EmotiveMascot to be available
+      while (!window.EmotiveMascot) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      try {
+        const mascot = new window.EmotiveMascot({
+          canvasId: 'cherokee-guide-mascot',
+          enableAudio: false,
+          soundEnabled: false,
+          defaultEmotion: 'euphoria',
+          enableGazeTracking: false,
+          enableIdleBehaviors: true,
+        })
+
+        mascotRef.current = mascot
+        mascot.start()
+
+        // Set euphoria emotion
+        if (mascot.setEmotion) {
+          mascot.setEmotion('euphoria', 0.7)
+        }
+
+        // Position mascot directly above the heading after layout is ready
+        setTimeout(() => {
+          if (headingRef.current && mascot.setPosition) {
+            const headingRect = headingRef.current.getBoundingClientRect()
+            const targetX = headingRect.left + headingRect.width / 2
+            const targetY = headingRect.top - 20 // 20px above the heading
+
+            // Calculate offsets from viewport center
+            const viewportCenterX = window.innerWidth / 2
+            const viewportCenterY = window.innerHeight / 2
+            const offsetX = targetX - viewportCenterX
+            const offsetY = targetY - viewportCenterY
+
+            // Set position immediately (no animation)
+            mascot.setPosition(offsetX, offsetY, 0)
+
+            // Clear particles spawned at old center position
+            if (mascot.clearParticles) {
+              mascot.clearParticles()
+            }
+          }
+        }, 200)
+      } catch (err) {
+        console.error('Failed to initialize Cherokee mascot:', err)
+      }
+    }
+
+    initMascot()
+
+    return () => {
+      if (mascotRef.current) {
+        mascotRef.current.stop?.()
+        mascotRef.current.destroy?.()
+      }
+    }
+  }, [])
 
   // Detect mobile viewport
   useEffect(() => {
@@ -18,6 +97,41 @@ export default function CherokeePage() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Scroll detection and mascot targeting
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+
+      // Trigger movement after scrolling 100px
+      if (scrollY > 100 && !hasScrolled) {
+        setHasScrolled(true)
+
+        // Target the first greeting card
+        if (mascotRef.current && firstCardRef.current && mascotRef.current.animateToPosition) {
+          const cardRect = firstCardRef.current.getBoundingClientRect()
+
+          // Calculate absolute screen position for card center
+          const targetX = cardRect.left + cardRect.width / 2
+          const targetY = cardRect.top + cardRect.height / 2
+
+          // Calculate offsets from viewport center
+          const viewportCenterX = window.innerWidth / 2
+          const viewportCenterY = window.innerHeight / 2
+          const offsetX = targetX - viewportCenterX
+          const offsetY = targetY - viewportCenterY
+
+          // Animate to the card position over 2 seconds
+          mascotRef.current.animateToPosition(offsetX, offsetY, 0, 2000, 'easeOutCubic')
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [hasScrolled])
 
   // Handle swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -153,6 +267,32 @@ export default function CherokeePage() {
     <div className="emotive-container">
       <EmotiveHeader />
 
+      {/* Full viewport mascot canvas */}
+      <canvas
+        ref={canvasRef}
+        id="cherokee-guide-mascot"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          pointerEvents: 'none',
+          zIndex: 100
+        }}
+      />
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
+
       <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
@@ -240,6 +380,52 @@ export default function CherokeePage() {
           </p>
         </div>
 
+        {/* Guide Section (Mascot positioned here initially via targeting) */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1.5rem',
+          marginBottom: '3rem',
+          padding: '2rem',
+          background: 'rgba(218,165,32,0.08)',
+          borderRadius: '16px',
+          border: '1px solid rgba(218,165,32,0.2)',
+          textAlign: 'center',
+          minHeight: '400px'
+        }}>
+          <div style={{
+            maxWidth: '600px'
+          }}>
+            <h3
+              ref={headingRef}
+              style={{
+                fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)',
+                marginBottom: '0.75rem',
+                color: '#DAA520',
+                fontWeight: '600'
+              }}
+            >
+              ᎣᏏᏲ! Let's Learn Together
+            </h3>
+            <p style={{
+              fontSize: 'clamp(1rem, 2vw, 1.2rem)',
+              opacity: 0.85,
+              lineHeight: 1.5
+            }}>
+              Click any greeting card below to explore its meaning, pronunciation, and cultural significance. I'll guide you through each phrase!
+            </p>
+            <div style={{
+              marginTop: '1rem',
+              fontSize: '2rem',
+              animation: 'bounce 2s ease-in-out infinite'
+            }}>
+              👇
+            </div>
+          </div>
+        </div>
+
         {/* Cherokee Greetings Grid */}
         <div style={{
           background: 'rgba(218,165,32,0.08)',
@@ -259,14 +445,6 @@ export default function CherokeePage() {
           }}>
             Common Cherokee Greetings
           </h3>
-          <p style={{
-            textAlign: 'center',
-            opacity: 0.7,
-            marginBottom: '3rem',
-            fontSize: '1rem'
-          }}>
-            Click any phrase to see the syllabary, pronunciation, and cultural context
-          </p>
 
           <div style={{
             display: 'grid',
@@ -274,9 +452,10 @@ export default function CherokeePage() {
             gap: 'var(--grid-gap)',
             marginBottom: 'var(--spacing-md)'
           }}>
-            {greetings.map((item) => (
+            {greetings.map((item, index) => (
               <div
                 key={item.english}
+                ref={index === 0 ? firstCardRef : null}
                 onClick={() => setSelectedPhrase(item.english)}
                 style={{
                   padding: '2rem',

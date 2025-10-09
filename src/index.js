@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Emotive Engine - Main Export
  *
  * This is the primary entry point for the Emotive Engine library.
@@ -150,3 +150,6 @@ export default EmotiveMascotPublic;
  * // Tree-shaking friendly
  * import { getEmotion } from 'emotive-engine';
  */
+// SDK helpers
+export { SiteController } from './sdk/site-controller.js';
+
