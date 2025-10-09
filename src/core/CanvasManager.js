@@ -89,20 +89,43 @@ class CanvasManager {
             // The browser will handle the scaling automatically
         } else if (this.canvas.hasAttribute('width') && this.canvas.hasAttribute('height')) {
             // Use the explicit canvas dimensions from attributes
-            // This prevents the canvas from changing size when DevTools opens
             const attrWidth = parseInt(this.canvas.getAttribute('width'), 10);
             const attrHeight = parseInt(this.canvas.getAttribute('height'), 10);
-            
-            // Use attribute dimensions as base size
-            this.width = attrWidth;
-            this.height = attrHeight;
-            
-            // Set actual canvas buffer size (no DPR scaling for fixed-size canvases)
-            this.canvas.width = attrWidth;
-            this.canvas.height = attrHeight;
-            
-            // No DPR scaling needed for fixed-size canvases
-            // The browser will handle the scaling automatically
+
+            // Check if attributes contain DPR-scaled values by comparing to CSS dimensions
+            const rect = this.canvas.getBoundingClientRect();
+            const cssWidth = rect.width;
+            const cssHeight = rect.height;
+
+            // If attribute dimensions are significantly larger than CSS dimensions,
+            // assume they're DPR-scaled and we need context scaling
+            const isDprScaled = (attrWidth > cssWidth * 1.5) || (attrHeight > cssHeight * 1.5);
+
+            if (isDprScaled) {
+                // Attributes contain DPR-scaled buffer dimensions
+                // Use CSS dimensions as logical size
+                this.width = cssWidth;
+                this.height = cssHeight;
+
+                // Use attribute values as buffer size
+                this.canvas.width = attrWidth;
+                this.canvas.height = attrHeight;
+
+                // Scale context to match DPR
+                this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                this.ctx.scale(this.dpr, this.dpr);
+            } else {
+                // Attributes contain logical dimensions (e.g., Cherokee cards)
+                // Use attribute dimensions as base size
+                this.width = attrWidth;
+                this.height = attrHeight;
+
+                // Set actual canvas buffer size (no DPR scaling)
+                this.canvas.width = attrWidth;
+                this.canvas.height = attrHeight;
+
+                // No context scaling needed
+            }
         } else {
             // For responsive canvases, use the bounding rect
             const rect = this.canvas.getBoundingClientRect();

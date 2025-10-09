@@ -109,19 +109,24 @@ export function useHeroMascotController(options: UseHeroMascotControllerOptions 
       return
     }
 
-    // Update CSS dimensions only - let CanvasManager handle buffer sizing with DPR
+    // Update dimensions with DPR scaling
     const viewportWidth = window.innerWidth || canvas.clientWidth || 1
     const viewportHeight = window.innerHeight || canvas.clientHeight || 1
     const renderHeight = Math.max(viewportHeight * renderHeightMultiplier, viewportHeight)
+    const dpr = window.devicePixelRatio || 1
 
+    // Update CSS dimensions
     canvas.style.width = `${viewportWidth}px`
     canvas.style.height = `${renderHeight}px`
 
-    // Trigger CanvasManager resize (it will handle DPR scaling automatically)
+    // Update canvas buffer dimensions with DPR via attributes
+    canvas.setAttribute('width', Math.round(viewportWidth * dpr).toString())
+    canvas.setAttribute('height', Math.round(renderHeight * dpr).toString())
+
+    // Trigger CanvasManager resize to pick up new dimensions
     const mascot = mascotRef.current
     const manager = mascot?.canvasManager
 
-    // Don't use setRenderSize - just trigger the standard resize
     if (manager?.resize) {
       manager.resize()
     }
@@ -165,18 +170,20 @@ export function useHeroMascotController(options: UseHeroMascotControllerOptions 
         throw new Error('Mascot canvas element not available during initialization.')
       }
 
-      // Don't use configureCanvas - let CanvasManager handle DPR scaling
-      // Just set CSS dimensions for the viewport height multiplier effect
+      // Calculate dimensions with DPR scaling
       const viewportWidth = window.innerWidth || canvas.clientWidth || 1
       const viewportHeight = window.innerHeight || canvas.clientHeight || 1
       const renderHeight = Math.max(viewportHeight * renderHeightMultiplier, viewportHeight)
+      const dpr = window.devicePixelRatio || 1
 
+      // Set CSS dimensions
       canvas.style.width = `${viewportWidth}px`
       canvas.style.height = `${renderHeight}px`
 
-      // Clear any manually set width/height - let CanvasManager handle it
-      canvas.removeAttribute('width')
-      canvas.removeAttribute('height')
+      // Set canvas buffer dimensions with DPR via attributes
+      // CanvasManager will detect these and use them as-is
+      canvas.setAttribute('width', Math.round(viewportWidth * dpr).toString())
+      canvas.setAttribute('height', Math.round(renderHeight * dpr).toString())
 
       const mascot = new EmotiveMascot({
         canvasId,
@@ -190,7 +197,6 @@ export function useHeroMascotController(options: UseHeroMascotControllerOptions 
         renderingStyle: 'classic',
         enableGazeTracking: false,
         enableIdleBehaviors: true,
-        // Don't pass renderSize - let CanvasManager handle DPR scaling automatically
         classicConfig: {
           coreColor: '#FFFFFF',
           coreSizeDivisor: 12,
