@@ -1,12 +1,60 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 
 export default function CherokeePage() {
   const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const [touchStart, setTouchStart] = useState(0)
+  const [touchEnd, setTouchEnd] = useState(0)
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Handle swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (selectedPhrase && (isLeftSwipe || isRightSwipe)) {
+      const currentIndex = greetings.findIndex(g => g.english === selectedPhrase)
+      if (isLeftSwipe && currentIndex < greetings.length - 1) {
+        setSelectedPhrase(greetings[currentIndex + 1].english)
+      } else if (isRightSwipe && currentIndex > 0) {
+        setSelectedPhrase(greetings[currentIndex - 1].english)
+      }
+    }
+  }
+
+  // Navigate to next/previous greeting
+  const navigateGreeting = (direction: 'next' | 'prev') => {
+    if (!selectedPhrase) return
+    const currentIndex = greetings.findIndex(g => g.english === selectedPhrase)
+    if (direction === 'next' && currentIndex < greetings.length - 1) {
+      setSelectedPhrase(greetings[currentIndex + 1].english)
+    } else if (direction === 'prev' && currentIndex > 0) {
+      setSelectedPhrase(greetings[currentIndex - 1].english)
+    }
+  }
 
   // Cherokee Greetings & Common Phrases
   // Verified from official Cherokee Nation sources (cherokee.org, Cherokee Nation social media)
@@ -285,7 +333,8 @@ export default function CherokeePage() {
             ))}
           </div>
 
-          {selectedPhrase && (() => {
+          {/* Desktop: Inline detail panel */}
+          {!isMobile && selectedPhrase && (() => {
             const selected = greetings.find(item => item.english === selectedPhrase)
             return selected ? (
               <div style={{
@@ -336,6 +385,155 @@ export default function CherokeePage() {
             ) : null
           })()}
         </div>
+
+        {/* Mobile: Full-screen modal */}
+        {isMobile && selectedPhrase && (() => {
+          const selected = greetings.find(item => item.english === selectedPhrase)
+          const currentIndex = greetings.findIndex(g => g.english === selectedPhrase)
+
+          return selected ? (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.95)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                zIndex: 1000,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '2rem',
+                animation: 'fadeIn 0.3s ease-out'
+              }}
+              onClick={() => setSelectedPhrase(null)}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  maxWidth: '500px',
+                  width: '100%',
+                  background: selected.bgColor,
+                  borderRadius: '20px',
+                  padding: '2.5rem 2rem',
+                  border: `2px solid ${selected.borderColor}`,
+                  textAlign: 'center',
+                  position: 'relative'
+                }}
+              >
+                {/* Close button */}
+                <button
+                  onClick={() => setSelectedPhrase(null)}
+                  style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    background: 'rgba(0,0,0,0.3)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    fontSize: '1.5rem',
+                    color: 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
+
+                {/* Content */}
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
+                  {selected.emoji} {selected.cherokee}
+                </div>
+                <div style={{ fontSize: '1.8rem', fontWeight: '600', marginBottom: '0.5rem', color: selected.color }}>
+                  {selected.english}
+                </div>
+                <div style={{ fontSize: '1.2rem', opacity: 0.8, marginBottom: '2rem', fontStyle: 'italic' }}>
+                  Pronunciation: <strong>{selected.pronunciation}</strong>
+                </div>
+                <div style={{
+                  fontSize: '1.1rem',
+                  opacity: 0.85,
+                  marginTop: '1rem',
+                  padding: '1.2rem',
+                  background: 'rgba(0,0,0,0.2)',
+                  borderRadius: '12px'
+                }}>
+                  <strong style={{ color: selected.color }}>Meaning:</strong><br />
+                  {selected.meaning}
+                </div>
+                <div style={{
+                  fontSize: '1rem',
+                  opacity: 0.75,
+                  marginTop: '1rem',
+                  padding: '1.2rem',
+                  background: 'rgba(0,0,0,0.15)',
+                  borderRadius: '12px',
+                  fontStyle: 'italic'
+                }}>
+                  💡 <strong>Cultural Context:</strong> {selected.context}
+                </div>
+
+                {/* Navigation arrows */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: '2rem',
+                  gap: '1rem'
+                }}>
+                  <button
+                    onClick={() => navigateGreeting('prev')}
+                    disabled={currentIndex === 0}
+                    style={{
+                      flex: 1,
+                      padding: '1rem',
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      background: currentIndex === 0 ? 'rgba(255,255,255,0.1)' : selected.bgColor,
+                      color: currentIndex === 0 ? 'rgba(255,255,255,0.3)' : 'white',
+                      border: currentIndex === 0 ? '1px solid rgba(255,255,255,0.1)' : `1px solid ${selected.borderColor}`,
+                      borderRadius: '8px',
+                      cursor: currentIndex === 0 ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    ← Previous
+                  </button>
+                  <button
+                    onClick={() => navigateGreeting('next')}
+                    disabled={currentIndex === greetings.length - 1}
+                    style={{
+                      flex: 1,
+                      padding: '1rem',
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      background: currentIndex === greetings.length - 1 ? 'rgba(255,255,255,0.1)' : selected.bgColor,
+                      color: currentIndex === greetings.length - 1 ? 'rgba(255,255,255,0.3)' : 'white',
+                      border: currentIndex === greetings.length - 1 ? '1px solid rgba(255,255,255,0.1)' : `1px solid ${selected.borderColor}`,
+                      borderRadius: '8px',
+                      cursor: currentIndex === greetings.length - 1 ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    Next →
+                  </button>
+                </div>
+
+                <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '1.5rem' }}>
+                  👆 Swipe left/right or use arrows to navigate
+                </p>
+              </div>
+            </div>
+          ) : null
+        })()}
 
         {/* Why Learn Cherokee */}
         <div style={{
