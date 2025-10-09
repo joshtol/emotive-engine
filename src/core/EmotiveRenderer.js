@@ -687,7 +687,19 @@ class EmotiveRenderer {
         // Store original context and switch to offscreen for double buffering
         const originalCtx = this.ctx;
         this.ctx = this.offscreenCtx;
-        
+
+        // Apply decay to main canvas to prevent glow accumulation
+        // Scale decay with particle count to handle high-particle emotions like euphoria
+        const particleCount = this.particleSystem ? this.particleSystem.particles.length : 0;
+        // Base decay: 12%, increased up to 20% for high particle counts
+        const decayRate = 0.12 + Math.min(0.08, particleCount * 0.003);
+
+        originalCtx.save();
+        originalCtx.globalCompositeOperation = 'destination-out';
+        originalCtx.fillStyle = `rgba(0, 0, 0, ${decayRate})`;
+        originalCtx.fillRect(0, 0, logicalWidth, logicalHeight);
+        originalCtx.restore();
+
         // Clear offscreen canvas for fresh render
         this.ctx.clearRect(0, 0, logicalWidth, logicalHeight);
         
@@ -1206,7 +1218,7 @@ class EmotiveRenderer {
         
         // Restore original context AFTER all rendering is done
         this.ctx = originalCtx;
-        
+
         // Simple blit - chromatic aberration is now handled via CSS filters
         originalCtx.drawImage(this.offscreenCanvas, 0, 0);
         

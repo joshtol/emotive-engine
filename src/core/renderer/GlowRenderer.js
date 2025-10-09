@@ -65,35 +65,9 @@ export class GlowRenderer {
         
         // Skip if intensity is too low
         if (intensity < 0.01) return;
-        
-        // Outer glow size
-        const glowSize = this.scaleValue(200);
-        
+
         // Always use direct rendering for consistent brightness
         this.renderGlowDirect(ctx, x, y, radius, color, intensity);
-        return;
-        
-        // Check if we need to update the cached gradient
-        if (this.cachedGlowColor !== color || this.cachedGlowRadius !== glowSize) {
-            this.cacheGlowGradient(color, glowSize);
-        }
-        
-        // Draw cached gradient for normal intensity
-        if (this.offscreenCanvas && this.cachedGlowColor === color) {
-            ctx.save();
-            ctx.globalAlpha = Math.min(1, intensity);
-            ctx.globalCompositeOperation = 'screen';
-            
-            // Draw from offscreen canvas
-            const drawX = x - glowSize;
-            const drawY = y - glowSize;
-            ctx.drawImage(this.offscreenCanvas, drawX, drawY);
-            
-            ctx.restore();
-        } else {
-            // Fallback to direct rendering if cache fails
-            this.renderGlowDirect(ctx, x, y, radius, color, intensity);
-        }
     }
 
     /**
@@ -143,14 +117,19 @@ export class GlowRenderer {
     renderGlowDirect(ctx, x, y, radius, color, intensity) {
         // Use the EXACT original formula for consistent brightness
         ctx.save();
-        
+
+        // Use 'screen' blending to prevent glow accumulation
+        ctx.globalCompositeOperation = 'screen';
+
         // Build gradient stops array
         const stops = 20;
         const gradientStops = [];
         for (let i = 0; i <= stops; i++) {
             const position = i / stops;
             const baseOpacity = 0.6 * Math.pow(1 - position, 2.2);
-            const opacity = baseOpacity * intensity;
+            // Clamp opacity to prevent accumulation at high intensities
+            // and ensure visibility at low intensities
+            const opacity = Math.max(0, Math.min(1, baseOpacity * intensity));
             gradientStops.push({ offset: position, color: this.hexToRgba(color, opacity) });
         }
 
@@ -158,12 +137,12 @@ export class GlowRenderer {
         const gradient = gradientCache.getRadialGradient(
             ctx, x, y, 0, x, y, radius, gradientStops
         );
-        
+
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.restore();
     }
 
@@ -227,9 +206,9 @@ export class GlowRenderer {
     /**
      * Update glow color with transition
      * @param {string} targetColor - Target glow color
-     * @param {number} deltaTime - Time since last frame
+     * @param {number} _deltaTime - Time since last frame (unused)
      */
-    updateGlowColor(targetColor, deltaTime) {
+    updateGlowColor(targetColor, _deltaTime) {
         if (this.targetGlowColor !== targetColor) {
             this.targetGlowColor = targetColor;
             this.glowColorTransition = 0;

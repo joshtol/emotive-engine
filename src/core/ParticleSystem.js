@@ -840,18 +840,25 @@ class ParticleSystem {
                 // Draw glow layers if needed
                 if (particle.hasGlow || fireflyGlow > 1.0) {
                     const glowRadius = Math.max(0.1, safeSize * (particle.glowSizeMultiplier || 1.5) * fireflyGlow);
-                    
+
+                    // Use 'screen' composite mode to prevent glow accumulation
+                    const originalCompositeOp = ctx.globalCompositeOperation;
+                    ctx.globalCompositeOperation = 'screen';
+
                     // Outer glow (enhanced by firefly effect)
                     ctx.globalAlpha = particle.opacity * 0.15 * fireflyGlow;
                     ctx.beginPath();
                     ctx.arc(particle.x, particle.y, glowRadius, 0, Math.PI * 2);
                     ctx.fill();
-                    
+
                     // Inner glow (enhanced by firefly effect)
                     ctx.globalAlpha = particle.opacity * 0.25 * fireflyGlow;
                     ctx.beginPath();
                     ctx.arc(particle.x, particle.y, glowRadius * 0.6, 0, Math.PI * 2);
                     ctx.fill();
+
+                    // Restore original composite mode
+                    ctx.globalCompositeOperation = originalCompositeOp;
                 }
                 
                 // Draw core (also brightened by firefly effect)

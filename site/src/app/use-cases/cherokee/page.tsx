@@ -44,16 +44,16 @@ export default function CherokeePage() {
           canvasId: 'cherokee-guide-mascot',
           enableAudio: false,
           soundEnabled: false,
-          defaultEmotion: 'euphoria',
+          defaultEmotion: 'neutral',
           enableGazeTracking: false,
           enableIdleBehaviors: true,
         })
 
         mascotRef.current = mascot
 
-        // Set euphoria emotion before starting
+        // Set neutral emotion before starting
         if (mascot.setEmotion) {
-          mascot.setEmotion('euphoria', 0.7)
+          mascot.setEmotion('neutral', 0.7)
         }
 
         // Wait for layout, then set position BEFORE starting render loop
@@ -145,8 +145,10 @@ export default function CherokeePage() {
         // Position mascot to the left of English content
         // Canvas fills full modal, mascot offset to left
         if (cardMascot.setPosition) {
-          // Offset to left for horizontal layout with English content
-          cardMascot.setPosition(-150, -120, 0) // Left offset, move up
+          // Different positions for mobile vs desktop
+          const offsetX = isMobile ? -50 : -150  // Less left offset on mobile
+          const offsetY = isMobile ? -160 : -120  // Higher on mobile to align between Hello and pronunciation
+          cardMascot.setPosition(offsetX, offsetY, 0)
         }
 
         // Wait for mascot to initialize, then trigger gestures
@@ -702,14 +704,14 @@ export default function CherokeePage() {
                 fontWeight: '600'
               }}
             >
-              ᎣᏏᏲ! Let's Learn Together
+              ᎣᏏᏲ! Let&apos;s Learn Together
             </h3>
             <p style={{
               fontSize: 'clamp(1rem, 2vw, 1.2rem)',
               opacity: 0.85,
               lineHeight: 1.5
             }}>
-              Click any greeting card below to explore its meaning, pronunciation, and cultural significance. I'll guide you through each phrase!
+              Click any greeting card below to explore its meaning, pronunciation, and cultural significance. I&apos;ll guide you through each phrase!
             </p>
             <div style={{
               marginTop: '1rem',
@@ -1068,7 +1070,7 @@ export default function CherokeePage() {
               <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🌍</div>
               <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.75rem', color: '#DAA520' }}>Cultural Preservation</div>
               <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.6 }}>
-                Help preserve one of America's indigenous languages spoken by over 450,000 Cherokee Nation citizens
+                Help preserve one of America&apos;s indigenous languages spoken by over 450,000 Cherokee Nation citizens
               </div>
             </div>
             <div style={{
@@ -1175,7 +1177,7 @@ export default function CherokeePage() {
             maxWidth: '700px',
             margin: '0 auto 2rem auto'
           }}>
-            This demo showcases the Emotive Engine's potential for culturally respectful language learning.
+            This demo showcases the Emotive Engine&apos;s potential for culturally respectful language learning.
             Full implementation requires official Cherokee Nation approval and collaboration.
           </p>
           <div style={{
@@ -1192,7 +1194,7 @@ export default function CherokeePage() {
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>😊</div>
               <div style={{ fontWeight: '600', marginBottom: '0.3rem' }}>Emotional Feedback</div>
-              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Characters react to learner's pronunciation with encouragement</div>
+              <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>Characters react to learner&apos;s pronunciation with encouragement</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📚</div>

@@ -14,7 +14,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FFB6C1',       // Light pink euphoric glow
-        glowIntensity: 2.0,         // Maximum transcendent radiance
+        glowIntensity: 1.2,         // Bright radiance without accumulation
         particleRate: 35,           // Abundant particle emission
         minParticles: 15,           // Abundant positive energy
         maxParticles: 30,           // Maximum radiant display
