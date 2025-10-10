@@ -17,6 +17,8 @@ export default function CherokeePage() {
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   const guideRef = useRef<HTMLDivElement>(null)
+  const guideMascotRef = useRef<any>(null)
+  const guideMascotCanvasRef = useRef<HTMLCanvasElement>(null)
   const cardMascotRef = useRef<any>(null)
   const cardCanvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -26,6 +28,61 @@ export default function CherokeePage() {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Initialize guide mascot
+  useEffect(() => {
+    if (typeof window === 'undefined' || !guideMascotCanvasRef.current) return
+
+    const initGuideMascot = async () => {
+      // Wait for EmotiveMascot to be available
+      while (!window.EmotiveMascot) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      const canvas = guideMascotCanvasRef.current
+      if (!canvas) return
+
+      // Set DPR-scaled canvas dimensions
+      const rect = canvas.getBoundingClientRect()
+      const dpr = window.devicePixelRatio || 1
+
+      canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
+      canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
+
+      try {
+        const guideMascot = new window.EmotiveMascot({
+          canvasId: 'guide-mascot',
+          enableAudio: false,
+          soundEnabled: false,
+          defaultEmotion: 'neutral',
+          enableGazeTracking: false,
+          enableIdleBehaviors: true,
+        })
+
+        guideMascotRef.current = guideMascot
+
+        // Set neutral emotion
+        if (guideMascot.setEmotion) {
+          guideMascot.setEmotion('neutral', 0.7)
+        }
+
+        // Start the mascot
+        guideMascot.start()
+      } catch (err) {
+        console.error('Failed to initialize guide mascot:', err)
+      }
+    }
+
+    initGuideMascot()
+
+    return () => {
+      if (guideMascotRef.current) {
+        guideMascotRef.current.stop?.()
+        guideMascotRef.current.destroy?.()
+        guideMascotRef.current = null
+      }
+    }
   }, [])
 
   // Initialize card mascot when a phrase is selected
@@ -432,7 +489,7 @@ export default function CherokeePage() {
           </p>
         </div>
 
-        {/* Guide Section (Mascot positioned here initially via targeting) */}
+        {/* Guide Section with mascot */}
         <div
           ref={guideRef}
           style={{
@@ -446,14 +503,42 @@ export default function CherokeePage() {
             background: 'rgba(218,165,32,0.08)',
             borderRadius: '16px',
             border: '1px solid rgba(218,165,32,0.2)',
-            minHeight: '400px'
+            minHeight: '400px',
+            position: 'relative'
           }}
         >
+          {/* Mascot container */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '200px',
+            height: '200px',
+            pointerEvents: 'none',
+            zIndex: 1
+          }}>
+            <canvas
+              ref={guideMascotCanvasRef}
+              id="guide-mascot"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none'
+              }}
+            />
+          </div>
+
           <h3 style={{
             fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)',
             marginBottom: '0.75rem',
             color: '#DAA520',
-            fontWeight: '600'
+            fontWeight: '600',
+            position: 'relative',
+            zIndex: 2
           }}>
             ᎣᏏᏲ! Let&apos;s Learn Together
           </h3>
@@ -461,14 +546,18 @@ export default function CherokeePage() {
             fontSize: 'clamp(1rem, 2vw, 1.2rem)',
             opacity: 0.85,
             lineHeight: 1.5,
-            maxWidth: '600px'
+            maxWidth: '600px',
+            position: 'relative',
+            zIndex: 2
           }}>
             Click any greeting card below to explore its meaning, pronunciation, and cultural significance. I&apos;ll guide you through each phrase!
           </p>
           <div style={{
             marginTop: '1rem',
             fontSize: '2rem',
-            animation: 'bounce 2s ease-in-out infinite'
+            animation: 'bounce 2s ease-in-out infinite',
+            position: 'relative',
+            zIndex: 2
           }}>
             👇
           </div>
