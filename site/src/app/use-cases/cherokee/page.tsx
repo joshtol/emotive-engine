@@ -18,11 +18,7 @@ export default function CherokeePage() {
   const [touchEnd, setTouchEnd] = useState(0)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
-  const firstCardRef = useRef<HTMLDivElement>(null)
   const guideRef = useRef<HTMLDivElement>(null)
-  const hasNoddedRef = useRef<boolean>(false)
-  const lastScrollDirection = useRef<'down' | 'up' | null>(null)
-  const lastScrollY = useRef<number>(0)
   const cardMascotRef = useRef<any>(null)
   const cardCanvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -56,33 +52,8 @@ export default function CherokeePage() {
           mascot.setEmotion('neutral', 0.7)
         }
 
-        // Wait for layout, then set position BEFORE starting render loop
-        requestAnimationFrame(() => {
-          if (mascot.setPosition && guideRef.current && canvasRef.current) {
-            // Position mascot INSIDE the "Let's Learn Together" section at the top
-            const guideRect = guideRef.current.getBoundingClientRect()
-            const viewportCenterX = window.innerWidth / 2
-            const viewportCenterY = window.innerHeight / 2
-
-            // Position inside the guide section, centered horizontally, near the top
-            const targetX = viewportCenterX
-            const targetY = guideRect.top + 100 // 100px from top of guide section
-
-            const offsetX = targetX - viewportCenterX
-            const offsetY = targetY - viewportCenterY
-
-            mascot.setPosition(offsetX, offsetY, 1)
-
-            // Apply initial scale immediately
-            const isDesktop = window.innerWidth >= 768
-            const initialScale = isDesktop ? 0.35 : 1
-            canvasRef.current.style.transform = `scale(${initialScale})`
-            canvasRef.current.style.transformOrigin = `${targetX}px ${targetY}px`
-          }
-
-          // NOW start rendering - mascot already in correct position
-          mascot.start()
-        })
+        // Start rendering
+        mascot.start()
       } catch (err) {
         console.error('Failed to initialize Cherokee mascot:', err)
       }
@@ -274,184 +245,6 @@ export default function CherokeePage() {
     }
   }, [selectedPhrase])
 
-  // Scroll-locked mascot movement: spawn location → first card
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    let spawnPosition: { x: number; y: number } | null = null
-    let targetPosition: { x: number; y: number } | null = null
-    let ticking = false
-
-    // Calculate positions once on mount
-    const calculatePositions = () => {
-      // Spawn position: inside the guide section at the top
-      if (guideRef.current) {
-        const guideRect = guideRef.current.getBoundingClientRect()
-        const viewportCenterX = window.innerWidth / 2
-        spawnPosition = {
-          x: viewportCenterX,
-          y: guideRect.top + window.scrollY + 100 // 100px from top of guide section
-        }
-      } else {
-        // Fallback: centered in viewport
-        spawnPosition = {
-          x: window.innerWidth / 2,
-          y: window.innerHeight / 2 + window.scrollY
-        }
-      }
-
-      // Get first card position
-      if (firstCardRef.current) {
-        const cardRect = firstCardRef.current.getBoundingClientRect()
-        targetPosition = {
-          x: cardRect.left + cardRect.width / 2,
-          y: cardRect.top + window.scrollY + cardRect.height / 2
-        }
-      }
-    }
-
-    const updateMascotPosition = () => {
-      if (!mascotRef.current || !mascotRef.current.setPosition) return
-      if (!spawnPosition || !targetPosition) {
-        calculatePositions()
-        if (!spawnPosition || !targetPosition) return
-      }
-
-      const scrollY = window.scrollY
-
-      // Detect scroll direction
-      const currentDirection = scrollY > lastScrollY.current ? 'down' : 'up'
-      lastScrollY.current = scrollY
-
-      // Define scroll ranges
-      const scrollStart = 0
-      const scrollReachCard = 600      // Mascot reaches the card
-      const scrollNodTrigger = 500     // Trigger nod gesture
-      const scrollFadeStart = 620      // Start fading out immediately after reaching card
-      const scrollFadeEnd = 800        // Fully transparent (faster disappear)
-
-      const viewportCenterX = window.innerWidth / 2
-      const viewportCenterY = window.innerHeight / 2
-
-      let viewportX: number
-      let viewportY: number
-      let opacity = 1
-      let scale = 1
-
-      if (scrollY <= scrollReachCard) {
-        // Phase 1: Moving from spawn to first card & shrinking
-        let progress = (scrollY - scrollStart) / (scrollReachCard - scrollStart)
-        progress = Math.max(0, Math.min(1, progress))
-
-        // Ease the progress for smoother motion (easeInOutCubic)
-        const easedProgress = progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2
-
-        // Interpolate absolute page position
-        const absoluteX = spawnPosition.x + (targetPosition.x - spawnPosition.x) * easedProgress
-        const absoluteY = spawnPosition.y + (targetPosition.y - spawnPosition.y) * easedProgress
-
-        // Interpolate scale from 1 to 0.333 (1/3 size)
-        scale = 1 - (easedProgress * 0.667) // 1 → 0.333
-
-        // Convert absolute page coordinates to viewport coordinates
-        viewportX = absoluteX
-        viewportY = absoluteY - scrollY
-        opacity = 1
-
-        // Trigger nod gesture when approaching card (scrolling down)
-        if (currentDirection === 'down' && scrollY >= scrollNodTrigger && !hasNoddedRef.current) {
-          hasNoddedRef.current = true
-          if (mascotRef.current.express) {
-            mascotRef.current.express('nod')
-          }
-        }
-
-        // Reset nod flag when scrolling back up past trigger
-        if (currentDirection === 'up' && scrollY < scrollNodTrigger && hasNoddedRef.current) {
-          hasNoddedRef.current = false
-        }
-      } else if (scrollY <= scrollFadeStart) {
-        // Phase 2: Stuck to the card - fully visible at 1/3 size
-        if (!firstCardRef.current) return
-
-        const cardRect = firstCardRef.current.getBoundingClientRect()
-        viewportX = cardRect.left + cardRect.width / 2
-        viewportY = cardRect.top + cardRect.height / 2
-        opacity = 1
-        scale = 0.333
-      } else if (scrollY <= scrollFadeEnd) {
-        // Phase 3: Disappearing into card - fading out at 1/3 size
-        if (!firstCardRef.current) return
-
-        const cardRect = firstCardRef.current.getBoundingClientRect()
-        viewportX = cardRect.left + cardRect.width / 2
-        viewportY = cardRect.top + cardRect.height / 2
-
-        // Calculate fade progress
-        const fadeProgress = (scrollY - scrollFadeStart) / (scrollFadeEnd - scrollFadeStart)
-        opacity = 1 - fadeProgress
-        scale = 0.333
-      } else {
-        // Phase 4: Fully disappeared into card
-        if (!firstCardRef.current) return
-
-        const cardRect = firstCardRef.current.getBoundingClientRect()
-        viewportX = cardRect.left + cardRect.width / 2
-        viewportY = cardRect.top + cardRect.height / 2
-        opacity = 0
-        scale = 0.333
-      }
-
-      // Convert to viewport-relative offsets
-      const offsetX = viewportX - viewportCenterX
-      const offsetY = viewportY - viewportCenterY
-
-      // Update mascot position
-      mascotRef.current.setPosition(offsetX, offsetY, 0)
-
-      // Update canvas opacity and scale
-      if (canvasRef.current) {
-        canvasRef.current.style.opacity = opacity.toString()
-        // Apply scale transform at the mascot's current position to avoid shifting
-        const canvasWidth = canvasRef.current.width
-        const canvasHeight = canvasRef.current.height
-        const mascotScreenX = viewportCenterX + offsetX
-        const mascotScreenY = viewportCenterY + offsetY
-
-        // Apply initial scale (0.35 on desktop, 1 on mobile) multiplied by scroll animation scale
-        const isDesktop = window.innerWidth >= 768
-        const initialScale = isDesktop ? 0.35 : 1
-        canvasRef.current.style.transform = `scale(${initialScale * scale})`
-        canvasRef.current.style.transformOrigin = `${mascotScreenX}px ${mascotScreenY}px`
-      }
-
-      ticking = false
-    }
-
-    const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(updateMascotPosition)
-        ticking = true
-      }
-    }
-
-    // Initial position calculation after a brief delay for layout
-    setTimeout(() => {
-      calculatePositions()
-      updateMascotPosition() // Set initial scale
-    }, 100)
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('resize', calculatePositions)
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', calculatePositions)
-    }
-  }, [])
-
   // Handle swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX)
@@ -601,13 +394,7 @@ export default function CherokeePage() {
           width: '100vw',
           height: '100vh',
           pointerEvents: 'none',
-          zIndex: 100,
-          background: 'transparent',
-          backgroundColor: 'transparent',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          transform: 'translateZ(0)',
-          willChange: 'transform, opacity'
+          zIndex: 100
         }}
       />
 
@@ -777,10 +564,9 @@ export default function CherokeePage() {
             gap: 'var(--grid-gap)',
             marginBottom: 'var(--spacing-md)'
           }}>
-            {greetings.map((item, index) => (
+            {greetings.map((item) => (
               <div
                 key={item.english}
-                ref={index === 0 ? firstCardRef : null}
                 onClick={() => setSelectedPhrase(item.english)}
                 style={{
                   padding: '2rem',
