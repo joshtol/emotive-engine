@@ -601,7 +601,13 @@ export default function CherokeePage() {
           width: '100vw',
           height: '100vh',
           pointerEvents: 'none',
-          zIndex: 100
+          zIndex: 100,
+          background: 'transparent',
+          backgroundColor: 'transparent',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: 'translateZ(0)',
+          willChange: 'transform, opacity'
         }}
       />
 
