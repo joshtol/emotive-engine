@@ -125,11 +125,15 @@ export default function CherokeePage() {
         cardMascotRef.current.destroy?.()
       }
 
-      // CRITICAL: Reset canvas to clear any leftover state from previous mascot
-      // This ensures CanvasManager starts fresh on each card
+      // CRITICAL: Set DPR-scaled canvas dimensions for crisp rendering
+      // Get canvas dimensions and apply DPR scaling via attributes
       const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width
-      canvas.height = rect.height
+      const dpr = window.devicePixelRatio || 1
+
+      // Set buffer dimensions with DPR scaling via attributes
+      // CanvasManager will detect these DPR-scaled attributes and use them correctly
+      canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
+      canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
       // Clear the canvas to remove any artifacts
       const ctx = canvas.getContext('2d')
