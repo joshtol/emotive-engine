@@ -16,58 +16,9 @@ export default function CherokeePage() {
   const [isMobile, setIsMobile] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const mascotRef = useRef<any>(null)
   const guideRef = useRef<HTMLDivElement>(null)
   const cardMascotRef = useRef<any>(null)
   const cardCanvasRef = useRef<HTMLCanvasElement>(null)
-
-  // Initialize mascot
-  useEffect(() => {
-    if (typeof window === 'undefined' || !canvasRef.current) return
-
-    const initMascot = async () => {
-      // Wait for EmotiveMascot to be available
-      while (!window.EmotiveMascot) {
-        await new Promise(resolve => setTimeout(resolve, 100))
-      }
-
-      const canvas = canvasRef.current
-      if (!canvas) return
-
-      try {
-        const mascot = new window.EmotiveMascot({
-          canvasId: 'cherokee-guide-mascot',
-          enableAudio: false,
-          soundEnabled: false,
-          defaultEmotion: 'neutral',
-          enableGazeTracking: false,
-          enableIdleBehaviors: true,
-        })
-
-        mascotRef.current = mascot
-
-        // Set neutral emotion before starting
-        if (mascot.setEmotion) {
-          mascot.setEmotion('neutral', 0.7)
-        }
-
-        // Start rendering
-        mascot.start()
-      } catch (err) {
-        console.error('Failed to initialize Cherokee mascot:', err)
-      }
-    }
-
-    initMascot()
-
-    return () => {
-      if (mascotRef.current) {
-        mascotRef.current.stop?.()
-        mascotRef.current.destroy?.()
-      }
-    }
-  }, [])
 
   // Detect mobile viewport
   useEffect(() => {
@@ -382,22 +333,6 @@ export default function CherokeePage() {
   return (
     <div className="emotive-container">
       <EmotiveHeader />
-
-      {/* Full viewport mascot canvas */}
-      <canvas
-        ref={canvasRef}
-        id="cherokee-guide-mascot"
-        width="300"
-        height="300"
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          pointerEvents: 'none',
-          zIndex: 100
-        }}
-      />
 
       <style jsx>{`
         @keyframes float {
