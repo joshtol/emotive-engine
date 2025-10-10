@@ -863,10 +863,13 @@ export default function CherokeePage() {
                 zIndex: 1000,
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 alignItems: 'center',
                 padding: isMobile ? '2rem' : '4rem',
-                animation: 'fadeIn 0.3s ease-out'
+                paddingBottom: isMobile ? '4rem' : '6rem',
+                animation: 'fadeIn 0.3s ease-out',
+                overflowY: 'auto',
+                overflowX: 'hidden'
               }}
               onClick={() => setSelectedPhrase(null)}
               onTouchStart={handleTouchStart}
@@ -881,10 +884,14 @@ export default function CherokeePage() {
                   background: selected.bgColor,
                   borderRadius: '20px',
                   padding: isMobile ? '2.5rem 2rem' : '3rem 2.5rem',
+                  paddingBottom: isMobile ? '3rem' : '4rem',
                   border: `2px solid ${selected.borderColor}`,
                   textAlign: 'center',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  marginTop: 'auto',
+                  marginBottom: 'auto',
+                  flexShrink: 0
                 }}
               >
                 {/* Full-modal mascot canvas for free particle movement */}
@@ -899,7 +906,9 @@ export default function CherokeePage() {
                     height: '100%',
                     pointerEvents: 'none',
                     zIndex: 1,
-                    filter: 'none' // Prevent CSS filters from washing out canvas shadows
+                    filter: 'none', // Prevent CSS filters from washing out canvas shadows
+                    transform: 'translateZ(0)', // Force GPU acceleration
+                    willChange: 'transform' // Optimize for animations
                   }}
                 />
 
