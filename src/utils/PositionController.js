@@ -30,9 +30,13 @@ class PositionController {
         this.minScale = config.minScale || 0.5;
         this.maxScale = config.maxScale || 2.0;
         this.zScaleRange = config.zScaleRange || 1000; // Z units for full scale range
-        
+
         // Global scale multiplier (independent of Z-depth)
         this.globalScale = 1.0;
+
+        // Component-specific scale overrides
+        this.coreScaleOverride = 1.0;
+        this.particleScaleOverride = 1.0;
         
         // Initialize modular positioning system
         this.positioning = new PositioningSystem(this);
@@ -150,13 +154,15 @@ class PositionController {
      * Calculate effective center coordinates
      * @param {number} centerX - Base center X
      * @param {number} centerY - Base center Y
-     * @returns {Object} Effective center {x, y, scale}
+     * @returns {Object} Effective center {x, y, scale, coreScale, particleScale}
      */
     getEffectiveCenter(centerX = 0, centerY = 0) {
         return {
             x: centerX + this.offsetX,
             y: centerY + this.offsetY,
-            scale: this.getZScale()
+            scale: this.getZScale(),
+            coreScale: this.getCoreScale(),
+            particleScale: this.getParticleScale()
         };
     }
     
@@ -181,6 +187,59 @@ class PositionController {
     setGlobalScale(scale) {
         this.globalScale = Math.max(0.1, scale); // Prevent zero/negative scale
         this.onUpdate(this.getEffectiveCenter());
+    }
+
+    /**
+     * Set component-specific scale overrides
+     * @param {Object} options - Scale options { global, core, particles }
+     */
+    setScaleOverrides(options) {
+        if (typeof options === 'number') {
+            // Backward compatible: number sets global scale
+            this.globalScale = Math.max(0.1, options);
+            this.coreScaleOverride = 1.0;
+            this.particleScaleOverride = 1.0;
+        } else {
+            // Options object
+            if (options.global !== undefined) {
+                this.globalScale = Math.max(0.1, options.global);
+            }
+            if (options.core !== undefined) {
+                this.coreScaleOverride = Math.max(0.1, options.core);
+            }
+            if (options.particles !== undefined) {
+                this.particleScaleOverride = Math.max(0.1, options.particles);
+            }
+        }
+        this.onUpdate(this.getEffectiveCenter());
+    }
+
+    /**
+     * Get composite scale for core rendering
+     * @returns {number} Core scale factor (globalScale * coreScaleOverride)
+     */
+    getCoreScale() {
+        const baseZScale = this.calculateBaseZScale();
+        return baseZScale * this.globalScale * this.coreScaleOverride;
+    }
+
+    /**
+     * Get composite scale for particle rendering
+     * @returns {number} Particle scale factor (globalScale * particleScaleOverride)
+     */
+    getParticleScale() {
+        const baseZScale = this.calculateBaseZScale();
+        return baseZScale * this.globalScale * this.particleScaleOverride;
+    }
+
+    /**
+     * Calculate base Z scale without global multipliers
+     * @returns {number} Base Z scale
+     */
+    calculateBaseZScale() {
+        const normalizedZ = -this.offsetZ / this.zScaleRange;
+        const clampedZ = Math.max(-1, Math.min(1, normalizedZ));
+        return this.lerp(this.minScale, this.maxScale, (clampedZ + 1) / 2);
     }
     
     /**

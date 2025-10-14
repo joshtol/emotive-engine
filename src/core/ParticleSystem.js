@@ -1048,6 +1048,22 @@ class ParticleSystem {
     }
 
     /**
+     * Refreshes the particle pool by discarding all pooled particles
+     * Used when scale changes to ensure new particles use updated scale factor
+     */
+    refreshPool() {
+        // Clear the entire pool - forces creation of new particles with updated scale
+        this.pool.length = 0;
+        this.poolHits = 0;
+        this.poolMisses = 0;
+
+        // Also kill all active particles so they'll be replaced with properly scaled ones
+        for (const particle of this.particles) {
+            particle.life = 0; // Mark as dead - they'll be filtered out on next update
+        }
+    }
+
+    /**
      * Destroys the particle system and cleans up resources
      */
     destroy() {

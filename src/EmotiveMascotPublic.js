@@ -71,98 +71,103 @@ class EmotiveMascotPublic {
         if (this._initialized) {
             return Promise.resolve();
         }
-        
-        // Create engine instance with canvas
-        const engineConfig = {
-            ...this._config,
-            canvasId: canvas  // This accepts either string ID or element
-        };
-        
-        // Create and initialize the engine - wrap in protective proxy
-        const engine = new EmotiveMascot(engineConfig);
-        
-        // Keep real engine reference for internal use (hidden from external access)
-        Object.defineProperty(this, '_realEngine', {
-            value: engine,
-            writable: false,
-            enumerable: false,  // Hide from Object.keys()
-            configurable: false
-        });
-        
-        // Create a protective proxy that hides internal components
-        this._engine = new Proxy(engine, {
-            get(target, prop) {
+
+        try {
+            // Create engine instance with canvas
+            const engineConfig = {
+                ...this._config,
+                canvasId: canvas  // This accepts either string ID or element
+            };
+
+            // Create and initialize the engine - wrap in protective proxy
+            const engine = new EmotiveMascot(engineConfig);
+
+            // Keep real engine reference for internal use (hidden from external access)
+            Object.defineProperty(this, '_realEngine', {
+                value: engine,
+                writable: false,
+                enumerable: false,  // Hide from Object.keys()
+                configurable: false
+            });
+
+            // Create a protective proxy that hides internal components
+            this._engine = new Proxy(engine, {
+                get(target, prop) {
                 // Block access to sensitive internal components
-                const blockedProps = [
-                    'soundSystem', 'stateMachine', 'emotionLibrary',
-                    'audioLevelProcessor', 'particleSystem', 'errorBoundary',
-                    'performanceMonitor', 'config', 'debugMode'
-                ];
+                    const blockedProps = [
+                        'soundSystem', 'stateMachine', 'emotionLibrary',
+                        'audioLevelProcessor', 'particleSystem', 'errorBoundary',
+                        'performanceMonitor', 'config', 'debugMode'
+                    ];
                 
-                if (blockedProps.includes(prop)) {
+                    if (blockedProps.includes(prop)) {
                     // Return a dummy object that looks empty
-                    return new Proxy({}, {
-                        get() { return undefined; },
-                        set() { return false; },
-                        has() { return false; },
-                        ownKeys() { return []; },
-                        getOwnPropertyDescriptor() { return undefined; }
-                    });
-                }
+                        return new Proxy({}, {
+                            get() { return undefined; },
+                            set() { return false; },
+                            has() { return false; },
+                            ownKeys() { return []; },
+                            getOwnPropertyDescriptor() { return undefined; }
+                        });
+                    }
                 
-                // For allowed components, wrap them too
-                if (prop === 'renderer' || prop === 'shapeMorpher' || 
+                    // For allowed components, wrap them too
+                    if (prop === 'renderer' || prop === 'shapeMorpher' || 
                     prop === 'audioAnalyzer' || prop === 'gazeTracker') {
-                    const component = target[prop];
-                    if (!component) return undefined;
+                        const component = target[prop];
+                        if (!component) return undefined;
                     
-                    // Return wrapped version that hides internals
-                    return new Proxy(component, {
-                        get(compTarget, compProp) {
+                        // Return wrapped version that hides internals
+                        return new Proxy(component, {
+                            get(compTarget, compProp) {
                             // Only expose essential methods
-                            const allowedMethods = {
-                                'renderer': ['setBlinkingEnabled'],
-                                'shapeMorpher': ['resetMusicDetection', 'frequencyData'],
-                                'audioAnalyzer': ['microphoneStream', 'currentFrequencies'],
-                                'gazeTracker': ['enable', 'disable', 'mousePos', 'updateTargetGaze', 'currentGaze', 'getState']
-                            };
+                                const allowedMethods = {
+                                    'renderer': ['setBlinkingEnabled'],
+                                    'shapeMorpher': ['resetMusicDetection', 'frequencyData'],
+                                    'audioAnalyzer': ['microphoneStream', 'currentFrequencies'],
+                                    'gazeTracker': ['enable', 'disable', 'mousePos', 'updateTargetGaze', 'currentGaze', 'getState']
+                                };
                             
-                            if (allowedMethods[prop]?.includes(compProp)) {
-                                return compTarget[compProp];
-                            }
-                            return undefined;
-                        },
-                        set() { return false; },
-                        has() { return false; },
-                        ownKeys() { return []; }
-                    });
-                }
+                                if (allowedMethods[prop]?.includes(compProp)) {
+                                    return compTarget[compProp];
+                                }
+                                return undefined;
+                            },
+                            set() { return false; },
+                            has() { return false; },
+                            ownKeys() { return []; }
+                        });
+                    }
                 
-                // Allow safe methods
-                return target[prop];
-            },
-            set() {
-                return false; // Prevent any modifications
-            },
-            has(target, prop) {
+                    // Allow safe methods
+                    return target[prop];
+                },
+                set() {
+                    return false; // Prevent any modifications
+                },
+                has(target, prop) {
                 // Hide internal properties from 'in' operator
-                const blockedProps = ['soundSystem', 'stateMachine', 'emotionLibrary'];
-                return !blockedProps.includes(prop) && prop in target;
-            },
-            ownKeys(target) {
+                    const blockedProps = ['soundSystem', 'stateMachine', 'emotionLibrary'];
+                    return !blockedProps.includes(prop) && prop in target;
+                },
+                ownKeys(target) {
                 // Hide internal properties from Object.keys()
-                const allowedKeys = ['canvas', 'start', 'stop', 'pause', 'resume', 
-                    'setEmotion', 'morphTo', 'express'];
-                return allowedKeys.filter(key => key in target);
-            }
-        });
-        
-        // Store canvas reference
-        this.canvas = this._engine.canvas;
-        this._initialized = true;
-        
-        // The initialize method is synchronous, but we keep async for future compatibility
-        return Promise.resolve();
+                    const allowedKeys = ['canvas', 'start', 'stop', 'pause', 'resume', 
+                        'setEmotion', 'morphTo', 'express'];
+                    return allowedKeys.filter(key => key in target);
+                }
+            });
+
+            // Store canvas reference
+            this.canvas = this._engine.canvas;
+            this._initialized = true;
+
+            // The initialize method is synchronous, but we keep async for future compatibility
+            return Promise.resolve();
+        } catch (error) {
+            console.error('Failed to initialize Emotive Engine:', error);
+            throw error;
+        }
     }
 
     /**
@@ -611,16 +616,338 @@ class EmotiveMascotPublic {
             'medium': { particleCount: 100, fps: 60 },
             'high': { particleCount: 200, fps: 60 }
         };
-        
+
         const settings = qualityMap[level] || qualityMap['medium'];
-        
+
         if (this._engine.performanceMonitor) {
             this._engine.performanceMonitor.setTargetFPS(settings.fps);
         }
-        
+
         if (this._engine.particleSystem) {
             this._engine.particleSystem.setMaxParticles(settings.particleCount);
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // EXTENDED PUBLIC API
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Set maximum number of particles
+     * @param {number} maxParticles - Maximum particle count
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setMaxParticles(maxParticles) {
+        const engine = this._getReal();
+        if (engine && engine.particleSystem) {
+            engine.particleSystem.setMaxParticles(maxParticles);
+        }
+        return this;
+    }
+
+    /**
+     * Get current particle count
+     * @returns {number} Current number of active particles
+     */
+    getParticleCount() {
+        const engine = this._getReal();
+        if (engine && engine.particleSystem && engine.particleSystem.particles) {
+            return engine.particleSystem.particles.length;
+        }
+        return 0;
+    }
+
+    /**
+     * Set mascot opacity
+     * @param {number} opacity - Opacity value (0.0 to 1.0)
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setOpacity(opacity) {
+        const engine = this._getReal();
+        opacity = Math.max(0, Math.min(1, opacity));
+
+        if (engine && engine.renderer) {
+            // Store opacity on canvas context
+            const ctx = engine.canvasManager?.getContext();
+            if (ctx) {
+                ctx.globalAlpha = opacity;
+            }
+        }
+
+        this._currentOpacity = opacity;
+        return this;
+    }
+
+    /**
+     * Get current opacity
+     * @returns {number} Current opacity value
+     */
+    getOpacity() {
+        return this._currentOpacity !== undefined ? this._currentOpacity : 1.0;
+    }
+
+    /**
+     * Fade in the mascot
+     * @param {number} duration - Fade duration in ms (default 1000)
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    fadeIn(duration = 1000) {
+        const startOpacity = this.getOpacity();
+        const startTime = performance.now();
+
+        const animate = currentTime => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const opacity = startOpacity + (1.0 - startOpacity) * progress;
+
+            this.setOpacity(opacity);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+        return this;
+    }
+
+    /**
+     * Fade out the mascot
+     * @param {number} duration - Fade duration in ms (default 1000)
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    fadeOut(duration = 1000) {
+        const startOpacity = this.getOpacity();
+        const startTime = performance.now();
+
+        const animate = currentTime => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const opacity = startOpacity * (1 - progress);
+
+            this.setOpacity(opacity);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+        return this;
+    }
+
+    /**
+     * Set core color
+     * @param {string} color - Hex color code (e.g., '#FFFFFF')
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setColor(color) {
+        const engine = this._getReal();
+        if (engine && engine.renderer && engine.renderer.config) {
+            engine.renderer.config.coreColor = color;
+        }
+        return this;
+    }
+
+    /**
+     * Set glow color
+     * @param {string} color - Hex color code (e.g., '#667eea')
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setGlowColor(color) {
+        const engine = this._getReal();
+        if (engine && engine.renderer && engine.renderer.config) {
+            engine.renderer.config.defaultGlowColor = color;
+        }
+        return this;
+    }
+
+    /**
+     * Set color theme (sets both core and glow colors)
+     * @param {Object} theme - Theme object with { core, glow } properties
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setTheme(theme) {
+        if (theme.core) {
+            this.setColor(theme.core);
+        }
+        if (theme.glow) {
+            this.setGlowColor(theme.glow);
+        }
+        return this;
+    }
+
+    /**
+     * Set animation speed multiplier
+     * @param {number} speed - Speed multiplier (1.0 = normal, 2.0 = double speed, 0.5 = half speed)
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setSpeed(speed) {
+        const engine = this._getReal();
+        speed = Math.max(0.1, Math.min(10, speed));
+
+        // Store speed multiplier for potential future use
+        this._speedMultiplier = speed;
+
+        // Note: Actual speed control would need deeper engine integration
+        // This is a placeholder for the API surface
+        return this;
+    }
+
+    /**
+     * Get current speed multiplier
+     * @returns {number} Current speed multiplier
+     */
+    getSpeed() {
+        return this._speedMultiplier || 1.0;
+    }
+
+    /**
+     * Set target FPS
+     * @param {number} fps - Target frames per second (default 60)
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setFPS(fps) {
+        const engine = this._getReal();
+        fps = Math.max(1, Math.min(120, fps));
+
+        if (engine && engine.animationController) {
+            engine.animationController.setTargetFPS(fps);
+        }
+
+        return this;
+    }
+
+    /**
+     * Get current target FPS
+     * @returns {number} Target FPS
+     */
+    getFPS() {
+        const engine = this._getReal();
+        if (engine && engine.animationController) {
+            return engine.animationController.targetFPS || 60;
+        }
+        return 60;
+    }
+
+    /**
+     * Check if mascot is paused
+     * @returns {boolean} True if paused
+     */
+    isPaused() {
+        const engine = this._getReal();
+        if (engine && engine.animationController) {
+            return engine.animationController.isPaused === true;
+        }
+        return false;
+    }
+
+    /**
+     * Execute multiple updates in a batch for better performance
+     * @param {Function} callback - Function containing batch updates
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    batch(callback) {
+        // Pause rendering during batch updates
+        const wasPaused = this.isPaused();
+        if (!wasPaused) {
+            this.pause();
+        }
+
+        // Execute callback
+        if (typeof callback === 'function') {
+            callback(this);
+        }
+
+        // Resume rendering if it wasn't paused before
+        if (!wasPaused) {
+            this.resume();
+        }
+
+        return this;
+    }
+
+    /**
+     * Register an event listener
+     * @param {string} event - Event name
+     * @param {Function} listener - Listener function
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    on(event, listener) {
+        const engine = this._getReal();
+        if (engine && engine.eventManager) {
+            engine.eventManager.on(event, listener);
+        }
+        return this;
+    }
+
+    /**
+     * Remove an event listener
+     * @param {string} event - Event name
+     * @param {Function} listener - Listener function
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    off(event, listener) {
+        const engine = this._getReal();
+        if (engine && engine.eventManager) {
+            engine.eventManager.off(event, listener);
+        }
+        return this;
+    }
+
+    /**
+     * Set global scale multiplier (independent of viewport size)
+     * @param {number|Object} scaleOrOptions - Scale factor or options object
+     *   - number: Global scale (1.0 = normal, 0.5 = half size, 2.0 = double size)
+     *   - object: { global, core, particles } for independent control
+     *     - global: Scale both core and particles (backward compatible)
+     *     - core: Scale only the core
+     *     - particles: Scale only the particles
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     * @example
+     * // Scale everything to 60%
+     * mascot.setScale(0.6)
+     *
+     * // Scale everything using explicit global property
+     * mascot.setScale({ global: 0.6 })
+     *
+     * // Independent control: larger particles, smaller core
+     * mascot.setScale({ particles: 1.2, core: 0.8 })
+     *
+     * // Adjust only particles, keep core unchanged
+     * mascot.setScale({ particles: 1.5 })
+     */
+    setScale(scaleOrOptions) {
+        const engine = this._getReal();
+        if (engine && engine.positionController) {
+            if (typeof scaleOrOptions === 'number') {
+                // Backward compatible: number sets global scale
+                engine.positionController.setScaleOverrides(scaleOrOptions);
+            } else {
+                // Options object for independent control
+                engine.positionController.setScaleOverrides(scaleOrOptions);
+            }
+
+            // Refresh particle pool when particle scale changes
+            if (typeof scaleOrOptions === 'object' && scaleOrOptions.particles !== undefined) {
+                if (engine.particleSystem && typeof engine.particleSystem.refreshPool === 'function') {
+                    engine.particleSystem.refreshPool();
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Get current scale
+     * @returns {number} Current scale factor
+     */
+    getScale() {
+        const engine = this._getReal();
+        if (engine && engine.positionController) {
+            return engine.positionController.globalScale || 1.0;
+        }
+        return 1.0;
     }
 
     // === Timeline Recording ===

@@ -762,8 +762,11 @@ class EmotiveRenderer {
             centerY = effectiveCenter.y - this.config.topOffset + (logicalHeight * state.properties.verticalOffset);
         }
         
-        // Calculate global scale factor based on canvas size, baseScale config, and Z scaling
-        this.scaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale * effectiveCenter.scale;
+        // Calculate global scale factor for core rendering (uses coreScale for independent control)
+        this.scaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale * (effectiveCenter.coreScale || effectiveCenter.scale);
+
+        // Store particle scale factor separately for particle system
+        this.particleScaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale * (effectiveCenter.particleScale || effectiveCenter.scale);
         
         // Apply gesture transform if present
         let scaleMultiplier = 1;

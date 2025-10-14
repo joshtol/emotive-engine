@@ -1901,7 +1901,7 @@ class EmotiveMascot {
                 null,  // no forced count
                 minParticles,
                 maxParticles,
-                this.renderer.scaleFactor || 1,  // Pass scale factor
+                this.renderer.particleScaleFactor || this.renderer.scaleFactor || 1,  // Use particle-specific scale factor
                 this.config.classicConfig?.particleSizeMultiplier || 1,  // Pass particle size multiplier
                 emotionParams.particleColors || null,  // Pass emotion colors
                 renderState.undertone  // Pass undertone for saturation adjustments

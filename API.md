@@ -1,11 +1,13 @@
 # Emotive Engine API Documentation
 
 ## Table of Contents
+
 - [Constructor](#constructor)
 - [Core Methods](#core-methods)
 - [Emotion Control](#emotion-control)
 - [Gesture System](#gesture-system)
 - [Breathing API](#breathing-api)
+- [Position and Scaling API](#position-and-scaling-api)
 - [Events](#events)
 - [Configuration Options](#configuration-options)
 
@@ -17,34 +19,42 @@ Creates a new Emotive Engine instance.
 
 ```javascript
 const mascot = new EmotiveMascot({
-  canvasId: 'emotive-canvas',
-  emotion: 'neutral',
-  particleCount: 100
+    canvasId: 'emotive-canvas',
+    emotion: 'neutral',
+    particleCount: 100,
 });
 ```
 
 ## Core Methods
 
 ### `start()`
+
 Starts the animation loop.
+
 ```javascript
 mascot.start();
 ```
 
 ### `stop()`
+
 Stops the animation loop.
+
 ```javascript
 mascot.stop();
 ```
 
 ### `destroy()`
+
 Cleans up resources and removes event listeners.
+
 ```javascript
 mascot.destroy();
 ```
 
 ### `resize(width, height)`
+
 Resizes the canvas and adjusts rendering.
+
 ```javascript
 mascot.resize(800, 600);
 ```
@@ -52,23 +62,27 @@ mascot.resize(800, 600);
 ## Emotion Control
 
 ### `setEmotion(emotionName, optionsOrDuration, timestamp)`
+
 Sets the current emotional state with optional transition duration.
 
 **Parameters:**
+
 - `emotionName` (string): Name of the emotion
 - `optionsOrDuration` (string|number|Object, optional):
-  - **string**: Undertone name (e.g., 'warm', 'cold')
-  - **number**: Transition duration in milliseconds (default: 500)
-  - **Object**: Options object with `{undertone: string, duration: number}`
+    - **string**: Undertone name (e.g., 'warm', 'cold')
+    - **number**: Transition duration in milliseconds (default: 500)
+    - **Object**: Options object with `{undertone: string, duration: number}`
 - `timestamp` (number, optional): Timestamp for recording mode
 
 **Available Emotions:**
+
 - `neutral`, `joy`, `sadness`, `anger`, `fear`, `surprise`, `disgust`
 - `love`, `curiosity`, `excitement`, `contemplation`, `determination`
 - `serenity`, `pride`, `embarrassment`, `amusement`, `awe`
 - `satisfaction`, `sympathy`, `triumph`, `speaking`, `suspicion`
 
 **Examples:**
+
 ```javascript
 // Basic emotion change with default 500ms transition
 mascot.setEmotion('joy');
@@ -87,13 +101,17 @@ mascot.setEmotion('joy', 1000); // 1 second transition
 mascot.setEmotion('joy', { undertone: 'energetic', duration: 0 });
 ```
 
-**Note on Instant Transitions:**
-Use `duration: 0` for instant emotion changes when rapidly switching between states (e.g., card carousels, quick interactions). This prevents particle systems from the previous emotion state from creating visual artifacts during the transition.
+**Note on Instant Transitions:** Use `duration: 0` for instant emotion changes
+when rapidly switching between states (e.g., card carousels, quick
+interactions). This prevents particle systems from the previous emotion state
+from creating visual artifacts during the transition.
 
 ### `addUndertone(undertone)`
+
 Adds an emotional undertone that modifies the primary emotion.
 
 **Available Undertones:**
+
 - `calm`, `energetic`, `melancholic`, `hopeful`, `anxious`, `confident`
 
 ```javascript
@@ -101,48 +119,51 @@ mascot.addUndertone('energetic');
 ```
 
 ### `blendEmotions(emotions, weights)`
+
 Blends multiple emotions together.
 
 ```javascript
-mascot.blendEmotions(
-  ['joy', 'excitement', 'curiosity'],
-  [0.5, 0.3, 0.2]
-);
+mascot.blendEmotions(['joy', 'excitement', 'curiosity'], [0.5, 0.3, 0.2]);
 ```
 
 ## Gesture System
 
 ### `addGesture(gestureName, options)`
+
 Triggers a gesture animation.
 
 **Available Gestures:**
+
 - `wave`, `nod`, `shake`, `bounce`, `pulse`, `expand`, `contract`
 - `spin`, `wobble`, `blink`, `look_left`, `look_right`, `look_up`, `look_down`
 
 ```javascript
 mascot.addGesture('wave', {
-  duration: 1000,
-  intensity: 0.8
+    duration: 1000,
+    intensity: 0.8,
 });
 ```
 
 ### `queueGestures(gestures)`
+
 Queues multiple gestures to play in sequence.
 
 ```javascript
 mascot.queueGestures([
-  { name: 'nod', duration: 500 },
-  { name: 'wave', duration: 1000 },
-  { name: 'pulse', duration: 500 }
+    { name: 'nod', duration: 500 },
+    { name: 'wave', duration: 1000 },
+    { name: 'pulse', duration: 500 },
 ]);
 ```
 
 ## Breathing API
 
 ### `setBreathePattern(inhale, hold1, exhale, hold2)`
+
 Sets a custom breathing pattern.
 
 **Parameters:**
+
 - `inhale` (number): Inhale duration in ms
 - `hold1` (number): Hold after inhale in ms
 - `exhale` (number): Exhale duration in ms
@@ -153,21 +174,26 @@ mascot.setBreathePattern(4000, 2000, 4000, 2000);
 ```
 
 ### `setOrbScale(scale, duration, easing)`
+
 Sets the orb scale for breathing effects.
 
 **Parameters:**
+
 - `scale` (number): Target scale (1 = normal)
 - `duration` (number): Transition duration in ms
-- `easing` (string): Easing function ('linear', 'ease-in', 'ease-out', 'ease-in-out')
+- `easing` (string): Easing function ('linear', 'ease-in', 'ease-out',
+  'ease-in-out')
 
 ```javascript
 mascot.setOrbScale(1.5, 2000, 'ease-in-out');
 ```
 
 ### `breathe(type)`
+
 Starts a predefined breathing pattern.
 
 **Preset Types:**
+
 - `calm`: 4-2-4-2 pattern
 - `anxious`: 2-0-2-1 pattern
 - `meditative`: 5-3-5-3 pattern
@@ -179,10 +205,158 @@ mascot.breathe('meditative');
 ```
 
 ### `stopBreathing()`
+
 Stops the current breathing animation.
 
 ```javascript
 mascot.stopBreathing();
+```
+
+## Position and Scaling API
+
+### `setPosition(x, y, z)`
+
+Sets the mascot's position offset from the viewport center.
+
+**Parameters:**
+
+- `x` (number): X offset from center in pixels
+- `y` (number): Y offset from center in pixels
+- `z` (number, optional): Z offset for pseudo-3D scaling (default: 0)
+
+```javascript
+// Position mascot 100px right, 50px down from center
+mascot.setPosition(100, 50);
+
+// Position with Z-depth scaling
+mascot.setPosition(100, 50, -200); // Farther (smaller)
+mascot.setPosition(100, 50, 200); // Closer (larger)
+```
+
+### `animateToPosition(x, y, z, duration, easing)`
+
+Animates the mascot to a new position with easing.
+
+**Parameters:**
+
+- `x` (number): Target X offset
+- `y` (number): Target Y offset
+- `z` (number, optional): Target Z offset (default: 0)
+- `duration` (number, optional): Animation duration in ms (default: 1000)
+- `easing` (string, optional): Easing function (default: 'easeOutCubic')
+
+**Available Easing Functions:**
+
+- `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`
+- `easeInCubic`, `easeOutCubic`, `easeInOutCubic`
+- `easeInBack`, `easeOutBack`
+
+```javascript
+// Smooth animation to new position
+mascot.animateToPosition(200, 100, 0, 1500, 'easeOutCubic');
+
+// Quick snap
+mascot.animateToPosition(0, 0, 0, 300, 'linear');
+```
+
+### `setScale(scaleOrOptions)`
+
+Sets the mascot's scale independently for core and particles.
+
+**Parameters:**
+
+- `scaleOrOptions` (number|Object):
+    - **number**: Global scale for both core and particles (backward compatible)
+    - **Object**: Options object with independent control:
+        - `global` (number, optional): Scale both core and particles
+        - `core` (number, optional): Scale only the core
+        - `particles` (number, optional): Scale only the particles
+
+**Examples:**
+
+```javascript
+// Global scaling (backward compatible)
+mascot.setScale(0.6); // 60% of default size
+
+// Explicit global scaling
+mascot.setScale({ global: 0.6 });
+
+// Independent control - smaller core, normal particles
+mascot.setScale({
+    core: 0.6, // Core at 60%
+    particles: 1.0, // Particles at 100%
+});
+
+// Larger particles, smaller core
+mascot.setScale({
+    core: 0.8,
+    particles: 1.2,
+});
+
+// Adjust only particles, keep core unchanged
+mascot.setScale({ particles: 1.5 });
+
+// Adjust only core, keep particles unchanged
+mascot.setScale({ core: 0.5 });
+```
+
+**Use Cases:**
+
+**Mobile Optimization:**
+
+```javascript
+// Smaller core for mobile, but keep particles visible
+const isMobile = window.innerWidth < 768;
+if (isMobile) {
+    mascot.setScale({
+        core: 0.6,
+        particles: 1.0,
+    });
+}
+```
+
+**Emphasis Effects:**
+
+```javascript
+// Emphasize particles for celebration
+mascot.setEmotion('joy');
+mascot.setScale({
+    core: 0.8,
+    particles: 1.5, // Bigger particles for impact
+});
+```
+
+**Subtle Presence:**
+
+```javascript
+// Subtle background mascot
+mascot.setScale({
+    core: 0.5,
+    particles: 0.7,
+});
+```
+
+**Note:** When particle scale changes, the particle pool is automatically
+refreshed to ensure all particles use the new scale immediately, preventing
+mixed-size particle artifacts.
+
+### `getScale()`
+
+Returns the current global scale factor.
+
+```javascript
+const currentScale = mascot.getScale(); // Returns number (e.g., 0.6)
+```
+
+### `clearParticles()`
+
+Clears all particles from the particle system. Useful when repositioning the
+mascot to remove particles from the old position.
+
+```javascript
+// Reposition and clear old particles
+mascot.setPosition(200, 100);
+mascot.clearParticles();
 ```
 
 ## Events
@@ -190,42 +364,52 @@ mascot.stopBreathing();
 The mascot emits various events you can listen to:
 
 ### `stateChange`
+
 Fired when emotional state changes.
+
 ```javascript
-mascot.on('stateChange', (state) => {
-  console.log(`New emotion: ${state.emotion}`);
+mascot.on('stateChange', state => {
+    console.log(`New emotion: ${state.emotion}`);
 });
 ```
 
 ### `gestureComplete`
+
 Fired when a gesture animation completes.
+
 ```javascript
-mascot.on('gestureComplete', (gestureName) => {
-  console.log(`Completed gesture: ${gestureName}`);
+mascot.on('gestureComplete', gestureName => {
+    console.log(`Completed gesture: ${gestureName}`);
 });
 ```
 
 ### `breathePhase`
+
 Fired during breathing animations.
+
 ```javascript
-mascot.on('breathePhase', (phase) => {
-  console.log(`Breathing phase: ${phase}`); // 'inhale', 'hold1', 'exhale', 'hold2'
+mascot.on('breathePhase', phase => {
+    console.log(`Breathing phase: ${phase}`); // 'inhale', 'hold1', 'exhale', 'hold2'
 });
 ```
 
 ### `particleSpawn`
+
 Fired when new particles are created.
+
 ```javascript
-mascot.on('particleSpawn', (particle) => {
-  console.log('New particle spawned');
+mascot.on('particleSpawn', particle => {
+    console.log('New particle spawned');
 });
 ```
 
 ### `performanceWarning`
+
 Fired when performance degrades.
+
 ```javascript
-mascot.on('performanceWarning', (metrics) => {
-  console.log(`FPS dropped to ${metrics.fps}`);
+mascot.on('performanceWarning', metrics => {
+    console.log(`FPS dropped to ${metrics.fps}`);
 });
 ```
 
@@ -235,63 +419,63 @@ mascot.on('performanceWarning', (metrics) => {
 
 ```javascript
 const mascot = new EmotiveMascot({
-  // Canvas Configuration
-  canvasId: 'emotive-canvas',
-  width: 400,
-  height: 400,
-  
-  // Particle Settings
-  particleCount: 150,
-  particleSize: { min: 2, max: 6 },
-  particleLifetime: { min: 1000, max: 3000 },
-  
-  // Performance
-  targetFPS: 60,
-  enableWorkers: true,
-  adaptivePerformance: true,
-  maxParticles: 500,
-  
-  // Visual Effects
-  glowIntensity: 1.2,
-  motionBlur: 0.8,
-  particleTrails: true,
-  
-  // Core Behavior
-  emotion: 'neutral',
-  undertone: 'calm',
-  
-  // Features
-  enableGestures: true,
-  enablePhysics: true,
-  enableAudio: false,
-  
-  // Interaction
-  mouseTracking: true,
-  touchEnabled: true,
-  
-  // Audio (Optional)
-  audioEnabled: false,
-  audioSensitivity: 0.7,
-  audioFrequencyBands: 32
+    // Canvas Configuration
+    canvasId: 'emotive-canvas',
+    width: 400,
+    height: 400,
+
+    // Particle Settings
+    particleCount: 150,
+    particleSize: { min: 2, max: 6 },
+    particleLifetime: { min: 1000, max: 3000 },
+
+    // Performance
+    targetFPS: 60,
+    enableWorkers: true,
+    adaptivePerformance: true,
+    maxParticles: 500,
+
+    // Visual Effects
+    glowIntensity: 1.2,
+    motionBlur: 0.8,
+    particleTrails: true,
+
+    // Core Behavior
+    emotion: 'neutral',
+    undertone: 'calm',
+
+    // Features
+    enableGestures: true,
+    enablePhysics: true,
+    enableAudio: false,
+
+    // Interaction
+    mouseTracking: true,
+    touchEnabled: true,
+
+    // Audio (Optional)
+    audioEnabled: false,
+    audioSensitivity: 0.7,
+    audioFrequencyBands: 32,
 });
 ```
 
 ### Performance Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `targetFPS` | number | 60 | Target frame rate |
-| `enableWorkers` | boolean | true | Use Web Workers for physics |
-| `adaptivePerformance` | boolean | true | Auto-adjust quality |
-| `maxParticles` | number | 500 | Maximum particle count |
+| Option                | Type    | Default | Description                 |
+| --------------------- | ------- | ------- | --------------------------- |
+| `targetFPS`           | number  | 60      | Target frame rate           |
+| `enableWorkers`       | boolean | true    | Use Web Workers for physics |
+| `adaptivePerformance` | boolean | true    | Auto-adjust quality         |
+| `maxParticles`        | number  | 500     | Maximum particle count      |
 
 ### Visual Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `glowIntensity` | number | 1.0 | Glow effect strength |
-| `motionBlur` | number | 0.5 | Motion blur amount |
-| `particleTrails` | boolean | false | Enable particle trails |
+| Option           | Type    | Default | Description            |
+| ---------------- | ------- | ------- | ---------------------- |
+| `glowIntensity`  | number  | 1.0     | Glow effect strength   |
+| `motionBlur`     | number  | 0.5     | Motion blur amount     |
+| `particleTrails` | boolean | false   | Enable particle trails |
 
 ## Method Chaining
 
@@ -299,10 +483,10 @@ Most methods return the mascot instance for chaining:
 
 ```javascript
 mascot
-  .setEmotion('joy')
-  .addUndertone('energetic')
-  .addGesture('wave')
-  .breathe('calm');
+    .setEmotion('joy')
+    .addUndertone('energetic')
+    .addGesture('wave')
+    .breathe('calm');
 ```
 
 ## TypeScript Support
@@ -310,15 +494,19 @@ mascot
 The package includes TypeScript definitions:
 
 ```typescript
-import EmotiveMascot, { EmotionName, GestureName, UndertoneType } from 'emotive-engine';
+import EmotiveMascot, {
+    EmotionName,
+    GestureName,
+    UndertoneType,
+} from 'emotive-engine';
 
 const emotion: EmotionName = 'joy';
 const gesture: GestureName = 'wave';
 const undertone: UndertoneType = 'calm';
 
 const mascot = new EmotiveMascot({
-  canvasId: 'mascot',
-  emotion,
-  undertone
+    canvasId: 'mascot',
+    emotion,
+    undertone,
 });
 ```
