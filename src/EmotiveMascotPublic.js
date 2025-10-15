@@ -1037,6 +1037,94 @@ class EmotiveMascotPublic {
         return 1.0;
     }
 
+    /**
+     * Set backdrop configuration for better particle visibility
+     * @param {Object} options - Backdrop configuration options
+     * @param {boolean} [options.enabled=false] - Enable/disable backdrop
+     *
+     * @param {number} [options.radius=1.5] - Diameter multiplier (mascot size × radius)
+     * @param {string} [options.shape='circle'] - Backdrop shape: 'circle', 'ellipse', 'fullscreen'
+     *
+     * @param {string} [options.color='rgba(0,0,0,0.6)'] - Base color (CSS color string)
+     * @param {number} [options.intensity=0.7] - Overall opacity (0-1)
+     * @param {string} [options.blendMode='normal'] - Canvas blend mode: 'normal', 'multiply', 'overlay', 'screen'
+     *
+     * @param {string} [options.falloff='smooth'] - Gradient falloff type: 'linear', 'smooth', 'exponential', 'custom'
+     * @param {Array<{stop: number, alpha: number}>} [options.falloffCurve=null] - Custom falloff curve (array of {stop, alpha})
+     * @param {number} [options.edgeSoftness=0.6] - How much of gradient is soft (0-1, controls overall gradient strength)
+     * @param {number} [options.coreTransparency=0.2] - How far center stays transparent (0-1, 0=no transparent core, 1=fully transparent)
+     *
+     * @param {number} [options.blur=0] - Backdrop blur radius (pixels)
+     * @param {boolean} [options.responsive=true] - React to audio amplitude
+     * @param {boolean} [options.pulse=false] - Enable subtle pulsing effect
+     *
+     * @param {Object} [options.offset={x:0, y:0}] - Position offset from mascot center
+     *
+     * @param {string} [options.type='radial-gradient'] - Legacy: backdrop type ('radial-gradient', 'vignette', 'glow')
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     *
+     * @example
+     * // Basic usage - simple dark backdrop
+     * mascot.setBackdrop({ enabled: true })
+     *
+     * @example
+     * // Custom size and smooth falloff
+     * mascot.setBackdrop({
+     *   enabled: true,
+     *   radius: 5,              // Large backdrop (5x mascot size)
+     *   edgeSoftness: 0.8,      // Very soft/gradual falloff
+     *   coreTransparency: 0.3   // Transparent in center 30%
+     * })
+     *
+     * @example
+     * // Exponential falloff (rapid increase near edges)
+     * mascot.setBackdrop({
+     *   enabled: true,
+     *   falloff: 'exponential',
+     *   edgeSoftness: 0.9
+     * })
+     *
+     * @example
+     * // Custom falloff curve for complete control
+     * mascot.setBackdrop({
+     *   enabled: true,
+     *   falloff: 'custom',
+     *   falloffCurve: [
+     *     { stop: 0, alpha: 0 },      // Center: transparent
+     *     { stop: 0.5, alpha: 0.1 },  // Middle: barely visible
+     *     { stop: 0.9, alpha: 0.8 },  // Near edge: strong
+     *     { stop: 1, alpha: 1 }       // Edge: full opacity
+     *   ]
+     * })
+     *
+     * @example
+     * // Colored backdrop with multiply blend
+     * mascot.setBackdrop({
+     *   enabled: true,
+     *   color: 'rgba(50, 20, 100, 0.7)',
+     *   blendMode: 'multiply'
+     * })
+     */
+    setBackdrop(options = {}) {
+        const engine = this._getReal();
+        if (engine && typeof engine.setBackdrop === 'function') {
+            engine.setBackdrop(options);
+        }
+        return this;
+    }
+
+    /**
+     * Get current backdrop configuration
+     * @returns {Object|null} Current backdrop config or null if not available
+     */
+    getBackdrop() {
+        const engine = this._getReal();
+        if (engine && typeof engine.getBackdrop === 'function') {
+            return engine.getBackdrop();
+        }
+        return null;
+    }
+
     // === Timeline Recording ===
 
     /**

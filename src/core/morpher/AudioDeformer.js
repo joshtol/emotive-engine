@@ -391,7 +391,7 @@ export class AudioDeformer {
                 const waveCount = 2; // 2 waves for clean look
                 const wiggleIntensity = this.bassEnergy * 0.25; // Increased from 0.15 to 0.25
                 undulation = Math.sin(angle * waveCount + this.morpher.undulationPhase) * wiggleIntensity;
-                
+
                 // Subtle breathing pulse synced with undulation
                 breathPulse = Math.sin(this.morpher.undulationPhase * 0.5) * this.bassEnergy * 0.08; // Increased from 0.05
             }

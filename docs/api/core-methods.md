@@ -290,6 +290,168 @@ mascot.clearParticles()
 
 ---
 
+## Backdrop Methods
+
+### setBackdrop(options)
+
+Configures a backdrop behind the mascot for better visibility against varying backgrounds. The backdrop provides a vignette-style darkening effect that fades from dark at the center to transparent at the edges.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `options` | `Object` | Backdrop configuration |
+
+**Options:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Enable/disable backdrop |
+| `radius` | `number` | `1.5` | Size multiplier (mascot radius × radius) |
+| `shape` | `string` | `'circle'` | Shape: `'circle'`, `'ellipse'`, `'fullscreen'` |
+| `color` | `string` | `'rgba(0,0,0,0.6)'` | Base color (CSS color string) |
+| `intensity` | `number` | `0.7` | Overall opacity (0-1) |
+| `blendMode` | `string` | `'normal'` | Canvas blend mode (see below) |
+| `falloff` | `string` | `'smooth'` | Gradient falloff: `'linear'`, `'smooth'`, `'exponential'`, `'custom'` |
+| `falloffCurve` | `Array` | `null` | Custom gradient stops: `[{stop: 0.5, alpha: 0.8}, ...]` |
+| `edgeSoftness` | `number` | `0.6` | How much of gradient is soft (0-1) |
+| `coreTransparency` | `number` | `0.2` | How far center stays transparent (0-1) |
+| `blur` | `number` | `0` | Backdrop blur radius (pixels) |
+| `responsive` | `boolean` | `true` | React to audio amplitude |
+| `pulse` | `boolean` | `false` | Enable subtle pulsing effect |
+| `offset` | `Object` | `{x:0, y:0}` | Position offset from mascot center |
+
+**Blend Modes:**
+- `'normal'` - Standard alpha blending
+- `'multiply'` - Darkens underlying content
+- `'screen'` - Lightens underlying content
+- `'overlay'` - Combination of multiply and screen
+- `'color-dodge'` - Creates bright, glowing effect
+- `'color-burn'` - Creates dark, contrasted effect
+
+```javascript
+// Simple backdrop
+mascot.setBackdrop({
+  enabled: true,
+  radius: 2.0,
+  intensity: 0.8
+})
+
+// Advanced configuration
+mascot.setBackdrop({
+  enabled: true,
+  radius: 3.5,
+  color: 'rgba(0, 0, 0, 0.7)',
+  intensity: 0.85,
+  blendMode: 'normal',
+  falloff: 'smooth',
+  edgeSoftness: 0.95,  // Very gradual fade
+  coreTransparency: 0.3,  // Keep center 30% transparent
+  blur: 5,  // Slight blur
+  responsive: true,  // React to audio
+  pulse: false
+})
+
+// Custom gradient curve
+mascot.setBackdrop({
+  enabled: true,
+  falloff: 'custom',
+  falloffCurve: [
+    { stop: 0, alpha: 1.0 },    // Dark center
+    { stop: 0.5, alpha: 0.6 },  // Medium darkness
+    { stop: 1.0, alpha: 0 }     // Transparent edge
+  ]
+})
+
+// Audio-reactive backdrop
+mascot.setBackdrop({
+  enabled: true,
+  responsive: true,  // Intensity boosts with audio
+  pulse: true        // Subtle breathing effect
+})
+```
+
+**When to use:**
+- Dark mascot on light backgrounds
+- Improving particle visibility
+- Creating depth and focus
+- Enhancing visual hierarchy
+- Audio-reactive backgrounds
+
+**Performance notes:**
+- Backdrop renders behind particles (correct z-order)
+- Blur increases GPU usage
+- Responsive mode triggers on audio amplitude
+- Pulse effect adds subtle animation
+
+---
+
+### getBackdrop()
+
+Gets the current backdrop configuration.
+
+**Returns:** `Object` - Current backdrop settings
+
+```javascript
+const backdrop = mascot.getBackdrop()
+console.log(backdrop)
+// {
+//   enabled: true,
+//   radius: 3.5,
+//   intensity: 0.85,
+//   blendMode: 'normal',
+//   ...
+// }
+```
+
+---
+
+### enableBackdrop()
+
+Enables the backdrop with current settings.
+
+```javascript
+mascot.enableBackdrop()
+```
+
+**Returns:** `void`
+
+---
+
+### disableBackdrop()
+
+Disables the backdrop with smooth fade-out.
+
+```javascript
+mascot.disableBackdrop()
+```
+
+**Returns:** `void`
+
+---
+
+### toggleBackdrop()
+
+Toggles backdrop enabled state.
+
+```javascript
+mascot.toggleBackdrop()
+```
+
+**Returns:** `void`
+
+**Example:**
+```javascript
+// Keyboard toggle
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'b') {
+    mascot.toggleBackdrop()
+  }
+})
+```
+
+---
+
 ## Utility Methods
 
 ### getPerformanceMetrics()

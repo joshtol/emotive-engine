@@ -89,7 +89,7 @@ export class AudioAnalyzer {
         if (!this.audioContext) {
             return;
         }
-        
+
         try {
             // Create source from audio element (only if not already created)
             if (!this.elementSource || this.connectedElement !== audioElement) {
@@ -100,7 +100,7 @@ export class AudioAnalyzer {
             this.source = this.elementSource;  // Set current source
             this.connectedElement = audioElement;
             this.isAnalyzing = true;
-            
+
             // Start analysis loop
             this.analyze();
         } catch (error) {
@@ -122,58 +122,49 @@ export class AudioAnalyzer {
      */
     analyze() {
         if (!this.isAnalyzing) return;
-        
+
         requestAnimationFrame(() => this.analyze());
-        
+
         // Get frequency data
         this.analyser.getByteFrequencyData(this.dataArray);
-        
+
         // Also try time domain data to see if mic is working
         const timeData = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteTimeDomainData(timeData);
-        
-        // Debug: Check both frequency and time domain
-        if (!this._debugLogged) {
-            const freqMax = Math.max(...this.dataArray);
-            const timeMax = Math.max(...timeData);
-            const timeMin = Math.min(...timeData);
-            
-            // Audio data logging removed for production
-        }
-        
+
         // Calculate overall amplitude
         let sum = 0;
         let vocalSum = 0;
         let vocalCount = 0;
-        
+
         // Frequency to bin conversion
         const nyquist = this.audioContext.sampleRate / 2;
         const binHz = nyquist / this.dataArray.length;
         const vocalMinBin = Math.floor(this.vocalRange.min / binHz);
         const vocalMaxBin = Math.ceil(this.vocalRange.max / binHz);
-        
+
         // Process frequency data
         for (let i = 0; i < this.dataArray.length; i++) {
             const value = this.dataArray[i] / 255; // Normalize to 0-1
             sum += value;
-            
+
             // Check if in vocal range
             if (i >= vocalMinBin && i <= vocalMaxBin) {
                 vocalSum += value;
                 vocalCount++;
             }
         }
-        
+
         // Calculate amplitudes
         this.currentAmplitude = sum / this.dataArray.length;
         const vocalAmplitude = vocalCount > 0 ? vocalSum / vocalCount : 0;
-        
+
         // Extract frequency bands for visualization
         this.extractFrequencyBands();
-        
+
         // Detect beats
         this.detectBeat(this.currentAmplitude);
-        
+
         // Return analysis data
         return {
             amplitude: this.currentAmplitude,

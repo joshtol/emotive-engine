@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { NavSection } from '@/lib/markdown'
@@ -8,11 +7,12 @@ import DocsSearch from './DocsSearch'
 
 interface DocsSidebarProps {
   navigation: NavSection[]
+  isMobileMenuOpen: boolean
+  setIsMobileMenuOpen: (open: boolean) => void
 }
 
-export default function DocsSidebar({ navigation }: DocsSidebarProps) {
+export default function DocsSidebar({ navigation, isMobileMenuOpen, setIsMobileMenuOpen }: DocsSidebarProps) {
   const pathname = usePathname()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const isActive = (slug: string[]) => {
     const path = `/docs/${slug.join('/')}`
@@ -21,37 +21,6 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        style={{
-          display: 'none',
-          position: 'fixed',
-          top: '80px',
-          left: '1rem',
-          zIndex: 1001,
-          background: 'rgba(102, 126, 234, 0.2)',
-          border: '1px solid rgba(102, 126, 234, 0.4)',
-          borderRadius: '8px',
-          padding: '0.75rem',
-          cursor: 'pointer',
-          color: 'white',
-        }}
-        className="mobile-menu-button"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          {isMobileMenuOpen ? (
-            <path d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <>
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </>
-          )}
-        </svg>
-      </button>
-
       {/* Overlay for mobile */}
       {isMobileMenuOpen && (
         <div
@@ -77,9 +46,11 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
           position: 'sticky',
           top: 0,
           overflowY: 'auto',
+          overflowX: 'hidden',
           borderRight: '1px solid rgba(102, 126, 234, 0.2)',
           padding: '2rem 1.5rem',
           background: 'rgba(5, 5, 5, 0.95)',
+          flexShrink: 0,
         }}
         className={`docs-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}
       >
@@ -126,7 +97,8 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
                       href={`/docs/${item.slug.join('/')}`}
                       style={{
                         display: 'block',
-                        padding: '0.5rem 0.75rem',
+                        padding: '0.75rem 1rem',
+                        minHeight: '44px',
                         borderRadius: '6px',
                         fontSize: '0.9rem',
                         color: active ? '#667eea' : 'rgba(255, 255, 255, 0.8)',
@@ -179,7 +151,8 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
               href="/demo"
               style={{
                 display: 'block',
-                padding: '0.5rem 0.75rem',
+                padding: '0.75rem 1rem',
+                minHeight: '44px',
                 fontSize: '0.9rem',
                 color: 'rgba(255, 255, 255, 0.8)',
                 textDecoration: 'none',
@@ -202,7 +175,8 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
               rel="noopener noreferrer"
               style={{
                 display: 'block',
-                padding: '0.5rem 0.75rem',
+                padding: '0.75rem 1rem',
+                minHeight: '44px',
                 fontSize: '0.9rem',
                 color: 'rgba(255, 255, 255, 0.8)',
                 textDecoration: 'none',
@@ -225,10 +199,6 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
     {/* Mobile Styles */}
     <style jsx global>{`
       @media (max-width: 768px) {
-        .mobile-menu-button {
-          display: block !important;
-        }
-
         .mobile-overlay {
           display: block !important;
         }
@@ -237,10 +207,12 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
           position: fixed !important;
           left: -100%;
           top: 0;
-          z-index: 1000;
+          z-index: 100000;
           transition: left 0.3s ease;
           height: 100vh;
+          width: min(85vw, 320px) !important;
           box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+          padding: 1.5rem 1rem !important;
         }
 
         .docs-sidebar.mobile-open {

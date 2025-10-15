@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import EmotiveHeader from '@/components/EmotiveHeader'
-import SystemControlsBar from '@/components/SystemControlsBar'
 import GameSidebar from '@/components/GameSidebar'
 import GameMain from '@/components/GameMain'
 import GameControls from '@/components/GameControls'
@@ -210,11 +209,10 @@ export default function Home() {
   return (
     <div className="emotive-container">
       <MessageHUD messages={messages} onMessageDismiss={removeMessage} />
-      <EmotiveHeader />
-      <SystemControlsBar
+      <EmotiveHeader
+        showMusicControls={true}
         mascot={mascot}
         onMessage={addMessage}
-        flashMusicButton={flashMusicButton}
       />
       <div className="emotive-main">
         <div className="gesture-menus-wrapper">

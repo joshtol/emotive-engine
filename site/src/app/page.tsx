@@ -75,6 +75,18 @@ export default function HomePage() {
         // Initialize the engine with canvas element
         await mascotInstance.init(canvas)
 
+        // Enable backdrop for better particle visibility
+        mascotInstance.setBackdrop({
+          enabled: true,
+          radius: 3.5,             // Smaller radius - stays near mascot, won't reach text
+          intensity: 0.85,         // Slightly darker since it's smaller
+          blendMode: 'normal',     // Normal mode for clean fadeout (no halo)
+          falloff: 'smooth',
+          edgeSoftness: 0.95,      // Very gradual falloff
+          coreTransparency: 0.3,   // Transparent in center 30%
+          responsive: true
+        })
+
         // Set mascot scale - smaller for subtle presence
         mascotInstance.setScale({
           core: 0.4,       // Core at 40% of default size
@@ -119,15 +131,19 @@ export default function HomePage() {
       const viewportWidth = window.innerWidth
       const isMobile = viewportWidth < 768
 
+      // Desktop: Position mascot far left in empty space
+      // Mobile: Keep centered
+      const baseXOffset = isMobile ? 0 : -viewportWidth * 0.38 // Far left on desktop
+
       // Vertical offset from center: follows scroll with dampening
       const yOffset = (scrollY - viewportHeight * 0.1) * 0.5
 
-      // Sinusoidal horizontal motion (reduced on mobile)
+      // Sinusoidal horizontal motion
       const wavelength = 600 // Pixels per wave
       const amplitude = isMobile
         ? Math.min(80, viewportWidth * 0.15)
-        : Math.min(250, viewportWidth * 0.2)
-      const xOffset = amplitude * Math.sin(scrollY / wavelength)
+        : Math.min(100, viewportWidth * 0.08) // Minimal amplitude on desktop
+      const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength))
 
       // Update mascot position
       if (typeof mascot.setPosition === 'function') {

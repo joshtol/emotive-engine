@@ -11,11 +11,62 @@ interface DocsContentProps {
 
 export default function DocsContent({ title, content }: DocsContentProps) {
   const pathname = usePathname()
+
   useEffect(() => {
     // Add syntax highlighting to code blocks
     const codeBlocks = document.querySelectorAll('pre code')
     codeBlocks.forEach((block) => {
       block.classList.add('hljs')
+    })
+
+    // Add copy buttons to code blocks
+    const preBlocks = document.querySelectorAll('pre')
+    preBlocks.forEach((pre) => {
+      // Skip if button already exists
+      if (pre.querySelector('.copy-button')) return
+
+      const button = document.createElement('button')
+      button.className = 'copy-button'
+      button.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span>Copy</span>
+      `
+      button.setAttribute('aria-label', 'Copy code to clipboard')
+
+      button.onclick = async () => {
+        const code = pre.querySelector('code')
+        if (!code) return
+
+        try {
+          await navigator.clipboard.writeText(code.textContent || '')
+          button.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Copied!</span>
+          `
+          button.classList.add('copied')
+
+          setTimeout(() => {
+            button.innerHTML = `
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy</span>
+            `
+            button.classList.remove('copied')
+          }, 2000)
+        } catch (err) {
+          console.error('Failed to copy:', err)
+        }
+      }
+
+      pre.style.position = 'relative'
+      pre.appendChild(button)
     })
   }, [content])
 
@@ -174,6 +225,45 @@ export default function DocsContent({ title, content }: DocsContentProps) {
           padding: 1.5rem;
           overflow-x: auto;
           margin-bottom: 1.5rem;
+          position: relative;
+        }
+
+        .copy-button {
+          position: absolute;
+          top: 0.75rem;
+          right: 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.5rem 0.75rem;
+          background: rgba(102, 126, 234, 0.15);
+          border: 1px solid rgba(102, 126, 234, 0.3);
+          border-radius: 6px;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 0.75rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          z-index: 10;
+        }
+
+        .copy-button:hover {
+          background: rgba(102, 126, 234, 0.25);
+          border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .copy-button.copied {
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.3);
+          color: #10b981;
+        }
+
+        .copy-button svg {
+          flex-shrink: 0;
+        }
+
+        .copy-button span {
+          white-space: nowrap;
         }
 
         .docs-content pre code {
@@ -201,6 +291,15 @@ export default function DocsContent({ title, content }: DocsContentProps) {
           background: rgba(0, 0, 0, 0.3);
           border-radius: 8px;
           overflow: hidden;
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+
+        .docs-content table tbody,
+        .docs-content table thead {
+          display: table;
+          width: 100%;
         }
 
         .docs-content th,
@@ -276,58 +375,119 @@ export default function DocsContent({ title, content }: DocsContentProps) {
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
           .docs-article {
-            padding: 2rem 1.5rem !important;
+            padding: 1.5rem 1rem !important;
+            max-width: 100% !important;
+            width: 100% !important;
           }
 
           .docs-article h1 {
             font-size: 2rem !important;
+            word-wrap: break-word;
+          }
+
+          .docs-content {
+            overflow-x: hidden !important;
+            width: 100% !important;
           }
 
           .docs-content h2 {
             font-size: 1.5rem !important;
+            word-wrap: break-word;
           }
 
           .docs-content h3 {
             font-size: 1.25rem !important;
+            word-wrap: break-word;
           }
 
           .docs-content h4 {
             font-size: 1.1rem !important;
+            word-wrap: break-word;
+          }
+
+          .docs-content p {
+            font-size: 0.95rem;
+            line-height: 1.7;
           }
 
           .docs-content table {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            display: block !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100% !important;
+            margin: 1.5rem -1rem !important;
+            padding: 0 1rem;
           }
 
           .docs-content th,
           .docs-content td {
-            padding: 0.75rem 1rem !important;
+            padding: 0.75rem 0.5rem !important;
+            white-space: normal !important;
+            min-width: 80px;
           }
 
           .docs-content pre {
             padding: 1rem !important;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            margin-left: -1rem;
+            margin-right: -1rem;
+            border-radius: 0;
+          }
+
+          .docs-content code {
+            font-size: 0.85em;
+            word-break: break-word;
+          }
+
+          .copy-button {
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.375rem 0.5rem;
+            font-size: 0.7rem;
           }
         }
 
         @media (max-width: 480px) {
           .docs-article {
-            padding: 1.5rem 1rem !important;
+            padding: 1rem 0.75rem !important;
           }
 
           .docs-article h1 {
             font-size: 1.75rem !important;
+            line-height: 1.2;
+          }
+
+          .docs-content h2 {
+            font-size: 1.35rem !important;
+            line-height: 1.3;
+          }
+
+          .docs-content p {
+            font-size: 0.9rem;
           }
 
           .docs-content table {
-            font-size: 0.8rem;
-            display: block;
-            overflow-x: auto;
+            font-size: 0.75rem;
+            margin: 1rem -0.75rem !important;
+            padding: 0 0.75rem;
           }
 
           .docs-content th,
           .docs-content td {
-            padding: 0.5rem 0.75rem !important;
+            padding: 0.5rem 0.375rem !important;
+            font-size: 0.75rem;
+          }
+
+          .docs-content pre {
+            margin-left: -0.75rem;
+            margin-right: -0.75rem;
+            padding: 0.75rem !important;
+            font-size: 0.75rem;
+          }
+
+          .copy-button span {
+            display: none;
           }
         }
       `}</style>

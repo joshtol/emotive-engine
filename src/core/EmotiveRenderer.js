@@ -102,6 +102,7 @@ import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
 import { RotationBrake } from './animation/RotationBrake.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
+import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 import { gradientCache } from './renderer/GradientCache.js';
 
@@ -130,6 +131,7 @@ class EmotiveRenderer {
         this.coreRenderer = new CoreRenderer(this);
         this.rotationBrake = new RotationBrake(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
+        this.backdropRenderer = new BackdropRenderer(this);
 
         // Configuration - matching original Emotive proportions
         this.config = {
@@ -701,6 +703,24 @@ class EmotiveRenderer {
         const originalCtx = this.ctx;
         this.ctx = this.offscreenCtx;
 
+        // RENDER BACKDROP TO MAIN CANVAS FIRST (persists, not subject to decay/clear)
+        // Calculate backdrop position early - needs centerX, centerY, coreRadius
+        // We'll calculate these now for backdrop, then again later for full render
+        const backdropCanvasSize = Math.min(logicalWidth, logicalHeight);
+        const backdropEffectiveCenter = this.getEffectiveCenter();
+        const backdropCenterX = backdropEffectiveCenter.x;
+        const backdropCenterY = backdropEffectiveCenter.y - this.config.topOffset;
+        const backdropScaleFactor = (backdropCanvasSize / this.config.referenceSize) * this.config.baseScale * (backdropEffectiveCenter.coreScale || backdropEffectiveCenter.scale);
+        const backdropBaseRadius = (this.config.referenceSize / this.config.coreSizeDivisor) * backdropScaleFactor;
+        const backdropCoreRadius = backdropBaseRadius; // Simple estimate, will be refined later
+
+        // Update and render backdrop to MAIN canvas (not offscreen)
+        this.backdropRenderer.update(deltaTime);
+        if (this.audioAnalyzer && this.audioAnalyzer.currentAmplitude) {
+            this.backdropRenderer.setAudioIntensity(this.audioAnalyzer.currentAmplitude);
+        }
+        this.backdropRenderer.render(backdropCenterX, backdropCenterY, backdropCoreRadius, originalCtx);
+
         // Apply decay to main canvas to prevent glow accumulation
         // Scale decay with particle count to handle high-particle emotions like euphoria
         const particleCount = this.particleSystem ? this.particleSystem.particles.length : 0;
@@ -1015,7 +1035,7 @@ class EmotiveRenderer {
             this.ctx.rotate(totalRotation);
             this.ctx.translate(-coreX, -coreY);
         }
-        
+
         // Render glow with visual effects
         if (isEffectActive('recording-glow', this.state)) {
             // Recording takes precedence over normal glow

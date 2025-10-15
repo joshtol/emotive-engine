@@ -7,7 +7,6 @@ import { visualizer } from 'rollup-plugin-visualizer';
 
 // Environment detection
 const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = process.env.NODE_ENV === 'development';
 const shouldAnalyze = process.env.ANALYZE === 'true';
 
 // Bundle size limits (in bytes)
@@ -31,9 +30,8 @@ const productionPlugins = [
     ...basePlugins,
     terser({
         compress: {
-            drop_console: true,
+            drop_console: false,
             drop_debugger: true,
-            pure_funcs: ['console.log', 'console.warn'],
             passes: 2,
             unsafe_arrows: true,
             unsafe_methods: true,
@@ -41,9 +39,7 @@ const productionPlugins = [
             unsafe_regexp: true
         },
         mangle: {
-            properties: {
-                regex: /^_/
-            }
+            properties: false
         },
         format: {
             comments: false
@@ -83,6 +79,7 @@ builds.push({
             file: 'dist/emotive-mascot.umd.js',
             format: 'umd',
             name: 'EmotiveMascot',
+            exports: 'named',
             sourcemap: false, // Disable source maps for production
             banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
         },
@@ -91,6 +88,7 @@ builds.push({
             file: 'dist/emotive-mascot.umd.dev.js',
             format: 'umd',
             name: 'EmotiveMascot',
+            exports: 'named',
             sourcemap: false
         },
         {
@@ -112,10 +110,7 @@ builds.push({
         ...analysisPlugins
     ],
     treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
-        tryCatchDeoptimization: false,
-        unknownGlobalSideEffects: false
+        moduleSideEffects: true
     }
 });
 
@@ -144,10 +139,7 @@ builds.push({
         })
     ],
     treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
-        tryCatchDeoptimization: false,
-        unknownGlobalSideEffects: false
+        moduleSideEffects: true
     }
 });
 
@@ -166,10 +158,7 @@ builds.push({
         ...(isProduction ? productionPlugins : developmentPlugins)
     ],
     treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
-        tryCatchDeoptimization: false,
-        unknownGlobalSideEffects: false
+        moduleSideEffects: true
     }
 });
 

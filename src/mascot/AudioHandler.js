@@ -60,7 +60,7 @@ export class AudioHandler {
         if (!this.mascot.audioAnalyzer) {
             return this.mascot;
         }
-        
+
         // Initialize audio context if needed - this will only happen after user interaction
         if (!this.mascot.audioAnalyzer.audioContext) {
             try {
@@ -70,7 +70,7 @@ export class AudioHandler {
                 return this.mascot;
             }
         }
-        
+
         // Resume AudioContext if it's suspended (common after user interaction)
         if (this.mascot.audioAnalyzer.audioContext && this.mascot.audioAnalyzer.audioContext.state === 'suspended') {
             try {
@@ -79,14 +79,14 @@ export class AudioHandler {
                 console.warn('Failed to resume AudioContext:', error);
             }
         }
-        
+
         // Connect the audio element
         this.mascot.audioAnalyzer.connectAudioElement(audioElement);
-        
+
         // Pass analyzer reference to shape morpher for frequency data
         if (this.mascot.shapeMorpher) {
             this.mascot.shapeMorpher.audioAnalyzer = this.mascot.audioAnalyzer;
-            
+
             // Set up beat detection callback for glitches and rhythm detection
             this.mascot.audioAnalyzer.onBeat(amplitude => {
                 if (this.mascot.shapeMorpher) {
@@ -103,12 +103,12 @@ export class AudioHandler {
                 }
             });
         }
-        
+
         // Start updating shape morpher with vocal data
         if (this.vocalUpdateInterval) {
             clearInterval(this.vocalUpdateInterval);
         }
-        
+
         // Start ambient groove animation when audio starts
         // This provides the continuous background movement
         if (this.mascot.renderer) {
@@ -128,12 +128,12 @@ export class AudioHandler {
                 this.mascot.shapeMorpher.setAudioDeformation(amplitude * 2); // Keep positive for expansion only
             }
         }, 50); // Update at 20 FPS
-        
+
         // Pass audio analyzer to renderer
         if (this.mascot.renderer) {
             this.mascot.renderer.audioAnalyzer = this.mascot.audioAnalyzer;
         }
-        
+
         return this.mascot;
     }
 

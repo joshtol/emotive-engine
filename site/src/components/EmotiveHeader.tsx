@@ -104,17 +104,43 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
 
       const audio = new Audio()
       audio.preload = 'auto'
+
+      // Add event listeners BEFORE setting src and playing
+      const handlePlay = async () => {
+        setIsPlaying(true)
+        if (mascot) {
+          await connectAudioToMascot(audio)
+        }
+      }
+
+      const handlePause = () => {
+        setIsPlaying(false)
+        if (mascot) {
+          disconnectAudioFromMascot()
+        }
+      }
+
+      const handleEnded = () => {
+        setIsPlaying(false)
+        if (mascot) disconnectAudioFromMascot()
+      }
+
+      audio.addEventListener('play', handlePlay)
+      audio.addEventListener('pause', handlePause)
+      audio.addEventListener('ended', handleEnded)
+
+      // Now set the src and play
       audioRef.current = audio
       audio.src = trackPath
       setCurrentAudio(trackPath)
 
       await audio.play()
-      setIsPlaying(true)
       onMessage?.('success', 'Track loaded', 2000)
     } catch (error) {
+      console.error('Failed to load track:', error);
       onMessage?.('error', 'Failed to load track', 3000)
     }
-  }, [disconnectAudioFromMascot, onMessage])
+  }, [disconnectAudioFromMascot, onMessage, mascot, connectAudioToMascot])
 
   const handlePlayPause = useCallback(async () => {
     if (!audioRef.current) return
@@ -133,37 +159,14 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
     }
   }, [onMessage])
 
-  // Audio event listeners
+  // Audio event listeners - kept for cleanup but actual listeners are added in handleTrackSelect
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    const handlePlay = async () => {
-      setIsPlaying(true)
-      if (mascot) {
-        await connectAudioToMascot(audio)
-        console.log('Audio connected to mascot, starting analysis...')
-      }
-    }
-
-    const handlePause = () => {
-      setIsPlaying(false)
-      if (mascot) disconnectAudioFromMascot()
-    }
-
-    const handleEnded = () => {
-      setIsPlaying(false)
-      if (mascot) disconnectAudioFromMascot()
-    }
-
-    audio.addEventListener('play', handlePlay)
-    audio.addEventListener('pause', handlePause)
-    audio.addEventListener('ended', handleEnded)
-
+    // Cleanup function - listeners are now added in handleTrackSelect
     return () => {
-      audio.removeEventListener('play', handlePlay)
-      audio.removeEventListener('pause', handlePause)
-      audio.removeEventListener('ended', handleEnded)
+      // Audio element will be cleaned up when new track is selected
     }
   }, [mascot, connectAudioToMascot, disconnectAudioFromMascot])
 

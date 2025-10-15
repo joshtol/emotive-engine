@@ -2797,7 +2797,48 @@ class EmotiveMascot {
             return this.positionController.getOffset();
         }, 'offset-getting', this)();
     }
-    
+
+    /**
+     * Configure backdrop rendering
+     * @param {Object} options - Backdrop configuration
+     * @param {boolean} [options.enabled] - Enable/disable backdrop
+     * @param {string} [options.type='radial-gradient'] - Type: 'radial-gradient', 'vignette', 'glow'
+     * @param {number} [options.intensity=0.7] - Darkness/opacity (0-1)
+     * @param {number} [options.radius=1.5] - Radius multiplier of mascot size
+     * @param {string} [options.color='rgba(0, 0, 0, 0.6)'] - Base color
+     * @param {boolean} [options.responsive=true] - React to audio/emotion
+     * @returns {EmotiveMascot} This instance for chaining
+     * @example
+     * mascot.setBackdrop({ enabled: true, intensity: 0.8, radius: 2 });
+     */
+    setBackdrop(options = {}) {
+        console.log('[EmotiveMascot] 🎨 setBackdrop called with:', options);
+        console.log('[EmotiveMascot] renderer exists?', !!this.renderer);
+        console.log('[EmotiveMascot] backdropRenderer exists?', !!this.renderer?.backdropRenderer);
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer && this.renderer.backdropRenderer) {
+                console.log('[EmotiveMascot] ✅ Calling backdropRenderer.setConfig');
+                this.renderer.backdropRenderer.setConfig(options);
+            } else {
+                console.error('[EmotiveMascot] ❌ No renderer or backdropRenderer available');
+            }
+            return this;
+        }, 'setBackdrop', this)();
+    }
+
+    /**
+     * Get current backdrop configuration
+     * @returns {Object} Current backdrop config
+     */
+    getBackdrop() {
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer && this.renderer.backdropRenderer) {
+                return this.renderer.backdropRenderer.getConfig();
+            }
+            return null;
+        }, 'getBackdrop', this)();
+    }
+
     /**
      * Animate to new offset values
      * @param {number} x - Target X offset

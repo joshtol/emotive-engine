@@ -108,9 +108,9 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           ;(canvasRef.current as any).renderSize = { width: renderWidth, height: renderHeight }
         }
         
-        // Load the engine script dynamically
+        // Load the engine script dynamically with cache busting
         const script = document.createElement('script')
-        script.src = '/emotive-engine.js'
+        script.src = `/emotive-engine.js?v=${Date.now()}`
         script.async = true
         
         await new Promise((resolve, reject) => {

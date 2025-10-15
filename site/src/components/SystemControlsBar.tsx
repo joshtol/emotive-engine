@@ -58,16 +58,25 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
       onMessage?.('warning', 'Mascot not ready', 3000)
       return
     }
-    
+
     const newGazeState = !isGazeTrackingEnabled
     setIsGazeTrackingEnabled(newGazeState)
-    
+
     try {
-      if (mascot.setGazeTracking) {
-        mascot.setGazeTracking(newGazeState)
-        onMessage?.('info', `Gaze tracking ${newGazeState ? 'enabled' : 'disabled'}`, 2000)
+      if (newGazeState) {
+        if (mascot.enableGazeTracking) {
+          mascot.enableGazeTracking()
+          onMessage?.('info', 'Gaze tracking enabled', 2000)
+        } else {
+          onMessage?.('warning', 'Gaze tracking not available', 3000)
+        }
       } else {
-        onMessage?.('warning', 'Gaze tracking not available', 3000)
+        if (mascot.disableGazeTracking) {
+          mascot.disableGazeTracking()
+          onMessage?.('info', 'Gaze tracking disabled', 2000)
+        } else {
+          onMessage?.('warning', 'Gaze tracking not available', 3000)
+        }
       }
     } catch (error) {
       onMessage?.('error', 'Failed to toggle gaze tracking', 4000)
