@@ -4,11 +4,14 @@ import Link from 'next/link'
 
 export default function DocsHomePage() {
   return (
-    <div style={{
-      padding: '4rem',
-      maxWidth: '1000px',
-      margin: '0 auto',
-    }}>
+    <div
+      className="docs-home"
+      style={{
+        padding: '4rem',
+        maxWidth: '1000px',
+        margin: '0 auto',
+      }}
+    >
       <h1 style={{
         fontSize: '4rem',
         fontWeight: '900',
@@ -174,6 +177,37 @@ export default function DocsHomePage() {
           ))}
         </div>
       </div>
+
+      {/* Mobile Styles */}
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .docs-home {
+            padding: 2rem 1.5rem !important;
+          }
+
+          .docs-home h1 {
+            font-size: 2.5rem !important;
+          }
+
+          .docs-home > p {
+            font-size: 1.1rem !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .docs-home {
+            padding: 1.5rem 1rem !important;
+          }
+
+          .docs-home h1 {
+            font-size: 2rem !important;
+          }
+
+          .docs-home > p {
+            font-size: 1rem !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { NavSection } from '@/lib/markdown'
@@ -11,6 +12,7 @@ interface DocsSidebarProps {
 
 export default function DocsSidebar({ navigation }: DocsSidebarProps) {
   const pathname = usePathname()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const isActive = (slug: string[]) => {
     const path = `/docs/${slug.join('/')}`
@@ -18,16 +20,69 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
   }
 
   return (
-    <aside style={{
-      width: '280px',
-      height: '100vh',
-      position: 'sticky',
-      top: 0,
-      overflowY: 'auto',
-      borderRight: '1px solid rgba(102, 126, 234, 0.2)',
-      padding: '2rem 1.5rem',
-      background: 'rgba(5, 5, 5, 0.95)',
-    }}>
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        style={{
+          display: 'none',
+          position: 'fixed',
+          top: '80px',
+          left: '1rem',
+          zIndex: 1001,
+          background: 'rgba(102, 126, 234, 0.2)',
+          border: '1px solid rgba(102, 126, 234, 0.4)',
+          borderRadius: '8px',
+          padding: '0.75rem',
+          cursor: 'pointer',
+          color: 'white',
+        }}
+        className="mobile-menu-button"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          {isMobileMenuOpen ? (
+            <path d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <>
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </>
+          )}
+        </svg>
+      </button>
+
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && (
+        <div
+          onClick={() => setIsMobileMenuOpen(false)}
+          style={{
+            display: 'none',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999,
+          }}
+          className="mobile-overlay"
+        />
+      )}
+
+      <aside
+        style={{
+          width: '280px',
+          height: '100vh',
+          position: 'sticky',
+          top: 0,
+          overflowY: 'auto',
+          borderRight: '1px solid rgba(102, 126, 234, 0.2)',
+          padding: '2rem 1.5rem',
+          background: 'rgba(5, 5, 5, 0.95)',
+        }}
+        className={`docs-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}
+      >
       <Link
         href="/docs"
         style={{
@@ -166,5 +221,33 @@ export default function DocsSidebar({ navigation }: DocsSidebarProps) {
         </ul>
       </div>
     </aside>
+
+    {/* Mobile Styles */}
+    <style jsx global>{`
+      @media (max-width: 768px) {
+        .mobile-menu-button {
+          display: block !important;
+        }
+
+        .mobile-overlay {
+          display: block !important;
+        }
+
+        .docs-sidebar {
+          position: fixed !important;
+          left: -100%;
+          top: 0;
+          z-index: 1000;
+          transition: left 0.3s ease;
+          height: 100vh;
+          box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .docs-sidebar.mobile-open {
+          left: 0 !important;
+        }
+      }
+    `}</style>
+    </>
   )
 }

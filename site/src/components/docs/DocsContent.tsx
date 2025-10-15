@@ -20,13 +20,16 @@ export default function DocsContent({ title, content }: DocsContentProps) {
   }, [content])
 
   return (
-    <article style={{
-      flex: 1,
-      padding: '3rem 4rem',
-      maxWidth: '900px',
-      margin: '0 auto',
-      width: '100%',
-    }}>
+    <article
+      className="docs-article"
+      style={{
+        flex: 1,
+        padding: '3rem 4rem',
+        maxWidth: '900px',
+        margin: '0 auto',
+        width: '100%',
+      }}
+    >
       {/* Title */}
       <h1 style={{
         fontSize: '3rem',
@@ -268,6 +271,64 @@ export default function DocsContent({ title, content }: DocsContentProps) {
           padding: 1rem 1.5rem;
           border-radius: 4px;
           margin: 1.5rem 0;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+          .docs-article {
+            padding: 2rem 1.5rem !important;
+          }
+
+          .docs-article h1 {
+            font-size: 2rem !important;
+          }
+
+          .docs-content h2 {
+            font-size: 1.5rem !important;
+          }
+
+          .docs-content h3 {
+            font-size: 1.25rem !important;
+          }
+
+          .docs-content h4 {
+            font-size: 1.1rem !important;
+          }
+
+          .docs-content table {
+            font-size: 0.85rem;
+          }
+
+          .docs-content th,
+          .docs-content td {
+            padding: 0.75rem 1rem !important;
+          }
+
+          .docs-content pre {
+            padding: 1rem !important;
+            font-size: 0.85rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .docs-article {
+            padding: 1.5rem 1rem !important;
+          }
+
+          .docs-article h1 {
+            font-size: 1.75rem !important;
+          }
+
+          .docs-content table {
+            font-size: 0.8rem;
+            display: block;
+            overflow-x: auto;
+          }
+
+          .docs-content th,
+          .docs-content td {
+            padding: 0.5rem 0.75rem !important;
+          }
         }
       `}</style>
     </article>
