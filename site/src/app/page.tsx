@@ -75,12 +75,10 @@ export default function HomePage() {
         // Initialize the engine with canvas element
         await mascotInstance.init(canvas)
 
-        // Set mascot scale with independent particle control
-        // The issue was particles appearing too small relative to core
-        // Now we can scale them independently to maintain the right ratio
+        // Set mascot scale - smaller for subtle presence
         mascotInstance.setScale({
-          core: 0.6,      // Core at 60% of default size
-          particles: 1.0   // Particles at 100% to maintain visibility
+          core: 0.4,       // Core at 40% of default size
+          particles: 0.7   // Particles at 70% for balanced appearance
         })
 
         // Start the engine
@@ -268,7 +266,7 @@ export default function HomePage() {
                 backgroundClip: 'text',
                 textShadow: '0 0 80px rgba(102, 126, 234, 0.3)',
               }}>
-                Emotional AI That Feels Human
+                Emotional AI That Feels
               </h1>
 
               <p style={{
@@ -283,6 +281,98 @@ export default function HomePage() {
                 Real-time emotion engine that creates genuine human connection.
                 No uncanny valley—just authentic, responsive experiences.
               </p>
+
+              {/* Interactive Emotion Selector */}
+              <div className="emotion-selector" style={{
+                maxWidth: '800px',
+                margin: '0 auto 3rem auto',
+                padding: '2rem',
+                background: 'rgba(255, 255, 255, 0.03)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                borderRadius: '20px',
+                border: '1px solid rgba(102, 126, 234, 0.2)',
+              }}>
+                <div style={{
+                  fontSize: '0.9rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '2px',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  marginBottom: '1.5rem',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                }}>
+                  ✨ Feel the Emotions
+                </div>
+
+                <div className="emotion-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                  gap: '1rem',
+                }}>
+                  {[
+                    { name: 'joy', svg: 'joy.svg', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)' },
+                    { name: 'sadness', svg: 'sadness.svg', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.15)' },
+                    { name: 'anger', svg: 'anger.svg', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' },
+                    { name: 'fear', svg: 'fear.svg', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)' },
+                    { name: 'excited', svg: 'excited.svg', color: '#EC4899', bg: 'rgba(236, 72, 153, 0.15)' },
+                    { name: 'love', svg: 'love.svg', color: '#F472B6', bg: 'rgba(244, 114, 182, 0.15)' },
+                    { name: 'calm', svg: 'calm.svg', color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.15)' },
+                    { name: 'surprise', svg: 'surprise.svg', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' },
+                  ].map((emotion) => (
+                    <button
+                      key={emotion.name}
+                      onClick={() => {
+                        if (mascot && typeof mascot.setEmotion === 'function') {
+                          mascot.setEmotion(emotion.name, 0) // Instant transition
+                        }
+                      }}
+                      style={{
+                        padding: '1rem',
+                        background: emotion.bg,
+                        border: `1px solid ${emotion.color}40`,
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = `${emotion.bg.replace('0.15', '0.25')}`
+                        e.currentTarget.style.borderColor = `${emotion.color}80`
+                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'
+                        e.currentTarget.style.boxShadow = `0 8px 20px ${emotion.color}40`
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = emotion.bg
+                        e.currentTarget.style.borderColor = `${emotion.color}40`
+                        e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <img
+                        src={`/assets/states/${emotion.svg}`}
+                        alt={emotion.name}
+                        style={{
+                          width: '56px',
+                          height: '56px',
+                          filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))',
+                        }}
+                      />
+                      <span style={{
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        color: emotion.color,
+                        textTransform: 'capitalize',
+                      }}>
+                        {emotion.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div style={{
                 display: 'flex',
@@ -421,32 +511,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Scroll Indicator */}
-          <div className="scroll-indicator" style={{
-            position: 'absolute',
-            bottom: '3rem',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '0.5rem',
-            opacity: 0.6,
-            animation: 'bounce 2s infinite',
-            zIndex: 10,
-          }}>
-            <span style={{
-              fontSize: '0.85rem',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-              color: 'rgba(255, 255, 255, 0.6)',
-            }}>
-              Scroll to explore
-            </span>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 5v14M19 12l-7 7-7-7"/>
-            </svg>
-          </div>
         </section>
 
         {/* Use Cases - Bento Grid */}
@@ -878,28 +942,23 @@ export default function HomePage() {
 
       {/* Styles */}
       <style jsx>{`
-        @keyframes bounce {
-          0%, 100% {
-            transform: translateX(-50%) translateY(0);
-          }
-          50% {
-            transform: translateX(-50%) translateY(-10px);
-          }
-        }
-
         /* Mobile Optimizations */
         @media (max-width: 768px) {
+          /* Emotion selector - stack in columns */
+          .emotion-selector {
+            padding: 1.5rem 1rem !important;
+          }
+
+          .emotion-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.8rem !important;
+          }
+
           /* Stats grid - reduce gap */
           .stats-grid {
             gap: 1.5rem !important;
             flex-wrap: wrap;
             padding-top: 2rem !important;
-          }
-
-          /* Scroll indicator - improve visibility */
-          .scroll-indicator {
-            bottom: 2rem !important;
-            opacity: 0.8 !important;
           }
 
           /* Use cases grid - single column */
@@ -932,16 +991,17 @@ export default function HomePage() {
 
         /* Very small screens */
         @media (max-width: 480px) {
+          .emotion-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.6rem !important;
+          }
+
           .stats-grid {
             gap: 1rem !important;
           }
 
           .stats-grid > div {
             min-width: 80px;
-          }
-
-          .scroll-indicator span {
-            font-size: 0.7rem !important;
           }
         }
       `}</style>

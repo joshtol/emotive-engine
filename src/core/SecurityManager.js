@@ -359,9 +359,10 @@ export class SecurityManager {
     }
 }
 
-// Create singleton instance
+// Create singleton instance (disabled by default to avoid console warnings)
+// Users can enable via: securityManager.enabled = true; securityManager.initialize();
 export const securityManager = new SecurityManager({
-    enabled: true,
+    enabled: false,
     strict: false,
     cspDirectives: {
         'connect-src': ["'self'", 'https://api.anthropic.com', 'https://*.firebaseio.com']

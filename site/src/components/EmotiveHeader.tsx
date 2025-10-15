@@ -2,18 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import SystemControlsBar from './SystemControlsBar'
 
-interface EmotiveHeaderProps {
-  mascot?: any
-  currentShape?: string
-  onAudioLoad?: (audioElement: HTMLAudioElement) => void
-  onPlayStateChange?: (isPlaying: boolean) => void
-  onMessage?: (type: string, content: string, duration?: number) => void
-  flashMusicButton?: boolean
-}
-
-export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPlayStateChange, onMessage, flashMusicButton }: EmotiveHeaderProps) {
+export default function EmotiveHeader() {
   const pathname = usePathname()
 
   return (
@@ -23,33 +13,56 @@ export default function EmotiveHeader({ mascot, currentShape, onAudioLoad, onPla
           <img src="/assets/emotive-engine-full-BW.svg" alt="Emotive Engine" className="emotive-logo-svg" />
         </Link>
       </div>
-      
-      {/* Navigation Links */}
+
       <div className="header-navigation">
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className={`nav-link ${pathname === '/' ? 'active' : ''}`}
         >
           Home
         </Link>
-        <Link 
-          href="/demo" 
+        <Link
+          href="/demo"
           className={`nav-link ${pathname === '/demo' ? 'active' : ''}`}
         >
           Demo
         </Link>
-      </div>
-      
-      {/* System Controls Bar in Header */}
-      <div className="header-system-controls">
-        <SystemControlsBar 
-          mascot={mascot}
-          currentShape={currentShape}
-          onAudioLoad={onAudioLoad}
-          onPlayStateChange={onPlayStateChange}
-          onMessage={onMessage}
-          flashMusicButton={flashMusicButton}
-        />
+        <Link
+          href="/use-cases/cherokee"
+          className={`nav-link ${pathname.startsWith('/use-cases/cherokee') ? 'active' : ''}`}
+        >
+          Cherokee
+        </Link>
+        <Link
+          href="/use-cases/retail"
+          className={`nav-link ${pathname.startsWith('/use-cases/retail') ? 'active' : ''}`}
+        >
+          Retail
+        </Link>
+        <Link
+          href="/use-cases/smart-home"
+          className={`nav-link ${pathname.startsWith('/use-cases/smart-home') ? 'active' : ''}`}
+        >
+          Smart Home
+        </Link>
+        <Link
+          href="/use-cases/healthcare"
+          className={`nav-link ${pathname.startsWith('/use-cases/healthcare') ? 'active' : ''}`}
+        >
+          Health
+        </Link>
+        <Link
+          href="/use-cases/education"
+          className={`nav-link ${pathname.startsWith('/use-cases/education') ? 'active' : ''}`}
+        >
+          Tutor
+        </Link>
+        <Link
+          href="/docs"
+          className={`nav-link ${pathname.startsWith('/docs') ? 'active' : ''}`}
+        >
+          Docs
+        </Link>
       </div>
     </div>
   )

@@ -377,7 +377,7 @@ class EmotiveMascotPublic {
     triggerGesture(gestureName, timestamp) {
         const engine = this._getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
+
         // Record if in recording mode
         if (this._isRecording) {
             const time = timestamp || (Date.now() - this._recordingStartTime);
@@ -387,9 +387,96 @@ class EmotiveMascotPublic {
                 time
             });
         }
-        
+
         // Trigger in engine
         engine.express(gestureName);
+    }
+
+    /**
+     * Express a gesture (alias for triggerGesture for compatibility)
+     * @param {string} gestureName - Name of gesture to express
+     * @param {number} [timestamp] - Optional timestamp for recording
+     */
+    express(gestureName, timestamp) {
+        return this.triggerGesture(gestureName, timestamp);
+    }
+
+    /**
+     * Execute a gesture chain combo
+     * @param {string} chainName - Name of the chain combo to execute
+     */
+    chain(chainName) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+
+        // Chain combo definitions
+        const chainDefinitions = {
+            'rise': 'breathe > sway+lean+tilt',
+            'flow': 'sway > lean+tilt > spin > bounce',
+            'burst': 'jump > nod > shake > flash',
+            'drift': 'sway+breathe+float+drift',
+            'chaos': 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
+            'morph': 'expand > contract > morph+glow > expand+flash',
+            'rhythm': 'pulse > pulse+sparkle > pulse+flicker',
+            'spiral': 'spin > orbital > twist > orbital+sparkle',
+            'routine': 'nod > bounce > spin+sparkle > sway+pulse > nod+flash',
+            'radiance': 'sparkle > pulse+flicker > shimmer',
+            'twinkle': 'sparkle > flash > pulse+sparkle > shimmer+flicker',
+            'stream': 'wave > nod+pulse > sparkle > flash'
+        };
+
+        const chainDefinition = chainDefinitions[chainName.toLowerCase()];
+        if (!chainDefinition) {
+            console.warn(`Chain combo '${chainName}' not found`);
+            return;
+        }
+
+        // Parse and execute chain
+        if (!chainDefinition.includes('>')) {
+            // Simultaneous gestures (e.g., 'sway+breathe+float+drift')
+            const gestures = chainDefinition.split('+').map(g => g.trim()).filter(g => g.length > 0);
+            gestures.forEach(gesture => {
+                engine.express(gesture);
+            });
+        } else {
+            // Sequential groups (e.g., 'jump > nod > shake > flash')
+            const gestureGroups = chainDefinition.split('>').map(g => g.trim()).filter(g => g.length > 0);
+
+            gestureGroups.forEach((group, groupIndex) => {
+                setTimeout(() => {
+                    // Each group can have simultaneous gestures (e.g., 'sway+pulse')
+                    const simultaneousGestures = group.split('+').map(g => g.trim()).filter(g => g.length > 0);
+                    simultaneousGestures.forEach(gesture => {
+                        engine.express(gesture);
+                    });
+                }, groupIndex * 500); // 500ms delay between groups
+            });
+        }
+    }
+
+    /**
+     * Morph to a shape (alias for setShape for compatibility)
+     * @param {string} shape - Shape name to morph to
+     * @param {Object} [config] - Optional shape configuration
+     */
+    morphTo(shape, config) {
+        return this.setShape(shape, config);
+    }
+
+    /**
+     * Update undertone
+     * @param {string|null} undertone - Undertone name or null to clear
+     */
+    updateUndertone(undertone) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+
+        // Apply undertone to current emotion
+        if (engine.updateUndertone && typeof engine.updateUndertone === 'function') {
+            engine.updateUndertone(undertone);
+        } else if (engine.addUndertone && typeof engine.addUndertone === 'function') {
+            engine.addUndertone(undertone);
+        }
     }
 
     /**

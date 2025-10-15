@@ -140,7 +140,12 @@
       "Bash(npm run lint:*)",
       "Bash(npm run start:*)",
       "Bash(start http://localhost:3003)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npx vercel inspect:*)",
+      "Bash(npx vercel deploy:*)",
+      "WebFetch(domain:www.smashingmagazine.com)",
+      "Bash(npm run build:dev:*)",
+      "Bash(start http://localhost:3001/demo)"
     ],
     "deny": [],
     "ask": []

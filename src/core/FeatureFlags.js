@@ -475,10 +475,12 @@ export class FeatureFlags {
     }
 }
 
-// Create singleton instance
+// Create singleton instance (no endpoint configured to avoid 404 errors)
+// Users can configure endpoint via: featureFlags.config.endpoint = '/api/feature-flags'; featureFlags.fetchFlags();
 export const featureFlags = new FeatureFlags({
+    endpoint: null, // Disable auto-fetch to prevent 404 errors
     enableCache: true,
-    enableAnalytics: true
+    enableAnalytics: false // Disable analytics since we're not fetching
 });
 
 // Helper functions

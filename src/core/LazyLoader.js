@@ -15,20 +15,11 @@ export class LazyLoader {
             ['plugins', () => import('../plugins-exports.js')],
 
             // Individual features
-            ['particles', () => import('../core/ParticleSystem.js')],
-            ['audio', () => import('../core/AudioAnalyzer.js')],
-            ['emotions', () => import('../emotions/EmotionModel.js')],
+            ['particles', () => import('./ParticleSystem.js')],
+            ['audio', () => import('./AudioAnalyzer.js')],
 
             // Behaviors
-            ['idle-behavior', () => import('../behaviors/IdleBehavior.js')],
-            ['listening-behavior', () => import('../behaviors/ListeningBehavior.js')],
-            ['speaking-behavior', () => import('../behaviors/SpeakingBehavior.js')],
-            ['thinking-behavior', () => import('../behaviors/ThinkingBehavior.js')],
-
-            // Plugins
-            ['sparkle-plugin', () => import('../plugins/SparklePlugin.js')],
-            ['confetti-plugin', () => import('../plugins/ConfettiEffectPlugin.js')],
-            ['dialogue-plugin', () => import('../plugins/DialoguePlugin.js')]
+            ['idle-behavior', () => import('./IdleBehavior.js')]
         ]);
 
         this.preloadQueue = [];
@@ -192,8 +183,7 @@ export class LazyLoader {
         const featureMap = {
             particles: ['particles'],
             audio: ['audio'],
-            emotions: ['emotions'],
-            behaviors: ['idle-behavior', 'listening-behavior', 'speaking-behavior', 'thinking-behavior'],
+            behaviors: ['idle-behavior'],
             plugins: ['plugins']
         };
 

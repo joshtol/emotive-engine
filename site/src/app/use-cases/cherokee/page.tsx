@@ -16,7 +16,10 @@ export default function CherokeePage() {
   const [isMobile, setIsMobile] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
+  const [viewedPhrases, setViewedPhrases] = useState<Set<string>>(new Set())
   const guideRef = useRef<HTMLDivElement>(null)
+  const guideMascotRef = useRef<any>(null)
+  const guideMascotCanvasRef = useRef<HTMLCanvasElement>(null)
   const cardMascotRef = useRef<any>(null)
   const cardCanvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -28,159 +31,383 @@ export default function CherokeePage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Initialize card mascot when a phrase is selected
+  // Initialize guide mascot with enhanced interactivity
   useEffect(() => {
-    if (typeof window === 'undefined' || !selectedPhrase || !cardCanvasRef.current) return
+    if (typeof window === 'undefined' || !guideMascotCanvasRef.current || !guideRef.current) return
 
-    const initCardMascot = async () => {
-      // Wait for EmotiveMascot to be available
-      while (!window.EmotiveMascot) {
+    const initGuideMascot = async () => {
+      // Wait for EmotiveMascot to load
+      let attempts = 0
+      while (!(window as any).EmotiveMascot && attempts < 50) {
         await new Promise(resolve => setTimeout(resolve, 100))
+        attempts++
       }
 
-      const canvas = cardCanvasRef.current
+      const canvas = guideMascotCanvasRef.current
       if (!canvas) return
 
-      // Clean up existing mascot if any
-      if (cardMascotRef.current) {
-        cardMascotRef.current.stop?.()
-        cardMascotRef.current.destroy?.()
-      }
-
-      // CRITICAL: Set DPR-scaled canvas dimensions for crisp rendering
-      // Get canvas dimensions and apply DPR scaling via attributes
+      // Set canvas dimensions with DPR scaling
       const rect = canvas.getBoundingClientRect()
       const dpr = window.devicePixelRatio || 1
-
-      // Set buffer dimensions with DPR scaling via attributes
-      // CanvasManager will detect these DPR-scaled attributes and use them correctly
       canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
       canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
-      // Clear the canvas to remove any artifacts
       const ctx = canvas.getContext('2d')
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
       }
 
       try {
-        const cardMascot = new window.EmotiveMascot({
-          canvasId: 'card-mascot',
+        // Fixed UMD access pattern - same as GameMain.tsx
+        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+
+        if (!EmotiveMascot) {
+          console.error('[Cherokee] EmotiveMascot not found on window object')
+          return
+        }
+
+        const guideMascot = new EmotiveMascot({
+          canvasId: 'guide-mascot',
           enableAudio: false,
           soundEnabled: false,
           defaultEmotion: 'joy',
           enableGazeTracking: false,
           enableIdleBehaviors: true,
+          transitionDuration: 600,
+          emotionTransitionSpeed: 400,
+        })
+
+        guideMascotRef.current = guideMascot
+
+        // Initialize and start
+        await guideMascot.init(canvas)
+        guideMascot.start()
+
+        // Set initial state - friendly, attentive teacher (neutral circle)
+        if (guideMascot.setEmotion) {
+          guideMascot.setEmotion('calm', 0.7)
+        }
+
+        // Position mascot higher up
+        if (guideMascot.setPosition) {
+          guideMascot.setPosition(0, -140, 0)
+        }
+
+        // Welcome gesture - gentle pulse showing readiness to teach
+        setTimeout(() => {
+          if (guideMascot.express) {
+            guideMascot.express('pulse')
+          }
+        }, 500)
+
+        // Scroll-driven progressive interactions
+        let scrollState = 'greeting' // greeting, teaching, encouraging, farewell
+        let lastGestureTime = 0
+        const GESTURE_COOLDOWN = 4000 // 4 seconds between gestures
+
+        const handleScroll = () => {
+          if (!canvas || !guideRef.current) return
+
+          const guideRect = guideRef.current.getBoundingClientRect()
+          const scrollProgress = Math.max(0, Math.min(1, -guideRect.top / (guideRect.height / 2)))
+          const now = Date.now()
+
+          // Visual scroll animation
+          const translateY = scrollProgress * 200
+          const opacity = 1 - scrollProgress
+
+          canvas.style.transform = `translateY(${translateY}px) translateZ(0)`
+          canvas.style.opacity = opacity.toString()
+
+          // Progressive emotional states reflecting teaching journey
+          if (scrollProgress < 0.15 && scrollState !== 'greeting') {
+            // Initial greeting - calm, welcoming
+            scrollState = 'greeting'
+            if (guideMascot.setEmotion) {
+              guideMascot.setEmotion('calm', 0.7)
+            }
+            if (guideMascot.updateUndertone) {
+              guideMascot.updateUndertone(null)
+            }
+          } else if (scrollProgress >= 0.15 && scrollProgress < 0.35 && scrollState !== 'teaching') {
+            // Starting to teach - attentive, focused
+            scrollState = 'teaching'
+            if (guideMascot.setEmotion) {
+              guideMascot.setEmotion('neutral', 0.8)
+            }
+            if (guideMascot.updateUndertone) {
+              guideMascot.updateUndertone('confident')
+            }
+
+            // Gentle nod - "yes, explore the phrases"
+            if (now - lastGestureTime > GESTURE_COOLDOWN && guideMascot.express) {
+              guideMascot.express('nod')
+              lastGestureTime = now
+            }
+          } else if (scrollProgress >= 0.35 && scrollProgress < 0.65 && scrollState !== 'encouraging') {
+            // Student engaging - encouraging, supportive
+            scrollState = 'encouraging'
+            if (guideMascot.setEmotion) {
+              guideMascot.setEmotion('joy', 0.6)
+            }
+            if (guideMascot.updateUndertone) {
+              guideMascot.updateUndertone('confident')
+            }
+
+            // Encouraging gesture - "you're doing great"
+            if (now - lastGestureTime > GESTURE_COOLDOWN && guideMascot.express) {
+              guideMascot.express('bounce')
+              lastGestureTime = now
+            }
+          } else if (scrollProgress >= 0.65 && scrollState !== 'farewell') {
+            // Student moving on - warm farewell
+            scrollState = 'farewell'
+            if (guideMascot.setEmotion) {
+              guideMascot.setEmotion('love', 0.5)
+            }
+            if (guideMascot.updateUndertone) {
+              guideMascot.updateUndertone(null)
+            }
+
+            // Farewell gesture - gentle wave
+            if (now - lastGestureTime > GESTURE_COOLDOWN && guideMascot.express) {
+              guideMascot.express('sway')
+              lastGestureTime = now
+            }
+          }
+        }
+
+        window.addEventListener('scroll', handleScroll)
+        handleScroll() // Initial call
+
+        return () => {
+          window.removeEventListener('scroll', handleScroll)
+        }
+      } catch (err) {
+        console.error('[Cherokee] Failed to initialize guide mascot:', err)
+      }
+    }
+
+    const cleanup = initGuideMascot()
+
+    return () => {
+      if (guideMascotRef.current) {
+        guideMascotRef.current.stop?.()
+        guideMascotRef.current.destroy?.()
+        guideMascotRef.current = null
+      }
+      if (cleanup) {
+        cleanup.then(fn => fn?.())
+      }
+    }
+  }, [])
+
+  // Track viewed phrases
+  useEffect(() => {
+    if (selectedPhrase && !viewedPhrases.has(selectedPhrase)) {
+      setViewedPhrases(prev => new Set([...prev, selectedPhrase]))
+    }
+  }, [selectedPhrase, viewedPhrases])
+
+  // Initialize card mascot with enhanced interactivity using public API
+  useEffect(() => {
+    if (typeof window === 'undefined' || !selectedPhrase || !cardCanvasRef.current) return
+
+    const initCardMascot = async () => {
+      // Wait for EmotiveMascot to load
+      let attempts = 0
+      while (!(window as any).EmotiveMascot && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        attempts++
+      }
+
+      const canvas = cardCanvasRef.current
+      if (!canvas) return
+
+      // Clean up existing mascot
+      if (cardMascotRef.current) {
+        cardMascotRef.current.stop?.()
+        cardMascotRef.current.destroy?.()
+      }
+
+      // Set canvas dimensions with DPR scaling
+      const rect = canvas.getBoundingClientRect()
+      const dpr = window.devicePixelRatio || 1
+      canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
+      canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
+
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+      }
+
+      // Phrase configurations - using original gesture sequences
+      const phraseConfigs: Record<string, {
+        emotion: string
+        intensity: number
+        shape?: string
+        gestures: Array<{name: string, delay: number}>
+      }> = {
+        'Hello': {
+          emotion: 'surprise',
+          intensity: 0.9,
+          gestures: [
+            {name: 'hula', delay: 300},
+            {name: 'nod', delay: 800}
+          ]
+        },
+        'Hello (informal)': {
+          emotion: 'surprise',
+          intensity: 0.8,
+          gestures: [
+            {name: 'wiggle', delay: 300}
+          ]
+        },
+        'Thank you': {
+          emotion: 'love',
+          intensity: 1.0,
+          gestures: [
+            {name: 'glow', delay: 300},
+            {name: 'pulse', delay: 500}
+          ]
+        },
+        'How are you?': {
+          emotion: 'neutral',
+          intensity: 0.6,
+          gestures: [
+            {name: 'point', delay: 300},
+            {name: 'bounce', delay: 600}
+          ]
+        },
+        'Good': {
+          emotion: 'calm',
+          intensity: 0.7,
+          gestures: [
+            {name: 'drift', delay: 300} // Using chain combo
+          ]
+        },
+        'Good morning': {
+          emotion: 'euphoria',
+          intensity: 1.0,
+          shape: 'sun',
+          gestures: [
+            {name: 'breathe', delay: 300}
+          ]
+        },
+        '\'Til we meet again': {
+          emotion: 'neutral',
+          intensity: 0.6,
+          shape: 'solar',
+          gestures: [
+            {name: 'groove', delay: 300},
+            {name: 'float', delay: 400}
+          ]
+        },
+        'Good night': {
+          emotion: 'resting',
+          intensity: 0.5,
+          shape: 'moon',
+          gestures: [
+            {name: 'wiggle', delay: 300},
+            {name: 'shimmer', delay: 600}
+          ]
+        }
+      }
+
+      const config = phraseConfigs[selectedPhrase] || {
+        emotion: 'neutral',
+        intensity: 0.5,
+        chain: 'drift'
+      }
+
+      try {
+        // Fixed UMD access pattern
+        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+
+        if (!EmotiveMascot) {
+          console.error('[Cherokee] EmotiveMascot not found on window object')
+          return
+        }
+
+        const cardMascot = new EmotiveMascot({
+          canvasId: 'card-mascot',
+          enableAudio: false,
+          soundEnabled: false,
+          defaultEmotion: config.emotion,
+          enableGazeTracking: false,
+          enableIdleBehaviors: true,
+          transitionDuration: 400,
+          emotionTransitionSpeed: 300,
         })
 
         cardMascotRef.current = cardMascot
 
-        // Set emotion and gesture chain based on card
-        const selected = greetings.find(g => g.english === selectedPhrase)
-
-        // Start the mascot
+        // Initialize and start
+        await cardMascot.init(canvas)
         cardMascot.start()
 
         // Position mascot to the left of English content
-        // Canvas fills full modal, mascot offset to left
         if (cardMascot.setPosition) {
-          // Different positions for mobile vs desktop
-          const offsetX = isMobile ? -50 : -150  // Less left offset on mobile
-          const offsetY = isMobile ? -160 : -120  // Higher on mobile to align between Hello and pronunciation
+          const offsetX = isMobile ? -50 : -150
+          const offsetY = isMobile ? 40 : 80  // Moved down significantly
           cardMascot.setPosition(offsetX, offsetY, 0)
         }
 
-        // Wait for mascot to initialize, then trigger gestures
-        setTimeout(() => {
-          // Define unique gesture chains for each card
-          const gestureChains: Record<string, () => void> = {
-            'Hello': () => {
-              // State: surprise, Chain: hula+reach > nod
-              if (cardMascot.setEmotion) cardMascot.setEmotion('surprise', 0)
-              setTimeout(() => {
-                if (cardMascot.express) cardMascot.express('hula')
-                setTimeout(() => {
-                  if (cardMascot.express) cardMascot.express('nod')
-                }, 800)
-              }, 300)
-            },
-            'Hello (informal)': () => {
-              // State: surprise, Chain: wiggle
-              if (cardMascot.setEmotion) cardMascot.setEmotion('surprise', 0)
-              setTimeout(() => {
-                if (cardMascot.express) cardMascot.express('wiggle')
-              }, 300)
-            },
-            'Thank you': () => {
-              // State: love, Chain: glow+pulse
-              if (cardMascot.setEmotion) cardMascot.setEmotion('love', 0)
-              setTimeout(() => {
-                if (cardMascot.express) cardMascot.express('glow')
-                setTimeout(() => {
-                  if (cardMascot.express) cardMascot.express('pulse')
-                }, 500)
-              }, 300)
-            },
-            'How are you?': () => {
-              // State: neutral, Chain: point+bounce
-              if (cardMascot.setEmotion) cardMascot.setEmotion('neutral', 0)
-              setTimeout(() => {
-                if (cardMascot.express) cardMascot.express('point')
-                setTimeout(() => {
-                  if (cardMascot.express) cardMascot.express('bounce')
-                }, 600)
-              }, 300)
-            },
-            'Good': () => {
-              // State: calm, Chain: pulse+flash
-              if (cardMascot.setEmotion) cardMascot.setEmotion('calm', 0)
-              setTimeout(() => {
-                if (cardMascot.express) cardMascot.express('pulse')
-                setTimeout(() => {
-                  if (cardMascot.express) cardMascot.express('flash')
-                }, 500)
-              }, 300)
-            },
-            'Good morning': () => {
-              // State: euphoria, Core: sun, Chain: breathe
-              if (cardMascot.setEmotion) cardMascot.setEmotion('euphoria', 0)
-              if (cardMascot.morphTo) cardMascot.morphTo('sun')
-              setTimeout(() => {
-                if (cardMascot.express) cardMascot.express('breathe')
-              }, 300)
-            },
-            '\'Til we meet again': () => {
-              // State: neutral, Core: solar, Chain: groove+float
-              if (cardMascot.setEmotion) cardMascot.setEmotion('neutral', 0)
-              if (cardMascot.morphTo) cardMascot.morphTo('solar')
-              setTimeout(() => {
-                if (cardMascot.express) cardMascot.express('groove')
-                setTimeout(() => {
-                  if (cardMascot.express) cardMascot.express('float')
-                }, 400)
-              }, 300)
-            },
-            'Good night': () => {
-              // State: resting, Core: moon, Chain: wiggle+shimmer
-              if (cardMascot.setEmotion) cardMascot.setEmotion('resting', 0)
-              if (cardMascot.morphTo) cardMascot.morphTo('moon')
-              setTimeout(() => {
-                if (cardMascot.express) cardMascot.express('wiggle')
-                setTimeout(() => {
-                  if (cardMascot.express) cardMascot.express('shimmer')
-                }, 600)
-              }, 300)
-            }
+        // Apply full configuration using public API
+        setTimeout(async () => {
+          // Set emotion with intensity
+          if (cardMascot.setEmotion) {
+            cardMascot.setEmotion(config.emotion, config.intensity)
           }
 
-          // Trigger the appropriate gesture chain
-          const gestureChain = gestureChains[selectedPhrase]
-          if (gestureChain) {
-            gestureChain()
+          // Morph to shape if specified
+          if (config.shape && cardMascot.morphTo) {
+            cardMascot.morphTo(config.shape)
           }
-        }, 100) // Wait 100ms for mascot to initialize
+
+          // Trigger gesture sequence
+          const triggerGestures = () => {
+            config.gestures.forEach((gesture, index) => {
+              setTimeout(() => {
+                // Check if it's a chain combo (for "Good" which uses "drift")
+                if (gesture.name === 'drift' && cardMascot.chain) {
+                  cardMascot.chain('drift')
+                } else if (cardMascot.express) {
+                  cardMascot.express(gesture.name)
+                }
+              }, gesture.delay)
+            })
+          }
+
+          // Trigger initial gesture sequence
+          triggerGestures()
+
+          // Repeat gesture sequence every 8 seconds for continuous feedback
+          const gestureInterval = setInterval(() => {
+            if (cardMascotRef.current) {
+              triggerGestures()
+            }
+          }, 8000)
+
+          // Store interval for cleanup
+          ;(cardMascot as any)._gestureInterval = gestureInterval
+
+          // Special completion animation for last card when all phrases viewed
+          const isLastCard = selectedPhrase === '\'Til we meet again'
+          const allPhrasesViewed = viewedPhrases.size === greetings.length
+
+          if (isLastCard && allPhrasesViewed) {
+            setTimeout(() => {
+              if (cardMascot.chain) {
+                cardMascot.chain('radiance') // Celebratory sparkle effect
+              }
+            }, 2000)
+          }
+
+        }, 200)
+
       } catch (err) {
-        console.error('Failed to initialize card mascot:', err)
+        console.error('[Cherokee] Failed to initialize card mascot:', err)
       }
     }
 
@@ -189,12 +416,16 @@ export default function CherokeePage() {
     // Cleanup when phrase changes or modal closes
     return () => {
       if (cardMascotRef.current) {
+        // Clear gesture interval if it exists
+        if ((cardMascotRef.current as any)._gestureInterval) {
+          clearInterval((cardMascotRef.current as any)._gestureInterval)
+        }
         cardMascotRef.current.stop?.()
         cardMascotRef.current.destroy?.()
         cardMascotRef.current = null
       }
     }
-  }, [selectedPhrase])
+  }, [selectedPhrase, isMobile])
 
   // Handle swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -346,10 +577,10 @@ export default function CherokeePage() {
       `}</style>
 
       <div style={{
-      minHeight: '100vh',
       background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
       color: 'white',
-      padding: 'var(--container-padding)'
+      padding: 'var(--container-padding)',
+      paddingBottom: '2rem'
     }}>
       <div style={{
         maxWidth: '1200px',
@@ -439,21 +670,44 @@ export default function CherokeePage() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'flex-end',
             textAlign: 'center',
             marginBottom: '3rem',
             padding: '2rem',
             background: 'rgba(218,165,32,0.08)',
             borderRadius: '16px',
             border: '1px solid rgba(218,165,32,0.2)',
-            minHeight: '400px'
+            minHeight: '400px',
+            position: 'relative',
+            overflow: 'hidden'
           }}
         >
+          {/* Mascot canvas - Highest z-index for scroll animation, hidden when card is visible */}
+          <canvas
+            ref={guideMascotCanvasRef}
+            id="guide-mascot"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 9999,
+              filter: 'none',
+              transform: 'translateZ(0)',
+              willChange: 'transform, opacity',
+              display: selectedPhrase ? 'none' : 'block'
+            }}
+          />
+
           <h3 style={{
             fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)',
             marginBottom: '0.75rem',
             color: '#DAA520',
-            fontWeight: '600'
+            fontWeight: '600',
+            position: 'relative',
+            zIndex: 2
           }}>
             ᎣᏏᏲ! Let&apos;s Learn Together
           </h3>
@@ -461,21 +715,25 @@ export default function CherokeePage() {
             fontSize: 'clamp(1rem, 2vw, 1.2rem)',
             opacity: 0.85,
             lineHeight: 1.5,
-            maxWidth: '600px'
+            maxWidth: '600px',
+            position: 'relative',
+            zIndex: 2
           }}>
             Click any greeting card below to explore its meaning, pronunciation, and cultural significance. I&apos;ll guide you through each phrase!
           </p>
           <div style={{
             marginTop: '1rem',
             fontSize: '2rem',
-            animation: 'bounce 2s ease-in-out infinite'
+            animation: 'bounce 2s ease-in-out infinite',
+            position: 'relative',
+            zIndex: 2
           }}>
             👇
           </div>
         </div>
 
         {/* Cherokee Greetings Grid */}
-        <div style={{
+        <div className="cherokee-greetings-grid" style={{
           background: 'rgba(218,165,32,0.08)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
@@ -576,6 +834,8 @@ export default function CherokeePage() {
         {selectedPhrase && (() => {
           const selected = greetings.find(item => item.english === selectedPhrase)
           const currentIndex = greetings.findIndex(g => g.english === selectedPhrase)
+          const isLastCard = selectedPhrase === '\'Til we meet again'
+          const allPhrasesViewed = viewedPhrases.size === greetings.length
 
           return selected ? (
             <div
@@ -623,6 +883,7 @@ export default function CherokeePage() {
                 }}
               >
                 {/* Full-modal mascot canvas for free particle movement */}
+                {/* Use aspect-ratio to maintain 1:1 regardless of content height */}
                 <canvas
                   ref={cardCanvasRef}
                   id="card-mascot"
@@ -631,12 +892,13 @@ export default function CherokeePage() {
                     top: 0,
                     left: 0,
                     width: '100%',
-                    height: '100%',
+                    aspectRatio: '1 / 1',
+                    maxHeight: '100%',
                     pointerEvents: 'none',
                     zIndex: 1,
-                    filter: 'none', // Prevent CSS filters from washing out canvas shadows
-                    transform: 'translateZ(0)', // Force GPU acceleration
-                    willChange: 'transform' // Optimize for animations
+                    filter: 'none',
+                    transform: 'translateZ(0)',
+                    willChange: 'transform'
                   }}
                 />
 
@@ -792,6 +1054,105 @@ export default function CherokeePage() {
                 <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '1.5rem' }}>
                   👆 Swipe left/right or use arrows to navigate
                 </p>
+
+                {/* Completion CTA - only show on last card when all phrases viewed */}
+                {isLastCard && allPhrasesViewed && (
+                  <div style={{
+                    marginTop: '2rem',
+                    padding: '2rem',
+                    background: 'rgba(218,165,32,0.15)',
+                    borderRadius: '16px',
+                    border: '2px solid rgba(218,165,32,0.4)',
+                    position: 'relative',
+                    zIndex: 2
+                  }}>
+                    <div style={{
+                      fontSize: '1.5rem',
+                      fontWeight: '600',
+                      marginBottom: '1rem',
+                      color: '#DAA520'
+                    }}>
+                      🎉 You've learned your first Cherokee phrases!
+                    </div>
+                    <p style={{
+                      fontSize: '1.1rem',
+                      opacity: 0.9,
+                      lineHeight: 1.6,
+                      marginBottom: '1.5rem'
+                    }}>
+                      <strong style={{ color: '#DAA520', fontSize: '1.3rem' }}>ᏙᎾᏓᎪᎲᎢ</strong> — 'Til we meet again.
+                    </p>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: isMobile ? 'column' : 'row',
+                      gap: '1rem',
+                      marginTop: '1.5rem'
+                    }}>
+                      <a
+                        href="https://language.cherokee.org/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          flex: 1,
+                          padding: '1rem 1.5rem',
+                          background: 'rgba(218,165,32,0.3)',
+                          border: '2px solid rgba(218,165,32,0.6)',
+                          borderRadius: '8px',
+                          color: 'white',
+                          textDecoration: 'none',
+                          fontWeight: '600',
+                          fontSize: '1rem',
+                          textAlign: 'center',
+                          transition: 'all 0.3s',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(218,165,32,0.5)'
+                          e.currentTarget.style.transform = 'translateY(-2px)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(218,165,32,0.3)'
+                          e.currentTarget.style.transform = 'translateY(0)'
+                        }}
+                      >
+                        Continue Your Cherokee Journey →
+                      </a>
+                      <button
+                        onClick={() => {
+                          setSelectedPhrase(null)
+                          setTimeout(() => {
+                            const greetingsSection = document.querySelector('.cherokee-greetings-grid')
+                            if (greetingsSection) {
+                              greetingsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                            }
+                          }, 100)
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '1rem 1.5rem',
+                          background: 'rgba(255,255,255,0.1)',
+                          border: '2px solid rgba(255,255,255,0.3)',
+                          borderRadius: '8px',
+                          color: 'white',
+                          fontWeight: '600',
+                          fontSize: '1rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.2)'
+                          e.currentTarget.style.transform = 'translateY(-2px)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                          e.currentTarget.style.transform = 'translateY(0)'
+                        }}
+                      >
+                        Review These Phrases ↻
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : null
@@ -911,6 +1272,104 @@ export default function CherokeePage() {
                 preserving Cherokee language and cultural identity.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Sources & Attribution */}
+        <div style={{
+          background: 'rgba(218,165,32,0.08)',
+          borderRadius: '16px',
+          padding: 'var(--card-padding-lg) var(--card-padding)',
+          border: '1px solid rgba(218,165,32,0.2)',
+          marginBottom: '4rem'
+        }}>
+          <h3 style={{
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            marginBottom: '1.5rem',
+            textAlign: 'center',
+            color: '#DAA520'
+          }}>
+            Sources & Resources
+          </h3>
+          <p style={{
+            opacity: 0.85,
+            fontSize: '1rem',
+            lineHeight: 1.6,
+            marginBottom: '1.5rem',
+            textAlign: 'center',
+            maxWidth: '800px',
+            margin: '0 auto 2rem auto'
+          }}>
+            All Cherokee language content on this page has been verified using official Cherokee Nation resources.
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 'var(--grid-gap)',
+            marginTop: '2rem'
+          }}>
+            <a
+              href="https://visitcherokeenation.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: '1.5rem',
+                background: 'rgba(218,165,32,0.1)',
+                border: '1px solid rgba(218,165,32,0.3)',
+                borderRadius: '12px',
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'all 0.3s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(218,165,32,0.2)'
+                e.currentTarget.style.transform = 'translateY(-4px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(218,165,32,0.1)'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.75rem', textAlign: 'center' }}>🌐</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#DAA520', textAlign: 'center' }}>
+                Official Cherokee Nation Website
+              </div>
+              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5, textAlign: 'center' }}>
+                Language content and cultural information verified through visitcherokeenation.com
+              </div>
+            </a>
+            <a
+              href="https://www.youtube.com/@VisitCherokeeNation"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: '1.5rem',
+                background: 'rgba(218,165,32,0.1)',
+                border: '1px solid rgba(218,165,32,0.3)',
+                borderRadius: '12px',
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'all 0.3s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(218,165,32,0.2)'
+                e.currentTarget.style.transform = 'translateY(-4px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(218,165,32,0.1)'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.75rem', textAlign: 'center' }}>🎥</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#DAA520', textAlign: 'center' }}>
+                Cherokee Nation YouTube
+              </div>
+              <div style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5, textAlign: 'center' }}>
+                Pronunciations and proper usage examples from official Cherokee Nation videos
+              </div>
+            </a>
           </div>
         </div>
 

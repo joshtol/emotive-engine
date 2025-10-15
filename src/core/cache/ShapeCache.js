@@ -68,9 +68,9 @@ export class ShapeCache {
             this.isInitialized = true;
             this.stats.loadTime = performance.now() - this.loadStartTime;
             this.stats.cacheSize = this.shapeCache.size;
-            
-            console.warn(`[ShapeCache] Initialized with ${this.shapeCache.size} shapes in ${this.stats.loadTime.toFixed(2)}ms`);
-            
+
+            // Removed verbose initialization log
+
         } catch (error) {
             console.error('[ShapeCache] Initialization failed:', error);
             this.isInitialized = false;

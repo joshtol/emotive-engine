@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import EmotiveHeader from '@/components/EmotiveHeader'
+import SystemControlsBar from '@/components/SystemControlsBar'
 import GameSidebar from '@/components/GameSidebar'
 import GameMain from '@/components/GameMain'
 import GameControls from '@/components/GameControls'
@@ -209,15 +210,9 @@ export default function Home() {
   return (
     <div className="emotive-container">
       <MessageHUD messages={messages} onMessageDismiss={removeMessage} />
-      <EmotiveHeader 
+      <EmotiveHeader />
+      <SystemControlsBar
         mascot={mascot}
-        currentShape="circle"
-        onAudioLoad={(_audioElement) => {
-          // Audio loaded
-        }}
-        onPlayStateChange={(_isPlaying) => {
-          // Play state changed
-        }}
         onMessage={addMessage}
         flashMusicButton={flashMusicButton}
       />

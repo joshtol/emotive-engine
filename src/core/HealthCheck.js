@@ -667,9 +667,10 @@ export class HealthCheck {
     }
 }
 
-// Create singleton instance
+// Create singleton instance (disabled by default to avoid 404 errors)
+// Users can enable via: healthCheck.enabled = true; healthCheck.start();
 export const healthCheck = new HealthCheck({
-    enabled: true,
+    enabled: false,
     interval: 30000
 });
 

@@ -34,7 +34,7 @@ export { default as AnimationController } from './core/AnimationController.js';
 // Performance Optimization
 export { AnimationLoopManager, animationLoopManager, AnimationPriority } from './core/AnimationLoopManager.js';
 export { GradientCache, gradientCache } from './core/renderer/GradientCache.js';
-export { ContextStateManager } from './core/renderer/ContextStateManager.js';
+export { default as ContextStateManager } from './core/renderer/ContextStateManager.js';
 export { PerformanceMonitor, performanceMonitor } from './core/PerformanceMonitor.js';
 export { ErrorTracker, errorTracker } from './core/ErrorTracker.js';
 export { LazyLoader, lazyLoader, lazyLoad, preloadModules, prefetchModules } from './core/LazyLoader.js';
@@ -48,7 +48,7 @@ export { default as ParticleSystem } from './core/ParticleSystem.js';
 // Audio
 export { SoundSystem } from './core/SoundSystem.js';
 export { default as AudioLevelProcessor } from './core/AudioLevelProcessor.js';
-export { default as AudioAnalyzer } from './core/AudioAnalyzer.js';
+export { AudioAnalyzer } from './core/AudioAnalyzer.js';
 
 // ============================================================================
 // FEATURES
@@ -87,7 +87,7 @@ export { default as GazeTracker } from './core/GazeTracker.js';
 
 // Error Handling
 export { default as ErrorBoundary } from './core/ErrorBoundary.js';
-export { default as ErrorLogger } from './core/ErrorLogger.js';
+export { ErrorLogger, getErrorLogger, resetErrorLogger } from './core/ErrorLogger.js';
 
 // Performance (already exported above)
 export { default as DegradationManager } from './core/DegradationManager.js';
@@ -99,14 +99,20 @@ export { default as AccessibilityManager } from './core/AccessibilityManager.js'
 export { default as MobileOptimization } from './core/MobileOptimization.js';
 
 // Browser Support
-export { checkBrowserSupport } from './utils/browserCompatibility.js';
+export {
+    getBrowserCompatibility,
+    initializeBrowserCompatibility,
+    polyfillRequestAnimationFrame,
+    polyfillPerformanceNow,
+    polyfillWebAudio,
+    browserCompatibility
+} from './utils/browserCompatibility.js';
 
 // ============================================================================
 // CONSTANTS & CONFIGURATION
 // ============================================================================
 
-export { EMOTION_PARAMS } from './config/emotionParams.js';
-export { undertoneModifiers } from './config/undertoneModifiers.js';
+export { UNDERTONE_MODIFIERS } from './config/undertoneModifiers.js';
 
 // ============================================================================
 // VERSION INFO

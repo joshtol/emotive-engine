@@ -70,8 +70,9 @@ export class GestureCache {
             this.stats.loadTime = performance.now() - this.loadStartTime;
             this.stats.cacheSize = this.gestureCache.size + this.propertyCache.size + this.compositionCache.size;
             this.isInitialized = true;
-            
-            console.warn(`🎭 GestureCache initialized: ${this.stats.cacheSize} items in ${this.stats.loadTime.toFixed(2)}ms`);
+
+            // Removed verbose initialization log
+
         } catch (error) {
             console.error('GestureCache initialization failed:', error);
             this.isInitialized = false;

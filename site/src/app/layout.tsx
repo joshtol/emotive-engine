@@ -25,7 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script src="/emotive-engine.js" defer></script>
       </head>
       <body className={`${poppins.variable} ${montserrat.variable}`}>
-        <div className="emotive-container">{children}</div>
+        <div className="emotive-container" style={{
+          background: 'linear-gradient(180deg, #0a0a0a 0%, #050505 50%, #0a0a0a 100%)',
+          position: 'relative',
+          scrollBehavior: 'smooth'
+        }}>{children}</div>
       </body>
     </html>
   )

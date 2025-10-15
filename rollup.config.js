@@ -76,7 +76,7 @@ const builds = [];
 
 // Full-featured builds
 builds.push({
-    input: 'src/EmotiveMascot.js',
+    input: 'src/index.js',
     output: [
         {
             // UMD production bundle

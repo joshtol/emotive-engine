@@ -88,8 +88,8 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
       if (!canvasRef.current) return
 
       try {
-        // Debug: Starting engine initialization
-        
+        console.log('[GameMain] Starting engine initialization...')
+
         // Measure canvas area and calculate 2x supersampling
         const canvasArea = document.querySelector('.game-canvas-area')
         if (canvasArea && canvasRef.current) {
@@ -119,11 +119,11 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           document.head.appendChild(script)
         })
         
-        // Access the global EmotiveMascot
-        const {EmotiveMascot} = (window as any)
-        // Debug: EmotiveMascot loaded
-        
+        // Access the global EmotiveMascot (UMD export with mixed exports uses .default)
+        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+
         if (!EmotiveMascot) {
+          console.error('EmotiveMascot not found on window object')
           throw new Error('EmotiveMascot not found on window object')
         }
         
@@ -151,27 +151,25 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           }
         })
 
-        // Debug: Mascot instance created
+        console.log('[GameMain] Mascot instance created')
         mascotRef.current = mascot
         setMascot(mascot) // Set mascot state
-        
+
         // Pass mascot reference to parent component
         if (onMascotReady) {
           onMascotReady(mascot)
         }
-        
+
+        // Initialize the engine with canvas element
+        await mascot.init(canvasRef.current)
+        console.log('[GameMain] Mascot initialized with canvas')
+
         // Start the engine
         mascot.start()
-        // Debug: Engine started
-        
-        // Check if mascot is actually rendering
-        setTimeout(() => {
-          // Debug: Mascot state check
-        }, 1000)
-        
-        // Debug: Engine initialization complete
+        console.log('[GameMain] Engine started')
+
       } catch (error) {
-        // Engine initialization failed
+        console.error('[GameMain] Engine initialization failed:', error)
       }
     }
 
@@ -218,19 +216,10 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Handle gesture from parent
+  // Handle gesture from parent (not used - parent handles gestures directly)
   const handleGesture = (gesture: string) => {
-    if (mascotRef.current) {
-      // Use the correct method name from the available methods
-      if (typeof mascotRef.current.executeGestureDirectly === 'function') {
-        mascotRef.current.executeGestureDirectly(gesture)
-      } else if (typeof mascotRef.current.triggerGesture === 'function') {
-        mascotRef.current.triggerGesture(gesture)
-      } else {
-        // Debug: No gesture method found
-      }
-    }
-    // Also call parent's gesture handler
+    // Parent component handles gestures directly via mascot reference
+    // This is just a passthrough
     onGesture(gesture)
   }
 
