@@ -8,6 +8,7 @@ import matter from 'gray-matter'
 import { remark } from 'remark'
 import html from 'remark-html'
 
+// Path to docs directory (one level up from site folder)
 const docsDirectory = path.join(process.cwd(), '..', 'docs')
 
 export interface DocFrontmatter {
@@ -35,7 +36,7 @@ export async function getDocBySlug(slug: string[]): Promise<DocContent | null> {
     }
 
     const fileContents = fs.readFileSync(fullPath, 'utf8')
-    const { data, content } = matter(fileContents)
+    const { data, content} = matter(fileContents)
 
     // Process markdown to HTML
     const processedContent = await remark()
@@ -48,7 +49,6 @@ export async function getDocBySlug(slug: string[]): Promise<DocContent | null> {
       content: processedContent.toString()
     }
   } catch (error) {
-    console.error('Error loading doc:', error)
     return null
   }
 }

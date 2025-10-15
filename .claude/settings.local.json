@@ -145,7 +145,8 @@
       "Bash(npx vercel deploy:*)",
       "WebFetch(domain:www.smashingmagazine.com)",
       "Bash(npm run build:dev:*)",
-      "Bash(start http://localhost:3001/demo)"
+      "Bash(start http://localhost:3001/demo)",
+      "Bash(start http://localhost:3003/docs)"
     ],
     "deny": [],
     "ask": []
