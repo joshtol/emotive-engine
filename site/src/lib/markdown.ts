@@ -6,6 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
 import { remark } from 'remark'
+import remarkGfm from 'remark-gfm'
 import html from 'remark-html'
 
 // Path to docs directory (one level up from site folder)
@@ -38,8 +39,9 @@ export async function getDocBySlug(slug: string[]): Promise<DocContent | null> {
     const fileContents = fs.readFileSync(fullPath, 'utf8')
     const { data, content} = matter(fileContents)
 
-    // Process markdown to HTML
+    // Process markdown to HTML with GFM (GitHub Flavored Markdown) support
     const processedContent = await remark()
+      .use(remarkGfm)
       .use(html, { sanitize: false })
       .process(content)
 
