@@ -91,31 +91,38 @@ export default function DocsContent({ title, content }: DocsContentProps) {
         .docs-content h2 {
           font-size: 2rem;
           font-weight: 700;
-          margin-top: 3rem;
-          margin-bottom: 1rem;
+          margin-top: 4rem;
+          margin-bottom: 1.5rem;
+          padding-bottom: 0.5rem;
           color: #ffffff;
           letter-spacing: -0.01em;
+          border-bottom: 2px solid rgba(102, 126, 234, 0.2);
         }
 
         .docs-content h3 {
           font-size: 1.5rem;
           font-weight: 600;
-          margin-top: 2rem;
-          margin-bottom: 1rem;
+          margin-top: 3rem;
+          margin-bottom: 1.25rem;
           color: #ffffff;
         }
 
         .docs-content h4 {
-          font-size: 1.2rem;
+          font-size: 1.15rem;
           font-weight: 600;
-          margin-top: 1.5rem;
-          margin-bottom: 0.75rem;
-          color: rgba(255, 255, 255, 0.9);
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+          color: #a5b4fc;
         }
 
         .docs-content p {
           margin-bottom: 1.5rem;
           line-height: 1.8;
+        }
+
+        .docs-content strong {
+          font-weight: 700;
+          color: #ffffff;
         }
 
         .docs-content ul,
@@ -125,6 +132,13 @@ export default function DocsContent({ title, content }: DocsContentProps) {
         }
 
         .docs-content li {
+          margin-bottom: 0.75rem;
+          line-height: 1.7;
+        }
+
+        .docs-content ul ul,
+        .docs-content ol ol {
+          margin-top: 0.5rem;
           margin-bottom: 0.5rem;
         }
 
@@ -178,25 +192,53 @@ export default function DocsContent({ title, content }: DocsContentProps) {
 
         .docs-content table {
           width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 1.5rem;
+          border-collapse: separate;
+          border-spacing: 0;
+          margin: 2rem 0;
+          background: rgba(0, 0, 0, 0.3);
+          border-radius: 8px;
+          overflow: hidden;
         }
 
         .docs-content th,
         .docs-content td {
-          border: 1px solid rgba(102, 126, 234, 0.2);
-          padding: 0.75rem 1rem;
+          padding: 1rem 1.5rem;
           text-align: left;
+          border-bottom: 1px solid rgba(102, 126, 234, 0.15);
         }
 
-        .docs-content th {
-          background: rgba(102, 126, 234, 0.1);
+        .docs-content thead th {
+          background: rgba(102, 126, 234, 0.15);
+          font-weight: 600;
+          font-size: 0.85rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: #a5b4fc;
+          border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .docs-content tbody tr:last-child td {
+          border-bottom: none;
+        }
+
+        .docs-content tbody tr:hover {
+          background: rgba(102, 126, 234, 0.05);
+        }
+
+        .docs-content td {
+          color: rgba(255, 255, 255, 0.9);
+          vertical-align: top;
+        }
+
+        .docs-content td:first-child {
           font-weight: 600;
           color: #ffffff;
         }
 
-        .docs-content td {
-          color: rgba(255, 255, 255, 0.85);
+        .docs-content td code {
+          background: rgba(102, 126, 234, 0.2);
+          padding: 0.15rem 0.4rem;
+          font-size: 0.85em;
         }
 
         .docs-content hr {
