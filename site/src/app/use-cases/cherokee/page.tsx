@@ -349,7 +349,7 @@ export default function CherokeePage() {
         // Position mascot to the left of English content
         if (cardMascot.setPosition) {
           const offsetX = isMobile ? -50 : -150
-          const offsetY = isMobile ? 40 : 80  // Moved down significantly
+          const offsetY = isMobile ? 20 : -120  // Mobile: lower position, Desktop: upper position
           cardMascot.setPosition(offsetX, offsetY, 0)
         }
 

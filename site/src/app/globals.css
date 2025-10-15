@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Single Dark Theme - Brand Consistent */
 :root{
   /* Brand Color Palette - Primary */
@@ -306,20 +327,65 @@ body {
 /* Header System Controls */
 .header-system-controls {
   position: absolute;
-  right: 20%;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 1rem;
   z-index: 10001;
 }
 
+/* Header System Controls Buttons */
+.header-system-controls .sci-fi-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  max-width: 2.5rem;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--button-bg);
+  background-image: var(--gradient-primary);
+  border: 1px solid var(--border-muted);
+  box-shadow: inset 0 0 var(--vp-5px) rgba(255,255,255,0.06), 0 0 var(--vp-10px) rgba(0,0,0,0.35);
+  transition: all 0.18s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-system-controls .sci-fi-btn:hover {
+  background: var(--button-bg-hover);
+  background-image: var(--gradient-secondary);
+  box-shadow: inset 0 0 var(--vp-8px) rgba(255,255,255,0.08), 0 0 var(--vp-15px) var(--glow-subtle);
+  transform: translateY(1px);
+  border-color: var(--border-primary);
+}
+
+.header-system-controls .sci-fi-btn.active {
+  background: var(--button-bg-active);
+  background-image: var(--gradient-primary);
+  box-shadow: 0 0 var(--vp-25px) var(--glow-intense), inset 0 0 var(--vp-12px) var(--button-bg-active);
+  border-color: var(--button-primary);
+}
+
 /* Make SVG icons fill header buttons with minimal padding */
 .header-system-controls .sci-fi-btn img,
+.header-system-controls .system-control-icon,
 .user-status img {
-  height: 90%;
-  width: 90%;
+  height: 70%;
+  width: 70%;
   object-fit: contain;
+  filter: brightness(0) invert(1) opacity(0.7);
+  transition: opacity 0.18s ease;
+}
+
+.header-system-controls .sci-fi-btn:hover img,
+.header-system-controls .sci-fi-btn:hover .system-control-icon {
+  opacity: 1;
 }
 
 /* Header Navigation */
@@ -384,7 +450,8 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
+  z-index: auto;
 }
 
 
@@ -629,9 +696,27 @@ body {
 .emotive-logo-svg { height: clamp(28px, 4vh, 42px); width:auto; filter: none; }
 
 /* Global utilities (visuals only) */
-/* Focus visible */
-:focus-visible { outline: var(--vp-2px) solid var(--accent-primary); outline-offset: var(--vp-2px); }
+/* Focus visible - Enhanced for accessibility */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 :focus { outline: none; }
+
+/* Docs-specific focus styles */
+.docs-sidebar a:focus-visible,
+.docs-content a:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(221, 74, 154, 0.2);
+}
 
 /* Selection */
 ::selection, ::-moz-selection { background: var(--accent-primary); color: var(--bg-primary); }
@@ -864,23 +949,23 @@ input[type="number"] { -moz-appearance: textfield; }
 .shape-selector-button[aria-pressed="true"] .shape-selector-icon, .shape-selector-button.active .shape-selector-icon, .shape-selector-button:focus-visible .shape-selector-icon { opacity: 1; }
 
 /* System Controls Bar - Match Shape Bar Styling */
-.system-controls-bar { 
-  position: absolute; 
-  top: 2%; 
-  left: 50%; 
-  transform: translateX(-50%); 
-  display: flex; 
+.system-controls-bar {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
   flex-direction: row;
-  align-items: center; 
+  align-items: center;
   justify-content: center;
-  gap: 2vw; 
-  z-index: 20; 
-  padding: 0; 
-  background: transparent; 
-  border: none; 
+  gap: 2vw;
+  z-index: 100002;
+  padding: 0;
+  background: transparent;
+  border: none;
   border-radius: 0;
-  backdrop-filter: none; 
-  -webkit-backdrop-filter: none; 
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-shadow: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: auto;
@@ -1451,7 +1536,7 @@ h2.section-header {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  z-index: 10000;
+  z-index: 100002;
   display: flex;
   align-items: center;
   justify-content: center;
