@@ -670,6 +670,22 @@ class EmotiveMascotPublic {
     }
 
     /**
+     * Set canvas dimensions on particle system for accurate spawn calculations
+     * Call this after init() to ensure particles spawn correctly when mascot is offset
+     * @param {number} width - Canvas width in pixels
+     * @param {number} height - Canvas height in pixels
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setParticleSystemCanvasDimensions(width, height) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        if (engine.setParticleSystemCanvasDimensions) {
+            engine.setParticleSystemCanvasDimensions(width, height);
+        }
+        return this;
+    }
+
+    /**
      * Get gaze tracker state
      * @returns {Object} Gaze state
      */
