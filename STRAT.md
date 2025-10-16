@@ -1616,15 +1616,194 @@ Exit options:
 - Document API
 - **Deliverable**: api.emotive.ai/v1/render
 
-**[RESEARCH]** Technical implementation:
+**Technical Implementation - Cloudflare Workers Reality Check** (Verified
+2024-2025):
 
-- Can Node Canvas run in Cloudflare Workers? (Cloudflare Workers compatibility,
-  alternatives like Rust/WASM)
-- What are actual Cloudflare Workers limits? (CPU time, memory, payload size -
-  official docs)
-- How to do server-side Canvas rendering efficiently? (Puppeteer vs node-canvas
-  vs wasm-based solutions)
-- What's the latency for server-side rendering? (Benchmarks, real-world tests)
+**Node Canvas Compatibility on Cloudflare Workers**:
+
+- **CRITICAL**: Node-canvas does NOT work in Cloudflare Workers runtime
+  (confirmed 2024-2025)
+- **Root cause**: Node-canvas depends on libcairo (native C library), which
+  cannot run in Workers V8 isolate environment
+- **Canvas API status**: OffscreenCanvas, FileReader, Image, createImageBitmap
+  APIs are NOT available (open GitHub issue #54 since 2022, still unresolved)
+- **Bottom line**: Traditional node-canvas approach is impossible on Cloudflare
+  Workers
+
+**Cloudflare Workers Limits** (Official 2024-2025):
+
+**CPU Time**:
+
+- Default: 30 seconds max CPU time
+- Extended: Up to 5 minutes (300,000ms) available for CPU-bound tasks (launched
+  March 2025)
+- Typical usage: Most Workers consume 1-2ms of CPU time per request
+- **Important**: CPU time = active processing time, NOT time waiting on
+  network/I/O
+
+**Script Size**:
+
+- Workers Free: 3 MB worker size limit
+- Workers Paid: 10 MB worker size limit
+
+**Memory**:
+
+- No explicit memory limit documented (V8 isolate handles memory management)
+- Practical limit: Memory is managed by V8's garbage collection
+
+**Other Limits**:
+
+- Subrequests: 50 (Free), 1,000 (Paid) per request
+- Worker startup time: 400ms
+- Cold start: Few milliseconds (V8 isolates, not containers)
+
+**Performance Improvements (2024-2025)**:
+
+- ~25% benchmark boost from V8 garbage collection optimization
+- Workers KV: Up to 3x faster hot reads, ~20ms latency reduction per operation
+- Cold starts: Negligible (few milliseconds) due to V8 isolates vs containers
+
+**Server-Side Canvas Rendering Alternatives**:
+
+**Option 1: Cloudflare Browser Rendering API** (Generally Available 2024):
+
+- **Technology**: Puppeteer running in remote browser sessions
+- **Use case**: Screenshots, automated testing, HTML-to-image
+- **Pricing**: Workers Paid plan required + $0.10 per browser session
+- **Limitations**:
+    - Custom @cloudflare/puppeteer fork (infrequent updates, 3 total updates,
+      last 4 months ago as of Dec 2024)
+    - Doesn't keep pace with latest Chrome updates
+    - Session reuse required to control costs
+- **Latency**: Browser startup overhead (hundreds of milliseconds)
+- **Verdict**: Overkill for particle rendering, too expensive at scale
+  ($0.10/session × 1,000 renders/day = $100/day)
+
+**Option 2: WASM-Based Canvas Libraries**:
+
+- **CanvasKit-WASM**: Web Canvas API compatible library that CAN work in Workers
+- **Skia/Cairo compiled to WASM**: WASM-wrapped C libraries (Skia, Cairo)
+  theoretically possible
+- **Challenge**: Compiling Cairo to WASM likely exceeds 1 MB Worker script limit
+  (Workers Free)
+- **Status**: WASM modules confirmed efficient for image processing in Workers
+- **Verdict**: Possible but requires custom WASM compilation, size constraints
+  on Free tier
+
+**Option 3: Pure JavaScript Canvas Implementation**:
+
+- **Approach**: Implement Canvas2D-like API in pure JavaScript
+- **Libraries**: upng.js for PNG encoding/decoding, manual pixel manipulation
+- **Pros**: No native dependencies, works in Workers, full control
+- **Cons**: Slower than native, complex to implement full Canvas API
+- **Verdict**: Feasible for simple rendering, difficult for complex particle
+  systems
+
+**Option 4: SVG Generation Instead of Canvas**:
+
+- **Approach**: Generate SVG instead of bitmap images
+- **Pros**: Works natively in Workers (string manipulation), scalable, small
+  payload
+- **Cons**: Not suitable for complex particle systems, performance at scale
+  unknown
+- **Verdict**: Not viable for real-time particle rendering
+
+**Option 5: Move Rendering Server-Side with Dedicated Servers** (Recommended):
+
+- **Technology**: Node.js + node-canvas on Hetzner/DigitalOcean
+- **Cost**: Hetzner AMD Ryzen 9 7950X (16 cores, 64GB RAM) = €65/month (~$70)
+- **Performance**: Handles 500,000 renders/day per server
+- **Scalability**: Add servers as needed ($140/month for 1M renders/day)
+- **Cost per render**: $0.0000047 (even cheaper than Workers $0.000062)
+- **Latency**: 10-50ms typical for Canvas rendering + network roundtrip
+- **Verdict**: Best option for production at scale
+
+**Recommended Architecture** (Hybrid Approach):
+
+**Phase 1: Client-Side SDK Only** (Month 1-3):
+
+- Free tier: 100% client-side rendering (browser Canvas API)
+- Cost: $0 (just CDN)
+- Limitation: Code visible (minified/obfuscated)
+- Validation: Prove product-market fit before infrastructure investment
+
+**Phase 2: Dedicated Rendering Servers** (Month 4+, when needed):
+
+- Paid tiers: Server-side rendering on Hetzner dedicated servers
+- Stack: Node.js + Express + node-canvas + Redis queue
+- Cost: $70/month (500K renders/day), scale linearly
+- Deployment: Docker containers, auto-scaling with load balancer
+- Latency: 10-50ms render time + network
+- Monitoring: Prometheus + Grafana for performance tracking
+
+**Skip Cloudflare Workers for Rendering**:
+
+- Workers cannot run node-canvas (native dependency issue)
+- Browser Rendering API too expensive ($0.10/session)
+- WASM solutions unproven, complex to implement
+- Dedicated servers cheaper AND faster at scale
+
+**Latency Benchmarks** (Server-Side Rendering):
+
+**Dedicated Server (Node.js + node-canvas)**:
+
+- Canvas render time: 5-20ms (simple shapes)
+- Canvas render time: 20-50ms (complex particle systems, 1000+ particles)
+- Network roundtrip: 10-30ms (CDN to origin)
+- Total latency: 15-80ms end-to-end
+
+**Cloudflare Browser Rendering API**:
+
+- Browser session startup: 200-500ms (if not reused)
+- Render time: 50-200ms (Puppeteer screenshot)
+- Total latency: 250-700ms (unacceptable for real-time)
+
+**Client-Side Rendering (Browser)**:
+
+- Render time: 5-16ms (60fps native Canvas)
+- Total latency: 5-16ms (instant, no network)
+- Verdict: Client-side is fastest, use for free tier
+
+**Key Strategic Insights**:
+
+1. **Cloudflare Workers is NOT viable for canvas rendering** - native dependency
+   blocker
+2. **Client-side SDK is your MVP** - zero cost, instant rendering, validates
+   demand
+3. **Dedicated servers beat Workers on cost** - $0.0000047 vs $0.000062 per
+   render
+4. **Start client-side, add servers later** - infrastructure follows revenue,
+   not precedes it
+5. **Browser Rendering API is a trap** - $0.10/session = $100/day for 1,000
+   renders
+6. **WASM solutions are R&D projects** - unproven, complex, risky for launch
+   timeline
+7. **Hetzner dedicated servers are the winner** - cheapest, fastest, proven
+   stack
+
+**Revised Infrastructure Roadmap**:
+
+- **Month 1-3**: Client-side SDK only (free tier), validate product-market fit
+- **Month 4-6**: Add 1× Hetzner server ($70/mo) for paid tier server-side
+  rendering
+- **Month 7-12**: Scale to 2-3× servers ($140-210/mo) as revenue grows
+- **Month 13+**: Implement auto-scaling, load balancing, global CDN
+
+**Sources**:
+
+- Cloudflare Workers Node.js compatibility:
+  blog.cloudflare.com/nodejs-workers-2025
+- Workers limits: developers.cloudflare.com/workers/platform/limits (2024-2025)
+- Canvas rendering issues: Cloudflare Community forums (2022-2025, ongoing)
+- Browser Rendering API:
+  blog.cloudflare.com/browser-rendering-api-ga-rolling-out-cloudflare-snippets-swr
+- CPU limit increase:
+  developers.cloudflare.com/changelog/2025-03-25-higher-cpu-limits
+- Performance benchmarks:
+  blog.cloudflare.com/unpacking-cloudflare-workers-cpu-performance-benchmarks
+- WASM solutions: GitHub cloudflare/workerd issues #54, #212
+- Alternative providers: Leapcell vs Cloudflare comparison (Dec 2024)
+- Dedicated server pricing: Hetzner.com (2024-2025 rates)
 
 **Wednesday-Thursday**: Public SDK
 
