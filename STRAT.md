@@ -4423,6 +4423,102 @@ Terms: Cash heavy (80%+), 12-month earnout for rest
 
 **Updated Anthropic Acquisition Projection** (Realistic):
 
+---
+
+### Conservative vs Aggressive Valuation Models (Gemini Framework)
+
+**Why Two Models?**
+
+Gemini's feedback correctly identifies that 22x-26x multiples are aggressive for
+<$2M ARR companies. A more realistic baseline is 12x-18x, with AI premium
+pushing to 22x-26x only in optimal conditions (bidding war, strategic
+imperative, hype cycle peak).
+
+**Conservative Model** (12x-18x multiple, more probable):
+
+**At $1.35M ARR (Month 12):**
+
+- 12x multiple: **$16.2M acquisition**
+- 18x multiple: **$24.3M acquisition**
+- Cash structure: 60% cash ($9.7M-14.6M), 20% stock ($3.2M-4.9M), 20% earnout
+  ($3.2M-4.9M)
+- **Probability**: 70% (typical for <$2M ARR acquisitions)
+- **Trigger**: 3-5 enterprise logos, 500+ paid customers, MCP traction
+
+**At $3M ARR (Month 18-24):**
+
+- 12x multiple: **$36M acquisition**
+- 18x multiple: **$54M acquisition**
+- Cash structure: 60% cash ($21.6M-32.4M), 20% stock ($7.2M-10.8M), 20% earnout
+  ($7.2M-10.8M)
+- **Probability**: 50% (requires sustained 15-20% MoM growth)
+- **Trigger**: 1,000+ paid customers, 10+ enterprise customers, strategic threat
+  to acquirer
+
+---
+
+**Aggressive Model** (22x-26x multiple, AI premium):
+
+**At $1.35M ARR (Month 12):**
+
+- 22x multiple: **$29.7M acquisition**
+- 26x multiple: **$35.1M acquisition**
+- Cash structure: 60% cash ($17.8M-21.1M), 20% stock ($5.9M-7M), 20% earnout
+  ($5.9M-7M)
+- **Probability**: 30% (requires strategic bidding war or AI hype cycle peak)
+- **Trigger**: Multiple bidders (OpenAI + Anthropic + ElevenLabs), viral growth
+  (100K+ users), strategic imperative (competitor launching similar product)
+
+**At $3M ARR (Month 18-24):**
+
+- 22x multiple: **$66M acquisition**
+- 26x multiple: **$78M acquisition**
+- Cash structure: 60% cash ($39.6M-46.8M), 20% stock ($13.2M-15.6M), 20% earnout
+  ($13.2M-15.6M)
+- **Probability**: 20% (top 5% AI acquisitions, requires perfect execution +
+  timing)
+- **Trigger**: Category leader position, 2,000+ paid customers, strategic threat
+  to multiple large players
+
+---
+
+**Recommended Exit Strategy** (Gemini + STRAT.md synthesis):
+
+**Primary Target**: $15-25M acquisition at 12-18 months (conservative baseline)
+
+- Timeline: 12-18 months partnership-first, NOT 60-90 days
+- Valuation: 12x-18x multiple on $1.35M-$2M ARR
+- Structure: 60% cash, 20% stock, 20% earnout
+- Buyers: OpenAI (most likely), Adobe, Hume AI, ElevenLabs
+
+**Upside Scenario**: $30-50M if multiple bidders or strategic premium
+
+- Timeline: 18-24 months after proving $3M+ ARR
+- Valuation: 18x-26x multiple (AI premium)
+- Trigger: Bidding war between OpenAI, Anthropic, Adobe
+
+**Anthropic Reality Check**:
+
+- Anthropic has made ZERO product acquisitions (only acqui-hires like
+  Humanloop 2025)
+- Most realistic path: MCP partnership → 12-18 months validation → potential
+  acquisition
+- Don't optimize for Anthropic exit; build for strategic value to multiple
+  buyers
+- If Anthropic acquires, it will likely be after 18-24 months at $3-5M ARR (not
+  12 months)
+
+**What This Means**:
+
+- **Conservative floor**: $15-25M is realistic, achievable target (70%
+  probability)
+- **Aggressive ceiling**: $30-50M requires perfect execution + favorable market
+  (20-30% probability)
+- **Most likely outcome**: Somewhere in between ($20-35M) if enterprise
+  traction + viral growth
+
+---
+
 **Scenario 1: Acqui-Hire (More Likely)**:
 
 - **Structure**: Anthropic hires you + small team, does NOT acquire Emotive
@@ -5071,14 +5167,63 @@ addressable market through OpenAI ecosystem."
 
 ---
 
-**Monday-Tuesday**: Cloudflare Workers API
+**Monday-Tuesday**: Client-Side SDK Polish & Documentation
 
-- Set up Cloudflare account
-- Build render endpoint
-- Test with 10K requests
-- Deploy to production
-- Document API
-- **Deliverable**: api.emotive.ai/v1/render
+**Why Client-Side First** (Gemini feedback):
+
+- Server-side rendering on Cloudflare Workers is technically infeasible
+  (node-canvas requires native C libraries)
+- Client-side SDK is sufficient for 95% of use cases
+- Zero infrastructure cost = validate PMF before paying for servers
+- Defer server-side API to Month 4+ after proving customer demand
+
+**Tasks**:
+
+- Audit existing emotive-mascot codebase for production readiness
+- Optimize particle rendering performance (target: 60 FPS on mobile devices)
+- Add comprehensive JSDoc documentation to all public APIs
+- Write 5 integration examples:
+    - React (hooks + context)
+    - Vue 3 (composition API)
+    - Svelte (stores)
+    - Vanilla JavaScript (CDN + script tag)
+    - Next.js (server components + client)
+- Create quick-start guide (5-minute integration)
+- Set up automated testing (Jest + Playwright for visual regression)
+- Publish to npm as `@emotive/engine` v1.0.0
+- **Deliverable**: npm package + documentation site at docs.emotive.ai
+
+**Wednesday-Friday**: ChatGPT Plugin Endpoint (Client-Side Proxy)
+
+Since we're deferring server-side rendering, the ChatGPT plugin will use a
+lightweight proxy that returns client-side SDK embed URLs:
+
+```javascript
+// /v1/visualize endpoint (Cloudflare Worker)
+export async function handleChatGPTVisualize(request) {
+    const { emotion, undertone, duration = 3000 } = await request.json();
+
+    // Generate unique visualization ID
+    const vizId = generateId();
+
+    // Return client-side embed URL (no server-side rendering needed)
+    const embedUrl = `https://emotive.ai/embed/${vizId}?emotion=${emotion}&undertone=${undertone}&duration=${duration}`;
+
+    return {
+        visualization_url: embedUrl,
+        emotion: emotion,
+        description: getEmotionDescription(emotion, undertone),
+    };
+}
+```
+
+The embed page loads the client-side SDK and renders in the user's browser. This
+approach:
+
+- ✅ Works with Cloudflare Workers (no native dependencies)
+- ✅ Zero rendering cost (client does the work)
+- ✅ Faster than server-side (no image generation latency)
+- ✅ Validates demand before building expensive server infrastructure
 
 **Technical Implementation - Cloudflare Workers Reality Check** (Verified
 2024-2025):
@@ -5193,12 +5338,33 @@ addressable market through OpenAI ecosystem."
 
 **Phase 2: Dedicated Rendering Servers** (Month 4+, when needed):
 
-- Paid tiers: Server-side rendering on Hetzner dedicated servers
-- Stack: Node.js + Express + node-canvas + Redis queue
-- Cost: $70/month (500K renders/day), scale linearly
-- Deployment: Docker containers, auto-scaling with load balancer
-- Latency: 10-50ms render time + network
-- Monitoring: Prometheus + Grafana for performance tracking
+**Trigger**: Deploy server-side rendering only after reaching 50+ paid customers
+requesting it.
+
+**Why Wait Until Month 4** (Gemini feedback):
+
+- Client-side SDK handles 95% of use cases (browsers are fast)
+- Zero infrastructure cost = validate PMF before spending $70/month
+- Most customers won't notice or care about server-side rendering
+- Infrastructure should follow revenue, not precede it
+
+**Technical Stack** (Proven, Reliable):
+
+- **Hardware**: Hetzner dedicated server (AMD Ryzen 9 7950X, 64GB RAM, 2TB NVMe)
+- **Cost**: €65/month (~$70 USD)
+- **Capacity**: 500,000 renders/day per server
+- **Stack**: Node.js + Express + node-canvas + Redis queue
+- **Cost per render**: $0.0000047 (13x cheaper than theoretical Workers, Gemini
+  calculation)
+- **Deployment**: Docker containers, auto-scaling with load balancer
+- **Latency**: 10-50ms render time + network
+- **Monitoring**: Prometheus + Grafana for performance tracking
+
+**When to Scale**:
+
+- 1 server (Month 4-6): 50-200 paid customers = 500K renders/day capacity
+- 2 servers (Month 7-9): 200-500 paid customers = 1M renders/day
+- 3 servers (Month 10-12): 500-1,000 paid customers = 1.5M renders/day
 
 **Skip Cloudflare Workers for Rendering**:
 
