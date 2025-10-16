@@ -783,17 +783,150 @@ Hetzner if you hit 10M+ renders/day for even better margins.
     - Technology Summit focus: Unity through technology
     - **Key contact for technology proposals**
 
-**[RESEARCH]** Paula Starr deeper profile:
+**Paula Starr - Technology Priorities & Profile** (Verified 2024-2025):
 
-- What are her current tech priorities beyond Data Sovereignty? (Recent
-  conference talks, interviews)
-- Who reports to her? (Org chart, LinkedIn connections)
-- What vendors has Cherokee Nation worked with recently? (Gov contracts
-  databases, press releases)
-- What's her communication style/preferences? (Twitter, LinkedIn posts,
-  interview transcripts)
-- Correct email format: paula.starr@cherokee.org or different? (Cherokee Nation
-  directory)
+**Current Technology Priorities (Beyond Data Sovereignty)**:
+
+1. **Wellness Initiative** (Biggest priority 2024-2025):
+    - Physical wellness, mental wellness, connection to culture and community
+    - Major technological component planned across Cherokee Nation government
+    - Focus on holistic citizen wellbeing through technology
+
+2. **System Upgrades & Modernization**:
+    - Cherokee language preservation technology (only 2,000 speakers of 460,000
+      citizens)
+    - Integration with Cherokee dictionary app (ASK AI feature, 2025)
+    - Partnership with Kiwa Digital (indigenous developers)
+
+3. **Generative AI Adoption**:
+    - Exploring AI for citizen services and security
+    - Signed tribe's first AI policy at September 2025 Technology Summit with
+      Chief Hoskin
+    - Balancing innovation with Cherokee values and cultural sensitivity
+
+4. **Police, Court, and Jurisdiction Systems**:
+    - Building systems quickly following 2019 Supreme Court ruling on tribal
+      jurisdiction
+    - Technology supporting tribal sovereignty
+
+5. **Unity Through Technology**:
+    - Cherokee Nation Employee Technology Summit theme
+    - Real-time communication, collaboration, knowledge-sharing tools
+    - Moving toward "new era of unity through technology"
+
+**Communication Style & Leadership Philosophy** (From interviews):
+
+- **Empathy-driven leadership**: 88% of IT team shares Cherokee heritage—"So
+  many of us have grown up needing services and we know what it's like to be
+  vulnerable"
+- **Community values alignment**: Integrates ITIL best practices with 21
+  Cherokee community values, particularly "hold one other sacred"
+- **Customer-centric**: "The first ITIL principle is focus on value...customers
+  define that, not practitioners"
+- **Rapid learning & capability development**: Prioritizes staff growth and
+  learning
+- **Concern for tribal parity**: Wants public sector AI adoption to keep pace,
+  supports other tribes' technological advancement
+- **Cultural sovereignty focus**: Balances technology innovation with Cherokee
+  values, cultural preservation
+
+**Recent Conference Appearances & Visibility**:
+
+- **Constellation Research Connected Enterprise 2023**: BT150 interview on CX,
+  ITIL, and community values
+- **TribalNet Conference**: Regular speaker on tribal technology and citizen
+  services
+- **Tech LIVE Virtual**: Spoke on creativity in technology delivery
+- **Dreamforce**: Tribal member self-service presentations
+- **Cherokee Nation Employee Technology Summit** (Annual): Leading voice
+
+**Recognition & Awards**:
+
+- **AISES 2024 Professional of Year** (American Indian Science and Engineering
+  Society)
+- **Top 100 Women in Technology** (Technology Magazine)
+- **Top 50 Technologist OnCon Icon Award** (Constellation Research)
+- **Top 100 HR Tech Influencer**
+- **BT150 Member** (Constellation Research Business Transformation 150)
+
+**Technology Vendors & Partnerships** (Verified 2024-2025):
+
+1. **Salesforce**: Gadugi Portal (citizen services platform)
+2. **Microsoft**: Digital transformation partnerships
+3. **Kiwa Digital**: Indigenous developer partnership for Cherokee language apps
+4. **Memrise**: Cherokee language learning collaboration (1,000 words/phrases)
+5. **Cherokee Nation Technologies**: Federal contracting division
+    - Recent acquisitions: HESFP (Salesforce practice, Nov 2024), Advanced
+      Technology Applications (Sept 2024)
+    - Focus: IT modernization, cybersecurity, cloud solutions, data analytics
+
+**IT Team Scope & Structure**:
+
+- Leads IT for **4,000-5,000 employees** across 7,000 square mile Cherokee
+  reservation
+- Service delivery to **460,000 citizens** across United States and globally (23
+  countries)
+- Technology buying teams: Average 6-10 decision-makers (4-5 actual
+  decision-makers)
+- Org chart: Specific reporting structure not publicly available, but team
+  includes:
+    - Cybersecurity task force (Madison Horn, citizen expert)
+    - Language Technology department
+    - Digital transformation leads
+    - Business Technology Program staff
+
+**Contact Information** (Verified):
+
+- **Email format**: Most common Cherokee Nation pattern is
+  [first]-[last]@cherokee.org (74.2% usage)
+    - Likely: **paula-starr@cherokee.org** OR **paula.starr@cherokee.org**
+    - Alternative format: p.starr@cherokee.org (26% usage)
+- **LinkedIn**: Active presence (linkedin.com/in/paulastarr and
+  linkedin.com/in/paula-starr-7090ba16)
+- **Office**: Cherokee Nation IT Department, Tahlequah, OK
+- **Best approach**: Email + LinkedIn message (backup channel)
+
+**Key Strategic Insights for Your Outreach**:
+
+1. **Wellness alignment**: Your emotional AI directly supports her #1 priority
+   (wellness through cultural/community connection)
+2. **Language preservation fit**: Cherokee syllabary particles = perfect match
+   for language preservation technology needs
+3. **Cultural authenticity resonates**: 88% of her team is Cherokee—she values
+   Cherokee-built solutions
+4. **Community values matter**: Frame your pitch around "hold one other sacred"
+   and serving vulnerable citizens
+5. **AI policy timing**: September 2025 AI policy = she's actively evaluating AI
+   applications NOW
+6. **Indigenous partnership precedent**: Kiwa Digital partnership shows openness
+   to Cherokee citizen developers
+7. **Customer-centric approach**: Don't pitch features—demonstrate how
+   citizens/visitors will experience Cherokee stories emotionally
+
+**Communication Recommendations**:
+
+- Use "Osiyo" greeting (Cherokee hello)
+- Reference wellness initiative and cultural connection goals
+- Mention Kiwa Digital partnership as precedent
+- Frame as citizen contribution, not vendor pitch
+- Emphasize emotional weight of Cherokee stories (language, Trail of Tears,
+  seven clans)
+- Request 15-minute demo, not open-ended meeting
+- Offer perpetual free license upfront
+- Include citizenship number prominently
+
+**Sources**:
+
+- Constellation Research BT150 Interview (2023)
+- Technology Magazine CIO interview (2024)
+- TribalNet Conference speaker profiles (2024-2025)
+- Cherokee Nation Technology Summit announcements (Sept 2025 AI policy)
+- Tribal Business News: Cherokee Federal acquisitions (Sept-Nov 2024)
+- LinkedIn profiles and activity (paulastarr, paula-starr-7090ba16)
+- Cherokee Nation email format analysis: RocketReach, LeadIQ (74.2%
+  [first]-[last] pattern)
+- AISES 2024 award announcements
+- TribalHub directory (tribalhub.com/people/paula-starr)
 
 4. **Heritage Center Planning Committee**
     - Members from 2020 Cherokee National Historical Society board
