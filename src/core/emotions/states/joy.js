@@ -68,32 +68,7 @@ export default {
         priority: 5,           // Elevated positive priority
         burstOnEntry: true     // Celebratory particle burst
     },
-    
-    // Audio/sound associations
-    audio: {
-        ambientSound: 'cheerful_hum',    // Cheerful background
-        transitionSound: 'pop',           // Pop sound on entry
-        gestureSound: 'giggle'            // Giggle on gestures
-    },
-    
-    // Particle spawn patterns
-    particleSpawn: {
-        pattern: 'fountain',     // Fountain-like spawn
-        frequency: 'burst',      // Burst spawning
-        burstOnEntry: true,      // Big burst on entry
-        fadeOnExit: false,       // Particles pop away
-        specialEffect: 'sparkle' // Sparkle effect
-    },
-    
-    // Eye/core appearance
-    coreAppearance: {
-        pupilSize: 1.2,          // Dilated with excitement
-        irisPattern: 'radiant',   // Radiant, sparkling iris
-        blinkRate: 'frequent',    // Happy, frequent blinking
-        lookDirection: 'up',      // Optimistic upward gaze
-        specialEffect: 'twinkle'  // Sparkling eye effect
-    },
-    
+
     // Rhythm configuration - joy bounces to the beat
     rhythm: {
         enabled: true,

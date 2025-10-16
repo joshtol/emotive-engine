@@ -67,33 +67,6 @@ export default {
         priority: 1              // Low-medium priority
     },
 
-    // Audio/sound associations
-    audio: {
-        ambientSound: 'soft_waves',  // Gentle ambient sounds
-        transitionSound: null,        // No harsh transition
-        gestureSound: null,           // Silent gestures
-        volumeModifier: 0.5           // Quieter overall
-    },
-
-    // Particle spawn patterns
-    particleSpawn: {
-        pattern: 'center_drift',  // Spawn from center, drift outward
-        frequency: 'slow',        // Very slow spawn rate
-        burstOnEntry: false,      // No burst when entering
-        fadeOnExit: true,         // Gentle fade when leaving
-        spawnRadius: 0.3,         // Spawn close to center
-        driftSpeed: 0.2           // Very slow particle drift
-    },
-
-    // Eye/core appearance
-    coreAppearance: {
-        pupilSize: 0.9,           // Slightly relaxed pupils
-        irisPattern: 'soft',       // Softer iris edges
-        blinkRate: 'slow',        // Slower, relaxed blinking
-        lookDirection: 'soft_center', // Soft focus, not sharp
-        eyeOpenness: 0.85         // Slightly droopy, relaxed eyes
-    },
-
     // Movement patterns
     movement: {
         floatPattern: 'sine_slow',     // Slow sine wave floating

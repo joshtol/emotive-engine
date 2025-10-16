@@ -64,30 +64,7 @@ export default {
         easing: 'easeInOut', // Balanced transition curve
         priority: 0         // Baseline priority level
     },
-    
-    // Audio/sound associations (optional)
-    audio: {
-        ambientSound: null,     // No specific ambient sound
-        transitionSound: null,  // No transition sound
-        gestureSound: null      // No gesture sound
-    },
-    
-    // Particle spawn patterns
-    particleSpawn: {
-        pattern: 'random',      // Random spawn positions
-        frequency: 'steady',    // Steady spawn rate
-        burstOnEntry: false,    // No burst when entering state
-        fadeOnExit: true        // Fade particles when leaving
-    },
-    
-    // Eye/core appearance
-    coreAppearance: {
-        pupilSize: 1.0,        // Standard pupil dilation
-        irisPattern: 'default', // Basic iris pattern
-        blinkRate: 'normal',    // Regular blink frequency
-        lookDirection: 'center' // Centered, neutral gaze
-    },
-    
+
     /**
      * Get core rendering parameters
      * @param {Object} state - Current renderer state

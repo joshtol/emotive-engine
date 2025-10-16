@@ -68,33 +68,7 @@ export default {
         priority: 8,            // High priority emotional state
         shakeOnEntry: true      // Trigger screen disturbance
     },
-    
-    // Audio/sound associations
-    audio: {
-        ambientSound: 'rumble',      // Low rumbling
-        transitionSound: 'explosion', // Explosive sound
-        gestureSound: 'growl'         // Growling sounds
-    },
-    
-    // Particle spawn patterns
-    particleSpawn: {
-        pattern: 'explosive',    // Explosive spawn
-        frequency: 'chaotic',    // Chaotic frequency
-        burstOnEntry: true,      // Explosion on entry
-        fadeOnExit: false,       // Particles dissipate violently
-        specialEffect: 'flames'  // Flame-like effect
-    },
-    
-    // Eye/core appearance
-    coreAppearance: {
-        pupilSize: 0.7,           // Constricted for focused intensity
-        irisPattern: 'sharp',      // Angular, aggressive iris pattern
-        blinkRate: 'rare',        // Unwavering, intense gaze
-        lookDirection: 'forward',  // Direct, confrontational focus
-        specialEffect: 'flames',   // Fire-like eye effects
-        pulseRate: 'rapid'        // Quick, agitated pulsing
-    },
-    
+
     // Special anger properties
     special: {
         screenShake: true,         // Environmental disturbance effect

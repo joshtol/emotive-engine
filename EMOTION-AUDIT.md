@@ -318,3 +318,45 @@ but this is NOT blocking for SDK extraction.
 
 **Recommendation:** Mark READY.md Section 1.1 as COMPLETE with notes about
 optional enrichment work.
+
+---
+
+## Code Cleanup (2025-10-16)
+
+**Removed dead code from emotion configuration files:**
+
+### Files Cleaned:
+
+- `src/core/emotions/states/neutral.js`
+- `src/core/emotions/states/joy.js`
+- `src/core/emotions/states/anger.js`
+- `src/core/emotions/states/calm.js`
+
+### Removed Unused Config Objects:
+
+1. **audio** config (never consumed)
+    - Properties: `ambientSound`, `transitionSound`, `gestureSound`
+    - Reason: SoundSystem integration disabled in StateCoordinator.js:103-106
+
+2. **particleSpawn** config (never consumed)
+    - Properties: `pattern`, `frequency`, `burstOnEntry`, `fadeOnExit`,
+      `specialEffect`
+    - Reason: ParticleSystem only reads `visual.particleBehavior` and
+      `visual.particleRate`
+
+3. **coreAppearance** unused properties (partially consumed)
+    - Removed: `pupilSize`, `irisPattern`, `blinkRate`, `lookDirection`,
+      `specialEffect`
+    - Kept: `eyeOpenness` (actually used by EmotiveRenderer)
+    - Reason: Only `eyeOpenness` is read by the renderer; other properties never
+      accessed
+
+### Kept Active Code:
+
+✅ **rhythm** config (joy.js only) - ACTIVE and working
+
+- Used by rhythmIntegration.js and ParticleSystem.js
+- Provides musical synchronization for joy emotion
+
+**Result:** Cleaner, more maintainable emotion configuration files with only
+active, functional properties.
