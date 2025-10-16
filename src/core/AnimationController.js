@@ -445,7 +445,7 @@ class AnimationController {
         // Only handle particles here if NOT in classic rendering mode
         // Classic mode handles its own particles in EmotiveMascot.render()
         const isClassicMode = this.parentMascot?.config?.renderingStyle === 'classic';
-        
+
         if (!isClassicMode) {
             // Get current emotional properties and center for particle system (advanced mode only)
             if (this.subsystems.particleSystem && this.subsystems.stateMachine && this.subsystems.canvasManager) {

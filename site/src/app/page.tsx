@@ -14,6 +14,8 @@ export default function HomePage() {
   const [containerZIndex, setContainerZIndex] = useState(100)
   const [isMobileView, setIsMobileView] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const initializingRef = useRef(false) // Track if initialization is in progress
+  const initializedRef = useRef(false) // Track if already initialized
 
   // Detect mobile on client-side only (prevents hydration mismatch)
   useEffect(() => {
@@ -30,8 +32,28 @@ export default function HomePage() {
 
   // Initialize mascot engine
   useEffect(() => {
+    // Prevent double initialization in React StrictMode
+    let cancelled = false
+
     const initializeEngine = async () => {
-      if (!canvasRef.current) return
+      if (!canvasRef.current || cancelled) return
+
+      // Strong guards against double initialization
+      if (initializedRef.current) {
+        return
+      }
+
+      if (initializingRef.current) {
+        return
+      }
+
+      // Check if we already have a mascot instance for this canvas
+      if (mascot) {
+        return
+      }
+
+      // Mark as initializing
+      initializingRef.current = true
 
       try {
         // Set canvas size to viewport for full particle freedom
@@ -42,15 +64,21 @@ export default function HomePage() {
         canvas.height = vh
 
         // Load the engine script dynamically with cache busting
-        const script = document.createElement('script')
-        script.src = `/emotive-engine.js?v=${Date.now()}`
-        script.async = true
+        // Check if script already loaded
+        const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
+        let script = existingScript as HTMLScriptElement
 
-        await new Promise((resolve, reject) => {
-          script.onload = resolve
-          script.onerror = reject
-          document.head.appendChild(script)
-        })
+        if (!existingScript) {
+          script = document.createElement('script')
+          script.src = `/emotive-engine.js?v=${Date.now()}`
+          script.async = true
+
+          await new Promise((resolve, reject) => {
+            script.onload = resolve
+            script.onerror = reject
+            document.head.appendChild(script)
+          })
+        }
 
         // Access the global EmotiveMascot (UMD export with mixed exports uses .default)
         const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
@@ -123,6 +151,10 @@ export default function HomePage() {
         // Set mascot in state AFTER init and start
         setMascot(mascotInstance)
 
+        // Mark as initialized
+        initializedRef.current = true
+        initializingRef.current = false
+
         // Fade in mascot
         if (typeof mascotInstance.fadeIn === 'function') {
           mascotInstance.fadeIn(1500)
@@ -130,17 +162,21 @@ export default function HomePage() {
 
       } catch (error) {
         console.error('Failed to initialize mascot:', error)
+        initializingRef.current = false // Reset on error
       }
     }
 
     initializeEngine()
 
     return () => {
+      cancelled = true
       if (mascot) {
         mascot.stop()
+        initializedRef.current = false
+        initializingRef.current = false
       }
     }
-  }, [])
+  }, []) // Empty deps - only run once
 
   // Scroll-driven animation with enhanced visual effects
   useEffect(() => {

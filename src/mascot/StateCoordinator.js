@@ -79,12 +79,20 @@ export class StateCoordinator {
                 }
                 
                 if (initialCount > 0) {
-                    // Always spawn from canvas center, not gaze-adjusted position
-                    const centerX = this.mascot.canvasManager.width / 2;
-                    const centerY = this.mascot.canvasManager.height / 2;
-                    
+                    // Use effective center (includes position offsets) instead of raw canvas center
+                    let centerX, centerY;
+                    if (this.mascot.renderer && typeof this.mascot.renderer.getEffectiveCenter === 'function') {
+                        const effectiveCenter = this.mascot.renderer.getEffectiveCenter();
+                        centerX = effectiveCenter.x;
+                        centerY = effectiveCenter.y;
+                    } else {
+                        // Fallback to canvas center if renderer not available
+                        centerX = this.mascot.canvasManager.width / 2;
+                        centerY = this.mascot.canvasManager.height / 2;
+                    }
+
                     this.mascot.particleSystem.burst(
-                        initialCount, 
+                        initialCount,
                         emotionalProps.particleBehavior,
                         centerX,
                         centerY
