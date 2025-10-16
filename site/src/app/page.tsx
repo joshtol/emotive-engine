@@ -90,6 +90,10 @@ export default function HomePage() {
         // Initialize the engine with canvas element
         await mascotInstance.init(canvas)
 
+        // Set canvas dimensions on particle system AFTER init
+        // This ensures particles spawn correctly when mascot is offset
+        mascotInstance.setParticleSystemCanvasDimensions(vw, vh)
+
         // Enable backdrop for better particle visibility
         mascotInstance.setBackdrop({
           enabled: true,
@@ -367,6 +371,10 @@ export default function HomePage() {
                       key={emotion.name}
                       onClick={() => {
                         if (mascot && typeof mascot.setEmotion === 'function') {
+                          // Clear existing particles before changing emotion
+                          if (typeof mascot.clearParticles === 'function') {
+                            mascot.clearParticles()
+                          }
                           mascot.setEmotion(emotion.name, 0) // Instant transition
                         }
                       }}

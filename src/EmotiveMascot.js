@@ -2382,6 +2382,21 @@ class EmotiveMascot {
     }
 
     /**
+     * Set canvas dimensions on particle system for accurate spawn calculations
+     * Call this after init() to ensure particles spawn correctly when mascot is offset
+     * @param {number} width - Canvas width in pixels
+     * @param {number} height - Canvas height in pixels
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    setParticleSystemCanvasDimensions(width, height) {
+        if (this.particleSystem) {
+            this.particleSystem.canvasWidth = width;
+            this.particleSystem.canvasHeight = height;
+        }
+        return this;
+    }
+
+    /**
      * Forces performance degradation mode (for testing)
      * @param {boolean} enabled - Whether to enable degradation mode
      * @returns {EmotiveMascot} This instance for chaining
