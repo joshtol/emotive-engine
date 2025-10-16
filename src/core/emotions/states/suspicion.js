@@ -86,5 +86,39 @@ export default {
         peekInterval: 4000,     // Time between peek gestures
         maxThreatDistance: 300, // Distance for threat calculation
         alertThreshold: 0.7     // Threat level for maximum alert
+    },
+
+    // Rhythm configuration - suspicion pulses with tense wary rhythm
+    rhythm: {
+        enabled: true,
+
+        particleEmission: {
+            syncMode: 'beat',
+            burstSize: 3,
+            offBeatRate: 0.6,
+            surveillanceSync: true
+        },
+
+        breathSync: {
+            mode: 'beats',
+            beatsPerBreath: 5,
+            intensity: 0.7
+        },
+
+        glowSync: {
+            intensityRange: [0.7, 1.1],
+            syncTo: 'beat',
+            attack: 0.3,
+            decay: 0.6
+        },
+
+        patternBehaviors: {
+            'stealth': {
+                particleEmission: { burstSize: 2 }
+            },
+            'thriller': {
+                particleEmission: { burstSize: 4 }
+            }
+        }
     }
 };

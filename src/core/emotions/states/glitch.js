@@ -56,9 +56,44 @@ export default {
     typicalGestures: ['bounce', 'sway', 'pulse', 'drift', 'flash'],
     
     // Transition configuration - simplified
-    transitions: { 
+    transitions: {
         duration: 300,          // Moderate transition
         easing: 'easeInOut',    // Smooth transition
         priority: 5             // Medium priority
+    },
+
+    // Rhythm configuration - glitch creates chaotic erratic patterns
+    rhythm: {
+        enabled: true,
+
+        particleEmission: {
+            syncMode: 'random',
+            burstSize: 8,
+            burstRange: [1, 15],
+            offBeatRate: 0.3,
+            burstSync: true
+        },
+
+        breathSync: {
+            mode: 'beats',
+            beatsPerBreath: 7,
+            intensity: 0.6
+        },
+
+        glowSync: {
+            intensityRange: [0.3, 2.0],
+            syncTo: 'random',
+            attack: 0.01,
+            decay: 0.8
+        },
+
+        patternBehaviors: {
+            'breakbeat': {
+                particleEmission: { burstSize: 12, burstRange: [2, 18] }
+            },
+            'glitch': {
+                particleEmission: { burstSize: 15, burstRange: [1, 20] }
+            }
+        }
     }
 };

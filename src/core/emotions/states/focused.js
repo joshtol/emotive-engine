@@ -47,12 +47,46 @@ export default {
     typicalGestures: ['track', 'lock', 'scan', 'pulse', 'vibrate'],
     
     // Transition configuration
-    transitions: { 
+    transitions: {
         duration: 400,       // Moderate focus shift
         easing: 'easeIn',   // Gradual concentration
         priority: 5         // Mid-level attention priority
     },
-    
+
+    // Rhythm configuration - focused maintains steady concentration
+    rhythm: {
+        enabled: true,
+
+        particleEmission: {
+            syncMode: 'beat',
+            burstSize: 4,
+            offBeatRate: 0.8,
+            directedSync: true
+        },
+
+        breathSync: {
+            mode: 'beats',
+            beatsPerBreath: 4,
+            intensity: 0.8
+        },
+
+        glowSync: {
+            intensityRange: [1.0, 1.3],
+            syncTo: 'beat',
+            attack: 0.2,
+            decay: 0.5
+        },
+
+        patternBehaviors: {
+            'ambient': {
+                particleEmission: { burstSize: 3 }
+            },
+            'minimal': {
+                particleEmission: { burstSize: 2 }
+            }
+        }
+    },
+
     // Core appearance parameters
     getCoreParams(state) {
         return {
