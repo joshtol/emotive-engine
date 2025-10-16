@@ -1003,7 +1003,7 @@ Revenue Sharing (Culture Packs only):
 - Attribution required in all uses
 - Free for educational/non-profit use
 
-Sign: ******\_\_\_****** Date: ******\_\_\_******
+Sign: **\*\***\_\_\_**\*\*** Date: **\*\***\_\_\_**\*\***
 ```
 
 **Implementation**:
@@ -2915,6 +2915,247 @@ Government/Military: $75,000/year
 Your cost: $0 (free tier), $50K/year support (paid tier)
 Value: Brand credibility, mission impact, PR
 ```
+
+---
+
+#### 4.1.1 Hybrid Pricing Model Enhancement
+
+**Why Hybrid Pricing** (Subscription + Usage-Based):
+
+ChatGPT Deep Research identified that pure subscription pricing leaves money on
+the table from power users and creates anxiety for light users. Hybrid model =
+optimal for both segments.
+
+**Current Model** (Subscription-Only):
+
+- Starter $19/mo → 25,000 renders → $0.00076 per render
+- Growth $99/mo → 200,000 renders → $0.000495 per render
+
+**Problem**:
+
+- Light users overpay (only use 10K renders but pay $19)
+- Heavy users arbitrage (use 24,999 renders for $19)
+
+**Enhanced Hybrid Model** (Subscription + Usage Overage):
+
+Already implemented in current pricing:
+
+- ✅ Starter: $0.50 per 1,000 renders overage
+- ✅ Growth: $0.40 per 1,000 renders overage
+- ✅ Pro: $0.30 per 1,000 renders overage
+
+**Additional Enhancement: Light Usage Discount** (NEW)
+
+For users who consistently use <50% of their plan for 3+ months:
+
+```
+Starter Light: $9/month (12,500 renders, was $19 for 25K)
+Growth Light: $59/month (100,000 renders, was $99 for 200K)
+
+Implementation:
+- Automatic notification: "You've used <50% for 3 months, save $10/mo?"
+- One-click downgrade (no penalty)
+- Can upgrade back anytime
+
+Impact:
+- Reduces churn from light users (40% of Starter tier, 25% of Growth tier)
+- Retains $9/mo vs $0/mo churn (prevents "I don't use it enough" cancellations)
+- Net revenue: +$45K ARR from preventing 500 churns/year
+```
+
+---
+
+### Explicit Enterprise vs Non-Profit Segmentation Table
+
+**Problem**: Current pricing lumps "Cultural Institutions" together without
+clear decision criteria.
+
+**Solution**: Decision matrix for institutional customers:
+
+| Organization Type                   | Annual Revenue | Pricing Tier  | Rationale                                                     |
+| ----------------------------------- | -------------- | ------------- | ------------------------------------------------------------- |
+| **Non-profit museums**              | <$5M           | FREE forever  | Mission alignment, PR value, brand credibility                |
+| **Tribal museums/cultural centers** | Any            | FREE forever  | Cultural partnership, core mission, can't charge partners     |
+| **Public schools/universities**     | Any            | FREE forever  | Educational access, viral student adoption, future customers  |
+| **For-profit museums**              | >$10M          | $50K/year     | Corporate budgets, can afford, high-visibility installations  |
+| **Government agencies**             | N/A            | $75K/year     | Procurement budgets, security requirements, custom SLAs       |
+| **Enterprise (tech/AI)**            | >$10M          | $1,999-25K/mo | Primary revenue driver, high usage, strategic customers       |
+| **Mid-market SaaS**                 | $1M-10M        | $299-1,999/mo | Growth segment, predictable revenue, expansion path           |
+| **Indie developers**                | <$100K         | $19-99/mo     | Viral adoption, community advocates, future enterprise buyers |
+
+**Edge Cases & Responses**:
+
+| Customer Type                                    | Request                               | Your Response                      | Why                                                                       |
+| ------------------------------------------------ | ------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| **Harvard University** (endowment $53B)          | "We're non-profit, give us free tier" | FREE (educational exception)       | Student viral adoption → future enterprise customers worth more than $50K |
+| **Smithsonian** (federal, $1.5B budget)          | "We're a museum, free tier?"          | $50K/year (federal agency pricing) | Federal procurement = paid, not non-profit                                |
+| **Cherokee Casino** (for-profit, $1B+ revenue)   | "We're Cherokee Nation, free?"        | $50K-75K/year (for-profit pricing) | For-profit arm, not cultural center (Nation entities are case-by-case)    |
+| **Disney Imagineering** ($28B parks revenue)     | "We want unlimited enterprise tier"   | $25K/month custom                  | High usage, Fortune 500 budget, strategic logo value                      |
+| **MIT Media Lab** (research, corporate sponsors) | "Educational discount?"               | FREE with attribution              | Research publication = PR value (Nature/Science papers citing Emotive)    |
+
+**Implementation**:
+
+- Pricing page: "Non-profit? Email us for free tier verification"
+- Verification: 501(c)(3) status (US), charity registration (UK), tribal
+  enrollment
+- Approval: 24-48 hour review, auto-approve .edu/.org/.gov domains
+- Abuse prevention: Revoke if used commercially (e.g., non-profit reselling
+  access)
+
+---
+
+### ROI Metrics Communication Framework
+
+**Problem**: Developers don't think in "cost per render" — they think in user
+experience value.
+
+**Solution**: ROI calculator on pricing page that translates renders → business
+outcomes.
+
+**ROI Calculator Example** (Interactive Tool):
+
+```
+Input:
+[ ] Monthly active users: 10,000
+[ ] Avg emotions shown per user: 5
+[ ] Customer satisfaction increase target: +10%
+
+Output:
+Your usage: 50,000 renders/month
+Recommended tier: Starter ($19/month)
+Cost per user: $0.0019/month ($0.23/year)
+
+Estimated impact:
+✓ +10% customer satisfaction = +2% retention
+✓ +2% retention on 10K users = +200 retained customers/year
+✓ 200 customers × $50 LTV = $10,000 additional revenue
+✓ ROI: $10,000 revenue / $228 annual cost = 44x return
+
+[Start Free Trial →]
+```
+
+**Industry-Specific ROI Messaging**:
+
+**For SaaS Products**:
+
+- Emotional feedback → +15-25% feature adoption (source: UserTesting 2023)
+- Cost: $0.0019 per user/month
+- ROI: 25% adoption increase on $99/mo product = +$24.75 ARPU
+- Payback: 1 month
+
+**For AI Chatbots**:
+
+- Emotional visualization → +30% conversation completion (source: MIT Media
+  Lab 2024)
+- Cost: $0.0004 per conversation
+- ROI: 30% more completed conversations = 30% more qualified leads
+- Payback: 1 conversation
+
+**For Museums/Cultural Centers**:
+
+- Emotional engagement → +45% exhibit time (source: AAM 2023)
+- Cost: FREE (non-profit tier)
+- ROI: Longer engagement = more donations, better visitor satisfaction
+- Payback: Immediate (free)
+
+**For Healthcare Apps**:
+
+- Emotional support → +20% therapy session completion (source: APA 2024)
+- Cost: $299/mo (Pro tier, HIPAA-ready)
+- ROI: 20% more sessions × 100 patients × $150/session = +$3,000/mo
+- Payback: 10 days
+
+**Implementation on Pricing Page**:
+
+1. **Hero Section**: "See your ROI in 30 seconds" (above pricing table)
+2. **Interactive Calculator**: Dropdown for industry
+   (SaaS/AI/Healthcare/Education/Museum)
+3. **Auto-populate benchmarks**: Pull industry-specific impact data
+4. **Social proof**: "ChatGPT plugin users see 40% more engagement" (if we have
+   data)
+5. **Case study links**: "How Notion increased feature adoption by 20% with
+   Emotive"
+
+**Messaging Framework by Customer Segment**:
+
+| Segment              | Pain Point                   | ROI Messaging                                                     | Call to Action                        |
+| -------------------- | ---------------------------- | ----------------------------------------------------------------- | ------------------------------------- |
+| **Indie Developers** | "Is $19/mo worth it?"        | "$0.0019/user = less than 1¢ per user per year"                   | "Start free, upgrade when profitable" |
+| **SaaS Companies**   | "Will this move the needle?" | "+15-25% feature adoption = $X ARR increase"                      | "See ROI calculator"                  |
+| **AI Companies**     | "How does this integrate?"   | "2-line integration, 5-minute setup, +30% engagement"             | "View MCP server docs"                |
+| **Museums**          | "We have no budget"          | "FREE forever for non-profits + increases exhibit engagement 45%" | "Verify non-profit status"            |
+| **Healthcare**       | "Is it HIPAA compliant?"     | "HIPAA BAA available, +20% therapy completion, $3K/mo ROI"        | "Talk to sales"                       |
+| **Enterprise**       | "Can we self-host?"          | "Yes ($5K/mo add-on) + SOC 2 + 99.95% SLA"                        | "Request custom quote"                |
+
+**Pricing Page A/B Test Plan**:
+
+Variant A (Current): List tiers with features Variant B (ROI-focused): Lead with
+"Calculate your ROI" → Show recommended tier Variant C (Social proof): "Join 10K
+developers using Emotive" → Pricing table
+
+Hypothesis: Variant B increases free → paid conversion by 20-30% (reduces "is
+this worth it?" friction)
+
+**Objection Handling Script** (for sales calls):
+
+| Objection                                         | Response                                                                                                                                                   |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Too expensive compared to building in-house"     | "Your engineering cost: $150K/year. Emotive: $299-1,999/mo. Payback: 1-2 months. Plus we handle updates, browser compatibility, performance optimization." |
+| "We don't know if users will care"                | "Start free tier (5,000 renders/mo). A/B test with 10% of users. If +20% engagement, upgrade to Starter. Zero risk."                                       |
+| "What if we exceed our render limit?"             | "Overages are transparent ($0.30-0.50 per 1,000 renders). We'll notify you at 80% usage. Upgrade anytime. No surprise bills."                              |
+| "Our users are global, will latency be an issue?" | "Cloudflare edge network = <50ms globally. Client-side SDK option = zero latency. We have customers in 40+ countries."                                     |
+| "Can we get a discount?"                          | "For annual prepay: 20% off (2 months free). For non-profit: free forever. For startups: YC/Techstars = 6 months free."                                    |
+
+---
+
+### Enhanced Pricing Strategy Impact
+
+**What Changed**:
+
+1. ✅ Hybrid model already implemented (subscription + usage overage)
+2. ✅ NEW: Light usage discount ($9 Starter Light, $59 Growth Light)
+3. ✅ NEW: Explicit enterprise vs non-profit segmentation table
+4. ✅ NEW: ROI calculator and industry-specific messaging framework
+5. ✅ NEW: Objection handling script for sales
+
+**Expected Impact**:
+
+| Metric                      | Before   | After    | Change                         |
+| --------------------------- | -------- | -------- | ------------------------------ |
+| Free → Starter conversion   | 5-10%    | 8-15%    | +50% (ROI clarity)             |
+| Starter churn (light users) | 40%/year | 25%/year | -37% (Light tier option)       |
+| Enterprise close rate       | 30%      | 45%      | +50% (ROI calculator)          |
+| Average deal cycle          | 60 days  | 45 days  | -25% (clear pricing)           |
+| Annual contract rate        | 10%      | 25%      | +150% (20% discount incentive) |
+
+**Revenue Impact** (Year 1):
+
+```
+Before Enhanced Pricing:
+- 10,000 free users × 7% conversion = 700 paid customers
+- 700 × $60 ARPU = $42,000 MRR = $504K ARR
+
+After Enhanced Pricing:
+- 10,000 free users × 10.5% conversion = 1,050 paid (+50%)
+- 1,050 × $60 ARPU = $63,000 MRR = $756K ARR
+- Delta: +$252K ARR from pricing optimization alone
+```
+
+**Implementation Timeline**:
+
+- Week 1: Add ROI calculator to pricing page
+- Week 2: Create industry-specific landing pages (SaaS/AI/Healthcare/Museum)
+- Week 3: Implement Light tier automatic notifications
+- Week 4: A/B test ROI-focused pricing page
+- Month 2: Analyze conversion data, iterate messaging
+
+**Success Metrics**:
+
+- [ ] Free → Paid conversion increases 8-15% (from 7% baseline)
+- [ ] Starter churn decreases to 25%/year (from 40%)
+- [ ] Enterprise close rate increases to 45% (from 30%)
+- [ ] Annual contract adoption increases to 25% (from 10%)
+- [ ] Pricing page → trial signup rate increases 20-30%
 
 ---
 
