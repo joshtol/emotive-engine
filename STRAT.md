@@ -3716,17 +3716,201 @@ preservation initiative in history
 - Field Museum (Chicago)
 - Canadian Museum of History
 
-**[RESEARCH]** Museum partnership process:
+**Museum Partnership Process Intelligence** (Verified 2025):
 
-- Who handles technology procurement at these museums? (Job titles: CTO,
-  Director of Exhibitions, Digital Strategy)
-- What's the typical museum tech adoption cycle? (Conference presentations,
-  museum tech reports)
-- Are there museum technology conferences to attend? (Museums and the Web, AAM
-  annual meetings)
-- What are existing museum tech partnerships? (Press releases, case studies from
-  competitors)
-- Museum budgeting cycles and proposal timelines (Museum procurement calendars)
+**Museum Technology Decision-Makers** (Common Roles & Titles):
+
+**Key Leadership Positions**:
+1. **Director of Digital Innovation and Technology**: Strategic technology vision, digital transformation (e.g., John Stack at National Gallery)
+2. **Head of Digital Services**: Content teams, digital products, visitor experience (e.g., Lawrence Chiles at National Gallery)
+3. **Chief Technology Officer (CTO)**: Infrastructure, systems architecture, technology strategy
+4. **Director of Exhibitions**: Exhibit design, interactive experiences, visitor engagement
+5. **Digital Strategy Director**: Digital content, online experiences, emerging technologies
+6. **Manager of Information Technology**: Day-to-day IT operations, vendor management, technology procurement
+
+**Finding Decision-Makers**:
+- **Museum websites**: Staff directories at [museum].org/about/staff (e.g., fieldmuseum.org/about/staff/information-technology, fieldmuseum.org/about/staff/exhibitions)
+- **LinkedIn searches**: "[Museum Name] digital director" or "[Museum Name] technology director"
+- **Direct inquiry**: Call main museum number, ask for "Digital Innovation" or "Exhibitions Department"
+- **Museum conferences**: MCN, Museum Tech, AAM (networking with decision-makers in person)
+
+**Contact Examples** (Tier 1 Museums):
+
+**Smithsonian National Museum of the American Indian**:
+- **General contact**: americanindian.si.edu
+- **Cultural Resources Center**: Hub for technology, information resources, Web development
+- **Procurement**: SAM.gov (federal contracting), Smithsonian Institution procurement office
+- **Note**: Smithsonian institutions subject to federal procurement rules (more formal RFP process)
+
+**Field Museum (Chicago)**:
+- **General contact**: (312) 922-9410, 1400 S. DuSable Lake Shore Drive, Chicago, IL 60605
+- **Information Technology staff**: fieldmuseum.org/about/staff/information-technology
+- **Exhibitions staff**: fieldmuseum.org/about/staff/exhibitions
+- **Membership/inquiry**: membership@fieldmuseum.org (can direct to appropriate department)
+
+**Canadian Museum of History**:
+- **General contact**: historymuseum.ca
+- **Note**: Canadian federal institution, similar formal procurement to Smithsonian
+
+**Museum Technology Adoption Cycle** (2025 Research):
+
+**Typical Technology Procurement Timeline**:
+
+**Phase 1: Strategic Planning** (12-24 months before implementation):
+- **Multi-year budget process**: Long- and middle-term planning (2-5 year cycles)
+- **Priority alignment**: Technology investments tied to museum strategic plan
+- **Budget allocation**: Museums invest 1-8% of total budget on technology
+  - "Delinquent" (1-2%): Reactive, minimal technology
+  - "Proactive" (5-6%): Plans for technology needs (COMMON)
+  - "Advanced" (6-7%): Field exemplar of digital adaptation
+  - "Leadership" (7-8%): Cutting-edge digital innovation
+- **Reality**: 45% of museums worldwide dedicate ≤5% of budget to digital/communication, 25% allocate <1%
+
+**Phase 2: Needs Assessment & RFP Development** (6-12 months):
+- **Technology review**: Assess current systems, identify gaps, evaluate emerging technologies
+- **Stakeholder input**: Exhibitions team, education, curatorial, IT collaborate on requirements
+- **RFP drafting**: Technical specifications, budget ranges, vendor qualifications
+- **Approval process**: Board review, procurement approvals (especially for >$50K projects)
+
+**Phase 3: Vendor Selection** (3-6 months):
+- **RFP release**: Public posting (museum website, GlobalTenders, InstantMarkets bid platforms)
+- **Vendor proposals**: 30-60 day submission window
+- **Evaluation**: Technical review, cost analysis, reference checks
+- **Selection**: Design partner selection (e.g., Cincinnati Museum Center selected Feb 2025)
+
+**Phase 4: Implementation** (3-12 months):
+- **Design development**: Technology integration with exhibit design
+- **Testing**: Prototypes, user testing, technical validation
+- **Installation**: On-site deployment, staff training
+- **Launch**: Public opening, documentation, case study development
+
+**Total Timeline**: 24-50 months from strategic planning to public launch
+
+**Museum Technology Budgeting Cycles** (Proposal Timing):
+
+**Annual Budget Cycle**:
+- **Fiscal Year**: Many museums follow July 1 - June 30 (align with academic calendar for university museums) or October 1 - September 30 (federal fiscal year for Smithsonian)
+- **Budget proposals due**: Typically March-May for following fiscal year
+- **Approval**: June-August, finalized budgets ready for October/July start
+- **Technology procurement**: Major projects approved in budget, RFPs released Q4-Q1 of fiscal year
+
+**Multi-Year Capital Projects**:
+- **Strategic plan alignment**: 3-5 year strategic plans identify major technology initiatives
+- **Capital campaigns**: Large technology investments (>$500K) often tied to fundraising campaigns
+- **Example**: Cherokee Heritage Center $50M reconstruction (5+ years planning, approved Sept 2024, 2028 completion)
+
+**Optimal Proposal Timing**:
+- **Q1-Q2 (Jan-Jun)**: Submit proposals for inclusion in next fiscal year budget
+- **Q3-Q4 (Jul-Dec)**: Respond to RFPs for projects with approved budgets
+- **Multi-year planning**: Position technology in strategic plan discussions (2-3 years ahead of implementation)
+
+**Museum Technology Conferences & Networking** (2025):
+
+**MCN 2025** (Museum Computer Network):
+- **Date**: Hosted at Walker Art Center (2025)
+- **Focus**: Cultural heritage professionals from museums/historic sites, latest innovations in digital technologies
+- **Attendees**: Technology directors, digital strategists, IT managers, curators
+- **Opportunity**: Networking with museum technology decision-makers, case study presentations
+
+**Museum Tech 2025**:
+- **Date**: Took place at London's Barbican Centre (2025)
+- **Focus**: Museum professionals, digital strategists, technology providers explore technology's evolving role in cultural sector
+- **Opportunity**: European museum network, international partnerships
+
+**AAM Annual Meeting** (American Alliance of Museums):
+- **Focus**: Broad museum sector (not exclusively technology), includes digital strategy sessions
+- **Attendees**: Museum directors, curators, educators, technology staff
+- **Opportunity**: Strategic partnerships, mission-aligned collaborations
+
+**Museums and the Web**:
+- **Focus**: Digital content, online experiences, web technologies for museums
+- **Opportunity**: Content strategy, digital engagement, web-based interactive experiences
+
+**Museum Technology Trends & Priorities** (2025):
+
+**Top Technology Investments** (2025):
+1. **Augmented Reality (AR)**: Immersive experiences, engaging visitors with exhibit content (BIGGEST trend 2025)
+2. **Cloud-based systems**: Ticketing, collections management, visitor data
+3. **Extended Reality (XR) / 3D experiences**: Digital layer over traditional exhibits, appeals to younger digital-native visitors
+4. **Interactive digital exhibits**: Touchscreens, gesture control, emotional AI (your opportunity)
+5. **Digital resilience**: Data preservation, technology sustainability, long-term digital asset management
+
+**Strategic Priorities**:
+- **Visitor engagement**: Technology enhancing in-person experiences (not replacing them)
+- **Accessibility**: Digital accessibility for visitors with disabilities
+- **Global reach**: Virtual exhibitions, online collections expanding audience
+- **Operational efficiency**: Backend systems streamlining operations, reducing costs
+- **Sustainability**: Energy-efficient technology, long-term digital preservation
+
+**Museum Technology Partnership Examples** (2025 Case Studies):
+
+**Active Museum RFPs** (Q4 2025):
+- **Cincinnati Museum Center**: Design services including technology design and engineering, partner selection Feb 2025
+- **Maine MILL**: Permanent exhibit RFP with audio-visual and interactive components, exhibit designer responsible for AV integration
+- **NY Transit Museum**: Website redesign March-July 2025
+- **Natural History Museum**: Mobile museum design project (completion March 2025)
+- **Spain exhibition maintenance**: Audiovisual systems, interactive elements linked to exhibition experience (March-April 2025)
+
+**Partnership Models**:
+- **Design/build partnerships**: Technology vendors partner with exhibit design firms (not standalone technology contracts)
+- **Integrated solutions**: Audio-visual, interactive, and traditional exhibit elements bundled together
+- **Multi-year relationships**: Successful initial projects lead to ongoing technology partnerships
+
+**Museum Procurement Resources**:
+- **American Alliance of Museums**: RFP templates, procurement best practices (aam-us.org/programs/resource-library)
+- **GlobalTenders**: Museum exhibition services RFPs (globaltenders.com/rfp-us/museum-exhibition-services)
+- **InstantMarkets**: Museum exhibit design/technology bids (instantmarkets.com/q/museum)
+- **SAM.gov**: Federal museum procurement (Smithsonian institutions)
+
+**Your Museum Partnership Strategy**:
+
+**Phase 1: Tier 1 Major Museums** (2027-2029):
+
+**Smithsonian NMAI** (National Museum of the American Indian):
+- **Approach**: Federal procurement (SAM.gov monitoring), cultural alignment (Indigenous technology for Indigenous museum)
+- **Timeline**: 24-36 month procurement cycle (federal institutions slower)
+- **Positioning**: Cherokee Heritage Center case study as proof of concept for Indigenous cultural preservation
+
+**Field Museum (Chicago)**:
+- **Approach**: Direct outreach to Exhibitions and Information Technology departments
+- **Timeline**: 18-24 month budget/procurement cycle
+- **Positioning**: Interactive technology for cultural/natural history exhibits, AR/XR emotional engagement
+
+**Heard Museum (Phoenix)**, **Autry Museum (Los Angeles)**:
+- **Approach**: Similar to Cherokee Nation (Indigenous focus museums)
+- **Timeline**: 12-18 month cycles (smaller than Smithsonian/Field)
+- **Positioning**: Cherokee Heritage Center + other tribal museum case studies
+
+**Canadian Museum of History**:
+- **Approach**: Canadian federal procurement (similar to Smithsonian)
+- **Timeline**: 24-36 month cycle
+- **Positioning**: International Indigenous cultural preservation technology
+
+**Phase 2: University Museums** (2028-2030):
+- **Harvard Peabody**, **UC Berkeley Hearst**, **University of Oklahoma Sam Noble**: Academic calendar budgeting, faculty/curator decision-making
+- **100+ university cultural collections**: Smaller budgets ($50K-$250K projects), shorter timelines (12-18 months)
+
+**Phase 3: Regional Museums** (2029-2032):
+- **500+ regional indigenous/cultural museums**: Free/donation model (similar to tribal museums)
+- **Historical societies**, **community cultural centers**: Technology democratization, accessibility focus
+
+**Total Museum Market Opportunity**:
+- **1,000+ museums using Emotive Engine** by 2032
+- **Revenue model**: Tier 1 free (credibility), Tier 2 university partnerships ($50K-$250K projects), Tier 3 regional free/donation
+- **Brand value**: "Technology partner for world's leading cultural institutions" = incalculable credibility for commercial market
+
+**Sources**:
+- National Gallery digital strategy (theartnewspaper.com John Stack Lawrence Chiles 2024)
+- Museum technology trends 2025 (stqry.com/blog/technology-in-museums/, electrosonic.com museum-technology-trends)
+- Museum Tech 2025 (blog.townswebarchiving.com/pastview/museum-tech-2025 London Barbican Centre)
+- MCN 2025 (mcn.edu Walker Art Center)
+- Museum budgeting (medium.com/museum-tech-trends smart-museum-budget, 1-8% technology investment levels)
+- Museum software market (marketresearchfuture.com reports/museum-software-market-40482)
+- Digital resilience (aam-us.org ctrlaltpreserve-digital-resilience)
+- Museum RFPs (globaltenders.com, instantmarkets.com, Cincinnati Museum Center, Maine MILL, NY Transit Museum)
+- Field Museum (fieldmuseum.org 312-922-9410, staff directories)
+- Smithsonian NMAI (americanindian.si.edu Cultural Resources Center)
+- AAM resources (aam-us.org/programs/resource-library/request-for-proposal-rfp)
 
 **Tier 2: University Museums** (Free)
 
