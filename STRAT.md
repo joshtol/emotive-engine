@@ -22,7 +22,108 @@ tribal nations using technology to preserve their cultures
 
 ---
 
+### Financial Snapshot
+
+**The Ask**: $1.2M seed round for 18-month runway to $2M ARR
+
+**ARR Targets**:
+
+- Q4 2025 (Month 12): $200K-500K ARR (conservative: 500 paid customers,
+  aggressive: 1,500)
+- Q4 2026 (Month 24): $1.35M-2M ARR (1,000-2,500 paid customers)
+- Acquisition readiness: Month 12-18 at $1.35M+ ARR
+
+**Burn Rate**: $15K-25K/month (lean, founder-led)
+
+- Founder salary: $8K/month ($96K/year, below market)
+- IP protection: $2K-3K/month (patents + trademarks)
+- Infrastructure: $0-500/month (client-side SDK, servers Month 4+)
+- Cherokee partnerships: $2K-5K/month (Advisory Board, cultural development)
+- Marketing: $2K-5K/month (Product Hunt, conferences, affiliate program)
+- Legal/accounting: $1K-3K/month (incorporation, contracts, bookkeeping)
+
+**Runway Calculation**:
+
+- $1.2M seed ÷ $20K average burn = 60 months (5 years) at lean ops
+- Realistic runway: 18 months to $2M ARR (Month 24), then Series A or exit
+- Break-even: Month 8-12 (when MRR exceeds burn rate)
+
+**Use of Funds** ($1.2M):
+
+- IP protection: $50K (3 provisional patents, 2 trademarks, legal setup)
+- Product development: $200K (6 months contract engineers for MCP, ChatGPT
+  plugin, server infrastructure)
+- Cherokee Nation partnerships: $150K (Advisory Board stipends, Fellowship
+  Program pilot, co-creation workshops)
+- Sales & marketing: $100K (Product Hunt, AAM/MCN conferences, enterprise
+  outreach)
+- Founder salary: $288K (18 months × $16K/month for 2 founders)
+- Operations: $100K (legal, accounting, insurance, travel)
+- Infrastructure: $20K (Hetzner servers, CDN, domain, tools)
+- Reserve: $292K (contingency, unforeseen costs)
+
+**Capital Efficiency**:
+
+- CAC: $75 blended (95% organic, 5% paid outreach)
+- LTV: $5,073 (67.6:1 LTV:CAC ratio)
+- Payback period: 9 days (60x faster than median)
+- Gross margin: 99.4% (client-side SDK + serverless infrastructure)
+
+**Exit Strategy**:
+
+- Primary target: $15-25M acquisition at 12-18 months (12x-18x multiple on
+  $1.35M-$2M ARR)
+- Upside scenario: $30-50M if bidding war (OpenAI + Anthropic + Adobe)
+- Acquirers: OpenAI (most likely), Adobe, Hume AI, ElevenLabs
+- Alternative: Series A at $10-15M valuation if $2M+ ARR achieved
+
+**Why This Works**:
+
+- Zero infrastructure cost until Month 4 (client-side SDK validates PMF)
+- 99.4% gross margin = unit economics allow aggressive growth
+- Cultural mission = grant funding offsets R&D ($500K-1M NEH/IMLS/Ford)
+- IP protection = +$15-30M acquisition premium
+- MCP + ChatGPT plugin = zero-CAC distribution (8M+ downloads, 200M+ users)
+
+---
+
 ## PART 1: MARKET ANALYSIS
+
+### Market Overview at a Glance (Investor Summary)
+
+**The Opportunity**: Three converging markets, zero direct competitors in
+visualization layer
+
+| Market Segment                | TAM (2025) | CAGR | Key Players                                                                      | The Gap                                                    | Your Advantage                                                                             |
+| ----------------------------- | ---------- | ---- | -------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Emotion AI**                | $5.7-9.0B  | 37%  | Hume AI ($219M valuation), Affectiva (acquired $73.5M), Beyond Verbal (acquired) | All focus on voice/facial detection, NONE on visualization | Only player building emotional visualization layer (Layer 3 in Emotion AI Stack)           |
+| **Museum Tech**               | $292M      | 3.6% | MuseumNext, MCN, Cuseum                                                          | Static exhibits, no emotional AI integration               | First to bring emotional AI to 33,000+ US museums, Cherokee Heritage Center ($50M project) |
+| **Developer Tools (API/SDK)** | $34B       | 22%  | GitHub, npm, OpenAI (ChatGPT plugins), Anthropic (MCP)                           | No cultural localization, no emotional visualization       | MCP + ChatGPT plugin = zero-CAC distribution to 8M+ downloads + 200M+ users                |
+
+**Market Positioning**:
+
+- **Blue Ocean**: Complementary to voice AI (Hume, ElevenLabs), not competitive
+- **Layer 3 Gap**: Hume does voice (Layer 2), you do visualization (Layer 3) →
+  perfect partnership/acquisition target
+- **Cultural Moat**: Only emotional AI with authentic Indigenous partnerships
+  (competitors can't replicate in 12-18 months)
+
+**Why Now?**:
+
+- AI agent boom (2025 = "Year of the Agent") → conversational AI needs emotional
+  interfaces
+- MCP protocol 80x growth (100K → 8M downloads in 5 months) → Anthropic
+  ecosystem exploding
+- Cherokee Heritage Center timeline (2028 opening) → perfect pilot project
+  alignment
+- Affectiva acquisition ($73.5M) + Beyond Verbal acquisition → validates emotion
+  AI M&A market
+
+**Total Addressable Market**: $40B+ (converging markets) **Serviceable
+Obtainable Market (Year 1)**: $10M-50M (1,000-5,000 customers) **Your Target
+(Year 1)**: $500K ARR (500 paid customers)
+
+---
 
 ### 1.1 Emotional AI Market (TAM)
 
@@ -1260,6 +1361,108 @@ launch)
 ---
 
 ## PART 3: CHEROKEE NATION STRATEGY
+
+**"Humanizing AI through Cultural Preservation"**
+
+Our mission is to preserve Indigenous cultures while building commercial AI
+products. This section outlines measurable cultural impact alongside commercial
+strategy.
+
+---
+
+### 3.0 Cultural Impact Metrics (Measurable Mission Outcomes)
+
+**Why Measure Cultural Impact?**
+
+Investors, tribal boards, and grant foundations require quantifiable evidence
+that cultural preservation is real, not marketing. These metrics demonstrate
+authentic commitment and scalability.
+
+**Year 1 Targets** (Months 1-12):
+
+| Metric                               | Q4 2025 Target        | How We'll Achieve It                                                                                                   |
+| ------------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Indigenous Languages Supported**   | 3-5 languages         | Cherokee (launch), Navajo (Month 4), Ojibwe (Month 6), Chickasaw (Month 9), Hawaiian (Month 12)                        |
+| **Tribal Partnerships**              | 10-15 tribal entities | Cherokee Nation (Month 1), MCN museums (Month 3), tribal tech conferences (Month 6), university partnerships (Month 9) |
+| **Culture Packs Created**            | 20-30 culture packs   | Cherokee resilience (Month 1), Navajo harmony (Month 4), 5 community workshops (Month 6-12)                            |
+| **Indigenous Technologists Trained** | 5-10 fellows          | Emotive Fellowship Program pilot (Month 6-12), 6-month paid fellowships                                                |
+| **Cultural Engagement Reach**        | 500K+ impressions     | Cherokee Heritage Center demo (Month 9), AAM/MCN conferences (Month 6, 10), museum installations                       |
+| **Grant Funding Secured**            | $100K-500K            | NEH Digital Humanities (Month 3), IMLS Museums for America (Month 6), Ford Foundation (Month 9)                        |
+
+**Year 2 Targets** (Months 13-24):
+
+| Metric                               | Q4 2026 Target        | How We'll Scale It                                                                                                     |
+| ------------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Indigenous Languages Supported**   | 10+ languages         | Add 5-7 languages (Lakota, Cree, Māori, Quechua, Yup'ik), expand to international Indigenous communities               |
+| **Tribal Partnerships**              | 30-50 tribal entities | 20 tribal museums, 10 tribal colleges, 10 tribal tech organizations, 5 international Indigenous groups                 |
+| **Culture Packs Created**            | 100+ culture packs    | Community contribution marketplace (Month 13), 50+ community-created packs, 20+ Advisory Board-approved                |
+| **Indigenous Technologists Trained** | 20-30 fellows         | Scale fellowship to 2 cohorts/year (10-15 fellows each), tribal technology workshops at 4 conferences                  |
+| **Cultural Engagement Reach**        | 2M+ impressions       | 10 museum installations, Cherokee Heritage Center (2028 opening), Smithsonian consideration, international exhibitions |
+| **Grant Funding Secured**            | $500K-1M              | NEH + IMLS + Ford Foundation + MacArthur Foundation + tribal economic development grants                               |
+
+**Non-Revenue KPIs** (Quarterly Tracking):
+
+These metrics measure cultural impact independently from commercial success:
+
+**Q1-Q4 2025:**
+
+- [ ] Number of tribal advisory board meetings held (target: 4 per year)
+- [ ] Percentage of culture packs reviewed by Indigenous advisors before release
+      (target: 100%)
+- [ ] Hours of cultural consultation provided to product team (target: 40
+      hours/quarter)
+- [ ] Indigenous community feedback surveys collected (target: 50/quarter from
+      tribal users)
+- [ ] Cultural accuracy incident reports (target: 0 - any reported
+      misrepresentation addressed within 7 days)
+
+**Q1-Q4 2026:**
+
+- [ ] Number of co-creation workshops with tribal communities (target: 8 per
+      year)
+- [ ] Percentage of Fellowship Program graduates employed in tech (target: 80%)
+- [ ] Indigenous language preservation collaborations (target: 5 partnerships
+      with language revitalization orgs)
+- [ ] Culture pack revenue shared with communities (target: 20% of all culture
+      pack revenue distributed quarterly)
+- [ ] Museums/cultural centers using free tier (target: 50 institutions)
+
+**Impact Reporting**:
+
+**Annual Cultural Impact Report** (Public, Transparent):
+
+- Published every January
+- 20-30 pages with quantitative + qualitative data
+- Case studies from tribal partners
+- Financial transparency (revenue sharing, grant usage)
+- Community testimonials
+- Third-party cultural audit (by anthropologist or tribal board member)
+
+**Why This Matters**:
+
+1. **Investor confidence**: ESG metrics increasingly critical for valuations
+   (+10-20% premium)
+2. **Grant eligibility**: Foundations require measurable outcomes to release
+   funding
+3. **Tribal trust**: Transparency demonstrates commitment vs exploitation
+4. **Acquisition premium**: Cultural moat is only defensible if formalized and
+   measurable (+$5-10M)
+5. **PR value**: Authentic impact = media coverage (NPR, NY Times, Wired)
+
+**Success Threshold**:
+
+If by Month 12 we achieve:
+
+- ✅ 3+ Indigenous languages supported
+- ✅ 10+ tribal partnerships
+- ✅ 20+ culture packs created
+- ✅ 5+ fellows trained
+- ✅ $100K+ grant funding
+
+Then cultural mission is validated and scalable. If <50% of targets hit, pivot
+strategy or increase cultural investment.
+
+---
 
 ### 3.1 Heritage Center Project Intel
 
@@ -4906,7 +5109,129 @@ Exit options:
 
 ---
 
-## PART 6: FIRST 30 DAYS ACTION PLAN
+## PART 6: 12-24 MONTH ROADMAP & EXECUTION PLAN
+
+### Visual Timeline: Product, IP, Culture, & Funding Milestones
+
+**12-24 Month Gantt-Style Roadmap** (ASCII visualization for pitch decks)
+
+```
+MONTH │ PRODUCT                 │ IP PROTECTION          │ CHEROKEE NATION       │ FUNDING & GROWTH
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+  1   │ ▓▓ ChatGPT Plugin      │ ▓▓ Patent #1 Filed    │ ▓▓ Outreach Begin     │ ░░ Seed conversations
+      │ ▓▓ Client-Side SDK     │ ▓▓ Trademark Filed    │                       │
+      │ ░░ MCP Server (prep)   │                        │                       │
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+  2   │ ▓▓ MCP Server Launch   │ ▓▓ Patent #2 Filed    │ ▓▓ Advisory Board     │ ░░ Seed term sheets
+      │ ▓▓ Product Hunt        │ ▓▓ CLA Setup          │    Forming            │
+      │ ░░ ChatGPT approval    │                        │                       │
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+  3   │ ▓▓ ChatGPT Plugin Live │ ▓▓ Patent #3 Filed    │ ▓▓ First Workshop     │ ▓▓ Seed Close ($1.2M)
+      │ ░░ Enterprise outreach │                        │ ░░ NEH Grant App      │ ░░ 100 paid customers
+      │                         │                        │                       │
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+  4   │ ░░ Hetzner Server      │ ░░ WASM Obfuscation   │ ▓▓ Cherokee Culture   │ ░░ $50K MRR
+      │    (if 50+ customers)  │    (begin)            │    Pack Launch        │
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+  6   │ ░░ React Native SDK    │ ░░ WASM Complete      │ ▓▓ Fellowship Pilot   │ ▓▓ AAM Conference
+      │ ░░ Mobile demos        │                        │    (5-10 fellows)     │ ▓▓ IMLS Grant App
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+  9   │ ░░ Voice integration   │                        │ ▓▓ Heritage Center    │ ░░ $100K MRR
+      │    (Hume AI partner)   │                        │    Demo (schematic)   │ ░░ Ford Grant App
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+ 12   │ ░░ Healthcare (HIPAA)  │ ▓▓ Convert Patents    │ ▓▓ 3+ Languages       │ ▓▓ $200K-500K ARR
+      │ ░░ Enterprise SSO      │    (provisional→full) │ ▓▓ 10+ Partnerships   │ ▓▓ Acquisition talks
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+ 15   │ ░░ WASM Enterprise     │                        │ ▓▓ Second Tribal      │ ░░ Series A prep OR
+      │    Packages            │                        │    Nation (Navajo?)   │ ░░ Acquisition DD
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+ 18   │ ░░ Self-Hosted Option  │ ▓▓ Patents Granted    │ ▓▓ 5+ Languages       │ ▓▓ $1.35M-2M ARR
+      │ ░░ White-Label         │    (provisional→full) │ ▓▓ Fellowship Scale   │ ▓▓ Series A ($10-15M)
+      │                         │                        │    (20-30 fellows)    │    OR Exit ($15-25M)
+──────┼─────────────────────────┼────────────────────────┼───────────────────────┼─────────────────────────
+ 24   │ ░░ Global Expansion    │ ▓▓ Full Patent        │ ▓▓ Heritage Center    │ ▓▓ $3M+ ARR
+      │ ░░ API v2.0            │    Portfolio (3-5)    │    Opens (2028 prep)  │ ▓▓ Exit ($30-50M) OR
+      │                         │                        │ ▓▓ 10+ Languages      │    Series B prep
+──────┴─────────────────────────┴────────────────────────┴───────────────────────┴─────────────────────────
+
+Legend:
+▓▓ = Critical path (must complete on time)
+░░ = Flexible (can adjust based on traction)
+```
+
+**Key Milestones Explained**:
+
+**Months 1-3: Foundation & Launch**
+
+- Week 1: ChatGPT plugin (fastest distribution, 200M+ users)
+- Week 2: MCP server (Anthropic ecosystem, 8M+ downloads)
+- Week 4: Product Hunt (developer community validation)
+- Month 1-3: File 3 provisional patents ($15K-30K)
+- Month 1: Cherokee Nation outreach (Paula Starr, Advisory Board)
+- Month 3: Seed funding close ($1.2M)
+
+**Months 4-6: Validation & Scale**
+
+- Month 4: Server-side rendering (if 50+ customers demand it)
+- Month 6: AAM Conference (museum partnerships)
+- Month 6: Fellowship Program pilot (5-10 Indigenous technologists)
+- Goal: $50K MRR, 500 paid customers
+
+**Months 7-12: Enterprise & IP**
+
+- Month 9: Cherokee Heritage Center demo (schematic design phase)
+- Month 12: Convert provisional patents to full utility patents
+- Month 12: Acquisition talks begin (OpenAI, Adobe, Hume AI)
+- Goal: $200K-500K ARR, 1,000+ paid customers
+
+**Months 13-18: Partnership or Exit**
+
+- Month 15: WASM enterprise packages (self-hosted for Fortune 500)
+- Month 18: Patents granted (3-5 portfolio)
+- Month 18: Series A ($10-15M) OR strategic acquisition ($15-25M)
+- Goal: $1.35M-2M ARR, 2,000+ paid customers
+
+**Months 19-24: Scale or Acquire**
+
+- Month 24: Heritage Center opening prep (2028 timeline)
+- Month 24: 10+ Indigenous languages supported
+- Month 24: Exit opportunity ($30-50M) OR Series B prep
+- Goal: $3M+ ARR, 3,000+ paid customers
+
+**Critical Success Factors** (Must-Haves):
+
+| Month | What Must Happen                               | Probability | Risk Mitigation                                                |
+| ----- | ---------------------------------------------- | ----------- | -------------------------------------------------------------- |
+| 1     | ChatGPT plugin submitted to OpenAI             | 95%         | Have backup: MCP server ready if plugin rejected               |
+| 2     | Product Hunt launch gets 500+ upvotes          | 70%         | Pre-launch email list (500+), Twitter outreach, Show HN post   |
+| 3     | Seed funding closes ($1.2M)                    | 60%         | Start conversations Month 1, have 5 investor intros lined up   |
+| 6     | AAM Conference = 3-5 museum leads              | 80%         | Pre-conference outreach, Cherokee Heritage Center case study   |
+| 9     | Cherokee Heritage Center partnership confirmed | 70%         | Paula Starr warm intro, align with 2028 timeline, free tier    |
+| 12    | $200K ARR achieved                             | 50%         | Requires 500 paid customers, MCP/ChatGPT virality critical     |
+| 18    | Acquisition offer OR Series A term sheet       | 40%         | Multiple buyer strategy (not just Anthropic), enterprise logos |
+
+**What Drives Timeline Acceleration**:
+
+- ChatGPT plugin featured placement → 10K installs Month 1 → compress timeline
+  3-6 months
+- Cherokee Heritage Center public announcement → PR wave → accelerate museum
+  partnerships
+- Enterprise logo (Notion, Replit, Perplexity) → acquisition interest spikes →
+  exit Month 12 possible
+- Grant funding ($500K-1M) → extend runway → less dilution on Series A
+
+**What Causes Timeline Delays**:
+
+- ChatGPT plugin rejected → resubmit → lose 1-2 months
+- Cherokee Nation partnership takes 6+ months → delay Fellowship Program →
+  cultural impact metrics lag
+- Seed funding takes 6+ months → burn personal savings → delay hiring → slow
+  product development
+- No enterprise traction → remain SMB-focused → lower acquisition valuations
+
+---
+
+## PART 6.1: FIRST 30 DAYS ACTION PLAN
 
 ### Week 1: Infrastructure (Jan 1-7)
 
