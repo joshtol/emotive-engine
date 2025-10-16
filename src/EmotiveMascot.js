@@ -203,7 +203,11 @@ class EmotiveMascot {
         
         this.stateMachine = new EmotiveStateMachine(this.errorBoundary);
         this.particleSystem = new ParticleSystem(this.config.maxParticles, this.errorBoundary);
-        
+
+        // Set canvas dimensions on particle system for proper spawn calculations
+        this.particleSystem.canvasWidth = this.canvasManager.width;
+        this.particleSystem.canvasHeight = this.canvasManager.height;
+
         // Always use EmotiveRenderer, pass full config including topOffset and position controller
         this.renderer = new EmotiveRenderer(this.canvasManager, {
             ...this.config.classicConfig,

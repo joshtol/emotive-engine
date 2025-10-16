@@ -181,24 +181,8 @@ export default function Home() {
       
       setTimeout(() => {
         try {
-          // Trigger hula and sparkle gestures
-          mascot.express('hula')
-          mascot.express('sparkle')
-          
-          // Start tutorial messages
-          addMessage('info', 'Welcome to the Emotive Engine! 🎭', 4000)
-          
-          setTimeout(() => {
-            addMessage('info', 'Try the emotion buttons and gesture controls!', 4000)
-          }, 2000)
-          
-          setTimeout(() => {
-            addMessage('info', '🎵 Check out the music demos in the system bar!', 4000)
-            // Flash the music button
-            setFlashMusicButton(true)
-            setTimeout(() => setFlashMusicButton(false), 3000)
-          }, 4000)
-          
+          // Welcome message with music demo prompt
+          addMessage('info', '🎵 Hit the music note up top to see the mascot react in real time!', 5000)
         } catch (error) {
           // Tutorial failed to start
         }

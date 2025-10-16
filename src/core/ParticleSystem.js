@@ -331,12 +331,15 @@ class ParticleSystem {
         if (this.particles.length >= this.absoluteMaxParticles) {
             return;
         }
-        
+
         // Calculate spawn position based on behavior
-        const spawnPos = this.getSpawnPosition(behavior, centerX, centerY);
-        
+        // Pass canvas size for proper calculation when mascot is offset
+        const canvasWidth = this.canvasWidth || (centerX * 2);
+        const canvasHeight = this.canvasHeight || (centerY * 2);
+        const spawnPos = this.getSpawnPosition(behavior, centerX, centerY, canvasWidth, canvasHeight);
+
         // CLAMP spawn position to canvas boundaries
-        const clampedPos = this.clampToCanvas(spawnPos.x, spawnPos.y, centerX, centerY);
+        const clampedPos = this.clampToCanvas(spawnPos.x, spawnPos.y, canvasWidth, canvasHeight);
         spawnPos.x = clampedPos.x;
         spawnPos.y = clampedPos.y;
         
@@ -362,13 +365,15 @@ class ParticleSystem {
     /**
      * Calculates spawn position based on behavior type
      * @param {string} behavior - Particle behavior type
-     * @param {number} centerX - Center X coordinate
-     * @param {number} centerY - Center Y coordinate
+     * @param {number} centerX - Center X coordinate (mascot position, may be offset)
+     * @param {number} centerY - Center Y coordinate (mascot position, may be offset)
+     * @param {number} canvasWidth - Actual canvas width
+     * @param {number} canvasHeight - Actual canvas height
      * @returns {Object} Spawn position {x, y}
      */
-    getSpawnPosition(behavior, centerX, centerY) {
+    getSpawnPosition(behavior, centerX, centerY, canvasWidth, canvasHeight) {
         // Calculate orb radius based on canvas size (matching EmotiveRenderer)
-        const canvasSize = Math.min(centerX * 2, centerY * 2);
+        const canvasSize = Math.min(canvasWidth, canvasHeight);
         const orbRadius = canvasSize / 12;  // Core radius
         const glowRadius = orbRadius * 2.5; // Glow extends this far
         
@@ -377,8 +382,10 @@ class ParticleSystem {
         
         // Spawn particles outside the glow radius so they're visible
         const minSpawnRadius = glowRadius * 1.1; // 10% beyond glow edge
-        const maxSpawnRadius = Math.min(glowRadius * 1.5, 
-            centerX - margin, centerY - margin); // Constrain to canvas
+        // Constrain to distance from mascot to canvas edge
+        const maxDistX = Math.min(centerX - margin, canvasWidth - centerX - margin);
+        const maxDistY = Math.min(centerY - margin, canvasHeight - centerY - margin);
+        const maxSpawnRadius = Math.min(glowRadius * 1.5, maxDistX, maxDistY);
         
         switch (behavior) {
         case 'ambient':
@@ -489,9 +496,7 @@ class ParticleSystem {
     /**
      * Clamps a position to stay within canvas boundaries
      */
-    clampToCanvas(x, y, centerX, centerY, margin = 30) {
-        const canvasWidth = centerX * 2;
-        const canvasHeight = centerY * 2;
+    clampToCanvas(x, y, canvasWidth, canvasHeight, margin = 30) {
         return {
             x: Math.max(margin, Math.min(canvasWidth - margin, x)),
             y: Math.max(margin, Math.min(canvasHeight - margin, y))

@@ -12,6 +12,21 @@ export default function HomePage() {
   const [scrollPosition, setScrollPosition] = useState(0)
   const lastGestureRef = useRef<number>(-1)
   const [containerZIndex, setContainerZIndex] = useState(100)
+  const [isMobileView, setIsMobileView] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Detect mobile on client-side only (prevents hydration mismatch)
+  useEffect(() => {
+    setIsClient(true)
+    setIsMobileView(window.innerWidth < 768)
+
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Initialize mascot engine
   useEffect(() => {
@@ -92,6 +107,11 @@ export default function HomePage() {
           core: 0.4,       // Core at 40% of default size
           particles: 0.7   // Particles at 70% for balanced appearance
         })
+
+        // Set initial position BEFORE starting to prevent center-spawn particles
+        // Desktop: Position mascot far left, Mobile: Keep centered
+        const initialXOffset = isMobile ? 0 : -vw * 0.38
+        mascotInstance.setPosition(initialXOffset, 0, 0)
 
         // Start the engine
         mascotInstance.start()
@@ -326,16 +346,23 @@ export default function HomePage() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                   gap: '1rem',
                 }}>
-                  {[
-                    { name: 'joy', svg: 'joy.svg', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)' },
-                    { name: 'sadness', svg: 'sadness.svg', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.15)' },
-                    { name: 'anger', svg: 'anger.svg', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' },
-                    { name: 'fear', svg: 'fear.svg', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)' },
-                    { name: 'excited', svg: 'excited.svg', color: '#EC4899', bg: 'rgba(236, 72, 153, 0.15)' },
-                    { name: 'love', svg: 'love.svg', color: '#F472B6', bg: 'rgba(244, 114, 182, 0.15)' },
-                    { name: 'calm', svg: 'calm.svg', color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.15)' },
-                    { name: 'surprise', svg: 'surprise.svg', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' },
-                  ].map((emotion) => (
+                  {isClient && [
+                    { name: 'joy', svg: 'joy.svg', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)', mobile: true },
+                    { name: 'sadness', svg: 'sadness.svg', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.15)', mobile: true },
+                    { name: 'anger', svg: 'anger.svg', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)', mobile: true },
+                    { name: 'fear', svg: 'fear.svg', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)', mobile: false },
+                    { name: 'excited', svg: 'excited.svg', color: '#EC4899', bg: 'rgba(236, 72, 153, 0.15)', mobile: false },
+                    { name: 'love', svg: 'love.svg', color: '#F472B6', bg: 'rgba(244, 114, 182, 0.15)', mobile: false },
+                    { name: 'calm', svg: 'calm.svg', color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.15)', mobile: true },
+                    { name: 'surprise', svg: 'surprise.svg', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)', mobile: false },
+                  ].filter((emotion) => {
+                    // Use state variable to avoid hydration mismatch
+                    if (isMobileView) {
+                      return emotion.mobile;
+                    }
+                    // Show all emotions on desktop
+                    return true;
+                  }).map((emotion) => (
                     <button
                       key={emotion.name}
                       onClick={() => {

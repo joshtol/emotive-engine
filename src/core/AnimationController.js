@@ -450,12 +450,20 @@ class AnimationController {
             // Get current emotional properties and center for particle system (advanced mode only)
             if (this.subsystems.particleSystem && this.subsystems.stateMachine && this.subsystems.canvasManager) {
                 const emotionalProps = this.subsystems.stateMachine.getCurrentEmotionalProperties();
-                const center = this.subsystems.canvasManager.getCenter();
-                
+
+                // Use effective center from renderer (includes position offsets) instead of raw canvas center
+                let center;
+                if (this.subsystems.renderer && typeof this.subsystems.renderer.getEffectiveCenter === 'function') {
+                    center = this.subsystems.renderer.getEffectiveCenter();
+                } else {
+                    // Fallback to canvas center if renderer doesn't have getEffectiveCenter
+                    center = this.subsystems.canvasManager.getCenter();
+                }
+
                 // Get current gesture info from renderer if available
                 let gestureMotion = null;
                 let gestureProgress = 0;
-                
+
                 if (this.subsystems.renderer && this.subsystems.renderer.getCurrentGesture) {
                     const currentGesture = this.subsystems.renderer.getCurrentGesture();
                     if (currentGesture && currentGesture.particleMotion) {
@@ -463,7 +471,7 @@ class AnimationController {
                         gestureProgress = currentGesture.progress || 0;
                     }
                 }
-                
+
                 // Update particle system with current emotional context
                 this.subsystems.particleSystem.spawn(
                     emotionalProps.particleBehavior,
@@ -473,7 +481,7 @@ class AnimationController {
                     center.y,
                     deltaTime
                 );
-                
+
                 // Update particles with gesture motion if available
                 this.subsystems.particleSystem.update(deltaTime, center.x, center.y, gestureMotion, gestureProgress);
             }
