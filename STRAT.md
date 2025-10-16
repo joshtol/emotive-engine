@@ -2121,17 +2121,159 @@ Exit options:
 - Identify other stakeholders
 - **Deliverable**: Outreach list
 
-**[RESEARCH]** Cherokee Nation outreach prep:
+**Cherokee Nation Outreach Intelligence** (Verified 2024-2025):
 
-- Cherokee Nation organizational chart (Government website, annual reports)
-- Recent Chief Hoskin speeches/priorities (Cherokee Phoenix, State of the Nation
-  addresses)
-- Cherokee Nation vendor/partnership process (Procurement policies, past
-  technology partnerships)
-- Cultural protocols for approaching tribal leadership (Tribal consultation best
-  practices)
-- Other Cherokee citizen entrepreneurs who've worked with the Nation (Success
-  stories, case studies)
+**Government Structure & Key Decision-Makers**:
+
+**Tripartite Government** (Executive, Legislative, Judicial):
+
+**Executive Branch Leadership**:
+- **Principal Chief**: Chuck Hoskin Jr. (elected, serves as final authority on administrative operations)
+- **Deputy Principal Chief**: Bryan Warner
+- **Chief of Staff**: Responsible for implementing policy, executive orders, and directives across government
+- **Seven Cabinet-Level Positions**:
+  1. Secretary of State
+  2. Chief of Staff
+  3. Treasurer
+  4. Marshal
+  5. Attorney General
+  6. Secretary of Natural Resources (oversees Tribal Historic Preservation)
+  7. Secretary of Veterans Affairs
+
+**Legislative Branch**:
+- **17 Tribal Council members** (15 district representatives + 2 at-large for citizens outside 14-county Oklahoma jurisdiction)
+- Elected to staggered four-year terms
+- Next redistricting planned for 2025 elections
+- Council committee approval required for major proposals (e.g., Heritage Center $50M investment)
+
+**Technology Leadership** (Already researched):
+- **CIO**: Paula Starr (first female CIO, leads IT for 4,000-5,000 employees serving 460,000 citizens)
+
+**Chief Chuck Hoskin Jr.'s Priorities** (2024-2025 State of the Nation Addresses):
+
+**August 31, 2024 State of the Nation** (7th annual address during 73rd Cherokee National Holiday):
+
+**Top Priorities** (Your strategic alignment opportunities):
+
+1. **Healthcare** (Top priority):
+   - Taking over Claremore Indian Hospital from federal IHS by end of 2025
+   - $450 million hospital in Tahlequah (doubles in-patient capacity) on track
+   - **Wellness Fund increase**: Raising Public Health & Wellness Fund from 7% to 10% of third-party healthcare revenue
+   - Funds wellness centers, behavioral health services, drug treatment facilities
+
+2. **Cultural Preservation** (PERFECT FIT for you):
+   - **$50 million Cherokee Heritage Center** (replacing site closed since 2020)
+   - Expected completion: 2028
+   - Historic cemeteries act
+   - Cherokee National Trail System
+   - Commission for repatriating artifacts and remains
+   - **Strategic alignment**: Your emotional AI for cultural storytelling directly supports this priority
+
+3. **Substance Abuse Treatment**:
+   - First adult drug treatment facility opening in Tahlequah in 2026
+   - Outpatient center planned for Vinita
+   - Residential recovery center designs to be unveiled
+
+4. **Education**:
+   - $65 million Sequoyah Schools capital improvement project
+
+5. **Economic Development**:
+   - $86 million in loan support for Cherokee-owned small businesses
+   - **Your opportunity**: Cherokee citizen entrepreneur with innovative AI technology
+
+6. **Housing & Community Development**:
+   - $30 million over 3 years for affordable housing, community buildings, recreation spaces, public safety
+
+**Communication Themes** (Frame your pitch around these):
+- "Impassioned" delivery style (Cherokee Phoenix description)
+- Focus on health, wellness, and community
+- Tribal sovereignty protection (recent speeches on jurisdiction threats)
+- Honoring ancestors while investing in future
+- Cherokee values integrated with modern innovation
+
+**Cherokee Heritage Center Planning Committee** (Your primary institutional contact):
+
+**Leadership & Governance**:
+- **Cherokee National Historical Society** governs the Heritage Center
+- **Board composition**: 3 members appointed by three branches of government (Executive, Legislative, Judicial), who then select 4 additional members (7 total)
+- **5+ years of planning** (2020-2025): Board researched Heritage Center history, assessed infrastructure, worked with design experts, toured modern museums
+
+**Design & Architecture**:
+- **Anishinabe Design** led by **Safdie Architects** (also designed Crystal Bridges Museum of American Art in Bentonville, Arkansas)
+- Modern museum design principles applied to Cherokee cultural storytelling
+
+**Current Status** (2024-2025):
+- Heritage Center closed to public during planning
+- $50 million investment proposal approved by Tribal Council (Sept 25, 2024 committee level, special council meeting same day)
+- Construction completion target: 2028
+- **Technology opportunity window**: Planning phase = perfect time to propose interactive exhibits
+
+**Procurement & Partnership Process** (How to work with Cherokee Nation):
+
+**Official Procurement Portal**:
+- **Website**: cherokeebids.org (all RFPs and bids posted here)
+- Opportunities for individuals and businesses to bid on Cherokee Nation and Cherokee Nation Businesses contracts
+
+**TERO (Tribal Employment Rights Office) Preference System** (Critical for you):
+- **Cherokee citizen advantage**: TERO-certified businesses receive preferential treatment in bid process
+- **Requirements**: Provide TERO certificate (front and back) with bid submissions
+- **Fees**: ½ of 1% of total contract award, plus TERO Labor Agreement fees if applicable
+- **Bonding waiver**: TERO-certified firms encouraged to bid even without bonding capability (normally required for construction contracts >$100K)
+- **Listing**: TERO maintains database of Indian-owned businesses used by CN Purchasing Department
+
+**Legal Restrictions**:
+- No contractors/subcontractors may be owned by first-degree relatives of elected officials
+
+**Award Process**:
+- Cherokee Nation reserves right to issue one award, multiple awards, or reject all bids
+- All bids subject to negotiation prior to award
+- Awards may be issued without discussion of received bids
+
+**Technology Procurement Examples** (2024-2025):
+- Cherokee Nation Entertainment: Player digital engagement and rebrand (CMS/DXP system, loyalty program technology)
+- Pattern: Technology RFPs are regularly posted on cherokeebids.org
+
+**Your Strategic Approach** (Dual Track):
+
+**Track 1: Direct Outreach to Paula Starr** (Personal/Professional):
+- Email: paula-starr@cherokee.org or paula.starr@cherokee.org (74.2% likelihood)
+- LinkedIn backup
+- Frame: Cherokee citizen entrepreneur with AI innovation supporting wellness + cultural preservation priorities
+- Timing: January 2025 = perfect (AI policy signed Sept 2025, actively evaluating applications)
+
+**Track 2: Formal Proposal to Heritage Center Planning Committee** (Institutional):
+- Contact: Secretary of Natural Resources Office (oversees Tribal Historic Preservation)
+- Alternative: Chief of Staff office (implements policy across government)
+- Frame: Interactive exhibit technology for new $50M Heritage Center (2028 completion)
+- Timing: Planning phase NOW = ideal for proposing technology integration
+
+**Track 3: TERO Certification** (Long-term positioning):
+- If you establish Cherokee-owned business entity, get TERO certified
+- Provides preferential treatment in all future Cherokee Nation procurement
+- Opens doors to broader tribal government technology contracts
+
+**Cultural Protocol Insights**:
+- Chief Hoskin's "impassioned" speaking style suggests emotional connection to cultural preservation
+- 88% of Paula Starr's IT team is Cherokee (cultural authenticity highly valued)
+- Community values integration (21 Cherokee values, especially "hold one other sacred")
+- Sovereignty protection is paramount (approach with respect for tribal self-governance)
+
+**Key Contacts Summary**:
+- **Paula Starr** (CIO): paula-starr@cherokee.org - Technology evaluation, AI policy implementation
+- **Chief Hoskin's Office**: Contact via official Cherokee Nation website contact page (formal proposals)
+- **Secretary of Natural Resources**: Tribal Historic Preservation (Heritage Center technology)
+- **Chief of Staff**: Cross-government policy implementation (if you need executive-level visibility)
+- **Procurement Department**: cherokeebids.org inquiries for formal RFP process
+
+**Sources**:
+- Cherokee Nation Government Structure (cherokee.org/our-government/)
+- Chief Hoskin State of Nation Aug 31, 2024 (cherokeephoenix.org, ictnews.org, ktul.com)
+- Cherokee Heritage Center $50M proposal (fourstateshomepage.com, cherokeephoenix.org)
+- Cherokee Nation Procurement (cherokeebids.org, cherokee.org/about-the-nation/procurements/)
+- TERO Policies (cherokeetero.com/procurement/)
+- Anishinabe Design/Safdie Architects (cherokeephoenix.org heritage center planning)
+- Cherokee Nation FY 2024 Distinguished Presentation Report
+- Tribal Council structure (cherokee.org/our-government/legislative-branch/)
 
 **Tuesday-Wednesday**: Letter Writing
 
