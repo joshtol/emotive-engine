@@ -1719,16 +1719,178 @@ Exit: Acquisition for $200-300M or IPO
 Your outcome: $150-250M (75-83% ownership)
 ```
 
-**[RESEARCH]** Fundraising specifics:
+**Fundraising Intelligence: AI Startup Funding Landscape** (Verified 2024-2025):
 
-- Which VCs actually invest at pre-seed/seed for AI companies? (Recent AI deals
-  on Crunchbase, VC portfolio pages)
-- What traction do VCs require for Series A in 2025? (VC blog posts, AngelList
-  data, Carta benchmarks)
-- Are there AI-focused funds with social impact mandates? (Impact investing
-  databases, Native American VC funds)
-- What are typical Series A term sheets like? (VC deal term databases, Y
-  Combinator resources)
+**AI Funding Market Overview** (2024-2025 Crunchbase Data):
+
+**Market Size & Activity**:
+- **2024**: ~$100 billion invested in AI startups globally (1 in 3 venture dollars)
+- **Q1 2025**: $59.6 billion to AI globally (53% of all global funding, 70%+ of VC activity)
+- **U.S. market**: 42% of U.S. VC went to AI in 2024 (up from 36% in 2023, 22% in 2022)
+- **North America H1 2025**: $145 billion seed-to-growth funding (43% YoY gain, highest in 3 years)
+- **Mega-rounds dominance**: 69% of AI VC flowed into $100M+ rounds
+
+**Seed Stage Trends**:
+- **Seed funding stability**: ~$8 billion/quarter through 2024 (down 1/3 from peak but held better than early/late-stage)
+- **Q2 2025 spike**: $5.9 billion (highest in 3 years, driven by Thinking Machines Lab $2B record seed)
+- **Pre-seed range**: Nearly 50% of AI pre-seed rounds fell in $500K–$2M range
+- **Notable 2025 seed rounds**: Thinking Machines $2B (record U.S. seed), LMArena $100M, Amca $77M, Emerald AI $24.5M
+
+**Top AI Investors: Pre-Seed & Seed Stage** (2024-2025):
+
+**Most Active Pre-Seed Investors**:
+1. **Y Combinator** (made nearly 700 seed investments in 2024, 50% of W24 batch was AI)
+2. **NFX**
+3. **Founders Fund**
+4. **C2 Investment**
+5. **Pioneer Fund** (AI-enabled tools: legal, recruiting, code, medical)
+6. **SV Angel**
+
+**Most Active Seed Investors**:
+1. **Andreessen Horowitz (a16z)** (most active global post-seed investor, 100 rounds in 2024)
+2. **NFX**
+3. **Bain Capital Ventures**
+4. **General Catalyst**
+5. **Lightspeed Venture Partners**
+
+**Top Multi-Stage AI Investors**:
+1. **Andreessen Horowitz** (a16z)
+2. **Sequoia Capital** (most active in YC companies all-time by deal count)
+3. **Khosla Ventures** (most active in YC companies all-time)
+4. **Benchmark**
+5. **Accel**
+6. **Bessemer Venture Partners**
+7. **First Mark Capital**
+8. **SignalFire**
+
+**AI Developer Tools Specific Investors** (Your category):
+- **a16z**: Led Stainless $25M Series A (API platform, 2024)
+- **Sequoia**: Co-led Stainless $25M Series A
+- **Y Combinator**: Greptile (LLM code analysis API, W24 batch)
+- **Benchmark, Khosla, General Catalyst**: AI-enabled dev tools, code development, APIs
+
+**Series A Traction Requirements** (2025 Benchmarks):
+
+**ARR Baseline** (Critical for your planning):
+- **Minimum baseline**: $1M ARR (barely acceptable)
+- **Competitive baseline**: $2M+ ARR (not aspiration, but REQUIREMENT)
+- **Typical range**: $2M–$5M ARR for Series A raises
+- **Your $1.35M Year 1 projection**: Just above minimum, need to hit $2M+ by Series A timing
+
+**AI Company Performance** (Faster than traditional SaaS):
+- **Enterprise AI median**: Reached $2M+ ARR in first year, raised Series A 9 months post-monetization
+- **Consumer AI median**: Even better—$4.2M ARR, Series A within 8 months of monetization
+- **Implication**: AI companies hit milestones 2-3x faster than traditional SaaS
+
+**Growth Rate Expectations**:
+- **Top-tier**: 3x (300%) YoY growth
+- **Good but not great**: 80-100% YoY growth
+- **Your Year 1→Year 2 projection**: $1.35M → $4.86M = 260% growth (good, approaching top-tier)
+
+**Additional Key Metrics VCs Evaluate**:
+
+**Capital Efficiency**:
+- **Burn multiple** (net burn ÷ ARR): Target <1.5x to stay attractive
+- **Your advantage**: Bootstrapping Year 1 means zero burn, infinite efficiency
+
+**Sales Velocity**:
+- **Top performers**: 4-6 new deals/month at $50K+ ACV
+- **Your model**: Developer tools = lower ACV ($500-2K/year), higher volume needed
+
+**Revenue Retention**:
+- **Net Revenue Retention (NRR)**: >100% signals strong product-market fit
+- **Upsell motion**: ≥30% of new ARR should come from upsells/expansions
+
+**AI-Specific Valuation Multiples** (2025):
+- **Series A & B**: Highest multiples at 39.0x and 31.7x respectively (momentum, team, market positioning)
+- **Pre-$5M ARR companies**: 20.8x average (seed stage)
+- **AI premium**: 25-40x revenue (vs 6x traditional SaaS)
+
+**What VCs Look For in AI Startups** (2025 Investment Criteria):
+
+**Core Business Competencies** (4 required):
+1. **Technical differentiation**: Clear advantage over existing solutions (not just wrapper around OpenAI)
+2. **Market validation**: Early traction, pilot programs, adoption signals
+3. **Financial discipline**: Sound financial model, transparent unit economics
+4. **Regulatory preparedness**: Awareness of AI governance, data privacy, compliance
+
+**Model Originality** (Critical in 2025):
+- **Problem**: Many AI startups just added layer on top of OpenAI models (easy to copy)
+- **Solution VCs want**: Originality, unique proprietary models, not fully reliant on external APIs
+- **Your advantage**: Proprietary particle physics engine + emotional AI = not a ChatGPT wrapper
+
+**Strategic Focus Areas** (VC priorities shifting):
+- **Infrastructure & application layer**: Moving beyond foundation models to practical applications
+- **Clear revenue models**: Not just hype, need business model clarity
+- **Durable moats**: Defensibility beyond just being first-to-market
+- **Go-to-market traction**: Evidence of customer acquisition, not just product demos
+- **Capital efficiency**: Pragmatic execution over burn-and-scale
+
+**Measurable Progress Requirements**:
+- Business metrics (ARR, growth rate, retention)
+- Technical milestones (product evolution, performance improvements)
+- Not just vision, but concrete evidence of execution
+
+**AI-Focused Funds with Social Impact Mandates**:
+
+**Impact Investing + AI**:
+- **Radical Ventures**: Led Emerald AI $24.5M seed (electric power system for AI energy demand)
+- **Pattern**: Impact funds interested in AI addressing real-world problems (climate, energy, healthcare, education)
+
+**Your Cherokee Nation angle** (Unique positioning):
+- **Cultural preservation**: AI for Indigenous language preservation, cultural heritage
+- **Underserved markets**: Tribal nations, museums, non-profits
+- **Social impact thesis**: Technology democratization, cultural equity
+- **Potential funds**: Impact funds focused on education, cultural preservation, Indigenous communities
+  - Note: Research needed for specific Native American VC funds (not found in 2024-2025 data)
+
+**Funding Strategy Recommendations for Emotive Engine**:
+
+**Pre-Seed/Seed Timeline** (If you choose VC path):
+
+**Scenario 1: Raise after Product Hunt traction (Month 2-3)**:
+- **Raise**: $500K–$1M pre-seed or $1M–$2M seed
+- **Traction needed**: 1,000+ free users, 50-100 paid customers, $10K-50K MRR
+- **Investors to target**: Y Combinator (apply for batch), NFX, Pioneer Fund, SV Angel
+- **Pitch angle**: Developer tools, MCP viral distribution, Cherokee cultural preservation impact story
+
+**Scenario 2: Bootstrap to $1M ARR, raise seed (Month 9-12)**:
+- **Raise**: $2M–$4M seed
+- **Traction needed**: $1M ARR, 300% growth trajectory, enterprise customer logos
+- **Investors to target**: a16z (AI developer tools), Sequoia, Benchmark, Khosla
+- **Pitch angle**: Proven traction, capital-efficient growth, Series A-ready in 12 months
+
+**Scenario 3: Bootstrap to $2M+ ARR, raise Series A (Month 15-18)**:
+- **Raise**: $8M–$15M Series A
+- **Traction needed**: $2M–$3M ARR, 200%+ growth, $50K+ ACV enterprise deals
+- **Investors to target**: a16z, Sequoia, General Catalyst (multi-stage funds)
+- **Pitch angle**: Capital-efficient ($0 raised to $2M ARR), clear path to $10M+ ARR
+
+**Your Competitive Advantages for Fundraising**:
+1. **Proprietary tech**: Not a wrapper around OpenAI (real defensibility)
+2. **Developer tools category**: Hot category for VCs (Stainless $25M, Greptile YC)
+3. **MCP distribution**: Anthropic partnership potential (strategic value)
+4. **Cherokee citizen founder**: Unique cultural preservation impact angle
+5. **Capital efficiency**: Bootstrapping demonstrates discipline VCs love
+6. **Clear revenue model**: SaaS pricing, not vague "we'll figure it out later"
+
+**Red Flags to Avoid**:
+- ❌ Raising too early (no traction = bad terms, high dilution)
+- ❌ "AI wrapper" perception (emphasize proprietary particle physics, emotional state machine)
+- ❌ Vague market size claims (use specific TAM: developer tools, museum tech, cultural institutions)
+- ❌ No unit economics (show CAC, LTV, payback period)
+- ❌ Ignoring competition (acknowledge ChatGPT, but show unique positioning)
+
+**Sources**:
+- Crunchbase AI funding data 2024-2025 (news.crunchbase.com AI soars, seed stalls, global funding)
+- Top AI investors 2025 (openvc.app, signal.nfx.com, seedtable.com)
+- Series A traction metrics 2025 (valor.vc, zeni.ai, spectup.com)
+- AI valuation multiples (qubit.capital, finrofca.com, flippa.com)
+- VC investment criteria (vciinstitute.com, moonfare.com, dealmaker.tech)
+- Y Combinator W24 AI batch (news.crunchbase.com YC winter 2024)
+- a16z, Sequoia, Khosla activity (topstartups.io, news.crunchbase.com active investors)
+- AI developer tools deals (Stainless $25M, Greptile YC, alexsandu.substack.com)
+- North America funding H1 2025 (news.crunchbase.com Q2 2025 data)
 
 ---
 
