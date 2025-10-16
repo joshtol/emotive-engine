@@ -2171,15 +2171,131 @@ Exit options:
 - Recruit upvoters (friends, network)
 - **Deliverable**: Ready to launch
 
-**[RESEARCH]** Launch strategy:
+**Launch Strategy Intelligence** (Verified 2024-2025):
 
-- What makes Product Hunt launches successful? (Top product analysis, founder
-  post-mortems)
-- Best day/time to launch on Product Hunt? (Historical data, Product Hunt
-  experts)
-- How to get to Hacker News front page? (HN algorithm analysis, successful Show
-  HN examples)
-- What launch mistakes to avoid? (Failed launch analyses, community guidelines)
+**Product Hunt Success Factors** (Analysis of 5,000 launches, 2024-2025 data):
+
+**Pre-Launch Preparation** (Critical):
+- **Time required**: 50-120 hours of preparation for successful launches
+- **Build community first**: Engage with Product Hunt 2-4 weeks before launch (upvote/comment on other products to build credibility)
+- **Coming Soon page**: Create Product Hunt teaser page early (especially for first-time launches)
+- **Hunter recruitment**: Identify influential hunters early—their upvotes/comments carry algorithmic weight
+- **Follower foundation**: If you have zero followers anywhere, build a tiny audience first—launching with no following "really complicates things"
+
+**Launch Page Optimization** (Featured product analysis):
+- **High-quality visuals**: 4-6 images + demo video (required for featured products as of Dec 2024)
+- **Compelling messaging**: Launch page should function like a landing page—clear, scannable, visually compelling
+- **Founder's Comment**: Get personal, tell your story, why you built it, what makes it special—genuine storytelling matters
+- **AI/Productivity categories**: AI tools dominate 2025, particularly those enhancing productivity through intelligent automation
+- **Featured rate**: 8.92% of products get featured (roughly 9% daily)
+
+**Timing Strategy** (Statistical analysis, 2024-2025):
+
+**Best time to launch**:
+- **12:01 AM - 1:00 AM Pacific Time** (catches full day of user attention, product at top when people wake up)
+
+**Best days of week**:
+- **Tuesday, Wednesday, Thursday**: Most competitive (highest upvotes required) but most traffic/visibility
+- **Monday**: High competition, strong traffic
+- **Saturday/Sunday**: Less competition (easier to win badges) but significantly less visibility
+- **Data**: Weekday launches consistently outperform weekends (more traffic = more visibility)
+
+**Best month**:
+- **September**: "Back-to-business" energy, post-vacation launches, high activity
+  - September 2024: 6 products crossed 1,000 upvotes, 6 more above 900, 10+ at 800+
+  - Founders push to launch before Q4
+- **Avoid December**: Holiday slowdown, lower engagement
+
+**Your launch timing recommendation**: Tuesday or Wednesday in late January (Week 4) = optimal
+
+**Launch Day Execution** (Successful founder tactics):
+- **Post at 12:01 AM PT sharp**: Be first on the daily list
+- **Respond to every comment**: Engagement directly impacts ranking—answer questions, thank users, appreciate feedback
+- **Social media amplification**: Share updates throughout the day on Twitter/LinkedIn
+- **No vote manipulation**: Product Hunt HATES begging for upvotes—shadowban risk if caught
+- **Old account votes matter more**: Votes from established, active contributors count significantly more than new accounts
+- **Stay engaged all day**: Maintain excitement and momentum for full 24 hours
+
+**Critical Mistakes to Avoid** (Failed launch analysis, 2024-2025):
+
+**Preparation failures**:
+- ❌ Rushing to launch with sloppy submission page or unpolished messaging
+- ❌ Skipping the teaser page (Coming Soon)
+- ❌ Launching with zero existing following or community presence
+- ❌ Insufficient preparation time (successful launches need 50-120 hours)
+
+**Audience misalignment**:
+- ❌ Product doesn't align with Product Hunt's community (tech enthusiasts, developers, startup founders)
+- ❌ Not understanding your target audience on the platform
+
+**Engagement mistakes**:
+- ❌ Ignoring comments (if you don't reply, people move on)
+- ❌ Begging for upvotes (shadowban risk)
+- ❌ Vote manipulation with new accounts (algorithm penalty)
+- ❌ Not responding personally throughout the day
+
+**Post-launch failures**:
+- ❌ Ignoring launch results and not following up with users
+- ❌ Not thanking supporters or getting feedback from signups
+
+**Recent penalty examples** (December 2024):
+- Two products "fell to temptations" that killed their launches
+- Both suffered big algorithmic penalties, lost Product of Day/Week despite strong starts
+
+**Hacker News Front Page Strategy** (Algorithm analysis, 2024-2025):
+
+**HN Ranking Algorithm**:
+- **Formula**: Score = (P-1) / (T+2)^G
+  - P = points (upvotes minus 1)
+  - T = time in hours since submission
+  - G = gravity (time exponent—articles eventually drop to zero)
+- **Penalties**: ~20% of front-page stories receive algorithmic penalties
+- **Controversy penalty**: Activates when comments > upvotes AND ≥40 comments (can cause sudden disappearance from front page)
+
+**Show HN Success Rate** (Sobering reality):
+- **<2% of front-page posts are Show HN** (extremely competitive)
+- **36% are news articles** (Show HN significantly underrepresented)
+- **Implication**: Show HN is a long shot—manage expectations
+
+**Successful Show HN Examples** (2024):
+- "If YouTube had actual channels" (creative reimagining)
+- Open-sourced "Internet OS" with 1M users after 3 years (proven traction)
+- After Effects alternative (solves real pain point)
+- InstantDB "Modern Firebase" (developer tools)
+- House optimized for LAN parties (unique/quirky)
+- **Pattern**: Either solve real developer pain, have proven traction, or be creatively unique/quirky
+
+**Your Show HN strategy**:
+- **Title**: "Show HN: Emotional AI Engine with Real-Time Particle Physics"
+- **Angle**: Developer tool (not just chatbot feature) + visual demo (particle physics hook)
+- **Timing**: Friday after Product Hunt (cross-promote traffic)
+- **Expectation management**: <2% front page odds, but even 50-100 upvotes = valuable traffic and credibility
+
+**Strategic Launch Timeline Recommendation**:
+
+**Tuesday, Jan 28 (Week 4)** - Product Hunt launch:
+- 12:01 AM PT: Post to Product Hunt
+- All day: Respond to every comment, share on Twitter/LinkedIn
+- Target: Top 5 Product of Day (realistic with 50-120 hours prep)
+- Expected: 1,000-2,000 free users (conservative based on PH launch data)
+
+**Friday, Jan 31** - Hacker News Show HN:
+- Morning PT: Submit "Show HN: Emotional AI Engine with Real-Time Particle Physics"
+- Engage with comments professionally
+- Target: Front page (stretch goal), 50-100 upvotes (realistic)
+- Expected: Additional 200-500 developer signups if successful
+
+**Sources**:
+- Product Hunt Launch Playbook 2025 (Arc: arc.dev/employer-blog/product-hunt-launch-playbook/)
+- Analysis of 5,000 PH Launches (Medium: medium.com/@shutakamizawa/how-analyzing-5-000-product-hunt-launches)
+- Product Hunt statistics & launch day calendar (hunted.space/stats)
+- Product Hunt 2025 trends (fits.formulashq.com/p/top-product-hunt-trends-for-2025)
+- How Hacker News ranking works (righto.com/2013/11/how-hacker-news-ranking-really-works.html)
+- What gets to HN front page (amplifypartners.com/blog-posts/what-gets-to-the-front-page-of-hacker-news)
+- Best of Show HN 2024 (bestofshowhn.com/2024)
+- PH launch mistakes to avoid (medium.com/@byalexai/5-mistakes-you-should-avoid-if-youre-launching-on-product-hunt)
+- Successful PH launch guide (tomdekan.com/articles/product-hunt-launch-guide)
+- PH community engagement tactics (blog.fastwaitlist.com/how-launch-successfully-product-hunt-2025)
 
 **Wednesday**: Soft Launch
 
