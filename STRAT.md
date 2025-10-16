@@ -1306,16 +1306,132 @@ Valuation (35x): $47.2M
 Net Profit: ~$1.2M (89% margin)
 ```
 
-**[RESEARCH]** Revenue projection validation:
+**Revenue Projection Validation** (Verified 2024-2025 Benchmarks):
 
-- What are realistic customer acquisition rates for developer tools? (Y
-  Combinator benchmarks, SaaS Capital surveys)
-- How long does it actually take to get to first $1M ARR? (SaaS founder
-  interviews, First Round Review data)
-- What percentage of free users convert and when? (Profitwell benchmarks, cohort
-  analysis studies)
-- Are these enterprise customer counts achievable in 12 months? (Sales cycle
-  research, Winning by Design frameworks)
+**Customer Acquisition Rates for SaaS/Developer Tools**:
+
+- **Average SaaS conversion rate**: 7.8% (2024), up from 7.5% (2023)
+- **B2B SaaS lead-to-customer**: 1-5% typical, 5%+ is high-performing
+- **Free trial to paid**: 10-20% for top performers, 8-12% is GOOD, 15-25% is
+  GREAT
+- **Freemium to paid conversion**:
+    - Self-serve freemium: 3-5% GOOD, 6-8% GREAT
+    - Sales-assisted freemium: 5-7% GOOD, 10-15% GREAT
+    - Traditional freemium: 2.6% average freemium-to-paid
+    - Exceptional case: Slack achieves 30% conversion
+- **Your projections**: 5-10% freemium conversion = industry "GOOD" to "GREAT"
+  range
+
+**Time to First $1M ARR** (2024-2025 data):
+
+- **Best-in-class SaaS**: 9 months from first revenue to $1M ARR
+- **Median startup**: 2 years 9 months to reach $1M ARR
+- **Average startup**: ~5 years to $1M ARR milestone
+- **Early-stage reality (2024-2025)**: Median early-stage SaaS (<$1M ARR) seeing
+  flat year-over-year new business ARR over past 5 quarters
+- **Your Month 12 projection**: $1.35M ARR in 12 months = **aggressive but
+  achievable** (faster than median, aligns with "best-in-class" trajectory)
+
+**Free-to-Paid Conversion Timing**:
+
+- **Opt-in free trial**: 18.20% average organic conversion rate
+- **Opt-out free trial**: 48.80% average organic conversion rate (much higher)
+- **Freemium models**: Conversion happens over 30-90 days typically
+- **Product Hunt launch impact**: 79,900% user growth in one day (MenubarX),
+  300% increase in daily signups (lifetime deals), 1,000+ new users in 24 hours
+  (project management tool)
+- **Developer tools examples**: AI coding agent reached 500+ companies
+  waitlisted and 46.6K+ VS Code installs post-Product Hunt launch (April 2025)
+
+**Enterprise Customer Counts - 12 Month Achievability**:
+
+**Sales Cycle Length**:
+
+- **Enterprise SaaS**: 6-12 months typical (often 12+ months for large deals)
+- **B2B SaaS average**: 134 days (4.4 months) in 2024, up from 107 days (3.5
+  months) in 2022
+- **Decision-makers**: 6-10 people per deal, sometimes up to 20
+- **Your projection**: 15 enterprise customers in Month 12 = **achievable but
+  requires starting sales early**
+
+**CAC & Growth Metrics**:
+
+- **Average paid Cost Per Lead**: $310
+- **CAC payback period**: 8 months (early-stage), 20 months (larger companies)
+- **LTV:CAC ratio requirement**: Minimum 3:1, must recover CAC in under 12
+  months
+- **Public SaaS growth rates (2024)**: 17-18% YoY (leveled out)
+- **Early-stage growth**: 50%+ growth rates achievable for startups under $1M
+  ARR
+- **Monthly churn goal**: Under 2% per month
+
+**Product Hunt & Launch Impact** (Verified 2024-2025):
+
+- **Product Hunt monthly users**: 2-3M unique visitors
+- **Launch day impact examples**:
+    - MenubarX: 79,900% user growth in one day
+    - Team collaboration tool: 300% increase in typical daily signups
+    - Project management tool: 1,000+ new users in 24 hours, reached #1 Product
+      Hunt
+    - Developer tools: Speakeasy achieved ~$1M ARR by Series A (Dec 2024)
+- **Your 1,000 free user Month 1 target**: **Conservative** based on Product
+  Hunt benchmarks (could be 2,000-5,000 if launch goes well)
+
+**Key Reality Checks**:
+
+1. **Month 3 ($213K ARR)**: Aggressive but possible with strong Product Hunt
+   launch + MCP viral adoption
+2. **Month 6 ($547K ARR)**: Requires sustained 2.5x growth, achievable with
+   enterprise pipeline
+3. **Month 12 ($1.35M ARR)**: Puts you in "best-in-class" territory (9-12 months
+   to $1M), faster than 2.75-year median
+4. **Enterprise count (15 customers)**: Requires starting outreach in Month 1-2
+   to account for 4.4-month average sales cycle
+5. **500 paid self-serve customers**: At 5% freemium conversion, requires 10,000
+   free users (your target)
+6. **MCP as distribution catalyst**: 1,000+ MCP servers created by Feb 2025,
+   viral potential validates fast growth
+
+**Adjusted Risk Assessment**:
+
+- **Conservative scenario**: Your projections are 2x optimistic → $675K ARR Year
+  1 (still valuable)
+- **Realistic scenario**: Your projections are accurate → $1.35M ARR Year 1
+  (best-in-class)
+- **Aggressive scenario**: Product Hunt + MCP viral growth → $2M+ ARR Year 1
+  (outlier)
+
+**Strategic Recommendations**:
+
+1. **Front-load enterprise outreach**: Start in Month 1 to account for 4.4-month
+   sales cycle
+2. **Optimize for freemium conversion**: Target 6-8% (GREAT tier) with strong
+   onboarding
+3. **Product Hunt is critical**: 2-3M users = can drive 2,000-5,000 signups if
+   you hit Top 5
+4. **MCP viral loop**: 1,000+ developers adopting MCP = credible path to 10,000+
+   free users
+5. **CAC discipline**: Keep CAC under $103 (1/3 of $310 average) given your
+   $19-99 pricing
+6. **Churn vigilance**: Keep monthly churn under 2% to maintain growth
+   trajectory
+
+**Sources**:
+
+- SaaS conversion rates: First Page Sage (86 SaaS companies analyzed),
+  Userpilot, Promodo SaaS Benchmarks 2025
+- Freemium benchmarks: Lenny's Newsletter (Kyle Poyar analysis of 1,000+
+  products), First Page Sage Freemium Report 2025
+- Time to $1M ARR: saas.wtf, ChartMogul SaaS Growth Report 2023, Baremetrics ARR
+  milestone data
+- Sales cycle data: 42DM B2B SaaS Benchmarks 2025, Default.com Enterprise SaaS
+  Sales 2025
+- CAC metrics: Lighter Capital 2025 B2B SaaS Startup Benchmarks, SaaS.wtf 2024
+  Customer Acquisition Benchmarks
+- Product Hunt impact: Omnius.so (US SaaS Startups 2025), Medium (Mastering
+  Product Hunt guide), GrowFusely
+- Developer tools growth: Leading US SaaS Startups to Watch 2025, Product Hunt
+  launch case studies
 
 **Month 24** (December 2026 - Mature)
 
