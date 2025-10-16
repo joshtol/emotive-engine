@@ -932,18 +932,194 @@ Hetzner if you hit 10M+ renders/day for even better margins.
     - Members from 2020 Cherokee National Historical Society board
     - 5+ years experience planning revitalization
 
-**[RESEARCH]** Heritage Center planning details:
+**Heritage Center Planning Details** (Verified 2024-2025):
 
-- Who specifically is on the planning committee? (Cherokee Phoenix articles,
-  press releases)
-- What's the technology procurement process for the Heritage Center? (Public
-  RFPs, bid opportunities)
-- Are there public planning documents or design specs? (Cherokee Nation
-  government website, FOIA if applicable)
-- Who are the architects/exhibit designers? (Project announcements, construction
-  permits)
-- When do technology decisions need to be made for 2028 opening? (Typical museum
-  construction timelines)
+**Cherokee National Historical Society Board** (Governing Body):
+
+**Board Structure**:
+- **7 members total**: 3 appointed by Cherokee Nation government branches (Executive, Legislative, Judicial), who then select 4 additional members
+- **Term lengths**: Initially staggered (2-7 years), then 5-year terms after initial period
+- **Authority**: Advisory board with specific legal authority over Heritage Center
+
+**Current Board Members** (2021-2025, verified Sept 2024 still active):
+
+**Initial Three (Selected by Government Branches)**:
+1. **Christine (Christy) Neuhoff** - Chairperson
+   - Selected by: Judicial branch
+   - Background: Senior Vice President & Chief Legal Officer, St. Luke's Health System (Boise, Idaho)
+   - Initial term: 5 years
+   - Role: Elected CNHS President
+
+2. **Bill Davis** - Board Member
+   - Selected by: Executive branch (Coffeyville, Kansas)
+   - Initial term: 7 years
+   - Status: Confirmed active as of September 2024
+
+3. **Matt Anderson** - Secretary
+   - Selected by: Council of the Cherokee Nation (Tahlequah)
+   - Background: Cultural specialist
+   - Initial term: 6 years
+   - Role: Elected CNHS Secretary
+
+**Four Additional Members** (Selected by Initial Three):
+4. **Jack Baker** - Treasurer
+   - Location: Oklahoma City
+   - Initial term: 3 years
+   - Role: Elected CNHS Treasurer
+
+5. **Susan Plumb**
+   - Background: Chairwoman & CEO, Bank of Cherokee County
+   - Initial term: 2 years
+
+6. **Brenda Partain**
+   - Location: Tulsa
+   - Note: Member of both former and current historical society boards
+
+7. **Calvin Rock**
+   - Location: Muskogee
+
+**Board Recognition** (Sept 2024):
+- Chief Hoskin awarded Cherokee National Historical Society a **Leadership Award** at 2024 Cherokee National Holiday for their work developing design for new Heritage Center
+
+**Five Years of Planning** (2020-2025):
+- Historical society board "poured over history of Cherokee Heritage Center, condition of buildings/infrastructure"
+- Worked with design experts
+- Toured other museums to understand modern museum design and construction
+- Result: Comprehensive Heritage Center redesign endorsed by board, approved by Council
+
+**Architects & Design Team** (Verified 2024-2025):
+
+**Lead Designer**:
+- **Anishinabe Design** led by **Safdie Architects**
+- **Safdie Architects portfolio**: Crystal Bridges Museum of American Art (Bentonville, Arkansas)
+- **Design approach**: Modern museum design with Cherokee cultural elements
+
+**Design Elements Announced** (Sept 2024):
+- Permanent exhibit spaces
+- Rotating galleries
+- Public art installations
+- Office space
+- **Seven-sided gathering place** (referencing seven Cherokee clans)
+- Café
+- **Cherokee cultural elements**:
+  - Woven basketry patterns
+  - Natural lighting integration
+  - Water features
+- Modern museum standards with cultural authenticity
+
+**Project Timeline & Legislative Approval**:
+
+**September 25, 2024** - Legislation Signing:
+- Principal Chief Chuck Hoskin Jr., Deputy Chief Bryan Warner, Council members signed legislation
+- Authorized $50 million construction of new Cherokee Heritage Center
+- **Unanimous Council approval** of Cherokee Heritage Center Act of 2020 amendment
+
+**Construction Timeline**:
+- **Two-phase construction**
+- **Phase 1 completion target**: Late 2028
+- **Current status**: Planning phase (site closed since 2020 for planning)
+
+**Technology Decision Timeline** (Critical for your proposal):
+
+**Typical Museum Construction Timeline** (Based on 2028 opening):
+- **2024-2025 (Now)**: **Schematic design, technology planning, exhibit design**
+  - THIS IS THE WINDOW for technology proposals
+  - Interactive exhibit technology specs being finalized
+  - AV/digital infrastructure planning
+- **2025-2026**: Design development, construction documents
+- **2026-2027**: Construction begins, technology procurement/installation
+- **2027-2028**: Phase 1 completion, exhibit installation, testing
+- **Late 2028**: Opening
+
+**Implication**: Technology decisions for interactive exhibits likely being made **Q1-Q2 2025** (RIGHT NOW)
+- **Urgent timeline**: Proposal should be submitted January-March 2025 to be considered for initial exhibit design
+
+**Technology Procurement Process** (Heritage Center):
+
+**No Public RFPs Found** (as of 2024-2025):
+- Heritage Center technology procurement not posted on cherokeebids.org (checked 2024-2025)
+- Likely handled through:
+  1. **Direct architect/exhibit designer selection** (Safdie Architects/Anishinabe Design)
+  2. **Cherokee National Historical Society board decisions** (Christy Neuhoff, board)
+  3. **Secretary of Natural Resources** (Tribal Historic Preservation oversight)
+
+**Recommended Contact Path for Technology Proposal**:
+1. **Cherokee National Historical Society Board** (Christy Neuhoff, Chairperson)
+2. **Secretary of Natural Resources Office** (Tribal Historic Preservation)
+3. **Chief of Staff Office** (implements policy across government)
+4. **Paula Starr (CIO)** (technology evaluation, AI policy compliance)
+
+**Current Heritage Center Status** (2024-2025):
+
+**Closed Since 2020**:
+- Closed early 2020 (COVID-19 pandemic)
+- Remained closed after Cherokee National Historical Society transferred ownership to Cherokee Nation
+- Currently in planning phase for $50M reconstruction
+
+**Public Planning Documents**:
+- No detailed public design specifications found (typical for pre-construction phase)
+- General design elements announced in Cherokee Phoenix (Sept 2024)
+- Detailed architectural plans likely confidential until construction phase
+
+**Contact Information** (Heritage Center Planning):
+
+**Cherokee National Historical Society**:
+- **Chairperson**: Christine (Christy) Neuhoff
+- **Contact via**: Cherokee Nation main number (918) 453-5000, ask for CNHS or Heritage Center planning
+- **Alternative**: Secretary of Natural Resources Office (Tribal Historic Preservation)
+
+**Strategic Timing Insights**:
+
+**Why NOW is critical** (Q1 2025):
+1. **Planning phase active**: Technology specs being finalized for 2028 opening
+2. **4-year runway**: Enough time to develop/integrate custom technology
+3. **Board recently awarded**: Leadership Award Sept 2024 = high visibility, momentum
+4. **AI policy timing**: First AI policy signed Sept 2025 = receptive to AI technology proposals
+5. **Pre-RFP window**: Proposal NOW can shape RFP requirements (vs responding to fixed RFP later)
+
+**Museum Technology Procurement Cycle** (Typical):
+- **Schematic design** (now): High-level technology vision, budget allocation
+- **Design development** (6-12 months): Specific technology selection, vendor evaluation
+- **Construction documents** (12-18 months): Final specs, procurement, contracts
+- **Installation** (18-36 months): Technology deployment, testing, training
+
+**Your Proposal Timing**:
+- **January 2025 outreach**: Perfect timing for schematic design phase
+- **February-March 2025**: Technology demo, board presentation
+- **Q2 2025**: If accepted, technology included in design development phase
+- **2026-2027**: Technology procurement, development, integration
+- **2028**: Launch with Heritage Center Phase 1 opening
+
+**Technology Opportunities** (Based on Design Elements):
+
+**Seven-Sided Gathering Place**:
+- **Emotive Engine application**: Seven clan emotional visualizations (one per wall)
+- **Interactive**: Visitors select clan, see traditional stories with emotional particle animations
+- **Cultural preservation**: Cherokee syllabary particles, clan-specific behaviors (verified accurate from earlier research)
+
+**Permanent Exhibit Spaces**:
+- **Trail of Tears emotional arc**: Particle visualization of historical trauma, resilience, survival
+- **"Saving the Voices" integration**: Elder voice recordings with visual emotional response
+- **Language learning**: Interactive Cherokee syllabary with particle morphology
+
+**Rotating Galleries**:
+- **Flexible digital platform**: Emotive Engine as underlying technology for curator-controlled content
+- **Easy updates**: CMS integration for changing exhibits without new technology procurement
+
+**Public Art Installations**:
+- **Outdoor particle projection**: Building facade or amphitheater projection mapping
+- **Natural lighting integration**: Particle behavior responds to actual sunlight (woven basketry pattern motif)
+- **Water features**: Particle animations synchronized with water installations
+
+**Sources**:
+- Cherokee National Historical Society board members (cherokeephoenix.org/culture/new-cherokee-national-historical-society-inaugural-meeting 2021, confirmed active Sept 2024)
+- Board structure (cherokeephoenix.org/news/new-historical-society-endorsed-heritage-center 2024)
+- $50M legislation signing Sept 25, 2024 (tahlequahdailypress.com, pryorinfopub.com, anadisgoi.com, indiangaming.com)
+- Safdie Architects/Anishinabe Design (cherokeephoenix.org/news/new-historical-society-endorsed-heritage-center)
+- Design elements (cherokeephoenix.org/culture/new-improved-cherokee-heritage-center-gets-green-light)
+- Construction timeline late 2028 (fourstateshomepage.com/news/cherokee-nation-proposes-50-million-heritage-center)
+- Heritage Center closed since 2020 (cherokeeheritage.org, Cherokee Nation website)
+- Leadership Award Sept 2024 (cherokeephoenix.org/news/new-historical-society-endorsed-heritage-center)
 
 5. **Cherokee Nation Language Department**
     - Active technology integration (dictionary app with ASK AI, 2025)
