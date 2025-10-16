@@ -1864,17 +1864,7 @@ class EmotiveMascot {
             // Apply undertone modifiers to particle behavior
             let particleBehavior = emotionParams.particleBehavior || 'ambient';
             let particleRate = emotionParams.particleRate || 15;
-            
-            // Debug logging for glitch emotion
-            if (renderState.emotion === 'glitch') {
-                console.log('🔍 Glitch emotion debug:', {
-                    emotion: renderState.emotion,
-                    emotionParams,
-                    particleBehavior,
-                    hasParticleBehavior: 'particleBehavior' in emotionParams,
-                    particleBehaviorValue: emotionParams.particleBehavior
-                });
-            }
+
             // Use emotionParams min/max if available, otherwise fall back to stateProps
             const minParticles = emotionParams.minParticles !== undefined ? emotionParams.minParticles : (stateProps.minParticles || 0);
             let maxParticles = emotionParams.maxParticles !== undefined ? emotionParams.maxParticles : (stateProps.maxParticles || 10);
@@ -2831,15 +2821,9 @@ class EmotiveMascot {
      * mascot.setBackdrop({ enabled: true, intensity: 0.8, radius: 2 });
      */
     setBackdrop(options = {}) {
-        console.log('[EmotiveMascot] 🎨 setBackdrop called with:', options);
-        console.log('[EmotiveMascot] renderer exists?', !!this.renderer);
-        console.log('[EmotiveMascot] backdropRenderer exists?', !!this.renderer?.backdropRenderer);
         return this.errorBoundary.wrap(() => {
             if (this.renderer && this.renderer.backdropRenderer) {
-                console.log('[EmotiveMascot] ✅ Calling backdropRenderer.setConfig');
                 this.renderer.backdropRenderer.setConfig(options);
-            } else {
-                console.error('[EmotiveMascot] ❌ No renderer or backdropRenderer available');
             }
             return this;
         }, 'setBackdrop', this)();
