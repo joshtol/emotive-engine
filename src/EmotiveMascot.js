@@ -219,8 +219,10 @@ class EmotiveMascot {
         this.shapeMorpher = new ShapeMorpher();
         this.audioAnalyzer = new AudioAnalyzer();
 
-        // Gesture compatibility system
-        this.gestureCompatibility = gestureCompatibility;
+        // Initialize GestureController early so it can be used
+        this.gestureController = new GestureController(this);
+        this.gestureController.gestureCompatibility = gestureCompatibility;
+        this.gestureController.init();
 
         // Groove templates for musical rhythm patterns
         this.grooveTemplates = new GrooveTemplates();
@@ -404,16 +406,14 @@ class EmotiveMascot {
             currentUtterance: null
         };
         
-        // Initialize modular handlers
+        // Initialize modular handlers (gestureController already initialized earlier)
         this.audioHandler = new AudioHandler(this);
-        this.gestureController = new GestureController(this);
         this.stateCoordinator = new StateCoordinator(this);
         this.visualizationRunner = new VisualizationRunner(this);
         this.configurationManager = new ConfigurationManager(this, config);
-        
-        // Initialize the handlers
+
+        // Initialize the handlers (gestureController.init() already called earlier)
         this.audioHandler.init();
-        this.gestureController.init();
         this.stateCoordinator.init();
         this.visualizationRunner.init();
         
@@ -682,157 +682,12 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     express(gesture, options = {}) {
-        return this.errorBoundary.wrap(() => {
-            // Performance marker: Gesture start
-            const gestureStartTime = performance.now();
-            const gestureName = Array.isArray(gesture) ? 'chord' :
-                (typeof gesture === 'object' && gesture.type === 'chord') ? 'chord' :
-                    gesture;
-
-            if (this.performanceMonitor) {
-                this.performanceMonitor.markGestureStart(gestureName);
-            }
-
-            if (!gesture) {
-                // No gesture provided to express()
-                if (this.performanceMonitor) {
-                    this.performanceMonitor.markGestureEnd(gestureName);
-                }
-                return this;
-            }
-
-            // Handle chord (multiple simultaneous gestures)
-            if (Array.isArray(gesture)) {
-                return this.expressChord(gesture, options);
-            }
-
-            // Handle chord object
-            if (typeof gesture === 'object' && gesture.type === 'chord') {
-                return this.expressChord(gesture.gestures, options);
-            }
-
-            // Express called with single gesture
-            // In rhythm game mode, gestures will be triggered directly by gameplay
-            // No queuing needed - immediate response to player actions
-
-            // Direct mapping to renderer methods for all gestures
-            const rendererMethods = {
-                'bounce': 'startBounce',
-                'pulse': 'startPulse',
-                'shake': 'startShake',
-                'spin': 'startSpin',
-                'nod': 'startNod',
-                'tilt': 'startTilt',
-                'expand': 'startExpand',
-                'contract': 'startContract',
-                'flash': 'startFlash',
-                'drift': 'startDrift',
-                'stretch': 'startStretch',
-                'glow': 'startGlow',
-                'sparkle': 'startSparkle',
-                'shimmer': 'startShimmer',
-                'wiggle': 'startWiggle',
-                'groove': 'startGroove',
-                'point': 'startPoint',
-                'lean': 'startLean',
-                'reach': 'startReach',
-                'headBob': 'startHeadBob',
-                'orbit': 'startOrbit',
-                'flicker': 'startFlicker',
-                'vibrate': 'startVibrate',
-                'wave': 'startWave',
-                'breathe': 'startBreathe',
-                'morph': 'startMorph',
-                'slowBlink': 'startSlowBlink',
-                'look': 'startLook',
-                'settle': 'startSettle',
-                'orbital': 'startOrbital',  // Alias for backwards compatibility
-                'hula': 'startHula',
-                'sway': 'startSway',
-                'breathIn': 'startBreathIn',
-                'breathOut': 'startBreathOut',
-                'breathHold': 'startBreathHold',
-                'breathHoldEmpty': 'startBreathHoldEmpty',
-                'jump': 'startJump',
-                'rain': 'startRain',
-                'runningman': 'startRunningMan',
-                'charleston': 'startCharleston',
-                // Ambient dance gestures
-                'grooveSway': 'startGrooveSway',
-                'grooveBob': 'startGrooveBob',
-                'grooveFlow': 'startGrooveFlow',
-                'groovePulse': 'startGroovePulse',
-                'grooveStep': 'startGrooveStep'
-                // Note: burst, peek, hold, scan, twitch, jitter, float
-                // are handled by the gesture system below
-            };
-            
-            // Check if this gesture has a direct renderer method
-            const methodName = rendererMethods[gesture];
-            if (methodName && this.renderer && this.renderer[methodName]) {
-                // Call the renderer method directly
-                this.renderer[methodName](options);
-
-                // Play gesture sound effect if available and enabled
-                if (this.config.soundEnabled && this.soundSystem.isAvailable()) {
-                    this.soundSystem.playGestureSound(gesture);
-                }
-
-                // Performance marker: Gesture end
-                if (this.performanceMonitor) {
-                    const gestureEndTime = performance.now();
-                    this.performanceMonitor.markGestureEnd(gestureName);
-                    this.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
-                }
-
-                return this;
-            }
-            
-            // Try to execute gesture through the particle system
-            // This handles modular gestures from the gesture registry
-            // Check if gesture exists in the gesture registry
-            const gestureConfig = getGesture(gesture);
-            
-            if (gestureConfig) {
-                // Register gesture's rhythm configuration
-                rhythmIntegration.registerConfig('gesture', gesture, gestureConfig);
-                
-                // Store the current gesture info for the particle system to use
-                this.currentModularGesture = {
-                    type: gesture,
-                    config: gestureConfig,
-                    startTime: performance.now(),
-                    duration: gestureConfig.defaultParams?.duration || 1000,
-                    progress: 0
-                };
-                
-                // Executed gesture through particle system
-                
-                // Play gesture sound effect if available and enabled
-                if (this.config.soundEnabled && this.soundSystem.isAvailable()) {
-                    this.soundSystem.playGestureSound(gesture);
-                }
-
-                // Performance marker: Gesture end
-                if (this.performanceMonitor) {
-                    const gestureEndTime = performance.now();
-                    this.performanceMonitor.markGestureEnd(gestureName);
-                    this.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
-                }
-
-                return this;
-            }
-            
-            // Unknown gesture - throttled warning
-            this.throttledWarn(`Unknown gesture: ${gesture}`, `gesture_${gesture}`);
-
-            // Performance marker: Gesture end (failed)
-            if (this.performanceMonitor) {
-                this.performanceMonitor.markGestureEnd(gestureName);
-            }
-
+        // Delegate to GestureController (check for initialization first)
+        if (!this.gestureController) {
+            console.warn('GestureController not initialized, skipping gesture');
             return this;
-        }, 'gesture-expression', this)();
+        }
+        return this.gestureController.express(gesture, options);
     }
 
     /**
@@ -842,45 +697,8 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     expressChord(gestures, options = {}) {
-        return this.errorBoundary.wrap(() => {
-            if (!gestures || !Array.isArray(gestures) || gestures.length === 0) {
-                return this;
-            }
-
-            // Import gesture compatibility if not loaded
-            if (!this.gestureCompatibility) {
-                // Try to load it dynamically
-                import('./core/GestureCompatibility.js').then(module => {
-                    this.gestureCompatibility = module.default;
-                }).catch(err => {
-                    console.warn('GestureCompatibility not available:', err);
-                });
-            }
-
-            // Use compatibility system if available
-            const compatibleGestures = this.gestureCompatibility ?
-                this.gestureCompatibility.getCompatibleGestures(gestures) :
-                gestures;
-
-            console.warn('Executing gesture chord:', compatibleGestures);
-
-            // Execute all compatible gestures simultaneously
-            compatibleGestures.forEach(gestureName => {
-                const normalizedGesture = typeof gestureName === 'string' ?
-                    gestureName : gestureName.gestureName;
-
-                // Execute directly to ensure simultaneity
-                this.executeGestureDirectly(normalizedGesture, options);
-            });
-
-            // Check for enhancing combination
-            if (this.gestureCompatibility?.isEnhancingCombination?.(compatibleGestures)) {
-                // Add extra visual flair
-                this.renderer?.specialEffects?.addSparkle?.();
-            }
-
-            return this;
-        }, 'gesture-chord', this)();
+        // Delegate to GestureController
+        return this.gestureController.expressChord(gestures, options);
     }
 
     /**
@@ -888,40 +706,8 @@ class EmotiveMascot {
      * @private
      */
     executeGestureDirectly(gesture, options = {}) {
-        // Direct mapping to renderer methods
-        const rendererMethods = {
-            'bounce': 'startBounce',
-            'pulse': 'startPulse',
-            'shake': 'startShake',
-            'spin': 'startSpin',
-            'nod': 'startNod',
-            'tilt': 'startTilt',
-            'flash': 'startFlash',
-            'glow': 'startGlow',
-            'sparkle': 'startSparkle',
-            'shimmer': 'startShimmer',
-            'wiggle': 'startWiggle',
-            'groove': 'startGroove',
-            'point': 'startPoint',
-            'lean': 'startLean',
-            'reach': 'startReach',
-            'headBob': 'startHeadBob',
-            'orbit': 'startOrbit',
-            'sway': 'startSway',
-            'jump': 'startJump',
-            'wave': 'startWave',
-            'flicker': 'startFlicker',
-            'breathe': 'startBreathe',
-            'float': 'startFloat',
-            'rain': 'startRain',
-            'hula': 'startHula',
-            'twist': 'startTwist'
-        };
-
-        const methodName = rendererMethods[gesture];
-        if (methodName && this.renderer && typeof this.renderer[methodName] === 'function') {
-            this.renderer[methodName](options);
-        }
+        // Delegate to GestureController
+        this.gestureController.executeGestureDirectly(gesture, options);
 
         // Emit event
         this.emit('gesture', { name: gesture, options });
@@ -933,21 +719,8 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     chain(...gestures) {
-        // Parse the chain using GestureCompatibility if available
-        if (this.gestureCompatibility) {
-            const chainString = gestures.join('>');
-            const steps = this.gestureCompatibility.parseChain(chainString);
-            
-            // Execute all steps with proper timing
-            this.executeChainSequence(steps);
-        } else {
-            console.warn('🔗 No gestureCompatibility available, falling back to first gesture');
-            // Fallback: execute first gesture
-            if (gestures.length > 0) {
-                this.express(gestures[0]);
-            }
-        }
-        return this;
+        // Delegate to GestureController
+        return this.gestureController.chain(...gestures);
     }
 
     /**
@@ -955,34 +728,8 @@ class EmotiveMascot {
      * @param {Array<Array<string>>} steps - Array of steps, each containing simultaneous gestures
      */
     executeChainSequence(steps) {
-        if (!steps || steps.length === 0) return;
-
-        let currentStep = 0;
-        const stepDuration = 800; // Base duration per step (ms)
-
-        const executeStep = () => {
-            if (currentStep >= steps.length) return;
-
-            const step = steps[currentStep];
-            
-            if (step.length === 1) {
-                // Single gesture
-                this.express(step[0]);
-            } else {
-                // Multiple simultaneous gestures
-                this.expressChord(step);
-            }
-
-            currentStep++;
-            
-            // Schedule next step
-            if (currentStep < steps.length) {
-                setTimeout(executeStep, stepDuration);
-            }
-        };
-
-        // Start the sequence
-        executeStep();
+        // Delegate to GestureController
+        return this.gestureController.executeChainSequence(steps);
     }
 
     /**
