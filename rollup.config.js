@@ -80,7 +80,7 @@ builds.push({
             format: 'umd',
             name: 'EmotiveMascot',
             exports: 'named',
-            sourcemap: false, // Disable source maps for production
+            sourcemap: true,
             banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
         },
         {
@@ -89,20 +89,20 @@ builds.push({
             format: 'umd',
             name: 'EmotiveMascot',
             exports: 'named',
-            sourcemap: false
+            sourcemap: true
         },
         {
             // ES Module production bundle
             file: 'dist/mascot.js',
             format: 'es',
-            sourcemap: false, // Disable source maps for production
+            sourcemap: true,
             banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
         },
         {
             // ES Module development bundle
             file: 'dist/mascot.dev.js',
             format: 'es',
-            sourcemap: false
+            sourcemap: true
         }
     ],
     plugins: [
@@ -121,14 +121,14 @@ builds.push({
         {
             file: 'dist/emotive-mascot.minimal.js',
             format: 'es',
-            sourcemap: false, // Disable source maps for production
+            sourcemap: true,
             banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
         },
         {
             file: 'dist/emotive-mascot.minimal.umd.js',
             format: 'umd',
             name: 'EmotiveMascotMinimal',
-            sourcemap: false, // Disable source maps for production
+            sourcemap: true,
             banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
         }
     ],
@@ -150,7 +150,7 @@ builds.push({
         {
             file: 'dist/emotive-mascot.audio.js',
             format: 'es',
-            sourcemap: false, // Disable source maps for production
+            sourcemap: true,
             banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
         }
     ],
