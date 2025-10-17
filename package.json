@@ -8,9 +8,9 @@
   "types": "dist/emotive-engine.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/emotive-engine.d.ts",
       "import": "./src/index.js",
-      "require": "./dist/emotive-engine.min.js",
-      "types": "./dist/emotive-engine.d.ts"
+      "require": "./dist/emotive-engine.min.js"
     },
     "./package.json": "./package.json"
   },
@@ -111,7 +111,7 @@
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-visualizer": "^6.0.3",
     "terser": "^5.44.0",
-    "vitest": "^1.0.0"
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",
