@@ -3,6 +3,12 @@
 /build
 /out
 
+# Generated bundles (should be built, not tracked)
+/site/js/*.js
+/site/js/*.map
+/site/public/emotive-engine.js
+*.map
+
 # Dependency directories
 /node_modules
 **/node_modules/
