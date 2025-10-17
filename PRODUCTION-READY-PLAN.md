@@ -244,27 +244,48 @@ The original production-plan.md contained several **inaccurate claims**:
 - ✅ Security vulnerabilities reduced by 4
 - ✅ Package.json exports fixed (types before import/require)
 
-#### Day 4: Core System Tests (8 hours)
+#### Day 4: Core System Tests (8 hours) ⏳ IN PROGRESS
 
-- [ ] **EmotiveMascot.js tests**
-    - Constructor with various configs
-    - setEmotion() transitions
-    - express() gesture triggering
-    - start() / stop() lifecycle
-    - Error handling
+- [x] **ParticleSystem.js tests** (28 test cases)
+    - Constructor and initialization
+    - Particle spawning (count, rate, min/max)
+    - Object pool efficiency (hits/misses)
+    - Particle update and lifecycle
+    - Behavior types (ambient, rising, falling, burst)
+    - Gesture behavior integration
+    - Burst mechanics
+    - Clear and cleanup operations
+    - Stats and configuration
+    - Pool refresh and destroy
 
-- [ ] **EmotiveRenderer.js tests**
+- [x] **colorUtils.js tests** (55 test cases)
+    - Color conversions (hex ↔ RGB ↔ HSL)
+    - RGB and HSL interpolation
+    - RGBA string creation
+    - Brightness adjustment
+    - Saturation adjustment
+    - Luminance calculations
+    - Contrast ratio
+    - Undertone saturation system (6 undertones)
+    - Undertone array application
+    - Emotional color palette validation
+
+- [x] **EmotiveMascot.js tests** (17 test cases - Day 3)
+    - Already completed in Day 3
+
+- [ ] **EmotiveRenderer.js tests** (pending)
     - Rendering without errors
     - Color transitions
     - Breathing animation calculations
     - Eye expression rendering
 
-- [ ] **ParticleSystem.js tests**
-    - Particle spawning
-    - Behavior application
-    - Performance degradation
+**Day 4 Progress:**
 
-- [ ] **Target**: 15-20 tests passing
+- ✅ 83 new test cases added (28 ParticleSystem + 55 colorUtils)
+- ✅ All 114 tests passing (14 site + 17 EmotiveMascot + 28 ParticleSystem + 55
+  colorUtils)
+- ✅ Target exceeded: 114 > 20 tests
+- ⏳ EmotiveRenderer tests pending
 
 #### Day 5: Integration Tests & Coverage (8 hours)
 
