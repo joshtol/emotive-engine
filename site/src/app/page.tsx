@@ -16,6 +16,9 @@ export default function HomePage() {
   const [isClient, setIsClient] = useState(false)
   const initializingRef = useRef(false) // Track if initialization is in progress
   const initializedRef = useRef(false) // Track if already initialized
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [waitlistMessage, setWaitlistMessage] = useState('')
 
   // Detect mobile on client-side only (prevents hydration mismatch)
   useEffect(() => {
@@ -56,12 +59,18 @@ export default function HomePage() {
       initializingRef.current = true
 
       try {
-        // Set canvas size to viewport for full particle freedom
+        // Set canvas size with DPR scaling to prevent squishing
         const canvas = canvasRef.current
         const vw = window.innerWidth
         const vh = window.innerHeight
-        canvas.width = vw
-        canvas.height = vh
+
+        // Get actual canvas dimensions (CSS size)
+        const rect = canvas.getBoundingClientRect()
+        const dpr = window.devicePixelRatio || 1
+
+        // Set internal canvas resolution with DPR scaling
+        canvas.width = Math.round(rect.width * dpr)
+        canvas.height = Math.round(rect.height * dpr)
 
         // Load the engine script dynamically with cache busting
         // Check if script already loaded
@@ -257,6 +266,40 @@ export default function HomePage() {
       window.removeEventListener('scroll', handleScroll)
     }
   }, [mascot])
+
+  // Handle waitlist signup
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setWaitlistStatus('loading')
+
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: waitlistEmail })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setWaitlistStatus('success')
+        setWaitlistMessage(data.message || 'Successfully joined the waitlist!')
+        setWaitlistEmail('')
+      } else {
+        setWaitlistStatus('error')
+        setWaitlistMessage(data.error || 'Failed to join waitlist')
+      }
+    } catch (error) {
+      setWaitlistStatus('error')
+      setWaitlistMessage('Failed to join waitlist. Please try again.')
+    }
+
+    // Reset status after 5 seconds
+    setTimeout(() => {
+      setWaitlistStatus('idle')
+      setWaitlistMessage('')
+    }, 5000)
+  }
 
   return (
     <>
@@ -986,37 +1029,98 @@ export default function HomePage() {
 
             <div style={{
               display: 'flex',
-              justifyContent: 'center',
+              flexDirection: 'column',
+              gap: '1rem',
+              alignItems: 'center',
+              maxWidth: '500px',
+              margin: '0 auto',
             }}>
-              <a
-                href="https://forms.gle/placeholder"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '1.2rem 2.5rem',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  borderRadius: '12px',
-                  textDecoration: 'none',
-                  color: 'white',
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(102, 126, 234, 0.6)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.4)'
-                }}
-              >
-                <span>🔔</span> Get Notified When Code is Available
-              </a>
+              <form onSubmit={handleWaitlistSubmit} style={{
+                display: 'flex',
+                gap: '1rem',
+                width: '100%',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+              }}>
+                <input
+                  type="email"
+                  value={waitlistEmail}
+                  onChange={(e) => setWaitlistEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  disabled={waitlistStatus === 'loading' || waitlistStatus === 'success'}
+                  style={{
+                    flex: '1',
+                    minWidth: '250px',
+                    padding: '1rem 1.5rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    color: 'white',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'
+                    e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.5)'
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={waitlistStatus === 'loading' || waitlistStatus === 'success'}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '1rem 2rem',
+                    background: waitlistStatus === 'success'
+                      ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'
+                      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    borderRadius: '12px',
+                    border: 'none',
+                    color: 'white',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: waitlistStatus === 'loading' || waitlistStatus === 'success' ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
+                    opacity: waitlistStatus === 'loading' ? 0.7 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (waitlistStatus !== 'loading' && waitlistStatus !== 'success') {
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 8px 30px rgba(102, 126, 234, 0.6)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.4)'
+                  }}
+                >
+                  <span>{waitlistStatus === 'loading' ? '⏳' : waitlistStatus === 'success' ? '✅' : '🔔'}</span>
+                  {waitlistStatus === 'loading' ? 'Joining...' : waitlistStatus === 'success' ? 'Joined!' : 'Get Notified'}
+                </button>
+              </form>
+              {waitlistMessage && (
+                <div style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  background: waitlistStatus === 'success'
+                    ? 'rgba(40, 167, 69, 0.2)'
+                    : 'rgba(220, 53, 69, 0.2)',
+                  color: waitlistStatus === 'success' ? '#28a745' : '#dc3545',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  textAlign: 'center',
+                }}>
+                  {waitlistMessage}
+                </div>
+              )}
             </div>
           </div>
         </section>
