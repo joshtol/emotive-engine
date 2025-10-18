@@ -30,7 +30,7 @@ export interface DocContent {
  */
 export async function getDocBySlug(slug: string[]): Promise<DocContent | null> {
   try {
-    const fullPath = path.join(docsDirectory, ...slug) + '.md'
+    const fullPath = `${path.join(docsDirectory, ...slug)}.md`
 
     if (!fs.existsSync(fullPath)) {
       return null
