@@ -12,16 +12,17 @@ declare global {
 }
 
 export default function CherokeePage() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [mascot, setMascot] = useState<any>(null)
   const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   const [viewedPhrases, setViewedPhrases] = useState<Set<string>>(new Set())
-  const guideRef = useRef<HTMLDivElement>(null)
-  const guideMascotRef = useRef<any>(null)
-  const guideMascotCanvasRef = useRef<HTMLCanvasElement>(null)
   const cardMascotRef = useRef<any>(null)
   const cardCanvasRef = useRef<HTMLCanvasElement>(null)
+  const initializingRef = useRef(false)
+  const initializedRef = useRef(false)
 
   // Detect mobile viewport
   useEffect(() => {
@@ -31,176 +32,157 @@ export default function CherokeePage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Initialize guide mascot with enhanced interactivity
+  // Initialize guide mascot - EXACT COPY FROM HOME PAGE
   useEffect(() => {
-    if (typeof window === 'undefined' || !guideMascotCanvasRef.current || !guideRef.current) return
+    let cancelled = false
 
-    const initGuideMascot = async () => {
-      // Wait for EmotiveMascot to load
-      let attempts = 0
-      while (!(window as any).EmotiveMascot && attempts < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100))
-        attempts++
-      }
+    const initializeEngine = async () => {
+      if (!canvasRef.current || cancelled) return
 
-      const canvas = guideMascotCanvasRef.current
-      if (!canvas) return
+      if (initializedRef.current) return
+      if (initializingRef.current) return
+      if (mascot) return
 
-      // Set canvas dimensions with DPR scaling
-      const rect = canvas.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
-      canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-      canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
-
-      const ctx = canvas.getContext('2d')
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-      }
+      initializingRef.current = true
 
       try {
-        // Fixed UMD access pattern - same as GameMain.tsx
+        const canvas = canvasRef.current
+        const vw = window.innerWidth
+        const vh = window.innerHeight
+        const isMobileDevice = window.innerWidth < 768
+
+        const rect = canvas.getBoundingClientRect()
+        const dpr = window.devicePixelRatio || 1
+
+        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
+        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
+
+        const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
+        let script = existingScript as HTMLScriptElement
+
+        if (!existingScript) {
+          script = document.createElement('script')
+          script.src = `/emotive-engine.js?v=${Date.now()}`
+          script.async = true
+
+          await new Promise((resolve, reject) => {
+            script.onload = resolve
+            script.onerror = reject
+            document.head.appendChild(script)
+          })
+        }
+
         const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
 
         if (!EmotiveMascot) {
-          console.error('[Cherokee] EmotiveMascot not found on window object')
+          console.error('EmotiveMascot not found on window object')
           return
         }
 
-        const guideMascot = new EmotiveMascot({
+        const mascotInstance = new EmotiveMascot({
           canvasId: 'guide-mascot',
+          targetFPS: isMobileDevice ? 30 : 60,
           enableAudio: false,
           soundEnabled: false,
-          defaultEmotion: 'joy',
-          enableGazeTracking: false,
+          maxParticles: isMobileDevice ? 50 : 120,
+          defaultEmotion: 'neutral',
+          enableGazeTracking: true,
           enableIdleBehaviors: true,
           transitionDuration: 600,
-          emotionTransitionSpeed: 400,
+          emotionTransitionSpeed: 400
         })
 
-        guideMascotRef.current = guideMascot
+        await mascotInstance.init(canvas)
 
-        // Initialize and start
-        await guideMascot.init(canvas)
-        guideMascot.start()
+        mascotInstance.setParticleSystemCanvasDimensions(vw, vh)
 
-        // Set initial state - friendly, attentive teacher (neutral circle)
-        if (guideMascot.setEmotion) {
-          guideMascot.setEmotion('calm', 0.7)
+        mascotInstance.setBackdrop({
+          enabled: true,
+          radius: 3.5,
+          intensity: 0.85,
+          blendMode: 'normal',
+          falloff: 'smooth',
+          edgeSoftness: 0.95,
+          coreTransparency: 0.3,
+          responsive: true
+        })
+
+        mascotInstance.setScale({
+          core: 0.8,
+          particles: 1.4
+        })
+
+        const initialXOffset = isMobileDevice ? 0 : -vw * 0.38
+        mascotInstance.setPosition(initialXOffset, 0, 0)
+
+        mascotInstance.start()
+
+        setMascot(mascotInstance)
+
+        initializedRef.current = true
+        initializingRef.current = false
+
+        if (typeof mascotInstance.fadeIn === 'function') {
+          mascotInstance.fadeIn(1500)
         }
 
-        // Position mascot higher up
-        if (guideMascot.setPosition) {
-          guideMascot.setPosition(0, -140, 0)
-        }
-
-        // Welcome gesture - gentle pulse showing readiness to teach
         setTimeout(() => {
-          if (guideMascot.express) {
-            guideMascot.express('pulse')
+          if (typeof mascotInstance.express === 'function') {
+            mascotInstance.express('pulse')
           }
-        }, 500)
+        }, 800)
 
-        // Scroll-driven progressive interactions
-        let scrollState = 'greeting' // greeting, teaching, encouraging, farewell
-        let lastGestureTime = 0
-        const GESTURE_COOLDOWN = 4000 // 4 seconds between gestures
-
-        const handleScroll = () => {
-          if (!canvas || !guideRef.current) return
-
-          const guideRect = guideRef.current.getBoundingClientRect()
-          const scrollProgress = Math.max(0, Math.min(1, -guideRect.top / (guideRect.height / 2)))
-          const now = Date.now()
-
-          // Visual scroll animation
-          const translateY = scrollProgress * 200
-          const opacity = 1 - scrollProgress
-
-          canvas.style.transform = `translateY(${translateY}px) translateZ(0)`
-          canvas.style.opacity = opacity.toString()
-
-          // Progressive emotional states reflecting teaching journey
-          if (scrollProgress < 0.15 && scrollState !== 'greeting') {
-            // Initial greeting - calm, welcoming
-            scrollState = 'greeting'
-            if (guideMascot.setEmotion) {
-              guideMascot.setEmotion('calm', 0.7)
-            }
-            if (guideMascot.updateUndertone) {
-              guideMascot.updateUndertone(null)
-            }
-          } else if (scrollProgress >= 0.15 && scrollProgress < 0.35 && scrollState !== 'teaching') {
-            // Starting to teach - attentive, focused
-            scrollState = 'teaching'
-            if (guideMascot.setEmotion) {
-              guideMascot.setEmotion('neutral', 0.8)
-            }
-            if (guideMascot.updateUndertone) {
-              guideMascot.updateUndertone('confident')
-            }
-
-            // Gentle nod - "yes, explore the phrases"
-            if (now - lastGestureTime > GESTURE_COOLDOWN && guideMascot.express) {
-              guideMascot.express('nod')
-              lastGestureTime = now
-            }
-          } else if (scrollProgress >= 0.35 && scrollProgress < 0.65 && scrollState !== 'encouraging') {
-            // Student engaging - encouraging, supportive
-            scrollState = 'encouraging'
-            if (guideMascot.setEmotion) {
-              guideMascot.setEmotion('joy', 0.6)
-            }
-            if (guideMascot.updateUndertone) {
-              guideMascot.updateUndertone('confident')
-            }
-
-            // Encouraging gesture - "you're doing great"
-            if (now - lastGestureTime > GESTURE_COOLDOWN && guideMascot.express) {
-              guideMascot.express('bounce')
-              lastGestureTime = now
-            }
-          } else if (scrollProgress >= 0.65 && scrollState !== 'farewell') {
-            // Student moving on - warm farewell
-            scrollState = 'farewell'
-            if (guideMascot.setEmotion) {
-              guideMascot.setEmotion('love', 0.5)
-            }
-            if (guideMascot.updateUndertone) {
-              guideMascot.updateUndertone(null)
-            }
-
-            // Farewell gesture - gentle wave
-            if (now - lastGestureTime > GESTURE_COOLDOWN && guideMascot.express) {
-              guideMascot.express('sway')
-              lastGestureTime = now
-            }
-          }
-        }
-
-        window.addEventListener('scroll', handleScroll)
-        handleScroll() // Initial call
-
-        return () => {
-          window.removeEventListener('scroll', handleScroll)
-        }
-      } catch (err) {
-        console.error('[Cherokee] Failed to initialize guide mascot:', err)
+      } catch (error) {
+        console.error('Failed to initialize mascot:', error)
+        initializingRef.current = false
       }
     }
 
-    const cleanup = initGuideMascot()
+    initializeEngine()
 
     return () => {
-      if (guideMascotRef.current) {
-        guideMascotRef.current.stop?.()
-        guideMascotRef.current.destroy?.()
-        guideMascotRef.current = null
-      }
-      if (cleanup) {
-        cleanup.then(fn => fn?.())
+      cancelled = true
+      if (mascot) {
+        mascot.stop()
+        initializedRef.current = false
+        initializingRef.current = false
       }
     }
   }, [])
+
+  // Scroll-driven animation - EXACT COPY FROM HOME PAGE
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+
+      if (!mascot) return
+
+      const viewportHeight = window.innerHeight
+      const viewportWidth = window.innerWidth
+      const isMobileDevice = viewportWidth < 768
+
+      const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
+
+      const yOffset = (scrollY - viewportHeight * 0.1) * 0.5
+
+      const wavelength = 600
+      const amplitude = isMobileDevice
+        ? Math.min(80, viewportWidth * 0.15)
+        : Math.min(100, viewportWidth * 0.08)
+      const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength))
+
+      if (typeof mascot.setPosition === 'function') {
+        mascot.setPosition(xOffset, yOffset, 0)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [mascot])
 
   // Track viewed phrases
   useEffect(() => {
@@ -565,6 +547,29 @@ export default function CherokeePage() {
     <div className="emotive-container">
       <EmotiveHeader />
 
+      {/* Scroll-driven mascot - EXACT COPY FROM HOME PAGE */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          pointerEvents: 'none',
+          zIndex: 100,
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          id="guide-mascot"
+          style={{
+            width: '100%',
+            height: '100%',
+            filter: 'drop-shadow(0 10px 40px rgba(102, 126, 234, 0.4))',
+          }}
+        />
+      </div>
+
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -665,49 +670,20 @@ export default function CherokeePage() {
 
         {/* Guide Section */}
         <div
-          ref={guideRef}
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
             textAlign: 'center',
             marginBottom: '3rem',
             padding: '2rem',
             background: 'rgba(218,165,32,0.08)',
             borderRadius: '16px',
             border: '1px solid rgba(218,165,32,0.2)',
-            minHeight: '400px',
-            position: 'relative',
-            overflow: 'hidden'
           }}
         >
-          {/* Mascot canvas - Highest z-index for scroll animation, hidden when card is visible */}
-          <canvas
-            ref={guideMascotCanvasRef}
-            id="guide-mascot"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              pointerEvents: 'none',
-              zIndex: 9999,
-              filter: 'none',
-              transform: 'translateZ(0)',
-              willChange: 'transform, opacity',
-              display: selectedPhrase ? 'none' : 'block'
-            }}
-          />
-
           <h3 style={{
             fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)',
             marginBottom: '0.75rem',
             color: '#DAA520',
             fontWeight: '600',
-            position: 'relative',
-            zIndex: 2
           }}>
             ᎣᏏᏲ! Let&apos;s Learn Together
           </h3>
@@ -716,17 +692,14 @@ export default function CherokeePage() {
             opacity: 0.85,
             lineHeight: 1.5,
             maxWidth: '600px',
-            position: 'relative',
-            zIndex: 2
+            margin: '0 auto',
           }}>
-            Click any greeting card below to explore its meaning, pronunciation, and cultural significance. I&apos;ll guide you through each phrase!
+            Click any greeting card below to explore its meaning, pronunciation, and cultural significance with an animated guide!
           </p>
           <div style={{
             marginTop: '1rem',
             fontSize: '2rem',
             animation: 'bounce 2s ease-in-out infinite',
-            position: 'relative',
-            zIndex: 2
           }}>
             👇
           </div>
