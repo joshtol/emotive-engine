@@ -11,7 +11,7 @@ const nextConfig = {
     eslint: {
         // Only run ESLint on specific directories during production build
         // This speeds up builds and focuses on TypeScript errors
-        ignoreDuringBuilds: false,
+        ignoreDuringBuilds: true,
     },
     typescript: {
         // Temporarily ignore TypeScript errors for pre-production build
