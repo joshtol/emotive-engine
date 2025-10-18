@@ -59,24 +59,15 @@ export default function HomePage() {
       initializingRef.current = true
 
       try {
-        // Set canvas size with DPR scaling to prevent squishing
+        // Set canvas size to match viewport (no DPR scaling for full-screen canvas)
         const canvas = canvasRef.current
         const vw = window.innerWidth
         const vh = window.innerHeight
 
-        // Get actual canvas dimensions (CSS size)
-        const rect = canvas.getBoundingClientRect()
-        const dpr = window.devicePixelRatio || 1
-
-        // Set internal canvas resolution with DPR scaling using setAttribute (matches Cherokee page)
-        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
-
-        // Clear canvas
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height)
-        }
+        // Set canvas internal dimensions to viewport size
+        // This prevents squishing by ensuring 1:1 pixel ratio with CSS
+        canvas.width = vw
+        canvas.height = vh
 
         // Load the engine script dynamically with cache busting
         // Check if script already loaded
