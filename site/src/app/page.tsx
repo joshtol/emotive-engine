@@ -94,31 +94,16 @@ export default function HomePage() {
           return
         }
 
-        // Mobile detection and sizing
-        const isMobile = vw < 768
-        const targetMascotSize = isMobile ? 150 : 300
-        const coreSizeDivisor = Math.max(4, vw / targetMascotSize)
-
-        // Create mascot instance with mobile optimization
+        // Create mascot instance with minimal config (like Cherokee page)
         const mascotInstance = new EmotiveMascot({
           canvasId: 'hero-mascot-canvas',
-          targetFPS: isMobile ? 30 : 60,
           enableAudio: false,
           soundEnabled: false,
-          maxParticles: isMobile ? 50 : 120,
           defaultEmotion: 'neutral',
-          enableAutoOptimization: true,
-          enableGracefulDegradation: true,
-          renderingStyle: 'classic',
           enableGazeTracking: false,
           enableIdleBehaviors: true,
-          renderSize: { width: vw, height: vh },
-          classicConfig: {
-            coreColor: '#FFFFFF',
-            coreSizeDivisor: coreSizeDivisor,
-            glowMultiplier: isMobile ? 2.0 : 3.0,
-            defaultGlowColor: '#667eea'
-          }
+          transitionDuration: 600,
+          emotionTransitionSpeed: 400
         })
 
         // Initialize the engine with canvas element
