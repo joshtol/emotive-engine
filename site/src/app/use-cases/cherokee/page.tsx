@@ -2,18 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 
-declare global {
-  interface Window {
-    EmotiveMascot?: any
-  }
-}
+const CherokeeMascot = dynamic(() => import('./CherokeeMascot'), {
+  ssr: false,
+  loading: () => null
+})
 
 export default function CherokeePage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [mascot, setMascot] = useState<any>(null)
   const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -22,206 +20,20 @@ export default function CherokeePage() {
   const [viewedPhrases, setViewedPhrases] = useState<Set<string>>(new Set())
   const cardMascotRef = useRef<any>(null)
   const cardCanvasRef = useRef<HTMLCanvasElement>(null)
-  const initializingRef = useRef(false)
-  const initializedRef = useRef(false)
-  const [scrollPosition, setScrollPosition] = useState(0)
-  const lastGestureRef = useRef<number>(-1)
 
-  // Detect mobile viewport and client-side rendering
+  // Detect mobile viewport
   useEffect(() => {
+    console.log('[Cherokee] Client mounted')
     setIsClient(true)
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768
+      console.log('[Cherokee] Mobile check:', mobile, 'width:', window.innerWidth)
+      setIsMobile(mobile)
+    }
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
-
-  // Initialize guide mascot - EXACT COPY FROM HOME PAGE
-  useEffect(() => {
-    // Wait for client-side hydration before initializing
-    if (!isClient) return
-
-    let cancelled = false
-
-    const initializeEngine = async () => {
-      if (!canvasRef.current || cancelled) return
-
-      if (initializedRef.current) return
-      if (initializingRef.current) return
-      if (mascot) return
-
-      initializingRef.current = true
-
-      try {
-        const canvas = canvasRef.current
-        const vw = window.innerWidth
-        const vh = window.innerHeight
-        const isMobileDevice = window.innerWidth < 768
-
-        const rect = canvas.getBoundingClientRect()
-        const dpr = window.devicePixelRatio || 1
-
-        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
-
-        const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
-        let script = existingScript as HTMLScriptElement
-
-        if (!existingScript) {
-          script = document.createElement('script')
-          script.src = `/emotive-engine.js?v=${Date.now()}`
-          script.async = true
-
-          await new Promise((resolve, reject) => {
-            script.onload = resolve
-            script.onerror = reject
-            document.head.appendChild(script)
-          })
-        }
-
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
-
-        if (!EmotiveMascot) {
-          console.error('EmotiveMascot not found on window object')
-          return
-        }
-
-        const mascotInstance = new EmotiveMascot({
-          canvasId: 'guide-mascot',
-          targetFPS: isMobileDevice ? 30 : 60,
-          enableAudio: false,
-          soundEnabled: false,
-          maxParticles: isMobileDevice ? 50 : 120,
-          defaultEmotion: 'neutral',
-          enableGazeTracking: false,
-          enableIdleBehaviors: true,
-          transitionDuration: 600,
-          emotionTransitionSpeed: 400
-        })
-
-        await mascotInstance.init(canvas)
-
-        mascotInstance.setParticleSystemCanvasDimensions(vw, vh)
-
-        mascotInstance.setBackdrop({
-          enabled: true,
-          radius: 3.5,
-          intensity: 0.85,
-          blendMode: 'normal',
-          falloff: 'smooth',
-          edgeSoftness: 0.95,
-          coreTransparency: 0.3,
-          responsive: true
-        })
-
-        mascotInstance.setScale({
-          core: 0.8,
-          particles: 1.4
-        })
-
-        const initialXOffset = isMobileDevice ? 0 : -vw * 0.38
-        mascotInstance.setPosition(initialXOffset, 0, 0)
-
-        mascotInstance.start()
-
-        setMascot(mascotInstance)
-
-        initializedRef.current = true
-        initializingRef.current = false
-
-        if (typeof mascotInstance.fadeIn === 'function') {
-          mascotInstance.fadeIn(1500)
-        }
-
-        setTimeout(() => {
-          if (typeof mascotInstance.express === 'function') {
-            mascotInstance.express('pulse')
-          }
-        }, 800)
-
-      } catch (error) {
-        console.error('Failed to initialize mascot:', error)
-        initializingRef.current = false
-      }
-    }
-
-    initializeEngine()
-
-    return () => {
-      cancelled = true
-      if (mascot) {
-        mascot.stop()
-        initializedRef.current = false
-        initializingRef.current = false
-      }
-    }
-  }, [isClient])
-
-  // Scroll-driven animation with gestures
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY
-      setScrollPosition(scrollY)
-
-      if (!mascot) return
-
-      const viewportHeight = window.innerHeight
-      const viewportWidth = window.innerWidth
-      const isMobileDevice = viewportWidth < 768
-
-      const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
-
-      const yOffset = (scrollY - viewportHeight * 0.1) * 0.5
-
-      const wavelength = 600
-      const amplitude = isMobileDevice
-        ? Math.min(80, viewportWidth * 0.15)
-        : Math.min(100, viewportWidth * 0.08)
-      const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength))
-
-      if (typeof mascot.setPosition === 'function') {
-        mascot.setPosition(xOffset, yOffset, 0)
-      }
-
-      // Trigger gestures at specific scroll positions
-      const gesturePoints = [
-        { threshold: 0, gesture: null, emotion: 'neutral' }, // Initial state
-        { threshold: viewportHeight * 0.9, gesture: 'wave', emotion: 'joy' }, // Leaving hero
-        { threshold: viewportHeight + 800, gesture: 'bounce', emotion: 'excited' }, // Greetings section
-      ]
-
-      // Find current zone based on scroll position
-      let currentZone = 0
-      for (let i = gesturePoints.length - 1; i >= 0; i--) {
-        if (scrollY > gesturePoints[i].threshold) {
-          currentZone = i
-          break
-        }
-      }
-
-      // Only trigger if zone changed
-      if (currentZone !== lastGestureRef.current) {
-        const point = gesturePoints[currentZone]
-
-        if (typeof mascot.setEmotion === 'function') {
-          mascot.setEmotion(point.emotion, 0)
-        }
-
-        if (point.gesture && typeof mascot.express === 'function') {
-          mascot.express(point.gesture)
-        }
-
-        lastGestureRef.current = currentZone
-      }
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll()
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [mascot])
 
   // Track viewed phrases
   useEffect(() => {
@@ -229,6 +41,99 @@ export default function CherokeePage() {
       setViewedPhrases(prev => new Set([...prev, selectedPhrase]))
     }
   }, [selectedPhrase, viewedPhrases])
+
+  // Cherokee Greetings & Common Phrases
+  // Verified from official Cherokee Nation sources (cherokee.org, Cherokee Nation social media)
+  const greetings = [
+    {
+      english: 'Hello',
+      cherokee: 'ᎣᏏᏲ',
+      pronunciation: 'oh-see-yoh',
+      meaning: 'It\'s good to see you',
+      context: 'Universal greeting for all occasions',
+      color: '#DAA520',
+      bgColor: 'rgba(218,165,32,0.15)',
+      borderColor: 'rgba(218,165,32,0.4)',
+      emoji: '👋'
+    },
+    {
+      english: 'Hello (informal)',
+      cherokee: 'ᏏᏲ',
+      pronunciation: 'see-yoh',
+      meaning: 'Hi / Hey',
+      context: 'Casual greeting among friends',
+      color: '#FFB347',
+      bgColor: 'rgba(255,179,71,0.15)',
+      borderColor: 'rgba(255,179,71,0.4)',
+      emoji: '😊'
+    },
+    {
+      english: 'Good',
+      cherokee: 'ᎣᏍᏓ',
+      pronunciation: 'oh-s-dah',
+      meaning: 'Response to "How are you?"',
+      context: 'Can also mean "I\'m good"',
+      color: '#82C4C3',
+      bgColor: 'rgba(130,196,195,0.15)',
+      borderColor: 'rgba(130,196,195,0.4)',
+      emoji: '✨'
+    },
+    {
+      english: 'Good morning',
+      cherokee: 'ᎣᏍᏓ ᏌᎾᎴᎢ',
+      pronunciation: 'oh-s-dah sah-nah-lay-ee',
+      meaning: 'Morning greeting',
+      context: 'Used until midday',
+      color: '#F8B739',
+      bgColor: 'rgba(248,183,57,0.15)',
+      borderColor: 'rgba(248,183,57,0.4)',
+      emoji: '🌅'
+    },
+    {
+      english: 'How are you?',
+      cherokee: 'ᏙᎯᏧ',
+      pronunciation: 'doh-hee-choo',
+      meaning: 'Asking about someone\'s wellbeing',
+      context: 'Common conversation starter',
+      color: '#F7DC6F',
+      bgColor: 'rgba(247,220,111,0.15)',
+      borderColor: 'rgba(247,220,111,0.4)',
+      emoji: '💬'
+    },
+    {
+      english: 'Thank you',
+      cherokee: 'ᏩᏙ',
+      pronunciation: 'wah-doh',
+      meaning: 'Expression of gratitude',
+      context: 'Shows respect and appreciation',
+      color: '#98D8C8',
+      bgColor: 'rgba(152,216,200,0.15)',
+      borderColor: 'rgba(152,216,200,0.4)',
+      emoji: '🙏'
+    },
+    {
+      english: 'Good night',
+      cherokee: 'ᎣᏍᏓ ᎤᏒᎢ',
+      pronunciation: 'oh-s-dah oo-sv-ee',
+      meaning: 'Evening farewell',
+      context: 'Used when parting in the evening',
+      color: '#9B59B6',
+      bgColor: 'rgba(155,89,182,0.15)',
+      borderColor: 'rgba(155,89,182,0.4)',
+      emoji: '🌙'
+    },
+    {
+      english: '\'Til we meet again',
+      cherokee: 'ᏙᎾᏓᎪᎲᎢ',
+      pronunciation: 'doh-nah-dah-goh-huh-ee',
+      meaning: 'There is no word for "goodbye" in Cherokee',
+      context: 'Reflects belief in continued connection',
+      color: '#C39BD3',
+      bgColor: 'rgba(195,155,211,0.15)',
+      borderColor: 'rgba(195,155,211,0.4)',
+      emoji: '🤝'
+    },
+  ]
 
   // Initialize card mascot with enhanced interactivity using public API
   useEffect(() => {
@@ -251,11 +156,13 @@ export default function CherokeePage() {
         cardMascotRef.current.destroy?.()
       }
 
-      // Set canvas dimensions with DPR scaling
+      // Set canvas dimensions with DPR scaling - FORCE 1:1 aspect ratio
       const rect = canvas.getBoundingClientRect()
       const dpr = window.devicePixelRatio || 1
-      canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-      canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
+      // Use the smaller dimension to ensure 1:1 aspect ratio
+      const size = Math.min(rect.width, rect.height)
+      canvas.setAttribute('width', Math.round(size * dpr).toString())
+      canvas.setAttribute('height', Math.round(size * dpr).toString())
 
       const ctx = canvas.getContext('2d')
       if (ctx) {
@@ -489,180 +396,89 @@ export default function CherokeePage() {
     }
   }
 
-  // Cherokee Greetings & Common Phrases
-  // Verified from official Cherokee Nation sources (cherokee.org, Cherokee Nation social media)
-  const greetings = [
-    {
-      english: 'Hello',
-      cherokee: 'ᎣᏏᏲ',
-      pronunciation: 'oh-see-yoh',
-      meaning: 'It\'s good to see you',
-      context: 'Universal greeting for all occasions',
-      color: '#DAA520',
-      bgColor: 'rgba(218,165,32,0.15)',
-      borderColor: 'rgba(218,165,32,0.4)',
-      emoji: '👋'
-    },
-    {
-      english: 'Hello (informal)',
-      cherokee: 'ᏏᏲ',
-      pronunciation: 'see-yoh',
-      meaning: 'Hi / Hey',
-      context: 'Casual greeting among friends',
-      color: '#FFB347',
-      bgColor: 'rgba(255,179,71,0.15)',
-      borderColor: 'rgba(255,179,71,0.4)',
-      emoji: '😊'
-    },
-    {
-      english: 'Good',
-      cherokee: 'ᎣᏍᏓ',
-      pronunciation: 'oh-s-dah',
-      meaning: 'Response to "How are you?"',
-      context: 'Can also mean "I\'m good"',
-      color: '#82C4C3',
-      bgColor: 'rgba(130,196,195,0.15)',
-      borderColor: 'rgba(130,196,195,0.4)',
-      emoji: '✨'
-    },
-    {
-      english: 'Good morning',
-      cherokee: 'ᎣᏍᏓ ᏌᎾᎴᎢ',
-      pronunciation: 'oh-s-dah sah-nah-lay-ee',
-      meaning: 'Morning greeting',
-      context: 'Used until midday',
-      color: '#F8B739',
-      bgColor: 'rgba(248,183,57,0.15)',
-      borderColor: 'rgba(248,183,57,0.4)',
-      emoji: '🌅'
-    },
-    {
-      english: 'How are you?',
-      cherokee: 'ᏙᎯᏧ',
-      pronunciation: 'doh-hee-choo',
-      meaning: 'Asking about someone\'s wellbeing',
-      context: 'Common conversation starter',
-      color: '#F7DC6F',
-      bgColor: 'rgba(247,220,111,0.15)',
-      borderColor: 'rgba(247,220,111,0.4)',
-      emoji: '💬'
-    },
-    {
-      english: 'Thank you',
-      cherokee: 'ᏩᏙ',
-      pronunciation: 'wah-doh',
-      meaning: 'Expression of gratitude',
-      context: 'Shows respect and appreciation',
-      color: '#98D8C8',
-      bgColor: 'rgba(152,216,200,0.15)',
-      borderColor: 'rgba(152,216,200,0.4)',
-      emoji: '🙏'
-    },
-    {
-      english: 'Good night',
-      cherokee: 'ᎣᏍᏓ ᎤᏒᎢ',
-      pronunciation: 'oh-s-dah oo-sv-ee',
-      meaning: 'Evening farewell',
-      context: 'Used when parting in the evening',
-      color: '#9B59B6',
-      bgColor: 'rgba(155,89,182,0.15)',
-      borderColor: 'rgba(155,89,182,0.4)',
-      emoji: '🌙'
-    },
-    {
-      english: '\'Til we meet again',
-      cherokee: 'ᏙᎾᏓᎪᎲᎢ',
-      pronunciation: 'doh-nah-dah-goh-huh-ee',
-      meaning: 'There is no word for "goodbye" in Cherokee',
-      context: 'Reflects belief in continued connection',
-      color: '#C39BD3',
-      bgColor: 'rgba(195,155,211,0.15)',
-      borderColor: 'rgba(195,155,211,0.4)',
-      emoji: '🤝'
-    },
-  ]
-
   return (
-    <div className="emotive-container">
+    <div>
       <EmotiveHeader />
 
-      {/* Scroll-driven mascot - EXACT COPY FROM HOME PAGE */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          pointerEvents: 'none',
-          zIndex: 100,
-        }}
-      >
-        <canvas
-          ref={canvasRef}
-          id="guide-mascot"
-          style={{
-            width: '100%',
-            height: '100%',
-            filter: 'drop-shadow(0 10px 40px rgba(102, 126, 234, 0.4))',
-          }}
-        />
-      </div>
+      {/* Scroll-driven mascot - Loaded dynamically */}
+      <CherokeeMascot />
 
       <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
         }
       `}</style>
 
-      <div style={{
-      background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+      <main style={{
+      background: 'radial-gradient(ellipse at top, rgba(218,165,32,0.15) 0%, transparent 50%), linear-gradient(180deg, #0a0a0f 0%, #050508 100%)',
       color: 'white',
-      padding: 'var(--container-padding)',
-      paddingBottom: '2rem'
+      minHeight: '100vh',
+      position: 'relative',
+      zIndex: 1,
     }}>
+      {/* Ambient light effect */}
       <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto'
+        position: 'absolute',
+        top: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '800px',
+        height: '400px',
+        background: 'radial-gradient(ellipse, rgba(218,165,32,0.08) 0%, transparent 70%)',
+        filter: 'blur(80px)',
+        pointerEvents: 'none'
+      }} />
+
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '2rem clamp(1.5rem, 5vw, 4rem)',
+        position: 'relative'
       }}>
         {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '3rem'
+          marginBottom: 'clamp(3rem, 6vw, 5rem)',
+          paddingTop: '1rem'
         }}>
           <Link
             href="/"
             style={{
-              color: 'rgba(255,255,255,0.7)',
+              color: 'rgba(255,255,255,0.5)',
               textDecoration: 'none',
-              fontSize: '1rem',
-              transition: 'all 0.3s'
+              fontSize: '0.95rem',
+              fontWeight: '500',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'white'
+              e.currentTarget.style.color = '#DAA520'
+              e.currentTarget.style.transform = 'translateX(-4px)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'rgba(255,255,255,0.7)'
+              e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
+              e.currentTarget.style.transform = 'translateX(0)'
             }}
           >
-            ← Back to Portfolio
+            <span style={{ fontSize: '1.2rem' }}>←</span> Back to Portfolio
           </Link>
           <div style={{
-            padding: '0.5rem 1rem',
-            background: 'rgba(218,165,32,0.2)',
-            borderRadius: '6px',
-            fontSize: '0.85rem',
-            fontWeight: '600',
+            padding: '0.6rem 1.2rem',
+            background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderRadius: '100px',
+            fontSize: '0.75rem',
+            fontWeight: '700',
             textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            border: '1px solid rgba(218,165,32,0.4)'
+            letterSpacing: '1.5px',
+            border: '1px solid rgba(218,165,32,0.3)',
+            boxShadow: '0 4px 24px rgba(218,165,32,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
           }}>
             Flagship Use Case
           </div>
@@ -671,36 +487,42 @@ export default function CherokeePage() {
         {/* Hero */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '4rem'
+          marginBottom: 'clamp(4rem, 8vw, 6rem)'
         }}>
           <h1 style={{
             fontFamily: 'var(--font-primary)',
-            fontSize: 'clamp(3rem, 8vw, 5rem)',
-            fontWeight: 'bold',
-            marginBottom: '1rem',
-            color: '#DAA520',
-            letterSpacing: '-0.02em'
+            fontSize: 'clamp(3.5rem, 10vw, 6.5rem)',
+            fontWeight: '800',
+            marginBottom: '1.5rem',
+            background: 'linear-gradient(135deg, #DAA520 0%, #FFD700 50%, #F0C420 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            letterSpacing: '-0.03em',
+            lineHeight: 1,
+            textShadow: '0 0 80px rgba(218,165,32,0.3)',
+            position: 'relative'
           }}>
             ᏣᎳᎩ ᎦᏬᏂᎯᏍᏗ
           </h1>
           <h2 style={{
             fontFamily: 'var(--font-primary)',
-            fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+            fontSize: 'clamp(1.8rem, 5vw, 3rem)',
             fontWeight: '600',
-            marginBottom: '1rem',
-            opacity: 0.9,
-            letterSpacing: '-0.01em'
+            marginBottom: '1.5rem',
+            color: 'rgba(255,255,255,0.95)',
+            letterSpacing: '-0.02em'
           }}>
             Cherokee Language Learning
           </h2>
           <p style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 'clamp(1rem, 2vw, 1.3rem)',
-            opacity: 0.7,
+            fontSize: 'clamp(1.05rem, 2.2vw, 1.25rem)',
+            color: 'rgba(255,255,255,0.6)',
             fontWeight: '400',
-            maxWidth: '700px',
-            margin: '0 auto 2rem auto',
-            lineHeight: 1.6
+            maxWidth: '650px',
+            margin: '0 auto',
+            lineHeight: 1.7
           }}>
             Learn essential Cherokee greetings and phrases with authentic syllabary characters and pronunciation.
             All content verified through official Cherokee Nation sources.
@@ -711,34 +533,55 @@ export default function CherokeePage() {
         <div
           style={{
             textAlign: 'center',
-            marginBottom: '3rem',
-            padding: '2rem',
-            background: 'rgba(218,165,32,0.08)',
-            borderRadius: '16px',
+            marginBottom: 'clamp(3rem, 6vw, 5rem)',
+            padding: 'clamp(2rem, 4vw, 3rem)',
+            background: 'linear-gradient(135deg, rgba(218,165,32,0.1) 0%, rgba(218,165,32,0.03) 100%)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            borderRadius: '24px',
             border: '1px solid rgba(218,165,32,0.2)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+            position: 'relative',
+            overflow: 'hidden'
           }}
         >
+          {/* Subtle gradient overlay */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(218,165,32,0.5), transparent)'
+          }} />
+
           <h3 style={{
-            fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)',
-            marginBottom: '0.75rem',
-            color: '#DAA520',
-            fontWeight: '600',
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            marginBottom: '1rem',
+            background: 'linear-gradient(135deg, #DAA520 0%, #FFD700 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontWeight: '700',
+            letterSpacing: '-0.01em'
           }}>
             ᎣᏏᏲ! Let&apos;s Learn Together
           </h3>
           <p style={{
-            fontSize: 'clamp(1rem, 2vw, 1.2rem)',
-            opacity: 0.85,
-            lineHeight: 1.5,
-            maxWidth: '600px',
+            fontSize: 'clamp(1rem, 2.2vw, 1.15rem)',
+            color: 'rgba(255,255,255,0.7)',
+            lineHeight: 1.6,
+            maxWidth: '580px',
             margin: '0 auto',
+            fontWeight: '400'
           }}>
             Click any greeting card below to explore its meaning, pronunciation, and cultural significance with an animated guide!
           </p>
           <div style={{
-            marginTop: '1rem',
-            fontSize: '2rem',
+            marginTop: '1.5rem',
+            fontSize: '2.5rem',
             animation: 'bounce 2s ease-in-out infinite',
+            filter: 'drop-shadow(0 2px 8px rgba(218,165,32,0.3))'
           }}>
             👇
           </div>
@@ -746,93 +589,128 @@ export default function CherokeePage() {
 
         {/* Cherokee Greetings Grid */}
         <div className="cherokee-greetings-grid" style={{
-          background: 'rgba(218,165,32,0.08)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          borderRadius: '20px',
-          padding: 'var(--card-padding-lg) var(--card-padding)',
-          border: '1px solid rgba(218,165,32,0.25)',
-          marginBottom: '4rem',
-          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+          background: 'linear-gradient(135deg, rgba(218,165,32,0.08) 0%, rgba(218,165,32,0.02) 100%)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          borderRadius: '32px',
+          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(2rem, 4vw, 3rem)',
+          border: '1px solid rgba(218,165,32,0.2)',
+          marginBottom: 'clamp(4rem, 8vw, 6rem)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
+          {/* Top gradient line */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(218,165,32,0.6), transparent)'
+          }} />
+
           <h3 style={{
-            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
-            marginBottom: '2rem',
+            fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
+            marginBottom: 'clamp(2rem, 4vw, 3rem)',
             textAlign: 'center',
-            color: '#DAA520'
+            background: 'linear-gradient(135deg, #DAA520 0%, #FFD700 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontWeight: '700',
+            letterSpacing: '-0.02em'
           }}>
             Common Cherokee Greetings
           </h3>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 'var(--grid-gap)',
-            marginBottom: 'var(--spacing-md)'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 'clamp(1.25rem, 2.5vw, 2rem)'
           }}>
             {greetings.map((item) => (
               <div
                 key={item.english}
                 onClick={() => setSelectedPhrase(item.english)}
                 style={{
-                  padding: '2rem',
+                  padding: 'clamp(1.75rem, 3vw, 2.25rem)',
                   background: selectedPhrase === item.english
-                    ? item.bgColor
-                    : 'rgba(255,255,255,0.05)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  borderRadius: '16px',
+                    ? `linear-gradient(135deg, ${item.bgColor}, ${item.bgColor.replace('0.15', '0.08')})`
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  borderRadius: '20px',
                   border: selectedPhrase === item.english
                     ? `2px solid ${item.borderColor}`
-                    : '1px solid rgba(255,255,255,0.15)',
+                    : '1px solid rgba(255,255,255,0.1)',
                   cursor: 'pointer',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   textAlign: 'center',
-                  willChange: 'transform',
+                  position: 'relative',
+                  overflow: 'hidden',
                   boxShadow: selectedPhrase === item.english
-                    ? `0 12px 40px ${item.borderColor}`
-                    : '0 4px 16px rgba(31, 38, 135, 0.1)'
+                    ? `0 20px 60px ${item.borderColor}, inset 0 1px 0 rgba(255,255,255,0.1)`
+                    : '0 8px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
                 }}
                 onMouseEnter={(e) => {
                   if (selectedPhrase !== item.english) {
-                    e.currentTarget.style.background = item.bgColor.replace('0.15', '0.08')
-                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)'
-                    e.currentTarget.style.boxShadow = `0 8px 24px ${item.borderColor}`
+                    e.currentTarget.style.background = `linear-gradient(135deg, ${item.bgColor.replace('0.15', '0.12')} 0%, ${item.bgColor.replace('0.15', '0.04')} 100%)`
+                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
+                    e.currentTarget.style.borderColor = item.borderColor.replace('0.4', '0.6')
+                    e.currentTarget.style.boxShadow = `0 16px 48px ${item.borderColor}, inset 0 1px 0 rgba(255,255,255,0.1)`
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedPhrase !== item.english) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
                     e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(31, 38, 135, 0.1)'
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
                   }
                 }}
               >
+                {/* Subtle shine effect */}
                 <div style={{
-                  fontSize: '3rem',
-                  marginBottom: '0.75rem'
+                  position: 'absolute',
+                  top: 0,
+                  left: '-100%',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)',
+                  transition: 'left 0.6s ease'
+                }} />
+
+                <div style={{
+                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  marginBottom: '1rem',
+                  filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))'
                 }}>
                   {item.emoji}
                 </div>
                 <div style={{
-                  fontSize: '1.1rem',
+                  fontSize: 'clamp(1rem, 2vw, 1.15rem)',
                   fontWeight: '600',
-                  marginBottom: '0.75rem',
-                  opacity: 0.9
+                  marginBottom: '1rem',
+                  color: 'rgba(255,255,255,0.9)',
+                  letterSpacing: '0.01em'
                 }}>
                   {item.english}
                 </div>
                 <div style={{
-                  fontSize: '2rem',
-                  marginBottom: '0.5rem',
-                  color: item.color
+                  fontSize: 'clamp(1.8rem, 3.5vw, 2.25rem)',
+                  marginBottom: '0.75rem',
+                  color: item.color,
+                  fontWeight: '600',
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                 }}>
                   {item.cherokee}
                 </div>
                 <div style={{
-                  fontSize: '0.95rem',
-                  opacity: 0.7,
-                  fontStyle: 'italic'
+                  fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
+                  color: 'rgba(255,255,255,0.6)',
+                  fontStyle: 'italic',
+                  fontWeight: '400'
                 }}>
                   {item.pronunciation}
                 </div>
@@ -1483,7 +1361,10 @@ export default function CherokeePage() {
           </Link>
         </div>
       </div>
-    </div>
+
+        {/* Footer Spacing */}
+        <div style={{ height: 'clamp(4rem, 8vw, 6rem)' }} />
+      </main>
 
       <EmotiveFooter />
     </div>

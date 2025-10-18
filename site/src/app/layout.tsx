@@ -2,8 +2,22 @@ import type { Metadata } from 'next'
 import { Poppins, Montserrat } from 'next/font/google'
 import './globals.css'
 
-const poppins = Poppins({ subsets: ['latin'], weight: ['300','400','500','600','700'], variable: '--font-poppins' })
-const montserrat = Montserrat({ subsets: ['latin'], weight: ['300','400','500','600','700'], variable: '--font-montserrat' })
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300','400','500','600','700'],
+  variable: '--font-poppins',
+  display: 'swap',
+  preload: true,
+  fallback: ['system-ui', 'arial']
+})
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['300','400','500','600','700'],
+  variable: '--font-montserrat',
+  display: 'swap',
+  preload: true,
+  fallback: ['system-ui', 'arial']
+})
 
 export const metadata: Metadata = {
   title: 'Emotive Engine - Rhythm Game',
