@@ -266,6 +266,14 @@ See [LICENSE.md](./LICENSE.md) for details.
 
 Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) first.
 
+## Documentation
+
+For detailed documentation, see the [`docs/`](./docs/) directory:
+
+- [Production Readiness Plan](./docs/PRODUCTION-READY-PLAN.md) - 10-day production launch plan
+- [Rhythm System](./docs/RHYTHM_SYSTEM.md) - Complete rhythm integration guide
+- [Performance Optimization](./docs/PERFORMANCE.md) - Performance tuning and monitoring
+
 ## Credits
 
 Created by Josh Tolhurst

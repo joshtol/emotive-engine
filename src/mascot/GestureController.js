@@ -212,8 +212,6 @@ export class GestureController {
                 this.gestureCompatibility.getCompatibleGestures(gestures) :
                 gestures;
 
-            console.warn('Executing gesture chord:', compatibleGestures);
-
             // Execute all compatible gestures simultaneously
             compatibleGestures.forEach(gestureName => {
                 const normalizedGesture = typeof gestureName === 'string' ?
