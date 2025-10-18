@@ -4,8 +4,6 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
-import { db } from '@/lib/firebase'
-import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore'
 
 export default function HomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -286,6 +284,10 @@ export default function HomePage() {
         }, 5000)
         return
       }
+
+      // Dynamically import Firebase only when needed (client-side only)
+      const { db } = await import('@/lib/firebase')
+      const { collection, addDoc, query, where, getDocs, serverTimestamp } = await import('firebase/firestore')
 
       // Check if email already exists
       const waitlistRef = collection(db, 'waitlist')
