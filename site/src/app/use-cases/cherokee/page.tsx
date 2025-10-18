@@ -1072,7 +1072,7 @@ export default function CherokeePage() {
                       marginBottom: '1rem',
                       color: '#DAA520'
                     }}>
-                      🎉 You've learned your first Cherokee phrases!
+                      🎉 You&apos;ve learned your first Cherokee phrases!
                     </div>
                     <p style={{
                       fontSize: '1.1rem',
@@ -1080,7 +1080,7 @@ export default function CherokeePage() {
                       lineHeight: 1.6,
                       marginBottom: '1.5rem'
                     }}>
-                      <strong style={{ color: '#DAA520', fontSize: '1.3rem' }}>ᏙᎾᏓᎪᎲᎢ</strong> — 'Til we meet again.
+                      <strong style={{ color: '#DAA520', fontSize: '1.3rem' }}>ᏙᎾᏓᎪᎲᎢ</strong> — &apos;Til we meet again.
                     </p>
                     <div style={{
                       display: 'flex',
