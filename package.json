@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@joshtol/emotive-engine",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Proprietary animation engine with musical time synchronization",
   "main": "dist/emotive-engine.min.js",
   "module": "src/index.js",
