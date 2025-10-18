@@ -1,4 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { writeFile, readFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+
+// Simple file-based waitlist storage (will be replaced with Firebase later)
+const WAITLIST_FILE = join(process.cwd(), 'data', 'waitlist.json');
+
+interface WaitlistEntry {
+  email: string;
+  timestamp: string;
+  source: string;
+}
+
+async function getWaitlist(): Promise<WaitlistEntry[]> {
+  try {
+    const data = await readFile(WAITLIST_FILE, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    // File doesn't exist yet
+    return [];
+  }
+}
+
+async function saveWaitlist(entries: WaitlistEntry[]): Promise<void> {
+  try {
+    // Ensure data directory exists
+    await mkdir(join(process.cwd(), 'data'), { recursive: true });
+    await writeFile(WAITLIST_FILE, JSON.stringify(entries, null, 2));
+  } catch (error) {
+    console.error('Error saving waitlist:', error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,53 +44,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize Firebase Admin (server-side)
-    const admin = await import('firebase-admin');
-
-    // Initialize Firebase Admin if not already initialized
-    if (!admin.apps.length) {
-      // Use environment variables for Firebase config
-      const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-        : {
-            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-            // For development, we'll use the public config
-            // In production, add proper service account credentials
-          };
-
-      try {
-        admin.initializeApp({
-          credential: serviceAccount.privateKey
-            ? admin.credential.cert(serviceAccount)
-            : admin.credential.applicationDefault(),
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        });
-      } catch (error: any) {
-        // If Firebase Admin is not properly configured, fall back to client-side
-        console.warn('Firebase Admin not available, using fallback');
-      }
-    }
-
-    let db;
-    try {
-      db = admin.firestore();
-    } catch {
-      // Fallback: Return success but log to console
-      console.log('Waitlist signup:', email);
-      return NextResponse.json({
-        success: true,
-        message: 'Successfully joined the waitlist!',
-        fallback: true
-      });
-    }
-
-    // Store in Firestore
-    const waitlistRef = db.collection('waitlist');
+    // Get current waitlist
+    const waitlist = await getWaitlist();
 
     // Check if email already exists
-    const existing = await waitlistRef.where('email', '==', email).get();
+    const existing = waitlist.find(entry => entry.email.toLowerCase() === email.toLowerCase());
 
-    if (!existing.empty) {
+    if (existing) {
       return NextResponse.json({
         success: true,
         message: "You're already on the waitlist!",
@@ -67,13 +58,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Add new email to waitlist
-    await waitlistRef.add({
+    // Add new email
+    const newEntry: WaitlistEntry = {
       email,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      source: 'homepage',
-      notified: false
-    });
+      timestamp: new Date().toISOString(),
+      source: 'homepage'
+    };
+
+    waitlist.push(newEntry);
+
+    // Save to file
+    await saveWaitlist(waitlist);
+
+    // Also log to console for monitoring
+    console.log('New waitlist signup:', email);
 
     return NextResponse.json({
       success: true,
