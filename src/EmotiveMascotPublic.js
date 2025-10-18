@@ -1374,7 +1374,7 @@ class EmotiveMascotPublic {
      * @returns {string} Version string
      */
     getVersion() {
-        return '2.4.0';
+        return '2.5.1';
     }
 
     /**

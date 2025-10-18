@@ -5,7 +5,7 @@
  * It provides a clean API surface for consumers.
  *
  * @module emotive-engine
- * @version 2.4.0
+ * @version 2.5.1
  */
 
 // ============================================================================
@@ -118,7 +118,7 @@ export { UNDERTONE_MODIFIERS } from './config/undertoneModifiers.js';
 // VERSION INFO
 // ============================================================================
 
-export const VERSION = '2.4.0';
+export const VERSION = '2.5.1';
 export const ENGINE_NAME = 'Emotive Engine';
 
 // ============================================================================

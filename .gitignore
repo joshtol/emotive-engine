@@ -50,6 +50,7 @@ service-account.json
 # Logs
 logs
 *.log
+console.txt
 
 # Runtime data
 pids
