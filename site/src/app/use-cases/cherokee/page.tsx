@@ -16,6 +16,7 @@ export default function CherokeePage() {
   const [mascot, setMascot] = useState<any>(null)
   const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   const [viewedPhrases, setViewedPhrases] = useState<Set<string>>(new Set())
@@ -26,8 +27,9 @@ export default function CherokeePage() {
   const [scrollPosition, setScrollPosition] = useState(0)
   const lastGestureRef = useRef<number>(-1)
 
-  // Detect mobile viewport
+  // Detect mobile viewport and client-side rendering
   useEffect(() => {
+    setIsClient(true)
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
     window.addEventListener('resize', checkMobile)
@@ -36,6 +38,9 @@ export default function CherokeePage() {
 
   // Initialize guide mascot - EXACT COPY FROM HOME PAGE
   useEffect(() => {
+    // Wait for client-side hydration before initializing
+    if (!isClient) return
+
     let cancelled = false
 
     const initializeEngine = async () => {
@@ -150,7 +155,7 @@ export default function CherokeePage() {
         initializingRef.current = false
       }
     }
-  }, [])
+  }, [isClient])
 
   // Scroll-driven animation with gestures
   useEffect(() => {
