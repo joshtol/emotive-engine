@@ -61,16 +61,20 @@ export default function HomePage() {
       try {
         // Set canvas size with DPR scaling to prevent squishing
         const canvas = canvasRef.current
-        const vw = window.innerWidth
-        const vh = window.innerHeight
 
         // Get actual canvas dimensions (CSS size)
         const rect = canvas.getBoundingClientRect()
         const dpr = window.devicePixelRatio || 1
 
-        // Set internal canvas resolution with DPR scaling
-        canvas.width = Math.round(rect.width * dpr)
-        canvas.height = Math.round(rect.height * dpr)
+        // Set internal canvas resolution with DPR scaling using setAttribute (matches Cherokee page)
+        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
+        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
+
+        // Clear canvas
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+        }
 
         // Load the engine script dynamically with cache busting
         // Check if script already loaded
