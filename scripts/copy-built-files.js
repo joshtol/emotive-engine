@@ -16,6 +16,7 @@ const SITE_PUBLIC_DIR = path.join(__dirname, '../site/public');
 
 // Files to copy from dist to site/js
 const FILES_TO_COPY = [
+    // Full builds
     'mascot.js',
     'mascot.js.map',
     'mascot.dev.js',
@@ -24,12 +25,16 @@ const FILES_TO_COPY = [
     'emotive-mascot.umd.js.map',
     'emotive-mascot.umd.dev.js',
     'emotive-mascot.umd.dev.js.map',
+    // Minimal builds (v2.5.1+)
     'emotive-mascot.minimal.js',
     'emotive-mascot.minimal.js.map',
     'emotive-mascot.minimal.umd.js',
     'emotive-mascot.minimal.umd.js.map',
+    // Audio builds (v2.5.1+)
     'emotive-mascot.audio.js',
-    'emotive-mascot.audio.js.map'
+    'emotive-mascot.audio.js.map',
+    'emotive-mascot.audio.umd.js',
+    'emotive-mascot.audio.umd.js.map'
 ];
 
 // Files to copy from dist to site/public (for Next.js static serving)
