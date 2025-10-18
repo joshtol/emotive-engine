@@ -334,7 +334,6 @@ export default function HomePage() {
           height: '100vh',
           pointerEvents: 'none', // Pass through clicks to content below
           zIndex: containerZIndex,
-          transition: 'z-index 0.3s ease',
         }}
       >
         <canvas

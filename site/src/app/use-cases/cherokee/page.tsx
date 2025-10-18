@@ -23,6 +23,8 @@ export default function CherokeePage() {
   const cardCanvasRef = useRef<HTMLCanvasElement>(null)
   const initializingRef = useRef(false)
   const initializedRef = useRef(false)
+  const [scrollPosition, setScrollPosition] = useState(0)
+  const lastGestureRef = useRef<number>(-1)
 
   // Detect mobile viewport
   useEffect(() => {
@@ -150,10 +152,11 @@ export default function CherokeePage() {
     }
   }, [])
 
-  // Scroll-driven animation - EXACT COPY FROM HOME PAGE
+  // Scroll-driven animation with gestures
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
+      setScrollPosition(scrollY)
 
       if (!mascot) return
 
@@ -173,6 +176,37 @@ export default function CherokeePage() {
 
       if (typeof mascot.setPosition === 'function') {
         mascot.setPosition(xOffset, yOffset, 0)
+      }
+
+      // Trigger gestures at specific scroll positions
+      const gesturePoints = [
+        { threshold: 0, gesture: null, emotion: 'neutral' }, // Initial state
+        { threshold: viewportHeight * 0.9, gesture: 'wave', emotion: 'joy' }, // Leaving hero
+        { threshold: viewportHeight + 800, gesture: 'bounce', emotion: 'excited' }, // Greetings section
+      ]
+
+      // Find current zone based on scroll position
+      let currentZone = 0
+      for (let i = gesturePoints.length - 1; i >= 0; i--) {
+        if (scrollY > gesturePoints[i].threshold) {
+          currentZone = i
+          break
+        }
+      }
+
+      // Only trigger if zone changed
+      if (currentZone !== lastGestureRef.current) {
+        const point = gesturePoints[currentZone]
+
+        if (typeof mascot.setEmotion === 'function') {
+          mascot.setEmotion(point.emotion, 0)
+        }
+
+        if (point.gesture && typeof mascot.express === 'function') {
+          mascot.express(point.gesture)
+        }
+
+        lastGestureRef.current = currentZone
       }
     }
 
@@ -836,6 +870,20 @@ export default function CherokeePage() {
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
+              onMouseMove={(e) => {
+                // Route mouse events to card mascot for gaze tracking
+                if (cardMascotRef.current && cardCanvasRef.current) {
+                  const canvas = cardCanvasRef.current
+                  const rect = canvas.getBoundingClientRect()
+                  const x = e.clientX - rect.left
+                  const y = e.clientY - rect.top
+
+                  // Call setGazeTarget if available
+                  if (typeof cardMascotRef.current.setGazeTarget === 'function') {
+                    cardMascotRef.current.setGazeTarget(x, y)
+                  }
+                }
+              }}
             >
               <div
                 onClick={(e) => e.stopPropagation()}
