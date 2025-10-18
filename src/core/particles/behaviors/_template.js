@@ -42,8 +42,8 @@
  */
 
 import { selectWeightedColor } from '../utils/colorUtils.js';
-import { PHYSICS } from '../config/physics.js';
-import { PLAYGROUND } from '../config/playground.js';
+// import { PHYSICS } from '../config/physics.js';
+// import { PLAYGROUND } from '../config/playground.js';
 
 /**
  * Initialize [YOUR BEHAVIOR] behavior for a particle
@@ -78,13 +78,15 @@ export function initializeYourBehavior(particle) {
 /**
  * Update [YOUR BEHAVIOR] behavior each frame
  * [DESCRIBE WHAT HAPPENS EACH FRAME]
- * 
+ *
  * @param {Particle} particle - The particle to update
  * @param {number} dt - Delta time (frame time, typically ~16.67 for 60fps)
  * @param {number} centerX - Orb center X position
  * @param {number} centerY - Orb center Y position
  */
+// eslint-disable-next-line no-unused-vars
 export function updateYourBehavior(particle, dt, centerX, centerY) {
+    // eslint-disable-next-line no-unused-vars
     const data = particle.behaviorData;
     
     // YOUR UPDATE LOGIC HERE

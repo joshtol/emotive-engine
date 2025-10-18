@@ -41,17 +41,17 @@ class ModuleLoader {
      * @param {Function} validator - Optional validation function
      * @returns {Promise<Object>} The populated registry
      */
-    static async loadModules(patternOrModules, registry = {}, validator = null) {
+    static loadModules(patternOrModules, registry = {}, validator = null) {
         // If we have glob support (Vite, Webpack 5+), use it
         if (this.hasGlobSupport() && typeof patternOrModules === 'string') {
             return this.loadWithGlob(patternOrModules, registry, validator);
         }
-        
+
         // Otherwise use manual loading
         if (Array.isArray(patternOrModules)) {
             return this.loadManual(patternOrModules, registry, validator);
         }
-        
+
         // If given a string pattern without glob support, warn and return empty
         // ModuleLoader: import.meta.glob not available and no manual modules provided
         return registry;
@@ -61,7 +61,7 @@ class ModuleLoader {
      * Load modules using import.meta.glob (build tools only)
      * @private
      */
-    static async loadWithGlob(pattern, registry = {}, validator = null) {
+    static loadWithGlob(pattern, registry = {}, validator = null) {
         try {
             const modules = import.meta.glob(pattern, { eager: true });
             
@@ -103,7 +103,7 @@ class ModuleLoader {
      * Load modules manually (works everywhere)
      * @private
      */
-    static async loadManual(modules, registry = {}, validator = null) {
+    static loadManual(modules, registry = {}, validator = null) {
         for (const module of modules) {
             try {
                 const mod = module.default || module;
