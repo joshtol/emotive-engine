@@ -9,12 +9,12 @@ import { visualizer } from 'rollup-plugin-visualizer';
 const isProduction = process.env.NODE_ENV === 'production';
 const shouldAnalyze = process.env.ANALYZE === 'true';
 
-// Bundle size limits (in bytes)
-const BUNDLE_SIZE_LIMITS = {
-    umd: 51200, // 50KB
-    es: 40960,  // 40KB
-    minimal: 20480 // 20KB for minimal build
-};
+// Bundle size limits (in bytes) - DEPRECATED: Now using package.json bundlesize
+// const BUNDLE_SIZE_LIMITS = {
+//     umd: 51200, // 50KB
+//     es: 40960,  // 40KB
+//     minimal: 20480 // 20KB for minimal build
+// };
 
 // Base plugins used by all builds
 const basePlugins = [
@@ -114,51 +114,57 @@ builds.push({
     }
 });
 
-// Minimal build (core functionality only)
+// Minimal build (core functionality only - no audio)
 builds.push({
-    input: 'src/EmotiveMascot.js', // Use main file for now
+    input: 'src/minimal.js', // Minimal entry point
     output: [
         {
             file: 'dist/emotive-mascot.minimal.js',
             format: 'es',
             sourcemap: true,
-            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
+            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.5.1'} | Proprietary License */`
         },
         {
             file: 'dist/emotive-mascot.minimal.umd.js',
             format: 'umd',
             name: 'EmotiveMascotMinimal',
+            exports: 'named',
             sourcemap: true,
-            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
-        }
-    ],
-    plugins: [
-        ...(isProduction ? productionPlugins : developmentPlugins),
-        bundleSize({
-            limit: BUNDLE_SIZE_LIMITS.minimal
-        })
-    ],
-    treeshake: {
-        moduleSideEffects: true
-    }
-});
-
-// Audio-only build (for audio-focused applications)
-builds.push({
-    input: 'src/EmotiveMascot.js', // Use main file for now
-    output: [
-        {
-            file: 'dist/emotive-mascot.audio.js',
-            format: 'es',
-            sourcemap: true,
-            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
+            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.5.1'} | Proprietary License */`
         }
     ],
     plugins: [
         ...(isProduction ? productionPlugins : developmentPlugins)
     ],
     treeshake: {
-        moduleSideEffects: true
+        moduleSideEffects: false  // Aggressive tree-shaking for minimal build
+    }
+});
+
+// Audio-focused build (for music-reactive applications)
+builds.push({
+    input: 'src/audio.js', // Audio entry point
+    output: [
+        {
+            file: 'dist/emotive-mascot.audio.js',
+            format: 'es',
+            sourcemap: true,
+            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.5.1'} | Proprietary License */`
+        },
+        {
+            file: 'dist/emotive-mascot.audio.umd.js',
+            format: 'umd',
+            name: 'EmotiveMascotAudio',
+            exports: 'named',
+            sourcemap: true,
+            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.5.1'} | Proprietary License */`
+        }
+    ],
+    plugins: [
+        ...(isProduction ? productionPlugins : developmentPlugins)
+    ],
+    treeshake: {
+        moduleSideEffects: false  // Aggressive tree-shaking for audio build
     }
 });
 

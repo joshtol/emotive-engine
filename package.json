@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@joshtol/emotive-engine",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "Proprietary animation engine with musical time synchronization",
   "main": "dist/emotive-engine.min.js",
   "module": "src/index.js",
@@ -116,12 +116,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",
-    "@sentry/browser": "^10.20.0",
-    "firebase": "^12.2.1",
-    "firebase-admin": "^13.5.0",
-    "next": "^15.5.4",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "@sentry/browser": "^10.20.0"
   },
   "lint-staged": {
     "*.js": [
@@ -134,13 +129,33 @@
   },
   "bundlesize": [
     {
-      "path": "./dist/emotive-engine.min.js",
-      "maxSize": "500 KB",
+      "path": "./dist/emotive-mascot.umd.js",
+      "maxSize": "900 KB",
       "compression": "none"
     },
     {
-      "path": "./dist/emotive-engine.min.js",
-      "maxSize": "150 KB",
+      "path": "./dist/emotive-mascot.umd.js",
+      "maxSize": "250 KB",
+      "compression": "gzip"
+    },
+    {
+      "path": "./dist/emotive-mascot.minimal.js",
+      "maxSize": "400 KB",
+      "compression": "none"
+    },
+    {
+      "path": "./dist/emotive-mascot.minimal.js",
+      "maxSize": "120 KB",
+      "compression": "gzip"
+    },
+    {
+      "path": "./dist/emotive-mascot.audio.js",
+      "maxSize": "700 KB",
+      "compression": "none"
+    },
+    {
+      "path": "./dist/emotive-mascot.audio.js",
+      "maxSize": "200 KB",
       "compression": "gzip"
     }
   ]

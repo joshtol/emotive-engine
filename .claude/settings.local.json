@@ -154,7 +154,10 @@
       "Bash(npm audit:*)",
       "Bash(git tag:*)",
       "Bash(cat:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npm uninstall firebase firebase-admin next react react-dom)",
+      "Bash(gzip -c dist/emotive-mascot.umd.js)",
+      "Bash(gzip -c dist/emotive-mascot.audio.js)"
     ],
     "deny": [],
     "ask": []

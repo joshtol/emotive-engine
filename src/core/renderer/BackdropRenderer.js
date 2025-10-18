@@ -136,17 +136,17 @@ export class BackdropRenderer {
         ctx.save();
 
         switch (this.config.type) {
-            case 'radial-gradient':
-                this.renderRadialGradient(centerX, centerY, mascotRadius, ctx);
-                break;
+        case 'radial-gradient':
+            this.renderRadialGradient(centerX, centerY, mascotRadius, ctx);
+            break;
 
-            case 'vignette':
-                this.renderVignette(centerX, centerY, mascotRadius, ctx);
-                break;
+        case 'vignette':
+            this.renderVignette(centerX, centerY, mascotRadius, ctx);
+            break;
 
-            case 'glow':
-                this.renderGlow(centerX, centerY, mascotRadius, ctx);
-                break;
+        case 'glow':
+            this.renderGlow(centerX, centerY, mascotRadius, ctx);
+            break;
         }
 
         ctx.restore();
@@ -216,7 +216,7 @@ export class BackdropRenderer {
      */
     renderVignette(centerX, centerY, mascotRadius, ctx) {
         ctx = ctx || this.ctx;
-        const canvas = ctx.canvas;
+        const {canvas} = ctx;
         const maxRadius = Math.max(canvas.width, canvas.height);
 
         const gradient = ctx.createRadialGradient(
@@ -265,7 +265,7 @@ export class BackdropRenderer {
      * @param {number} intensityMultiplier - Intensity multiplier
      */
     addGradientStopsSimple(gradient, baseColor, intensityMultiplier) {
-        const coreTransparency = this.config.coreTransparency;
+        const {coreTransparency} = this.config;
 
         // DARK CENTER → TRANSPARENT EDGES (vignette style)
         // Center is darkest
@@ -299,7 +299,7 @@ export class BackdropRenderer {
      * @param {number} scale - Scale factor for gradient (effectiveRadius / gradientRadius)
      */
     addGradientStops(gradient, baseColor, intensityMultiplier, scale = 1.0) {
-        const coreTransparency = this.config.coreTransparency;
+        const {coreTransparency} = this.config;
 
         // Custom falloff curve takes precedence
         if (this.config.falloffCurve && Array.isArray(this.config.falloffCurve)) {
@@ -311,77 +311,77 @@ export class BackdropRenderer {
 
         // Generate stops based on falloff type
         switch (this.config.falloff) {
-            case 'linear': {
-                // Linear falloff: simple transition
-                gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-                gradient.addColorStop(coreTransparency, 'rgba(0, 0, 0, 0)');
-                gradient.addColorStop(1, this.adjustColorAlpha(baseColor, intensityMultiplier));
-                break;
-            }
+        case 'linear': {
+            // Linear falloff: simple transition
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(coreTransparency, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(1, this.adjustColorAlpha(baseColor, intensityMultiplier));
+            break;
+        }
 
-            case 'exponential': {
-                // Exponential falloff: rapid increase near edges
-                gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-                gradient.addColorStop(coreTransparency, 'rgba(0, 0, 0, 0)');
-                gradient.addColorStop(coreTransparency + (1 - coreTransparency) * 0.3, this.adjustColorAlpha(baseColor, intensityMultiplier * 0.05));
-                gradient.addColorStop(coreTransparency + (1 - coreTransparency) * 0.5, this.adjustColorAlpha(baseColor, intensityMultiplier * 0.15));
-                gradient.addColorStop(coreTransparency + (1 - coreTransparency) * 0.7, this.adjustColorAlpha(baseColor, intensityMultiplier * 0.4));
-                gradient.addColorStop(coreTransparency + (1 - coreTransparency) * 0.85, this.adjustColorAlpha(baseColor, intensityMultiplier * 0.7));
-                gradient.addColorStop(1, this.adjustColorAlpha(baseColor, intensityMultiplier));
-                break;
-            }
+        case 'exponential': {
+            // Exponential falloff: rapid increase near edges
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(coreTransparency, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(coreTransparency + (1 - coreTransparency) * 0.3, this.adjustColorAlpha(baseColor, intensityMultiplier * 0.05));
+            gradient.addColorStop(coreTransparency + (1 - coreTransparency) * 0.5, this.adjustColorAlpha(baseColor, intensityMultiplier * 0.15));
+            gradient.addColorStop(coreTransparency + (1 - coreTransparency) * 0.7, this.adjustColorAlpha(baseColor, intensityMultiplier * 0.4));
+            gradient.addColorStop(coreTransparency + (1 - coreTransparency) * 0.85, this.adjustColorAlpha(baseColor, intensityMultiplier * 0.7));
+            gradient.addColorStop(1, this.adjustColorAlpha(baseColor, intensityMultiplier));
+            break;
+        }
 
-            case 'smooth':
-            default: {
-                // Smooth falloff: gradual transition with multiple stops
-                // Center stays transparent up to coreTransparency
-                gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-                gradient.addColorStop(coreTransparency * scale, 'rgba(0, 0, 0, 0)');
+        case 'smooth':
+        default: {
+            // Smooth falloff: gradual transition with multiple stops
+            // Center stays transparent up to coreTransparency
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(coreTransparency * scale, 'rgba(0, 0, 0, 0)');
 
-                // The backdrop reaches peak opacity at 'scale' position (e.g., 0.83 if scale=0.83)
-                // Then fades back to transparent at position 1.0 for soft edges
+            // The backdrop reaches peak opacity at 'scale' position (e.g., 0.83 if scale=0.83)
+            // Then fades back to transparent at position 1.0 for soft edges
 
-                // edgeSoftness controls how gradually we reach peak opacity
-                const edgeSoftness = this.config.edgeSoftness;
-                const peakPosition = scale; // Where we reach maximum opacity
-                const softRange = coreTransparency * scale + (peakPosition - coreTransparency * scale) * edgeSoftness;
+            // edgeSoftness controls how gradually we reach peak opacity
+            const {edgeSoftness} = this.config;
+            const peakPosition = scale; // Where we reach maximum opacity
+            const softRange = coreTransparency * scale + (peakPosition - coreTransparency * scale) * edgeSoftness;
 
-                // Generate many stops for ultra-smooth transition
-                const numStops = 25;
-                for (let i = 1; i <= numStops; i++) {
-                    const t = i / numStops; // 0.04, 0.08, 0.12, ... 1.0
-                    const stopPosition = t;
+            // Generate many stops for ultra-smooth transition
+            const numStops = 25;
+            for (let i = 1; i <= numStops; i++) {
+                const t = i / numStops; // 0.04, 0.08, 0.12, ... 1.0
+                const stopPosition = t;
 
-                    let alpha = 0;
+                let alpha = 0;
 
-                    if (stopPosition <= coreTransparency * scale) {
-                        // In transparent core region
-                        alpha = 0;
-                    } else if (stopPosition <= peakPosition) {
-                        // Ramping up to peak opacity
-                        if (stopPosition <= softRange) {
-                            // Within soft range: gradual increase using easing
-                            const localT = (stopPosition - coreTransparency * scale) / (softRange - coreTransparency * scale);
-                            alpha = this.easeInOutCubic(localT);
-                        } else {
-                            // Beyond soft range to peak: final ramp
-                            const localT = (stopPosition - softRange) / (peakPosition - softRange);
-                            alpha = 1 - (1 - this.easeInOutCubic(localT)) * 0.05; // 95-100% range
-                        }
+                if (stopPosition <= coreTransparency * scale) {
+                    // In transparent core region
+                    alpha = 0;
+                } else if (stopPosition <= peakPosition) {
+                    // Ramping up to peak opacity
+                    if (stopPosition <= softRange) {
+                        // Within soft range: gradual increase using easing
+                        const localT = (stopPosition - coreTransparency * scale) / (softRange - coreTransparency * scale);
+                        alpha = this.easeInOutCubic(localT);
                     } else {
-                        // Beyond peak: fade back to transparent for soft edge
-                        // This is the key to eliminating hard edges!
-                        const fadeT = (stopPosition - peakPosition) / (1 - peakPosition);
-                        alpha = 1 - this.easeInOutCubic(fadeT); // Ease from 1.0 to 0.0
+                        // Beyond soft range to peak: final ramp
+                        const localT = (stopPosition - softRange) / (peakPosition - softRange);
+                        alpha = 1 - (1 - this.easeInOutCubic(localT)) * 0.05; // 95-100% range
                     }
-
-                    gradient.addColorStop(stopPosition, this.adjustColorAlpha(baseColor, intensityMultiplier * alpha));
+                } else {
+                    // Beyond peak: fade back to transparent for soft edge
+                    // This is the key to eliminating hard edges!
+                    const fadeT = (stopPosition - peakPosition) / (1 - peakPosition);
+                    alpha = 1 - this.easeInOutCubic(fadeT); // Ease from 1.0 to 0.0
                 }
 
-                // Ensure final edge is fully transparent for soft fadeout
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                break;
+                gradient.addColorStop(stopPosition, this.adjustColorAlpha(baseColor, intensityMultiplier * alpha));
             }
+
+            // Ensure final edge is fully transparent for soft fadeout
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            break;
+        }
         }
     }
 
