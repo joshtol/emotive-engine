@@ -86,7 +86,7 @@ export default function CherokeePage() {
           soundEnabled: false,
           maxParticles: isMobileDevice ? 50 : 120,
           defaultEmotion: 'neutral',
-          enableGazeTracking: true,
+          enableGazeTracking: false,
           enableIdleBehaviors: true,
           transitionDuration: 600,
           emotionTransitionSpeed: 400
@@ -316,7 +316,7 @@ export default function CherokeePage() {
           enableAudio: false,
           soundEnabled: false,
           defaultEmotion: config.emotion,
-          enableGazeTracking: false,
+          enableGazeTracking: true,  // Enable gaze tracking for interactive card mascot
           enableIdleBehaviors: true,
           transitionDuration: 400,
           emotionTransitionSpeed: 300,
@@ -867,7 +867,7 @@ export default function CherokeePage() {
                     width: '100%',
                     aspectRatio: '1 / 1',
                     maxHeight: '100%',
-                    pointerEvents: 'none',
+                    pointerEvents: 'auto',  // Enable pointer events for gaze tracking
                     zIndex: 1,
                     filter: 'none',
                     transform: 'translateZ(0)',

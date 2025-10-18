@@ -59,15 +59,18 @@ export default function HomePage() {
       initializingRef.current = true
 
       try {
-        // Set canvas size to match viewport (no DPR scaling for full-screen canvas)
         const canvas = canvasRef.current
         const vw = window.innerWidth
         const vh = window.innerHeight
+        const isMobile = window.innerWidth < 768
 
-        // Set canvas internal dimensions to viewport size
-        // This prevents squishing by ensuring 1:1 pixel ratio with CSS
-        canvas.width = vw
-        canvas.height = vh
+        // Use getBoundingClientRect() and DPR like Cherokee page for proper aspect ratio
+        const rect = canvas.getBoundingClientRect()
+        const dpr = window.devicePixelRatio || 1
+
+        // Set canvas internal resolution with DPR scaling
+        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
+        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
         // Load the engine script dynamically with cache busting
         // Check if script already loaded
@@ -94,13 +97,15 @@ export default function HomePage() {
           return
         }
 
-        // Create mascot instance with minimal config (like Cherokee page)
+        // Create mascot instance - enable interactivity like Cherokee page
         const mascotInstance = new EmotiveMascot({
           canvasId: 'hero-mascot-canvas',
+          targetFPS: isMobile ? 30 : 60,
           enableAudio: false,
           soundEnabled: false,
+          maxParticles: isMobile ? 50 : 120,
           defaultEmotion: 'neutral',
-          enableGazeTracking: false,
+          enableGazeTracking: false,  // Disable mouse/touch tracking
           enableIdleBehaviors: true,
           transitionDuration: 600,
           emotionTransitionSpeed: 400
@@ -125,10 +130,10 @@ export default function HomePage() {
           responsive: true
         })
 
-        // Set mascot scale - smaller for subtle presence
+        // Set mascot scale - doubled for better visibility
         mascotInstance.setScale({
-          core: 0.4,       // Core at 40% of default size
-          particles: 0.7   // Particles at 70% for balanced appearance
+          core: 0.8,       // Core at 80% of default size
+          particles: 1.4   // Particles at 140% for balanced appearance
         })
 
         // Set initial position BEFORE starting to prevent center-spawn particles
@@ -150,6 +155,13 @@ export default function HomePage() {
         if (typeof mascotInstance.fadeIn === 'function') {
           mascotInstance.fadeIn(1500)
         }
+
+        // Welcome gesture - gentle pulse showing readiness to interact (like Cherokee page)
+        setTimeout(() => {
+          if (typeof mascotInstance.express === 'function') {
+            mascotInstance.express('pulse')
+          }
+        }, 800)
 
       } catch (error) {
         console.error('Failed to initialize mascot:', error)
@@ -233,8 +245,9 @@ export default function HomePage() {
           mascot.setEmotion(point.emotion, 0)
         }
 
-        if (point.gesture && typeof mascot.triggerGesture === 'function') {
-          mascot.triggerGesture(point.gesture)
+        // Use express() method like Cherokee page for gestures
+        if (point.gesture && typeof mascot.express === 'function') {
+          mascot.express(point.gesture)
         }
 
         lastGestureRef.current = currentZone
@@ -319,7 +332,7 @@ export default function HomePage() {
           left: 0,
           width: '100vw',
           height: '100vh',
-          pointerEvents: 'none',
+          pointerEvents: 'none', // Pass through clicks to content below
           zIndex: containerZIndex,
           transition: 'z-index 0.3s ease',
         }}
