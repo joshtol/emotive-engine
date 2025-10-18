@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
+import { db } from '@/lib/firebase'
+import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore'
 
 export default function HomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -273,23 +275,42 @@ export default function HomePage() {
     setWaitlistStatus('loading')
 
     try {
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: waitlistEmail })
-      })
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(waitlistEmail)) {
+        setWaitlistStatus('error')
+        setWaitlistMessage('Please enter a valid email address')
+        setTimeout(() => {
+          setWaitlistStatus('idle')
+          setWaitlistMessage('')
+        }, 5000)
+        return
+      }
 
-      const data = await response.json()
+      // Check if email already exists
+      const waitlistRef = collection(db, 'waitlist')
+      const q = query(waitlistRef, where('email', '==', waitlistEmail.toLowerCase()))
+      const querySnapshot = await getDocs(q)
 
-      if (response.ok) {
+      if (!querySnapshot.empty) {
         setWaitlistStatus('success')
-        setWaitlistMessage(data.message || 'Successfully joined the waitlist!')
+        setWaitlistMessage("You're already on the waitlist!")
         setWaitlistEmail('')
       } else {
-        setWaitlistStatus('error')
-        setWaitlistMessage(data.error || 'Failed to join waitlist')
+        // Add new email to waitlist
+        await addDoc(waitlistRef, {
+          email: waitlistEmail.toLowerCase(),
+          timestamp: serverTimestamp(),
+          source: 'homepage',
+          notified: false
+        })
+
+        setWaitlistStatus('success')
+        setWaitlistMessage('Successfully joined the waitlist!')
+        setWaitlistEmail('')
       }
     } catch (error) {
+      console.error('Waitlist error:', error)
       setWaitlistStatus('error')
       setWaitlistMessage('Failed to join waitlist. Please try again.')
     }
