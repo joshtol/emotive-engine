@@ -48,6 +48,7 @@ import IdleBehavior from './core/IdleBehavior.js';
 import { getEmotionVisualParams, getEmotion } from './core/emotions/index.js';
 import { getGesture } from './core/gestures/index.js';
 import PositionController from './utils/PositionController.js';
+import { initSentry, captureError, addBreadcrumb } from './utils/sentry.js';
 import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
@@ -151,10 +152,26 @@ class EmotiveMascot {
                 glowMultiplier: 2.5,      // Glow radius = core * 2.5 (original Emotive)
                 defaultGlowColor: '#14B8A6'
             },
-            topOffset: 0  // Vertical offset to shift mascot upward (in pixels)
+            topOffset: 0,  // Vertical offset to shift mascot upward (in pixels)
+            // Sentry error monitoring configuration
+            sentry: {
+                enabled: false,  // Set to true and provide dsn to enable
+                dsn: null,       // Sentry DSN from https://sentry.io
+                environment: 'production',
+                tracesSampleRate: 0.1
+            }
         };
-        
+
         this.config = { ...defaults, ...config };
+
+        // Initialize Sentry if configured
+        if (this.config.sentry && this.config.sentry.enabled) {
+            initSentry(this.config.sentry);
+            addBreadcrumb('EmotiveMascot initialized', 'lifecycle', {
+                emotion: this.config.defaultEmotion,
+                renderingStyle: this.config.renderingStyle
+            });
+        }
         
         // Get canvas element
         this.canvas = typeof this.config.canvasId === 'string' 

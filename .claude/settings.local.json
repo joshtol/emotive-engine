@@ -146,7 +146,15 @@
       "WebFetch(domain:www.smashingmagazine.com)",
       "Bash(npm run build:dev:*)",
       "Bash(start http://localhost:3001/demo)",
-      "Bash(start http://localhost:3003/docs)"
+      "Bash(start http://localhost:3003/docs)",
+      "Bash(ls:*)",
+      "Bash(git stash:*)",
+      "Bash(git mv:*)",
+      "Bash(npm run test:coverage:*)",
+      "Bash(npm audit:*)",
+      "Bash(git tag:*)",
+      "Bash(cat:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
