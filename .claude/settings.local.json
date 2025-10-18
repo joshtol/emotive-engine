@@ -157,7 +157,8 @@
       "Bash(git log:*)",
       "Bash(npm uninstall firebase firebase-admin next react react-dom)",
       "Bash(gzip -c dist/emotive-mascot.umd.js)",
-      "Bash(gzip -c dist/emotive-mascot.audio.js)"
+      "Bash(gzip -c dist/emotive-mascot.audio.js)",
+      "Bash(npx vercel --prod)"
     ],
     "deny": [],
     "ask": []
