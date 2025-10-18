@@ -61,6 +61,8 @@ export default function HomePage() {
       try {
         // Set canvas size with DPR scaling to prevent squishing
         const canvas = canvasRef.current
+        const vw = window.innerWidth
+        const vh = window.innerHeight
 
         // Get actual canvas dimensions (CSS size)
         const rect = canvas.getBoundingClientRect()
