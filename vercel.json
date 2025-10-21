@@ -1,6 +1,4 @@
 {
-  "buildCommand": "npm run build && cd site && npm run build",
-  "outputDirectory": "site/.next",
   "env": {
     "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "emotive-engine",
     "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "emotive-engine.firebaseapp.com",
