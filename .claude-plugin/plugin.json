@@ -1,0 +1,30 @@
+{
+  "name": "emotive-mascot-skills",
+  "displayName": "Emotive Mascot Development Skills",
+  "description": "Specialized Claude Code skills for developing emotional particle-based mascots using the emotive-engine library. Includes emotion choreography, performance optimization, LLM integration, and use case implementation.",
+  "version": "1.0.0",
+  "author": "Joshua Tollette",
+  "repository": "https://github.com/joshtol/emotive-engine",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "skills": [
+    "emotion-choreographer",
+    "mascot-integrator",
+    "performance-auditor",
+    "theme-implementer",
+    "llm-integrator",
+    "semantic-performance-builder",
+    "use-case-generator",
+    "bundle-optimizer"
+  ],
+  "categories": ["animation", "ui-components", "performance", "ai-integration", "creative-tools"],
+  "keywords": [
+    "mascot",
+    "animation",
+    "particles",
+    "emotion",
+    "llm",
+    "ai-assistant",
+    "canvas",
+    "performance"
+  ]
+}
