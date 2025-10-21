@@ -143,7 +143,9 @@ export default [
             'dist/',
             'node_modules/',
             'site/dist/',
-            'site/public/emotive-engine.js',
+            'site/public/emotive-engine*.js',
+            'site/public/sw.js',
+            'site/next.config*.js',
             'coverage/',
             '*.min.js',
             '*.old.js'
