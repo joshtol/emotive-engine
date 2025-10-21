@@ -318,12 +318,12 @@ export default function CherokeePage() {
         canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
         canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
-        const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
+        const existingScript = document.querySelector('script[src^="/emotive-engine-lean.js"]')
         let script = existingScript as HTMLScriptElement
 
         if (!existingScript) {
           script = document.createElement('script')
-          script.src = `/emotive-engine.js?v=${Date.now()}`
+          script.src = `/emotive-engine-lean.js?v=${Date.now()}`
           script.async = true
 
           await new Promise((resolve, reject) => {
@@ -333,7 +333,8 @@ export default function CherokeePage() {
           })
         }
 
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+        // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
+        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
 
         if (!EmotiveMascot) {
           console.error('EmotiveMascot not found on window object')
@@ -402,10 +403,14 @@ export default function CherokeePage() {
       }
     }
 
-    initializeEngine()
+    // Defer initialization by 500ms to prevent blocking initial render
+    const timer = setTimeout(() => {
+      initializeEngine()
+    }, 500)
 
     return () => {
       cancelled = true
+      clearTimeout(timer)
       if (mascot) {
         mascot.stop()
         initializedRef.current = false
@@ -532,9 +537,9 @@ export default function CherokeePage() {
     if (selectedPhraseIndex === null || !cardCanvasRef.current) return
 
     const initCardMascot = async () => {
-      // Wait for EmotiveMascot to load
+      // Wait for EmotiveMascot to load (lean bundle)
       let attempts = 0
-      while (!(window as any).EmotiveMascot && attempts < 50) {
+      while (!(window as any).EmotiveMascotLean && attempts < 50) {
         await new Promise(resolve => setTimeout(resolve, 100))
         attempts++
       }
@@ -563,7 +568,8 @@ export default function CherokeePage() {
       if (!greeting) return
 
       try {
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+        // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
+        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
 
         if (!EmotiveMascot) {
           console.error('EmotiveMascot not found on window object')
