@@ -881,80 +881,107 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
         </div>
       </div>
 
-      {/* AI Help Panel - Slides in over the Interface Card area only */}
+      {/* Premium Slate Glass AI Panel */}
       <div style={{
         position: 'absolute',
         top: 0,
         bottom: 0,
         right: 0,
         width: isMobile ? '100%' : 'calc(50% - 1.5rem)',
-        background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        border: '2px solid rgba(0, 217, 255, 0.3)',
-        borderRadius: '32px',
+        background: `
+          linear-gradient(135deg,
+            rgba(10, 12, 20, 0.95) 0%,
+            rgba(15, 18, 28, 0.97) 50%,
+            rgba(20, 24, 35, 0.95) 100%
+          )
+        `,
+        backdropFilter: 'blur(80px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(80px) saturate(180%)',
+        border: '1px solid rgba(0, 217, 255, 0.15)',
+        borderRadius: '40px',
         transform: showAIHelp ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
         zIndex: 50,
         overflow: 'hidden',
-        boxShadow: showAIHelp ? '0 30px 90px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(0, 217, 255, 0.1)' : 'none'
+        boxShadow: showAIHelp
+          ? `0 50px 150px rgba(0, 0, 0, 0.7),
+             0 0 0 1px rgba(0, 217, 255, 0.08),
+             inset 0 0 120px rgba(0, 217, 255, 0.03),
+             inset 0 2px 0 rgba(255, 255, 255, 0.05),
+             inset 0 -1px 0 rgba(0, 0, 0, 0.5)`
+          : 'none'
       }}>
-        {/* Top accent line */}
+        {/* Premium glass reflection overlay */}
         <div style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          height: '2px',
-          background: 'linear-gradient(90deg, rgba(0, 217, 255, 0.8), transparent)'
+          height: '50%',
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 100
         }} />
 
-        {/* AI Panel Header */}
+        {/* Animated ambient glow - top right */}
         <div style={{
-          padding: '2rem 2.5rem',
-          borderBottom: '2px solid rgba(0, 217, 255, 0.2)',
-          background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%)',
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1.25rem',
-            marginBottom: '0.5rem'
-          }}>
-            <div style={{
-              fontSize: '2.5rem',
-              filter: 'drop-shadow(0 4px 16px rgba(0, 217, 255, 0.5))'
-            }}>
-              🤖
-            </div>
-            <div>
-              <div style={{
-                fontWeight: '800',
-                fontSize: '1.4rem',
-                background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                letterSpacing: '-0.01em'
-              }}>
-                AI Assistant
-              </div>
-              <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.7,
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontWeight: '500'
-              }}>
-                I'm here to help with your checkout
-              </div>
-            </div>
-          </div>
-        </div>
+          position: 'absolute',
+          top: '-10%',
+          right: '10%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(0, 217, 255, 0.12) 0%, transparent 70%)',
+          filter: 'blur(80px)',
+          pointerEvents: 'none',
+          animation: 'float 12s ease-in-out infinite',
+          zIndex: 0
+        }} />
 
-        {/* AI Assistant Content */}
+        {/* Animated ambient glow - bottom left */}
         <div style={{
-          height: 'calc(100% - 120px)',
-          overflow: 'hidden'
+          position: 'absolute',
+          bottom: '15%',
+          left: '5%',
+          width: '350px',
+          height: '350px',
+          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
+          filter: 'blur(80px)',
+          pointerEvents: 'none',
+          animation: 'float 15s ease-in-out infinite reverse',
+          zIndex: 0
+        }} />
+
+        {/* Edge glow accent */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: '1px',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(0, 217, 255, 0.3) 20%, rgba(0, 217, 255, 0.3) 80%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 101
+        }} />
+
+        {/* Top edge accent */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent 0%, rgba(0, 217, 255, 0.4) 50%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 101
+        }} />
+
+        {/* AI Assistant Content - Full Height */}
+        <div style={{
+          position: 'relative',
+          height: '100%',
+          overflow: 'hidden',
+          zIndex: 10,
+          padding: '2rem'
         }}>
           <AICheckoutAssistant onLLMResponse={handleLLMResponse} />
         </div>
@@ -982,14 +1009,20 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
           50% { transform: scale(1.2) rotate(10deg); }
           100% { transform: scale(1) rotate(0deg); }
         }
+
+        @keyframes float {
+          0%, 100% {
+            transform: translate(0, 0);
+          }
+          50% {
+            transform: translate(10px, -10px);
+          }
+        }
       `}</style>
 
       {/* Render help button in status bar using portal */}
-      {isClient && document.getElementById('help-button-container') ? (
+      {isClient && document.getElementById('help-button-container') && (
         createPortal(helpButton, document.getElementById('help-button-container')!)
-      ) : (
-        console.log('Portal not rendering:', { isClient, hasContainer: !!document.getElementById('help-button-container') }),
-        null
       )}
     </div>
   )
