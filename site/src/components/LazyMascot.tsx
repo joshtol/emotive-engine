@@ -57,6 +57,11 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
     initializingRef.current = true
     setIsLoading(true)
 
+    // Defer initialization by 500ms to reduce initial script evaluation time
+    const deferredLoad = setTimeout(() => {
+      loadMascot()
+    }, 500)
+
     const loadMascot = async () => {
       if (!canvasRef.current || cancelled) return
 
@@ -107,13 +112,13 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
         let targetFPS: number
 
         if (isVeryLowEnd) {
-          maxParticles = 30   // Very low-end: minimal particles
+          maxParticles = 20   // Very low-end: minimal particles (reduced from 30)
           targetFPS = 30
         } else if (isLowEnd || isMobile) {
-          maxParticles = 50   // Low-end/mobile: reduced particles
+          maxParticles = 30   // Low-end/mobile: reduced particles (reduced from 50)
           targetFPS = 30
         } else {
-          maxParticles = 100  // Desktop: full particles (reduced from 120)
+          maxParticles = 80  // Desktop: reduced particles (reduced from 100)
           targetFPS = 60
         }
 
@@ -173,10 +178,9 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
       }
     }
 
-    loadMascot()
-
     return () => {
       cancelled = true
+      clearTimeout(deferredLoad)
       if (mascot) {
         mascot.destroy?.()
       }
