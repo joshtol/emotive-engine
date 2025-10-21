@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
+import FeaturesShowcase from '@/components/FeaturesShowcase'
 
 export default function HomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -948,6 +949,9 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
+
+        {/* Features Showcase */}
+        <FeaturesShowcase />
 
         {/* For Developers */}
         <section style={{
