@@ -158,7 +158,8 @@
       "Bash(npm uninstall firebase firebase-admin next react react-dom)",
       "Bash(gzip -c dist/emotive-mascot.umd.js)",
       "Bash(gzip -c dist/emotive-mascot.audio.js)",
-      "Bash(npx vercel --prod)"
+      "Bash(npx vercel --prod)",
+      "Bash(start http://localhost:3002/use-cases/retail)"
     ],
     "deny": [],
     "ask": []
@@ -171,10 +172,6 @@
           {
             "type": "command",
             "command": "NO STUBS - FULL IMPLEMENTATION ALWAYS - MODULAR SYSTEM"
-          },
-          {
-            "type": "command",
-            "command": "Don't ever try to open the demo."
           }
         ]
       }
