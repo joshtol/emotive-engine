@@ -65,4 +65,9 @@ coverage/
 tmp/
 temp/
 
+# Playwright test artifacts
+site/test-results/
+site/playwright-report/
+site/playwright/.cache/
+
 .vercel
