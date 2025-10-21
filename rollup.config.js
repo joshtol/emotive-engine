@@ -168,4 +168,51 @@ builds.push({
     }
 });
 
+
+// Lean build (ultra-optimized for homepage/marketing)
+builds.push({
+    input: 'src/lean.js',
+    output: [
+        {
+            file: 'dist/emotive-mascot.lean.umd.js',
+            format: 'umd',
+            name: 'EmotiveMascotLean',
+            exports: 'named',
+            sourcemap: true
+        }
+    ],
+    plugins: [
+        ...basePlugins,
+        terser({
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+                passes: 3,
+                pure_funcs: ['console.log', 'console.warn', 'console.info'],
+                unsafe_arrows: true,
+                unsafe_methods: true,
+                unsafe_proto: true,
+                unsafe_regexp: true,
+                dead_code: true,
+                evaluate: true,
+                inline: 3
+            },
+            mangle: {
+                properties: {
+                    regex: /^_/
+                }
+            },
+            format: {
+                comments: false
+            }
+        })
+    ],
+    treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false,
+        unknownGlobalSideEffects: false
+    }
+});
+
 export default builds;

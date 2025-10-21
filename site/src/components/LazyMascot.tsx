@@ -89,7 +89,7 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
 
         if (!existingScript) {
           script = document.createElement('script')
-          script.src = `/emotive-engine-minimal.js?v=${Date.now()}`
+          script.src = `/emotive-engine-lean.js?v=${Date.now()}`
           script.async = true
 
           await new Promise((resolve, reject) => {
@@ -99,8 +99,8 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
           })
         }
 
-        // Access the global EmotiveMascot (minimal bundle exports as EmotiveMascotMinimal)
-        const EmotiveMascot = (window as any).EmotiveMascotMinimal?.default || (window as any).EmotiveMascotMinimal || (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+        // Access the global EmotiveMascot (minimal bundle exports as EmotiveMascotLean)
+        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean || (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
 
         if (!EmotiveMascot) {
           console.error('EmotiveMascot not found')
