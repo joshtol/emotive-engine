@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import AICheckoutAssistant from './AICheckoutAssistant'
 
 interface Product {
@@ -13,6 +14,7 @@ interface Product {
 
 interface CheckoutSimulationProps {
   onStepChange?: (step: number, emotion: string) => void
+  openAIChat?: () => void
 }
 
 const DEMO_PRODUCTS: Product[] = [
@@ -23,7 +25,7 @@ const DEMO_PRODUCTS: Product[] = [
   { id: '5', name: 'Orange Juice', price: 4.29, barcode: '56789', image: '🧃' },
 ]
 
-export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationProps) {
+export default function CheckoutSimulation({ onStepChange, openAIChat }: CheckoutSimulationProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [cart, setCart] = useState<Product[]>([])
   const [scanning, setScanning] = useState(false)
@@ -35,6 +37,24 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Expose the open AI chat function to parent
+  useEffect(() => {
+    if (openAIChat) {
+      // Pass the function to open the chat
+      (window as any).__openRetailAIChat = () => setShowAIHelp(true)
+    }
+    return () => {
+      delete (window as any).__openRetailAIChat
+    }
+  }, [openAIChat])
+
+  // Detect client-side mounting
+  useEffect(() => {
+    setIsClient(true)
+    console.log('CheckoutSimulation mounted on client')
+  }, [])
 
   // Detect mobile
   useEffect(() => {
@@ -123,28 +143,11 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
     }
   }, [isMobile])
 
-  // Handle step changes
+  // Handle step changes - DISABLED to prevent mascot jumping around
   useEffect(() => {
-    if (!mascotRef.current) return
-
-    const stepEmotions = [
-      { emotion: 'neutral', gesture: 'pulse' }, // Welcome
-      { emotion: 'focused', gesture: 'breathe' }, // Scanning
-      { emotion: 'satisfaction', gesture: 'drift' }, // Cart review
-      { emotion: 'calm', gesture: 'breathe' }, // Payment
-      { emotion: 'anticipation', gesture: 'pulse' }, // Processing
-      { emotion: 'triumph', gesture: 'glow' }, // Complete
-    ]
-
-    const step = stepEmotions[currentStep] || stepEmotions[0]
-    mascotRef.current.setEmotion?.(step.emotion, 0.8)
-
-    setTimeout(() => {
-      mascotRef.current.express?.(step.gesture)
-    }, 200)
-
+    // Mascot now only responds to AI chat, not checkout steps
     if (onStepChange) {
-      onStepChange(currentStep, step.emotion)
+      onStepChange(currentStep, 'neutral')
     }
   }, [currentStep, onStepChange])
 
@@ -152,15 +155,14 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
     setScanning(true)
     setScanError(false)
 
-    // Set mascot to focused
-    if (mascotRef.current) {
-      mascotRef.current.setEmotion?.('focused', 0.9)
-      mascotRef.current.express?.('breathe')
-    }
-
     // Random product
     const randomProduct = DEMO_PRODUCTS[Math.floor(Math.random() * DEMO_PRODUCTS.length)]
     setCurrentProduct(randomProduct)
+
+    // Mascot shakes while scanning
+    if (mascotRef.current && mascotRef.current.express) {
+      mascotRef.current.express('shake', { intensity: 0.5, duration: 800 })
+    }
 
     // 15% chance of error for demo purposes
     const willError = Math.random() < 0.15
@@ -168,27 +170,31 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
     await new Promise(resolve => setTimeout(resolve, 1200))
 
     if (willError) {
-      // Error state
+      // Error state - surprised with subdued undertone
       setScanError(true)
       setScanning(false)
 
+      // Change to surprised emotion with subdued undertone
       if (mascotRef.current) {
-        mascotRef.current.setEmotion?.('empathy', 1.0)
-        mascotRef.current.express?.('shake')
-
-        setTimeout(() => {
-          mascotRef.current.express?.('nod')
-        }, 600)
+        if (mascotRef.current.setEmotion) {
+          mascotRef.current.setEmotion('surprise', 0.7)
+        }
+        if (mascotRef.current.updateUndertone) {
+          mascotRef.current.updateUndertone('subdued')
+        }
+        if (mascotRef.current.express) {
+          mascotRef.current.express('shake', { intensity: 0.5, duration: 600 })
+        }
       }
     } else {
-      // Success state
+      // Success state - subtle nod, stay neutral
       setCart(prev => [...prev, randomProduct])
       setScanning(false)
       setCurrentProduct(null)
 
-      if (mascotRef.current) {
-        mascotRef.current.setEmotion?.('joy', 0.9)
-        mascotRef.current.express?.('bounce')
+      // Quick nod on success
+      if (mascotRef.current && mascotRef.current.express) {
+        mascotRef.current.express('nod', { intensity: 0.4, duration: 500 })
       }
     }
   }
@@ -197,13 +203,23 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
     setScanError(false)
     setCurrentProduct(null)
 
+    // Return to neutral emotion and clear undertone
     if (mascotRef.current) {
-      mascotRef.current.setEmotion?.('calm', 0.7)
-      mascotRef.current.express?.('point')
+      if (mascotRef.current.setEmotion) {
+        mascotRef.current.setEmotion('neutral', 0.5)
+      }
+      if (mascotRef.current.updateUndertone) {
+        mascotRef.current.updateUndertone('clear')
+      }
     }
   }
 
   const handleCheckout = async () => {
+    // Mascot floats when proceeding to checkout
+    if (mascotRef.current && mascotRef.current.express) {
+      mascotRef.current.express('float', { intensity: 0.6, duration: 1500 })
+    }
+
     setCurrentStep(2) // Cart review
     await new Promise(resolve => setTimeout(resolve, 1500))
 
@@ -213,17 +229,15 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
     setCurrentStep(4) // Processing
     setProcessing(true)
 
-    if (mascotRef.current) {
-      // Repeating pulse during processing
-      const pulseInterval = setInterval(() => {
-        if (mascotRef.current) {
-          mascotRef.current.express?.('pulse')
+    // Mascot performs processing animation - use semantic performance for sophisticated choreography
+    if (mascotRef.current && mascotRef.current.perform) {
+      await mascotRef.current.perform('processing', {
+        context: {
+          frustration: 0,
+          urgency: 'medium',
+          magnitude: 'moderate'
         }
-      }, 1000)
-
-      setTimeout(() => {
-        clearInterval(pulseInterval)
-      }, 2500)
+      })
     }
 
     await new Promise(resolve => setTimeout(resolve, 2500))
@@ -232,19 +246,38 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
     setProcessing(false)
     setCompleted(true)
 
-    if (mascotRef.current) {
-      mascotRef.current.setEmotion?.('triumph', 1.0)
-      mascotRef.current.express?.('glow')
+    // Mascot celebrates completion with euphoria and sun shape!
+    await handleLLMResponse({
+      message: '',
+      emotion: 'triumph',
+      sentiment: 'positive',
+      action: 'celebrate',
+      frustrationLevel: 0,
+      shape: 'sun',
+      gesture: 'sparkle'
+    })
 
-      setTimeout(() => {
+    // Add glow effect after morphing to sun
+    setTimeout(() => {
+      if (mascotRef.current && mascotRef.current.express) {
+        mascotRef.current.express('glow', { intensity: 0.8, duration: 2000 })
+      }
+    }, 500)
+
+    // Return to neutral after celebrating
+    setTimeout(async () => {
+      if (mascotRef.current) {
+        if (mascotRef.current.setEmotion) {
+          mascotRef.current.setEmotion('neutral', 0.5)
+        }
         if (mascotRef.current.morphTo) {
-          mascotRef.current.morphTo('sun')
+          mascotRef.current.morphTo('circle', { duration: 1500 })
         }
-        if (mascotRef.current.chain) {
-          mascotRef.current.chain('radiance')
+        if (mascotRef.current.updateUndertone) {
+          mascotRef.current.updateUndertone('clear')
         }
-      }, 500)
-    }
+      }
+    }, 3000)
   }
 
   const handleReset = () => {
@@ -255,24 +288,92 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
     setProcessing(false)
     setCompleted(false)
     setCurrentProduct(null)
+  }
 
-    if (mascotRef.current) {
-      // Reset shape first
-      if (mascotRef.current.morphTo) {
-        mascotRef.current.morphTo('circle')
-      }
+  const handleLLMResponse = async (response: any) => {
+    console.log('handleLLMResponse called with:', response)
 
-      // Then reset emotion and gesture
-      setTimeout(() => {
-        if (mascotRef.current) {
-          mascotRef.current.setEmotion?.('neutral', 0.7)
-          mascotRef.current.express?.('wave')
+    if (!mascotRef.current) {
+      console.warn('Mascot not initialized yet')
+      return
+    }
+
+    if (mascotRef.current.handleLLMResponse) {
+      console.log('Using new handleLLMResponse API')
+      try {
+        await mascotRef.current.handleLLMResponse(response)
+      } catch (error) {
+        console.error('Error handling LLM response:', error)
+        // Fallback to manual control
+        if (mascotRef.current.setEmotion) {
+          mascotRef.current.setEmotion(response.emotion, 0.8)
         }
-      }, 300)
+      }
+    } else {
+      console.warn('handleLLMResponse not available, using fallback')
+      // Fallback to manual choreography
+      if (mascotRef.current.setEmotion) {
+        mascotRef.current.setEmotion(response.emotion, 0.8)
+      }
+      if (response.shape && mascotRef.current.morphTo) {
+        mascotRef.current.morphTo(response.shape, { duration: 1000 })
+      }
+      if (response.gesture && mascotRef.current.express) {
+        setTimeout(() => {
+          if (mascotRef.current && mascotRef.current.express) {
+            mascotRef.current.express(response.gesture, { intensity: 0.7 })
+          }
+        }, 300)
+      }
     }
   }
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+  // Help button to be rendered in status bar
+  const helpButton = (
+    <button
+      onClick={() => setShowAIHelp(!showAIHelp)}
+      style={{
+        padding: '0.6rem 1.25rem',
+        background: showAIHelp
+          ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
+          : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+        borderRadius: '10px',
+        fontSize: '0.9rem',
+        fontWeight: '700',
+        color: 'white',
+        border: showAIHelp
+          ? '1px solid rgba(239, 68, 68, 0.3)'
+          : '1px solid rgba(16, 185, 129, 0.3)',
+        boxShadow: showAIHelp
+          ? '0 2px 12px rgba(239, 68, 68, 0.3)'
+          : '0 2px 12px rgba(16, 185, 129, 0.3)',
+        letterSpacing: '0.5px',
+        textTransform: 'uppercase',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-1px)'
+        e.currentTarget.style.boxShadow = showAIHelp
+          ? '0 4px 16px rgba(239, 68, 68, 0.4)'
+          : '0 4px 16px rgba(16, 185, 129, 0.4)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)'
+        e.currentTarget.style.boxShadow = showAIHelp
+          ? '0 2px 12px rgba(239, 68, 68, 0.3)'
+          : '0 2px 12px rgba(16, 185, 129, 0.3)'
+      }}
+    >
+      <span style={{ fontSize: '1rem' }}>{showAIHelp ? '✕' : '💬'}</span>
+      <span>{showAIHelp ? 'Close Chat' : 'Get Help'}</span>
+    </button>
+  )
 
   return (
     <div style={{
@@ -294,6 +395,8 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
         alignItems: 'center',
         justifyContent: 'center',
         order: isMobile ? 1 : 0,
+        transform: showAIHelp && !isMobile ? 'translateX(-10%)' : 'translateX(0)',
+        transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
       }}>
         <canvas
           ref={canvasRef}
@@ -778,61 +881,13 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
         </div>
       </div>
 
-      {/* AI Help Button - Always visible */}
-      <button
-        onClick={() => setShowAIHelp(!showAIHelp)}
-        style={{
-          position: 'absolute',
-          bottom: '2rem',
-          right: '2rem',
-          padding: '1.2rem 2rem',
-          background: showAIHelp
-            ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-            : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-          color: 'white',
-          border: showAIHelp
-            ? '2px solid rgba(239, 68, 68, 0.4)'
-            : '2px solid rgba(16, 185, 129, 0.4)',
-          borderRadius: '100px',
-          fontSize: '1.05rem',
-          fontWeight: '700',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          boxShadow: showAIHelp
-            ? '0 8px 32px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-            : '0 8px 32px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          zIndex: 100,
-          letterSpacing: '0.5px',
-          textTransform: 'uppercase'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
-          e.currentTarget.style.boxShadow = showAIHelp
-            ? '0 12px 48px rgba(239, 68, 68, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-            : '0 12px 48px rgba(16, 185, 129, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0) scale(1)'
-          e.currentTarget.style.boxShadow = showAIHelp
-            ? '0 8px 32px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-            : '0 8px 32px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-        }}
-      >
-        <span style={{ fontSize: '1.5rem' }}>{showAIHelp ? '✕' : '💬'}</span>
-        <span>{showAIHelp ? 'Close' : 'Help'}</span>
-      </button>
-
-      {/* AI Help Panel - Slides in to fill entire area */}
+      {/* AI Help Panel - Slides in over the Interface Card area only */}
       <div style={{
         position: 'absolute',
         top: 0,
-        left: 0,
-        right: 0,
         bottom: 0,
-        width: '100%',
+        right: 0,
+        width: isMobile ? '100%' : 'calc(50% - 1.5rem)',
         background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
         backdropFilter: 'blur(40px)',
         WebkitBackdropFilter: 'blur(40px)',
@@ -901,7 +956,7 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
           height: 'calc(100% - 120px)',
           overflow: 'hidden'
         }}>
-          <AICheckoutAssistant />
+          <AICheckoutAssistant onLLMResponse={handleLLMResponse} />
         </div>
       </div>
 
@@ -928,6 +983,14 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
           100% { transform: scale(1) rotate(0deg); }
         }
       `}</style>
+
+      {/* Render help button in status bar using portal */}
+      {isClient && document.getElementById('help-button-container') ? (
+        createPortal(helpButton, document.getElementById('help-button-container')!)
+      ) : (
+        console.log('Portal not rendering:', { isClient, hasContainer: !!document.getElementById('help-button-container') }),
+        null
+      )}
     </div>
   )
 }

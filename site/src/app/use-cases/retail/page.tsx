@@ -403,8 +403,20 @@ export default function RetailPage() {
               justifyContent: 'center',
               marginBottom: '4rem',
             }}>
-              <a
-                href="#demo"
+              <button
+                onClick={() => {
+                  // Scroll to demo section
+                  const demoSection = document.querySelector('#demo')
+                  if (demoSection) {
+                    demoSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  }
+                  // Open AI chat after scrolling
+                  setTimeout(() => {
+                    if ((window as any).__openRetailAIChat) {
+                      (window as any).__openRetailAIChat()
+                    }
+                  }, 800)
+                }}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -418,6 +430,8 @@ export default function RetailPage() {
                   fontWeight: '600',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   boxShadow: '0 4px 20px rgba(221, 74, 154, 0.4)',
+                  border: 'none',
+                  cursor: 'pointer',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)'
@@ -429,7 +443,7 @@ export default function RetailPage() {
                 }}
               >
                 <span>🤖</span> Try AI Assistant
-              </a>
+              </button>
 
               <a
                 href="#features"
@@ -535,7 +549,7 @@ export default function RetailPage() {
         </section>
 
         {/* Full Checkout Experience - THE PRIMARY DEMO */}
-        <section style={{
+        <section id="demo" style={{
           padding: '2rem',
           maxWidth: '100%',
           margin: '0 auto',
@@ -739,6 +753,9 @@ export default function RetailPage() {
                   }}>
                     AI Active
                   </div>
+
+                  {/* Help button will be rendered here via portal */}
+                  <div id="help-button-container" />
                 </div>
               </div>
 
