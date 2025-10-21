@@ -136,7 +136,7 @@ export function setTags(tags) {
  * @returns {boolean}
  */
 export function isSentryEnabled() {
-    return Sentry.getCurrentHub().getClient() !== undefined;
+    return Sentry.getClient() !== undefined;
 }
 
 export default {
