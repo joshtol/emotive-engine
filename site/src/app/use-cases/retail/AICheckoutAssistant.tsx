@@ -9,8 +9,18 @@ interface Message {
   sentiment?: string
 }
 
+interface LLMResponse {
+  message: string
+  emotion: string
+  sentiment: string
+  action: string
+  frustrationLevel: number
+  shape?: string
+  gesture?: string
+}
+
 interface AICheckoutAssistantProps {
-  onEmotionChange?: (emotion: string, gesture: string) => void
+  onLLMResponse?: (response: LLMResponse) => void
 }
 
 // Demo mode fallback responses
@@ -79,7 +89,7 @@ function getDemoResponse(userMessage: string): any {
   }
 }
 
-export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssistantProps) {
+export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -93,8 +103,7 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
   const [frustrationLevel, setFrustrationLevel] = useState(0)
   const [demoMode, setDemoMode] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const mascotRef = useRef<any>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
 
   // Detect mobile
@@ -105,129 +114,12 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Initialize mascot
+  // Auto-scroll chat container to bottom when messages change
   useEffect(() => {
-    let cancelled = false
-
-    const initMascot = async () => {
-      if (!canvasRef.current || cancelled) return
-
-      try {
-        // Wait for EmotiveMascot to load
-        let attempts = 0
-        while (!(window as any).EmotiveMascot && attempts < 50) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          attempts++
-        }
-
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
-        if (!EmotiveMascot) {
-          console.error('EmotiveMascot not found')
-          return
-        }
-
-        const canvas = canvasRef.current
-        if (!canvas) return
-
-        // Set canvas dimensions
-        const rect = canvas.getBoundingClientRect()
-        const dpr = window.devicePixelRatio || 1
-        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
-
-        const mascot = new EmotiveMascot({
-          canvasId: 'assistant-mascot',
-          enableAudio: false,
-          soundEnabled: false,
-          defaultEmotion: 'joy',
-          enableGazeTracking: true,
-          enableIdleBehaviors: true,
-          targetFPS: isMobile ? 30 : 60,
-          maxParticles: isMobile ? 50 : 100,
-          transitionDuration: 400,
-          emotionTransitionSpeed: 300,
-          // Walmart-themed colors
-          primaryColor: '#0071CE',  // Walmart blue
-          secondaryColor: '#FCBA03', // Walmart yellow
-        })
-
-        await mascot.init(canvas)
-        mascot.start()
-
-        // Position mascot centered in kiosk screen
-        mascot.setPosition(0, -20, 0)
-
-        // Scale for kiosk terminal context
-        mascot.setScale({
-          core: isMobile ? 0.5 : 0.7,
-          particles: isMobile ? 0.8 : 1.2
-        })
-
-        // Enable backdrop with Walmart blue theme
-        mascot.setBackdrop({
-          enabled: true,
-          radius: 3.2,
-          intensity: 0.75,
-          blendMode: 'normal',
-          falloff: 'smooth',
-          edgeSoftness: 0.95,
-          coreTransparency: 0.35,
-          responsive: true,
-          color: '#0071CE'  // Walmart blue backdrop
-        })
-
-        mascotRef.current = mascot
-
-        // Initial greeting gesture
-        setTimeout(() => {
-          if (mascot.express) {
-            mascot.express('wave')
-          }
-        }, 500)
-
-      } catch (error) {
-        console.error('Failed to initialize mascot:', error)
-      }
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
     }
-
-    initMascot()
-
-    return () => {
-      cancelled = true
-      if (mascotRef.current) {
-        mascotRef.current.stop?.()
-        mascotRef.current.destroy?.()
-      }
-    }
-  }, [isMobile])
-
-  // Update mascot emotion using Semantic Performance API
-  const updateMascotEmotion = async (emotion: string, action: string, frustration: number) => {
-    if (!mascotRef.current || !mascotRef.current.perform) return
-
-    // Map action to semantic performance
-    const performanceMap: Record<string, string> = {
-      'guide': 'guiding',
-      'offer_help': frustration > 60 ? 'offering_urgent_help' : 'offering_help',
-      'celebrate': frustration < 20 ? 'celebrating_epic' : 'celebrating'
-    }
-
-    const performance = performanceMap[action] || 'responding_neutral'
-
-    // Update context and perform semantic action
-    await mascotRef.current.perform?.(performance, {
-      context: {
-        frustration,
-        urgency: frustration > 60 ? 'high' : frustration > 30 ? 'medium' : 'low',
-        magnitude: frustration < 20 ? 'epic' : frustration > 60 ? 'major' : 'moderate'
-      }
-    })
-
-    // Notify parent component with simple emotion fallback
-    if (onEmotionChange) {
-      onEmotionChange(emotion, action)
-    }
-  }
+  }, [messages])
 
   const handleSend = async () => {
     if (!input.trim() || loading) return
@@ -239,9 +131,16 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     setLoading(true)
 
-    // Set mascot to "listening" state using semantic performance
-    if (mascotRef.current && mascotRef.current.perform) {
-      await mascotRef.current.perform('listening')
+    // Notify parent that user is talking
+    if (onLLMResponse) {
+      onLLMResponse({
+        message: '',
+        emotion: 'neutral',
+        sentiment: 'neutral',
+        action: 'listen',
+        frustrationLevel: 20,
+        gesture: 'settle'
+      })
     }
 
     // Simulate typing delay
@@ -299,8 +198,10 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
       // Update frustration level
       setFrustrationLevel(data.frustrationLevel || 0)
 
-      // Update mascot based on AI's emotion detection
-      updateMascotEmotion(data.emotion, data.action, data.frustrationLevel || 0)
+      // Notify parent component to update mascot with full LLM response
+      if (onLLMResponse) {
+        onLLMResponse(data)
+      }
 
     } catch (error) {
       console.error('Chat error:', error)
@@ -317,7 +218,11 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
       }])
 
       setFrustrationLevel(fallback.frustrationLevel)
-      updateMascotEmotion(fallback.emotion, fallback.action, fallback.frustrationLevel)
+
+      // Notify parent component with full LLM response
+      if (onLLMResponse) {
+        onLLMResponse(fallback)
+      }
     } finally {
       setLoading(false)
     }
@@ -334,164 +239,178 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
   return (
     <div style={{
       position: 'relative',
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '1fr 400px',
-      gap: '1.5rem',
-      alignItems: 'start',
+      width: '100%',
       minHeight: '650px'
     }}>
-      {/* Chat Interface - Walmart Blue Theme */}
+      {/* Premium Slate Glass Interface */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '650px',
-        background: 'linear-gradient(180deg, rgba(0, 113, 206, 0.05) 0%, rgba(252, 186, 3, 0.03) 100%)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: '16px',
-        border: '2px solid rgba(0, 113, 206, 0.2)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        background: `
+          linear-gradient(135deg,
+            rgba(30, 35, 45, 0.85) 0%,
+            rgba(20, 25, 35, 0.92) 50%,
+            rgba(15, 18, 28, 0.95) 100%
+          )
+        `,
+        backdropFilter: 'blur(60px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(60px) saturate(180%)',
+        borderRadius: '32px',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        boxShadow: `
+          0 30px 90px rgba(0, 0, 0, 0.5),
+          0 0 0 1px rgba(0, 217, 255, 0.05),
+          inset 0 0 80px rgba(0, 217, 255, 0.02),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04)
+        `,
         overflow: 'hidden',
         position: 'relative'
       }}>
-        {/* Kiosk-Style Header */}
+        {/* Top glass reflection */}
         <div style={{
-          padding: '1.25rem 1.5rem',
-          borderBottom: '2px solid rgba(0, 113, 206, 0.3)',
-          background: 'linear-gradient(180deg, rgba(0, 113, 206, 0.15) 0%, rgba(0, 113, 206, 0.05) 100%)',
-          position: 'relative'
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '200px',
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 1
+        }} />
+
+        {/* Ambient glow particles */}
+        <div style={{
+          position: 'absolute',
+          top: '10%',
+          right: '15%',
+          width: '300px',
+          height: '300px',
+          background: 'radial-gradient(circle, rgba(0, 217, 255, 0.08) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+          pointerEvents: 'none',
+          animation: 'float 8s ease-in-out infinite',
+          zIndex: 0
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '20%',
+          left: '10%',
+          width: '250px',
+          height: '250px',
+          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+          pointerEvents: 'none',
+          animation: 'float 10s ease-in-out infinite reverse',
+          zIndex: 0
+        }} />
+
+        {/* Ultra-Premium Header */}
+        <div style={{
+          padding: '2.5rem 2.5rem 2rem 2.5rem',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%)',
+          position: 'relative',
+          zIndex: 2
         }}>
-          {/* Status Bar */}
           <div style={{
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '0.75rem',
-            fontSize: '0.7rem',
-            opacity: 0.6,
-            textTransform: 'uppercase',
-            letterSpacing: '0.8px'
+            gap: '1.25rem'
           }}>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <span style={{ color: '#10B981' }}>● ONLINE</span>
-              {demoMode && <span style={{ color: '#FCBA03' }}>⚠ DEMO MODE</span>}
-            </div>
-            <div>STATION 04</div>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
+            {/* Premium icon with gradient border */}
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
+              border: '1px solid rgba(0, 217, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.75rem',
+              boxShadow: '0 8px 32px rgba(0, 217, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Shine effect */}
               <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                marginBottom: '0.25rem'
-              }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  background: 'linear-gradient(135deg, #0071CE 0%, #004C91 100%)',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.2rem',
-                  boxShadow: '0 2px 8px rgba(0, 113, 206, 0.3)'
-                }}>
-                  🤖
-                </div>
-                <div>
-                  <h3 style={{
-                    fontSize: '1.15rem',
-                    fontWeight: '700',
-                    color: '#0071CE',
-                    marginBottom: '0.15rem',
-                    letterSpacing: '-0.01em'
-                  }}>
-                    Self-Checkout Assistant
-                  </h3>
-                  <p style={{
-                    fontSize: '0.75rem',
-                    opacity: 0.7,
-                    margin: 0
-                  }}>
-                    {demoMode ? 'Demo Mode • Smart Responses' : 'Powered by Claude AI'}
-                  </p>
-                </div>
-              </div>
+                position: 'absolute',
+                top: 0,
+                left: '-100%',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+                animation: 'shine 3s ease-in-out infinite'
+              }} />
+              💬
             </div>
-
-            {/* Customer Sentiment Monitor */}
+            <div style={{ flex: 1 }}>
+              <h3 style={{
+                fontSize: '1.75rem',
+                fontWeight: '700',
+                background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                margin: 0,
+                lineHeight: 1.2,
+                letterSpacing: '-0.03em',
+                textShadow: '0 0 40px rgba(0, 217, 255, 0.3)'
+              }}>
+                AI Assistant
+              </h3>
+              <p style={{
+                fontSize: '0.875rem',
+                color: 'rgba(255, 255, 255, 0.4)',
+                margin: '0.375rem 0 0 0',
+                fontWeight: '500',
+                letterSpacing: '0.3px'
+              }}>
+                Powered by Claude Haiku 4.5
+              </p>
+            </div>
+            {/* Status indicator */}
             <div style={{
               display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: '0.35rem'
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.5rem 1rem',
+              background: 'rgba(16, 185, 129, 0.1)',
+              borderRadius: '100px',
+              border: '1px solid rgba(16, 185, 129, 0.2)'
             }}>
               <div style={{
-                fontSize: '0.7rem',
-                opacity: 0.6,
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: '#10B981',
+                boxShadow: '0 0 12px rgba(16, 185, 129, 0.8)',
+                animation: 'pulse 2s ease-in-out infinite'
+              }} />
+              <span style={{
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                color: 'rgba(16, 185, 129, 0.9)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
               }}>
-                Customer Sentiment
-              </div>
-              <div style={{
-                display: 'flex',
-                gap: '0.5rem',
-                alignItems: 'center'
-              }}>
-                <div style={{
-                  width: '90px',
-                  height: '5px',
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  borderRadius: '3px',
-                  overflow: 'hidden',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}>
-                  <div style={{
-                    width: `${Math.max(100 - frustrationLevel, 0)}%`,
-                    height: '100%',
-                    background: frustrationLevel > 60
-                      ? 'linear-gradient(90deg, #EF4444, #DC2626)'
-                      : frustrationLevel > 30
-                      ? 'linear-gradient(90deg, #FCBA03, #F59E0B)'
-                      : 'linear-gradient(90deg, #10B981, #059669)',
-                    transition: 'width 0.5s ease'
-                  }} />
-                </div>
-                <span style={{
-                  fontSize: '0.8rem',
-                  fontWeight: '600',
-                  padding: '0.15rem 0.5rem',
-                  borderRadius: '4px',
-                  background: frustrationLevel > 60
-                    ? 'rgba(239, 68, 68, 0.2)'
-                    : frustrationLevel > 30
-                    ? 'rgba(252, 186, 3, 0.2)'
-                    : 'rgba(16, 185, 129, 0.2)',
-                  color: frustrationLevel > 60 ? '#EF4444' : frustrationLevel > 30 ? '#FCBA03' : '#10B981',
-                  border: `1px solid ${frustrationLevel > 60 ? '#EF4444' : frustrationLevel > 30 ? '#FCBA03' : '#10B981'}40`
-                }}>
-                  {frustrationLevel > 60 ? 'NEEDS HELP' : frustrationLevel > 30 ? 'NEUTRAL' : 'POSITIVE'}
-                </span>
-              </div>
+                Online
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Messages */}
-        <div style={{
+        {/* Messages - Premium Glass Bubbles */}
+        <div ref={messagesContainerRef} style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '1.5rem',
+          padding: '2rem 2.5rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1rem'
+          gap: '1.25rem',
+          position: 'relative',
+          zIndex: 2
         }}>
           {messages.map((msg, i) => (
             <div
@@ -499,25 +418,49 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
               style={{
                 display: 'flex',
                 justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                animation: 'slideInUp 0.3s ease-out'
+                animation: 'slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
               <div style={{
-                maxWidth: '75%',
-                padding: '1rem 1.25rem',
+                maxWidth: '70%',
+                padding: '1rem 1.375rem',
                 background: msg.role === 'user'
-                  ? 'linear-gradient(135deg, rgba(221, 74, 154, 0.3) 0%, rgba(255, 107, 157, 0.2) 100%)'
-                  : 'rgba(0, 0, 0, 0.3)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                  ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
                 borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                border: `1px solid ${msg.role === 'user' ? 'rgba(221, 74, 154, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                border: msg.role === 'user'
+                  ? '1px solid rgba(0, 217, 255, 0.2)'
+                  : '1px solid rgba(255, 255, 255, 0.06)',
+                boxShadow: msg.role === 'user'
+                  ? `0 8px 32px rgba(0, 217, 255, 0.15),
+                     inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                     inset 0 0 20px rgba(0, 217, 255, 0.05)`
+                  : `0 8px 32px rgba(0, 0, 0, 0.2),
+                     inset 0 1px 0 rgba(255, 255, 255, 0.03)`,
                 color: 'white',
-                fontSize: '0.95rem',
-                lineHeight: '1.5'
+                fontSize: '0.9375rem',
+                lineHeight: '1.6',
+                fontWeight: msg.role === 'user' ? '500' : '400',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
-                {msg.content}
+                {/* Subtle inner glow for user messages */}
+                {msg.role === 'user' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, transparent 100%)',
+                    pointerEvents: 'none'
+                  }} />
+                )}
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  {msg.content}
+                </div>
               </div>
             </div>
           ))}
@@ -528,14 +471,15 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
               justifyContent: 'flex-start'
             }}>
               <div style={{
-                padding: '1rem 1.25rem',
-                background: 'rgba(0, 0, 0, 0.3)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                padding: '1.125rem 1.5rem',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                backdropFilter: 'blur(30px)',
+                WebkitBackdropFilter: 'blur(30px)',
                 borderRadius: '20px 20px 20px 4px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.03)',
                 display: 'flex',
-                gap: '0.5rem'
+                gap: '0.625rem'
               }}>
                 <div className="typing-dot" />
                 <div className="typing-dot" style={{ animationDelay: '0.2s' }} />
@@ -547,46 +491,59 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Example prompts */}
+        {/* Example Prompts - Premium Glass Pills */}
         {messages.length <= 1 && (
           <div style={{
-            padding: '0 1.5rem 1rem 1.5rem'
+            padding: '0 2.5rem 1.5rem 2.5rem',
+            position: 'relative',
+            zIndex: 2
           }}>
             <div style={{
-              fontSize: '0.8rem',
-              opacity: 0.6,
-              marginBottom: '0.5rem',
+              fontSize: '0.75rem',
+              opacity: 0.4,
+              marginBottom: '0.875rem',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px'
+              letterSpacing: '1px',
+              fontWeight: '600'
             }}>
-              Try asking:
+              Suggested Questions
             </div>
             <div style={{
               display: 'flex',
               flexWrap: 'wrap',
-              gap: '0.5rem'
+              gap: '0.625rem'
             }}>
               {examplePrompts.map((prompt, i) => (
                 <button
                   key={i}
                   onClick={() => setInput(prompt)}
                   style={{
-                    padding: '0.5rem 1rem',
-                    background: 'rgba(221, 74, 154, 0.15)',
-                    border: '1px solid rgba(221, 74, 154, 0.3)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '0.85rem',
+                    padding: '0.75rem 1.25rem',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '100px',
+                    color: 'rgba(255, 255, 255, 0.85)',
+                    fontSize: '0.8125rem',
+                    fontWeight: '500',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+                    position: 'relative',
+                    overflow: 'hidden'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(221, 74, 154, 0.25)'
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 217, 255, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)'
+                    e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.3)'
                     e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(221, 74, 154, 0.15)'
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
                     e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
                   }}
                 >
                   {prompt}
@@ -596,269 +553,102 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
           </div>
         )}
 
-        {/* Input */}
+        {/* Premium Glass Input Bar */}
         <div style={{
-          padding: '1.5rem',
-          borderTop: '1px solid rgba(221, 74, 154, 0.2)',
-          background: 'rgba(0, 0, 0, 0.2)'
+          padding: '2rem 2.5rem 2.5rem 2.5rem',
+          borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 100%)',
+          position: 'relative',
+          zIndex: 2
         }}>
           <div style={{
             display: 'flex',
-            gap: '0.75rem'
+            gap: '0.875rem',
+            alignItems: 'center',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            borderRadius: '20px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            padding: '0.5rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
           }}>
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask me anything about checkout..."
+              placeholder="Type your message..."
               disabled={loading}
               style={{
                 flex: 1,
-                padding: '1rem 1.25rem',
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(221, 74, 154, 0.3)',
-                borderRadius: '12px',
+                padding: '0.875rem 1.25rem',
+                background: 'transparent',
+                border: 'none',
                 color: 'white',
-                fontSize: '0.95rem',
+                fontSize: '0.9375rem',
+                fontWeight: '400',
                 outline: 'none',
-                transition: 'all 0.3s ease'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
-                e.currentTarget.style.borderColor = 'rgba(221, 74, 154, 0.5)'
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(221, 74, 154, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
-                e.currentTarget.style.borderColor = 'rgba(221, 74, 154, 0.3)'
-                e.currentTarget.style.boxShadow = 'none'
+                caretColor: '#00D9FF'
               }}
             />
             <button
               onClick={handleSend}
               disabled={loading || !input.trim()}
               style={{
-                padding: '1rem 1.75rem',
+                padding: '0.875rem 1.75rem',
                 background: loading || !input.trim()
-                  ? 'rgba(221, 74, 154, 0.2)'
-                  : 'linear-gradient(135deg, #DD4A9A 0%, #C44569 100%)',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '0.95rem',
+                  ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
+                  : 'linear-gradient(135deg, rgba(0, 217, 255, 0.4) 0%, rgba(16, 185, 129, 0.3) 100%)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: loading || !input.trim()
+                  ? '1px solid rgba(0, 217, 255, 0.15)'
+                  : '1px solid rgba(0, 217, 255, 0.3)',
+                borderRadius: '16px',
+                color: loading || !input.trim() ? 'rgba(255, 255, 255, 0.4)' : 'white',
+                fontSize: '0.9375rem',
                 fontWeight: '600',
                 cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease',
-                opacity: loading || !input.trim() ? 0.5 : 1
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: loading || !input.trim() ? 0.5 : 1,
+                boxShadow: loading || !input.trim()
+                  ? 'none'
+                  : '0 4px 20px rgba(0, 217, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                position: 'relative',
+                overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
                 if (!loading && input.trim()) {
                   e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(221, 74, 154, 0.4)'
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 217, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 217, 255, 0.5) 0%, rgba(16, 185, 129, 0.4) 100%)'
                 }
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 217, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 217, 255, 0.4) 0%, rgba(16, 185, 129, 0.3) 100%)'
               }}
             >
-              {loading ? 'Sending...' : 'Send'}
+              {loading ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>Sending</span>
+                  <span style={{ animation: 'ellipsis 1.5s infinite' }}>...</span>
+                </span>
+              ) : (
+                'Send'
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Walmart-Style Checkout Kiosk */}
-      {!isMobile && (
-        <div style={{
-          position: 'relative',
-          height: '650px',
-          background: 'linear-gradient(180deg, rgba(0, 113, 206, 0.08) 0%, rgba(20, 20, 20, 0.95) 100%)',
-          borderRadius: '16px',
-          border: '2px solid rgba(0, 113, 206, 0.3)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          {/* Kiosk Header */}
-          <div style={{
-            padding: '1rem 1.25rem',
-            background: 'linear-gradient(180deg, rgba(0, 113, 206, 0.2) 0%, rgba(0, 113, 206, 0.08) 100%)',
-            borderBottom: '2px solid rgba(0, 113, 206, 0.3)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div style={{
-              fontSize: '0.7rem',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              opacity: 0.7,
-              fontWeight: '600'
-            }}>
-              AI Visual Assistant
-            </div>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              alignItems: 'center'
-            }}>
-              <div style={{
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                background: '#10B981',
-                boxShadow: '0 0 8px #10B981',
-                animation: 'pulse 2s ease-in-out infinite'
-              }} />
-              <span style={{
-                fontSize: '0.7rem',
-                color: '#10B981',
-                fontWeight: '600'
-              }}>ACTIVE</span>
-            </div>
-          </div>
-
-          {/* Kiosk Screen Area */}
-          <div style={{
-            flex: 1,
-            position: 'relative',
-            background: 'linear-gradient(135deg, rgba(0, 113, 206, 0.03) 0%, rgba(0, 0, 0, 0.6) 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1.5rem',
-            overflow: 'hidden'
-          }}>
-            {/* Terminal Background Pattern */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundImage: `
-                linear-gradient(rgba(0, 113, 206, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 113, 206, 0.03) 1px, transparent 1px)
-              `,
-              backgroundSize: '20px 20px',
-              opacity: 0.3,
-              pointerEvents: 'none'
-            }} />
-
-            {/* Mascot Canvas */}
-            <div style={{
-              position: 'relative',
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <canvas
-                ref={canvasRef}
-                id="assistant-mascot"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  filter: 'drop-shadow(0 0 30px rgba(0, 113, 206, 0.4)) drop-shadow(0 10px 40px rgba(252, 186, 3, 0.2))',
-                }}
-              />
-            </div>
-
-            {/* Corner Accents */}
-            <div style={{
-              position: 'absolute',
-              top: '1rem',
-              left: '1rem',
-              width: '40px',
-              height: '40px',
-              borderTop: '3px solid rgba(0, 113, 206, 0.4)',
-              borderLeft: '3px solid rgba(0, 113, 206, 0.4)',
-              borderRadius: '4px 0 0 0'
-            }} />
-            <div style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              width: '40px',
-              height: '40px',
-              borderTop: '3px solid rgba(0, 113, 206, 0.4)',
-              borderRight: '3px solid rgba(0, 113, 206, 0.4)',
-              borderRadius: '0 4px 0 0'
-            }} />
-            <div style={{
-              position: 'absolute',
-              bottom: '1rem',
-              left: '1rem',
-              width: '40px',
-              height: '40px',
-              borderBottom: '3px solid rgba(252, 186, 3, 0.4)',
-              borderLeft: '3px solid rgba(252, 186, 3, 0.4)',
-              borderRadius: '0 0 0 4px'
-            }} />
-            <div style={{
-              position: 'absolute',
-              bottom: '1rem',
-              right: '1rem',
-              width: '40px',
-              height: '40px',
-              borderBottom: '3px solid rgba(252, 186, 3, 0.4)',
-              borderRight: '3px solid rgba(252, 186, 3, 0.4)',
-              borderRadius: '0 0 4px 0'
-            }} />
-          </div>
-
-          {/* Kiosk Footer - Payment Icons */}
-          <div style={{
-            padding: '1rem 1.25rem',
-            background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 113, 206, 0.1) 100%)',
-            borderTop: '2px solid rgba(0, 113, 206, 0.3)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              fontSize: '0.7rem',
-              opacity: 0.7
-            }}>
-              <span>PAYMENT METHODS</span>
-              <span>📱 💳 💵</span>
-            </div>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: '0.5rem',
-              background: 'rgba(0, 113, 206, 0.1)',
-              borderRadius: '6px',
-              border: '1px solid rgba(0, 113, 206, 0.2)'
-            }}>
-              <div style={{
-                fontSize: '1.5rem',
-                filter: 'grayscale(0.3)'
-              }}>🤖</div>
-              <div style={{
-                flex: 1,
-                fontSize: '0.75rem',
-                lineHeight: '1.3'
-              }}>
-                <div style={{ fontWeight: '600', color: '#0071CE' }}>Emotion-Aware AI</div>
-                <div style={{ opacity: 0.7, fontSize: '0.7rem' }}>Responds to your sentiment in real-time</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <style jsx>{`
         @keyframes slideInUp {
           from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(15px);
           }
           to {
             opacity: 1;
@@ -866,23 +656,93 @@ export default function AICheckoutAssistant({ onEmotionChange }: AICheckoutAssis
           }
         }
 
+        @keyframes float {
+          0%, 100% {
+            transform: translate(0, 0);
+          }
+          50% {
+            transform: translate(10px, -10px);
+          }
+        }
+
+        @keyframes shine {
+          0% {
+            left: -100%;
+          }
+          50%, 100% {
+            left: 100%;
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
+          }
+          50% {
+            opacity: 0.6;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 1);
+          }
+        }
+
         .typing-dot {
-          width: 8px;
-          height: 8px;
-          background: rgba(221, 74, 154, 0.6);
+          width: 7px;
+          height: 7px;
+          background: linear-gradient(135deg, rgba(0, 217, 255, 0.8) 0%, rgba(16, 185, 129, 0.6) 100%);
           border-radius: 50%;
           animation: typingDot 1.4s infinite;
+          box-shadow: 0 0 8px rgba(0, 217, 255, 0.4);
         }
 
         @keyframes typingDot {
           0%, 60%, 100% {
             transform: translateY(0);
-            opacity: 0.4;
+            opacity: 0.3;
           }
           30% {
-            transform: translateY(-8px);
+            transform: translateY(-10px);
             opacity: 1;
           }
+        }
+
+        @keyframes ellipsis {
+          0% {
+            content: '';
+          }
+          25% {
+            content: '.';
+          }
+          50% {
+            content: '..';
+          }
+          75%, 100% {
+            content: '...';
+          }
+        }
+
+        /* Custom scrollbar for premium feel */
+        div::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        div::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 10px;
+        }
+
+        div::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, rgba(0, 217, 255, 0.4) 0%, rgba(16, 185, 129, 0.3) 100%);
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        div::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, rgba(0, 217, 255, 0.6) 0%, rgba(16, 185, 129, 0.5) 100%);
+        }
+
+        input::placeholder {
+          color: rgba(255, 255, 255, 0.3);
+          font-weight: 400;
         }
       `}</style>
     </div>
