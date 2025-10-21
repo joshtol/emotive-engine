@@ -825,22 +825,24 @@ export default function CheckoutSimulation({ onStepChange }: CheckoutSimulationP
         <span>{showAIHelp ? 'Close' : 'Help'}</span>
       </button>
 
-      {/* AI Help Panel - Slides in from right */}
+      {/* AI Help Panel - Slides in to fill entire area */}
       <div style={{
         position: 'absolute',
         top: 0,
+        left: 0,
         right: 0,
         bottom: 0,
-        width: isMobile ? '100%' : '550px',
+        width: '100%',
         background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
         backdropFilter: 'blur(40px)',
         WebkitBackdropFilter: 'blur(40px)',
-        borderLeft: '2px solid rgba(0, 217, 255, 0.3)',
+        border: '2px solid rgba(0, 217, 255, 0.3)',
+        borderRadius: '32px',
         transform: showAIHelp ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         zIndex: 50,
         overflow: 'hidden',
-        boxShadow: showAIHelp ? '-30px 0 90px rgba(0, 0, 0, 0.6), inset 1px 0 0 rgba(0, 217, 255, 0.1)' : 'none'
+        boxShadow: showAIHelp ? '0 30px 90px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(0, 217, 255, 0.1)' : 'none'
       }}>
         {/* Top accent line */}
         <div style={{
