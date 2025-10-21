@@ -981,9 +981,17 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
           height: '100%',
           overflow: 'hidden',
           zIndex: 10,
-          padding: '2rem'
+          padding: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column'
         }}>
-          <AICheckoutAssistant onLLMResponse={handleLLMResponse} />
+          <div style={{
+            flex: 1,
+            overflow: 'hidden',
+            borderRadius: '32px'
+          }}>
+            <AICheckoutAssistant onLLMResponse={handleLLMResponse} />
+          </div>
         </div>
       </div>
 

@@ -19,100 +19,40 @@ interface LLMResponse {
   gesture?: string
 }
 
-interface AICheckoutAssistantProps {
+interface PremiumAIAssistantProps {
+  title?: string
+  subtitle?: string
+  initialMessage?: string
+  context?: string
+  examplePrompts?: string[]
   onLLMResponse?: (response: LLMResponse) => void
 }
 
-// Demo mode fallback responses
-const DEMO_RESPONSES: Record<string, any> = {
-  'scan': {
-    message: "To scan an item, hold the barcode 6-8 inches from the scanner until you hear a beep. The red laser should cover the entire barcode.",
-    emotion: 'calm',
-    sentiment: 'neutral',
-    action: 'guide',
-    frustrationLevel: 15
-  },
-  'coupon': {
-    message: "After scanning your items, select 'Apply Coupon' on the payment screen. You can scan paper coupons or enter digital codes. Need help with a specific coupon?",
-    emotion: 'joy',
-    sentiment: 'positive',
-    action: 'guide',
-    frustrationLevel: 10
-  },
-  'payment': {
-    message: "We accept credit cards, debit cards, mobile payments (Apple Pay, Google Pay), cash, and EBT. Just tap or insert your card when prompted!",
-    emotion: 'calm',
-    sentiment: 'neutral',
-    action: 'guide',
-    frustrationLevel: 5
-  },
-  'help': {
-    message: "I'm here to help! An attendant has been notified and will be with you shortly. In the meantime, I can answer questions about scanning, coupons, or payment.",
-    emotion: 'empathy',
-    sentiment: 'positive',
-    action: 'offer_help',
-    frustrationLevel: 40
-  },
-  'frustrated': {
-    message: "I completely understand your frustration! Let me get you some immediate help. What's giving you trouble right now?",
-    emotion: 'empathy',
-    sentiment: 'negative',
-    action: 'offer_help',
-    frustrationLevel: 80
-  },
-  'thanks': {
-    message: "You're so welcome! I'm thrilled I could help. Have a wonderful day and thanks for shopping with us!",
-    emotion: 'joy',
-    sentiment: 'positive',
-    action: 'celebrate',
-    frustrationLevel: 0
-  }
-}
-
-function getDemoResponse(userMessage: string): any {
-  const msg = userMessage.toLowerCase()
-
-  if (msg.includes('thank') || msg.includes('thanks')) return DEMO_RESPONSES.thanks
-  if (msg.includes('frustrat') || msg.includes('forever') || msg.includes('slow')) return DEMO_RESPONSES.frustrated
-  if (msg.includes('help') || msg.includes('assistant') || msg.includes('attendant')) return DEMO_RESPONSES.help
-  if (msg.includes('scan')) return DEMO_RESPONSES.scan
-  if (msg.includes('coupon') || msg.includes('discount')) return DEMO_RESPONSES.coupon
-  if (msg.includes('pay') || msg.includes('card') || msg.includes('cash')) return DEMO_RESPONSES.payment
-
-  // Default friendly response
-  return {
-    message: "I'd be happy to help! Try asking about scanning items, applying coupons, payment methods, or requesting assistance.",
-    emotion: 'calm',
-    sentiment: 'neutral',
-    action: 'guide',
-    frustrationLevel: 20
-  }
-}
-
-export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssistantProps) {
+export default function PremiumAIAssistant({
+  title = 'AI Assistant',
+  subtitle = 'Powered by Claude Haiku 4.5',
+  initialMessage = "Hi! I'm your AI assistant. How can I help you today?",
+  context = 'general',
+  examplePrompts = [
+    "Help me get started",
+    "How does this work?",
+    "What can you do?",
+    "I need assistance",
+  ],
+  onLLMResponse
+}: PremiumAIAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm your checkout assistant. How can I help you today?",
+      content: initialMessage,
       emotion: 'joy',
       sentiment: 'positive'
     }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [frustrationLevel, setFrustrationLevel] = useState(0)
-  const [demoMode, setDemoMode] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const [isMobile, setIsMobile] = useState(false)
-
-  // Detect mobile
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 768)
-    const handleResize = () => setIsMobile(window.innerWidth < 768)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // Auto-scroll chat container to bottom when messages change
   useEffect(() => {
@@ -147,94 +87,56 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
     await new Promise(resolve => setTimeout(resolve, 800))
 
     try {
-      let data
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          context
+        }),
+      })
 
-      // Try API first
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: userMessage,
-            context: 'checkout'
-          }),
-        })
+      if (res.status === 429) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'Please wait a moment before sending another message.',
+          emotion: 'calm',
+          sentiment: 'neutral'
+        }])
+        setLoading(false)
+        return
+      }
 
-        if (res.status === 429) {
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: 'Please wait a moment before sending another message.',
-            emotion: 'calm',
-            sentiment: 'neutral'
-          }])
-          setLoading(false)
-          return
+      if (res.ok) {
+        const data = await res.json()
+
+        // Add AI message
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.message,
+          emotion: data.emotion,
+          sentiment: data.sentiment
+        }])
+
+        // Notify parent component to update mascot with full LLM response
+        if (onLLMResponse) {
+          onLLMResponse(data)
         }
-
-        if (res.ok) {
-          const apiData = await res.json()
-          if (!apiData.error) {
-            data = apiData
-          }
-        }
-      } catch (apiError) {
-        console.log('API unavailable, using demo mode')
       }
-
-      // Fallback to demo mode if API fails
-      if (!data) {
-        setDemoMode(true)
-        data = getDemoResponse(userMessage)
-      }
-
-      // Add AI message
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.message,
-        emotion: data.emotion,
-        sentiment: data.sentiment
-      }])
-
-      // Update frustration level
-      setFrustrationLevel(data.frustrationLevel || 0)
-
-      // Notify parent component to update mascot with full LLM response
-      if (onLLMResponse) {
-        onLLMResponse(data)
-      }
-
     } catch (error) {
       console.error('Chat error:', error)
 
-      // Final fallback
-      const fallback = getDemoResponse(userMessage)
-      setDemoMode(true)
-
+      // Fallback response
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: fallback.message,
-        emotion: fallback.emotion,
-        sentiment: fallback.sentiment
+        content: "I'd be happy to help! Could you provide more details about what you need assistance with?",
+        emotion: 'calm',
+        sentiment: 'neutral'
       }])
-
-      setFrustrationLevel(fallback.frustrationLevel)
-
-      // Notify parent component with full LLM response
-      if (onLLMResponse) {
-        onLLMResponse(fallback)
-      }
     } finally {
       setLoading(false)
     }
   }
-
-  // Example prompts
-  const examplePrompts = [
-    "Help me scan an item",
-    "How do I use a coupon?",
-    "What payment do you accept?",
-    "I need assistance",
-  ]
 
   return (
     <div style={{
@@ -342,7 +244,7 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
                 letterSpacing: '-0.03em',
                 textShadow: '0 0 40px rgba(0, 217, 255, 0.3)'
               }}>
-                AI Assistant
+                {title}
               </h3>
               <p style={{
                 fontSize: '0.875rem',
@@ -351,7 +253,7 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
                 fontWeight: '500',
                 letterSpacing: '0.3px'
               }}>
-                Powered by Claude Haiku 4.5
+                {subtitle}
               </p>
             </div>
             {/* Status indicator */}
