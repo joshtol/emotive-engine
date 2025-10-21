@@ -159,7 +159,8 @@
       "Bash(gzip -c dist/emotive-mascot.umd.js)",
       "Bash(gzip -c dist/emotive-mascot.audio.js)",
       "Bash(npx vercel --prod)",
-      "Bash(start http://localhost:3002/use-cases/retail)"
+      "Bash(start http://localhost:3002/use-cases/retail)",
+      "Bash(true\"\n- Prevents build failures in Vercel where husky is not installed\n- Allows the build to continue even if husky setup fails\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

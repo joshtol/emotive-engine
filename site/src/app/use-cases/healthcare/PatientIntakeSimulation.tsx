@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import HealthcareAssistant from './HealthcareAssistant'
+import PremiumAIAssistant from '@/components/PremiumAIAssistant'
 
 interface FormField {
   label: string
@@ -772,12 +772,36 @@ export default function PatientIntakeSimulation({ onStepChange, openAIChat }: Pa
           </div>
         </div>
 
-        {/* AI Assistant Content */}
+        {/* AI Assistant Content - Full Height */}
         <div style={{
-          height: 'calc(100% - 120px)',
-          overflow: 'hidden'
+          position: 'relative',
+          height: '100%',
+          overflow: 'hidden',
+          zIndex: 10,
+          padding: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column'
         }}>
-          <HealthcareAssistant onLLMResponse={handleLLMResponse} />
+          <div style={{
+            flex: 1,
+            overflow: 'hidden',
+            borderRadius: '32px'
+          }}>
+            <PremiumAIAssistant
+              title="Healthcare Assistant"
+              subtitle="Powered by Claude Haiku 4.5"
+              initialMessage="Hi! I'm your healthcare assistant. I can help you with patient intake forms, insurance questions, and appointment scheduling."
+              context="healthcare"
+              examplePrompts={[
+                "Help me fill out my forms",
+                "What insurance do you accept?",
+                "Schedule an appointment",
+                "I need my medical records"
+              ]}
+              onLLMResponse={handleLLMResponse}
+              onClose={() => setShowAIHelp(false)}
+            />
+          </div>
         </div>
       </div>
 

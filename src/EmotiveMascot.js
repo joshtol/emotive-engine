@@ -76,6 +76,10 @@ import { PerformanceSystem } from './core/PerformanceSystem.js';
 import { ContextManager } from './core/ContextManager.js';
 import { SequenceExecutor } from './core/SequenceExecutor.js';
 
+// Import LLM Integration
+import LLMResponseHandler from './core/LLMResponseHandler.js';
+import { generateSystemPrompt } from './core/llm-templates.js';
+
 class EmotiveMascot {
     constructor(config = {}) {
         // Initialize error boundary first
@@ -2838,7 +2842,154 @@ class EmotiveMascot {
     getAvailableShapes() {
         return ShapeMorpher.getAvailableShapes();
     }
-    
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // LLM INTEGRATION API
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Handle an LLM response and automatically choreograph mascot reaction
+     *
+     * @param {Object} response - Structured LLM response
+     * @param {string} response.message - Message content
+     * @param {string} response.emotion - Emotion to express
+     * @param {string} response.sentiment - Sentiment (positive/neutral/negative)
+     * @param {string} response.action - Action context
+     * @param {number} response.frustrationLevel - User frustration (0-100)
+     * @param {string} [response.shape] - Optional shape to morph to
+     * @param {string} [response.gesture] - Optional gesture to perform
+     * @param {Object} options - Handler options
+     * @returns {Promise<EmotiveMascot>} This instance for chaining
+     *
+     * @example
+     * const llmResponse = {
+     *   message: "I'd be happy to help!",
+     *   emotion: 'joy',
+     *   sentiment: 'positive',
+     *   action: 'offer_help',
+     *   frustrationLevel: 20,
+     *   shape: 'heart',
+     *   gesture: 'reach'
+     * };
+     * await mascot.handleLLMResponse(llmResponse);
+     */
+    // eslint-disable-next-line require-await
+    async handleLLMResponse(response, options = {}) {
+        return this.errorBoundary.wrap(async () => {
+            // Lazy-initialize LLM handler
+            if (!this.llmHandler) {
+                this.llmHandler = new LLMResponseHandler(this, options);
+            }
+
+            // Process the response
+            await this.llmHandler.handle(response, options);
+
+            return this;
+        }, 'handleLLMResponse', this)();
+    }
+
+    /**
+     * Configure LLM response handling behavior
+     *
+     * @param {Object} config - Handler configuration
+     * @param {boolean} [config.autoMorphShapes] - Automatically morph shapes
+     * @param {number} [config.morphDuration] - Shape morph duration (ms)
+     * @param {boolean} [config.autoExpressGestures] - Automatically express gestures
+     * @param {number} [config.gestureTiming] - Gesture delay (ms)
+     * @param {number} [config.gestureIntensity] - Default gesture intensity (0-1)
+     * @param {Object} [config.emotionToShapeMap] - Custom emotion→shape mappings
+     * @param {Object} [config.actionToGestureMap] - Custom action→gesture mappings
+     * @returns {EmotiveMascot} This instance for chaining
+     *
+     * @example
+     * mascot.configureLLMHandler({
+     *   emotionToShapeMap: {
+     *     joy: 'sun',      // Override default
+     *     empathy: 'moon'  // Custom mapping
+     *   },
+     *   gestureIntensity: 0.9
+     * });
+     */
+    configureLLMHandler(config) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.llmHandler) {
+                this.llmHandler = new LLMResponseHandler(this, config);
+            } else {
+                this.llmHandler.configure(config);
+            }
+            return this;
+        }, 'configureLLMHandler', this)();
+    }
+
+    /**
+     * Get the LLM response schema for validation
+     * @returns {Object} Response schema
+     */
+    getLLMResponseSchema() {
+        if (!this.llmHandler) {
+            this.llmHandler = new LLMResponseHandler(this);
+        }
+        return this.llmHandler.getSchema();
+    }
+
+    /**
+     * Get system prompt template for LLM integration
+     *
+     * @param {Object} options - Prompt customization options
+     * @param {string} [options.domain] - Domain context (e.g., 'retail checkout')
+     * @param {string} [options.personality] - Mascot personality
+     * @param {string} [options.brand] - Brand name
+     * @returns {string} System prompt
+     *
+     * @example
+     * const prompt = EmotiveMascot.getLLMPromptTemplate({
+     *   domain: 'customer support',
+     *   personality: 'friendly and professional',
+     *   brand: 'Acme Corp'
+     * });
+     *
+     * // Use with Claude, GPT, Gemini, etc.
+     * const response = await llm.generate({
+     *   system: prompt,
+     *   message: userInput
+     * });
+     */
+    static getLLMPromptTemplate(options = {}) {
+        return generateSystemPrompt(options);
+    }
+
+    /**
+     * Get available emotions for LLM responses
+     * @returns {Array<string>} List of valid emotion names
+     */
+    static getLLMEmotions() {
+        return LLMResponseHandler.getAvailableEmotions();
+    }
+
+    /**
+     * Get available actions for LLM responses
+     * @returns {Array<string>} List of valid action names
+     */
+    static getLLMActions() {
+        return LLMResponseHandler.getAvailableActions();
+    }
+
+    /**
+     * Get available shapes for LLM responses
+     * @returns {Array<string>} List of valid shape names
+     */
+    static getLLMShapes() {
+        return LLMResponseHandler.getAvailableShapes();
+    }
+
+    /**
+     * Get available gestures for LLM responses
+     * @returns {Array<string>} List of valid gesture names
+     */
+    static getLLMGestures() {
+        return LLMResponseHandler.getAvailableGestures();
+    }
+
     /**
      * Destroys the mascot instance and cleans up resources
      */
@@ -2889,7 +3040,12 @@ class EmotiveMascot {
             if (this.eventManager) {
                 this.eventManager.destroy();
             }
-            
+
+            // Clean up LLM handler
+            if (this.llmHandler) {
+                this.llmHandler = null;
+            }
+
             // Destroy new systems
             if (this.accessibilityManager) {
                 this.accessibilityManager.destroy();

@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     // Call Haiku 4.5 with timeout
     const responsePromise = anthropic.messages.create({
-      model: 'claude-4-5-haiku-20250514',
+      model: 'claude-haiku-4-5',
       max_tokens: MAX_TOKENS,
       temperature: 0.7,
       system: SYSTEM_PROMPT,
@@ -186,6 +186,10 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('Chat API error:', error);
+    console.error('Error type:', error?.type);
+    console.error('Error status:', error?.status);
+    console.error('Error message:', error?.message);
+    console.error('Full error:', JSON.stringify(error, null, 2));
 
     // Handle specific errors
     if (error.message === 'Request timeout') {
@@ -204,7 +208,7 @@ export async function POST(req: NextRequest) {
 
     // Generic error
     return NextResponse.json(
-      { error: 'An error occurred. Please try again.' },
+      { error: 'An error occurred. Please try again.', details: error?.message },
       { status: 500 }
     );
   }

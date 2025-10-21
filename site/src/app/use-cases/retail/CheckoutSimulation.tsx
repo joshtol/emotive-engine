@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import AICheckoutAssistant from './AICheckoutAssistant'
+import PremiumAIAssistant from '@/components/PremiumAIAssistant'
 
 interface Product {
   id: string
@@ -990,7 +990,20 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
             overflow: 'hidden',
             borderRadius: '32px'
           }}>
-            <AICheckoutAssistant onLLMResponse={handleLLMResponse} />
+            <PremiumAIAssistant
+              title="Checkout Assistant"
+              subtitle="Powered by Claude Haiku 4.5"
+              initialMessage="Hi! I'm your checkout assistant. I can help you scan items, apply coupons, answer questions, and make your shopping experience smooth."
+              context="retail-checkout"
+              examplePrompts={[
+                "How do I scan an item?",
+                "Help with payment",
+                "Do you accept coupons?",
+                "Scanner not working"
+              ]}
+              onLLMResponse={handleLLMResponse}
+              onClose={() => setShowAIHelp(false)}
+            />
           </div>
         </div>
       </div>

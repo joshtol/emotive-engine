@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import AISmartHomeAssistant from './AISmartHomeAssistant'
+import PremiumAIAssistant from '@/components/PremiumAIAssistant'
 
 interface Room {
   id: string
@@ -820,10 +820,34 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         </div>
 
         <div style={{
-          height: 'calc(100% - 120px)',
-          overflow: 'hidden'
+          position: 'relative',
+          height: '100%',
+          overflow: 'hidden',
+          zIndex: 10,
+          padding: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column'
         }}>
-          <AISmartHomeAssistant onLLMResponse={handleLLMResponse} />
+          <div style={{
+            flex: 1,
+            overflow: 'hidden',
+            borderRadius: '32px'
+          }}>
+            <PremiumAIAssistant
+              title="Smart Home Assistant"
+              subtitle="Powered by Claude Haiku 4.5"
+              initialMessage="Hi! I'm your smart home assistant. I can help you control devices, create automations, and answer questions about your home."
+              context="smart-home"
+              examplePrompts={[
+                "Turn on living room lights",
+                "Set temperature to 72°F",
+                "Create morning routine",
+                "Show me energy usage"
+              ]}
+              onLLMResponse={handleLLMResponse}
+              onClose={() => setShowAIHelp(false)}
+            />
+          </div>
         </div>
       </div>
 

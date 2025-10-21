@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import AILearningAssistant from './AILearningAssistant'
+import PremiumAIAssistant from '@/components/PremiumAIAssistant'
 
 interface Problem {
   id: string
@@ -185,17 +185,35 @@ export default function LearningSimulation() {
       </div>
       <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: isMobile ? '100%' : 'calc(50% - 1.5rem)', background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)', backdropFilter: 'blur(40px)', border: '2px solid rgba(124, 58, 237, 0.3)', borderRadius: '32px', transform: showAIHelp ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 50, overflow: 'hidden', boxShadow: showAIHelp ? '0 30px 90px rgba(0, 0, 0, 0.6)' : 'none' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, rgba(124, 58, 237, 0.8), transparent)' }} />
-        <div style={{ padding: '2rem 2.5rem', borderBottom: '2px solid rgba(124, 58, 237, 0.2)', background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(20, 184, 166, 0.08) 100%)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '0.5rem' }}>
-            <div style={{ fontSize: '2.5rem' }}>🎓</div>
-            <div>
-              <div style={{ fontWeight: '800', fontSize: '1.4rem', background: 'linear-gradient(135deg, #7C3AED 0%, #14B8A6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.01em' }}>AI Tutor</div>
-              <div style={{ fontSize: '0.9rem', opacity: 0.7, color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>I&apos;m here to guide your learning</div>
-            </div>
+        <div style={{
+          position: 'relative',
+          height: '100%',
+          overflow: 'hidden',
+          zIndex: 10,
+          padding: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <div style={{
+            flex: 1,
+            overflow: 'hidden',
+            borderRadius: '32px'
+          }}>
+            <PremiumAIAssistant
+              title="AI Tutor"
+              subtitle="Powered by Claude Haiku 4.5"
+              initialMessage="Hi! I'm your AI tutor. I can help you understand concepts, work through problems step-by-step, and answer any questions you have about your studies."
+              context="education"
+              examplePrompts={[
+                "Help me solve this problem",
+                "Explain this concept",
+                "Give me a hint",
+                "Check my work"
+              ]}
+              onLLMResponse={handleLLMResponse}
+              onClose={() => setShowAIHelp(false)}
+            />
           </div>
-        </div>
-        <div style={{ height: 'calc(100% - 120px)', overflow: 'hidden' }}>
-          <AILearningAssistant onLLMResponse={handleLLMResponse} />
         </div>
       </div>
       {isClient && document.getElementById('help-button-container') ? createPortal(helpButton, document.getElementById('help-button-container')!) : null}

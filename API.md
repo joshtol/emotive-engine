@@ -4,6 +4,7 @@
 
 - [Constructor](#constructor)
 - [Core Methods](#core-methods)
+- [LLM Integration](#llm-integration) 🤖 **NEW in v4.0**
 - [Semantic Performance System](#semantic-performance-system) ⭐ **NEW in v3.0**
 - [Emotion Control](#emotion-control)
 - [Gesture System](#gesture-system)
@@ -59,6 +60,268 @@ Resizes the canvas and adjusts rendering.
 ```javascript
 mascot.resize(800, 600);
 ```
+
+## LLM Integration
+
+> 🤖 **NEW in v4.0** - Seamlessly integrate with Claude, GPT, Gemini, and other
+> LLMs
+
+The LLM Integration API enables your mascot to automatically respond to AI
+conversations with choreographed emotions, shape morphing, and gestures. Perfect
+for chatbots, AI assistants, and conversational interfaces.
+
+### Quick Start (3 lines)
+
+```javascript
+// 1. Get system prompt for your LLM
+const prompt = EmotiveMascot.getLLMPromptTemplate({
+    domain: 'customer support',
+});
+
+// 2. Get LLM response (using Claude, GPT, Gemini, etc.)
+const llmResponse = await yourLLM.chat(prompt, userMessage);
+
+// 3. Let mascot respond emotionally
+await mascot.handleLLMResponse(llmResponse);
+```
+
+### `handleLLMResponse(response, options)`
+
+Process an LLM response and automatically choreograph mascot reactions.
+
+**Parameters:**
+
+- `response` (object): Structured LLM response
+    - `message` (string): Message content
+    - `emotion` (string): Emotion to express (joy, empathy, calm, etc.)
+    - `sentiment` (string): positive | neutral | negative
+    - `action` (string): Action context (offer_help, celebrate, guide, etc.)
+    - `frustrationLevel` (number): User frustration level (0-100)
+    - `shape` (string, optional): Shape to morph to (heart, star, sun, etc.)
+    - `gesture` (string, optional): Gesture to perform (nod, wave, sparkle,
+      etc.)
+- `options` (object, optional): Override calculated intensity, skip validation
+
+**Returns:** `Promise<EmotiveMascot>`
+
+```javascript
+const llmResponse = {
+    message: "I'd be happy to help with that!",
+    emotion: 'joy',
+    sentiment: 'positive',
+    action: 'offer_help',
+    frustrationLevel: 20,
+    shape: 'heart',
+    gesture: 'reach',
+};
+
+await mascot.handleLLMResponse(llmResponse);
+```
+
+### `configureLLMHandler(config)`
+
+Configure LLM response handling behavior.
+
+```javascript
+mascot.configureLLMHandler({
+    // Shape morphing
+    autoMorphShapes: true,
+    morphDuration: 1000,
+
+    // Gesture choreography
+    autoExpressGestures: true,
+    gestureTiming: 300, // Delay before gesture (ms)
+    gestureIntensity: 0.8,
+
+    // Custom mappings
+    emotionToShapeMap: {
+        joy: 'sun', // Override default (star)
+        empathy: 'moon', // Override default (heart)
+    },
+    actionToGestureMap: {
+        offer_help: 'wave', // Override default (reach)
+        celebrate: 'bounce', // Override default (sparkle)
+    },
+});
+```
+
+### `static getLLMPromptTemplate(options)`
+
+Get a system prompt template for your LLM that instructs it to return structured
+responses.
+
+**Parameters:**
+
+- `options.domain` (string): Domain context (e.g., 'retail checkout', 'customer
+  support')
+- `options.personality` (string): Mascot personality
+- `options.brand` (string): Brand name
+
+**Returns:** System prompt string
+
+```javascript
+const prompt = EmotiveMascot.getLLMPromptTemplate({
+    domain: 'retail checkout',
+    personality: 'friendly and helpful',
+    brand: 'SmartMart',
+});
+
+// Use with any LLM provider
+const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5',
+    system: prompt,
+    messages: [{ role: 'user', content: userMessage }],
+});
+```
+
+### LLM Response Schema
+
+Your LLM should return JSON with this structure:
+
+```typescript
+{
+  // Required fields
+  message: string,              // Message to display
+  emotion: string,              // joy | empathy | calm | excitement | concern | neutral | triumph | love | curiosity
+  sentiment: string,            // positive | neutral | negative
+  action: string,               // offer_help | celebrate | guide | reassure | greet | confirm | deny | emphasize | question | think | listen | respond | none
+  frustrationLevel: number,     // 0-100
+
+  // Optional fields
+  shape?: string,               // circle | heart | star | sun | moon | eclipse | square | triangle
+  gesture?: string              // bounce | pulse | nod | wave | sparkle | point | reach | shake | ... (40+ gestures)
+}
+```
+
+### Available Options
+
+Get valid values programmatically:
+
+```javascript
+const emotions = EmotiveMascot.getLLMEmotions();
+// ['joy', 'empathy', 'calm', 'excitement', 'concern', 'neutral', 'triumph', 'love', 'curiosity']
+
+const actions = EmotiveMascot.getLLMActions();
+// ['offer_help', 'celebrate', 'guide', 'reassure', 'greet', 'confirm', 'deny', ...]
+
+const shapes = EmotiveMascot.getLLMShapes();
+// ['circle', 'heart', 'star', 'sun', 'moon', 'eclipse', 'square', 'triangle', ...]
+
+const gestures = EmotiveMascot.getLLMGestures();
+// ['bounce', 'pulse', 'nod', 'wave', 'sparkle', 'point', 'reach', ...]
+```
+
+### Provider-Specific Examples
+
+#### Claude (Anthropic) - Recommended
+
+```javascript
+import Anthropic from '@anthropic-ai/sdk';
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const systemPrompt = EmotiveMascot.getLLMPromptTemplate({ domain: 'support' });
+
+const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5',
+    max_tokens: 200,
+    temperature: 0.7,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userMessage }],
+});
+
+const llmResponse = JSON.parse(response.content[0].text);
+await mascot.handleLLMResponse(llmResponse);
+```
+
+#### OpenAI GPT
+
+```javascript
+import OpenAI from 'openai';
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const systemPrompt = EmotiveMascot.getLLMPromptTemplate({ domain: 'support' });
+
+const response = await openai.chat.completions.create({
+    model: 'gpt-4-turbo-preview',
+    max_tokens: 200,
+    temperature: 0.7,
+    response_format: { type: 'json_object' },
+    messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+    ],
+});
+
+const llmResponse = JSON.parse(response.choices[0].message.content);
+await mascot.handleLLMResponse(llmResponse);
+```
+
+#### Google Gemini
+
+```javascript
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+const systemPrompt = EmotiveMascot.getLLMPromptTemplate({ domain: 'support' });
+
+const result = await model.generateContent([systemPrompt, userMessage]);
+const llmResponse = JSON.parse(result.response.text());
+await mascot.handleLLMResponse(llmResponse);
+```
+
+### Emotion + Shape Combinations
+
+Create memorable emotional expressions:
+
+| Emotion    | Default Shape | Use Case                        |
+| ---------- | ------------- | ------------------------------- |
+| joy        | star          | Celebrations, positive outcomes |
+| empathy    | heart         | Caring support, understanding   |
+| excitement | sun           | High energy moments             |
+| calm       | moon          | Soothing, gentle guidance       |
+| triumph    | star          | Achievements unlocked           |
+| love       | heart         | Gratitude, deep appreciation    |
+
+### Action Guidelines
+
+| Action     | Default Gesture | When to Use                 |
+| ---------- | --------------- | --------------------------- |
+| offer_help | reach           | User needs assistance       |
+| celebrate  | sparkle         | Success or achievement      |
+| guide      | point           | Providing instructions      |
+| reassure   | nod             | Calming concerns            |
+| greet      | wave            | Starting conversation       |
+| confirm    | nod             | Validating user action      |
+| deny       | shake           | Correcting or rejecting     |
+| emphasize  | pulse           | Highlighting important info |
+
+### Best Practices
+
+1. **Track Frustration** - Increase intensity for frustrated users
+    - 0-20: Calm and satisfied
+    - 21-40: Minor confusion
+    - 41-60: Moderate frustration
+    - 61-80: High frustration - urgent help needed
+    - 81-100: Critical - escalate immediately
+
+2. **Keep Messages Concise** - 2-3 sentences max
+
+3. **Use Semantic Performances** - Automatically uses choreographed performances
+   when available
+
+4. **Combine Shape + Emotion** - Heart + empathy, Star + triumph, etc.
+
+### Complete Example
+
+See [examples/llm-integration/](../examples/llm-integration/) for complete
+working examples with:
+
+- Claude Haiku integration
+- OpenAI GPT integration
+- Google Gemini integration
+- Chat interface
+- Demo fallback responses
 
 ## Semantic Performance System
 

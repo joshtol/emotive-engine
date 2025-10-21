@@ -26,6 +26,7 @@ interface PremiumAIAssistantProps {
   context?: string
   examplePrompts?: string[]
   onLLMResponse?: (response: LLMResponse) => void
+  onClose?: () => void
 }
 
 export default function PremiumAIAssistant({
@@ -39,7 +40,8 @@ export default function PremiumAIAssistant({
     "What can you do?",
     "I need assistance",
   ],
-  onLLMResponse
+  onLLMResponse,
+  onClose
 }: PremiumAIAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -284,6 +286,47 @@ export default function PremiumAIAssistant({
                 Online
               </span>
             </div>
+            {/* Close button */}
+            {onClose && (
+              <button
+                onClick={onClose}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '1.25rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%)'
+                  e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)'
+                  e.currentTarget.style.color = 'rgba(239, 68, 68, 0.9)'
+                  e.currentTarget.style.transform = 'scale(1.05)'
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'
+                  e.currentTarget.style.transform = 'scale(1)'
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+                }}
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
 

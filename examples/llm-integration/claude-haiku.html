@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Mascot + Claude Haiku Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            opacity: 0.8;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .mascot-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        #emotive-canvas {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            max-width: 80%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            align-self: flex-end;
+            color: white;
+        }
+
+        .message.assistant {
+            background: rgba(255, 255, 255, 0.2);
+            align-self: flex-start;
+            color: white;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 1rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .examples {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .example-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .example-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 Claude Haiku + Emotive Mascot</h1>
+    <p class="subtitle">Watch the mascot respond emotionally to AI conversations</p>
+
+    <div class="container">
+        <div class="mascot-container">
+            <canvas id="emotive-canvas"></canvas>
+            <div class="status" id="status">Initializing...</div>
+        </div>
+
+        <div class="chat-container">
+            <div class="examples">
+                <button class="example-btn" onclick="sendExample('How do I scan an item?')">📦 How to scan</button>
+                <button class="example-btn" onclick="sendExample('This scanner is broken!')">😤 Frustrated</button>
+                <button class="example-btn" onclick="sendExample('Thank you so much!')">❤️ Thanks</button>
+                <button class="example-btn" onclick="sendExample('Hello!')">👋 Greeting</button>
+            </div>
+
+            <div class="messages" id="messages"></div>
+
+            <div class="input-area">
+                <input
+                    type="text"
+                    id="input"
+                    placeholder="Type a message..."
+                    onkeypress="if(event.key === 'Enter') sendMessage()"
+                />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot from '../../dist/emotive-mascot.js';
+
+        // Initialize mascot
+        const mascot = new EmotiveMascot({
+            canvasId: 'emotive-canvas',
+            emotion: 'neutral',
+            particleCount: 150,
+            enableGazeTracking: true,
+            enableIdleBehaviors: true
+        });
+
+        mascot.start();
+
+        // Configure LLM handler with custom settings
+        mascot.configureLLMHandler({
+            autoMorphShapes: true,
+            morphDuration: 1000,
+            autoExpressGestures: true,
+            gestureTiming: 300,
+            gestureIntensity: 0.8,
+            // Custom emotion-to-shape mappings
+            emotionToShapeMap: {
+                joy: 'star',
+                empathy: 'heart',
+                excitement: 'sun'
+            }
+        });
+
+        document.getElementById('status').textContent = 'Ready! Say hello.';
+
+        // Add welcome message
+        addMessage('assistant', "Hi! I'm your AI assistant with an emotional mascot. How can I help you today?");
+
+        window.sendMessage = async function() {
+            const input = document.getElementById('input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+
+            // Disable input while processing
+            input.disabled = true;
+            document.querySelector('button').disabled = true;
+
+            try {
+                // Call your Claude Haiku API endpoint
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Handle LLM response with mascot
+                await mascot.handleLLMResponse(data);
+
+                // Display assistant message
+                addMessage('assistant', data.message);
+
+            } catch (error) {
+                console.error('Error:', error);
+
+                // Demo fallback response
+                const demoResponse = getDemoResponse(message);
+                await mascot.handleLLMResponse(demoResponse);
+                addMessage('assistant', demoResponse.message);
+            } finally {
+                input.disabled = false;
+                document.querySelector('button').disabled = false;
+                input.focus();
+            }
+        };
+
+        window.sendExample = function(text) {
+            document.getElementById('input').value = text;
+            sendMessage();
+        };
+
+        function addMessage(role, content) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            messageDiv.textContent = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Demo fallback responses
+        function getDemoResponse(message) {
+            const msg = message.toLowerCase();
+
+            if (msg.includes('scan') || msg.includes('barcode')) {
+                return {
+                    message: "Hold the barcode about 6 inches from the scanner until you hear a beep. Make sure the entire barcode is visible!",
+                    emotion: 'calm',
+                    sentiment: 'neutral',
+                    action: 'guide',
+                    frustrationLevel: 15,
+                    shape: 'square',
+                    gesture: 'point'
+                };
+            }
+
+            if (msg.includes('thank') || msg.includes('thanks')) {
+                return {
+                    message: "You're so welcome! I'm thrilled I could help. Have a wonderful day!",
+                    emotion: 'joy',
+                    sentiment: 'positive',
+                    action: 'celebrate',
+                    frustrationLevel: 0,
+                    shape: 'heart',
+                    gesture: 'sparkle'
+                };
+            }
+
+            if (msg.includes('frustrat') || msg.includes('broken') || msg.includes('help')) {
+                return {
+                    message: "I completely understand your frustration! Let me get you some immediate help. An attendant is being notified right now.",
+                    emotion: 'empathy',
+                    sentiment: 'negative',
+                    action: 'offer_help',
+                    frustrationLevel: 80,
+                    shape: 'heart',
+                    gesture: 'reach'
+                };
+            }
+
+            if (msg.includes('hello') || msg.includes('hi')) {
+                return {
+                    message: "Hello! I'm here to make your experience smooth and easy. How can I help you today?",
+                    emotion: 'joy',
+                    sentiment: 'positive',
+                    action: 'greet',
+                    frustrationLevel: 0,
+                    shape: 'sun',
+                    gesture: 'wave'
+                };
+            }
+
+            return {
+                message: "I'd be happy to help with that! Could you tell me more about what you need?",
+                emotion: 'calm',
+                sentiment: 'neutral',
+                action: 'listen',
+                frustrationLevel: 20,
+                shape: 'circle',
+                gesture: 'nod'
+            };
+        }
+    </script>
+</body>
+</html>
