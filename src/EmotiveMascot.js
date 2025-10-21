@@ -71,6 +71,11 @@ import { StateCoordinator } from './mascot/StateCoordinator.js';
 import { VisualizationRunner } from './mascot/VisualizationRunner.js';
 import { ConfigurationManager } from './mascot/ConfigurationManager.js';
 
+// Import Semantic Performance System
+import { PerformanceSystem } from './core/PerformanceSystem.js';
+import { ContextManager } from './core/ContextManager.js';
+import { SequenceExecutor } from './core/SequenceExecutor.js';
+
 class EmotiveMascot {
     constructor(config = {}) {
         // Initialize error boundary first
@@ -409,7 +414,30 @@ class EmotiveMascot {
         // Store rhythm integration internally instead of global
         this.rhythmIntegration = rhythmIntegration;
         this.warningThrottle = 5000; // Only show same warning every 5 seconds
-        
+
+        // Initialize Semantic Performance System
+        this.contextManager = new ContextManager({
+            enableHistory: this.config.enablePerformanceHistory !== false,
+            enableDecay: this.config.enableFrustrationDecay !== false,
+            historyLimit: this.config.performanceHistoryLimit || 50,
+            frustrationDecayRate: this.config.frustrationDecayRate || 5,
+            decayInterval: this.config.frustrationDecayInterval || 10000
+        });
+
+        this.sequenceExecutor = new SequenceExecutor({
+            mascot: this,
+            eventManager: this.eventManager,
+            allowConcurrent: this.config.allowConcurrentPerformances !== false
+        });
+
+        this.performanceSystem = new PerformanceSystem({
+            mascot: this,
+            contextManager: this.contextManager,
+            sequenceExecutor: this.sequenceExecutor,
+            eventManager: this.eventManager,
+            enableAnalytics: this.config.enablePerformanceAnalytics !== false
+        });
+
         // Recording state (listening/capturing)
         this.recording = false;
         
@@ -748,6 +776,187 @@ class EmotiveMascot {
         // Delegate to GestureController
         return this.gestureController.executeChainSequence(steps);
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SEMANTIC PERFORMANCE API
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Execute a semantic performance (e.g., 'celebrating', 'empathizing', 'success_major')
+     * @param {string} semanticAction - The semantic action to perform
+     * @param {Object} options - Performance options
+     * @param {Object} [options.context] - Context for intensity calculation
+     * @param {number} [options.context.frustration] - User frustration level (0-100)
+     * @param {string} [options.context.urgency] - Urgency level (low/medium/high)
+     * @param {string} [options.context.magnitude] - Magnitude (small/moderate/major/epic)
+     * @param {number} [options.intensity] - Override calculated intensity (0-1)
+     * @param {number} [options.delay] - Override default delay
+     * @returns {Promise<EmotiveMascot>} Promise resolving to this instance for chaining
+     */
+    perform(semanticAction, options = {}) {
+        return this.errorBoundary.wrap(async () => {
+            if (!this.performanceSystem) {
+                console.warn('[EmotiveMascot] PerformanceSystem not initialized');
+                return this;
+            }
+
+            // Update context if provided
+            if (options.context) {
+                this.updateContext(options.context);
+            }
+
+            // Execute the performance
+            await this.performanceSystem.perform(semanticAction, {
+                ...options,
+                mascot: this
+            });
+
+            return this;
+        }, 'semantic-performance', this)();
+    }
+
+    /**
+     * Update conversation context for context-aware performances
+     * @param {Object} updates - Context updates
+     * @param {number} [updates.frustration] - Frustration level (0-100)
+     * @param {string} [updates.urgency] - Urgency level (low/medium/high)
+     * @param {string} [updates.magnitude] - Magnitude (small/moderate/major/epic)
+     * @param {Object} [updates.custom] - Custom context values
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    updateContext(updates) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.contextManager) {
+                console.warn('[EmotiveMascot] ContextManager not initialized');
+                return this;
+            }
+
+            this.contextManager.update(updates);
+            return this;
+        }, 'context-update', this)();
+    }
+
+    /**
+     * Get current conversation context
+     * @returns {Object} Current context state
+     */
+    getContext() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.contextManager) {
+                return null;
+            }
+            return this.contextManager.getContext();
+        }, 'context-get', this)();
+    }
+
+    /**
+     * Increment user frustration level
+     * @param {number} amount - Amount to increment (default: 10)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    incrementFrustration(amount = 10) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.contextManager) {
+                console.warn('[EmotiveMascot] ContextManager not initialized');
+                return this;
+            }
+
+            this.contextManager.incrementFrustration(amount);
+            return this;
+        }, 'frustration-increment', this)();
+    }
+
+    /**
+     * Decrement user frustration level
+     * @param {number} amount - Amount to decrement (default: 10)
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    decrementFrustration(amount = 10) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.contextManager) {
+                console.warn('[EmotiveMascot] ContextManager not initialized');
+                return this;
+            }
+
+            this.contextManager.decrementFrustration(amount);
+            return this;
+        }, 'frustration-decrement', this)();
+    }
+
+    /**
+     * Reset user frustration to zero
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    resetFrustration() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.contextManager) {
+                console.warn('[EmotiveMascot] ContextManager not initialized');
+                return this;
+            }
+
+            this.contextManager.resetFrustration();
+            return this;
+        }, 'frustration-reset', this)();
+    }
+
+    /**
+     * Get all available performance names
+     * @returns {Array<string>} Array of performance names
+     */
+    getAvailablePerformances() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.performanceSystem) {
+                return [];
+            }
+            return this.performanceSystem.getAllPerformanceNames();
+        }, 'performances-list', this)();
+    }
+
+    /**
+     * Register a custom performance
+     * @param {string} name - Performance name
+     * @param {Object} definition - Performance definition
+     * @returns {EmotiveMascot} This instance for chaining
+     */
+    registerPerformance(name, definition) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.performanceSystem) {
+                console.warn('[EmotiveMascot] PerformanceSystem not initialized');
+                return this;
+            }
+
+            this.performanceSystem.registerPerformance(name, definition);
+            return this;
+        }, 'performance-register', this)();
+    }
+
+    /**
+     * Get performance analytics (if enabled)
+     * @returns {Object|null} Performance analytics data
+     */
+    getPerformanceAnalytics() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.performanceSystem) {
+                return null;
+            }
+            return this.performanceSystem.getAnalytics();
+        }, 'performance-analytics', this)();
+    }
+
+    /**
+     * Get context analytics (if history is enabled)
+     * @returns {Object|null} Context analytics data
+     */
+    getContextAnalytics() {
+        return this.errorBoundary.wrap(() => {
+            if (!this.contextManager) {
+                return null;
+            }
+            return this.contextManager.getAnalytics();
+        }, 'context-analytics', this)();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
 
     /**
      * Starts speech reactivity mode with audio level monitoring

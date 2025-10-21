@@ -4,6 +4,7 @@
 
 - [Constructor](#constructor)
 - [Core Methods](#core-methods)
+- [Semantic Performance System](#semantic-performance-system) ⭐ **NEW in v3.0**
 - [Emotion Control](#emotion-control)
 - [Gesture System](#gesture-system)
 - [Breathing API](#breathing-api)
@@ -58,6 +59,165 @@ Resizes the canvas and adjusts rendering.
 ```javascript
 mascot.resize(800, 600);
 ```
+
+## Semantic Performance System
+
+> ⭐ **NEW in v3.0** - Express AI intent through choreographed animation
+> sequences
+
+The Semantic Performance System enables context-aware, choreographed animations
+that translate AI intent into expressive performances without manual timing and
+coordination.
+
+### Quick Example
+
+```javascript
+// Old approach: 50+ lines of manual choreography
+const intensity = frustration > 60 ? 1.0 : 0.7;
+mascot.setEmotion('empathy', intensity);
+setTimeout(() => mascot.express('nod'), 200);
+setTimeout(() => mascot.express('point'), 600);
+
+// New approach: 1 line with semantic API
+await mascot.perform('offering_help', {
+    context: { frustration: 70, urgency: 'high' },
+});
+```
+
+### `perform(semanticAction, options)`
+
+Execute a semantic performance with context-aware intensity.
+
+**Parameters:**
+
+- `semanticAction` (string): Performance name (see
+  [Performance Catalog](#performance-catalog))
+- `options` (object, optional):
+    - `context` (object): Context for intensity calculation
+        - `frustration` (number, 0-100): User frustration level
+        - `urgency` (string): `'low'` | `'medium'` | `'high'`
+        - `magnitude` (string): `'small'` | `'moderate'` | `'major'` | `'epic'`
+    - `intensity` (number, 0-1): Override calculated intensity
+    - `delay` (number): Override default delay in milliseconds
+
+**Returns:** `Promise<EmotiveMascot>`
+
+```javascript
+// Basic performance
+await mascot.perform('greeting');
+
+// With context for automatic intensity adjustment
+await mascot.perform('celebrating', {
+    context: {
+        frustration: 0,
+        urgency: 'low',
+        magnitude: 'epic',
+    },
+});
+
+// Frustrated user needs help
+await mascot.perform('offering_urgent_help', {
+    context: { frustration: 85, urgency: 'high' },
+});
+```
+
+### `updateContext(updates)`
+
+Update conversation context for context-aware performances.
+
+```javascript
+// Set frustration level (0-100)
+mascot.updateContext({ frustration: 60 });
+
+// Set urgency (affects intensity by ±0.2)
+mascot.updateContext({ urgency: 'high' });
+
+// Set magnitude (scales intensity)
+mascot.updateContext({ magnitude: 'epic' });
+
+// Multiple updates at once
+mascot.updateContext({
+    frustration: 40,
+    urgency: 'medium',
+    magnitude: 'moderate',
+});
+```
+
+### `getContext()`
+
+Get current conversation context.
+
+```javascript
+const context = mascot.getContext();
+console.log(context.frustration); // 60
+console.log(context.urgency); // 'high'
+console.log(context.magnitude); // 'moderate'
+```
+
+### `incrementFrustration(amount)` / `decrementFrustration(amount)` / `resetFrustration()`
+
+Manage user frustration level (automatically decays over time).
+
+```javascript
+// On error or retry
+mascot.incrementFrustration(10);
+
+// On successful action
+mascot.decrementFrustration(15);
+
+// On problem resolved
+mascot.resetFrustration();
+```
+
+### `getAvailablePerformances()`
+
+Get all 44 built-in performance names.
+
+```javascript
+const performances = mascot.getAvailablePerformances();
+// ['listening', 'thinking', 'celebrating', 'empathizing', ...]
+```
+
+### `registerPerformance(name, definition)`
+
+Register a custom performance.
+
+```javascript
+mascot.registerPerformance('welcome_back', {
+    name: 'welcome_back',
+    category: 'custom',
+    emotion: 'joy',
+    gesture: 'wave',
+    baseIntensity: 0.75,
+    description: 'Welcome back returning users',
+});
+
+await mascot.perform('welcome_back');
+```
+
+### Performance Catalog
+
+**Conversational** (16 performances):
+
+- `listening`, `thinking`, `acknowledging`, `guiding`
+- `empathizing`, `celebrating`, `celebrating_epic`, `reassuring`
+- `offering_help`, `offering_urgent_help`, `apologizing`, `encouraging`
+- `greeting`, `responding_positive`, `responding_neutral`, `responding_negative`
+
+**Feedback** (13 performances):
+
+- `success_minor`, `success_moderate`, `success_major`, `success_epic`
+- `error_minor`, `error_moderate`, `error_major`, `error_critical`
+- `warning`, `info`
+- `progress_start`, `progress_ongoing`, `progress_complete`
+
+**State** (15 performances):
+
+- `idle`, `ready`, `waiting`, `processing`, `scanning`, `analyzing`
+- `completing`, `completed`, `reviewing`, `monitoring`
+- `paused`, `loading`, `connecting`, `active`
+
+📖 **[Full Documentation →](./docs/api/semantic-performances.md)**
 
 ## Emotion Control
 

@@ -9,6 +9,110 @@ and this project uses
 
 ## [Unreleased]
 
+## [3.0.0] - 2025-10-20 - Semantic Performance System 🎭
+
+### 🎯 Major Feature: Context-Aware Performance Choreography
+
+This major release introduces the **Semantic Performance System**, enabling
+developers to express AI intent through universal, choreographed animation
+sequences with context-aware intensity adjustment. This eliminates manual
+animation timing and gesture coordination, reducing code by 98%.
+
+#### Core System Implementation
+
+- **ADDED** `PerformanceSystem` - Main orchestrator for semantic performances
+- **ADDED** `ContextManager` - Manages conversation context (frustration,
+  urgency, magnitude)
+- **ADDED** `SequenceExecutor` - Timeline-based multi-step performance execution
+- **ADDED** 44 built-in semantic performances across 3 categories:
+    - **Conversational** (16): `listening`, `thinking`, `empathizing`,
+      `celebrating`, `greeting`, etc.
+    - **Feedback** (13): `success_minor`, `success_epic`, `error_moderate`,
+      `warning`, etc.
+    - **State** (15): `idle`, `processing`, `loading`, `completed`,
+      `monitoring`, etc.
+
+#### New API Methods
+
+- **ADDED** `perform(semanticAction, options)` - Execute semantic performance
+- **ADDED** `updateContext(updates)` - Update conversation context
+- **ADDED** `getContext()` - Get current context state
+- **ADDED** `incrementFrustration(amount)` - Increase user frustration
+- **ADDED** `decrementFrustration(amount)` - Decrease user frustration
+- **ADDED** `resetFrustration()` - Reset frustration to zero
+- **ADDED** `getAvailablePerformances()` - List all 44 performance names
+- **ADDED** `registerPerformance(name, definition)` - Add custom performances
+- **ADDED** `getPerformanceAnalytics()` - Get execution analytics
+- **ADDED** `getContextAnalytics()` - Get context history analytics
+
+#### Context-Aware Intelligence
+
+- **ADDED** Automatic intensity calculation based on:
+    - Frustration level (0-100) → Boosts intensity up to +0.3
+    - Urgency (low/medium/high) → Adjusts intensity by ±0.2
+    - Magnitude (small/moderate/major/epic) → Scales from -0.1 to +0.3
+- **ADDED** Automatic frustration decay (-5 points per 10 seconds, configurable)
+- **ADDED** Context history tracking for UX optimization
+- **ADDED** Performance execution analytics
+
+#### Configuration Options
+
+- **ADDED** `enablePerformanceHistory` (default: true) - Track context history
+- **ADDED** `enableFrustrationDecay` (default: true) - Auto-decay frustration
+- **ADDED** `performanceHistoryLimit` (default: 50) - Max history entries
+- **ADDED** `frustrationDecayRate` (default: 5) - Decay points per interval
+- **ADDED** `frustrationDecayInterval` (default: 10000) - Decay interval in ms
+- **ADDED** `allowConcurrentPerformances` (default: false) - Allow multiple
+  performances
+- **ADDED** `enablePerformanceAnalytics` (default: true) - Track analytics
+
+#### Documentation
+
+- **ADDED** `docs/api/semantic-performances.md` - Complete semantic performance
+  guide (420+ lines)
+- **ADDED** `docs/SEMANTIC_PERFORMANCES_QUICK_REFERENCE.md` - Quick reference
+  cheat sheet
+- **UPDATED** `API.md` - Added Semantic Performance System section
+- **UPDATED** `README.md` - Highlighted new feature in Key Features section
+
+#### Retail Use Case Integration
+
+- **MIGRATED** `site/src/app/use-cases/retail/AICheckoutAssistant.tsx` to
+  semantic API
+- **REDUCED** Animation choreography code from 50+ lines → 1 line (98%
+  reduction)
+- **IMPROVED** User experience with context-aware intensity adjustments
+- **SIMPLIFIED** Maintenance with centralized performance definitions
+
+#### Developer Experience
+
+```javascript
+// Before v3.0: Manual choreography (50+ lines)
+const intensity = frustration > 60 ? 1.0 : 0.7;
+mascot.setEmotion('empathy', intensity);
+setTimeout(() => mascot.express('shake'), 200);
+setTimeout(() => mascot.express('nod'), 600);
+setTimeout(() => mascot.express('point'), 900);
+
+// After v3.0: Semantic API (1 line)
+await mascot.perform('offering_urgent_help', {
+    context: { frustration: 85, urgency: 'high' },
+});
+```
+
+#### Breaking Changes
+
+- None - Fully backward compatible with v2.x API
+- All existing methods continue to work as before
+- Semantic Performance System is additive, not replacing existing APIs
+
+### 📊 Impact
+
+- **Code Reduction**: 98% less animation choreography code
+- **Maintainability**: Centralized performance definitions
+- **Consistency**: Universal archetypes across all use cases
+- **Extensibility**: Easy custom performance registration
+
 ## [2.5.1] - 2025-10-17 - Dependency Cleanup & Build Optimization 🧹
 
 ### 🎯 Production-Ready Package Management

@@ -42,6 +42,11 @@ mascot.start();
 mascot.setEmotion('joy');
 mascot.express('bounce');
 
+// ⭐ NEW in v3.0: Semantic Performance System
+await mascot.perform('celebrating', {
+    context: { frustration: 0, urgency: 'low', magnitude: 'epic' },
+});
+
 // Control rotation (v2.6.0)
 mascot.setRotationSpeed(5); // Degrees per frame
 await mascot.renderer.rotationBrake.brakeToUpright();
@@ -109,6 +114,25 @@ import { getEmotion, applyGesture } from '@joshtol/emotive-engine';
 ```
 
 ## Key Features
+
+### ⭐ Semantic Performance System (NEW in v3.0)
+
+- **44 Built-in Performances** - Express AI intent through choreographed
+  animations
+- **Context-Aware Intensity** - Automatic adjustment based on user frustration,
+  urgency, and magnitude
+- **98% Code Reduction** - Replace 50+ lines of manual choreography with 1 line
+- **Universal Archetypes** - Conversational, feedback, and state performances
+
+```javascript
+// Old: 50+ lines of manual timing
+// New: 1 line with semantic API
+await mascot.perform('celebrating_epic', {
+    context: { frustration: 0, urgency: 'low', magnitude: 'epic' },
+});
+```
+
+**[📖 Semantic Performance Docs →](./docs/api/semantic-performances.md)**
 
 ### Emotional Intelligence
 
