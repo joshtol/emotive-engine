@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
+import ScheduleModal from '@/components/ScheduleModal'
 
 export default function CherokeePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -11,6 +12,7 @@ export default function CherokeePage() {
   const [mascot, setMascot] = useState<any>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const initializingRef = useRef(false)
   const initializedRef = useRef(false)
   const lastGestureRef = useRef<number>(-1)
@@ -772,6 +774,71 @@ export default function CherokeePage() {
             }}>
               Discover common Cherokee phrases through interactive cards with emotional AI that responds to each greeting's unique cultural meaning.
             </p>
+
+            {/* CTA Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              marginTop: '2rem'
+            }}>
+              <a
+                href="/docs"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '1.25rem 2.5rem',
+                  background: 'linear-gradient(135deg, #DAA520 0%, #FFB347 100%)',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  color: 'white',
+                  fontSize: '1.15rem',
+                  fontWeight: '600',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 4px 20px rgba(218, 165, 32, 0.4)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(218, 165, 32, 0.6)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(218, 165, 32, 0.4)'
+                }}
+              >
+                <span>📚</span> View Documentation
+              </a>
+
+              <button
+                onClick={() => setIsScheduleModalOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '1.25rem 2.5rem',
+                  background: 'rgba(218, 165, 32, 0.1)',
+                  border: '1px solid rgba(218, 165, 32, 0.3)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '1.15rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(218, 165, 32, 0.15)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(218, 165, 32, 0.1)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <span>📅</span> Schedule Demo
+              </button>
+            </div>
 
           </div>
 
@@ -2470,6 +2537,12 @@ export default function CherokeePage() {
           </div>
         </div>
       )}
+
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        calLink="emotive-engine/30min"
+      />
     </>
   )
 }

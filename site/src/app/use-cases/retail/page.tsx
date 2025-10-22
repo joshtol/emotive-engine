@@ -5,6 +5,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
+import ScheduleModal from '@/components/ScheduleModal'
 import AICheckoutAssistant from './AICheckoutAssistant'
 import CheckoutSimulation from './CheckoutSimulation'
 
@@ -14,6 +15,7 @@ export default function RetailPage() {
   const [mascot, setMascot] = useState<any>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const initializingRef = useRef(false)
   const initializedRef = useRef(false)
   const lastGestureRef = useRef<number>(-1)
@@ -41,6 +43,9 @@ export default function RetailPage() {
 
   // Initialize scroll-following mascot
   useEffect(() => {
+    // Wait for client-side hydration before initializing
+    if (!isClient) return
+
     let cancelled = false
 
     const initializeEngine = async () => {
@@ -64,13 +69,13 @@ export default function RetailPage() {
         canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
         canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
-        // Load EmotiveMascot
-        const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
+        // Load EmotiveMascot (lean bundle)
+        const existingScript = document.querySelector('script[src^="/emotive-engine-lean.js"]')
         let script = existingScript as HTMLScriptElement
 
         if (!existingScript) {
           script = document.createElement('script')
-          script.src = `/emotive-engine.js?v=${Date.now()}`
+          script.src = `/emotive-engine-lean.js?v=${Date.now()}`
           script.async = true
 
           await new Promise((resolve, reject) => {
@@ -80,7 +85,8 @@ export default function RetailPage() {
           })
         }
 
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+        // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
+        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
 
         if (!EmotiveMascot) {
           console.error('EmotiveMascot not found on window object')
@@ -121,7 +127,10 @@ export default function RetailPage() {
         })
 
         const initialXOffset = isMobileDevice ? 0 : -vw * 0.38
-        mascotInstance.setPosition(initialXOffset, 0, 0)
+        const initialYOffset = isMobileDevice
+          ? -vh * 0.3  // Mobile: (0 - vh * 0.6) * 0.5
+          : -vh * 0.05   // Desktop: (0 - vh * 0.1) * 0.5
+        mascotInstance.setPosition(initialXOffset, initialYOffset, 0)
 
         mascotInstance.start()
 
@@ -146,17 +155,21 @@ export default function RetailPage() {
       }
     }
 
-    initializeEngine()
+    // Defer initialization by 500ms to prevent blocking initial render
+    const timer = setTimeout(() => {
+      initializeEngine()
+    }, 500)
 
     return () => {
       cancelled = true
+      clearTimeout(timer)
       if (mascot) {
         mascot.stop()
         initializedRef.current = false
         initializingRef.current = false
       }
     }
-  }, [])
+  }, [isClient])
 
   // Scroll-driven animation with optimized performance
   useEffect(() => {
@@ -178,7 +191,9 @@ export default function RetailPage() {
         // Only update position every 3 frames to reduce blocking
         if (frameCountRef.current % 3 === 0 && mascot && typeof mascot.setPosition === 'function') {
           const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
-          const yOffset = (scrollY - viewportHeight * 0.1) * 0.5
+          const yOffset = isMobileDevice
+            ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
+            : (scrollY - viewportHeight * 0.1) * 0.5   // Normal on desktop
           const wavelength = 600
           const amplitude = isMobileDevice
             ? Math.min(80, viewportWidth * 0.15)
@@ -308,16 +323,22 @@ export default function RetailPage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
+        width: '100%',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
       }}>
         {/* Hero Section */}
         <section style={{
-          minHeight: '100vh',
+          minHeight: '75vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '4rem 2rem',
+          padding: 'clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 2rem)',
           background: 'radial-gradient(ellipse at top, rgba(221,74,154,0.15) 0%, transparent 50%), linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
           position: 'relative',
+          width: '100%',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
         }}>
           {/* Ambient light effect */}
           <div style={{
@@ -336,7 +357,7 @@ export default function RetailPage() {
             maxWidth: '1000px',
             width: '100%',
             textAlign: 'center',
-            paddingTop: '2rem',
+            paddingTop: 'clamp(8rem, 20vh, 12rem)',
             position: 'relative',
             zIndex: 2
           }}>
@@ -472,6 +493,34 @@ export default function RetailPage() {
               >
                 See Features
               </a>
+
+              <button
+                onClick={() => setIsScheduleModalOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '1.25rem 2.5rem',
+                  background: 'rgba(221, 74, 154, 0.1)',
+                  border: '1px solid rgba(221, 74, 154, 0.3)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '1.15rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(221, 74, 154, 0.15)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(221, 74, 154, 0.1)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <span>📅</span> Schedule Demo
+              </button>
             </div>
 
             {/* Stats */}
@@ -656,7 +705,7 @@ export default function RetailPage() {
             {/* Full-width Kiosk Interface */}
             <div style={{
               background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%)',
-              borderRadius: '40px',
+              borderRadius: isMobile ? '20px' : '40px',
               border: '3px solid rgba(0, 217, 255, 0.2)',
               boxShadow: `
                 0 40px 120px rgba(0, 0, 0, 0.7),
@@ -664,7 +713,10 @@ export default function RetailPage() {
                 inset 0 1px 0 rgba(255, 255, 255, 0.05)
               `,
               overflow: 'hidden',
-              position: 'relative'
+              position: 'relative',
+              height: isMobile ? 'calc(100vh - 2rem)' : 'auto',
+              display: isMobile ? 'flex' : 'block',
+              flexDirection: isMobile ? 'column' : undefined
             }}>
               {/* Top accent */}
               <div style={{
@@ -680,20 +732,23 @@ export default function RetailPage() {
               {/* Terminal header bar */}
               <div style={{
                 background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%)',
-                padding: '2rem 2.5rem',
+                padding: isMobile ? '0.75rem 1rem' : '2rem 2.5rem',
                 borderBottom: '2px solid rgba(0, 217, 255, 0.2)',
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                position: 'relative'
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? '0.5rem' : '0',
+                position: 'relative',
+                flexShrink: 0
               }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '1.25rem'
+                  gap: isMobile ? '0.75rem' : '1.25rem'
                 }}>
                   <div style={{
-                    fontSize: '2.5rem',
+                    fontSize: isMobile ? '1.75rem' : '2.5rem',
                     filter: 'drop-shadow(0 4px 16px rgba(0, 217, 255, 0.5))'
                   }}>
                     🛒
@@ -701,7 +756,7 @@ export default function RetailPage() {
                   <div>
                     <div style={{
                       fontWeight: '800',
-                      fontSize: '1.4rem',
+                      fontSize: isMobile ? '1.1rem' : '1.4rem',
                       background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
@@ -712,7 +767,7 @@ export default function RetailPage() {
                       SmartMart Self-Checkout
                     </div>
                     <div style={{
-                      fontSize: '0.9rem',
+                      fontSize: isMobile ? '0.75rem' : '0.9rem',
                       opacity: 0.6,
                       fontWeight: '500'
                     }}>
@@ -722,8 +777,10 @@ export default function RetailPage() {
                 </div>
                 <div style={{
                   display: 'flex',
-                  gap: '1.25rem',
-                  alignItems: 'center'
+                  gap: isMobile ? '0.75rem' : '1.25rem',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  width: isMobile ? '100%' : 'auto'
                 }}>
                   <div style={{
                     display: 'flex',
@@ -731,19 +788,19 @@ export default function RetailPage() {
                     alignItems: 'center'
                   }}>
                     <div style={{
-                      width: '12px',
-                      height: '12px',
+                      width: isMobile ? '10px' : '12px',
+                      height: isMobile ? '10px' : '12px',
                       borderRadius: '50%',
                       background: '#10B981',
                       boxShadow: '0 0 16px rgba(16, 185, 129, 0.8), inset 0 0 4px rgba(255, 255, 255, 0.3)'
                     }} />
-                    <span style={{ fontSize: '0.9rem', opacity: 0.8, fontWeight: '600' }}>System Online</span>
+                    <span style={{ fontSize: isMobile ? '0.75rem' : '0.9rem', opacity: 0.8, fontWeight: '600' }}>System Online</span>
                   </div>
                   <div style={{
-                    padding: '0.6rem 1.25rem',
+                    padding: isMobile ? '0.5rem 1rem' : '0.6rem 1.25rem',
                     background: 'rgba(0, 217, 255, 0.15)',
                     borderRadius: '10px',
-                    fontSize: '0.9rem',
+                    fontSize: isMobile ? '0.75rem' : '0.9rem',
                     fontWeight: '700',
                     color: '#00D9FF',
                     border: '1px solid rgba(0, 217, 255, 0.3)',
@@ -1028,6 +1085,12 @@ export default function RetailPage() {
       </main>
 
       <EmotiveFooter />
+
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        calLink="emotive-engine/30min"
+      />
     </>
   )
 }

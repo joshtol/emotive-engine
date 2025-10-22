@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
+import ScheduleModal from '@/components/ScheduleModal'
 import SmartHomeSimulation from './SmartHomeSimulation'
 
 export default function SmartHomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [mascot, setMascot] = useState<any>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -415,12 +417,11 @@ export default function SmartHomePage() {
                   const demoSection = document.querySelector('#demo')
                   if (demoSection) {
                     demoSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    // Scroll up a bit more to fully show the demo
+                    setTimeout(() => {
+                      window.scrollBy({ top: -100, behavior: 'smooth' })
+                    }, 600)
                   }
-                  setTimeout(() => {
-                    if ((window as any).__openSmartHomeAIChat) {
-                      (window as any).__openSmartHomeAIChat()
-                    }
-                  }, 800)
                 }}
                 style={{
                   display: 'inline-flex',
@@ -447,11 +448,11 @@ export default function SmartHomePage() {
                   e.currentTarget.style.boxShadow = '0 4px 20px rgba(139, 92, 246, 0.4)'
                 }}
               >
-                <span>🏠</span> Try AI Control
+                <span>▶️</span> See Live Demo
               </button>
 
               <a
-                href="#features"
+                href="/docs"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -475,7 +476,7 @@ export default function SmartHomePage() {
                   e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
-                Explore Features
+                <span>📚</span> View Documentation
               </a>
             </div>
 
@@ -899,6 +900,129 @@ export default function SmartHomePage() {
           </div>
         </section>
 
+        {/* Final CTA Section */}
+        <section style={{
+          padding: '8rem 2rem',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 2,
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%)',
+            borderRadius: '32px',
+            padding: 'clamp(3rem, 5vw, 5rem)',
+            border: '2px solid rgba(139, 92, 246, 0.3)',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Glow effect */}
+            <div style={{
+              position: 'absolute',
+              top: '-50%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '600px',
+              height: '600px',
+              background: 'radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%)',
+              filter: 'blur(60px)',
+              pointerEvents: 'none'
+            }} />
+
+            <h2 style={{
+              fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+              marginBottom: '1.5rem',
+              fontWeight: '700',
+              letterSpacing: '-0.02em',
+              position: 'relative',
+              zIndex: 1
+            }}>
+              Ready to Elevate Your Interface?
+            </h2>
+
+            <p style={{
+              fontSize: 'clamp(1.1rem, 2vw, 1.4rem)',
+              opacity: 0.85,
+              marginBottom: '3rem',
+              maxWidth: '700px',
+              margin: '0 auto 3rem auto',
+              lineHeight: 1.7,
+              position: 'relative',
+              zIndex: 1
+            }}>
+              Join leading product teams using Emotive Engine to create interfaces that users love to interact with.
+            </p>
+
+            <div style={{
+              display: 'flex',
+              gap: '1.5rem',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              position: 'relative',
+              zIndex: 1
+            }}>
+              <a
+                href="/docs"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '1.25rem 2.5rem',
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  color: 'white',
+                  fontSize: '1.15rem',
+                  fontWeight: '600',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 4px 20px rgba(139, 92, 246, 0.4)',
+                  border: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(139, 92, 246, 0.6)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(139, 92, 246, 0.4)'
+                }}
+              >
+                <span>📚</span> Get Started
+              </a>
+
+              <button
+                onClick={() => setIsScheduleModalOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '1.25rem 2.5rem',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '1.15rem',
+                  fontWeight: '600',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <span>📧</span> Schedule Demo
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* Back navigation */}
         <div style={{
           maxWidth: '1400px',
@@ -937,6 +1061,13 @@ export default function SmartHomePage() {
       </main>
 
       <EmotiveFooter />
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        calLink="emotive-engine/30min"
+      />
     </>
   )
 }

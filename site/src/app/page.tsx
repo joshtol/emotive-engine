@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
+import ScheduleModal from '@/components/ScheduleModal'
 import LazyMascot from '@/components/LazyMascot'
 import LazyFeaturesShowcase from '@/components/LazyFeaturesShowcase'
 
@@ -28,6 +29,7 @@ export default function HomePage() {
   const [mascot, setMascot] = useState<any>(null)
   const [waitlistEmail, setWaitlistEmail] = useState('')
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const [waitlistMessage, setWaitlistMessage] = useState('')
 
   // Scroll handler for mascot position and z-index
@@ -283,6 +285,20 @@ export default function HomePage() {
                 }}>
                   See Live Demo
                 </Link>
+
+                <button onClick={() => setIsScheduleModalOpen(true)} style={{
+                  padding: '1rem 2.5rem',
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                  background: 'rgba(102, 126, 234, 0.1)',
+                  color: 'white',
+                  border: '2px solid rgba(102, 126, 234, 0.5)',
+                  borderRadius: '50px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}>
+                  Schedule Demo
+                </button>
               </div>
 
               {/* Waitlist Form */}
@@ -648,6 +664,12 @@ export default function HomePage() {
       </main>
 
       <EmotiveFooter />
+
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        calLink="emotive-engine/30min"
+      />
     </>
   )
 }
