@@ -303,7 +303,8 @@ export default function RetailPage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
-          willChange: 'opacity, z-index',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
         }}
       >
         <canvas
@@ -313,6 +314,8 @@ export default function RetailPage() {
             width: '100%',
             height: '100%',
             filter: 'drop-shadow(0 10px 40px rgba(221, 74, 154, 0.4))',
+            willChange: 'transform',
+            transform: 'translateZ(0)',
           }}
         />
       </div>
@@ -326,6 +329,8 @@ export default function RetailPage() {
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
+        willChange: 'transform',
+        transform: 'translateZ(0)',
       }}>
         {/* Hero Section */}
         <section style={{
