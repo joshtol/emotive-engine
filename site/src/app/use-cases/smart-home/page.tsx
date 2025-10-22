@@ -122,7 +122,10 @@ export default function SmartHomePage() {
         })
 
         const initialXOffset = isMobileDevice ? 0 : -vw * 0.38
-        mascotInstance.setPosition(initialXOffset, 0, 0)
+        const initialYOffset = isMobileDevice
+          ? -vh * 0.3  // Mobile: higher up to account for 75vh hero
+          : -vh * 0.05   // Desktop: slightly up
+        mascotInstance.setPosition(initialXOffset, initialYOffset, 0)
 
         mascotInstance.start()
 
@@ -176,10 +179,12 @@ export default function SmartHomePage() {
         const viewportWidth = window.innerWidth
         const isMobileDevice = viewportWidth < 768
 
-        // Update position
+        // Only update position every 3 frames to reduce blocking
         if (frameCountRef.current % 3 === 0 && mascot && typeof mascot.setPosition === 'function') {
           const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
-          const yOffset = (scrollY - viewportHeight * 0.1) * 0.5
+          const yOffset = isMobileDevice
+            ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
+            : (scrollY - viewportHeight * 0.1) * 0.5   // Normal on desktop
           const wavelength = 600
           const amplitude = isMobileDevice
             ? Math.min(80, viewportWidth * 0.15)
