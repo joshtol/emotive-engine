@@ -98,10 +98,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
   useEffect(() => {
     setIsClient(true)
-  }, [])
-
-  useEffect(() => {
     setIsMobile(window.innerWidth < 768)
+
     const handleResize = () => setIsMobile(window.innerWidth < 768)
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
@@ -424,6 +422,24 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
     "Create movie scene",
     "Lock all doors"
   ]
+
+  // Don't render until client-side
+  if (!isClient) {
+    return (
+      <div style={{
+        position: 'relative',
+        height: '80vh',
+        minHeight: '80vh',
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0, 0, 0, 0.2)'
+      }}>
+        <div style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '1rem' }}>Loading...</div>
+      </div>
+    )
+  }
 
   return (
     <div style={{
