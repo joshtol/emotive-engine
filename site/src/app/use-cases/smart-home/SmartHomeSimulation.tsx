@@ -79,15 +79,6 @@ const INITIAL_ROOMS_MOBILE: Room[] = [
     ]
   },
   {
-    id: 'kitchen',
-    name: 'Kitchen',
-    icon: '🍳',
-    devices: [
-      { id: 'kitchen-light', type: 'light', name: 'Kitchen Lights', status: false, icon: '💡' },
-      { id: 'kitchen-camera', type: 'camera', name: 'Security Cam', status: true, icon: '📹' },
-    ]
-  },
-  {
     id: 'entry',
     name: 'Front Door',
     icon: '🚪',
