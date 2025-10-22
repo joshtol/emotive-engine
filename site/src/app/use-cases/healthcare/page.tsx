@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
+import ScheduleModal from '@/components/ScheduleModal'
 import PatientIntakeSimulation from './PatientIntakeSimulation'
 
 export default function HealthcarePage() {
@@ -12,6 +13,7 @@ export default function HealthcarePage() {
   const [mascot, setMascot] = useState<any>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const initializingRef = useRef(false)
   const initializedRef = useRef(false)
   const lastGestureRef = useRef<number>(-1)
@@ -476,6 +478,34 @@ export default function HealthcarePage() {
               >
                 See Features
               </a>
+
+              <button
+                onClick={() => setIsScheduleModalOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '1.25rem 2.5rem',
+                  background: 'rgba(74, 144, 226, 0.1)',
+                  border: '1px solid rgba(74, 144, 226, 0.3)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '1.15rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(74, 144, 226, 0.15)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(74, 144, 226, 0.1)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <span>📅</span> Schedule Demo
+              </button>
             </div>
 
             {/* Stats */}
@@ -1032,6 +1062,12 @@ export default function HealthcarePage() {
       </main>
 
       <EmotiveFooter />
+
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        calLink="emotive-engine/30min"
+      />
     </>
   )
 }
