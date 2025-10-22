@@ -213,7 +213,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
     }
   }, [isMobile])
 
-  const toggleDevice = (roomId: string, deviceId: string) => {
+  const toggleDevice = async (roomId: string, deviceId: string) => {
+    const device = rooms.find(r => r.id === roomId)?.devices.find(d => d.id === deviceId)
+
     setRooms(prevRooms =>
       prevRooms.map(room =>
         room.id === roomId
@@ -232,11 +234,73 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
       )
     )
 
-    if (mascotRef.current && mascotRef.current.express) {
-      mascotRef.current.express('nod', { intensity: 0.4, duration: 400 })
+    // Device-specific mascot reactions
+    if (mascotRef.current && device) {
+      if (device.type === 'light') {
+        // Check if it's porch light (entry-light) or other lights
+        if (deviceId === 'entry-light') {
+          // Porch light: pulse effect
+          if (mascotRef.current.express) {
+            await mascotRef.current.express('pulse', { intensity: 0.6, duration: 500 })
+          }
+        } else {
+          // Main lights: glow effect
+          if (mascotRef.current.express) {
+            await mascotRef.current.express('glow', { intensity: 0.8, duration: 600 })
+          }
+        }
+      } else if (device.type === 'lock') {
+        // Smart lock: square shape + calm emotion
+        if (mascotRef.current.morphTo) {
+          mascotRef.current.morphTo('square', { duration: 800 })
+        }
+        if (mascotRef.current.setEmotion) {
+          mascotRef.current.setEmotion('calm', 0.7)
+        }
+        if (mascotRef.current.express) {
+          await mascotRef.current.express('nod', { intensity: 0.4, duration: 400 })
+        }
+        // Reset after 1.5 seconds
+        setTimeout(() => {
+          if (mascotRef.current) {
+            if (mascotRef.current.morphTo) {
+              mascotRef.current.morphTo('circle', { duration: 800 })
+            }
+            if (mascotRef.current.setEmotion) {
+              mascotRef.current.setEmotion('neutral', 0.5)
+            }
+          }
+        }, 1500)
+      } else if (device.type === 'camera') {
+        // Doorbell cam: sus core + recording state
+        if (mascotRef.current.setCore) {
+          mascotRef.current.setCore('sus', { duration: 800 })
+        }
+        if (mascotRef.current.setState) {
+          mascotRef.current.setState('recording', 0.8)
+        }
+        if (mascotRef.current.express) {
+          await mascotRef.current.express('pulse', { intensity: 0.5, duration: 500 })
+        }
+        // Reset after 1.5 seconds
+        setTimeout(() => {
+          if (mascotRef.current) {
+            if (mascotRef.current.setCore) {
+              mascotRef.current.setCore('default', { duration: 800 })
+            }
+            if (mascotRef.current.setState) {
+              mascotRef.current.setState('idle', 0.5)
+            }
+          }
+        }, 1500)
+      } else {
+        // Default for other devices
+        if (mascotRef.current.express) {
+          mascotRef.current.express('nod', { intensity: 0.4, duration: 400 })
+        }
+      }
     }
 
-    const device = rooms.find(r => r.id === roomId)?.devices.find(d => d.id === deviceId)
     if (device && onDeviceChange) {
       onDeviceChange(device.type, device.status ? 'off' : 'on')
     }
