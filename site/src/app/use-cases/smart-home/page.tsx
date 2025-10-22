@@ -310,13 +310,16 @@ export default function SmartHomePage() {
       }}>
         {/* Hero Section - Apple Style */}
         <section style={{
-          minHeight: '100vh',
+          minHeight: '75vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '4rem 2rem',
+          padding: 'clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 2rem)',
           background: 'radial-gradient(ellipse at top, rgba(139,92,246,0.15) 0%, transparent 50%), linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
           position: 'relative',
+          width: '100%',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
         }}>
           {/* Ambient light effect */}
           <div style={{
@@ -335,7 +338,7 @@ export default function SmartHomePage() {
             maxWidth: '1000px',
             width: '100%',
             textAlign: 'center',
-            paddingTop: '2rem',
+            paddingTop: 'clamp(8rem, 20vh, 12rem)',
             position: 'relative',
             zIndex: 2
           }}>
