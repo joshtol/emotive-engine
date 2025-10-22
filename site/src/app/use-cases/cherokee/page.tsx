@@ -711,7 +711,7 @@ export default function CherokeePage() {
             maxWidth: '1000px',
             width: '100%',
             textAlign: 'center',
-            paddingTop: '2rem',
+            paddingTop: '6rem',
             position: 'relative',
             zIndex: 2
           }}>
@@ -724,7 +724,7 @@ export default function CherokeePage() {
               WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(218, 165, 32, 0.3)',
               borderRadius: '30px',
-              marginBottom: '2rem',
+              marginBottom: '3rem',
               fontSize: '0.85rem',
               fontWeight: '600',
               color: '#DAA520',
@@ -739,7 +739,7 @@ export default function CherokeePage() {
               fontFamily: 'var(--font-primary)',
               fontSize: 'clamp(3.5rem, 10vw, 6.5rem)',
               fontWeight: '900',
-              marginBottom: '2rem',
+              marginBottom: '2.5rem',
               lineHeight: 1,
               letterSpacing: '-0.04em',
               background: 'linear-gradient(135deg, #DAA520 0%, #FFB347 50%, #F8B739 100%)',
@@ -755,7 +755,7 @@ export default function CherokeePage() {
               fontFamily: 'var(--font-primary)',
               fontSize: 'clamp(1.8rem, 5vw, 3rem)',
               fontWeight: '600',
-              marginBottom: '1.5rem',
+              marginBottom: '2rem',
               color: 'rgba(255,255,255,0.95)',
               letterSpacing: '-0.02em',
             }}>
@@ -768,7 +768,7 @@ export default function CherokeePage() {
               color: 'rgba(255,255,255,0.75)',
               lineHeight: '1.7',
               maxWidth: '700px',
-              margin: '0 auto',
+              margin: '0 auto 3rem',
             }}>
               Discover common Cherokee phrases through interactive cards with emotional AI that responds to each greeting's unique cultural meaning.
             </p>
