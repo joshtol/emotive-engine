@@ -3805,7 +3805,7 @@ h2.section-header {
   display: grid;
   /* Mobile: 1-column stacked (default) */
   grid-template-columns: 1fr;
-  grid-auto-rows: minmax(200px, auto);
+  grid-auto-rows: minmax(220px, auto);
   gap: clamp(1rem, 2vw, 1.5rem);
   width: 100%;
 }
@@ -3822,7 +3822,8 @@ h2.section-header {
 @media (min-width: 641px) {
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 180px;
+    grid-auto-rows: 220px;
+    gap: 1.5rem;
   }
 
   .bento-grid > a:nth-child(1) {
@@ -3832,29 +3833,34 @@ h2.section-header {
   }
 }
 
-/* Desktop: 4-column grid */
+/* Desktop: Better proportioned 3-column grid */
 @media (min-width: 1025px) {
   .bento-grid {
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 200px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 280px;
+    gap: 2rem;
   }
 
   .bento-grid > a:nth-child(1) {
-    /* Cherokee - 2x2 on desktop */
+    /* Cherokee - Large flagship card (2x2) */
     grid-column: span 2;
     grid-row: span 2;
   }
 
-  .bento-grid > a:nth-child(2),
+  .bento-grid > a:nth-child(2) {
+    /* Retail - Tall card on right (1x2) */
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+
   .bento-grid > a:nth-child(3) {
-    /* Retail, Smart Home - 2x1 on desktop */
-    grid-column: span 2;
+    /* Education - Bottom left (1x1) */
+    grid-column: span 1;
     grid-row: span 1;
   }
 
-  .bento-grid > a:nth-child(4),
-  .bento-grid > a:nth-child(5) {
-    /* Healthcare, Education - 1x1 on desktop */
+  .bento-grid > a:nth-child(4) {
+    /* Healthcare - Bottom middle (1x1) */
     grid-column: span 1;
     grid-row: span 1;
   }
