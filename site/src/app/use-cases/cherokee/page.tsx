@@ -711,7 +711,7 @@ export default function CherokeePage() {
             maxWidth: '1000px',
             width: '100%',
             textAlign: 'center',
-            paddingTop: '6rem',
+            paddingTop: 'clamp(8rem, 20vh, 12rem)',
             position: 'relative',
             zIndex: 2
           }}>
