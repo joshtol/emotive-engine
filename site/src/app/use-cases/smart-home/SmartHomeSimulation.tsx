@@ -283,8 +283,11 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
       )
 
       if (mascotRef.current) {
+        if (mascotRef.current.morphTo) {
+          mascotRef.current.morphTo('sun', { duration: 1000 })
+        }
         if (mascotRef.current.setEmotion) {
-          mascotRef.current.setEmotion('joy', 0.8)
+          mascotRef.current.setEmotion('euphoria', 0.9)
         }
         if (mascotRef.current.express) {
           await mascotRef.current.express('bounce', { intensity: 0.6, duration: 800 })
@@ -305,8 +308,16 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         }))
       )
 
-      if (mascotRef.current && mascotRef.current.express) {
-        await mascotRef.current.express('wave', { intensity: 0.5, duration: 600 })
+      if (mascotRef.current) {
+        if (mascotRef.current.morphTo) {
+          mascotRef.current.morphTo('lunar', { duration: 1000 })
+        }
+        if (mascotRef.current.setEmotion) {
+          mascotRef.current.setEmotion('sadness', 0.7)
+        }
+        if (mascotRef.current.express) {
+          await mascotRef.current.express('wave', { intensity: 0.5, duration: 600 })
+        }
       }
     } else if (scene === 'movie-night') {
       setRooms(prevRooms =>
@@ -323,8 +334,11 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
       )
 
       if (mascotRef.current) {
+        if (mascotRef.current.morphTo) {
+          mascotRef.current.morphTo('star', { duration: 1000 })
+        }
         if (mascotRef.current.setEmotion) {
-          mascotRef.current.setEmotion('excitement', 0.7)
+          mascotRef.current.setEmotion('excitement', 0.8)
         }
         if (mascotRef.current.express) {
           await mascotRef.current.express('sparkle', { intensity: 0.8, duration: 1000 })
@@ -334,8 +348,13 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
     setTimeout(() => {
       setActiveScene(null)
-      if (mascotRef.current && mascotRef.current.setEmotion) {
-        mascotRef.current.setEmotion('neutral', 0.5)
+      if (mascotRef.current) {
+        if (mascotRef.current.morphTo) {
+          mascotRef.current.morphTo('circle', { duration: 1000 })
+        }
+        if (mascotRef.current.setEmotion) {
+          mascotRef.current.setEmotion('neutral', 0.5)
+        }
       }
     }, 2000)
   }
