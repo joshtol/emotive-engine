@@ -3837,8 +3837,8 @@ h2.section-header {
 @media (min-width: 1025px) {
   .bento-grid {
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 280px;
-    gap: 2rem;
+    grid-auto-rows: 180px;
+    gap: 1.5rem;
   }
 
   .bento-grid > a:nth-child(1) {
