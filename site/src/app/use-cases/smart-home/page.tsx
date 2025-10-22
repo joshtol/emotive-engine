@@ -388,7 +388,7 @@ export default function SmartHomePage() {
               color: 'rgba(255,255,255,0.95)',
               letterSpacing: '-0.02em'
             }}>
-              Control Everything with Your Voice
+              Interfaces That Feel Alive
             </h2>
 
             <p style={{
@@ -400,7 +400,7 @@ export default function SmartHomePage() {
               maxWidth: '700px',
               margin: '0 auto 3rem auto',
             }}>
-              Emotive AI that understands context, learns your routines, and creates the perfect home environment automatically.
+              Real-time visual feedback that responds to every interaction. Watch the mascot morph shapes, express emotions, and react to your commands with delightful animations.
             </p>
 
             <div style={{
@@ -479,7 +479,7 @@ export default function SmartHomePage() {
               </a>
             </div>
 
-            {/* Stats - Bento Style */}
+            {/* Stats - Emotive Engine Capabilities */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -497,7 +497,7 @@ export default function SmartHomePage() {
                   marginBottom: '0.5rem',
                   textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
                 }}>
-                  45%
+                  35+
                 </div>
                 <div style={{
                   fontSize: '0.9rem',
@@ -506,7 +506,7 @@ export default function SmartHomePage() {
                   letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  Energy Savings
+                  Built-in Gestures
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>
@@ -517,7 +517,7 @@ export default function SmartHomePage() {
                   marginBottom: '0.5rem',
                   textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
                 }}>
-                  92%
+                  15
                 </div>
                 <div style={{
                   fontSize: '0.9rem',
@@ -526,7 +526,7 @@ export default function SmartHomePage() {
                   letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  User Satisfaction
+                  Core Emotions
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>
@@ -537,7 +537,7 @@ export default function SmartHomePage() {
                   marginBottom: '0.5rem',
                   textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
                 }}>
-                  100+
+                  ∞
                 </div>
                 <div style={{
                   fontSize: '0.9rem',
@@ -546,7 +546,7 @@ export default function SmartHomePage() {
                   letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  Device Types
+                  Infinitely Custom
                 </div>
               </div>
             </div>
@@ -641,7 +641,7 @@ export default function SmartHomePage() {
                 lineHeight: 1.7,
                 fontWeight: '500'
               }}>
-                Experience the future of home automation with AI that understands your preferences and creates the perfect environment automatically. Powered by Emotive Engine.
+                See how visual feedback brings your interface to life. The mascot morphs shapes, changes emotions, and responds with animations to every interaction. Powered by Emotive Engine.
               </p>
             </div>
 
@@ -708,7 +708,7 @@ export default function SmartHomePage() {
               marginBottom: '1rem',
               letterSpacing: '-0.02em',
             }}>
-              Why Choose Emotive Smart Home
+              Emotive Engine Features
             </h2>
             <p style={{
               fontFamily: 'var(--font-heading)',
@@ -717,7 +717,7 @@ export default function SmartHomePage() {
               maxWidth: '700px',
               margin: '0 auto',
             }}>
-              AI that truly understands your home and your lifestyle
+              Real-time visual feedback that makes interfaces feel responsive and alive
             </p>
           </div>
 
@@ -728,39 +728,39 @@ export default function SmartHomePage() {
           }}>
             {[
               {
-                icon: '🎤',
-                title: 'Natural Voice Control',
-                description: 'Talk to your home naturally. Powered by Claude Haiku 4.5 for human-like understanding of context and intent.',
+                icon: '✨',
+                title: 'Dynamic Shape Morphing',
+                description: 'Watch the mascot seamlessly transform between circles, squares, stars, and custom shapes in real-time based on user interactions.',
                 color: '#8B5CF6'
               },
               {
-                icon: '🧠',
-                title: 'Contextual Intelligence',
-                description: 'AI learns your routines and preferences, automatically adjusting settings before you ask.',
+                icon: '😊',
+                title: 'Emotional Expressions',
+                description: 'The mascot displays emotions like joy, calm, excitement, and surprise through particle behavior and color shifts.',
                 color: '#A78BFA'
               },
               {
-                icon: '😊',
-                title: 'Emotion-Aware Responses',
-                description: 'Visual mascot reacts to your commands with empathy, making home control feel personal and delightful.',
+                icon: '🎭',
+                title: 'Gesture Animations',
+                description: 'Built-in gestures like wave, bounce, pulse, glow, and nod bring personality to every interaction.',
                 color: '#06B6D4'
               },
               {
-                icon: '🎬',
-                title: 'Smart Scenes',
-                description: 'Create custom environments with one command. "Movie Night" dims lights, closes blinds, and adjusts temperature.',
+                icon: '💫',
+                title: 'Particle Effects',
+                description: 'Dynamic particle system with adjustable intensity, spread, and behavior creates mesmerizing visual feedback.',
                 color: '#14B8A6'
               },
               {
-                icon: '⚡',
-                title: 'Energy Optimization',
-                description: 'Save up to 45% on energy bills with AI-powered scheduling and intelligent device management.',
+                icon: '🎨',
+                title: 'Customizable Appearance',
+                description: 'Fully configurable colors, backdrop effects, scale, and positioning to match your brand aesthetic.',
                 color: '#F59E0B'
               },
               {
-                icon: '🔒',
-                title: 'Enhanced Security',
-                description: 'Proactive alerts, smart cameras, and automated locking keep your home secure 24/7.',
+                icon: '⚡',
+                title: 'Performance Optimized',
+                description: 'Configurable FPS targets and adaptive particle systems ensure buttery-smooth animations on any device without compromising visual quality.',
                 color: '#EF4444'
               },
             ].map((feature, i) => (
@@ -815,7 +815,7 @@ export default function SmartHomePage() {
           </div>
         </section>
 
-        {/* Target Market */}
+        {/* Integration Info */}
         <section style={{
           padding: '6rem 2rem',
           maxWidth: '1400px',
@@ -849,7 +849,7 @@ export default function SmartHomePage() {
               fontWeight: '700',
               letterSpacing: '-0.02em'
             }}>
-              Perfect For Smart Home Leaders
+              Easy Integration
             </h2>
             <p style={{
               fontSize: 'clamp(1.1rem, 2.2vw, 1.3rem)',
@@ -858,7 +858,7 @@ export default function SmartHomePage() {
               maxWidth: '700px',
               margin: '0 auto 2.5rem auto'
             }}>
-              Apple HomeKit • Amazon Alexa • Google Home • Samsung SmartThings • Home Assistant
+              Add the Emotive Engine to any web-based interface with just a few lines of code
             </p>
             <div style={{
               display: 'grid',
@@ -867,10 +867,10 @@ export default function SmartHomePage() {
               marginTop: '2rem'
             }}>
               {[
-                { icon: '💰', label: '45% Energy Savings', value: 'Reduce utility bills dramatically' },
-                { icon: '⭐', label: '92% User Satisfaction', value: 'Homeowners love the experience' },
-                { icon: '🔌', label: 'Universal Compatibility', value: 'Works with 100+ device types' },
-                { icon: '📈', label: 'ROI in 6 Months', value: 'Energy savings pay for themselves' },
+                { icon: '📦', label: 'Simple Setup', value: 'Initialize with minimal configuration' },
+                { icon: '🎨', label: 'Fully Customizable', value: 'Colors, shapes, and behaviors' },
+                { icon: '📱', label: 'Responsive Design', value: 'Works on desktop and mobile' },
+                { icon: '⚡', label: 'Lightweight', value: 'Optimized for performance' },
               ].map((item, i) => (
                 <div
                   key={i}

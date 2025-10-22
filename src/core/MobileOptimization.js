@@ -287,8 +287,10 @@ export class MobileOptimization {
      * @param {TouchEvent} event - Touch event
      */
     handleTouchStart(event) {
-        event.preventDefault();
-        
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+
         const now = Date.now();
         this.gestureStartTime = now;
         
@@ -365,8 +367,10 @@ export class MobileOptimization {
      * @param {TouchEvent} event - Touch event
      */
     handleTouchMove(event) {
-        event.preventDefault();
-        
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+
         // Update touch positions
         for (const touch of event.touches) {
             const storedTouch = this.touches.get(touch.identifier);
@@ -472,8 +476,10 @@ export class MobileOptimization {
      * @param {TouchEvent} event - Touch event
      */
     handleTouchEnd(event) {
-        event.preventDefault();
-        
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+
         const now = Date.now();
         
         // Process ended touches

@@ -90,6 +90,31 @@ const INITIAL_ROOMS_MOBILE: Room[] = [
   },
 ]
 
+// Color scheme for smart home hub
+const COLORS = {
+  primary: '#FF6B35',      // Vibrant Orange
+  secondary: '#004E89',    // Deep Blue
+  accent: '#F7931E',       // Warm Amber
+  success: '#00A878',      // Teal Green
+  background: {
+    main: 'rgba(0, 20, 40, 0.95)',
+    card: 'linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(0, 78, 137, 0.05) 100%)',
+    cardBorder: 'rgba(255, 107, 53, 0.2)',
+    input: 'rgba(0, 0, 0, 0.5)',
+  },
+  text: {
+    primary: '#FF6B35',
+    secondary: '#00A878',
+    muted: 'rgba(255, 255, 255, 0.6)',
+  },
+  button: {
+    active: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)',
+    inactive: 'rgba(255, 107, 53, 0.1)',
+    border: 'rgba(255, 107, 53, 0.3)',
+    activeBorder: 'rgba(255, 107, 53, 0.5)',
+  }
+}
+
 export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulationProps) {
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -118,6 +143,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
     }
   }, [])
 
+  // NO AUTO-SCROLL - User controls scrolling manually
+
   useEffect(() => {
     setIsClient(true)
     const isMobileDevice = window.innerWidth < 768
@@ -135,6 +162,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
   // Initialize mascot - ONCE
   useEffect(() => {
+    // Don't initialize until client-side rendering is complete
+    if (!isClient) return
+
     let cancelled = false
 
     const initMascot = async () => {
@@ -182,11 +212,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           enableIdleBehaviors: true,
           targetFPS: isMobile ? 30 : 60,
           maxParticles: isMobile ? 40 : 100,
-          primaryColor: '#8B5CF6',
-          secondaryColor: '#06B6D4',
+          primaryColor: COLORS.primary,
+          secondaryColor: COLORS.secondary,
         })
-
-        console.log('Initializing mascot...', { isMobile, canvasWidth: width, canvasHeight: height })
 
         await mascot.init(canvas)
         mascot.start()
@@ -210,8 +238,6 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
         mascotRef.current = mascot
 
-        console.log('Mascot initialized successfully')
-
         setTimeout(() => {
           mascot.express?.('wave')
         }, 500)
@@ -230,7 +256,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         mascotRef.current.destroy?.()
       }
     }
-  }, [isMobile])
+  }, [isClient, isMobile])
 
   const toggleDevice = async (roomId: string, deviceId: string) => {
     const device = rooms.find(r => r.id === roomId)?.devices.find(d => d.id === deviceId)
@@ -590,7 +616,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 width: '100%',
                 position: 'relative',
                 background: 'rgba(0, 0, 0, 0.3)',
-                borderBottom: '1px solid rgba(139, 92, 246, 0.3)'
+                borderBottom: `1px solid ${COLORS.background.cardBorder}`
               }}>
                 <canvas
                   ref={canvasRef}
@@ -598,7 +624,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                   style={{
                     width: '100%',
                     height: '100%',
-                    filter: 'drop-shadow(0 10px 40px rgba(139, 92, 246, 0.6))',
+                    filter: 'drop-shadow(0 10px 40px rgba(255, 107, 53, 0.6))',
                   }}
                 />
               </div>
@@ -607,7 +633,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 flex: 1,
                 overflow: 'auto',
                 padding: '0.75rem',
-                background: 'linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(15,15,35,0.98) 100%)'
+                background: COLORS.background.main
               }}>
                 {/* Scene buttons */}
                 <div style={{
@@ -629,9 +655,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                         flex: 1,
                         padding: '0.75rem',
                         background: activeScene === scene.id
-                          ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
-                          : 'rgba(139, 92, 246, 0.1)',
-                        border: `1px solid ${activeScene === scene.id ? 'rgba(139, 92, 246, 0.5)' : 'rgba(139, 92, 246, 0.3)'}`,
+                          ? COLORS.button.active
+                          : COLORS.button.inactive,
+                        border: `1px solid ${activeScene === scene.id ? COLORS.button.activeBorder : COLORS.button.border}`,
                         borderRadius: '10px',
                         color: 'white',
                         fontSize: '0.85rem',
@@ -660,10 +686,10 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     <div
                       key={room.id}
                       style={{
-                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)',
+                        background: COLORS.background.card,
                         borderRadius: '12px',
                         padding: '1rem',
-                        border: '1px solid rgba(139, 92, 246, 0.2)'
+                        border: `1px solid ${COLORS.background.cardBorder}`
                       }}
                     >
                       <div style={{
@@ -676,7 +702,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                         <h3 style={{
                           fontSize: '1rem',
                           fontWeight: '700',
-                          color: '#8B5CF6',
+                          color: COLORS.text.primary,
                           margin: 0
                         }}>
                           {room.name}
@@ -720,9 +746,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                                 style={{
                                   padding: '0.35rem 0.75rem',
                                   background: device.status
-                                    ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                                    ? `linear-gradient(135deg, ${COLORS.success} 0%, #008F65 100%)`
                                     : 'rgba(255, 255, 255, 0.1)',
-                                  border: `1px solid ${device.status ? '#10B981' : 'rgba(255, 255, 255, 0.2)'}`,
+                                  border: `1px solid ${device.status ? COLORS.success : 'rgba(255, 255, 255, 0.2)'}`,
                                   borderRadius: '6px',
                                   color: 'white',
                                   fontSize: '0.7rem',
@@ -744,8 +770,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                                   style={{
                                     width: '24px',
                                     height: '24px',
-                                    background: 'rgba(139, 92, 246, 0.2)',
-                                    border: '1px solid rgba(139, 92, 246, 0.4)',
+                                    background: COLORS.button.inactive,
+                                    border: `1px solid ${COLORS.button.border}`,
                                     borderRadius: '4px',
                                     color: 'white',
                                     fontSize: '0.9rem',
@@ -760,7 +786,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                                 <span style={{
                                   fontSize: '0.85rem',
                                   fontWeight: '700',
-                                  color: '#06B6D4',
+                                  color: COLORS.text.secondary,
                                   minWidth: '40px',
                                   textAlign: 'center'
                                 }}>
@@ -771,8 +797,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                                   style={{
                                     width: '24px',
                                     height: '24px',
-                                    background: 'rgba(139, 92, 246, 0.2)',
-                                    border: '1px solid rgba(139, 92, 246, 0.4)',
+                                    background: COLORS.button.inactive,
+                                    border: `1px solid ${COLORS.button.border}`,
                                     borderRadius: '4px',
                                     color: 'white',
                                     fontSize: '0.9rem',
@@ -796,9 +822,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 {/* Energy usage */}
                 <div style={{
                   padding: '1rem',
-                  background: 'rgba(6, 182, 212, 0.1)',
+                  background: 'rgba(0, 168, 120, 0.1)',
                   borderRadius: '10px',
-                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  border: `1px solid ${COLORS.text.secondary}`,
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -832,7 +858,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     padding: '0.85rem',
                     fontSize: '0.9rem',
                     fontWeight: '700',
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
+                    background: COLORS.button.active,
                     color: 'white',
                     border: 'none',
                     borderRadius: '10px',
@@ -854,7 +880,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 width: '100%',
                 position: 'relative',
                 background: 'rgba(0, 0, 0, 0.3)',
-                borderBottom: '1px solid rgba(139, 92, 246, 0.3)'
+                borderBottom: `1px solid ${COLORS.background.cardBorder}`
               }}>
                 <canvas
                   ref={canvasRef}
@@ -862,7 +888,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                   style={{
                     width: '100%',
                     height: '100%',
-                    filter: 'drop-shadow(0 10px 40px rgba(139, 92, 246, 0.6))',
+                    filter: 'drop-shadow(0 10px 40px rgba(255, 107, 53, 0.6))',
                   }}
                 />
               </div>
@@ -871,7 +897,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
               <div style={{
                 padding: '0.75rem 1rem',
                 background: 'rgba(0, 0, 0, 0.5)',
-                borderBottom: '1px solid rgba(139, 92, 246, 0.3)',
+                borderBottom: `1px solid ${COLORS.background.cardBorder}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
@@ -881,8 +907,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    background: 'rgba(139, 92, 246, 0.2)',
-                    border: '2px solid rgba(139, 92, 246, 0.4)',
+                    background: COLORS.button.inactive,
+                    border: `2px solid ${COLORS.button.border}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -891,7 +917,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     🏠
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: '800', color: '#8B5CF6' }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: '800', color: COLORS.text.primary }}>
                       Home Assistant
                     </div>
                     <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>
@@ -924,7 +950,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 flex: 1,
                 overflow: 'auto',
                 padding: '1rem',
-                background: 'linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(15,15,35,0.98) 100%)',
+                background: COLORS.background.main,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1rem'
@@ -938,11 +964,11 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                       padding: '0.75rem 1rem',
                       borderRadius: '16px',
                       background: msg.role === 'user'
-                        ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
-                        : 'rgba(139, 92, 246, 0.1)',
+                        ? COLORS.button.active
+                        : COLORS.button.inactive,
                       border: msg.role === 'user'
                         ? 'none'
-                        : '1px solid rgba(139, 92, 246, 0.3)',
+                        : `1px solid ${COLORS.button.border}`,
                       color: 'white',
                       fontSize: '0.95rem',
                       lineHeight: 1.5
@@ -957,7 +983,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                       padding: '0.75rem 1rem',
                       borderRadius: '16px',
                       background: 'rgba(139, 92, 246, 0.1)',
-                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      border: `1px solid ${COLORS.button.border}`,
                       color: 'white',
                       fontSize: '0.95rem'
                     }}>
@@ -987,8 +1013,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                         }}
                         style={{
                           padding: '0.75rem',
-                          background: 'rgba(139, 92, 246, 0.05)',
-                          border: '1px solid rgba(139, 92, 246, 0.2)',
+                          background: 'rgba(255, 107, 53, 0.05)',
+                          border: `1px solid ${COLORS.background.cardBorder}`,
                           borderRadius: '10px',
                           color: 'rgba(255, 255, 255, 0.8)',
                           fontSize: '0.85rem',
@@ -1007,7 +1033,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
               <div style={{
                 padding: '1rem',
                 background: 'rgba(10,10,10,0.95)',
-                borderTop: '1px solid rgba(139, 92, 246, 0.3)',
+                borderTop: `1px solid ${COLORS.button.border}`,
                 display: 'flex',
                 gap: '0.75rem'
               }}>
@@ -1021,8 +1047,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                   style={{
                     flex: 1,
                     padding: '0.75rem 1rem',
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    background: COLORS.background.input,
+                    border: `1px solid ${COLORS.button.border}`,
                     borderRadius: '10px',
                     color: 'white',
                     fontSize: '0.95rem',
@@ -1036,7 +1062,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     padding: '0.75rem 1.5rem',
                     background: input.trim() && !loading
                       ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
-                      : 'rgba(139, 92, 246, 0.2)',
+                      : COLORS.button.inactive,
                     border: 'none',
                     borderRadius: '10px',
                     color: input.trim() && !loading ? 'white' : 'rgba(255, 255, 255, 0.3)',
@@ -1063,9 +1089,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         }}>
           {/* LEFT: Quick Controls & Scenes */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.03) 100%)',
+            background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.05) 0%, rgba(0, 78, 137, 0.03) 100%)',
             borderRadius: '20px',
-            border: '1px solid rgba(139, 92, 246, 0.2)',
+            border: `1px solid ${COLORS.background.cardBorder}`,
             padding: '2rem',
             display: 'flex',
             flexDirection: 'column',
@@ -1077,7 +1103,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 fontSize: '1.8rem',
                 fontWeight: '900',
                 marginBottom: '0.5rem',
-                background: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
+                background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.accent} 100%)`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}>
@@ -1112,7 +1138,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     padding: '0.75rem 1.25rem',
                     background: activeScene === scene.id
                       ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
-                      : 'rgba(139, 92, 246, 0.1)',
+                      : COLORS.button.inactive,
                     border: `1px solid ${activeScene === scene.id ? 'rgba(139, 92, 246, 0.5)' : 'rgba(139, 92, 246, 0.3)'}`,
                     borderRadius: '12px',
                     color: 'white',
@@ -1131,15 +1157,18 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
               ))}
             </div>
 
-            {/* Main Room - Living Room only on left */}
+            {/* Main Rooms - Living Room & Bedroom on left */}
             <div style={{
-              flex: 1
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
             }}>
-              {rooms.slice(0, 1).map((room) => (
+              {rooms.slice(0, 2).map((room) => (
                 <div
                   key={room.id}
                   style={{
-                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)',
+                    background: COLORS.background.card,
                     borderRadius: '16px',
                     padding: '1.25rem',
                     border: '1px solid rgba(139, 92, 246, 0.2)'
@@ -1155,7 +1184,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     <h3 style={{
                       fontSize: '1.1rem',
                       fontWeight: '700',
-                      color: '#8B5CF6',
+                      color: COLORS.text.primary,
                       margin: 0
                     }}>
                       {room.name}
@@ -1199,7 +1228,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                             style={{
                               padding: '0.4rem 0.85rem',
                               background: device.status
-                                ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                                ? `linear-gradient(135deg, ${COLORS.success} 0%, #008F65 100%)`
                                 : 'rgba(255, 255, 255, 0.1)',
                               border: `1px solid ${device.status ? '#10B981' : 'rgba(255, 255, 255, 0.2)'}`,
                               borderRadius: '7px',
@@ -1223,8 +1252,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                               style={{
                                 width: '26px',
                                 height: '26px',
-                                background: 'rgba(139, 92, 246, 0.2)',
-                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                background: COLORS.button.inactive,
+                                border: `1px solid ${COLORS.button.border}`,
                                 borderRadius: '5px',
                                 color: 'white',
                                 fontSize: '0.95rem',
@@ -1250,8 +1279,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                               style={{
                                 width: '26px',
                                 height: '26px',
-                                background: 'rgba(139, 92, 246, 0.2)',
-                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                background: COLORS.button.inactive,
+                                border: `1px solid ${COLORS.button.border}`,
                                 borderRadius: '5px',
                                 color: 'white',
                                 fontSize: '0.95rem',
@@ -1307,10 +1336,14 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           {/* CENTER: Mascot */}
           <div style={{
             height: '700px',
+            width: '500px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            position: 'relative'
+            position: 'relative',
+            background: 'rgba(255, 107, 53, 0.03)',
+            borderRadius: '20px',
+            border: `1px solid ${COLORS.background.cardBorder}`
           }}>
             <canvas
               ref={canvasRef}
@@ -1318,7 +1351,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
               style={{
                 width: '100%',
                 height: '100%',
-                filter: 'drop-shadow(0 20px 80px rgba(139, 92, 246, 0.6))',
+                filter: 'drop-shadow(0 20px 80px rgba(255, 107, 53, 0.6))',
               }}
             />
           </div>
@@ -1330,17 +1363,17 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
             gap: '1.5rem',
             overflow: 'auto'
           }}>
-            {/* Other Rooms */}
+            {/* Other Rooms - Kitchen & Front Door */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr',
               gap: '1rem'
             }}>
-              {rooms.slice(1).map((room) => (
+              {rooms.slice(2).map((room) => (
                 <div
                   key={room.id}
                   style={{
-                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)',
+                    background: COLORS.background.card,
                     borderRadius: '16px',
                     padding: '1.25rem',
                     border: '1px solid rgba(139, 92, 246, 0.2)'
@@ -1356,7 +1389,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     <h3 style={{
                       fontSize: '1.1rem',
                       fontWeight: '700',
-                      color: '#8B5CF6',
+                      color: COLORS.text.primary,
                       margin: 0
                     }}>
                       {room.name}
@@ -1400,7 +1433,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                             style={{
                               padding: '0.4rem 0.85rem',
                               background: device.status
-                                ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                                ? `linear-gradient(135deg, ${COLORS.success} 0%, #008F65 100%)`
                                 : 'rgba(255, 255, 255, 0.1)',
                               border: `1px solid ${device.status ? '#10B981' : 'rgba(255, 255, 255, 0.2)'}`,
                               borderRadius: '7px',
@@ -1424,8 +1457,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                               style={{
                                 width: '26px',
                                 height: '26px',
-                                background: 'rgba(139, 92, 246, 0.2)',
-                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                background: COLORS.button.inactive,
+                                border: `1px solid ${COLORS.button.border}`,
                                 borderRadius: '5px',
                                 color: 'white',
                                 fontSize: '0.95rem',
@@ -1451,8 +1484,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                               style={{
                                 width: '26px',
                                 height: '26px',
-                                background: 'rgba(139, 92, 246, 0.2)',
-                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                background: COLORS.button.inactive,
+                                border: `1px solid ${COLORS.button.border}`,
                                 borderRadius: '5px',
                                 color: 'white',
                                 fontSize: '0.95rem',
@@ -1475,17 +1508,18 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
             {/* Compact AI Chat */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.03) 100%)',
+              background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.05) 0%, rgba(0, 78, 137, 0.03) 100%)',
               borderRadius: '20px',
-              border: '1px solid rgba(139, 92, 246, 0.2)',
+              border: `1px solid ${COLORS.background.cardBorder}`,
               display: 'flex',
               flexDirection: 'column',
-              maxHeight: '400px'
+              height: '600px',
+              flex: 1
             }}>
             {/* Compact Chat Header */}
             <div style={{
               padding: '1rem 1.25rem',
-              borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
+              borderBottom: `1px solid ${COLORS.background.cardBorder}`,
               background: 'rgba(0, 0, 0, 0.2)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -1493,8 +1527,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                   width: '36px',
                   height: '36px',
                   borderRadius: '50%',
-                  background: 'rgba(139, 92, 246, 0.2)',
-                  border: '2px solid rgba(139, 92, 246, 0.4)',
+                  background: COLORS.button.inactive,
+                  border: `2px solid ${COLORS.button.border}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1503,7 +1537,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                   🏠
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '1rem', fontWeight: '800', color: '#8B5CF6' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: '800', color: COLORS.text.primary }}>
                     AI Assistant
                   </div>
                 </div>
@@ -1529,10 +1563,10 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     borderRadius: '16px',
                     background: msg.role === 'user'
                       ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
-                      : 'rgba(139, 92, 246, 0.1)',
+                      : COLORS.button.inactive,
                     border: msg.role === 'user'
                       ? 'none'
-                      : '1px solid rgba(139, 92, 246, 0.3)',
+                      : `1px solid ${COLORS.button.border}`,
                     color: 'white',
                     fontSize: '1rem',
                     lineHeight: 1.5
@@ -1547,7 +1581,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                     padding: '1rem 1.25rem',
                     borderRadius: '16px',
                     background: 'rgba(139, 92, 246, 0.1)',
-                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    border: `1px solid ${COLORS.button.border}`,
                     color: 'white',
                     fontSize: '1rem'
                   }}>
@@ -1577,7 +1611,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                   flex: 1,
                   padding: '0.75rem',
                   background: 'rgba(0, 0, 0, 0.5)',
-                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  border: `1px solid ${COLORS.button.border}`,
                   borderRadius: '8px',
                   color: 'white',
                   fontSize: '0.9rem',
