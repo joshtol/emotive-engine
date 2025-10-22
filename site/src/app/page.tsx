@@ -553,6 +553,59 @@ export default function HomePage() {
               </div>
             </Link>
 
+            {/* Smart Home */}
+            <Link
+              href="/use-cases/smart-home"
+              style={{
+                background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%)',
+                borderRadius: 'clamp(16px, 3vw, 20px)',
+                border: '1px solid rgba(139,92,246,0.2)',
+                padding: 'clamp(1.5rem, 4vw, 2rem)',
+                textDecoration: 'none',
+                color: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'clamp(0.75rem, 2vw, 1rem)',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)'
+                e.currentTarget.style.boxShadow = '0 20px 60px rgba(139,92,246,0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <div style={{ fontSize: 'clamp(2rem, 5vw, 2.5rem)' }}>🏠</div>
+              <div>
+                <h3 style={{
+                  fontFamily: 'var(--font-primary)',
+                  fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
+                  fontWeight: '700',
+                  marginBottom: '0.5rem',
+                  color: '#8B5CF6',
+                }}>
+                  Smart Home AI
+                </h3>
+                <p style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                  lineHeight: '1.6',
+                  opacity: 0.85,
+                }}>
+                  Context-aware home automation that learns your preferences. Emotional responses to lighting, climate, and security events.
+                </p>
+              </div>
+              <div style={{
+                fontSize: 'clamp(0.75rem, 1.5vw, 0.875rem)',
+                opacity: 0.6,
+                fontWeight: '600',
+              }}>
+                +35% user satisfaction
+              </div>
+            </Link>
+
             {/* Adaptive Learning */}
             <Link
               href="/use-cases/education"
