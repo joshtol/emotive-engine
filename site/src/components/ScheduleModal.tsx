@@ -26,7 +26,7 @@ const injectCalStyles = () => {
   document.head.appendChild(style)
 }
 
-export default function ScheduleModal({ isOpen, onClose, calLink = 'mailto:hello@emotive.io?subject=Technical%20Demo%20Request' }: ScheduleModalProps) {
+export default function ScheduleModal({ isOpen, onClose, calLink = 'mailto:hello@emotiveengine.com?subject=Technical%20Demo%20Request' }: ScheduleModalProps) {
   // Close on escape key and inject styles
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -206,7 +206,7 @@ export default function ScheduleModal({ isOpen, onClose, calLink = 'mailto:hello
               }}>
                 Prefer email?{' '}
                 <a
-                  href="mailto:hello@emotive.io"
+                  href="mailto:hello@emotiveengine.com"
                   style={{
                     color: '#8B5CF6',
                     textDecoration: 'none',
@@ -268,13 +268,13 @@ export default function ScheduleModal({ isOpen, onClose, calLink = 'mailto:hello
               }}>
                 Or email us directly at{' '}
                 <a
-                  href="mailto:hello@emotive.io"
+                  href="mailto:hello@emotiveengine.com"
                   style={{
                     color: '#8B5CF6',
                     textDecoration: 'none',
                   }}
                 >
-                  hello@emotive.io
+                  hello@emotiveengine.com
                 </a>
               </p>
             </div>

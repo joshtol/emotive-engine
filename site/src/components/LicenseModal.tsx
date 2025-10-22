@@ -106,7 +106,7 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA
   }
 
   const handleContactLegal = () => {
-    window.open('mailto:legal@emotiveengine.com?subject=License Inquiry', '_blank')
+    window.open('mailto:licensing@emotiveengine.com?subject=License Inquiry', '_blank')
   }
 
   if (!isOpen) return null
