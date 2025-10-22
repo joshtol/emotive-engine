@@ -294,7 +294,8 @@ export default function SmartHomePage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
-          willChange: 'opacity, z-index',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
         }}
       >
         <canvas
@@ -304,6 +305,8 @@ export default function SmartHomePage() {
             width: '100%',
             height: '100%',
             filter: 'drop-shadow(0 10px 40px rgba(139, 92, 246, 0.5))',
+            willChange: 'transform',
+            transform: 'translateZ(0)',
           }}
         />
       </div>
@@ -314,6 +317,8 @@ export default function SmartHomePage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
+        willChange: 'transform',
+        transform: 'translateZ(0)',
       }}>
         {/* Hero Section - Apple Style */}
         <section style={{
