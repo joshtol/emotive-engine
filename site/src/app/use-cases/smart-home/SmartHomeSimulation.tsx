@@ -272,9 +272,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           }
         }, 1500)
       } else if (device.type === 'camera') {
-        // Doorbell cam: suspicious emotion + recording effects
+        // Doorbell cam: recording emotion + pulse effects
         if (mascotRef.current.setEmotion) {
-          mascotRef.current.setEmotion('suspicious', 0.8)
+          mascotRef.current.setEmotion('recording', 0.8)
         }
         if (mascotRef.current.express) {
           await mascotRef.current.express('pulse', { intensity: 0.6, duration: 800 })
