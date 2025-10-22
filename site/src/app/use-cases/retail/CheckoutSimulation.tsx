@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import PremiumAIAssistant from '@/components/PremiumAIAssistant'
 
 interface Product {
   id: string
@@ -25,6 +23,11 @@ const DEMO_PRODUCTS: Product[] = [
   { id: '5', name: 'Orange Juice', price: 4.29, barcode: '56789', image: '🧃' },
 ]
 
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export default function CheckoutSimulation({ onStepChange, openAIChat }: CheckoutSimulationProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [cart, setCart] = useState<Product[]>([])
@@ -39,10 +42,19 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
-  // Expose the open AI chat function to parent
+  // Chat state
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      content: "Hi! I'm your checkout assistant. I can help you scan items, apply coupons, answer questions, and make your shopping smooth."
+    }
+  ])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (openAIChat) {
-      // Pass the function to open the chat
       (window as any).__openRetailAIChat = () => setShowAIHelp(true)
     }
     return () => {
@@ -50,13 +62,10 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
     }
   }, [openAIChat])
 
-  // Detect client-side mounting
   useEffect(() => {
     setIsClient(true)
-    console.log('CheckoutSimulation mounted on client')
   }, [])
 
-  // Detect mobile
   useEffect(() => {
     setIsMobile(window.innerWidth < 768)
     const handleResize = () => setIsMobile(window.innerWidth < 768)
@@ -64,7 +73,14 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Initialize mascot
+  // Auto-scroll disabled - let user control viewport
+  // useEffect(() => {
+  //   if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+  //     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  //   }
+  // }, [messages])
+
+  // Initialize mascot - ONCE
   useEffect(() => {
     let cancelled = false
 
@@ -73,12 +89,12 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
 
       try {
         let attempts = 0
-        while (!(window as any).EmotiveMascot && attempts < 50) {
+        while (!(window as any).EmotiveMascotLean && !(window as any).EmotiveMascot && attempts < 50) {
           await new Promise(resolve => setTimeout(resolve, 100))
           attempts++
         }
 
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean || (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
         if (!EmotiveMascot) return
 
         const canvas = canvasRef.current
@@ -97,7 +113,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
           enableGazeTracking: false,
           enableIdleBehaviors: true,
           targetFPS: isMobile ? 30 : 60,
-          maxParticles: isMobile ? 50 : 100,
+          maxParticles: isMobile ? 40 : 100,
         })
 
         await mascot.init(canvas)
@@ -105,24 +121,23 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
 
         mascot.setPosition(0, 0, 0)
         mascot.setScale({
-          core: isMobile ? 0.7 : 1.2,
-          particles: isMobile ? 1.0 : 1.8
+          core: isMobile ? 1.3 : 1.2,
+          particles: isMobile ? 1.5 : 1.8
         })
 
         mascot.setBackdrop({
           enabled: true,
-          radius: 3.0,
-          intensity: 0.8,
+          radius: 3.5,
+          intensity: 0.9,
           blendMode: 'normal',
           falloff: 'smooth',
           edgeSoftness: 0.95,
-          coreTransparency: 0.3,
+          coreTransparency: 0.2,
           responsive: true
         })
 
         mascotRef.current = mascot
 
-        // Welcome gesture
         setTimeout(() => {
           mascot.express?.('wave')
         }, 500)
@@ -143,38 +158,25 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
     }
   }, [isMobile])
 
-  // Handle step changes - DISABLED to prevent mascot jumping around
-  useEffect(() => {
-    // Mascot now only responds to AI chat, not checkout steps
-    if (onStepChange) {
-      onStepChange(currentStep, 'neutral')
-    }
-  }, [currentStep, onStepChange])
-
   const handleScanProduct = async () => {
     setScanning(true)
     setScanError(false)
 
-    // Random product
     const randomProduct = DEMO_PRODUCTS[Math.floor(Math.random() * DEMO_PRODUCTS.length)]
     setCurrentProduct(randomProduct)
 
-    // Mascot shakes while scanning
     if (mascotRef.current && mascotRef.current.express) {
       mascotRef.current.express('shake', { intensity: 0.5, duration: 800 })
     }
 
-    // 15% chance of error for demo purposes
     const willError = Math.random() < 0.15
 
     await new Promise(resolve => setTimeout(resolve, 1200))
 
     if (willError) {
-      // Error state - surprised with subdued undertone
       setScanError(true)
       setScanning(false)
 
-      // Change to surprised emotion with subdued undertone
       if (mascotRef.current) {
         if (mascotRef.current.setEmotion) {
           mascotRef.current.setEmotion('surprise', 0.7)
@@ -182,17 +184,12 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
         if (mascotRef.current.updateUndertone) {
           mascotRef.current.updateUndertone('subdued')
         }
-        if (mascotRef.current.express) {
-          mascotRef.current.express('shake', { intensity: 0.5, duration: 600 })
-        }
       }
     } else {
-      // Success state - subtle nod, stay neutral
       setCart(prev => [...prev, randomProduct])
       setScanning(false)
       setCurrentProduct(null)
 
-      // Quick nod on success
       if (mascotRef.current && mascotRef.current.express) {
         mascotRef.current.express('nod', { intensity: 0.4, duration: 500 })
       }
@@ -203,7 +200,6 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
     setScanError(false)
     setCurrentProduct(null)
 
-    // Return to neutral emotion and clear undertone
     if (mascotRef.current) {
       if (mascotRef.current.setEmotion) {
         mascotRef.current.setEmotion('neutral', 0.5)
@@ -215,21 +211,19 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
   }
 
   const handleCheckout = async () => {
-    // Mascot floats when proceeding to checkout
     if (mascotRef.current && mascotRef.current.express) {
       mascotRef.current.express('float', { intensity: 0.6, duration: 1500 })
     }
 
-    setCurrentStep(2) // Cart review
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    setCurrentStep(2)
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-    setCurrentStep(3) // Payment
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    setCurrentStep(3)
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-    setCurrentStep(4) // Processing
+    setCurrentStep(4)
     setProcessing(true)
 
-    // Mascot performs processing animation - use semantic performance for sophisticated choreography
     if (mascotRef.current && mascotRef.current.perform) {
       await mascotRef.current.perform('processing', {
         context: {
@@ -240,13 +234,12 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
       })
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2500))
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
-    setCurrentStep(5) // Complete
+    setCurrentStep(5)
     setProcessing(false)
     setCompleted(true)
 
-    // Mascot celebrates completion with euphoria and sun shape!
     await handleLLMResponse({
       message: '',
       emotion: 'triumph',
@@ -257,14 +250,12 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
       gesture: 'sparkle'
     })
 
-    // Add glow effect after morphing to sun
     setTimeout(() => {
       if (mascotRef.current && mascotRef.current.express) {
         mascotRef.current.express('glow', { intensity: 0.8, duration: 2000 })
       }
     }, 500)
 
-    // Return to neutral after celebrating
     setTimeout(async () => {
       if (mascotRef.current) {
         if (mascotRef.current.setEmotion) {
@@ -291,27 +282,18 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
   }
 
   const handleLLMResponse = async (response: any) => {
-    console.log('handleLLMResponse called with:', response)
-
-    if (!mascotRef.current) {
-      console.warn('Mascot not initialized yet')
-      return
-    }
+    if (!mascotRef.current) return
 
     if (mascotRef.current.handleLLMResponse) {
-      console.log('Using new handleLLMResponse API')
       try {
         await mascotRef.current.handleLLMResponse(response)
       } catch (error) {
         console.error('Error handling LLM response:', error)
-        // Fallback to manual control
         if (mascotRef.current.setEmotion) {
           mascotRef.current.setEmotion(response.emotion, 0.8)
         }
       }
     } else {
-      console.warn('handleLLMResponse not available, using fallback')
-      // Fallback to manual choreography
       if (mascotRef.current.setEmotion) {
         mascotRef.current.setEmotion(response.emotion, 0.8)
       }
@@ -328,722 +310,1045 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
     }
   }
 
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  const handleSendMessage = async () => {
+    if (!input.trim() || loading) return
 
-  // Help button to be rendered in status bar
-  const helpButton = (
-    <button
-      onClick={() => setShowAIHelp(!showAIHelp)}
-      style={{
-        padding: '0.6rem 1.25rem',
-        background: showAIHelp
-          ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-          : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-        borderRadius: '10px',
-        fontSize: '0.9rem',
-        fontWeight: '700',
-        color: 'white',
-        border: showAIHelp
-          ? '1px solid rgba(239, 68, 68, 0.3)'
-          : '1px solid rgba(16, 185, 129, 0.3)',
-        boxShadow: showAIHelp
-          ? '0 2px 12px rgba(239, 68, 68, 0.3)'
-          : '0 2px 12px rgba(16, 185, 129, 0.3)',
-        letterSpacing: '0.5px',
-        textTransform: 'uppercase',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-1px)'
-        e.currentTarget.style.boxShadow = showAIHelp
-          ? '0 4px 16px rgba(239, 68, 68, 0.4)'
-          : '0 4px 16px rgba(16, 185, 129, 0.4)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.boxShadow = showAIHelp
-          ? '0 2px 12px rgba(239, 68, 68, 0.3)'
-          : '0 2px 12px rgba(16, 185, 129, 0.3)'
-      }}
-    >
-      <span style={{ fontSize: '1rem' }}>{showAIHelp ? '✕' : '💬'}</span>
-      <span>{showAIHelp ? 'Close Chat' : 'Get Help'}</span>
-    </button>
-  )
+    const userMessage = input.trim()
+    setInput('')
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+    setLoading(true)
+
+    // Mascot listens
+    if (mascotRef.current) {
+      if (mascotRef.current.setEmotion) {
+        mascotRef.current.setEmotion('neutral', 0.6)
+      }
+      if (mascotRef.current.express) {
+        mascotRef.current.express('settle', { intensity: 0.3, duration: 500 })
+      }
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 800))
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          context: 'retail-checkout'
+        }),
+      })
+
+      if (!res.ok) throw new Error('Failed to get response')
+
+      const data = await res.json()
+
+      setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
+
+      // Trigger mascot reaction
+      await handleLLMResponse({
+        message: data.message,
+        emotion: data.emotion || 'joy',
+        sentiment: data.sentiment || 'positive',
+        action: data.action || 'none',
+        frustrationLevel: data.frustrationLevel || 0,
+        shape: data.shape,
+        gesture: data.gesture
+      })
+
+    } catch (error) {
+      console.error('Chat error:', error)
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "I'm having trouble connecting right now. Please try again!"
+      }])
+
+      // Show error emotion
+      if (mascotRef.current && mascotRef.current.setEmotion) {
+        mascotRef.current.setEmotion('surprise', 0.6)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const total = cart.reduce((sum, item) => sum + item.price, 0)
+
+  const examplePrompts = isMobile ? [
+    "How do I scan an item?",
+    "Help with payment",
+    "Scanner not working"
+  ] : [
+    "How do I scan an item?",
+    "Help with payment",
+    "Do you accept coupons?",
+    "Scanner not working"
+  ]
 
   return (
     <div style={{
       position: 'relative',
-      minHeight: '800px',
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-      gap: isMobile ? '2rem' : '3rem',
-      alignItems: 'center',
-      padding: '2rem',
+      height: '100%',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
       overflow: 'hidden'
     }}>
-      {/* Mascot - Front and Center */}
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        height: isMobile ? '400px' : '600px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        order: isMobile ? 1 : 0,
-        transform: showAIHelp && !isMobile ? 'translateX(-10%)' : 'translateX(0)',
-        transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-      }}>
-        <canvas
-          ref={canvasRef}
-          id="checkout-mascot"
-          style={{
-            width: '100%',
-            height: '100%',
-            filter: 'drop-shadow(0 20px 80px rgba(0, 217, 255, 0.6))',
-          }}
-        />
-      </div>
+      {isMobile ? (
+        <>
+          {!showAIHelp ? (
+            /* CHECKOUT VIEW */
+            <>
+              <div style={{
+                height: '22vh',
+                minHeight: '140px',
+                maxHeight: '180px',
+                width: '100%',
+                position: 'relative',
+                background: 'rgba(0, 0, 0, 0.3)',
+                borderBottom: '1px solid rgba(0, 217, 255, 0.3)'
+              }}>
+                <canvas
+                  ref={canvasRef}
+                  id="checkout-mascot"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    filter: 'drop-shadow(0 10px 40px rgba(0, 217, 255, 0.6))',
+                  }}
+                />
+              </div>
 
-      {/* Interface Card */}
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        order: isMobile ? 2 : 1,
-      }}>
-        {/* Glass Card */}
+              <div style={{
+                flex: 1,
+                overflow: 'auto',
+                padding: '0.75rem',
+                background: 'linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(15,15,35,0.98) 100%)'
+              }}>
+                {currentStep === 0 && (
+                  <div style={{ textAlign: 'center' }}>
+                    <h3 style={{
+                      fontSize: '1.5rem',
+                      marginBottom: '0.5rem',
+                      background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      fontWeight: '800'
+                    }}>
+                      Welcome to SmartMart
+                    </h3>
+                    <p style={{ fontSize: '0.9rem', opacity: 0.75, marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                      Watch the mascot respond emotionally to your checkout
+                    </p>
+                    <button
+                      onClick={() => setCurrentStep(1)}
+                      style={{
+                        width: '100%',
+                        padding: '1rem',
+                        fontSize: '1rem',
+                        fontWeight: '700',
+                        background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
+                        color: '#0F1223',
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}
+                    >
+                      Start Shopping
+                    </button>
+                  </div>
+                )}
+
+                {currentStep === 1 && (
+                  <div>
+                    <h3 style={{
+                      fontSize: '1.1rem',
+                      marginBottom: '0.75rem',
+                      background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      fontWeight: '800',
+                      textAlign: 'center'
+                    }}>
+                      Scan Items
+                    </h3>
+
+                    <div style={{
+                      padding: '1rem',
+                      background: 'rgba(0, 0, 0, 0.4)',
+                      borderRadius: '12px',
+                      border: `2px dashed ${scanning ? 'rgba(0, 217, 255, 0.6)' : 'rgba(255, 255, 255, 0.15)'}`,
+                      marginBottom: '0.75rem',
+                      textAlign: 'center',
+                      minHeight: '100px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {scanning && currentProduct && (
+                        <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
+                          {currentProduct.image}
+                        </div>
+                      )}
+
+                      {scanError && currentProduct && (
+                        <div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#EF4444', marginBottom: '0.5rem' }}>
+                            Scanning Error
+                          </div>
+                          <p style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: '1rem' }}>
+                            Mascot shows empathy! Try again.
+                          </p>
+                          <button
+                            onClick={handleRetry}
+                            style={{
+                              padding: '0.75rem 1.5rem',
+                              background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
+                              color: '#0F1223',
+                              border: 'none',
+                              borderRadius: '10px',
+                              fontSize: '0.9rem',
+                              fontWeight: '700',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Try Again
+                          </button>
+                        </div>
+                      )}
+
+                      {!scanning && !scanError && (
+                        <>
+                          <div style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '1rem' }}>
+                            Watch mascot react
+                          </div>
+                          <button
+                            onClick={handleScanProduct}
+                            disabled={scanning}
+                            style={{
+                              padding: '1rem 2rem',
+                              fontSize: '1rem',
+                              fontWeight: '700',
+                              background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
+                              color: '#0F1223',
+                              border: 'none',
+                              borderRadius: '12px',
+                              cursor: 'pointer',
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            Scan Item
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {cart.length > 0 && (
+                      <div style={{
+                        padding: '0.75rem',
+                        background: 'rgba(0, 217, 255, 0.05)',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(0, 217, 255, 0.2)',
+                        marginBottom: '0.75rem'
+                      }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.75rem', color: '#00D9FF' }}>
+                          CART ({cart.length})
+                        </div>
+                        {cart.map((item, i) => (
+                          <div key={i} style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '0.5rem',
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            borderRadius: '8px',
+                            marginBottom: '0.5rem',
+                            fontSize: '0.85rem'
+                          }}>
+                            <span>{item.image} {item.name}</span>
+                            <span style={{ fontWeight: '700', color: '#10B981' }}>${item.price.toFixed(2)}</span>
+                          </div>
+                        ))}
+                        <div style={{
+                          marginTop: '0.75rem',
+                          paddingTop: '0.75rem',
+                          borderTop: '1px solid rgba(0, 217, 255, 0.2)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          fontSize: '1.1rem',
+                          fontWeight: '800'
+                        }}>
+                          <span style={{ color: '#00D9FF' }}>Total:</span>
+                          <span style={{ color: '#10B981' }}>${total.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {cart.length > 0 && (
+                      <button
+                        onClick={handleCheckout}
+                        style={{
+                          width: '100%',
+                          padding: '0.85rem',
+                          fontSize: '0.95rem',
+                          fontWeight: '700',
+                          background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          textTransform: 'uppercase',
+                          marginBottom: '0.65rem'
+                        }}
+                      >
+                        Checkout (${total.toFixed(2)})
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setShowAIHelp(true)}
+                      style={{
+                        width: '100%',
+                        padding: '0.85rem',
+                        fontSize: '0.9rem',
+                        fontWeight: '700',
+                        background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase'
+                      }}
+                    >
+                      💬 Get AI Help
+                    </button>
+                  </div>
+                )}
+
+                {currentStep >= 2 && currentStep <= 4 && (
+                  <div style={{ textAlign: 'center' }}>
+                    <h3 style={{
+                      fontSize: '1.5rem',
+                      marginBottom: '1rem',
+                      background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      fontWeight: '800'
+                    }}>
+                      {currentStep === 2 && 'Reviewing Order'}
+                      {currentStep === 3 && 'Secure Payment'}
+                      {currentStep === 4 && 'Processing...'}
+                    </h3>
+                    <p style={{ fontSize: '1rem', opacity: 0.75, lineHeight: 1.6 }}>
+                      {currentStep === 2 && `${cart.length} items • $${total.toFixed(2)}`}
+                      {currentStep === 3 && 'Encrypted & secure'}
+                      {currentStep === 4 && 'Watch mascot respond...'}
+                    </p>
+                  </div>
+                )}
+
+                {currentStep === 5 && (
+                  <div style={{ textAlign: 'center' }}>
+                    <h3 style={{
+                      fontSize: '2rem',
+                      marginBottom: '1rem',
+                      background: 'linear-gradient(135deg, #10B981 0%, #00D9FF 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      fontWeight: '900'
+                    }}>
+                      Order Complete!
+                    </h3>
+                    <p style={{ fontSize: '1rem', opacity: 0.85, marginBottom: '0.5rem' }}>
+                      Mascot celebrates your success!
+                    </p>
+                    <p style={{ fontSize: '0.95rem', opacity: 0.75, marginBottom: '2rem' }}>
+                      Total: <span style={{ color: '#10B981', fontWeight: '700' }}>${total.toFixed(2)}</span>
+                    </p>
+                    <button
+                      onClick={handleReset}
+                      style={{
+                        width: '100%',
+                        padding: '1rem',
+                        fontSize: '1rem',
+                        fontWeight: '700',
+                        background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
+                        color: '#0F1223',
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase'
+                      }}
+                    >
+                      New Order
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            /* AI CHAT VIEW - SAME MASCOT! */
+            <>
+              {/* Mascot - SAME CANVAS */}
+              <div style={{
+                height: '22vh',
+                minHeight: '140px',
+                maxHeight: '180px',
+                width: '100%',
+                position: 'relative',
+                background: 'rgba(0, 0, 0, 0.3)',
+                borderBottom: '1px solid rgba(0, 217, 255, 0.3)'
+              }}>
+                <canvas
+                  ref={canvasRef}
+                  id="checkout-mascot"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    filter: 'drop-shadow(0 10px 40px rgba(0, 217, 255, 0.6))',
+                  }}
+                />
+              </div>
+
+              {/* Header with close */}
+              <div style={{
+                padding: '0.75rem 1rem',
+                background: 'rgba(0, 0, 0, 0.5)',
+                borderBottom: '1px solid rgba(0, 217, 255, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(0, 217, 255, 0.2)',
+                    border: '2px solid rgba(0, 217, 255, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1rem'
+                  }}>
+                    💬
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: '800', color: '#00D9FF' }}>
+                      Checkout Assistant
+                    </div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                      Claude Haiku 4.5
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAIHelp(false)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Chat messages */}
+              <div style={{
+                flex: 1,
+                overflow: 'auto',
+                padding: '1rem',
+                background: 'linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(15,15,35,0.98) 100%)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem'
+              }}>
+                {messages.map((msg, i) => (
+                  <div key={i} style={{
+                    alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                    maxWidth: '85%'
+                  }}>
+                    <div style={{
+                      padding: '0.75rem 1rem',
+                      borderRadius: '16px',
+                      background: msg.role === 'user'
+                        ? 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)'
+                        : 'rgba(0, 217, 255, 0.1)',
+                      border: msg.role === 'user'
+                        ? 'none'
+                        : '1px solid rgba(0, 217, 255, 0.3)',
+                      color: msg.role === 'user' ? '#0F1223' : 'white',
+                      fontSize: '0.95rem',
+                      lineHeight: 1.5
+                    }}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                {loading && (
+                  <div style={{ alignSelf: 'flex-start', maxWidth: '85%' }}>
+                    <div style={{
+                      padding: '0.75rem 1rem',
+                      borderRadius: '16px',
+                      background: 'rgba(0, 217, 255, 0.1)',
+                      border: '1px solid rgba(0, 217, 255, 0.3)',
+                      color: 'white',
+                      fontSize: '0.95rem'
+                    }}>
+                      Typing...
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Example prompts */}
+              {messages.length === 1 && (
+                <div style={{
+                  padding: '0.5rem 1rem 1rem 1rem',
+                  background: 'rgba(10,10,10,0.95)',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+                }}>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.5rem' }}>
+                    SUGGESTED QUESTIONS
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {examplePrompts.map((prompt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setInput(prompt)
+                        }}
+                        style={{
+                          padding: '0.75rem',
+                          background: 'rgba(0, 217, 255, 0.05)',
+                          border: '1px solid rgba(0, 217, 255, 0.2)',
+                          borderRadius: '10px',
+                          color: 'rgba(255, 255, 255, 0.8)',
+                          fontSize: '0.85rem',
+                          textAlign: 'left',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Input */}
+              <div style={{
+                padding: '1rem',
+                background: 'rgba(10,10,10,0.95)',
+                borderTop: '1px solid rgba(0, 217, 255, 0.3)',
+                display: 'flex',
+                gap: '0.75rem'
+              }}>
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Type your message..."
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    border: '1px solid rgba(0, 217, 255, 0.3)',
+                    borderRadius: '10px',
+                    color: 'white',
+                    fontSize: '0.95rem',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || loading}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: input.trim() && !loading
+                      ? 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)'
+                      : 'rgba(0, 217, 255, 0.2)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: input.trim() && !loading ? '#0F1223' : 'rgba(255, 255, 255, 0.3)',
+                    fontSize: '0.9rem',
+                    fontWeight: '700',
+                    cursor: input.trim() && !loading ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  Send
+                </button>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        /* DESKTOP - Three column layout */
         <div style={{
-          background: 'linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(15, 18, 35, 0.98) 100%)',
-          backdropFilter: 'blur(60px)',
-          WebkitBackdropFilter: 'blur(60px)',
-          borderRadius: '32px',
-          padding: 'clamp(2rem, 4vw, 3rem)',
-          border: '2px solid rgba(0, 217, 255, 0.2)',
-          boxShadow: `
-            0 30px 90px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(0, 217, 255, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05)
-          `,
-          position: 'relative',
-          overflow: 'hidden'
+          display: 'grid',
+          gridTemplateColumns: '1fr 500px 1fr',
+          gap: '2rem',
+          padding: '2rem',
+          minHeight: '700px',
+          alignItems: 'stretch'
         }}>
-          {/* Top accent line */}
+          {/* LEFT: Checkout Interface */}
           <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '2px',
-            background: 'linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.8), transparent)'
-          }} />
-
-          {/* Ambient glow */}
-          <div style={{
-            position: 'absolute',
-            top: '-50%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '500px',
-            height: '500px',
-            background: 'radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, transparent 70%)',
-            pointerEvents: 'none',
-            filter: 'blur(40px)',
-          }} />
-
-          {/* Progress indicator */}
-          <div style={{
-            marginBottom: '2.5rem',
+            background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.05) 0%, rgba(16, 185, 129, 0.03) 100%)',
+            borderRadius: '20px',
+            border: '1px solid rgba(0, 217, 255, 0.2)',
+            padding: '2rem',
             display: 'flex',
-            gap: '0.5rem',
+            flexDirection: 'column',
+            gap: '1.5rem'
+          }}>
+            {currentStep === 0 && (
+              <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h3 style={{
+                  fontSize: '2rem',
+                  marginBottom: '1rem',
+                  background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: '800'
+                }}>
+                  Welcome to SmartMart
+                </h3>
+                <p style={{ fontSize: '1.1rem', opacity: 0.75, marginBottom: '2rem', lineHeight: 1.6 }}>
+                  Watch the mascot respond emotionally to your checkout experience
+                </p>
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  style={{
+                    padding: '1.25rem 2.5rem',
+                    fontSize: '1.1rem',
+                    fontWeight: '700',
+                    background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
+                    color: '#0F1223',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    boxShadow: '0 4px 20px rgba(0, 217, 255, 0.3)'
+                  }}
+                >
+                  Start Shopping
+                </button>
+              </div>
+            )}
+
+            {currentStep === 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1 }}>
+                <h3 style={{
+                  fontSize: '1.5rem',
+                  marginBottom: '0.5rem',
+                  background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: '800',
+                  textAlign: 'center'
+                }}>
+                  Scan Items
+                </h3>
+
+                <div style={{
+                  padding: '2rem',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  borderRadius: '16px',
+                  border: `2px dashed ${scanning ? 'rgba(0, 217, 255, 0.6)' : 'rgba(255, 255, 255, 0.15)'}`,
+                  minHeight: '180px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '1rem'
+                }}>
+                  {scanning && currentProduct && (
+                    <div style={{ fontSize: '4rem', marginBottom: '0.5rem' }}>
+                      {currentProduct.image}
+                    </div>
+                  )}
+
+                  {scanError && currentProduct && (
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#EF4444', marginBottom: '0.75rem' }}>
+                        Scanning Error
+                      </div>
+                      <p style={{ fontSize: '1rem', opacity: 0.8, marginBottom: '1.5rem' }}>
+                        Mascot shows empathy! Try scanning again.
+                      </p>
+                      <button
+                        onClick={handleRetry}
+                        style={{
+                          padding: '1rem 2rem',
+                          background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
+                          color: '#0F1223',
+                          border: 'none',
+                          borderRadius: '10px',
+                          fontSize: '1rem',
+                          fontWeight: '700',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  )}
+
+                  {!scanning && !scanError && (
+                    <>
+                      <div style={{ fontSize: '1rem', opacity: 0.7, marginBottom: '1rem' }}>
+                        Watch the mascot react to each scan
+                      </div>
+                      <button
+                        onClick={handleScanProduct}
+                        disabled={scanning}
+                        style={{
+                          padding: '1.25rem 2.5rem',
+                          fontSize: '1.1rem',
+                          fontWeight: '700',
+                          background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
+                          color: '#0F1223',
+                          border: 'none',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          textTransform: 'uppercase',
+                          boxShadow: '0 4px 20px rgba(0, 217, 255, 0.3)'
+                        }}
+                      >
+                        Scan Item
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {cart.length > 0 && (
+                  <div style={{
+                    padding: '1.5rem',
+                    background: 'rgba(0, 217, 255, 0.05)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(0, 217, 255, 0.2)',
+                    flex: 1
+                  }}>
+                    <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', color: '#00D9FF' }}>
+                      CART ({cart.length} items)
+                    </div>
+                    {cart.map((item, i) => (
+                      <div key={i} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem',
+                        background: 'rgba(0, 0, 0, 0.3)',
+                        borderRadius: '8px',
+                        marginBottom: '0.5rem',
+                        fontSize: '1rem'
+                      }}>
+                        <span>{item.image} {item.name}</span>
+                        <span style={{ fontWeight: '700', color: '#10B981' }}>${item.price.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div style={{
+                      marginTop: '1rem',
+                      paddingTop: '1rem',
+                      borderTop: '1px solid rgba(0, 217, 255, 0.2)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: '1.3rem',
+                      fontWeight: '800'
+                    }}>
+                      <span style={{ color: '#00D9FF' }}>Total:</span>
+                      <span style={{ color: '#10B981' }}>${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {cart.length > 0 && (
+                  <button
+                    onClick={handleCheckout}
+                    style={{
+                      padding: '1.25rem',
+                      fontSize: '1.1rem',
+                      fontWeight: '700',
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      textTransform: 'uppercase',
+                      boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)'
+                    }}
+                  >
+                    Checkout (${total.toFixed(2)})
+                  </button>
+                )}
+              </div>
+            )}
+
+            {currentStep >= 2 && currentStep <= 4 && (
+              <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h3 style={{
+                  fontSize: '2rem',
+                  marginBottom: '1rem',
+                  background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: '800'
+                }}>
+                  {currentStep === 2 && 'Reviewing Order'}
+                  {currentStep === 3 && 'Secure Payment'}
+                  {currentStep === 4 && 'Processing...'}
+                </h3>
+                <p style={{ fontSize: '1.2rem', opacity: 0.75, lineHeight: 1.6 }}>
+                  {currentStep === 2 && `${cart.length} items • $${total.toFixed(2)}`}
+                  {currentStep === 3 && 'Encrypted & secure payment processing'}
+                  {currentStep === 4 && 'Watch the mascot respond...'}
+                </p>
+              </div>
+            )}
+
+            {currentStep === 5 && (
+              <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h3 style={{
+                  fontSize: '2.5rem',
+                  marginBottom: '1rem',
+                  background: 'linear-gradient(135deg, #10B981 0%, #00D9FF 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: '900'
+                }}>
+                  Order Complete!
+                </h3>
+                <p style={{ fontSize: '1.2rem', opacity: 0.85, marginBottom: '0.75rem' }}>
+                  Mascot celebrates your success!
+                </p>
+                <p style={{ fontSize: '1.1rem', opacity: 0.75, marginBottom: '2rem' }}>
+                  Total: <span style={{ color: '#10B981', fontWeight: '700' }}>${total.toFixed(2)}</span>
+                </p>
+                <button
+                  onClick={handleReset}
+                  style={{
+                    padding: '1.25rem 2.5rem',
+                    fontSize: '1.1rem',
+                    fontWeight: '700',
+                    background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
+                    color: '#0F1223',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                    boxShadow: '0 4px 20px rgba(0, 217, 255, 0.3)'
+                  }}
+                >
+                  New Order
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* CENTER: Mascot */}
+          <div style={{
+            height: '700px',
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
             position: 'relative'
           }}>
-            {['Start', 'Scan', 'Review', 'Pay', 'Process', 'Done'].map((label, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  maxWidth: '100px',
-                  textAlign: 'center'
-                }}
-              >
-                <div style={{
-                  height: '3px',
-                  background: i <= currentStep
-                    ? 'linear-gradient(90deg, #00D9FF, #10B981)'
-                    : 'rgba(255, 255, 255, 0.08)',
-                  borderRadius: '3px',
-                  marginBottom: '0.6rem',
-                  transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: i <= currentStep ? '0 0 12px rgba(0, 217, 255, 0.5)' : 'none'
-                }} />
-                <div style={{
-                  fontSize: '0.75rem',
-                  opacity: i <= currentStep ? 1 : 0.35,
-                  fontWeight: i === currentStep ? '700' : '500',
-                  color: i <= currentStep ? '#00D9FF' : 'rgba(255, 255, 255, 0.4)',
-                  transition: 'all 0.3s ease',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase'
-                }}>
-                  {label}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Main content */}
-          <div style={{ position: 'relative' }}>
-          {currentStep === 0 && (
-            <div style={{ textAlign: 'center' }}>
-              <h3 style={{
-                fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)',
-                marginBottom: '1rem',
-                background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontWeight: '800',
-                letterSpacing: '-0.02em'
-              }}>
-                Welcome to SmartMart
-              </h3>
-              <p style={{
-                fontSize: '1.15rem',
-                opacity: 0.75,
-                marginBottom: '2.5rem',
-                lineHeight: 1.7,
-                color: 'rgba(255, 255, 255, 0.7)'
-              }}>
-                Watch how the mascot responds with emotion to every step of your checkout!
-              </p>
-              <button
-                onClick={() => setCurrentStep(1)}
-                style={{
-                  padding: '1.4rem 3rem',
-                  fontSize: '1.15rem',
-                  fontWeight: '700',
-                  background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
-                  color: 'rgba(15, 18, 35, 1)',
-                  border: '2px solid rgba(0, 217, 255, 0.3)',
-                  borderRadius: '16px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 8px 32px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)'
-                  e.currentTarget.style.boxShadow = '0 12px 48px rgba(0, 217, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                }}
-              >
-                Start Shopping
-              </button>
-            </div>
-          )}
-
-          {currentStep === 1 && (
-            <div>
-              <h3 style={{
-                fontSize: 'clamp(1.6rem, 3vw, 2.2rem)',
-                marginBottom: '2rem',
-                background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontWeight: '800',
-                textAlign: 'center',
-                letterSpacing: '-0.01em'
-              }}>
-                Scan Your Items
-              </h3>
-
-              {/* Scanner area */}
-              <div style={{
-                padding: '2.5rem',
-                background: 'rgba(0, 0, 0, 0.4)',
-                borderRadius: '20px',
-                border: `2px dashed ${scanning ? 'rgba(0, 217, 255, 0.6)' : 'rgba(255, 255, 255, 0.15)'}`,
-                marginBottom: '1.5rem',
-                textAlign: 'center',
-                minHeight: '220px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: scanning ? '0 0 40px rgba(0, 217, 255, 0.3), inset 0 0 40px rgba(0, 217, 255, 0.1)' : 'none'
-              }}>
-                {scanning && currentProduct && (
-                  <div style={{
-                    fontSize: '4rem',
-                    marginBottom: '1rem',
-                    animation: 'scanPulse 1s ease-in-out infinite'
-                  }}>
-                    {currentProduct.image}
-                  </div>
-                )}
-
-                {scanError && currentProduct && (
-                  <div style={{
-                    animation: 'slideInUp 0.3s ease-out'
-                  }}>
-                    <div style={{
-                      fontSize: '1.3rem',
-                      fontWeight: '700',
-                      color: '#EF4444',
-                      marginBottom: '0.75rem'
-                    }}>
-                      Scanning Error
-                    </div>
-                    <div style={{
-                      fontSize: '1rem',
-                      opacity: 0.8,
-                      marginBottom: '1rem',
-                      lineHeight: 1.5,
-                      color: 'rgba(255, 255, 255, 0.7)'
-                    }}>
-                      The mascot is showing empathy! Try holding the barcode closer to the scanner.
-                    </div>
-                    <button
-                      onClick={handleRetry}
-                      style={{
-                        padding: '1rem 2rem',
-                        background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
-                        color: 'rgba(15, 18, 35, 1)',
-                        border: '2px solid rgba(0, 217, 255, 0.3)',
-                        borderRadius: '12px',
-                        fontSize: '1rem',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: '0 4px 20px rgba(0, 217, 255, 0.4)',
-                        letterSpacing: '0.5px',
-                        textTransform: 'uppercase'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-3px)'
-                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 217, 255, 0.6)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)'
-                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 217, 255, 0.4)'
-                      }}
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                )}
-
-                {!scanning && !scanError && (
-                  <>
-                    <div style={{
-                      fontSize: '1.1rem',
-                      opacity: 0.7,
-                      marginBottom: '1.5rem',
-                      color: 'rgba(255, 255, 255, 0.7)'
-                    }}>
-                      Watch the mascot react as you scan items
-                    </div>
-                    <button
-                      onClick={handleScanProduct}
-                      disabled={scanning}
-                      style={{
-                        padding: '1.2rem 2.5rem',
-                        fontSize: '1.1rem',
-                        fontWeight: '700',
-                        background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
-                        color: 'rgba(15, 18, 35, 1)',
-                        border: '2px solid rgba(0, 217, 255, 0.3)',
-                        borderRadius: '14px',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: '0 6px 24px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
-                        letterSpacing: '0.5px',
-                        textTransform: 'uppercase'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'
-                        e.currentTarget.style.boxShadow = '0 10px 40px rgba(0, 217, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                        e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                      }}
-                    >
-                      Scan Item
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Cart preview */}
-              {cart.length > 0 && (
-                <div style={{
-                  padding: '1.8rem',
-                  background: 'rgba(0, 217, 255, 0.05)',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(0, 217, 255, 0.2)',
-                  marginBottom: '1.5rem',
-                  boxShadow: '0 4px 20px rgba(0, 217, 255, 0.1)'
-                }}>
-                  <div style={{
-                    fontSize: '1rem',
-                    fontWeight: '700',
-                    marginBottom: '1.2rem',
-                    color: '#00D9FF',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px'
-                  }}>
-                    Cart ({cart.length} {cart.length === 1 ? 'item' : 'items'})
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.6rem',
-                    maxHeight: '180px',
-                    overflowY: 'auto'
-                  }}>
-                    {cart.map((item, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '0.75rem 1rem',
-                          background: 'rgba(0, 0, 0, 0.3)',
-                          borderRadius: '10px',
-                          fontSize: '0.95rem',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <span style={{ fontSize: '1.5rem' }}>{item.image}</span>
-                          <span style={{ fontWeight: '500' }}>{item.name}</span>
-                        </span>
-                        <span style={{ fontWeight: '700', color: '#10B981', fontSize: '1.05rem' }}>
-                          ${item.price.toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{
-                    marginTop: '1.2rem',
-                    paddingTop: '1.2rem',
-                    borderTop: '2px solid rgba(0, 217, 255, 0.2)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '1.3rem',
-                    fontWeight: '800'
-                  }}>
-                    <span style={{ color: '#00D9FF' }}>Total:</span>
-                    <span style={{ color: '#10B981' }}>${total.toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
-
-              {cart.length > 0 && (
-                <button
-                  onClick={handleCheckout}
-                  style={{
-                    width: '100%',
-                    padding: '1.5rem',
-                    fontSize: '1.2rem',
-                    fontWeight: '700',
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                    color: 'white',
-                    border: '2px solid rgba(16, 185, 129, 0.4)',
-                    borderRadius: '16px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)'
-                    e.currentTarget.style.boxShadow = '0 12px 48px rgba(16, 185, 129, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                  }}
-                >
-                  Proceed to Checkout
-                </button>
-              )}
-            </div>
-          )}
-
-          {currentStep >= 2 && currentStep <= 4 && (
-            <div style={{ textAlign: 'center' }}>
-              <h3 style={{
-                fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)',
-                marginBottom: '1.2rem',
-                background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontWeight: '800',
-                letterSpacing: '-0.02em'
-              }}>
-                {currentStep === 2 && 'Reviewing Your Order'}
-                {currentStep === 3 && 'Secure Payment'}
-                {currentStep === 4 && 'Processing...'}
-              </h3>
-              <p style={{
-                fontSize: '1.15rem',
-                opacity: 0.75,
-                lineHeight: 1.7,
-                color: 'rgba(255, 255, 255, 0.7)',
-                marginBottom: '1rem'
-              }}>
-                {currentStep === 2 && `${cart.length} items • Total: $${total.toFixed(2)}`}
-                {currentStep === 3 && 'Your payment is encrypted and secure'}
-                {currentStep === 4 && 'Watch the mascot respond while we process...'}
-              </p>
-            </div>
-          )}
-
-          {currentStep === 5 && (
-            <div style={{ textAlign: 'center' }}>
-              <h3 style={{
-                fontSize: 'clamp(2.2rem, 4.5vw, 3.5rem)',
-                marginBottom: '1.2rem',
-                background: 'linear-gradient(135deg, #10B981 0%, #00D9FF 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontWeight: '900',
-                letterSpacing: '-0.02em'
-              }}>
-                Order Complete!
-              </h3>
-              <p style={{
-                fontSize: '1.25rem',
-                opacity: 0.85,
-                marginBottom: '1rem',
-                lineHeight: 1.7,
-                color: 'rgba(255, 255, 255, 0.8)'
-              }}>
-                Look at the mascot celebrating your successful checkout!
-              </p>
-              <p style={{
-                fontSize: '1.1rem',
-                opacity: 0.75,
-                marginBottom: '2.5rem',
-                lineHeight: 1.7,
-                color: 'rgba(255, 255, 255, 0.7)'
-              }}>
-                Your order of <span style={{ color: '#10B981', fontWeight: '700' }}>${total.toFixed(2)}</span> has been processed.
-              </p>
-              <button
-                onClick={handleReset}
-                style={{
-                  padding: '1.4rem 3rem',
-                  fontSize: '1.15rem',
-                  fontWeight: '700',
-                  background: 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)',
-                  color: 'rgba(15, 18, 35, 1)',
-                  border: '2px solid rgba(0, 217, 255, 0.3)',
-                  borderRadius: '16px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 8px 32px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)'
-                  e.currentTarget.style.boxShadow = '0 12px 48px rgba(0, 217, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                }}
-              >
-                Start New Order
-              </button>
-            </div>
-          )}
-          </div>
-        </div>
-      </div>
-
-      {/* Premium Slate Glass AI Panel */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        right: 0,
-        width: isMobile ? '100%' : 'calc(50% - 1.5rem)',
-        background: `
-          linear-gradient(135deg,
-            rgba(10, 12, 20, 0.95) 0%,
-            rgba(15, 18, 28, 0.97) 50%,
-            rgba(20, 24, 35, 0.95) 100%
-          )
-        `,
-        backdropFilter: 'blur(80px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(80px) saturate(180%)',
-        border: '1px solid rgba(0, 217, 255, 0.15)',
-        borderRadius: '40px',
-        transform: showAIHelp ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-        zIndex: 50,
-        overflow: 'hidden',
-        boxShadow: showAIHelp
-          ? `0 50px 150px rgba(0, 0, 0, 0.7),
-             0 0 0 1px rgba(0, 217, 255, 0.08),
-             inset 0 0 120px rgba(0, 217, 255, 0.03),
-             inset 0 2px 0 rgba(255, 255, 255, 0.05),
-             inset 0 -1px 0 rgba(0, 0, 0, 0.5)`
-          : 'none'
-      }}>
-        {/* Premium glass reflection overlay */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '50%',
-          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 100
-        }} />
-
-        {/* Animated ambient glow - top right */}
-        <div style={{
-          position: 'absolute',
-          top: '-10%',
-          right: '10%',
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(circle, rgba(0, 217, 255, 0.12) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-          animation: 'float 12s ease-in-out infinite',
-          zIndex: 0
-        }} />
-
-        {/* Animated ambient glow - bottom left */}
-        <div style={{
-          position: 'absolute',
-          bottom: '15%',
-          left: '5%',
-          width: '350px',
-          height: '350px',
-          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-          animation: 'float 15s ease-in-out infinite reverse',
-          zIndex: 0
-        }} />
-
-        {/* Edge glow accent */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: '1px',
-          background: 'linear-gradient(180deg, transparent 0%, rgba(0, 217, 255, 0.3) 20%, rgba(0, 217, 255, 0.3) 80%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 101
-        }} />
-
-        {/* Top edge accent */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '1px',
-          background: 'linear-gradient(90deg, transparent 0%, rgba(0, 217, 255, 0.4) 50%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 101
-        }} />
-
-        {/* AI Assistant Content - Full Height */}
-        <div style={{
-          position: 'relative',
-          height: '100%',
-          overflow: 'hidden',
-          zIndex: 10,
-          padding: '1.5rem',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          <div style={{
-            flex: 1,
-            overflow: 'hidden',
-            borderRadius: '32px'
-          }}>
-            <PremiumAIAssistant
-              title="Checkout Assistant"
-              subtitle="Powered by Claude Haiku 4.5"
-              initialMessage="Hi! I'm your checkout assistant. I can help you scan items, apply coupons, answer questions, and make your shopping experience smooth."
-              context="retail-checkout"
-              examplePrompts={[
-                "How do I scan an item?",
-                "Help with payment",
-                "Do you accept coupons?",
-                "Scanner not working"
-              ]}
-              onLLMResponse={handleLLMResponse}
-              onClose={() => setShowAIHelp(false)}
+            <canvas
+              ref={canvasRef}
+              id="checkout-mascot"
+              style={{
+                width: '100%',
+                height: '100%',
+                filter: 'drop-shadow(0 20px 80px rgba(0, 217, 255, 0.6))',
+              }}
             />
           </div>
+
+          {/* RIGHT: AI Chat */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.05) 0%, rgba(16, 185, 129, 0.03) 100%)',
+            borderRadius: '20px',
+            border: '1px solid rgba(0, 217, 255, 0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}>
+            {/* Chat Header */}
+            <div style={{
+              padding: '1.5rem',
+              borderBottom: '1px solid rgba(0, 217, 255, 0.2)',
+              background: 'rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(0, 217, 255, 0.2)',
+                  border: '2px solid rgba(0, 217, 255, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.5rem'
+                }}>
+                  💬
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#00D9FF' }}>
+                    AI Assistant
+                  </div>
+                  <div style={{ fontSize: '0.85rem', opacity: 0.6 }}>
+                    Claude Haiku 4.5
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Messages */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}>
+              {messages.map((msg, i) => (
+                <div key={i} style={{
+                  alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '80%'
+                }}>
+                  <div style={{
+                    padding: '1rem 1.25rem',
+                    borderRadius: '16px',
+                    background: msg.role === 'user'
+                      ? 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)'
+                      : 'rgba(0, 217, 255, 0.1)',
+                    border: msg.role === 'user'
+                      ? 'none'
+                      : '1px solid rgba(0, 217, 255, 0.3)',
+                    color: msg.role === 'user' ? '#0F1223' : 'white',
+                    fontSize: '1rem',
+                    lineHeight: 1.5
+                  }}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div style={{ alignSelf: 'flex-start', maxWidth: '80%' }}>
+                  <div style={{
+                    padding: '1rem 1.25rem',
+                    borderRadius: '16px',
+                    background: 'rgba(0, 217, 255, 0.1)',
+                    border: '1px solid rgba(0, 217, 255, 0.3)',
+                    color: 'white',
+                    fontSize: '1rem'
+                  }}>
+                    Typing...
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Example prompts */}
+            {messages.length === 1 && (
+              <div style={{
+                padding: '0 1.5rem 1rem 1.5rem',
+                borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+              }}>
+                <div style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.75rem' }}>
+                  SUGGESTED QUESTIONS
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {examplePrompts.map((prompt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setInput(prompt)
+                      }}
+                      style={{
+                        padding: '0.75rem',
+                        background: 'rgba(0, 217, 255, 0.05)',
+                        border: '1px solid rgba(0, 217, 255, 0.2)',
+                        borderRadius: '10px',
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        fontSize: '0.9rem',
+                        textAlign: 'left',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Chat Input */}
+            <div style={{
+              padding: '1.5rem',
+              borderTop: '1px solid rgba(0, 217, 255, 0.2)',
+              background: 'rgba(0, 0, 0, 0.2)',
+              display: 'flex',
+              gap: '0.75rem'
+            }}>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="Type your message..."
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '1rem',
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  border: '1px solid rgba(0, 217, 255, 0.3)',
+                  borderRadius: '10px',
+                  color: 'white',
+                  fontSize: '1rem',
+                  outline: 'none'
+                }}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!input.trim() || loading}
+                style={{
+                  padding: '1rem 2rem',
+                  background: input.trim() && !loading
+                    ? 'linear-gradient(135deg, #00D9FF 0%, #00A8CC 100%)'
+                    : 'rgba(0, 217, 255, 0.2)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: input.trim() && !loading ? '#0F1223' : 'rgba(255, 255, 255, 0.3)',
+                  fontSize: '1rem',
+                  fontWeight: '700',
+                  cursor: input.trim() && !loading ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Send
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes scanPulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.1); opacity: 0.8; }
-        }
-
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes celebrationBounce {
-          0% { transform: scale(0) rotate(0deg); }
-          50% { transform: scale(1.2) rotate(10deg); }
-          100% { transform: scale(1) rotate(0deg); }
-        }
-
-        @keyframes float {
-          0%, 100% {
-            transform: translate(0, 0);
-          }
-          50% {
-            transform: translate(10px, -10px);
-          }
-        }
-      `}</style>
-
-      {/* Render help button in status bar using portal */}
-      {isClient && document.getElementById('help-button-container') && (
-        createPortal(helpButton, document.getElementById('help-button-container')!)
       )}
     </div>
   )

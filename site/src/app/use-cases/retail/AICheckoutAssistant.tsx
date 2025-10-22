@@ -114,12 +114,12 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Auto-scroll chat container to bottom when messages change
-  useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
-    }
-  }, [messages])
+  // Auto-scroll disabled - let user control viewport
+  // useEffect(() => {
+  //   if (messagesContainerRef.current) {
+  //     messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+  //   }
+  // }, [messages])
 
   const handleSend = async () => {
     if (!input.trim() || loading) return
