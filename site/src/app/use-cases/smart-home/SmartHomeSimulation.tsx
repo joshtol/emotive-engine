@@ -26,7 +26,7 @@ interface SmartHomeSimulationProps {
   onDeviceChange?: (deviceType: string, action: string) => void
 }
 
-const INITIAL_ROOMS: Room[] = [
+const INITIAL_ROOMS_DESKTOP: Room[] = [
   {
     id: 'living',
     name: 'Living Room',
@@ -68,15 +68,46 @@ const INITIAL_ROOMS: Room[] = [
   },
 ]
 
+const INITIAL_ROOMS_MOBILE: Room[] = [
+  {
+    id: 'living',
+    name: 'Living Room',
+    icon: '🛋️',
+    devices: [
+      { id: 'living-light', type: 'light', name: 'Main Lights', status: false, icon: '💡' },
+      { id: 'living-temp', type: 'thermostat', name: 'Temperature', status: 72, icon: '🌡️' },
+    ]
+  },
+  {
+    id: 'kitchen',
+    name: 'Kitchen',
+    icon: '🍳',
+    devices: [
+      { id: 'kitchen-light', type: 'light', name: 'Kitchen Lights', status: false, icon: '💡' },
+      { id: 'kitchen-camera', type: 'camera', name: 'Security Cam', status: true, icon: '📹' },
+    ]
+  },
+  {
+    id: 'entry',
+    name: 'Front Door',
+    icon: '🚪',
+    devices: [
+      { id: 'entry-lock', type: 'lock', name: 'Smart Lock', status: true, icon: '🔒' },
+      { id: 'entry-camera', type: 'camera', name: 'Doorbell Cam', status: true, icon: '🎥' },
+      { id: 'entry-light', type: 'light', name: 'Porch Light', status: false, icon: '💡' },
+    ]
+  },
+]
+
 export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulationProps) {
-  const [rooms, setRooms] = useState<Room[]>(INITIAL_ROOMS)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+  const [rooms, setRooms] = useState<Room[]>([])
   const [activeScene, setActiveScene] = useState<string | null>(null)
   const [showAIHelp, setShowAIHelp] = useState(false)
   const [energyUsage, setEnergyUsage] = useState(42)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
-  const [isMobile, setIsMobile] = useState(false)
-  const [isClient, setIsClient] = useState(false)
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
@@ -98,9 +129,15 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
   useEffect(() => {
     setIsClient(true)
-    setIsMobile(window.innerWidth < 768)
+    const isMobileDevice = window.innerWidth < 768
+    setIsMobile(isMobileDevice)
+    setRooms(isMobileDevice ? INITIAL_ROOMS_MOBILE : INITIAL_ROOMS_DESKTOP)
 
-    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      setRooms(mobile ? INITIAL_ROOMS_MOBILE : INITIAL_ROOMS_DESKTOP)
+    }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
