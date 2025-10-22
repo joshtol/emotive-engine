@@ -25,6 +25,7 @@ import LazyFeaturesShowcase from '@/components/LazyFeaturesShowcase'
  */
 export default function HomePage() {
   const lastGestureRef = useRef<number>(-1)
+  const lastZIndexRef = useRef<number>(100)
   const [containerZIndex, setContainerZIndex] = useState(100)
   const [mascot, setMascot] = useState<any>(null)
   const [waitlistEmail, setWaitlistEmail] = useState('')
@@ -57,12 +58,13 @@ export default function HomePage() {
         mascot.setPosition(xOffset, yOffset, 0)
       }
 
-      // Z-index transition
+      // Z-index transition - only update if actually changed to prevent unnecessary re-renders
       const heroHeight = viewportHeight * 0.9
-      if (scrollY < heroHeight) {
-        setContainerZIndex(100)
-      } else {
-        setContainerZIndex(1)
+      const newZIndex = scrollY < heroHeight ? 100 : 1
+
+      if (newZIndex !== lastZIndexRef.current) {
+        lastZIndexRef.current = newZIndex
+        setContainerZIndex(newZIndex)
       }
 
       // Gesture triggers
@@ -165,6 +167,8 @@ export default function HomePage() {
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
+        transform: 'translateZ(0)',
+        willChange: 'transform',
       }}>
 
         {/* Hero Section - Critical Path */}

@@ -198,6 +198,8 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
         height: '100vh',
         pointerEvents: 'none',
         zIndex: containerZIndex,
+        willChange: 'transform',
+        transform: 'translateZ(0)',
       }}
     >
       <canvas
@@ -208,7 +210,9 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
           height: '100%',
           filter: 'drop-shadow(0 10px 40px rgba(102, 126, 234, 0.4))',
           opacity: isLoading ? 0 : 1,
-          transition: 'opacity 0.3s ease-in'
+          transition: 'opacity 0.3s ease-in',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
         }}
       />
 
