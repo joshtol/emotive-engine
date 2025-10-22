@@ -272,27 +272,25 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           }
         }, 1500)
       } else if (device.type === 'camera') {
-        // Doorbell cam: sus core + recording state
-        if (mascotRef.current.setCore) {
-          mascotRef.current.setCore('sus', { duration: 800 })
-        }
-        if (mascotRef.current.setState) {
-          mascotRef.current.setState('recording', 0.8)
+        // Doorbell cam: suspicious emotion + recording effects
+        if (mascotRef.current.setEmotion) {
+          mascotRef.current.setEmotion('suspicious', 0.8)
         }
         if (mascotRef.current.express) {
-          await mascotRef.current.express('pulse', { intensity: 0.5, duration: 500 })
+          await mascotRef.current.express('pulse', { intensity: 0.6, duration: 800 })
         }
-        // Reset after 1.5 seconds
+        // Add a second pulse for "recording" effect
         setTimeout(() => {
-          if (mascotRef.current) {
-            if (mascotRef.current.setCore) {
-              mascotRef.current.setCore('default', { duration: 800 })
-            }
-            if (mascotRef.current.setState) {
-              mascotRef.current.setState('idle', 0.5)
-            }
+          if (mascotRef.current && mascotRef.current.express) {
+            mascotRef.current.express('pulse', { intensity: 0.4, duration: 600 })
           }
-        }, 1500)
+        }, 400)
+        // Reset after 2 seconds
+        setTimeout(() => {
+          if (mascotRef.current && mascotRef.current.setEmotion) {
+            mascotRef.current.setEmotion('neutral', 0.5)
+          }
+        }, 2000)
       } else {
         // Default for other devices
         if (mascotRef.current.express) {
