@@ -153,10 +153,25 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         const canvas = canvasRef.current
         if (!canvas) return
 
+        // Wait for canvas to have dimensions
+        let retries = 0
+        while ((canvas.offsetWidth === 0 || canvas.offsetHeight === 0) && retries < 20) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          retries++
+        }
+
         const rect = canvas.getBoundingClientRect()
         const dpr = window.devicePixelRatio || 1
-        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
+        const width = Math.round(rect.width * dpr)
+        const height = Math.round(rect.height * dpr)
+
+        if (width === 0 || height === 0) {
+          console.error('Canvas has zero dimensions:', { width, height, rect })
+          return
+        }
+
+        canvas.setAttribute('width', width.toString())
+        canvas.setAttribute('height', height.toString())
 
         const mascot = new EmotiveMascot({
           canvasId: 'home-control-mascot',
@@ -170,6 +185,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           primaryColor: '#8B5CF6',
           secondaryColor: '#06B6D4',
         })
+
+        console.log('Initializing mascot...', { isMobile, canvasWidth: width, canvasHeight: height })
 
         await mascot.init(canvas)
         mascot.start()
@@ -192,6 +209,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         })
 
         mascotRef.current = mascot
+
+        console.log('Mascot initialized successfully')
 
         setTimeout(() => {
           mascot.express?.('wave')
