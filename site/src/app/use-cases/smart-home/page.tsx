@@ -648,7 +648,8 @@ export default function SmartHomePage() {
                 inset 0 1px 0 rgba(255, 255, 255, 0.05)
               `,
               overflow: 'hidden',
-              position: 'relative'
+              position: 'relative',
+              minHeight: isMobile ? '80vh' : '700px'
             }}>
               <div style={{
                 position: 'absolute',
