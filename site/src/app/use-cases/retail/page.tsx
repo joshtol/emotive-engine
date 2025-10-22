@@ -303,8 +303,6 @@ export default function RetailPage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
-          willChange: 'transform, opacity',
-          transform: 'translateZ(0)',
         }}
       >
         <canvas
@@ -314,8 +312,6 @@ export default function RetailPage() {
             width: '100%',
             height: '100%',
             filter: 'drop-shadow(0 10px 40px rgba(221, 74, 154, 0.4))',
-            willChange: 'transform',
-            transform: 'translateZ(0)',
           }}
         />
       </div>
@@ -329,8 +325,6 @@ export default function RetailPage() {
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
-        willChange: 'transform',
-        transform: 'translateZ(0)',
       }}>
         {/* Hero Section */}
         <section style={{
@@ -471,34 +465,6 @@ export default function RetailPage() {
                 <span>🤖</span> Try AI Assistant
               </button>
 
-              <a
-                href="#features"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '1.25rem 2.5rem',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '12px',
-                  textDecoration: 'none',
-                  color: 'white',
-                  fontSize: '1.15rem',
-                  fontWeight: '600',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                }}
-              >
-                See Features
-              </a>
-
               <button
                 onClick={() => setIsScheduleModalOpen(true)}
                 style={{
@@ -531,28 +497,29 @@ export default function RetailPage() {
             {/* Stats */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '2rem',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: isMobile ? '1.5rem' : '2rem',
               maxWidth: '800px',
               margin: '0 auto',
-              paddingTop: '3rem',
+              paddingTop: isMobile ? '2rem' : '3rem',
               borderTop: '1px solid rgba(221, 74, 154, 0.2)',
+              padding: isMobile ? '2rem 1rem 0 1rem' : '3rem 0 0 0'
             }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#DD4A9A',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(221, 74, 154, 0.5)',
                 }}>
                   40%
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   Less Abandonment
@@ -560,39 +527,39 @@ export default function RetailPage() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#DD4A9A',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(221, 74, 154, 0.5)',
                 }}>
                   85%
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   Satisfaction
                 </div>
               </div>
-              <div style={{ textAlign: 'center' }}>
+              <div style={{ textAlign: 'center', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#DD4A9A',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(221, 74, 154, 0.5)',
                 }}>
                   35%
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   Faster Checkout

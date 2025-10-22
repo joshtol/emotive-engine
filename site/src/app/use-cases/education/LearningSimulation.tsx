@@ -11,21 +11,89 @@ interface Problem {
   answer: string
   difficulty: 'easy' | 'medium' | 'hard'
   icon: string
+  hints: string[]
+  explanation: string
+  mascotShape?: string
+  mascotEmotion?: string
 }
 
 const DEMO_PROBLEMS: Problem[] = [
-  { id: '1', subject: 'Math', question: 'What is 15 × 8?', answer: '120', difficulty: 'easy', icon: '📐' },
-  { id: '2', subject: 'Science', question: 'What is H₂O?', answer: 'water', difficulty: 'easy', icon: '🧪' },
-  { id: '3', subject: 'Math', question: 'Solve: 3x + 7 = 22', answer: '5', difficulty: 'medium', icon: '📐' },
+  {
+    id: '1',
+    subject: 'Math - Multiplication',
+    question: 'What is 15 × 8?',
+    answer: '120',
+    difficulty: 'easy',
+    icon: '📐',
+    hints: [
+      'Think about breaking 15 into 10 + 5',
+      'Try: (10 × 8) + (5 × 8)',
+      'That gives you 80 + 40'
+    ],
+    explanation: 'Great! 15 × 8 = 120. You can break it down as (10×8) + (5×8) = 80 + 40 = 120',
+    mascotShape: 'sphere',
+    mascotEmotion: 'calm'
+  },
+  {
+    id: '2',
+    subject: 'Chemistry',
+    question: 'What is the chemical formula for water?',
+    answer: 'H2O',
+    difficulty: 'easy',
+    icon: '🧪',
+    hints: [
+      'Water is made of hydrogen and oxygen',
+      'It has 2 hydrogen atoms and 1 oxygen atom',
+      'Use H for hydrogen and O for oxygen'
+    ],
+    explanation: 'Perfect! H₂O means 2 hydrogen atoms bonded to 1 oxygen atom - that\'s water!',
+    mascotShape: 'droplet',
+    mascotEmotion: 'joy'
+  },
+  {
+    id: '3',
+    subject: 'Algebra',
+    question: 'Solve for x: 3x + 7 = 22',
+    answer: '5',
+    difficulty: 'medium',
+    icon: '📐',
+    hints: [
+      'First, subtract 7 from both sides',
+      'That gives you 3x = 15',
+      'Now divide both sides by 3'
+    ],
+    explanation: 'Excellent work! You isolated x by subtracting 7 (getting 3x = 15) then dividing by 3 to get x = 5',
+    mascotShape: 'star',
+    mascotEmotion: 'triumph'
+  },
+  {
+    id: '4',
+    subject: 'Physics',
+    question: 'What is the speed of light in vacuum? (in km/s)',
+    answer: '299792',
+    difficulty: 'hard',
+    icon: '⚡',
+    hints: [
+      'It\'s approximately 300,000 km/s',
+      'The exact value is 299,792.458 km/s',
+      'You can round to 299792'
+    ],
+    explanation: 'Amazing! The speed of light is 299,792 km/s - one of the fundamental constants of the universe!',
+    mascotShape: 'sun',
+    mascotEmotion: 'euphoria'
+  },
 ]
 
 export default function LearningSimulation() {
   const [currentProblem, setCurrentProblem] = useState(0)
-  const [answer, setAnswer] = useState('')
+  const [answer, setAnswer] = useState('120')
   const [attempts, setAttempts] = useState(0)
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | 'hint' | null>(null)
   const [showAIHelp, setShowAIHelp] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [currentHint, setCurrentHint] = useState(0)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [streak, setStreak] = useState(0)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -79,7 +147,7 @@ export default function LearningSimulation() {
         await mascot.init(canvas)
         mascot.start()
         mascot.setPosition(0, 0, 0)
-        mascot.setScale({ core: isMobile ? 0.7 : 1.2, particles: isMobile ? 1.0 : 1.8 })
+        mascot.setScale({ core: isMobile ? 1.4 : 1.2, particles: isMobile ? 2.0 : 1.8 })
         mascot.setBackdrop({ enabled: true, radius: 3.0, intensity: 0.8 })
         mascotRef.current = mascot
         setTimeout(() => mascot.express?.('wave'), 500)
@@ -97,26 +165,80 @@ export default function LearningSimulation() {
     }
   }, [isMobile])
 
-  const checkAnswer = () => {
-    const correct = answer.toLowerCase().trim() === DEMO_PROBLEMS[currentProblem].answer.toLowerCase()
+  const checkAnswer = async () => {
+    // Prevent checking if already correct
+    if (feedback === 'correct') return
+
+    const problem = DEMO_PROBLEMS[currentProblem]
+    const correct = answer.toLowerCase().trim() === problem.answer.toLowerCase()
+
     if (correct) {
       setFeedback('correct')
-      if (mascotRef.current?.express) mascotRef.current.express('bounce')
-      setTimeout(() => {
-        if (currentProblem < DEMO_PROBLEMS.length - 1) {
-          setCurrentProblem(currentProblem + 1)
-          setAnswer('')
-          setFeedback(null)
-          setAttempts(0)
+      setShowExplanation(true)
+      setStreak(streak + 1)
+
+      // Mascot celebrates with morph and emotion
+      if (mascotRef.current) {
+        if (problem.mascotShape && mascotRef.current.morphTo) {
+          mascotRef.current.morphTo(problem.mascotShape, { duration: 800 })
         }
-      }, 2000)
+        if (problem.mascotEmotion && mascotRef.current.setEmotion) {
+          mascotRef.current.setEmotion(problem.mascotEmotion, 0.9)
+        }
+        if (mascotRef.current.express) {
+          mascotRef.current.express('bounce')
+          setTimeout(() => {
+            if (mascotRef.current?.express) {
+              mascotRef.current.express('sparkle', { intensity: 0.8, duration: 1500 })
+            }
+          }, 300)
+        }
+      }
     } else {
-      setAttempts(attempts + 1)
-      if (attempts >= 1) {
-        setFeedback('hint')
-        if (mascotRef.current?.express) mascotRef.current.express('shake')
-      } else {
-        setFeedback('incorrect')
+      const newAttempts = attempts + 1
+      setAttempts(newAttempts)
+
+      // Show frustration based on attempts
+      if (mascotRef.current) {
+        if (newAttempts >= 2) {
+          setFeedback('hint')
+          if (mascotRef.current.setEmotion) {
+            mascotRef.current.setEmotion('empathy', 0.7)
+          }
+          if (mascotRef.current.express) {
+            mascotRef.current.express('wobble')
+          }
+        } else {
+          setFeedback('incorrect')
+          if (mascotRef.current.setEmotion) {
+            mascotRef.current.setEmotion('concern', 0.6)
+          }
+          if (mascotRef.current.express) {
+            mascotRef.current.express('shake')
+          }
+        }
+      }
+    }
+  }
+
+  const handleNextProblem = () => {
+    if (currentProblem < DEMO_PROBLEMS.length - 1) {
+      const nextProblemIndex = currentProblem + 1
+      setCurrentProblem(nextProblemIndex)
+      setAnswer(DEMO_PROBLEMS[nextProblemIndex].answer)
+      setFeedback(null)
+      setAttempts(0)
+      setCurrentHint(0)
+      setShowExplanation(false)
+    }
+  }
+
+  const showNextHint = () => {
+    const problem = DEMO_PROBLEMS[currentProblem]
+    if (currentHint < problem.hints.length - 1) {
+      setCurrentHint(currentHint + 1)
+      if (mascotRef.current?.express) {
+        mascotRef.current.express('pulse', { intensity: 0.6 })
       }
     }
   }
@@ -133,10 +255,10 @@ export default function LearningSimulation() {
     <button
       onClick={() => setShowAIHelp(!showAIHelp)}
       style={{
-        padding: '0.6rem 1.25rem',
+        padding: isMobile ? '0.5rem 0.875rem' : '0.6rem 1.25rem',
         background: showAIHelp ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' : 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
-        borderRadius: '10px',
-        fontSize: '0.9rem',
+        borderRadius: isMobile ? '8px' : '10px',
+        fontSize: isMobile ? '0.75rem' : '0.9rem',
         fontWeight: '700',
         color: 'white',
         border: `1px solid ${showAIHelp ? 'rgba(239, 68, 68, 0.3)' : 'rgba(20, 184, 166, 0.3)'}`,
@@ -144,60 +266,541 @@ export default function LearningSimulation() {
         transition: 'all 0.3s ease',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: isMobile ? '0.35rem' : '0.5rem',
         letterSpacing: '0.5px',
-        textTransform: 'uppercase'
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap'
       }}
     >
-      <span style={{ fontSize: '1rem' }}>{showAIHelp ? '✕' : '💬'}</span>
-      <span>{showAIHelp ? 'Close' : 'Get Help'}</span>
+      <span style={{ fontSize: isMobile ? '0.85rem' : '1rem' }}>{showAIHelp ? '✕' : '💬'}</span>
+      <span>{showAIHelp ? 'Close' : 'Help'}</span>
     </button>
   )
 
   return (
-    <div style={{ position: 'relative', minHeight: '800px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '2rem' : '3rem', alignItems: 'center', padding: '2rem', overflow: 'hidden' }}>
-      <div style={{ position: 'relative', width: '100%', height: isMobile ? '400px' : '600px', display: 'flex', alignItems: 'center', justifyContent: 'center', order: isMobile ? 1 : 0, transform: showAIHelp && !isMobile ? 'translateX(-10%)' : 'translateX(0)', transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-        <canvas ref={canvasRef} id="learning-mascot" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 20px 80px rgba(124, 58, 237, 0.6))' }} />
-      </div>
-      <div style={{ position: 'relative', width: '100%', order: isMobile ? 2 : 1 }}>
-        <div style={{ background: 'linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(15, 18, 35, 0.98) 100%)', backdropFilter: 'blur(60px)', borderRadius: '32px', padding: 'clamp(2rem, 4vw, 3rem)', border: '2px solid rgba(124, 58, 237, 0.2)', boxShadow: '0 30px 90px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(124, 58, 237, 0.1)', position: 'relative', overflow: 'hidden' }}>
+    <div style={{
+      position: 'relative',
+      minHeight: isMobile ? 'auto' : '750px',
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : showAIHelp ? '450px 1fr 480px' : '450px 1fr',
+      gap: isMobile ? '0' : '2.5rem',
+      padding: isMobile ? '0.75rem' : '2rem',
+      overflow: 'hidden',
+      transition: 'grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      alignItems: 'start',
+      width: isMobile ? '100%' : 'auto',
+      boxSizing: 'border-box'
+    }}>
+      {/* Mascot Column - Hidden on mobile */}
+      {!isMobile && (
+        <div style={{
+          position: 'sticky',
+          top: '2rem',
+          width: '100%',
+          height: '680px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <canvas
+            ref={canvasRef}
+            id="learning-mascot"
+            style={{
+              width: '100%',
+              height: '100%',
+              filter: 'drop-shadow(0 20px 80px rgba(124, 58, 237, 0.6))'
+            }}
+          />
+        </div>
+      )}
+
+      {/* Mobile mascot - scaled larger */}
+      {isMobile && (
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          height: '250px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '0.75rem'
+        }}>
+          <canvas
+            ref={canvasRef}
+            id="learning-mascot"
+            style={{
+              width: '100%',
+              height: '100%',
+              filter: 'drop-shadow(0 10px 40px rgba(124, 58, 237, 0.5))'
+            }}
+          />
+        </div>
+      )}
+
+      {/* Problem Column */}
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        order: isMobile ? 2 : 1
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(15, 18, 35, 0.98) 100%)',
+          backdropFilter: 'blur(60px)',
+          borderRadius: isMobile ? '12px' : '24px',
+          padding: isMobile ? '1rem' : '2rem',
+          border: '2px solid rgba(124, 58, 237, 0.2)',
+          boxShadow: '0 30px 90px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(124, 58, 237, 0.1)',
+          position: 'relative',
+          overflow: 'hidden',
+          height: isMobile ? 'auto' : '680px',
+          minHeight: isMobile ? 'auto' : '680px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: isMobile ? 'flex-start' : 'space-between',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.8), transparent)' }} />
-          <div style={{ marginBottom: '2.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-            {DEMO_PROBLEMS.map((_, i) => (
-              <div key={i} style={{ flex: 1, maxWidth: '100px', textAlign: 'center' }}>
-                <div style={{ height: '3px', background: i <= currentProblem ? 'linear-gradient(90deg, #7C3AED, #14B8A6)' : 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', marginBottom: '0.6rem', transition: 'all 0.5s', boxShadow: i <= currentProblem ? '0 0 12px rgba(124, 58, 237, 0.5)' : 'none' }} />
-                <div style={{ fontSize: '0.75rem', opacity: i <= currentProblem ? 1 : 0.35, fontWeight: i === currentProblem ? '700' : '500', color: i <= currentProblem ? '#7C3AED' : 'rgba(255, 255, 255, 0.4)', transition: 'all 0.3s', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Problem {i + 1}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>{problem.icon}</div>
-            <h3 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)', marginBottom: '1rem', background: 'linear-gradient(135deg, #7C3AED 0%, #14B8A6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: '800', letterSpacing: '-0.02em' }}>{problem.subject}</h3>
-            <div style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '2rem', color: '#A78BFA' }}>{problem.question}</div>
-            <div style={{ marginBottom: '2rem' }}>
-              <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && checkAnswer()} placeholder="Your answer" style={{ padding: '1rem 2rem', fontSize: '1.2rem', width: '100%', maxWidth: '300px', textAlign: 'center', background: 'rgba(255,255,255,0.1)', border: '2px solid rgba(124, 58, 237, 0.5)', borderRadius: '12px', color: 'white', outline: 'none' }} />
+
+          {/* Header Section - Progress Bar */}
+          <div style={{ flexShrink: 0 }}>
+            <div style={{ marginBottom: isMobile ? '0.75rem' : '1.5rem', display: 'flex', gap: isMobile ? '0.25rem' : '0.5rem', justifyContent: 'center', width: '100%' }}>
+              {DEMO_PROBLEMS.map((_, i) => (
+                <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ height: isMobile ? '2.5px' : '3px', background: i <= currentProblem ? 'linear-gradient(90deg, #7C3AED, #14B8A6)' : 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', marginBottom: isMobile ? '0.3rem' : '0.6rem', transition: 'all 0.5s', boxShadow: i <= currentProblem ? '0 0 12px rgba(124, 58, 237, 0.5)' : 'none' }} />
+                  <div style={{ fontSize: isMobile ? '0.55rem' : '0.75rem', opacity: i <= currentProblem ? 1 : 0.35, fontWeight: i === currentProblem ? '700' : '500', color: i <= currentProblem ? '#7C3AED' : 'rgba(255, 255, 255, 0.4)', transition: 'all 0.3s', letterSpacing: isMobile ? '0' : '0.5px', textTransform: 'uppercase' }}>{isMobile ? `${i + 1}` : `Problem ${i + 1}`}</div>
+                </div>
+              ))}
             </div>
-            <button onClick={checkAnswer} disabled={!answer} style={{ padding: '1rem 3rem', fontSize: '1.1rem', fontWeight: '600', background: answer ? 'linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)' : 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '12px', cursor: answer ? 'pointer' : 'not-allowed', transition: 'all 0.3s', opacity: answer ? 1 : 0.5 }}>Check Answer</button>
-            {feedback === 'correct' && <div style={{ marginTop: '2rem', padding: '1.5rem 2rem', background: 'rgba(20,184,166,0.2)', borderRadius: '12px', fontSize: '1.3rem', border: '2px solid rgba(20,184,166,0.5)' }}>🎉 Perfect! Great job!</div>}
-            {feedback === 'hint' && <div style={{ marginTop: '2rem', padding: '1.5rem 2rem', background: 'rgba(245,158,11,0.2)', borderRadius: '12px', fontSize: '1.1rem', border: '2px solid rgba(245,158,11,0.5)' }}>🤔 Not quite. Try using the AI tutor for help!</div>}
+          </div>
+
+          {/* Main Content Section - Flexible */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center', minHeight: 0 }}>
+            {/* Streak Counter - Top Right */}
+            {streak > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '3rem',
+                right: isMobile ? '0.5rem' : '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: isMobile ? '0.25rem' : '0.5rem',
+                padding: isMobile ? '0.25rem 0.5rem' : '0.5rem 1rem',
+                background: isMobile ? 'rgba(245,158,11,0.25)' : 'linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(251,146,60,0.2) 100%)',
+                borderRadius: '100px',
+                border: isMobile ? '1px solid rgba(245,158,11,0.4)' : '2px solid rgba(245,158,11,0.5)',
+                boxShadow: isMobile ? '0 2px 8px rgba(245,158,11,0.2)' : '0 6px 24px rgba(245,158,11,0.3)',
+                animation: isMobile ? 'none' : 'pulse 2s ease-in-out infinite'
+              }}>
+                <span style={{ fontSize: isMobile ? '0.85rem' : '1.4rem' }}>🔥</span>
+                {isMobile ? (
+                  <div style={{ fontSize: '0.85rem', fontWeight: '900', color: '#F59E0B', lineHeight: 1 }}>{streak}</div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: '0.6rem', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Streak</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#F59E0B', lineHeight: 1 }}>{streak}</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Problem Icon & Subject */}
+            <div style={{
+              fontSize: isMobile ? '1.75rem' : '2.5rem',
+              marginBottom: isMobile ? '0.35rem' : '0.75rem',
+              filter: 'drop-shadow(0 4px 16px rgba(124, 58, 237, 0.4))'
+            }}>{problem.icon}</div>
+            <div style={{
+              fontSize: isMobile ? '0.6rem' : '0.75rem',
+              textTransform: 'uppercase',
+              letterSpacing: isMobile ? '0.5px' : '1.5px',
+              fontWeight: '600',
+              marginBottom: isMobile ? '0.5rem' : '1rem',
+              opacity: 0.6
+            }}>
+              {problem.difficulty} • {problem.subject}
+            </div>
+
+            {/* Question */}
+            <h3 style={{
+              fontSize: isMobile ? '1.15rem' : '1.75rem',
+              marginBottom: isMobile ? '0.75rem' : '1.5rem',
+              fontWeight: '800',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.3,
+              color: 'white',
+              textShadow: '0 2px 20px rgba(124, 58, 237, 0.4)',
+              padding: isMobile ? '0' : '0 1rem'
+            }}>{problem.question}</h3>
+
+            {/* Answer Input */}
+            <div style={{ marginBottom: isMobile ? '0.75rem' : '1.5rem' }}>
+              <input
+                type="text"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !feedback && checkAnswer()}
+                placeholder="Type your answer..."
+                disabled={feedback === 'correct'}
+                style={{
+                  padding: isMobile ? '0.75rem 0.875rem' : '1rem 1.5rem',
+                  fontSize: isMobile ? '1rem' : '1.3rem',
+                  width: '100%',
+                  maxWidth: isMobile ? '100%' : '400px',
+                  textAlign: 'center',
+                  background: feedback === 'correct' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.08)',
+                  border: `2px solid ${feedback === 'correct' ? 'rgba(16,185,129,0.5)' : 'rgba(124, 58, 237, 0.4)'}`,
+                  borderRadius: isMobile ? '8px' : '12px',
+                  color: 'white',
+                  outline: 'none',
+                  fontWeight: '700',
+                  transition: 'all 0.3s ease',
+                  boxShadow: feedback === 'correct' ? '0 0 0 4px rgba(16,185,129,0.1)' : 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* Action Button */}
+            {feedback !== 'correct' ? (
+              <button
+                onClick={checkAnswer}
+                disabled={!answer}
+                style={{
+                  padding: isMobile ? '0.75rem 1.5rem' : '1rem 3rem',
+                  fontSize: isMobile ? '0.85rem' : '1rem',
+                  fontWeight: '700',
+                  background: answer ? 'linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)' : 'rgba(255,255,255,0.08)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: isMobile ? '8px' : '12px',
+                  cursor: answer ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  opacity: answer ? 1 : 0.4,
+                  boxShadow: answer ? '0 6px 24px rgba(124, 58, 237, 0.5)' : 'none',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  width: isMobile ? '100%' : 'auto'
+                }}
+                onMouseEnter={(e) => {
+                  if (answer && !isMobile) {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 12px 48px rgba(124, 58, 237, 0.6)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isMobile) {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = answer ? '0 6px 24px rgba(124, 58, 237, 0.5)' : 'none'
+                  }
+                }}
+              >
+                Check Answer
+              </button>
+            ) : (
+              <button
+                onClick={handleNextProblem}
+                disabled={currentProblem >= DEMO_PROBLEMS.length - 1}
+                style={{
+                  padding: isMobile ? '0.75rem 1.5rem' : '1rem 3rem',
+                  fontSize: isMobile ? '0.85rem' : '1rem',
+                  fontWeight: '700',
+                  background: currentProblem < DEMO_PROBLEMS.length - 1
+                    ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                    : 'rgba(255,255,255,0.08)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: isMobile ? '8px' : '12px',
+                  cursor: currentProblem < DEMO_PROBLEMS.length - 1 ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: currentProblem < DEMO_PROBLEMS.length - 1 ? '0 6px 24px rgba(16, 185, 129, 0.5)' : 'none',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  opacity: currentProblem < DEMO_PROBLEMS.length - 1 ? 1 : 0.4,
+                  width: isMobile ? '100%' : 'auto'
+                }}
+                onMouseEnter={(e) => {
+                  if (currentProblem < DEMO_PROBLEMS.length - 1 && !isMobile) {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 12px 48px rgba(16, 185, 129, 0.6)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isMobile) {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = currentProblem < DEMO_PROBLEMS.length - 1 ? '0 6px 24px rgba(16, 185, 129, 0.5)' : 'none'
+                  }
+                }}
+              >
+                {currentProblem < DEMO_PROBLEMS.length - 1 ? 'Next Problem →' : 'All Complete! 🎉'}
+              </button>
+            )}
+          </div>
+
+          {/* Feedback Section - Flexibly positioned at bottom */}
+          <div style={{ flexShrink: 0 }}>
+
+            {/* Correct Feedback with Explanation */}
+            {feedback === 'correct' && (
+              <div style={{
+                marginTop: isMobile ? '0.75rem' : '1.5rem',
+                padding: isMobile ? '0.875rem' : '1.25rem',
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.15) 100%)',
+                borderRadius: isMobile ? '10px' : '16px',
+                border: '2px solid rgba(16,185,129,0.6)',
+                boxShadow: '0 8px 32px rgba(16,185,129,0.4)',
+                animation: 'slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}>
+                {/* Header with emoji and title inline */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: isMobile ? '0.4rem' : '0.75rem',
+                  marginBottom: isMobile ? '0.6rem' : '1rem'
+                }}>
+                  <span style={{ fontSize: isMobile ? '1.25rem' : '2rem' }}>🎉</span>
+                  <div style={{
+                    fontSize: isMobile ? '1rem' : '1.4rem',
+                    fontWeight: '900',
+                    color: '#10B981'
+                  }}>
+                    Perfect! {streak > 1 && `${streak} in a row!`}
+                  </div>
+                </div>
+
+                {/* Answer and Explanation - vertical on mobile, horizontal on desktop */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr',
+                  gap: isMobile ? '0.6rem' : '1rem',
+                  alignItems: 'stretch'
+                }}>
+                  {/* Answer Display */}
+                  <div style={{
+                    padding: isMobile ? '0.75rem' : '1.25rem',
+                    background: 'rgba(0,0,0,0.25)',
+                    borderRadius: isMobile ? '8px' : '12px',
+                    border: '1px solid rgba(16,185,129,0.3)',
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center'
+                  }}>
+                    <div style={{
+                      fontSize: isMobile ? '0.6rem' : '0.75rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      fontWeight: '600',
+                      marginBottom: isMobile ? '0.3rem' : '0.5rem',
+                      opacity: 0.7
+                    }}>Answer</div>
+                    <div style={{
+                      fontSize: isMobile ? '1.25rem' : '1.75rem',
+                      fontWeight: '800',
+                      color: '#10B981'
+                    }}>{answer}</div>
+                  </div>
+
+                  {/* Explanation */}
+                  {showExplanation && (
+                    <div style={{
+                      padding: isMobile ? '0.75rem' : '1.25rem',
+                      background: 'rgba(0,0,0,0.3)',
+                      borderRadius: isMobile ? '8px' : '12px',
+                      border: '1px solid rgba(16,185,129,0.2)',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: isMobile ? '0.3rem' : '0.5rem',
+                        marginBottom: isMobile ? '0.4rem' : '0.75rem'
+                      }}>
+                        <span style={{ fontSize: isMobile ? '0.9rem' : '1.25rem' }}>💡</span>
+                        <span style={{
+                          fontSize: isMobile ? '0.7rem' : '0.85rem',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          color: '#10B981'
+                        }}>Explanation</span>
+                      </div>
+                      <div style={{
+                        fontSize: isMobile ? '0.85rem' : '1rem',
+                        lineHeight: '1.5',
+                        opacity: 0.95,
+                        color: 'rgba(255,255,255,0.9)'
+                      }}>
+                        {problem.explanation}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Incorrect Feedback */}
+            {feedback === 'incorrect' && (
+              <div style={{
+                marginTop: isMobile ? '0.75rem' : '1.5rem',
+                padding: isMobile ? '0.75rem 1rem' : '1.25rem 1.5rem',
+                background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(220,38,38,0.15) 100%)',
+                borderRadius: isMobile ? '10px' : '16px',
+                border: '2px solid rgba(239,68,68,0.5)',
+                boxShadow: '0 8px 32px rgba(239,68,68,0.3)',
+                animation: 'shake 0.5s ease-in-out',
+                display: 'flex',
+                alignItems: 'center',
+                gap: isMobile ? '0.6rem' : '1rem'
+              }}>
+                <div style={{ fontSize: isMobile ? '1.25rem' : '2rem' }}>❌</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: isMobile ? '1rem' : '1.4rem',
+                    fontWeight: '700',
+                    color: '#EF4444',
+                    marginBottom: '0.15rem'
+                  }}>
+                    Not quite!
+                  </div>
+                  <div style={{
+                    fontSize: isMobile ? '0.85rem' : '1rem',
+                    opacity: 0.9,
+                    lineHeight: 1.4
+                  }}>
+                    Try again! 💪
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Progressive Hint System */}
+            {feedback === 'hint' && (
+              <div style={{
+                marginTop: isMobile ? '0.75rem' : '1.5rem',
+                padding: isMobile ? '0.875rem' : '1.25rem',
+                background: 'linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(251,191,36,0.15) 100%)',
+                borderRadius: isMobile ? '10px' : '16px',
+                border: '2px solid rgba(245,158,11,0.6)',
+                boxShadow: '0 8px 32px rgba(245,158,11,0.4)'
+              }}>
+                {/* Header - inline on desktop, stacked on mobile */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  alignItems: isMobile ? 'flex-start' : 'center',
+                  justifyContent: 'space-between',
+                  gap: isMobile ? '0.6rem' : '0',
+                  marginBottom: isMobile ? '0.6rem' : '1rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0.4rem' : '0.75rem' }}>
+                    <span style={{ fontSize: isMobile ? '1.25rem' : '1.75rem' }}>💡</span>
+                    <span style={{
+                      fontSize: isMobile ? '0.95rem' : '1.3rem',
+                      fontWeight: '800',
+                      color: '#F59E0B'
+                    }}>
+                      Hint {currentHint + 1}/{problem.hints.length}
+                    </span>
+                  </div>
+
+                  {/* Buttons */}
+                  <div style={{ display: 'flex', gap: isMobile ? '0.5rem' : '0.75rem', width: isMobile ? '100%' : 'auto' }}>
+                    {currentHint < problem.hints.length - 1 && (
+                      <button
+                        onClick={showNextHint}
+                        style={{
+                          padding: isMobile ? '0.5rem 0.875rem' : '0.75rem 1.25rem',
+                          fontSize: isMobile ? '0.75rem' : '0.9rem',
+                          fontWeight: '700',
+                          background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          boxShadow: '0 4px 16px rgba(245,158,11,0.4)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          flex: isMobile ? '1' : '0'
+                        }}
+                      >
+                        Next →
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowAIHelp(true)}
+                      style={{
+                        padding: isMobile ? '0.5rem 0.875rem' : '0.75rem 1.25rem',
+                        fontSize: isMobile ? '0.75rem' : '0.9rem',
+                        fontWeight: '700',
+                        background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 4px 16px rgba(20,184,166,0.4)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        flex: isMobile ? '1' : '0'
+                      }}
+                    >
+                      💬 AI
+                    </button>
+                  </div>
+                </div>
+
+                {/* Hint text */}
+                <div style={{
+                  fontSize: isMobile ? '0.85rem' : '1.1rem',
+                  lineHeight: '1.5',
+                  padding: isMobile ? '0.75rem' : '1.25rem',
+                  background: 'rgba(0,0,0,0.3)',
+                  borderRadius: isMobile ? '8px' : '12px',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  textAlign: 'left'
+                }}>
+                  {problem.hints[currentHint]}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-      <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: isMobile ? '100%' : 'calc(50% - 1.5rem)', background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)', backdropFilter: 'blur(40px)', border: '2px solid rgba(124, 58, 237, 0.3)', borderRadius: '32px', transform: showAIHelp ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 50, overflow: 'hidden', boxShadow: showAIHelp ? '0 30px 90px rgba(0, 0, 0, 0.6)' : 'none' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, rgba(124, 58, 237, 0.8), transparent)' }} />
+
+      {/* AI Tutor Column - Third column when active */}
+      {showAIHelp && !isMobile && (
         <div style={{
-          position: 'relative',
-          height: '100%',
+          position: 'sticky',
+          top: '2rem',
+          width: '100%',
+          height: '680px',
+          background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
+          backdropFilter: 'blur(60px)',
+          border: '2px solid rgba(20, 184, 166, 0.3)',
+          borderRadius: '32px',
           overflow: 'hidden',
-          zIndex: 10,
-          padding: '1.5rem',
-          display: 'flex',
-          flexDirection: 'column'
+          boxShadow: '0 30px 90px rgba(0, 0, 0, 0.6)',
+          animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
           <div style={{
-            flex: 1,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '2px',
+            background: 'linear-gradient(90deg, rgba(20, 184, 166, 0.8), transparent)'
+          }} />
+          <div style={{
+            position: 'relative',
+            height: '100%',
             overflow: 'hidden',
-            borderRadius: '32px'
+            display: 'flex',
+            flexDirection: 'column'
           }}>
             <PremiumAIAssistant
               title="AI Tutor"
@@ -215,7 +818,42 @@ export default function LearningSimulation() {
             />
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Mobile AI Tutor Overlay - Inline with content */}
+      {showAIHelp && isMobile && (
+        <div style={{
+          width: '100%',
+          marginTop: '1rem',
+          background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
+          backdropFilter: 'blur(40px)',
+          borderRadius: '20px',
+          border: '2px solid rgba(124, 58, 237, 0.3)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          overflow: 'hidden',
+          minHeight: '500px',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <PremiumAIAssistant
+            title="AI Tutor"
+            subtitle="Powered by Claude Haiku 4.5"
+            initialMessage={isMobile ? "Hi! I'm your AI tutor. Ask me anything!" : "Hi! I'm your AI tutor. I can help you understand concepts and work through problems."}
+            context="education"
+            examplePrompts={isMobile ? [
+              "Explain this concept"
+            ] : [
+              "Help me solve this problem",
+              "Explain this concept",
+              "Give me a hint",
+              "Check my work"
+            ]}
+            onLLMResponse={handleLLMResponse}
+            onClose={() => setShowAIHelp(false)}
+          />
+        </div>
+      )}
+
       {isClient && document.getElementById('help-button-container') ? createPortal(helpButton, document.getElementById('help-button-container')!) : null}
     </div>
   )

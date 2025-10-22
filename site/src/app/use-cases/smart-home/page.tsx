@@ -294,8 +294,6 @@ export default function SmartHomePage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
-          willChange: 'transform, opacity',
-          transform: 'translateZ(0)',
         }}
       >
         <canvas
@@ -305,8 +303,6 @@ export default function SmartHomePage() {
             width: '100%',
             height: '100%',
             filter: 'drop-shadow(0 10px 40px rgba(139, 92, 246, 0.5))',
-            willChange: 'transform',
-            transform: 'translateZ(0)',
           }}
         />
       </div>
@@ -317,8 +313,6 @@ export default function SmartHomePage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
-        willChange: 'transform',
-        transform: 'translateZ(0)',
       }}>
         {/* Hero Section - Apple Style */}
         <section style={{
@@ -488,28 +482,29 @@ export default function SmartHomePage() {
             {/* Stats - Emotive Engine Capabilities */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '2rem',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: isMobile ? '1.5rem' : '2rem',
               maxWidth: '800px',
               margin: '0 auto',
-              paddingTop: '3rem',
+              paddingTop: isMobile ? '2rem' : '3rem',
               borderTop: '1px solid rgba(139, 92, 246, 0.2)',
+              padding: isMobile ? '2rem 1rem 0 1rem' : '3rem 0 0 0'
             }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#8B5CF6',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
                 }}>
                   35+
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   Built-in Gestures
@@ -517,39 +512,39 @@ export default function SmartHomePage() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#8B5CF6',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
                 }}>
                   15
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   Core Emotions
                 </div>
               </div>
-              <div style={{ textAlign: 'center' }}>
+              <div style={{ textAlign: 'center', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#8B5CF6',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
                 }}>
                   ∞
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   Infinitely Custom

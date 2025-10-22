@@ -59,7 +59,8 @@ export default function HomePage() {
       }
 
       // Z-index transition - only update if actually changed to prevent unnecessary re-renders
-      const heroHeight = viewportHeight * 0.9
+      // On mobile, hide mascot much earlier to prevent interference
+      const heroHeight = isMobile ? viewportHeight * 0.5 : viewportHeight * 0.9
       const newZIndex = scrollY < heroHeight ? 100 : 1
 
       if (newZIndex !== lastZIndexRef.current) {
@@ -167,8 +168,6 @@ export default function HomePage() {
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
-        transform: 'translateZ(0)',
-        willChange: 'transform',
       }}>
 
         {/* Hero Section - Critical Path */}
@@ -607,58 +606,6 @@ export default function HomePage() {
               </div>
             </Link>
 
-            {/* Healthcare - Mental Health */}
-            <Link
-              href="/use-cases/healthcare"
-              style={{
-                background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 100%)',
-                borderRadius: 'clamp(16px, 3vw, 20px)',
-                border: '1px solid rgba(16,185,129,0.2)',
-                padding: 'clamp(1.5rem, 4vw, 2rem)',
-                textDecoration: 'none',
-                color: 'white',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'clamp(0.75rem, 2vw, 1rem)',
-                transition: 'all 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)'
-                e.currentTarget.style.boxShadow = '0 20px 60px rgba(16,185,129,0.3)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
-            >
-              <div style={{ fontSize: 'clamp(2rem, 5vw, 2.5rem)' }}>🏥</div>
-              <div>
-                <h3 style={{
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
-                  fontWeight: '700',
-                  marginBottom: '0.5rem',
-                  color: '#10B981',
-                }}>
-                  Mental Health Support
-                </h3>
-                <p style={{
-                  fontFamily: 'var(--font-heading)',
-                  fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                  lineHeight: '1.6',
-                  opacity: 0.85,
-                }}>
-                  Real-time emotion monitoring for therapy. Detects stress, anxiety markers, and celebrates progress.
-                </p>
-              </div>
-              <div style={{
-                fontSize: 'clamp(0.75rem, 1.5vw, 0.875rem)',
-                opacity: 0.6,
-                fontWeight: '600',
-              }}>
-                +40% patient engagement
-              </div>
-            </Link>
           </div>
         </section>
 

@@ -49,7 +49,6 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
     { name: 'Cherokee', href: '/use-cases/cherokee' },
     { name: 'Retail', href: '/use-cases/retail' },
     { name: 'Smart Home', href: '/use-cases/smart-home' },
-    { name: 'Healthcare', href: '/use-cases/healthcare' },
     { name: 'Education', href: '/use-cases/education' },
   ]
 

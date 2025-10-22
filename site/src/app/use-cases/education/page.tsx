@@ -22,6 +22,9 @@ export default function EducationPage() {
   const rafRef = useRef<number | null>(null)
   const tickingRef = useRef(false)
   const frameCountRef = useRef(0)
+  const lastOpacityRef = useRef(1)
+  const lastZIndexRef = useRef(100)
+  const lastVisibilityRef = useRef<string>('visible')
 
   // Detect mobile
   useEffect(() => {
@@ -123,7 +126,10 @@ export default function EducationPage() {
         })
 
         const initialXOffset = isMobileDevice ? 0 : -vw * 0.38
-        mascotInstance.setPosition(initialXOffset, 0, 0)
+        const initialYOffset = isMobileDevice
+          ? -vh * 0.3  // Mobile: higher up
+          : -vh * 0.05   // Desktop: slightly higher
+        mascotInstance.setPosition(initialXOffset, initialYOffset, 0)
 
         mascotInstance.start()
 
@@ -165,22 +171,20 @@ export default function EducationPage() {
     if (!mascot || !containerRef.current) return
 
     const container = containerRef.current
-    let lastOpacity = 1
-    let lastZIndex = 100
 
     const updateMascotOnScroll = () => {
       try {
-        frameCountRef.current++
-
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
         const viewportWidth = window.innerWidth
         const isMobileDevice = viewportWidth < 768
 
-        // Only update position every 3 frames to reduce blocking
-        if (frameCountRef.current % 3 === 0 && mascot && typeof mascot.setPosition === 'function') {
+        // Update mascot position
+        if (mascot && typeof mascot.setPosition === 'function') {
           const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
-          const yOffset = (scrollY - viewportHeight * 0.1) * 0.5
+          const yOffset = isMobileDevice
+            ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
+            : (scrollY - viewportHeight * 0.1) * 0.5  // Slightly higher on desktop
           const wavelength = 600
           const amplitude = isMobileDevice
             ? Math.min(80, viewportWidth * 0.15)
@@ -190,35 +194,26 @@ export default function EducationPage() {
           mascot.setPosition(xOffset, yOffset, 0)
         }
 
-        // Calculate opacity and z-index
+        // Calculate opacity using CSS custom property - no z-index changes
         const heroHeight = viewportHeight * 0.9
         const demoSectionStart = heroHeight + viewportHeight * 0.3
         const fadeRange = viewportHeight * 0.3
 
         let opacity = 1
-        let zIndex = 100
 
         if (scrollY >= demoSectionStart) {
           const fadeProgress = Math.min((scrollY - demoSectionStart) / fadeRange, 1)
           opacity = Math.max(0, 1 - fadeProgress)
         }
 
-        if (scrollY >= heroHeight) {
-          zIndex = opacity > 0.1 ? 1 : -1
+        // Only update opacity if changed significantly
+        if (Math.abs(opacity - lastOpacityRef.current) > 0.02) {
+          container.style.opacity = String(opacity)
+          lastOpacityRef.current = opacity
         }
 
-        // Only update DOM if values changed significantly
-        if (Math.abs(opacity - lastOpacity) > 0.01 || zIndex !== lastZIndex) {
-          container.style.opacity = opacity.toFixed(2)
-          container.style.zIndex = String(zIndex)
-          container.style.visibility = opacity < 0.01 ? 'hidden' : 'visible'
-          lastOpacity = opacity
-          lastZIndex = zIndex
-        }
-
-        // Gesture points (only if visible and not too frequent)
+        // Gesture points (only if visible)
         if (opacity > 0.1) {
-          const heroHeight = viewportHeight * 0.9
           const gesturePoints = [
             { threshold: 0, gesture: null, emotion: 'neutral' },
             { threshold: heroHeight * 0.9, gesture: 'wave', emotion: 'joy' },
@@ -290,8 +285,6 @@ export default function EducationPage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
-          willChange: 'transform, opacity',
-          transform: 'translateZ(0)',
         }}
       >
         <canvas
@@ -301,8 +294,6 @@ export default function EducationPage() {
             width: '100%',
             height: '100%',
             filter: 'drop-shadow(0 10px 40px rgba(124, 58, 237, 0.4))',
-            willChange: 'transform',
-            transform: 'translateZ(0)',
           }}
         />
       </div>
@@ -313,18 +304,20 @@ export default function EducationPage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
-        willChange: 'transform',
-        transform: 'translateZ(0)',
       }}>
         {/* Hero Section */}
         <section style={{
-          minHeight: '100vh',
+          minHeight: '75vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '4rem 2rem',
+          padding: 'clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 2rem)',
           background: 'radial-gradient(ellipse at top, rgba(124,58,237,0.15) 0%, transparent 50%), linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
           position: 'relative',
+          width: '100%',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
+          overflow: 'hidden'
         }}>
           {/* Ambient light effect */}
           <div style={{
@@ -343,72 +336,81 @@ export default function EducationPage() {
             maxWidth: '1000px',
             width: '100%',
             textAlign: 'center',
-            paddingTop: '2rem',
+            paddingTop: 'clamp(8rem, 20vh, 12rem)',
             position: 'relative',
             zIndex: 2
           }}>
             <div style={{
               display: 'inline-block',
-              padding: '0.6rem 1.5rem',
+              padding: isMobile ? '0.5rem 1rem' : '0.6rem 1.5rem',
               background: 'rgba(124, 58, 237, 0.15)',
               border: '1px solid rgba(124, 58, 237, 0.3)',
               borderRadius: '30px',
-              marginBottom: '2rem',
-              fontSize: '0.85rem',
+              marginBottom: isMobile ? '1.5rem' : '2rem',
+              fontSize: isMobile ? '0.7rem' : '0.85rem',
               fontWeight: '600',
               color: '#A78BFA',
               textTransform: 'uppercase',
-              letterSpacing: '1.5px',
-              boxShadow: '0 4px 24px rgba(124, 58, 237, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
+              letterSpacing: isMobile ? '1px' : '1.5px',
+              boxShadow: '0 4px 24px rgba(124, 58, 237, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+              whiteSpace: 'nowrap'
             }}>
-              AI-Powered Education • Live Demo
+              {isMobile ? 'AI Education • Live' : 'AI-Powered Education • Live Demo'}
             </div>
 
             <h1 style={{
               fontFamily: 'var(--font-primary)',
-              fontSize: 'clamp(3.5rem, 10vw, 6.5rem)',
+              fontSize: isMobile ? '2.5rem' : 'clamp(3.5rem, 10vw, 6.5rem)',
               fontWeight: '900',
-              marginBottom: '2rem',
-              lineHeight: 1,
-              letterSpacing: '-0.04em',
+              marginBottom: isMobile ? '1.25rem' : '2rem',
+              lineHeight: 1.1,
+              letterSpacing: '-0.03em',
               background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 50%, #C4B5FD 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               textShadow: '0 0 80px rgba(124, 58, 237, 0.3)',
+              padding: isMobile ? '0 0.5rem' : '0'
             }}>
-              Adaptive Learning AI
+              Adaptive Learning{isMobile ? '' : ' AI'}
             </h1>
 
             <h2 style={{
               fontFamily: 'var(--font-primary)',
-              fontSize: 'clamp(1.8rem, 5vw, 3rem)',
+              fontSize: isMobile ? '1.4rem' : 'clamp(1.8rem, 5vw, 3rem)',
               fontWeight: '600',
-              marginBottom: '1.5rem',
+              marginBottom: isMobile ? '1rem' : '1.5rem',
               color: 'rgba(255,255,255,0.95)',
-              letterSpacing: '-0.02em'
+              letterSpacing: '-0.02em',
+              padding: isMobile ? '0 0.5rem' : '0'
             }}>
-              Boost Student Engagement by 73%
+              {isMobile ? '73% More Engagement' : 'Boost Student Engagement by 73%'}
             </h2>
 
             <p style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 'clamp(1.15rem, 2.2vw, 1.4rem)',
+              fontSize: isMobile ? '1rem' : 'clamp(1.15rem, 2.2vw, 1.4rem)',
               color: 'rgba(255,255,255,0.75)',
-              marginBottom: '3rem',
-              lineHeight: '1.7',
-              maxWidth: '700px',
-              margin: '0 auto 3rem auto',
+              marginBottom: isMobile ? '2rem' : '3rem',
+              lineHeight: '1.6',
+              maxWidth: isMobile ? '100%' : '700px',
+              margin: isMobile ? '0 0 2rem 0' : '0 auto 3rem auto',
+              padding: isMobile ? '0 0.5rem' : '0'
             }}>
-              Emotive AI that detects student confusion and frustration in real-time, adapting lessons with personalized encouragement and progressive hints.
+              {isMobile
+                ? 'AI that detects confusion in real-time, adapting with personalized help.'
+                : 'Emotive AI that detects student confusion and frustration in real-time, adapting lessons with personalized encouragement and progressive hints.'}
             </p>
 
             <div style={{
               display: 'flex',
-              gap: '1.5rem',
+              gap: isMobile ? '1rem' : '1.5rem',
+              flexDirection: isMobile ? 'column' : 'row',
               flexWrap: 'wrap',
               justifyContent: 'center',
-              marginBottom: '4rem',
+              marginBottom: isMobile ? '2rem' : '4rem',
+              padding: isMobile ? '0 0.5rem' : '0',
+              width: isMobile ? '100%' : 'auto'
             }}>
               <button
                 onClick={() => {
@@ -427,82 +429,66 @@ export default function EducationPage() {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '0.5rem',
-                  padding: '1.25rem 2.5rem',
+                  padding: isMobile ? '1rem 2rem' : '1.25rem 2.5rem',
                   background: 'linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)',
-                  borderRadius: '12px',
+                  borderRadius: isMobile ? '10px' : '12px',
                   textDecoration: 'none',
                   color: 'white',
-                  fontSize: '1.15rem',
+                  fontSize: isMobile ? '1rem' : '1.15rem',
                   fontWeight: '600',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   boxShadow: '0 4px 20px rgba(124, 58, 237, 0.4)',
                   border: 'none',
                   cursor: 'pointer',
+                  width: isMobile ? '100%' : 'auto'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(124, 58, 237, 0.6)'
+                  if (!isMobile) {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(124, 58, 237, 0.6)'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(124, 58, 237, 0.4)'
+                  if (!isMobile) {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(124, 58, 237, 0.4)'
+                  }
                 }}
               >
                 <span>🎓</span> Try AI Tutor
               </button>
-
-              <a
-                href="#features"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '1.25rem 2.5rem',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '12px',
-                  textDecoration: 'none',
-                  color: 'white',
-                  fontSize: '1.15rem',
-                  fontWeight: '600',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                }}
-              >
-                See Features
-              </a>
 
               <button
                 onClick={() => setIsScheduleModalOpen(true)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '0.5rem',
-                  padding: '1.25rem 2.5rem',
+                  padding: isMobile ? '1rem 2rem' : '1.25rem 2.5rem',
                   background: 'rgba(124, 58, 237, 0.1)',
                   border: '1px solid rgba(124, 58, 237, 0.3)',
-                  borderRadius: '12px',
+                  borderRadius: isMobile ? '10px' : '12px',
                   color: 'white',
-                  fontSize: '1.15rem',
+                  fontSize: isMobile ? '1rem' : '1.15rem',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  width: isMobile ? '100%' : 'auto'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(124, 58, 237, 0.15)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  if (!isMobile) {
+                    e.currentTarget.style.background = 'rgba(124, 58, 237, 0.15)'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(124, 58, 237, 0.1)'
-                  e.currentTarget.style.transform = 'translateY(0)'
+                  if (!isMobile) {
+                    e.currentTarget.style.background = 'rgba(124, 58, 237, 0.1)'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }
                 }}
               >
                 <span>📅</span> Schedule Demo
@@ -512,28 +498,29 @@ export default function EducationPage() {
             {/* Stats */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '2rem',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: isMobile ? '1.5rem' : '2rem',
               maxWidth: '800px',
               margin: '0 auto',
-              paddingTop: '3rem',
+              paddingTop: isMobile ? '2rem' : '3rem',
               borderTop: '1px solid rgba(124, 58, 237, 0.2)',
+              padding: isMobile ? '2rem 1rem 0 1rem' : '3rem 0 0 0'
             }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#7C3AED',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(124, 58, 237, 0.5)',
                 }}>
                   73%
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   More Engagement
@@ -541,39 +528,39 @@ export default function EducationPage() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#7C3AED',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(124, 58, 237, 0.5)',
                 }}>
                   92%
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   Retention Rate
                 </div>
               </div>
-              <div style={{ textAlign: 'center' }}>
+              <div style={{ textAlign: 'center', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
                 <div style={{
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
+                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
                   fontWeight: '800',
                   color: '#7C3AED',
-                  marginBottom: '0.5rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
                   textShadow: '0 0 20px rgba(124, 58, 237, 0.5)',
                 }}>
                   2.5x
                 </div>
                 <div style={{
-                  fontSize: '0.9rem',
+                  fontSize: isMobile ? '0.65rem' : '0.9rem',
                   color: 'rgba(255, 255, 255, 0.6)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: isMobile ? '0.5px' : '1px',
                   fontWeight: '600',
                 }}>
                   Faster Learning
@@ -691,15 +678,17 @@ export default function EducationPage() {
             {/* Full-width Learning Interface */}
             <div style={{
               background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%)',
-              borderRadius: '40px',
-              border: '3px solid rgba(124, 58, 237, 0.2)',
+              borderRadius: isMobile ? '20px' : '40px',
+              border: isMobile ? '2px solid rgba(124, 58, 237, 0.2)' : '3px solid rgba(124, 58, 237, 0.2)',
               boxShadow: `
                 0 40px 120px rgba(0, 0, 0, 0.7),
                 0 0 0 1px rgba(124, 58, 237, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05)
               `,
               overflow: 'hidden',
-              position: 'relative'
+              position: 'relative',
+              width: '100%',
+              boxSizing: 'border-box'
             }}>
               {/* Top accent */}
               <div style={{
@@ -715,76 +704,88 @@ export default function EducationPage() {
               {/* Terminal header bar */}
               <div style={{
                 background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(20, 184, 166, 0.08) 100%)',
-                padding: '2rem 2.5rem',
+                padding: isMobile ? '1rem' : '2rem 2.5rem',
                 borderBottom: '2px solid rgba(124, 58, 237, 0.2)',
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                position: 'relative'
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? '1rem' : '0',
+                position: 'relative',
+                width: '100%',
+                boxSizing: 'border-box'
               }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '1.25rem'
+                  gap: isMobile ? '0.75rem' : '1.25rem',
+                  width: isMobile ? '100%' : 'auto'
                 }}>
                   <div style={{
-                    fontSize: '2.5rem',
-                    filter: 'drop-shadow(0 4px 16px rgba(124, 58, 237, 0.5))'
+                    fontSize: isMobile ? '2rem' : '2.5rem',
+                    filter: 'drop-shadow(0 4px 16px rgba(124, 58, 237, 0.5))',
+                    flexShrink: 0
                   }}>
                     🎓
                   </div>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
                       fontWeight: '800',
-                      fontSize: '1.4rem',
+                      fontSize: isMobile ? '1.1rem' : '1.4rem',
                       background: 'linear-gradient(135deg, #7C3AED 0%, #14B8A6 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
                       marginBottom: '0.25rem',
-                      letterSpacing: '-0.01em'
+                      letterSpacing: '-0.01em',
+                      whiteSpace: isMobile ? 'normal' : 'nowrap',
+                      lineHeight: 1.2
                     }}>
-                      LearnSmart Interactive Lab
+                      LearnSmart {isMobile ? '' : 'Interactive '}Lab
                     </div>
                     <div style={{
-                      fontSize: '0.9rem',
+                      fontSize: isMobile ? '0.75rem' : '0.9rem',
                       opacity: 0.6,
                       fontWeight: '500'
                     }}>
-                      Session 12 • AI-Adaptive Learning
+                      Session 12 • AI-Adaptive
                     </div>
                   </div>
                 </div>
                 <div style={{
                   display: 'flex',
-                  gap: '1.25rem',
-                  alignItems: 'center'
+                  gap: isMobile ? '0.5rem' : '1.25rem',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  width: isMobile ? '100%' : 'auto'
                 }}>
                   <div style={{
                     display: 'flex',
-                    gap: '0.6rem',
+                    gap: '0.5rem',
                     alignItems: 'center'
                   }}>
                     <div style={{
-                      width: '12px',
-                      height: '12px',
+                      width: isMobile ? '10px' : '12px',
+                      height: isMobile ? '10px' : '12px',
                       borderRadius: '50%',
                       background: '#14B8A6',
-                      boxShadow: '0 0 16px rgba(20, 184, 166, 0.8), inset 0 0 4px rgba(255, 255, 255, 0.3)'
+                      boxShadow: '0 0 16px rgba(20, 184, 166, 0.8), inset 0 0 4px rgba(255, 255, 255, 0.3)',
+                      flexShrink: 0
                     }} />
-                    <span style={{ fontSize: '0.9rem', opacity: 0.8, fontWeight: '600' }}>Learning Active</span>
+                    <span style={{ fontSize: isMobile ? '0.75rem' : '0.9rem', opacity: 0.8, fontWeight: '600', whiteSpace: 'nowrap' }}>Learning Active</span>
                   </div>
                   <div style={{
-                    padding: '0.6rem 1.25rem',
+                    padding: isMobile ? '0.5rem 0.875rem' : '0.6rem 1.25rem',
                     background: 'rgba(124, 58, 237, 0.15)',
-                    borderRadius: '10px',
-                    fontSize: '0.9rem',
+                    borderRadius: isMobile ? '8px' : '10px',
+                    fontSize: isMobile ? '0.75rem' : '0.9rem',
                     fontWeight: '700',
                     color: '#A78BFA',
                     border: '1px solid rgba(124, 58, 237, 0.3)',
                     boxShadow: '0 2px 12px rgba(124, 58, 237, 0.2)',
                     letterSpacing: '0.5px',
-                    textTransform: 'uppercase'
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap'
                   }}>
                     AI Active
                   </div>

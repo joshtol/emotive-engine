@@ -654,8 +654,6 @@ export default function CherokeePage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
-          willChange: 'transform, opacity',
-          transform: 'translateZ(0)',
         }}
       >
         <canvas
@@ -665,8 +663,6 @@ export default function CherokeePage() {
             width: '100%',
             height: '100%',
             filter: 'drop-shadow(0 10px 40px rgba(218, 165, 32, 0.4))',
-            willChange: 'transform',
-            transform: 'translateZ(0)',
           }}
         />
       </div>
@@ -678,8 +674,6 @@ export default function CherokeePage() {
         position: 'relative',
         zIndex: 1,
         overflow: 'hidden',
-        willChange: 'transform',
-        transform: 'translateZ(0)',
       }}>
         {/* Hero Section with Parallax */}
         <section style={{
@@ -2029,8 +2023,6 @@ export default function CherokeePage() {
                   pointerEvents: 'auto',
                   zIndex: 1,
                   filter: 'none',
-                  transform: 'translateZ(0)',
-                  willChange: 'transform'
                 }}
               />
 

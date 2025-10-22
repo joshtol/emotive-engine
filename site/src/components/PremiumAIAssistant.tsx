@@ -53,8 +53,17 @@ export default function PremiumAIAssistant({
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
+
+  // Detect mobile
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768)
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Auto-scroll chat container to bottom when messages change
   useEffect(() => {
@@ -195,7 +204,7 @@ export default function PremiumAIAssistant({
 
         {/* Ultra-Premium Header */}
         <div style={{
-          padding: '2.5rem 2.5rem 2rem 2.5rem',
+          padding: isMobile ? '1rem' : '2.5rem 2.5rem 2rem 2.5rem',
           borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
           background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%)',
           position: 'relative',
@@ -204,22 +213,23 @@ export default function PremiumAIAssistant({
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '1.25rem'
+            gap: isMobile ? '0.75rem' : '1.25rem'
           }}>
             {/* Premium icon with gradient border */}
             <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
+              width: isMobile ? '40px' : '56px',
+              height: isMobile ? '40px' : '56px',
+              borderRadius: isMobile ? '12px' : '16px',
               background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
               border: '1px solid rgba(0, 217, 255, 0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.75rem',
+              fontSize: isMobile ? '1.25rem' : '1.75rem',
               boxShadow: '0 8px 32px rgba(0, 217, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              flexShrink: 0
             }}>
               {/* Shine effect */}
               <div style={{
@@ -233,9 +243,9 @@ export default function PremiumAIAssistant({
               }} />
               💬
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <h3 style={{
-                fontSize: '1.75rem',
+                fontSize: isMobile ? '1.1rem' : '1.75rem',
                 fontWeight: '700',
                 background: 'linear-gradient(135deg, #00D9FF 0%, #10B981 100%)',
                 WebkitBackgroundClip: 'text',
@@ -249,7 +259,7 @@ export default function PremiumAIAssistant({
                 {title}
               </h3>
               <p style={{
-                fontSize: '0.875rem',
+                fontSize: isMobile ? '0.7rem' : '0.875rem',
                 color: 'rgba(255, 255, 255, 0.4)',
                 margin: '0.375rem 0 0 0',
                 fontWeight: '500',
@@ -258,16 +268,17 @@ export default function PremiumAIAssistant({
                 {subtitle}
               </p>
             </div>
-            {/* Status indicator */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 1rem',
-              background: 'rgba(16, 185, 129, 0.1)',
-              borderRadius: '100px',
-              border: '1px solid rgba(16, 185, 129, 0.2)'
-            }}>
+            {/* Status indicator - hide on mobile */}
+            {!isMobile && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                background: 'rgba(16, 185, 129, 0.1)',
+                borderRadius: '100px',
+                border: '1px solid rgba(16, 185, 129, 0.2)'
+              }}>
               <div style={{
                 width: '6px',
                 height: '6px',
@@ -285,7 +296,8 @@ export default function PremiumAIAssistant({
               }}>
                 Online
               </span>
-            </div>
+              </div>
+            )}
             {/* Close button */}
             {onClose && (
               <button
@@ -484,7 +496,7 @@ export default function PremiumAIAssistant({
 
         {/* Premium Glass Input Bar */}
         <div style={{
-          padding: '2rem 2.5rem 2.5rem 2.5rem',
+          padding: isMobile ? '1rem' : '2rem 2.5rem 2.5rem 2.5rem',
           borderTop: '1px solid rgba(255, 255, 255, 0.04)',
           background: 'linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 100%)',
           position: 'relative',
@@ -492,15 +504,17 @@ export default function PremiumAIAssistant({
         }}>
           <div style={{
             display: 'flex',
-            gap: '0.875rem',
+            gap: isMobile ? '0.5rem' : '0.875rem',
             alignItems: 'center',
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
             backdropFilter: 'blur(40px) saturate(180%)',
             WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-            borderRadius: '20px',
+            borderRadius: isMobile ? '16px' : '20px',
             border: '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '0.5rem',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+            padding: isMobile ? '0.35rem' : '0.5rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             <input
               type="text"
@@ -511,21 +525,22 @@ export default function PremiumAIAssistant({
               disabled={loading}
               style={{
                 flex: 1,
-                padding: '0.875rem 1.25rem',
+                padding: isMobile ? '0.75rem 0.875rem' : '0.875rem 1.25rem',
                 background: 'transparent',
                 border: 'none',
                 color: 'white',
-                fontSize: '0.9375rem',
+                fontSize: isMobile ? '0.875rem' : '0.9375rem',
                 fontWeight: '400',
                 outline: 'none',
-                caretColor: '#00D9FF'
+                caretColor: '#00D9FF',
+                minWidth: 0
               }}
             />
             <button
               onClick={handleSend}
               disabled={loading || !input.trim()}
               style={{
-                padding: '0.875rem 1.75rem',
+                padding: isMobile ? '0.75rem 1.25rem' : '0.875rem 1.75rem',
                 background: loading || !input.trim()
                   ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
                   : 'linear-gradient(135deg, rgba(0, 217, 255, 0.4) 0%, rgba(16, 185, 129, 0.3) 100%)',
@@ -534,9 +549,9 @@ export default function PremiumAIAssistant({
                 border: loading || !input.trim()
                   ? '1px solid rgba(0, 217, 255, 0.15)'
                   : '1px solid rgba(0, 217, 255, 0.3)',
-                borderRadius: '16px',
+                borderRadius: isMobile ? '12px' : '16px',
                 color: loading || !input.trim() ? 'rgba(255, 255, 255, 0.4)' : 'white',
-                fontSize: '0.9375rem',
+                fontSize: isMobile ? '0.85rem' : '0.9375rem',
                 fontWeight: '600',
                 cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -545,7 +560,9 @@ export default function PremiumAIAssistant({
                   ? 'none'
                   : '0 4px 20px rgba(0, 217, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                flexShrink: 0,
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => {
                 if (!loading && input.trim()) {

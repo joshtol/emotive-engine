@@ -198,6 +198,9 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
         height: '100vh',
         pointerEvents: 'none',
         zIndex: containerZIndex,
+        opacity: containerZIndex === 1 ? 0 : 1,
+        visibility: containerZIndex === 1 ? 'hidden' : 'visible',
+        transition: 'opacity 0.5s ease-out, visibility 0.5s ease-out',
         willChange: 'transform',
         transform: 'translateZ(0)',
       }}

@@ -129,11 +129,15 @@ export async function POST(req: NextRequest) {
       setTimeout(() => reject(new Error('Request timeout')), TIMEOUT);
     });
 
-    // Call Haiku 4.5 with timeout
+    // Call Haiku 4.5 with timeout and extended thinking
     const responsePromise = anthropic.messages.create({
-      model: 'claude-4-5-haiku-20250514',
+      model: 'claude-haiku-4-5',
       max_tokens: MAX_TOKENS,
       temperature: 0.7,
+      thinking: {
+        type: 'enabled',
+        budget_tokens: 1024
+      },
       system: SYSTEM_PROMPT,
       messages: [
         {
