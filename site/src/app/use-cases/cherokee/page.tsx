@@ -1996,81 +1996,130 @@ export default function CherokeePage() {
                 ×
               </button>
 
-              {/* Previous button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  navigateCard('prev')
-                }}
-                style={{
-                  position: 'absolute',
-                  left: '1rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'rgba(0,0,0,0.5)',
-                  backdropFilter: 'blur(10px)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '44px',
-                  height: '44px',
-                  fontSize: '1.5rem',
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 10,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0,0,0,0.7)'
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0,0,0,0.5)'
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)'
-                }}
-              >
-                ←
-              </button>
+              {/* Navigation Controls - Centered Bottom */}
+              <div style={{
+                position: 'absolute',
+                bottom: '2rem',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'center',
+                zIndex: 10,
+              }}>
+                {/* Previous button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigateCard('prev')
+                  }}
+                  aria-label="Previous greeting"
+                  style={{
+                    background: 'rgba(218, 165, 32, 0.1)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(218, 165, 32, 0.3)',
+                    borderRadius: '16px',
+                    width: '64px',
+                    height: '64px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(218, 165, 32, 0.2)'
+                    e.currentTarget.style.borderColor = 'rgba(218, 165, 32, 0.5)'
+                    e.currentTarget.style.transform = 'scale(1.05)'
+                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(218, 165, 32, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(218, 165, 32, 0.1)'
+                    e.currentTarget.style.borderColor = 'rgba(218, 165, 32, 0.3)'
+                    e.currentTarget.style.transform = 'scale(1)'
+                    e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  }}
+                >
+                  {/* Chevron Left - Premium design */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 18L9 12L15 6" stroke="#DAA520" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
 
-              {/* Next button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  navigateCard('next')
-                }}
-                style={{
-                  position: 'absolute',
-                  right: '1rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'rgba(0,0,0,0.5)',
-                  backdropFilter: 'blur(10px)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '44px',
-                  height: '44px',
-                  fontSize: '1.5rem',
-                  color: 'white',
-                  cursor: 'pointer',
+                {/* Progress Indicator */}
+                <div style={{
                   display: 'flex',
+                  gap: '8px',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 10,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0,0,0,0.7)'
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0,0,0,0.5)'
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)'
-                }}
-              >
-                →
-              </button>
+                  padding: '12px 20px',
+                  background: 'rgba(0,0,0,0.4)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}>
+                  {greetings.map((_, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        width: index === selectedPhraseIndex ? '24px' : '8px',
+                        height: '8px',
+                        borderRadius: '4px',
+                        background: index === selectedPhraseIndex
+                          ? 'linear-gradient(135deg, #DAA520 0%, #FFB347 100%)'
+                          : 'rgba(255,255,255,0.3)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        boxShadow: index === selectedPhraseIndex
+                          ? '0 2px 8px rgba(218, 165, 32, 0.4)'
+                          : 'none',
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Next button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigateCard('next')
+                  }}
+                  aria-label="Next greeting"
+                  style={{
+                    background: 'rgba(218, 165, 32, 0.1)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(218, 165, 32, 0.3)',
+                    borderRadius: '16px',
+                    width: '64px',
+                    height: '64px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(218, 165, 32, 0.2)'
+                    e.currentTarget.style.borderColor = 'rgba(218, 165, 32, 0.5)'
+                    e.currentTarget.style.transform = 'scale(1.05)'
+                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(218, 165, 32, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(218, 165, 32, 0.1)'
+                    e.currentTarget.style.borderColor = 'rgba(218, 165, 32, 0.3)'
+                    e.currentTarget.style.transform = 'scale(1)'
+                    e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  }}
+                >
+                  {/* Chevron Right - Premium design */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 18L15 12L9 6" stroke="#DAA520" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
 
               <div style={{
                 position: 'relative',
