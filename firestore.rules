@@ -45,5 +45,14 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false; // Only server can update
     }
+
+    // Waitlist - allow anyone to add their email (create only)
+    match /waitlist/{docId} {
+      allow read: if false; // No reading waitlist
+      allow create: if request.resource.data.keys().hasAll(['email', 'timestamp']) &&
+                       request.resource.data.email is string &&
+                       request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$');
+      allow update, delete: if false; // No updating or deleting
+    }
   }
 }

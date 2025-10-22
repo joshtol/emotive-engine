@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/firebase'
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,40 +16,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // TODO: Replace with your actual email service or database
-    // For now, we'll log to console and return success
-    // You can integrate with services like:
-    // - Mailchimp API
-    // - SendGrid Lists
-    // - ConvertKit
-    // - Your own database (Supabase, Firebase, etc.)
+    const normalizedEmail = email.toLowerCase().trim()
 
-    const waitlistData = {
-      email: email.toLowerCase().trim(),
-      timestamp: new Date().toISOString(),
-      userAgent: request.headers.get('user-agent') || 'Unknown',
-      referrer: request.headers.get('referer') || 'Direct',
+    // Check if email already exists
+    const waitlistRef = collection(db, 'waitlist')
+    const q = query(waitlistRef, where('email', '==', normalizedEmail))
+    const querySnapshot = await getDocs(q)
+
+    if (!querySnapshot.empty) {
+      return NextResponse.json(
+        { error: 'Email already on waitlist' },
+        { status: 409 }
+      )
     }
 
-    console.log('📬 New Waitlist Signup:', JSON.stringify(waitlistData, null, 2))
+    // Add to Firestore
+    const waitlistData = {
+      email: normalizedEmail,
+      timestamp: serverTimestamp(),
+      userAgent: request.headers.get('user-agent') || 'Unknown',
+      referrer: request.headers.get('referer') || 'Direct',
+      source: 'website-homepage',
+    }
 
-    // Example: Add to email service
-    // await addToMailingList({
-    //   email: waitlistData.email,
-    //   tags: ['emotive-engine-waitlist'],
-    //   source: 'website-homepage',
-    // })
+    await addDoc(waitlistRef, waitlistData)
 
-    // Example: Send confirmation email
-    // await sendEmail({
-    //   to: waitlistData.email,
-    //   subject: 'Welcome to Emotive Engine Waitlist',
-    //   html: `
-    //     <h2>Thanks for joining!</h2>
-    //     <p>You're on the waitlist for Emotive Engine.</p>
-    //     <p>We'll notify you when we launch.</p>
-    //   `,
-    // })
+    console.log('📬 New Waitlist Signup:', normalizedEmail)
 
     return NextResponse.json(
       {
