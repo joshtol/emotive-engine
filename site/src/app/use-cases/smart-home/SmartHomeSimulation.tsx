@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import PremiumAIAssistant from '@/components/PremiumAIAssistant'
 
 interface Room {
   id: string
@@ -17,6 +15,11 @@ interface Device {
   name: string
   status: boolean | number
   icon: string
+}
+
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
 }
 
 interface SmartHomeSimulationProps {
@@ -69,13 +72,23 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
   const [rooms, setRooms] = useState<Room[]>(INITIAL_ROOMS)
   const [activeScene, setActiveScene] = useState<string | null>(null)
   const [showAIHelp, setShowAIHelp] = useState(false)
-  const [energyUsage, setEnergyUsage] = useState(42) // percentage
+  const [energyUsage, setEnergyUsage] = useState(42)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
-  // Expose the open AI chat function to parent
+  // Chat state
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      content: "Hi! I'm your smart home assistant. I can help you control devices, create scenes, and answer questions."
+    }
+  ])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     (window as any).__openSmartHomeAIChat = () => setShowAIHelp(true)
     return () => {
@@ -94,7 +107,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Initialize mascot
+  // Initialize mascot - ONCE
   useEffect(() => {
     let cancelled = false
 
@@ -127,7 +140,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           enableGazeTracking: false,
           enableIdleBehaviors: true,
           targetFPS: isMobile ? 30 : 60,
-          maxParticles: isMobile ? 50 : 100,
+          maxParticles: isMobile ? 40 : 100,
           primaryColor: '#8B5CF6',
           secondaryColor: '#06B6D4',
         })
@@ -137,18 +150,18 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
         mascot.setPosition(0, 0, 0)
         mascot.setScale({
-          core: isMobile ? 0.7 : 1.2,
-          particles: isMobile ? 1.0 : 1.8
+          core: isMobile ? 1.3 : 1.2,
+          particles: isMobile ? 1.5 : 1.8
         })
 
         mascot.setBackdrop({
           enabled: true,
-          radius: 3.0,
-          intensity: 0.8,
+          radius: 3.5,
+          intensity: 0.9,
           blendMode: 'normal',
           falloff: 'smooth',
           edgeSoftness: 0.95,
-          coreTransparency: 0.3,
+          coreTransparency: 0.2,
           responsive: true
         })
 
@@ -193,12 +206,10 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
       )
     )
 
-    // Mascot reaction
     if (mascotRef.current && mascotRef.current.express) {
       mascotRef.current.express('nod', { intensity: 0.4, duration: 400 })
     }
 
-    // Callback
     const device = rooms.find(r => r.id === roomId)?.devices.find(d => d.id === deviceId)
     if (device && onDeviceChange) {
       onDeviceChange(device.type, device.status ? 'off' : 'on')
@@ -232,9 +243,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
   const activateScene = async (scene: string) => {
     setActiveScene(scene)
 
-    // Apply scene settings
     if (scene === 'good-morning') {
-      // Turn on lights, adjust temp, open blinds
       setRooms(prevRooms =>
         prevRooms.map(room => ({
           ...room,
@@ -247,7 +256,6 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         }))
       )
 
-      // Mascot celebration
       if (mascotRef.current) {
         if (mascotRef.current.setEmotion) {
           mascotRef.current.setEmotion('joy', 0.8)
@@ -257,7 +265,6 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         }
       }
     } else if (scene === 'leave-home') {
-      // Turn off lights, lock doors, arm security
       setRooms(prevRooms =>
         prevRooms.map(room => ({
           ...room,
@@ -272,12 +279,10 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         }))
       )
 
-      // Mascot acknowledges
       if (mascotRef.current && mascotRef.current.express) {
         await mascotRef.current.express('wave', { intensity: 0.5, duration: 600 })
       }
     } else if (scene === 'movie-night') {
-      // Dim lights, close blinds, adjust temp
       setRooms(prevRooms =>
         prevRooms.map(room => ({
           ...room,
@@ -291,7 +296,6 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         }))
       )
 
-      // Mascot gets excited
       if (mascotRef.current) {
         if (mascotRef.current.setEmotion) {
           mascotRef.current.setEmotion('excitement', 0.7)
@@ -302,7 +306,6 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
       }
     }
 
-    // Clear active scene after animation
     setTimeout(() => {
       setActiveScene(null)
       if (mascotRef.current && mascotRef.current.setEmotion) {
@@ -327,10 +330,81 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
       if (mascotRef.current.setEmotion) {
         mascotRef.current.setEmotion(response.emotion, 0.8)
       }
+      if (response.shape && mascotRef.current.morphTo) {
+        mascotRef.current.morphTo(response.shape, { duration: 1000 })
+      }
+      if (response.gesture && mascotRef.current.express) {
+        setTimeout(() => {
+          if (mascotRef.current && mascotRef.current.express) {
+            mascotRef.current.express(response.gesture, { intensity: 0.7 })
+          }
+        }, 300)
+      }
     }
   }
 
-  // Calculate active devices
+  const handleSendMessage = async () => {
+    if (!input.trim() || loading) return
+
+    const userMessage = input.trim()
+    setInput('')
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+    setLoading(true)
+
+    // Mascot listens
+    if (mascotRef.current) {
+      if (mascotRef.current.setEmotion) {
+        mascotRef.current.setEmotion('neutral', 0.6)
+      }
+      if (mascotRef.current.express) {
+        mascotRef.current.express('settle', { intensity: 0.3, duration: 500 })
+      }
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 800))
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          context: 'smart-home'
+        }),
+      })
+
+      if (!res.ok) throw new Error('Failed to get response')
+
+      const data = await res.json()
+
+      setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
+
+      // Trigger mascot reaction
+      await handleLLMResponse({
+        message: data.message,
+        emotion: data.emotion || 'joy',
+        sentiment: data.sentiment || 'positive',
+        action: data.action || 'none',
+        frustrationLevel: data.frustrationLevel || 0,
+        shape: data.shape,
+        gesture: data.gesture
+      })
+
+    } catch (error) {
+      console.error('Chat error:', error)
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "I'm having trouble connecting right now. Please try again!"
+      }])
+
+      if (mascotRef.current && mascotRef.current.setEmotion) {
+        mascotRef.current.setEmotion('surprise', 0.6)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const activeDevices = rooms.reduce((count, room) => {
     return count + room.devices.filter(d =>
       (typeof d.status === 'boolean' && d.status) ||
@@ -340,129 +414,528 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
   const totalDevices = rooms.reduce((count, room) => count + room.devices.length, 0)
 
-  const helpButton = (
-    <button
-      onClick={() => setShowAIHelp(!showAIHelp)}
-      style={{
-        padding: '0.6rem 1.25rem',
-        background: showAIHelp
-          ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-          : 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
-        borderRadius: '10px',
-        fontSize: '0.9rem',
-        fontWeight: '700',
-        color: 'white',
-        border: showAIHelp
-          ? '1px solid rgba(239, 68, 68, 0.3)'
-          : '1px solid rgba(139, 92, 246, 0.3)',
-        boxShadow: showAIHelp
-          ? '0 2px 12px rgba(239, 68, 68, 0.3)'
-          : '0 2px 12px rgba(139, 92, 246, 0.3)',
-        letterSpacing: '0.5px',
-        textTransform: 'uppercase',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-1px)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)'
-      }}
-    >
-      <span style={{ fontSize: '1rem' }}>{showAIHelp ? '✕' : '🏠'}</span>
-      <span>{showAIHelp ? 'Close AI' : 'Ask AI'}</span>
-    </button>
-  )
+  const examplePrompts = isMobile ? [
+    "Turn on lights",
+    "Set temperature",
+    "Lock doors"
+  ] : [
+    "Turn on living room lights",
+    "Set temperature to 72°F",
+    "Create movie scene",
+    "Lock all doors"
+  ]
 
   return (
     <div style={{
       position: 'relative',
-      minHeight: '800px',
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-      gap: isMobile ? '2rem' : '3rem',
-      alignItems: 'center',
-      padding: '2rem',
+      height: '100%',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
       overflow: 'hidden'
     }}>
-      {/* Mascot - Centered and Prominent */}
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        height: isMobile ? '400px' : '600px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        order: isMobile ? 1 : 0,
-        transform: showAIHelp && !isMobile ? 'translateX(-10%)' : 'translateX(0)',
-        transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-      }}>
-        <canvas
-          ref={canvasRef}
-          id="home-control-mascot"
-          style={{
-            width: '100%',
-            height: '100%',
-            filter: 'drop-shadow(0 20px 80px rgba(139, 92, 246, 0.6))',
-          }}
-        />
-      </div>
+      {isMobile ? (
+        <>
+          {!showAIHelp ? (
+            /* DEVICE CONTROLS VIEW */
+            <>
+              <div style={{
+                height: '22vh',
+                minHeight: '140px',
+                maxHeight: '180px',
+                width: '100%',
+                position: 'relative',
+                background: 'rgba(0, 0, 0, 0.3)',
+                borderBottom: '1px solid rgba(139, 92, 246, 0.3)'
+              }}>
+                <canvas
+                  ref={canvasRef}
+                  id="home-control-mascot"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    filter: 'drop-shadow(0 10px 40px rgba(139, 92, 246, 0.6))',
+                  }}
+                />
+              </div>
 
-      {/* Control Interface */}
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        order: isMobile ? 2 : 1,
-      }}>
-        {/* Main Control Card - Bento Grid Style */}
+              <div style={{
+                flex: 1,
+                overflow: 'auto',
+                padding: '0.75rem',
+                background: 'linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(15,15,35,0.98) 100%)'
+              }}>
+                {/* Scene buttons */}
+                <div style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  marginBottom: '1rem',
+                  flexWrap: 'wrap'
+                }}>
+                  {[
+                    { id: 'good-morning', label: 'Morning', icon: '☀️' },
+                    { id: 'leave-home', label: 'Leave', icon: '🚪' },
+                    { id: 'movie-night', label: 'Movie', icon: '🍿' }
+                  ].map(scene => (
+                    <button
+                      key={scene.id}
+                      onClick={() => activateScene(scene.id)}
+                      disabled={activeScene === scene.id}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        background: activeScene === scene.id
+                          ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
+                          : 'rgba(139, 92, 246, 0.1)',
+                        border: `1px solid ${activeScene === scene.id ? 'rgba(139, 92, 246, 0.5)' : 'rgba(139, 92, 246, 0.3)'}`,
+                        borderRadius: '10px',
+                        color: 'white',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        cursor: activeScene === scene.id ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span>{scene.icon}</span>
+                      <span>{scene.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Rooms grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr',
+                  gap: '0.75rem',
+                  marginBottom: '1rem'
+                }}>
+                  {rooms.map((room) => (
+                    <div
+                      key={room.id}
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)',
+                        borderRadius: '12px',
+                        padding: '1rem',
+                        border: '1px solid rgba(139, 92, 246, 0.2)'
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginBottom: '0.75rem'
+                      }}>
+                        <span style={{ fontSize: '1.5rem' }}>{room.icon}</span>
+                        <h3 style={{
+                          fontSize: '1rem',
+                          fontWeight: '700',
+                          color: '#8B5CF6',
+                          margin: 0
+                        }}>
+                          {room.name}
+                        </h3>
+                      </div>
+
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.5rem'
+                      }}>
+                        {room.devices.map((device) => (
+                          <div
+                            key={device.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '0.5rem 0.75rem',
+                              background: 'rgba(0, 0, 0, 0.2)',
+                              borderRadius: '8px'
+                            }}
+                          >
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}>
+                              <span style={{ fontSize: '1.1rem' }}>{device.icon}</span>
+                              <span style={{
+                                fontSize: '0.85rem',
+                                fontWeight: '500'
+                              }}>
+                                {device.name}
+                              </span>
+                            </div>
+
+                            {typeof device.status === 'boolean' ? (
+                              <button
+                                onClick={() => toggleDevice(room.id, device.id)}
+                                style={{
+                                  padding: '0.35rem 0.75rem',
+                                  background: device.status
+                                    ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                                    : 'rgba(255, 255, 255, 0.1)',
+                                  border: `1px solid ${device.status ? '#10B981' : 'rgba(255, 255, 255, 0.2)'}`,
+                                  borderRadius: '6px',
+                                  color: 'white',
+                                  fontSize: '0.7rem',
+                                  fontWeight: '700',
+                                  cursor: 'pointer',
+                                  textTransform: 'uppercase'
+                                }}
+                              >
+                                {device.status ? 'ON' : 'OFF'}
+                              </button>
+                            ) : (
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem'
+                              }}>
+                                <button
+                                  onClick={() => adjustTemperature(room.id, device.id, -1)}
+                                  style={{
+                                    width: '24px',
+                                    height: '24px',
+                                    background: 'rgba(139, 92, 246, 0.2)',
+                                    border: '1px solid rgba(139, 92, 246, 0.4)',
+                                    borderRadius: '4px',
+                                    color: 'white',
+                                    fontSize: '0.9rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  −
+                                </button>
+                                <span style={{
+                                  fontSize: '0.85rem',
+                                  fontWeight: '700',
+                                  color: '#06B6D4',
+                                  minWidth: '40px',
+                                  textAlign: 'center'
+                                }}>
+                                  {device.status}°
+                                </span>
+                                <button
+                                  onClick={() => adjustTemperature(room.id, device.id, 1)}
+                                  style={{
+                                    width: '24px',
+                                    height: '24px',
+                                    background: 'rgba(139, 92, 246, 0.2)',
+                                    border: '1px solid rgba(139, 92, 246, 0.4)',
+                                    borderRadius: '4px',
+                                    color: 'white',
+                                    fontSize: '0.9rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Energy usage */}
+                <div style={{
+                  padding: '1rem',
+                  background: 'rgba(6, 182, 212, 0.1)',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '0.75rem'
+                }}>
+                  <div>
+                    <div style={{
+                      fontSize: '0.7rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      opacity: 0.7,
+                      marginBottom: '0.25rem'
+                    }}>
+                      Energy Today
+                    </div>
+                    <div style={{
+                      fontSize: '1.5rem',
+                      fontWeight: '800',
+                      color: '#06B6D4'
+                    }}>
+                      {energyUsage}%
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '2rem' }}>⚡</div>
+                </div>
+
+                <button
+                  onClick={() => setShowAIHelp(true)}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    fontSize: '0.9rem',
+                    fontWeight: '700',
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  🏠 Ask AI Assistant
+                </button>
+              </div>
+            </>
+          ) : (
+            /* AI CHAT VIEW */
+            <>
+              <div style={{
+                height: '22vh',
+                minHeight: '140px',
+                maxHeight: '180px',
+                width: '100%',
+                position: 'relative',
+                background: 'rgba(0, 0, 0, 0.3)',
+                borderBottom: '1px solid rgba(139, 92, 246, 0.3)'
+              }}>
+                <canvas
+                  ref={canvasRef}
+                  id="home-control-mascot"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    filter: 'drop-shadow(0 10px 40px rgba(139, 92, 246, 0.6))',
+                  }}
+                />
+              </div>
+
+              {/* Header with close */}
+              <div style={{
+                padding: '0.75rem 1rem',
+                background: 'rgba(0, 0, 0, 0.5)',
+                borderBottom: '1px solid rgba(139, 92, 246, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(139, 92, 246, 0.2)',
+                    border: '2px solid rgba(139, 92, 246, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1rem'
+                  }}>
+                    🏠
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: '800', color: '#8B5CF6' }}>
+                      Home Assistant
+                    </div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                      Claude Haiku 4.5
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAIHelp(false)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Chat messages */}
+              <div style={{
+                flex: 1,
+                overflow: 'auto',
+                padding: '1rem',
+                background: 'linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(15,15,35,0.98) 100%)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem'
+              }}>
+                {messages.map((msg, i) => (
+                  <div key={i} style={{
+                    alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                    maxWidth: '85%'
+                  }}>
+                    <div style={{
+                      padding: '0.75rem 1rem',
+                      borderRadius: '16px',
+                      background: msg.role === 'user'
+                        ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
+                        : 'rgba(139, 92, 246, 0.1)',
+                      border: msg.role === 'user'
+                        ? 'none'
+                        : '1px solid rgba(139, 92, 246, 0.3)',
+                      color: 'white',
+                      fontSize: '0.95rem',
+                      lineHeight: 1.5
+                    }}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                {loading && (
+                  <div style={{ alignSelf: 'flex-start', maxWidth: '85%' }}>
+                    <div style={{
+                      padding: '0.75rem 1rem',
+                      borderRadius: '16px',
+                      background: 'rgba(139, 92, 246, 0.1)',
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      color: 'white',
+                      fontSize: '0.95rem'
+                    }}>
+                      Typing...
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Example prompts */}
+              {messages.length === 1 && (
+                <div style={{
+                  padding: '0.5rem 1rem 1rem 1rem',
+                  background: 'rgba(10,10,10,0.95)',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+                }}>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.5rem' }}>
+                    SUGGESTED
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {examplePrompts.map((prompt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setInput(prompt)
+                        }}
+                        style={{
+                          padding: '0.75rem',
+                          background: 'rgba(139, 92, 246, 0.05)',
+                          border: '1px solid rgba(139, 92, 246, 0.2)',
+                          borderRadius: '10px',
+                          color: 'rgba(255, 255, 255, 0.8)',
+                          fontSize: '0.85rem',
+                          textAlign: 'left',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Input */}
+              <div style={{
+                padding: '1rem',
+                background: 'rgba(10,10,10,0.95)',
+                borderTop: '1px solid rgba(139, 92, 246, 0.3)',
+                display: 'flex',
+                gap: '0.75rem'
+              }}>
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Type your message..."
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    borderRadius: '10px',
+                    color: 'white',
+                    fontSize: '0.95rem',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || loading}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: input.trim() && !loading
+                      ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
+                      : 'rgba(139, 92, 246, 0.2)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: input.trim() && !loading ? 'white' : 'rgba(255, 255, 255, 0.3)',
+                    fontSize: '0.9rem',
+                    fontWeight: '700',
+                    cursor: input.trim() && !loading ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  Send
+                </button>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        /* DESKTOP - Three column layout */
         <div style={{
-          background: 'linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(15, 18, 35, 0.98) 100%)',
-          backdropFilter: 'blur(60px)',
-          WebkitBackdropFilter: 'blur(60px)',
-          borderRadius: '32px',
-          padding: 'clamp(2rem, 4vw, 3rem)',
-          border: '2px solid rgba(139, 92, 246, 0.2)',
-          boxShadow: `
-            0 30px 90px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(139, 92, 246, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05)
-          `,
-          position: 'relative',
-          overflow: 'hidden'
+          display: 'grid',
+          gridTemplateColumns: '1fr 500px 1fr',
+          gap: '2rem',
+          padding: '2rem',
+          minHeight: '700px',
+          alignItems: 'stretch'
         }}>
-          {/* Top accent */}
+          {/* LEFT: Device Controls */}
           <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '2px',
-            background: 'linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.8), transparent)'
-          }} />
-
-          {/* Header with Stats - Bento Style */}
-          <div style={{
-            marginBottom: '2.5rem',
-            display: 'grid',
-            gridTemplateColumns: '1fr auto',
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.03) 100%)',
+            borderRadius: '20px',
+            border: '1px solid rgba(139, 92, 246, 0.2)',
+            padding: '2rem',
+            display: 'flex',
+            flexDirection: 'column',
             gap: '1.5rem',
-            alignItems: 'center'
+            overflow: 'auto'
           }}>
             <div>
               <h2 style={{
-                fontFamily: 'var(--font-primary)',
-                fontSize: 'clamp(2rem, 4vw, 2.8rem)',
+                fontSize: '1.8rem',
                 fontWeight: '900',
                 marginBottom: '0.5rem',
-                letterSpacing: '-0.02em',
                 background: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
                 WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
               }}>
                 Home Control
               </h2>
@@ -475,386 +948,410 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
               </p>
             </div>
 
-            {/* Help button container for portal */}
-            <div id="home-help-button-container" />
-          </div>
+            {/* Quick Scenes */}
+            <div style={{
+              display: 'flex',
+              gap: '0.75rem',
+              flexWrap: 'wrap'
+            }}>
+              {[
+                { id: 'good-morning', label: 'Good Morning', icon: '☀️' },
+                { id: 'leave-home', label: 'Leave Home', icon: '🚪' },
+                { id: 'movie-night', label: 'Movie Night', icon: '🍿' }
+              ].map(scene => (
+                <button
+                  key={scene.id}
+                  onClick={() => activateScene(scene.id)}
+                  disabled={activeScene === scene.id}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1.25rem',
+                    background: activeScene === scene.id
+                      ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
+                      : 'rgba(139, 92, 246, 0.1)',
+                    border: `1px solid ${activeScene === scene.id ? 'rgba(139, 92, 246, 0.5)' : 'rgba(139, 92, 246, 0.3)'}`,
+                    borderRadius: '12px',
+                    color: 'white',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    cursor: activeScene === scene.id ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <span>{scene.icon}</span>
+                  <span>{scene.label}</span>
+                </button>
+              ))}
+            </div>
 
-          {/* Quick Scenes - Bento Pills */}
-          <div style={{
-            display: 'flex',
-            gap: '0.75rem',
-            marginBottom: '2rem',
-            flexWrap: 'wrap'
-          }}>
-            {[
-              { id: 'good-morning', label: 'Good Morning', icon: '☀️' },
-              { id: 'leave-home', label: 'Leave Home', icon: '🚪' },
-              { id: 'movie-night', label: 'Movie Night', icon: '🍿' }
-            ].map(scene => (
-              <button
-                key={scene.id}
-                onClick={() => activateScene(scene.id)}
-                disabled={activeScene === scene.id}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: activeScene === scene.id
-                    ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
-                    : 'rgba(139, 92, 246, 0.1)',
-                  border: `1px solid ${activeScene === scene.id ? 'rgba(139, 92, 246, 0.5)' : 'rgba(139, 92, 246, 0.3)'}`,
-                  borderRadius: '100px',
-                  color: 'white',
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  cursor: activeScene === scene.id ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  opacity: activeScene === scene.id ? 0.7 : 1
-                }}
-                onMouseEnter={(e) => {
-                  if (activeScene !== scene.id) {
-                    e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)'
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeScene !== scene.id) {
-                    e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)'
-                    e.currentTarget.style.transform = 'translateY(0)'
-                  }
-                }}
-              >
-                <span>{scene.icon}</span>
-                <span>{scene.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Rooms - Bento Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '1.25rem',
-            marginBottom: '1.5rem'
-          }}>
-            {rooms.map((room) => (
-              <div
-                key={room.id}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)',
-                  borderRadius: '20px',
-                  padding: '1.5rem',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)'
-                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(139, 92, 246, 0.15)'
-                  e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  marginBottom: '1.25rem'
-                }}>
-                  <span style={{ fontSize: '1.8rem' }}>{room.icon}</span>
-                  <h3 style={{
-                    fontSize: '1.2rem',
-                    fontWeight: '700',
-                    color: '#8B5CF6',
-                    margin: 0,
-                    letterSpacing: '-0.01em'
+            {/* Rooms */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '1rem',
+              flex: 1
+            }}>
+              {rooms.map((room) => (
+                <div
+                  key={room.id}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)',
+                    borderRadius: '16px',
+                    padding: '1.25rem',
+                    border: '1px solid rgba(139, 92, 246, 0.2)'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    marginBottom: '1rem'
                   }}>
-                    {room.name}
-                  </h3>
-                </div>
+                    <span style={{ fontSize: '1.5rem' }}>{room.icon}</span>
+                    <h3 style={{
+                      fontSize: '1.1rem',
+                      fontWeight: '700',
+                      color: '#8B5CF6',
+                      margin: 0
+                    }}>
+                      {room.name}
+                    </h3>
+                  </div>
 
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.75rem'
-                }}>
-                  {room.devices.map((device) => (
-                    <div
-                      key={device.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.75rem 1rem',
-                        background: 'rgba(0, 0, 0, 0.2)',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem'
-                      }}>
-                        <span style={{ fontSize: '1.3rem' }}>{device.icon}</span>
-                        <span style={{
-                          fontSize: '0.9rem',
-                          fontWeight: '500',
-                          color: 'rgba(255, 255, 255, 0.9)'
-                        }}>
-                          {device.name}
-                        </span>
-                      </div>
-
-                      {typeof device.status === 'boolean' ? (
-                        <button
-                          onClick={() => toggleDevice(room.id, device.id)}
-                          style={{
-                            padding: '0.4rem 0.9rem',
-                            background: device.status
-                              ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                              : 'rgba(255, 255, 255, 0.1)',
-                            border: `1px solid ${device.status ? '#10B981' : 'rgba(255, 255, 255, 0.2)'}`,
-                            borderRadius: '8px',
-                            color: 'white',
-                            fontSize: '0.75rem',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'scale(1.05)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'scale(1)'
-                          }}
-                        >
-                          {device.status ? 'ON' : 'OFF'}
-                        </button>
-                      ) : (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.6rem'
+                  }}>
+                    {room.devices.map((device) => (
+                      <div
+                        key={device.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.6rem 0.85rem',
+                          background: 'rgba(0, 0, 0, 0.2)',
+                          borderRadius: '10px'
+                        }}
+                      >
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '0.5rem'
+                          gap: '0.6rem'
                         }}>
-                          <button
-                            onClick={() => adjustTemperature(room.id, device.id, -1)}
-                            style={{
-                              width: '28px',
-                              height: '28px',
-                              background: 'rgba(139, 92, 246, 0.2)',
-                              border: '1px solid rgba(139, 92, 246, 0.4)',
-                              borderRadius: '6px',
-                              color: 'white',
-                              fontSize: '1rem',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)'
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)'
-                            }}
-                          >
-                            −
-                          </button>
+                          <span style={{ fontSize: '1.2rem' }}>{device.icon}</span>
                           <span style={{
-                            fontSize: '0.95rem',
-                            fontWeight: '700',
-                            color: '#06B6D4',
-                            minWidth: '45px',
-                            textAlign: 'center'
+                            fontSize: '0.9rem',
+                            fontWeight: '500'
                           }}>
-                            {device.status}°F
+                            {device.name}
                           </span>
+                        </div>
+
+                        {typeof device.status === 'boolean' ? (
                           <button
-                            onClick={() => adjustTemperature(room.id, device.id, 1)}
+                            onClick={() => toggleDevice(room.id, device.id)}
                             style={{
-                              width: '28px',
-                              height: '28px',
-                              background: 'rgba(139, 92, 246, 0.2)',
-                              border: '1px solid rgba(139, 92, 246, 0.4)',
-                              borderRadius: '6px',
+                              padding: '0.4rem 0.85rem',
+                              background: device.status
+                                ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                                : 'rgba(255, 255, 255, 0.1)',
+                              border: `1px solid ${device.status ? '#10B981' : 'rgba(255, 255, 255, 0.2)'}`,
+                              borderRadius: '7px',
                               color: 'white',
-                              fontSize: '1rem',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
                               cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)'
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)'
+                              textTransform: 'uppercase'
                             }}
                           >
-                            +
+                            {device.status ? 'ON' : 'OFF'}
                           </button>
-                        </div>
-                      )}
-                    </div>
+                        ) : (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            <button
+                              onClick={() => adjustTemperature(room.id, device.id, -1)}
+                              style={{
+                                width: '26px',
+                                height: '26px',
+                                background: 'rgba(139, 92, 246, 0.2)',
+                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                borderRadius: '5px',
+                                color: 'white',
+                                fontSize: '0.95rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              −
+                            </button>
+                            <span style={{
+                              fontSize: '0.9rem',
+                              fontWeight: '700',
+                              color: '#06B6D4',
+                              minWidth: '42px',
+                              textAlign: 'center'
+                            }}>
+                              {device.status}°
+                            </span>
+                            <button
+                              onClick={() => adjustTemperature(room.id, device.id, 1)}
+                              style={{
+                                width: '26px',
+                                height: '26px',
+                                background: 'rgba(139, 92, 246, 0.2)',
+                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                borderRadius: '5px',
+                                color: 'white',
+                                fontSize: '0.95rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Energy Monitor */}
+            <div style={{
+              padding: '1.25rem',
+              background: 'rgba(6, 182, 212, 0.1)',
+              borderRadius: '12px',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <div style={{
+                  fontSize: '0.75rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  opacity: 0.7,
+                  marginBottom: '0.35rem'
+                }}>
+                  Energy Usage Today
+                </div>
+                <div style={{
+                  fontSize: '2rem',
+                  fontWeight: '800',
+                  color: '#06B6D4'
+                }}>
+                  {energyUsage}%
+                </div>
+              </div>
+              <div style={{ fontSize: '3rem' }}>⚡</div>
+            </div>
+          </div>
+
+          {/* CENTER: Mascot */}
+          <div style={{
+            height: '700px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative'
+          }}>
+            <canvas
+              ref={canvasRef}
+              id="home-control-mascot"
+              style={{
+                width: '100%',
+                height: '100%',
+                filter: 'drop-shadow(0 20px 80px rgba(139, 92, 246, 0.6))',
+              }}
+            />
+          </div>
+
+          {/* RIGHT: AI Chat */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.03) 100%)',
+            borderRadius: '20px',
+            border: '1px solid rgba(139, 92, 246, 0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}>
+            {/* Chat Header */}
+            <div style={{
+              padding: '1.5rem',
+              borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
+              background: 'rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(139, 92, 246, 0.2)',
+                  border: '2px solid rgba(139, 92, 246, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.5rem'
+                }}>
+                  🏠
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#8B5CF6' }}>
+                    AI Assistant
+                  </div>
+                  <div style={{ fontSize: '0.85rem', opacity: 0.6 }}>
+                    Claude Haiku 4.5
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Messages */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}>
+              {messages.map((msg, i) => (
+                <div key={i} style={{
+                  alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '80%'
+                }}>
+                  <div style={{
+                    padding: '1rem 1.25rem',
+                    borderRadius: '16px',
+                    background: msg.role === 'user'
+                      ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
+                      : 'rgba(139, 92, 246, 0.1)',
+                    border: msg.role === 'user'
+                      ? 'none'
+                      : '1px solid rgba(139, 92, 246, 0.3)',
+                    color: 'white',
+                    fontSize: '1rem',
+                    lineHeight: 1.5
+                  }}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div style={{ alignSelf: 'flex-start', maxWidth: '80%' }}>
+                  <div style={{
+                    padding: '1rem 1.25rem',
+                    borderRadius: '16px',
+                    background: 'rgba(139, 92, 246, 0.1)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    color: 'white',
+                    fontSize: '1rem'
+                  }}>
+                    Typing...
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Example prompts */}
+            {messages.length === 1 && (
+              <div style={{
+                padding: '0 1.5rem 1rem 1.5rem',
+                borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+              }}>
+                <div style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.75rem' }}>
+                  SUGGESTED QUESTIONS
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {examplePrompts.map((prompt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setInput(prompt)
+                      }}
+                      style={{
+                        padding: '0.75rem',
+                        background: 'rgba(139, 92, 246, 0.05)',
+                        border: '1px solid rgba(139, 92, 246, 0.2)',
+                        borderRadius: '10px',
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        fontSize: '0.9rem',
+                        textAlign: 'left',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {prompt}
+                    </button>
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
+            )}
 
-          {/* Energy Monitor - Apple Style */}
-          <div style={{
-            padding: '1.5rem',
-            background: 'rgba(6, 182, 212, 0.1)',
-            borderRadius: '16px',
-            border: '1px solid rgba(6, 182, 212, 0.3)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{
-                fontSize: '0.8rem',
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                opacity: 0.7,
-                marginBottom: '0.5rem'
-              }}>
-                Energy Usage Today
-              </div>
-              <div style={{
-                fontSize: '2rem',
-                fontWeight: '800',
-                background: 'linear-gradient(135deg, #06B6D4 0%, #14B8A6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                {energyUsage}%
-              </div>
-            </div>
+            {/* Chat Input */}
             <div style={{
-              fontSize: '3rem'
+              padding: '1.5rem',
+              borderTop: '1px solid rgba(139, 92, 246, 0.2)',
+              background: 'rgba(0, 0, 0, 0.2)',
+              display: 'flex',
+              gap: '0.75rem'
             }}>
-              ⚡
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="Type your message..."
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '1rem',
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  borderRadius: '10px',
+                  color: 'white',
+                  fontSize: '1rem',
+                  outline: 'none'
+                }}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!input.trim() || loading}
+                style={{
+                  padding: '1rem 2rem',
+                  background: input.trim() && !loading
+                    ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
+                    : 'rgba(139, 92, 246, 0.2)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: input.trim() && !loading ? 'white' : 'rgba(255, 255, 255, 0.3)',
+                  fontSize: '1rem',
+                  fontWeight: '700',
+                  cursor: input.trim() && !loading ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Send
+              </button>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* AI Help Panel */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        right: 0,
-        width: isMobile ? '100%' : 'calc(50% - 1.5rem)',
-        background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        border: '2px solid rgba(139, 92, 246, 0.3)',
-        borderRadius: '32px',
-        transform: showAIHelp ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        zIndex: 50,
-        overflow: 'hidden',
-        boxShadow: showAIHelp ? '0 30px 90px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(139, 92, 246, 0.1)' : 'none'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '2px',
-          background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.8), transparent)'
-        }} />
-
-        <div style={{
-          padding: '2rem 2.5rem',
-          borderBottom: '2px solid rgba(139, 92, 246, 0.2)',
-          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.08) 100%)',
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1.25rem'
-          }}>
-            <div style={{
-              fontSize: '2.5rem',
-              filter: 'drop-shadow(0 4px 16px rgba(139, 92, 246, 0.5))'
-            }}>
-              🏠
-            </div>
-            <div>
-              <div style={{
-                fontWeight: '800',
-                fontSize: '1.4rem',
-                background: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                letterSpacing: '-0.01em'
-              }}>
-                AI Home Assistant
-              </div>
-              <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.7,
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontWeight: '500'
-              }}>
-                Control your home with natural language
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{
-          position: 'relative',
-          height: '100%',
-          overflow: 'hidden',
-          zIndex: 10,
-          padding: '1.5rem',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          <div style={{
-            flex: 1,
-            overflow: 'hidden',
-            borderRadius: '32px'
-          }}>
-            <PremiumAIAssistant
-              title="Smart Home Assistant"
-              subtitle="Powered by Claude Haiku 4.5"
-              initialMessage="Hi! I'm your smart home assistant. I can help you control devices, create automations, and answer questions about your home."
-              context="smart-home"
-              examplePrompts={[
-                "Turn on living room lights",
-                "Set temperature to 72°F",
-                "Create morning routine",
-                "Show me energy usage"
-              ]}
-              onLLMResponse={handleLLMResponse}
-              onClose={() => setShowAIHelp(false)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Render help button using portal */}
-      {isClient && document.getElementById('home-help-button-container') ? (
-        createPortal(helpButton, document.getElementById('home-help-button-container')!)
-      ) : null}
+      )}
     </div>
   )
 }
