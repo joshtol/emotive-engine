@@ -289,7 +289,8 @@ export default function HealthcarePage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
-          willChange: 'opacity, z-index',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
         }}
       >
         <canvas
@@ -299,6 +300,8 @@ export default function HealthcarePage() {
             width: '100%',
             height: '100%',
             filter: 'drop-shadow(0 10px 40px rgba(74, 144, 226, 0.4))',
+            willChange: 'transform',
+            transform: 'translateZ(0)',
           }}
         />
       </div>
@@ -309,6 +312,8 @@ export default function HealthcarePage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
+        willChange: 'transform',
+        transform: 'translateZ(0)',
       }}>
         {/* Hero Section */}
         <section style={{
