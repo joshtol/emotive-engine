@@ -1036,13 +1036,13 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         /* DESKTOP - Three column layout */
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 500px 1fr',
+          gridTemplateColumns: '400px 500px 1fr',
           gap: '2rem',
           padding: '2rem',
           minHeight: '700px',
           alignItems: 'stretch'
         }}>
-          {/* LEFT: Device Controls */}
+          {/* LEFT: Quick Controls & Scenes */}
           <div style={{
             background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.03) 100%)',
             borderRadius: '20px',
@@ -1112,14 +1112,11 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
               ))}
             </div>
 
-            {/* Rooms */}
+            {/* Main Room - Living Room only on left */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '1rem',
               flex: 1
             }}>
-              {rooms.map((room) => (
+              {rooms.slice(0, 1).map((room) => (
                 <div
                   key={room.id}
                   style={{
@@ -1307,41 +1304,188 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
             />
           </div>
 
-          {/* RIGHT: AI Chat */}
+          {/* RIGHT: Remaining Rooms + Compact AI Chat */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.03) 100%)',
-            borderRadius: '20px',
-            border: '1px solid rgba(139, 92, 246, 0.2)',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            gap: '1.5rem',
+            overflow: 'auto'
           }}>
-            {/* Chat Header */}
+            {/* Other Rooms */}
             <div style={{
-              padding: '1.5rem',
+              display: 'grid',
+              gridTemplateColumns: '1fr',
+              gap: '1rem'
+            }}>
+              {rooms.slice(1).map((room) => (
+                <div
+                  key={room.id}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)',
+                    borderRadius: '16px',
+                    padding: '1.25rem',
+                    border: '1px solid rgba(139, 92, 246, 0.2)'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    marginBottom: '1rem'
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>{room.icon}</span>
+                    <h3 style={{
+                      fontSize: '1.1rem',
+                      fontWeight: '700',
+                      color: '#8B5CF6',
+                      margin: 0
+                    }}>
+                      {room.name}
+                    </h3>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.6rem'
+                  }}>
+                    {room.devices.map((device) => (
+                      <div
+                        key={device.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.6rem 0.85rem',
+                          background: 'rgba(0, 0, 0, 0.2)',
+                          borderRadius: '10px'
+                        }}
+                      >
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.6rem'
+                        }}>
+                          <span style={{ fontSize: '1.2rem' }}>{device.icon}</span>
+                          <span style={{
+                            fontSize: '0.9rem',
+                            fontWeight: '500'
+                          }}>
+                            {device.name}
+                          </span>
+                        </div>
+
+                        {typeof device.status === 'boolean' ? (
+                          <button
+                            onClick={() => toggleDevice(room.id, device.id)}
+                            style={{
+                              padding: '0.4rem 0.85rem',
+                              background: device.status
+                                ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                                : 'rgba(255, 255, 255, 0.1)',
+                              border: `1px solid ${device.status ? '#10B981' : 'rgba(255, 255, 255, 0.2)'}`,
+                              borderRadius: '7px',
+                              color: 'white',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            {device.status ? 'ON' : 'OFF'}
+                          </button>
+                        ) : (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            <button
+                              onClick={() => adjustTemperature(room.id, device.id, -1)}
+                              style={{
+                                width: '26px',
+                                height: '26px',
+                                background: 'rgba(139, 92, 246, 0.2)',
+                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                borderRadius: '5px',
+                                color: 'white',
+                                fontSize: '0.95rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              −
+                            </button>
+                            <span style={{
+                              fontSize: '0.9rem',
+                              fontWeight: '700',
+                              color: '#06B6D4',
+                              minWidth: '42px',
+                              textAlign: 'center'
+                            }}>
+                              {device.status}°
+                            </span>
+                            <button
+                              onClick={() => adjustTemperature(room.id, device.id, 1)}
+                              style={{
+                                width: '26px',
+                                height: '26px',
+                                background: 'rgba(139, 92, 246, 0.2)',
+                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                borderRadius: '5px',
+                                color: 'white',
+                                fontSize: '0.95rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Compact AI Chat */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.03) 100%)',
+              borderRadius: '20px',
+              border: '1px solid rgba(139, 92, 246, 0.2)',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: '400px'
+            }}>
+            {/* Compact Chat Header */}
+            <div style={{
+              padding: '1rem 1.25rem',
               borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
               background: 'rgba(0, 0, 0, 0.2)'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{
-                  width: '48px',
-                  height: '48px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
                   background: 'rgba(139, 92, 246, 0.2)',
                   border: '2px solid rgba(139, 92, 246, 0.4)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.5rem'
+                  fontSize: '1.2rem'
                 }}>
                   🏠
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#8B5CF6' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: '800', color: '#8B5CF6' }}>
                     AI Assistant
-                  </div>
-                  <div style={{ fontSize: '0.85rem', opacity: 0.6 }}>
-                    Claude Haiku 4.5
                   </div>
                 </div>
               </div>
@@ -1395,63 +1539,29 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Example prompts */}
-            {messages.length === 1 && (
-              <div style={{
-                padding: '0 1.5rem 1rem 1.5rem',
-                borderTop: '1px solid rgba(255, 255, 255, 0.05)'
-              }}>
-                <div style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.75rem' }}>
-                  SUGGESTED QUESTIONS
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {examplePrompts.map((prompt, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setInput(prompt)
-                      }}
-                      style={{
-                        padding: '0.75rem',
-                        background: 'rgba(139, 92, 246, 0.05)',
-                        border: '1px solid rgba(139, 92, 246, 0.2)',
-                        borderRadius: '10px',
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        fontSize: '0.9rem',
-                        textAlign: 'left',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Chat Input */}
+            {/* Compact Chat Input */}
             <div style={{
-              padding: '1.5rem',
+              padding: '1rem',
               borderTop: '1px solid rgba(139, 92, 246, 0.2)',
               background: 'rgba(0, 0, 0, 0.2)',
               display: 'flex',
-              gap: '0.75rem'
+              gap: '0.5rem'
             }}>
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type your message..."
+                placeholder="Ask about your home..."
                 disabled={loading}
                 style={{
                   flex: 1,
-                  padding: '1rem',
+                  padding: '0.75rem',
                   background: 'rgba(0, 0, 0, 0.5)',
                   border: '1px solid rgba(139, 92, 246, 0.3)',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   color: 'white',
-                  fontSize: '1rem',
+                  fontSize: '0.9rem',
                   outline: 'none'
                 }}
               />
@@ -1459,20 +1569,21 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 onClick={handleSendMessage}
                 disabled={!input.trim() || loading}
                 style={{
-                  padding: '1rem 2rem',
+                  padding: '0.75rem 1.5rem',
                   background: input.trim() && !loading
                     ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
                     : 'rgba(139, 92, 246, 0.2)',
                   border: 'none',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   color: input.trim() && !loading ? 'white' : 'rgba(255, 255, 255, 0.3)',
-                  fontSize: '1rem',
+                  fontSize: '0.9rem',
                   fontWeight: '700',
                   cursor: input.trim() && !loading ? 'pointer' : 'not-allowed'
                 }}
               >
                 Send
               </button>
+            </div>
             </div>
           </div>
         </div>
