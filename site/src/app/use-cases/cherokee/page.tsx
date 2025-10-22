@@ -2008,11 +2008,8 @@ export default function CherokeePage() {
                   left: '1.5rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  background: 'rgba(218, 165, 32, 0.1)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(218, 165, 32, 0.3)',
-                  borderRadius: '16px',
+                  background: 'transparent',
+                  border: 'none',
                   width: '56px',
                   height: '56px',
                   cursor: 'pointer',
@@ -2021,22 +2018,15 @@ export default function CherokeePage() {
                   justifyContent: 'center',
                   zIndex: 10,
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(218, 165, 32, 0.2)'
-                  e.currentTarget.style.borderColor = 'rgba(218, 165, 32, 0.5)'
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(218, 165, 32, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(218, 165, 32, 0.1)'
-                  e.currentTarget.style.borderColor = 'rgba(218, 165, 32, 0.3)'
                   e.currentTarget.style.transform = 'translateY(-50%) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
                 }}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M15 18L9 12L15 6" stroke="#DAA520" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
@@ -2053,11 +2043,8 @@ export default function CherokeePage() {
                   right: '1.5rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  background: 'rgba(218, 165, 32, 0.1)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(218, 165, 32, 0.3)',
-                  borderRadius: '16px',
+                  background: 'transparent',
+                  border: 'none',
                   width: '56px',
                   height: '56px',
                   cursor: 'pointer',
@@ -2066,22 +2053,15 @@ export default function CherokeePage() {
                   justifyContent: 'center',
                   zIndex: 10,
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(218, 165, 32, 0.2)'
-                  e.currentTarget.style.borderColor = 'rgba(218, 165, 32, 0.5)'
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(218, 165, 32, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(218, 165, 32, 0.1)'
-                  e.currentTarget.style.borderColor = 'rgba(218, 165, 32, 0.3)'
                   e.currentTarget.style.transform = 'translateY(-50%) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
                 }}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 18L15 12L9 6" stroke="#DAA520" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
