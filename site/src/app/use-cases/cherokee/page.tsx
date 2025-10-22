@@ -2005,7 +2005,7 @@ export default function CherokeePage() {
                 aria-label="Previous greeting"
                 style={{
                   position: 'absolute',
-                  left: '1.5rem',
+                  left: '0.5rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   background: 'transparent',
@@ -2040,7 +2040,7 @@ export default function CherokeePage() {
                 aria-label="Next greeting"
                 style={{
                   position: 'absolute',
-                  right: '1.5rem',
+                  right: '0.5rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   background: 'transparent',
