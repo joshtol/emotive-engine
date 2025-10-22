@@ -640,7 +640,7 @@ export default function SmartHomePage() {
             {/* Simulation */}
             <div style={{
               background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%)',
-              borderRadius: '40px',
+              borderRadius: isMobile ? '20px' : '40px',
               border: '3px solid rgba(139, 92, 246, 0.2)',
               boxShadow: `
                 0 40px 120px rgba(0, 0, 0, 0.7),
@@ -649,7 +649,9 @@ export default function SmartHomePage() {
               `,
               overflow: 'hidden',
               position: 'relative',
-              minHeight: isMobile ? '80vh' : '700px'
+              height: isMobile ? 'calc(100vh - 2rem)' : 'auto',
+              display: isMobile ? 'flex' : 'block',
+              flexDirection: isMobile ? 'column' : undefined
             }}>
               <div style={{
                 position: 'absolute',

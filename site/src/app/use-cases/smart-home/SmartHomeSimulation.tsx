@@ -444,8 +444,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
   return (
     <div style={{
       position: 'relative',
-      height: isMobile ? '80vh' : '100%',
-      minHeight: isMobile ? '80vh' : '700px',
+      height: '100%',
       width: '100%',
       display: 'flex',
       flexDirection: 'column',
