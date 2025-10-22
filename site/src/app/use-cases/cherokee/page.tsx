@@ -19,7 +19,6 @@ export default function CherokeePage() {
   const frameCountRef = useRef(0)
   const lastOpacityRef = useRef<number>(1)
   const lastZIndexRef = useRef<number>(100)
-  const [scrollIndicatorOpacity, setScrollIndicatorOpacity] = useState(1)
 
   // Card modal state
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState<number | null>(null)
@@ -55,21 +54,6 @@ export default function CherokeePage() {
     window.scrollTo(0, 0)
   }, [])
 
-  // Track scroll for indicator fade
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY
-      // Fade out immediately on any scroll
-      const newOpacity = scrollY === 0 ? 1 : 0
-      setScrollIndicatorOpacity(newOpacity)
-    }
-
-    // Initial check
-    handleScroll()
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   // Handle feedback form submission
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
@@ -692,7 +676,7 @@ export default function CherokeePage() {
       }}>
         {/* Hero Section with Parallax */}
         <section style={{
-          minHeight: '100vh',
+          minHeight: '75vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -789,55 +773,19 @@ export default function CherokeePage() {
               Discover common Cherokee phrases through interactive cards with emotional AI that responds to each greeting's unique cultural meaning.
             </p>
 
-            {/* Scroll indicator - mobile only */}
-            {isMobile && (
-              <div style={{
-                position: 'absolute',
-                bottom: '-7rem',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.5rem',
-                animation: scrollIndicatorOpacity > 0 ? 'scrollBounce 2.5s ease-in-out infinite' : 'none',
-                zIndex: 10,
-                opacity: scrollIndicatorOpacity,
-                visibility: scrollIndicatorOpacity > 0 ? 'visible' : 'hidden',
-                transition: 'opacity 0.3s ease-out, visibility 0.3s ease-out',
-                pointerEvents: 'none',
-              }}>
-                <div style={{
-                  width: '2px',
-                  height: '48px',
-                  background: 'linear-gradient(180deg, transparent 0%, rgba(218,165,32,0.3) 50%, transparent 100%)',
-                  borderRadius: '1px',
-                  position: 'relative',
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    top: '0',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '6px',
-                    height: '6px',
-                    background: 'radial-gradient(circle, #FFD700 0%, rgba(218,165,32,0.8) 100%)',
-                    borderRadius: '50%',
-                    animation: 'scrollDot 2.5s ease-in-out infinite',
-                    boxShadow: '0 0 12px rgba(255,215,0,0.8), 0 0 24px rgba(255,215,0,0.4)',
-                  }} />
-                </div>
-                <div style={{
-                  fontSize: '1.5rem',
-                  color: '#FFD700',
-                  textShadow: '0 0 20px rgba(255,215,0,0.6)',
-                  animation: 'scrollArrow 2.5s ease-in-out infinite',
-                }}>
-                  ↓
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Subtle bottom gradient - passive scroll hint */}
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '150px',
+            background: 'linear-gradient(0deg, rgba(5,5,5,0.95) 0%, transparent 100%)',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }} />
         </section>
 
         {/* Bento Grid Greeting Cards */}
@@ -2269,44 +2217,6 @@ export default function CherokeePage() {
           to {
             opacity: 1;
             transform: scale(1);
-          }
-        }
-        @keyframes scrollBounce {
-          0%, 100% {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-          }
-          50% {
-            transform: translateX(-50%) translateY(10px);
-            opacity: 0.8;
-          }
-        }
-        @keyframes scrollDot {
-          0% {
-            top: 0;
-            opacity: 1;
-          }
-          50% {
-            top: 42px;
-            opacity: 0.3;
-          }
-          50.01% {
-            top: 0;
-            opacity: 0;
-          }
-          100% {
-            top: 0;
-            opacity: 1;
-          }
-        }
-        @keyframes scrollArrow {
-          0%, 100% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-          50% {
-            transform: translateY(4px);
-            opacity: 0.5;
           }
         }
       `}</style>
