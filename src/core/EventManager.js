@@ -379,6 +379,22 @@ export class EventManager {
 
         return cleaned;
     }
+
+    /**
+     * Destroy the event manager and remove all listeners
+     * @returns {number} Number of listeners removed
+     */
+    destroy() {
+        const count = this.removeAll();
+        this.listeners.clear();
+        this.groups.clear();
+        this.stats = {
+            registered: 0,
+            removed: 0,
+            active: 0
+        };
+        return count;
+    }
 }
 
 // Create singleton instance

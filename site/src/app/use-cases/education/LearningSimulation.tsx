@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import PremiumAIAssistant from '@/components/PremiumAIAssistant'
+import { useTimeoutManager } from '@/hooks/useTimeoutManager'
 
 interface Problem {
   id: string
@@ -85,6 +86,7 @@ const DEMO_PROBLEMS: Problem[] = [
 ]
 
 export default function LearningSimulation() {
+  const { setTimeout: setManagedTimeout } = useTimeoutManager()
   const [currentProblem, setCurrentProblem] = useState(0)
   const [answer, setAnswer] = useState('120')
   const [attempts, setAttempts] = useState(0)
@@ -150,7 +152,7 @@ export default function LearningSimulation() {
         mascot.setScale({ core: isMobile ? 1.4 : 1.2, particles: isMobile ? 2.0 : 1.8 })
         mascot.setBackdrop({ enabled: true, radius: 3.0, intensity: 0.8 })
         mascotRef.current = mascot
-        setTimeout(() => mascot.express?.('wave'), 500)
+        setManagedTimeout(() => mascot.express?.('wave'), 500)
       } catch (error) {
         console.error('Failed to initialize mascot:', error)
       }
@@ -187,7 +189,7 @@ export default function LearningSimulation() {
         }
         if (mascotRef.current.express) {
           mascotRef.current.express('bounce')
-          setTimeout(() => {
+          setManagedTimeout(() => {
             if (mascotRef.current?.express) {
               mascotRef.current.express('sparkle', { intensity: 0.8, duration: 1500 })
             }

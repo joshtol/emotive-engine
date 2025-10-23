@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useTimeoutManager } from '@/hooks/useTimeoutManager'
 
 interface Room {
   id: string
@@ -116,6 +117,7 @@ const COLORS = {
 }
 
 export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulationProps) {
+  const { setTimeout: setManagedTimeout } = useTimeoutManager()
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
   const [rooms, setRooms] = useState<Room[]>([])
@@ -238,7 +240,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
         mascotRef.current = mascot
 
-        setTimeout(() => {
+        setManagedTimeout(() => {
           mascot.express?.('wave')
         }, 500)
 
@@ -306,7 +308,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           await mascotRef.current.express('nod', { intensity: 0.4, duration: 400 })
         }
         // Reset after 1.5 seconds
-        setTimeout(() => {
+        setManagedTimeout(() => {
           if (mascotRef.current) {
             if (mascotRef.current.morphTo) {
               mascotRef.current.morphTo('circle', { duration: 800 })
@@ -325,13 +327,13 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           await mascotRef.current.express('pulse', { intensity: 0.6, duration: 800 })
         }
         // Add a second pulse for "recording" effect
-        setTimeout(() => {
+        setManagedTimeout(() => {
           if (mascotRef.current && mascotRef.current.express) {
             mascotRef.current.express('pulse', { intensity: 0.4, duration: 600 })
           }
         }, 400)
         // Reset after 2 seconds
-        setTimeout(() => {
+        setManagedTimeout(() => {
           if (mascotRef.current && mascotRef.current.setEmotion) {
             mascotRef.current.setEmotion('neutral', 0.5)
           }
@@ -453,7 +455,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
       }
     }
 
-    setTimeout(() => {
+    setManagedTimeout(() => {
       setActiveScene(null)
       if (mascotRef.current) {
         if (mascotRef.current.morphTo) {
@@ -486,7 +488,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
         mascotRef.current.morphTo(response.shape, { duration: 1000 })
       }
       if (response.gesture && mascotRef.current.express) {
-        setTimeout(() => {
+        setManagedTimeout(() => {
           if (mascotRef.current && mascotRef.current.express) {
             mascotRef.current.express(response.gesture, { intensity: 0.7 })
           }

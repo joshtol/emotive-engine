@@ -13,6 +13,8 @@ class ElementTargetingAdvanced extends ElementTargeting {
         this.audioContext = null;
         this.audioAnalyser = null;
         this.gazeTracker = null;
+        this.activeRAFIds = new Set(); // Track all active RAF IDs
+        this.activeSmoothAnimations = new Set(); // Track smooth animation RAF IDs
     }
 
     /**
@@ -219,6 +221,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
 
         const startOffset = this.positionController.getOffset();
         const startTime = performance.now();
+        let rafId = null;
 
         const animate = currentTime => {
             const elapsed = currentTime - startTime;
@@ -231,11 +234,18 @@ class ElementTargetingAdvanced extends ElementTargeting {
             this.positionController.setOffset(currentX, currentY, 0);
 
             if (progress < 1) {
-                requestAnimationFrame(animate);
+                rafId = requestAnimationFrame(animate);
+                this.activeSmoothAnimations.add(rafId);
+            } else {
+                // Animation complete, remove from tracking
+                if (rafId !== null) {
+                    this.activeSmoothAnimations.delete(rafId);
+                }
             }
         };
 
-        requestAnimationFrame(animate);
+        rafId = requestAnimationFrame(animate);
+        this.activeSmoothAnimations.add(rafId);
     }
 
     /**
@@ -348,21 +358,28 @@ class ElementTargetingAdvanced extends ElementTargeting {
         const baseX = rect.left + rect.width / 2 + offset.x - window.innerWidth / 2;
         const baseY = rect.top + rect.height / 2 + offset.y - window.innerHeight / 2;
 
+        let rafId = null;
         const updatePosition = () => {
             this.audioAnalyser.getByteFrequencyData(audioData);
-            
+
             let sum = 0;
             for (let i = 0; i < audioData.length; i++) {
                 sum += audioData[i];
             }
             const averageLevel = (sum / audioData.length) / 255;
-            
+
             const audioOffset = averageLevel * sensitivity;
             const currentX = baseX + audioOffset;
             const currentY = baseY + (audioOffset * 0.5);
-            
+
             this.positionController.setOffset(currentX, currentY, 0);
-            requestAnimationFrame(updatePosition);
+
+            // Remove old RAF ID and add new one
+            if (rafId !== null) {
+                this.activeRAFIds.delete(rafId);
+            }
+            rafId = requestAnimationFrame(updatePosition);
+            this.activeRAFIds.add(rafId);
         };
 
         updatePosition();
@@ -394,18 +411,25 @@ class ElementTargetingAdvanced extends ElementTargeting {
         const targetX = rect.left + rect.width / 2 + offset.x - window.innerWidth / 2;
         const targetY = rect.top + rect.height / 2 + offset.y - window.innerHeight / 2;
 
+        let rafId = null;
         const updatePosition = () => {
             // Simulate gaze tracking (replace with actual gaze tracking implementation)
             const gazeX = this.gazeTracker.x - window.innerWidth / 2;
             const gazeY = this.gazeTracker.y - window.innerHeight / 2;
-            
+
             // Interpolate between gaze position and target
             const gazeWeight = gazeOptions.gazeWeight || 0.3;
             const currentX = targetX + (gazeX - targetX) * gazeWeight;
             const currentY = targetY + (gazeY - targetY) * gazeWeight;
-            
+
             this.positionController.setOffset(currentX, currentY, 0);
-            requestAnimationFrame(updatePosition);
+
+            // Remove old RAF ID and add new one
+            if (rafId !== null) {
+                this.activeRAFIds.delete(rafId);
+            }
+            rafId = requestAnimationFrame(updatePosition);
+            this.activeRAFIds.add(rafId);
         };
 
         updatePosition();
@@ -438,6 +462,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * Destroy the advanced targeting system
      */
     destroy() {
+        // Cancel all path-based RAF loops
         const activePathEntries = Array.from(this.activePaths.values());
         activePathEntries.forEach(entry => {
             if (entry && typeof entry.stop === 'function') {
@@ -447,8 +472,21 @@ class ElementTargetingAdvanced extends ElementTargeting {
             }
         });
         this.activePaths.clear();
+
+        // Cancel all tracked RAF IDs (audio, gaze, etc.)
+        this.activeRAFIds.forEach(rafId => {
+            cancelAnimationFrame(rafId);
+        });
+        this.activeRAFIds.clear();
+
+        // Cancel all smooth animation RAF IDs
+        this.activeSmoothAnimations.forEach(rafId => {
+            cancelAnimationFrame(rafId);
+        });
+        this.activeSmoothAnimations.clear();
+
         this.obstacles.clear();
-        
+
         if (this.audioContext) {
             this.audioContext.close();
             this.audioContext = null;

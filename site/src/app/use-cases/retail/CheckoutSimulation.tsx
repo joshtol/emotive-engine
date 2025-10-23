@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useTimeoutManager } from '@/hooks/useTimeoutManager'
 
 interface Product {
   id: string
@@ -29,6 +30,7 @@ interface Message {
 }
 
 export default function CheckoutSimulation({ onStepChange, openAIChat }: CheckoutSimulationProps) {
+  const { setTimeout: setManagedTimeout } = useTimeoutManager()
   const [currentStep, setCurrentStep] = useState(0)
   const [cart, setCart] = useState<Product[]>([])
   const [scanning, setScanning] = useState(false)
@@ -138,7 +140,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
 
         mascotRef.current = mascot
 
-        setTimeout(() => {
+        setManagedTimeout(() => {
           mascot.express?.('wave')
         }, 500)
 
@@ -151,6 +153,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
 
     return () => {
       cancelled = true
+      // Timeouts are auto-cleaned by useTimeoutManager hook
       if (mascotRef.current) {
         mascotRef.current.stop?.()
         mascotRef.current.destroy?.()
@@ -250,13 +253,13 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
       gesture: 'sparkle'
     })
 
-    setTimeout(() => {
+    setManagedTimeout(() => {
       if (mascotRef.current && mascotRef.current.express) {
         mascotRef.current.express('glow', { intensity: 0.8, duration: 2000 })
       }
     }, 500)
 
-    setTimeout(async () => {
+    setManagedTimeout(async () => {
       if (mascotRef.current) {
         if (mascotRef.current.setEmotion) {
           mascotRef.current.setEmotion('neutral', 0.5)
@@ -301,7 +304,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
         mascotRef.current.morphTo(response.shape, { duration: 1000 })
       }
       if (response.gesture && mascotRef.current.express) {
-        setTimeout(() => {
+        setManagedTimeout(() => {
           if (mascotRef.current && mascotRef.current.express) {
             mascotRef.current.express(response.gesture, { intensity: 0.7 })
           }
