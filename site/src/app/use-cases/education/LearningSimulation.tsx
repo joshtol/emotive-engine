@@ -344,9 +344,7 @@ export default function LearningSimulation() {
         order: isMobile ? 2 : 1
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(15, 18, 35, 0.98) 100%)',
-          backdropFilter: 'blur(60px)',
-          borderRadius: isMobile ? '12px' : '24px',
+          background: 'linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(15, 18, 35, 0.98) 100%)',          borderRadius: isMobile ? '12px' : '24px',
           padding: isMobile ? '1rem' : '2rem',
           border: '2px solid rgba(124, 58, 237, 0.2)',
           boxShadow: '0 30px 90px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(124, 58, 237, 0.1)',
@@ -779,9 +777,7 @@ export default function LearningSimulation() {
           top: '2rem',
           width: '100%',
           height: '680px',
-          background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
-          backdropFilter: 'blur(60px)',
-          border: '2px solid rgba(20, 184, 166, 0.3)',
+          background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',          border: '2px solid rgba(20, 184, 166, 0.3)',
           borderRadius: '32px',
           overflow: 'hidden',
           boxShadow: '0 30px 90px rgba(0, 0, 0, 0.6)',
@@ -825,9 +821,7 @@ export default function LearningSimulation() {
         <div style={{
           width: '100%',
           marginTop: '1rem',
-          background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
-          backdropFilter: 'blur(40px)',
-          borderRadius: '20px',
+          background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',          borderRadius: '20px',
           border: '2px solid rgba(124, 58, 237, 0.3)',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
           overflow: 'hidden',

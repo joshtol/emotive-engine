@@ -253,9 +253,7 @@ export default function LazyFeaturesShowcase() {
                   padding: '2rem',
                   background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '16px',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'transform 0.3s ease, border-color 0.3s ease',
+                  borderRadius: '16px',                  transition: 'transform 0.3s ease, border-color 0.3s ease',
                   cursor: 'pointer'
                 }}
                 onMouseEnter={(e) => {

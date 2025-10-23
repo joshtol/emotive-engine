@@ -410,10 +410,7 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
                 padding: '1rem 1.375rem',
                 background: msg.role === 'user'
                   ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
-                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                backdropFilter: 'blur(40px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',                borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
                 border: msg.role === 'user'
                   ? '1px solid rgba(0, 217, 255, 0.2)'
                   : '1px solid rgba(255, 255, 255, 0.06)',
@@ -456,10 +453,7 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
             }}>
               <div style={{
                 padding: '1.125rem 1.5rem',
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                backdropFilter: 'blur(30px)',
-                WebkitBackdropFilter: 'blur(30px)',
-                borderRadius: '20px 20px 20px 4px',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',                borderRadius: '20px 20px 20px 4px',
                 border: '1px solid rgba(255, 255, 255, 0.06)',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.03)',
                 display: 'flex',
@@ -503,10 +497,7 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
                   onClick={() => setInput(prompt)}
                   style={{
                     padding: '0.75rem 1.25rem',
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     borderRadius: '100px',
                     color: 'rgba(255, 255, 255, 0.85)',
                     fontSize: '0.8125rem',
@@ -549,10 +540,7 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
             display: 'flex',
             gap: '0.875rem',
             alignItems: 'center',
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
-            backdropFilter: 'blur(40px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-            borderRadius: '20px',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',            borderRadius: '20px',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             padding: '0.5rem',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
@@ -583,10 +571,7 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
                 padding: '0.875rem 1.75rem',
                 background: loading || !input.trim()
                   ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
-                  : 'linear-gradient(135deg, rgba(0, 217, 255, 0.4) 0%, rgba(16, 185, 129, 0.3) 100%)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: loading || !input.trim()
+                  : 'linear-gradient(135deg, rgba(0, 217, 255, 0.4) 0%, rgba(16, 185, 129, 0.3) 100%)',                border: loading || !input.trim()
                   ? '1px solid rgba(0, 217, 255, 0.15)'
                   : '1px solid rgba(0, 217, 255, 0.3)',
                 borderRadius: '16px',

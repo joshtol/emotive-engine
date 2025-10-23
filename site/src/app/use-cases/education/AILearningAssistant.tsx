@@ -384,10 +384,7 @@ export default function AILearningAssistant({ onEmotionChange, onLLMResponse }: 
         display: 'flex',
         flexDirection: 'column',
         height: '650px',
-        background: 'linear-gradient(180deg, rgba(124, 58, 237, 0.05) 0%, rgba(20, 184, 166, 0.03) 100%)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: '16px',
+        background: 'linear-gradient(180deg, rgba(124, 58, 237, 0.05) 0%, rgba(20, 184, 166, 0.03) 100%)',        borderRadius: '16px',
         border: '2px solid rgba(124, 58, 237, 0.2)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
         overflow: 'hidden',
@@ -546,10 +543,7 @@ export default function AILearningAssistant({ onEmotionChange, onLLMResponse }: 
                 padding: '1rem 1.25rem',
                 background: msg.role === 'user'
                   ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(167, 139, 250, 0.2) 100%)'
-                  : 'rgba(0, 0, 0, 0.3)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                  : 'rgba(0, 0, 0, 0.3)',                borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
                 border: `1px solid ${msg.role === 'user' ? 'rgba(124, 58, 237, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
                 boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
                 color: 'white',
@@ -568,10 +562,7 @@ export default function AILearningAssistant({ onEmotionChange, onLLMResponse }: 
             }}>
               <div style={{
                 padding: '1rem 1.25rem',
-                background: 'rgba(0, 0, 0, 0.3)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                borderRadius: '20px 20px 20px 4px',
+                background: 'rgba(0, 0, 0, 0.3)',                borderRadius: '20px 20px 20px 4px',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
                 gap: '0.5rem'

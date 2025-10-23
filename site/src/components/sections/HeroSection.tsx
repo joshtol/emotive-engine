@@ -317,9 +317,7 @@ export default function HeroSection({ mascot }: HeroSectionProps) {
                                                 : '120px',
                                         backgroundColor: isActiveCard
                                             ? 'rgba(255, 255, 255, 0.25)'
-                                            : 'rgba(255, 255, 255, 0.15)',
-                                        backdropFilter: 'blur(15px)',
-                                        borderRadius: '16px',
+                                            : 'rgba(255, 255, 255, 0.15)',                                        borderRadius: '16px',
                                         border: `2px solid ${card.color}`,
                                         boxShadow: isActiveCard
                                             ? `0 12px 40px ${card.color}66`

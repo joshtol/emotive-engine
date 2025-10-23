@@ -759,10 +759,7 @@ export default function CherokeePage() {
             <div style={{
               display: 'inline-block',
               padding: '0.6rem 1.5rem',
-              background: 'rgba(218, 165, 32, 0.15)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(218, 165, 32, 0.3)',
+              background: 'rgba(218, 165, 32, 0.15)',              border: '1px solid rgba(218, 165, 32, 0.3)',
               borderRadius: '30px',
               marginBottom: '3rem',
               fontSize: '0.85rem',
@@ -912,10 +909,7 @@ export default function CherokeePage() {
                 key={greeting.english}
                 onClick={() => setSelectedPhraseIndex(index)}
                 style={{
-                  background: greeting.bgColor,
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  border: `2px solid ${greeting.borderColor}`,
+                  background: greeting.bgColor,                  border: `2px solid ${greeting.borderColor}`,
                   borderRadius: '20px',
                   padding: '2.5rem',
                   cursor: 'pointer',
@@ -924,13 +918,15 @@ export default function CherokeePage() {
                   overflow: 'hidden',
                   gridColumn: index === 0 || index === 7 ? (isMobile ? 'span 1' : 'span 2') : 'span 1',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                  willChange: 'transform',
+                  transform: 'translateZ(0)',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
+                  e.currentTarget.style.transform = 'translateY(-8px) scale(1.02) translateZ(0)'
                   e.currentTarget.style.boxShadow = `0 20px 60px ${greeting.borderColor.replace('0.4', '0.6')}`
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                  e.currentTarget.style.transform = 'translateY(0) scale(1) translateZ(0)'
                   e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)'
                 }}
               >
@@ -1004,10 +1000,7 @@ export default function CherokeePage() {
           }} />
 
           <div style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '32px',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',            borderRadius: '32px',
             padding: isMobile ? '3rem 2rem' : '4.5rem 3.5rem',
             border: '2px solid rgba(218,165,32,0.2)',
             marginBottom: '4rem',
@@ -1061,9 +1054,7 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  border: '2px solid rgba(218,165,32,0.3)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',                  border: '2px solid rgba(218,165,32,0.3)',
                   borderRadius: '24px',
                   textAlign: 'center',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1117,9 +1108,7 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  border: '2px solid rgba(218,165,32,0.3)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',                  border: '2px solid rgba(218,165,32,0.3)',
                   borderRadius: '24px',
                   textAlign: 'center',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1167,9 +1156,7 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  border: '2px solid rgba(218,165,32,0.3)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',                  border: '2px solid rgba(218,165,32,0.3)',
                   borderRadius: '24px',
                   textAlign: 'center',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1218,10 +1205,7 @@ export default function CherokeePage() {
 
           {/* About the Syllabary - Bento Grid */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '32px',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',            borderRadius: '32px',
             padding: isMobile ? '3rem 2rem' : '4.5rem 3.5rem',
             border: '2px solid rgba(218,165,32,0.2)',
             marginBottom: '4rem',
@@ -1262,9 +1246,7 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(218,165,32,0.25)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',                  border: '2px solid rgba(218,165,32,0.25)',
                   borderRadius: '24px',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
@@ -1312,9 +1294,7 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(218,165,32,0.25)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',                  border: '2px solid rgba(218,165,32,0.25)',
                   borderRadius: '24px',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
@@ -1362,9 +1342,7 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(218,165,32,0.25)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',                  border: '2px solid rgba(218,165,32,0.25)',
                   borderRadius: '24px',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
@@ -1414,10 +1392,7 @@ export default function CherokeePage() {
           {/* Sources & Attribution */}
           <div style={{
             position: 'relative',
-            background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '32px',
+            background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',            borderRadius: '32px',
             padding: isMobile ? '4rem 2rem' : '5rem 4rem',
             border: '2px solid rgba(218,165,32,0.3)',
             marginBottom: '4rem',
@@ -1474,9 +1449,7 @@ export default function CherokeePage() {
                 onClick={() => setShowFeedbackModal(true)}
                 style={{
                   padding: '0.875rem 2rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.15) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(218,165,32,0.4)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.15) 100%)',                  border: '2px solid rgba(218,165,32,0.4)',
                   borderRadius: '12px',
                   color: '#FFD700',
                   fontSize: 'clamp(0.95rem, 2vw, 1.05rem)',
@@ -1511,9 +1484,7 @@ export default function CherokeePage() {
                 rel="noopener noreferrer"
                 style={{
                   padding: '3rem 2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  border: '2px solid rgba(218,165,32,0.35)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',                  border: '2px solid rgba(218,165,32,0.35)',
                   borderRadius: '28px',
                   textDecoration: 'none',
                   color: 'inherit',
@@ -1573,9 +1544,7 @@ export default function CherokeePage() {
                 rel="noopener noreferrer"
                 style={{
                   padding: '3rem 2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  border: '2px solid rgba(218,165,32,0.35)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',                  border: '2px solid rgba(218,165,32,0.35)',
                   borderRadius: '28px',
                   textDecoration: 'none',
                   color: 'inherit',
@@ -1635,9 +1604,7 @@ export default function CherokeePage() {
                 rel="noopener noreferrer"
                 style={{
                   padding: '3rem 2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  border: '2px solid rgba(218,165,32,0.35)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',                  border: '2px solid rgba(218,165,32,0.35)',
                   borderRadius: '28px',
                   textDecoration: 'none',
                   color: 'inherit',
@@ -1697,10 +1664,7 @@ export default function CherokeePage() {
           {/* Coming Soon with Partnership */}
           <div style={{
             position: 'relative',
-            background: 'linear-gradient(135deg, rgba(15,15,20,0.8) 0%, rgba(10,10,15,0.9) 100%)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '32px',
+            background: 'linear-gradient(135deg, rgba(15,15,20,0.8) 0%, rgba(10,10,15,0.9) 100%)',            borderRadius: '32px',
             padding: isMobile ? '3rem 1.5rem' : '4rem 3rem',
             border: '1px solid rgba(218,165,32,0.2)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
@@ -1778,9 +1742,7 @@ export default function CherokeePage() {
                   gridColumn: isMobile ? '1' : 'span 2',
                   gridRow: isMobile ? 'auto' : '1',
                   padding: isMobile ? '2rem 1.5rem' : '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.12) 0%, rgba(218,165,32,0.05) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '20px',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.12) 0%, rgba(218,165,32,0.05) 100%)',                  borderRadius: '20px',
                   border: '1px solid rgba(218,165,32,0.2)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   position: 'relative',
@@ -1821,9 +1783,7 @@ export default function CherokeePage() {
                   gridColumn: isMobile ? '1' : '3',
                   gridRow: isMobile ? 'auto' : 'span 2',
                   padding: isMobile ? '2rem 1.5rem' : '2.5rem 2rem',
-                  background: 'linear-gradient(135deg, rgba(138,43,226,0.12) 0%, rgba(138,43,226,0.05) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '20px',
+                  background: 'linear-gradient(135deg, rgba(138,43,226,0.12) 0%, rgba(138,43,226,0.05) 100%)',                  borderRadius: '20px',
                   border: '1px solid rgba(138,43,226,0.2)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   position: 'relative',
@@ -1870,9 +1830,7 @@ export default function CherokeePage() {
                   gridColumn: isMobile ? '1' : '4',
                   gridRow: isMobile ? 'auto' : 'span 2',
                   padding: isMobile ? '2rem 1.5rem' : '2.5rem 2rem',
-                  background: 'linear-gradient(135deg, rgba(65,105,225,0.12) 0%, rgba(65,105,225,0.05) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '20px',
+                  background: 'linear-gradient(135deg, rgba(65,105,225,0.12) 0%, rgba(65,105,225,0.05) 100%)',                  borderRadius: '20px',
                   border: '1px solid rgba(65,105,225,0.2)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   position: 'relative',
@@ -1919,9 +1877,7 @@ export default function CherokeePage() {
                   gridColumn: isMobile ? '1' : 'span 2',
                   gridRow: isMobile ? 'auto' : '2',
                   padding: isMobile ? '2rem 1.5rem' : '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(34,139,34,0.12) 0%, rgba(34,139,34,0.05) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '20px',
+                  background: 'linear-gradient(135deg, rgba(34,139,34,0.12) 0%, rgba(34,139,34,0.05) 100%)',                  borderRadius: '20px',
                   border: '1px solid rgba(34,139,34,0.2)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   position: 'relative',
@@ -1973,10 +1929,7 @@ export default function CherokeePage() {
             style={{
               display: 'inline-block',
               padding: '1rem 2rem',
-              background: 'rgba(218, 165, 32, 0.2)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              borderRadius: '12px',
+              background: 'rgba(218, 165, 32, 0.2)',              borderRadius: '12px',
               textDecoration: 'none',
               color: 'white',
               fontSize: '1.1rem',
@@ -2021,10 +1974,7 @@ export default function CherokeePage() {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0,0,0,0.85)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              zIndex: 1000,
+              background: 'rgba(0,0,0,0.85)',              zIndex: 1000,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -2038,10 +1988,7 @@ export default function CherokeePage() {
               style={{
                 maxWidth: isMobile ? '500px' : '800px',
                 width: '100%',
-                background: selected.bgColor,
-                backdropFilter: 'blur(30px)',
-                WebkitBackdropFilter: 'blur(30px)',
-                borderRadius: '24px',
+                background: selected.bgColor,                borderRadius: '24px',
                 padding: isMobile ? '2.5rem 2rem' : '3rem 2.5rem',
                 paddingBottom: isMobile ? '3rem' : '4rem',
                 border: `2px solid ${selected.borderColor}`,
@@ -2075,9 +2022,7 @@ export default function CherokeePage() {
                   position: 'absolute',
                   top: '1rem',
                   right: '1rem',
-                  background: 'rgba(0,0,0,0.5)',
-                  backdropFilter: 'blur(10px)',
-                  border: 'none',
+                  background: 'rgba(0,0,0,0.5)',                  border: 'none',
                   borderRadius: '50%',
                   width: '44px',
                   height: '44px',
@@ -2231,9 +2176,7 @@ export default function CherokeePage() {
                 marginLeft: isMobile ? '0' : '4rem',
                 marginRight: isMobile ? '0' : '4rem',
                 padding: '1.5rem',
-                background: 'rgba(0,0,0,0.3)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '16px',
+                background: 'rgba(0,0,0,0.3)',                borderRadius: '16px',
                 position: 'relative',
                 zIndex: 2,
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -2249,9 +2192,7 @@ export default function CherokeePage() {
                 marginLeft: isMobile ? '0' : '4rem',
                 marginRight: isMobile ? '0' : '4rem',
                 padding: '1rem 1.2rem',
-                background: 'rgba(0,0,0,0.15)',
-                backdropFilter: 'blur(5px)',
-                borderRadius: '12px',
+                background: 'rgba(0,0,0,0.15)',                borderRadius: '12px',
                 position: 'relative',
                 zIndex: 2,
                 border: '1px solid rgba(255,255,255,0.03)',
@@ -2330,9 +2271,7 @@ export default function CherokeePage() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0,0,0,0.8)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 10000,
+            background: 'rgba(0,0,0,0.8)',            zIndex: 10000,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -2342,9 +2281,7 @@ export default function CherokeePage() {
         >
           <div
             style={{
-              background: 'linear-gradient(135deg, rgba(15,15,20,0.95) 0%, rgba(10,10,15,0.98) 100%)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: '24px',
+              background: 'linear-gradient(135deg, rgba(15,15,20,0.95) 0%, rgba(10,10,15,0.98) 100%)',              borderRadius: '24px',
               padding: isMobile ? '2rem 1.5rem' : '3rem 2.5rem',
               maxWidth: '600px',
               width: '100%',
