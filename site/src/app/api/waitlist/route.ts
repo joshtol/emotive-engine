@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase-admin'
+import { getAdminDb } from '@/lib/firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
 
 export async function POST(request: NextRequest) {
@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim()
 
     // Check if email already exists
+    const adminDb = getAdminDb()
     const waitlistRef = adminDb.collection('waitlist')
     const querySnapshot = await waitlistRef.where('email', '==', normalizedEmail).get()
 
