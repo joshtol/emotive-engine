@@ -3273,16 +3273,19 @@ class EmotiveRenderer {
                 this.animationFrameIds[key] = null;
             }
         }
-        
+
         // Clear animation states
         this.colorTransition.active = false;
         if (this.zenTransition) {
             this.zenTransition.active = false;
         }
-        
+
+        // Clean up gaze tracking listeners
+        this.cleanupGazeTracking();
+
         // Clear other resources
         this.speakingRings = [];
-        
+
         // Clear gesture compositor cache
         if (this.gestureCompositor) {
             this.gestureCompositor.clearCache();

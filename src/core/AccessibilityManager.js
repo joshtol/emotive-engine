@@ -33,6 +33,10 @@ export class AccessibilityManager {
         this.liveRegion = null;
         this.announcementQueue = [];
         
+        // Bound event handlers for proper cleanup
+        this.boundHandleKeyDown = null;
+        this.boundHandleKeyUp = null;
+
         // Color schemes for different accessibility needs
         this.colorSchemes = {
             normal: null, // Will be set from current colors
@@ -182,8 +186,12 @@ export class AccessibilityManager {
      * Set up keyboard navigation
      */
     setupKeyboardNavigation() {
-        document.addEventListener('keydown', this.handleKeyDown.bind(this));
-        document.addEventListener('keyup', this.handleKeyUp.bind(this));
+        // Create bound methods and store references for cleanup
+        this.boundHandleKeyDown = this.handleKeyDown.bind(this);
+        this.boundHandleKeyUp = this.handleKeyUp.bind(this);
+
+        document.addEventListener('keydown', this.boundHandleKeyDown);
+        document.addEventListener('keyup', this.boundHandleKeyUp);
     }
     
     /**
@@ -622,9 +630,15 @@ export class AccessibilityManager {
      * Destroy accessibility manager
      */
     destroy() {
-        // Remove event listeners
-        document.removeEventListener('keydown', this.handleKeyDown);
-        document.removeEventListener('keyup', this.handleKeyUp);
+        // Remove event listeners using bound references
+        if (this.boundHandleKeyDown) {
+            document.removeEventListener('keydown', this.boundHandleKeyDown);
+            this.boundHandleKeyDown = null;
+        }
+        if (this.boundHandleKeyUp) {
+            document.removeEventListener('keyup', this.boundHandleKeyUp);
+            this.boundHandleKeyUp = null;
+        }
         
         // Remove live region
         if (this.liveRegion && this.liveRegion.parentNode) {

@@ -105,6 +105,7 @@ export class MobileOptimization {
         this.handleOrientationChange = this.handleOrientationChange.bind(this);
         this.handleViewportChange = this.handleViewportChange.bind(this);
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
+        this.handleContextMenu = e => e.preventDefault();
         
         // Initialize
         this.initialize();
@@ -206,9 +207,9 @@ export class MobileOptimization {
         canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
         canvas.addEventListener('touchend', this.handleTouchEnd, { passive: false });
         canvas.addEventListener('touchcancel', this.handleTouchCancel, { passive: false });
-        
+
         // Prevent context menu on long press
-        canvas.addEventListener('contextmenu', e => e.preventDefault());
+        canvas.addEventListener('contextmenu', this.handleContextMenu);
     }
     
     /**
@@ -859,21 +860,22 @@ export class MobileOptimization {
      */
     destroy() {
         const canvas = this.getCanvas();
-        
+
         if (canvas) {
             canvas.removeEventListener('touchstart', this.handleTouchStart);
             canvas.removeEventListener('touchmove', this.handleTouchMove);
             canvas.removeEventListener('touchend', this.handleTouchEnd);
             canvas.removeEventListener('touchcancel', this.handleTouchCancel);
+            canvas.removeEventListener('contextmenu', this.handleContextMenu);
         }
-        
+
         window.removeEventListener('resize', this.handleViewportChange);
         window.removeEventListener('orientationchange', this.handleOrientationChange);
         document.removeEventListener('visibilitychange', this.handleVisibilityChange);
-        
+
         this.touches.clear();
         this.gestureHistory = [];
-        
+
     }
 }
 

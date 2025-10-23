@@ -28,6 +28,9 @@ export class SecurityManager {
             ...options.cspDirectives
         };
 
+        // Bound event handler for proper cleanup
+        this.boundHandleViolation = null;
+
         if (this.strict) {
             this.applyStrictCSP();
         }
@@ -143,10 +146,13 @@ export class SecurityManager {
     monitorViolations() {
         if (typeof window === 'undefined') return;
 
-        // Listen for CSP violations
-        window.addEventListener('securitypolicyviolation', event => {
+        // Create bound handler and store reference for cleanup
+        this.boundHandleViolation = event => {
             this.handleViolation(event);
-        });
+        };
+
+        // Listen for CSP violations
+        window.addEventListener('securitypolicyviolation', this.boundHandleViolation);
 
         // Monitor other security events
         this.monitorXSSAttempts();
@@ -356,6 +362,17 @@ export class SecurityManager {
                 secureContext: typeof window !== 'undefined' && window.isSecureContext
             }
         };
+    }
+
+    /**
+     * Destroy security manager and cleanup listeners
+     */
+    destroy() {
+        // Remove CSP violation listener
+        if (this.boundHandleViolation && typeof window !== 'undefined') {
+            window.removeEventListener('securitypolicyviolation', this.boundHandleViolation);
+            this.boundHandleViolation = null;
+        }
     }
 }
 
