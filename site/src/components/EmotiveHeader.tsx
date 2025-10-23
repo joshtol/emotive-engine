@@ -159,16 +159,18 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
     }
   }, [onMessage])
 
-  // Audio event listeners - kept for cleanup but actual listeners are added in handleTrackSelect
+  // Audio cleanup when component unmounts (e.g., leaving demo page)
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    // Cleanup function - listeners are now added in handleTrackSelect
     return () => {
-      // Audio element will be cleaned up when new track is selected
+      // Stop and clean up audio when leaving the page
+      if (audioRef.current) {
+        audioRef.current.pause()
+        disconnectAudioFromMascot()
+        audioRef.current.src = ''
+        audioRef.current = null
+      }
     }
-  }, [mascot, connectAudioToMascot, disconnectAudioFromMascot])
+  }, [disconnectAudioFromMascot])
 
   return (
     <>
