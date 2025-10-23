@@ -102,7 +102,7 @@ export default function CherokeePage() {
       meaning: 'It\'s good to see you',
       context: 'Universal greeting for all occasions',
       color: '#DAA520',
-      bgColor: 'rgba(218,165,32,0.15)',
+      bgColor: 'rgba(218,165,32,0.25)',
       borderColor: 'rgba(218,165,32,0.4)',
       emoji: '👋',
       emotion: 'surprise',
@@ -119,7 +119,7 @@ export default function CherokeePage() {
       meaning: 'Hi / Hey',
       context: 'Casual greeting among friends',
       color: '#FFB347',
-      bgColor: 'rgba(255,179,71,0.15)',
+      bgColor: 'rgba(255,179,71,0.25)',
       borderColor: 'rgba(255,179,71,0.4)',
       emoji: '😊',
       emotion: 'surprise',
@@ -135,7 +135,7 @@ export default function CherokeePage() {
       meaning: 'Response to "How are you?"',
       context: 'Can also mean "I\'m good"',
       color: '#82C4C3',
-      bgColor: 'rgba(130,196,195,0.15)',
+      bgColor: 'rgba(130,196,195,0.25)',
       borderColor: 'rgba(130,196,195,0.4)',
       emoji: '✨',
       emotion: 'calm',
@@ -151,7 +151,7 @@ export default function CherokeePage() {
       meaning: 'Morning greeting',
       context: 'Used until midday',
       color: '#F8B739',
-      bgColor: 'rgba(248,183,57,0.15)',
+      bgColor: 'rgba(248,183,57,0.25)',
       borderColor: 'rgba(248,183,57,0.4)',
       emoji: '🌅',
       emotion: 'euphoria',
@@ -168,7 +168,7 @@ export default function CherokeePage() {
       meaning: 'Asking about someone\'s wellbeing',
       context: 'Common conversation starter',
       color: '#F7DC6F',
-      bgColor: 'rgba(247,220,111,0.15)',
+      bgColor: 'rgba(247,220,111,0.25)',
       borderColor: 'rgba(247,220,111,0.4)',
       emoji: '💬',
       emotion: 'neutral',
@@ -185,7 +185,7 @@ export default function CherokeePage() {
       meaning: 'Expression of gratitude',
       context: 'Shows respect and appreciation',
       color: '#98D8C8',
-      bgColor: 'rgba(152,216,200,0.15)',
+      bgColor: 'rgba(152,216,200,0.25)',
       borderColor: 'rgba(152,216,200,0.4)',
       emoji: '🙏',
       emotion: 'love',
@@ -202,7 +202,7 @@ export default function CherokeePage() {
       meaning: 'Evening farewell',
       context: 'Used when parting in the evening',
       color: '#9B59B6',
-      bgColor: 'rgba(155,89,182,0.15)',
+      bgColor: 'rgba(155,89,182,0.25)',
       borderColor: 'rgba(155,89,182,0.4)',
       emoji: '🌙',
       emotion: 'resting',
@@ -220,7 +220,7 @@ export default function CherokeePage() {
       meaning: 'There is no word for "goodbye" in Cherokee',
       context: 'Reflects belief in continued connection',
       color: '#C39BD3',
-      bgColor: 'rgba(195,155,211,0.15)',
+      bgColor: 'rgba(195,155,211,0.25)',
       borderColor: 'rgba(195,155,211,0.4)',
       emoji: '🤝',
       emotion: 'neutral',
@@ -448,28 +448,13 @@ export default function CherokeePage() {
       try {
         frameCountRef.current++
 
-        // Pause mascot rendering during active scroll to free main thread
-        if (!isScrolling && mascot && typeof mascot.stop === 'function') {
-          mascot.stop()
-          isScrolling = true
-        }
-
-        // Resume mascot after scroll stops
-        clearTimeout(scrollTimeout)
-        scrollTimeout = setTimeout(() => {
-          if (isScrolling && mascot && typeof mascot.start === 'function') {
-            mascot.start()
-            isScrolling = false
-          }
-        }, 150)
-
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
         const viewportWidth = window.innerWidth
         const isMobileDevice = viewportWidth < 768
 
-        // Only update position every 3 frames to reduce blocking
-        if (frameCountRef.current % 3 === 0 && mascot && typeof mascot.setPosition === 'function') {
+        // Update position on every scroll frame for smooth movement
+        if (mascot && typeof mascot.setPosition === 'function') {
           const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
           const yOffset = isMobileDevice
             ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
