@@ -2,11 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import ScheduleModal from '@/components/ScheduleModal'
 
 export default function CherokeePage() {
+  const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [mascot, setMascot] = useState<any>(null)
@@ -1930,6 +1932,7 @@ export default function CherokeePage() {
         }}>
           <Link
             href="/"
+            prefetch={false}
             style={{
               display: 'inline-block',
               padding: '1rem 2rem',
@@ -1945,10 +1948,12 @@ export default function CherokeePage() {
               boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
             }}
             onMouseEnter={(e) => {
+              router.prefetch('/')
               e.currentTarget.style.background = 'rgba(218, 165, 32, 0.3)'
               e.currentTarget.style.transform = 'translateY(-2px)'
               e.currentTarget.style.boxShadow = '0 8px 24px rgba(218, 165, 32, 0.3)'
             }}
+            onTouchStart={() => router.prefetch('/')}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(218, 165, 32, 0.2)'
               e.currentTarget.style.transform = 'translateY(0)'

@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import ScheduleModal from '@/components/ScheduleModal'
 import SmartHomeSimulation from './SmartHomeSimulation'
 
 export default function SmartHomePage() {
+  const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -1032,6 +1034,7 @@ export default function SmartHomePage() {
         }}>
           <Link
             href="/"
+            prefetch={false}
             style={{
               display: 'inline-block',
               padding: '1rem 2rem',
@@ -1044,9 +1047,11 @@ export default function SmartHomePage() {
               transition: 'all 0.3s ease'
             }}
             onMouseEnter={(e) => {
+              router.prefetch('/')
               e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)'
               e.currentTarget.style.transform = 'translateY(-2px)'
             }}
+            onTouchStart={() => router.prefetch('/')}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)'
               e.currentTarget.style.transform = 'translateY(0)'

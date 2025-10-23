@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
@@ -10,6 +11,7 @@ import AICheckoutAssistant from './AICheckoutAssistant'
 import CheckoutSimulation from './CheckoutSimulation'
 
 export default function RetailPage() {
+  const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [mascot, setMascot] = useState<any>(null)
@@ -1028,6 +1030,7 @@ export default function RetailPage() {
         }}>
           <Link
             href="/"
+            prefetch={false}
             style={{
               display: 'inline-block',
               padding: '1rem 2rem',
@@ -1040,9 +1043,11 @@ export default function RetailPage() {
               transition: 'all 0.3s ease'
             }}
             onMouseEnter={(e) => {
+              router.prefetch('/')
               e.currentTarget.style.background = 'rgba(221, 74, 154, 0.3)'
               e.currentTarget.style.transform = 'translateY(-2px)'
             }}
+            onTouchStart={() => router.prefetch('/')}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(221, 74, 154, 0.2)'
               e.currentTarget.style.transform = 'translateY(0)'
