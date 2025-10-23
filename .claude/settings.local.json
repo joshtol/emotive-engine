@@ -6,7 +6,8 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nfix: use Firebase Admin SDK for waitlist API\n\n- Added firebase-admin package\n- Created firebase-admin.ts with server-side config\n- Updated /api/waitlist to use Admin SDK (bypasses security rules)\n- Fixed permission denied errors on server-side API routes\n\nThis fixes the waitlist 500 error. Admin SDK bypasses Firestore\nsecurity rules for server-side operations.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(sed:*)",
       "Bash(cp:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

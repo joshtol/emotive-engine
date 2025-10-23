@@ -23,6 +23,7 @@ export default function CherokeePage() {
   const frameCountRef = useRef(0)
   const lastOpacityRef = useRef<number>(1)
   const lastZIndexRef = useRef<number>(100)
+  const lastHiddenStateRef = useRef<boolean>(false)
 
   // Card modal state
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState<number | null>(null)
@@ -453,13 +454,13 @@ export default function CherokeePage() {
           zIndex = 100  // In front during hero section
         }
 
-        // Only update DOM if values changed significantly
-        if (Math.abs(opacity - lastOpacityRef.current) > 0.01 || zIndex !== lastZIndexRef.current) {
-          container.style.opacity = opacity.toFixed(2)
-          container.style.zIndex = String(zIndex)
-          container.style.visibility = opacity < 0.01 ? 'hidden' : 'visible'
-          lastOpacityRef.current = opacity
+        // Update z-index ONLY when it changes (threshold-based, not continuous)
+        // This prevents CSS recompilation while allowing mascot to hide behind content
+        if (zIndex !== lastZIndexRef.current && containerRef.current) {
           lastZIndexRef.current = zIndex
+          containerRef.current.style.zIndex = String(zIndex)
+          containerRef.current.style.opacity = zIndex === 1 || zIndex === 0 ? '0' : '1'
+          containerRef.current.style.visibility = zIndex === 1 || zIndex === 0 ? 'hidden' : 'visible'
         }
 
         // Gesture points (only if visible and not too frequent)
@@ -656,6 +657,7 @@ export default function CherokeePage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
+          transition: 'opacity 0.3s ease',
         }}
       >
         <canvas

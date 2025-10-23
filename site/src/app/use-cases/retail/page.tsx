@@ -24,6 +24,9 @@ export default function RetailPage() {
   const rafRef = useRef<number | null>(null)
   const tickingRef = useRef(false)
   const frameCountRef = useRef(0)
+  const lastOpacityRef = useRef<number>(1)
+  const lastZIndexRef = useRef<number>(100)
+  const lastHiddenStateRef = useRef<boolean>(false)
 
   // Detect mobile
   useEffect(() => {
@@ -178,8 +181,6 @@ export default function RetailPage() {
     if (!mascot || !containerRef.current) return
 
     const container = containerRef.current
-    let lastOpacity = 1
-    let lastZIndex = 100
 
     const updateMascotOnScroll = () => {
       try {
@@ -222,13 +223,13 @@ export default function RetailPage() {
           zIndex = opacity > 0.1 ? 1 : -1
         }
 
-        // Only update DOM if values changed significantly
-        if (Math.abs(opacity - lastOpacity) > 0.01 || zIndex !== lastZIndex) {
-          container.style.opacity = opacity.toFixed(2)
-          container.style.zIndex = String(zIndex)
-          container.style.visibility = opacity < 0.01 ? 'hidden' : 'visible'
-          lastOpacity = opacity
-          lastZIndex = zIndex
+        // Update z-index ONLY when it changes (threshold-based, not continuous)
+        // This prevents CSS recompilation while allowing mascot to hide behind content
+        if (zIndex !== lastZIndexRef.current && containerRef.current) {
+          lastZIndexRef.current = zIndex
+          containerRef.current.style.zIndex = String(zIndex)
+          containerRef.current.style.opacity = zIndex <= 1 ? '0' : '1'
+          containerRef.current.style.visibility = zIndex <= 1 ? 'hidden' : 'visible'
         }
 
         // Gesture points (only if visible and not too frequent)
@@ -305,6 +306,7 @@ export default function RetailPage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
+          transition: 'opacity 0.3s ease',
         }}
       >
         <canvas

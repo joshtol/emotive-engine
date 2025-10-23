@@ -28,7 +28,7 @@ export default function HomePage() {
   const router = useRouter()
   const lastGestureRef = useRef<number>(-1)
   const lastZIndexRef = useRef<number>(100)
-  const [containerZIndex, setContainerZIndex] = useState(100)
+  const mascotContainerRef = useRef<HTMLDivElement>(null)
   const [mascot, setMascot] = useState<any>(null)
   const [waitlistEmail, setWaitlistEmail] = useState('')
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -65,9 +65,12 @@ export default function HomePage() {
       const heroHeight = isMobile ? viewportHeight * 0.5 : viewportHeight * 0.9
       const newZIndex = scrollY < heroHeight ? 100 : 1
 
-      if (newZIndex !== lastZIndexRef.current) {
+      // Update z-index directly on DOM to avoid React re-renders
+      if (newZIndex !== lastZIndexRef.current && mascotContainerRef.current) {
         lastZIndexRef.current = newZIndex
-        setContainerZIndex(newZIndex)
+        mascotContainerRef.current.style.zIndex = String(newZIndex)
+        mascotContainerRef.current.style.opacity = newZIndex === 1 ? '0' : '1'
+        mascotContainerRef.current.style.visibility = newZIndex === 1 ? 'hidden' : 'visible'
       }
 
       // Gesture triggers
@@ -157,7 +160,7 @@ export default function HomePage() {
 
       {/* Lazy-loaded mascot with Intersection Observer */}
       <LazyMascot
-        containerZIndex={containerZIndex}
+        containerRef={mascotContainerRef}
         onMascotLoaded={setMascot}
       />
 

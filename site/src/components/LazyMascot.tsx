@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 interface LazyMascotProps {
-  containerZIndex: number
+  containerRef?: React.RefObject<HTMLDivElement>
   onMascotLoaded?: (mascot: any) => void
 }
 
@@ -15,9 +15,10 @@ interface LazyMascotProps {
  *
  * This reduces initial bundle size and improves LCP
  */
-export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMascotProps) {
+export default function LazyMascot({ containerRef: externalContainerRef, onMascotLoaded }: LazyMascotProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const internalContainerRef = useRef<HTMLDivElement>(null)
+  const containerRef = externalContainerRef || internalContainerRef
   const [mascot, setMascot] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
@@ -195,9 +196,8 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
         width: '100vw',
         height: '100vh',
         pointerEvents: 'none',
-        zIndex: containerZIndex,
-        opacity: containerZIndex === 1 ? 0 : 1,
-        visibility: containerZIndex === 1 ? 'hidden' : 'visible',
+        zIndex: 100,
+        opacity: 1,
         transition: 'opacity 0.5s ease-out, visibility 0.5s ease-out',
         willChange: 'transform',
         transform: 'translateZ(0)',

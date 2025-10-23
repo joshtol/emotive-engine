@@ -27,6 +27,7 @@ export default function EducationPage() {
   const lastOpacityRef = useRef(1)
   const lastZIndexRef = useRef(100)
   const lastVisibilityRef = useRef<string>('visible')
+  const lastHiddenStateRef = useRef<boolean>(false)
 
   // Detect mobile
   useEffect(() => {
@@ -202,16 +203,24 @@ export default function EducationPage() {
         const fadeRange = viewportHeight * 0.3
 
         let opacity = 1
+        let zIndex = 100
 
         if (scrollY >= demoSectionStart) {
           const fadeProgress = Math.min((scrollY - demoSectionStart) / fadeRange, 1)
           opacity = Math.max(0, 1 - fadeProgress)
         }
 
-        // Only update opacity if changed significantly
-        if (Math.abs(opacity - lastOpacityRef.current) > 0.02) {
-          container.style.opacity = String(opacity)
-          lastOpacityRef.current = opacity
+        if (scrollY >= heroHeight) {
+          zIndex = opacity > 0.1 ? 1 : -1
+        }
+
+        // Update z-index ONLY when it changes (threshold-based, not continuous)
+        // This prevents CSS recompilation while allowing mascot to hide behind content
+        if (zIndex !== lastZIndexRef.current && containerRef.current) {
+          lastZIndexRef.current = zIndex
+          containerRef.current.style.zIndex = String(zIndex)
+          containerRef.current.style.opacity = zIndex <= 1 ? '0' : '1'
+          containerRef.current.style.visibility = zIndex <= 1 ? 'hidden' : 'visible'
         }
 
         // Gesture points (only if visible)
@@ -287,6 +296,7 @@ export default function EducationPage() {
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
+          transition: 'opacity 0.3s ease',
         }}
       >
         <canvas
