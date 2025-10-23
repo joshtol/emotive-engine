@@ -170,6 +170,8 @@ export default function HomePage() {
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
+        contain: 'layout style paint',
+        willChange: 'scroll-position',
       }}>
 
         {/* Hero Section - Critical Path */}
@@ -177,6 +179,8 @@ export default function HomePage() {
           minHeight: '100vh',
           display: 'flex',
           alignItems: 'center',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 100vh',
           justifyContent: 'center',
           padding: 'clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 2rem)',
           position: 'relative',

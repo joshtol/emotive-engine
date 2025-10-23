@@ -316,6 +316,8 @@ export default function SmartHomePage() {
         position: 'relative',
         zIndex: 1,
       }}>
+        contain: 'layout style paint',
+        willChange: 'scroll-position',
         {/* Hero Section - Apple Style */}
         <section style={{
           minHeight: '75vh',
@@ -325,6 +327,8 @@ export default function SmartHomePage() {
           padding: 'clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 2rem)',
           background: 'radial-gradient(ellipse at top, rgba(139,92,246,0.15) 0%, transparent 50%), linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
           position: 'relative',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 75vh',
           width: '100%',
           maxWidth: '100vw',
           boxSizing: 'border-box',
@@ -567,6 +571,8 @@ export default function SmartHomePage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 100vh',
         }}>
           {/* Ambient background */}
           <div style={{
@@ -691,6 +697,8 @@ export default function SmartHomePage() {
           zIndex: 2,
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
         }}>
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 800px',
           <div style={{
             position: 'absolute',
             top: 0,
@@ -830,6 +838,8 @@ export default function SmartHomePage() {
             background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%)',
             borderRadius: '32px',
             padding: 'clamp(3rem, 5vw, 4rem)',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 600px',
             border: '1px solid rgba(139, 92, 246, 0.3)',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
             textAlign: 'center',

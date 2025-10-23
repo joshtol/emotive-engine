@@ -327,6 +327,8 @@ export default function RetailPage() {
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
+        contain: 'layout style paint',
+        willChange: 'scroll-position',
       }}>
         {/* Hero Section */}
         <section style={{
@@ -337,6 +339,8 @@ export default function RetailPage() {
           padding: 'clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 2rem)',
           background: 'radial-gradient(ellipse at top, rgba(221,74,154,0.15) 0%, transparent 50%), linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
           position: 'relative',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 75vh',
           width: '100%',
           maxWidth: '100vw',
           boxSizing: 'border-box',
@@ -582,6 +586,8 @@ export default function RetailPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 100vh',
         }}>
           {/* Ambient background */}
           <div style={{
@@ -807,6 +813,8 @@ export default function RetailPage() {
           position: 'relative',
           zIndex: 2,
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 800px',
         }}>
           {/* Top gradient line */}
           <div style={{
@@ -943,6 +951,8 @@ export default function RetailPage() {
           margin: '4rem auto 6rem auto',
           position: 'relative',
           zIndex: 2,
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 600px',
         }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(221, 74, 154, 0.18) 0%, rgba(255, 107, 157, 0.12) 100%)',

@@ -306,6 +306,8 @@ export default function EducationPage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
+        contain: 'layout style paint',
+        willChange: 'scroll-position',
       }}>
         {/* Hero Section */}
         <section style={{
@@ -319,7 +321,9 @@ export default function EducationPage() {
           width: '100%',
           maxWidth: '100vw',
           boxSizing: 'border-box',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 75vh'
         }}>
           {/* Ambient light effect */}
           <div style={{
@@ -583,6 +587,8 @@ export default function EducationPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 100vh',
         }}>
           {/* Ambient background */}
           <div style={{
@@ -810,6 +816,8 @@ export default function EducationPage() {
           margin: '4rem auto 6rem auto',
           background: 'rgba(10, 10, 10, 0.95)',
           borderRadius: '32px',
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 800px',
           border: '1px solid rgba(124, 58, 237, 0.15)',
           position: 'relative',
           zIndex: 2,
@@ -950,6 +958,8 @@ export default function EducationPage() {
           margin: '4rem auto 6rem auto',
           position: 'relative',
           zIndex: 2,
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 600px',
         }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.18) 0%, rgba(167, 139, 250, 0.12) 100%)',
