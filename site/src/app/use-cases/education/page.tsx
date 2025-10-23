@@ -292,6 +292,10 @@ export default function EducationPage() {
     const handleScroll = () => {
       if (!tickingRef.current) {
         tickingRef.current = true
+        // Cancel any pending RAF before scheduling new one
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current)
+        }
         rafRef.current = requestAnimationFrame(updateMascotOnScroll)
       }
     }
@@ -303,6 +307,7 @@ export default function EducationPage() {
       window.removeEventListener('scroll', handleScroll)
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
       }
       tickingRef.current = false
     }
