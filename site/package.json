@@ -21,6 +21,7 @@
     "canvas": "^3.2.0",
     "ffmpeg-static": "^5.2.0",
     "firebase": "^10.0.0",
+    "firebase-admin": "^13.5.0",
     "fs-extra": "^11.3.2",
     "gray-matter": "^4.0.3",
     "next": "^14.0.0",

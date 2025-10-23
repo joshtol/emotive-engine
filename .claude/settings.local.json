@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: remove healthcare use case and fix mascot visibility\n\n- Removed healthcare use case from homepage bento grid\n- Removed healthcare link from header navigation\n- Deleted healthcare use case page and all components\n- Fixed guide mascot visibility to fade out on scroll (opacity + visibility)\n- Made mascot hide earlier on mobile (50vh instead of 90vh)\n- Applied education mascot scale settings to healthcare before removal\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: remove healthcare use case and fix mascot visibility\n\n- Removed healthcare use case from homepage bento grid\n- Removed healthcare link from header navigation\n- Deleted healthcare use case page and all components\n- Fixed guide mascot visibility to fade out on scroll (opacity + visibility)\n- Made mascot hide earlier on mobile (50vh instead of 90vh)\n- Applied education mascot scale settings to healthcare before removal\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(echo:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: use Firebase Admin SDK for waitlist API\n\n- Added firebase-admin package\n- Created firebase-admin.ts with server-side config\n- Updated /api/waitlist to use Admin SDK (bypasses security rules)\n- Fixed permission denied errors on server-side API routes\n\nThis fixes the waitlist 500 error. Admin SDK bypasses Firestore\nsecurity rules for server-side operations.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

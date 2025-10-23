@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/firebase'
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
+import { adminDb } from '@/lib/firebase-admin'
+import { FieldValue } from 'firebase-admin/firestore'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,9 +19,8 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim()
 
     // Check if email already exists
-    const waitlistRef = collection(db, 'waitlist')
-    const q = query(waitlistRef, where('email', '==', normalizedEmail))
-    const querySnapshot = await getDocs(q)
+    const waitlistRef = adminDb.collection('waitlist')
+    const querySnapshot = await waitlistRef.where('email', '==', normalizedEmail).get()
 
     if (!querySnapshot.empty) {
       return NextResponse.json(
@@ -33,13 +32,13 @@ export async function POST(request: NextRequest) {
     // Add to Firestore
     const waitlistData = {
       email: normalizedEmail,
-      timestamp: serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       userAgent: request.headers.get('user-agent') || 'Unknown',
       referrer: request.headers.get('referer') || 'Direct',
       source: 'website-homepage',
     }
 
-    await addDoc(waitlistRef, waitlistData)
+    await waitlistRef.add(waitlistData)
 
     console.log('📬 New Waitlist Signup:', normalizedEmail)
 
