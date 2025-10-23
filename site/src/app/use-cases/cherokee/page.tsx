@@ -441,10 +441,27 @@ export default function CherokeePage() {
     if (!mascot || !containerRef.current) return
 
     const container = containerRef.current
+    let isScrolling = false
+    let scrollTimeout: NodeJS.Timeout
 
     const updateMascotOnScroll = () => {
       try {
         frameCountRef.current++
+
+        // Pause mascot rendering during active scroll to free main thread
+        if (!isScrolling && mascot && typeof mascot.stop === 'function') {
+          mascot.stop()
+          isScrolling = true
+        }
+
+        // Resume mascot after scroll stops
+        clearTimeout(scrollTimeout)
+        scrollTimeout = setTimeout(() => {
+          if (isScrolling && mascot && typeof mascot.start === 'function') {
+            mascot.start()
+            isScrolling = false
+          }
+        }, 150)
 
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
@@ -550,6 +567,7 @@ export default function CherokeePage() {
         cancelAnimationFrame(rafRef.current)
         rafRef.current = null
       }
+      clearTimeout(scrollTimeout)
       tickingRef.current = false
     }
   }, [mascot, selectedPhraseIndex])
