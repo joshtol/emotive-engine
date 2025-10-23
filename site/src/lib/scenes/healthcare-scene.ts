@@ -21,6 +21,7 @@ export class HealthcareScene implements Scene {
   private animationProgress = 0
   private showValidation = false
   private completionCallback?: () => void
+  private intervalId: number | null = null
 
   private steps = [
     { title: 'Personal Info', fields: ['Name', 'Date of Birth', 'Contact'] },
@@ -103,6 +104,12 @@ export class HealthcareScene implements Scene {
   }
 
   dispose(): void {
+    // Clear interval to prevent memory leak
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId)
+      this.intervalId = null
+    }
+
     if (this.canvas && this.container) {
       this.container.removeChild(this.canvas)
     }
@@ -124,17 +131,20 @@ export class HealthcareScene implements Scene {
 
   private startDemo(): void {
     // Auto-advance through steps
-    const stepInterval = setInterval(() => {
+    this.intervalId = setInterval(() => {
       if (this.currentStep < this.totalSteps - 1) {
         this.completedSteps.add(this.currentStep)
         this.currentStep++
         this.showValidation = false
       } else {
-        clearInterval(stepInterval)
+        if (this.intervalId !== null) {
+          clearInterval(this.intervalId)
+          this.intervalId = null
+        }
         this.completedSteps.add(this.currentStep)
         this.onComplete?.()
       }
-    }, 2500)
+    }, 2500) as unknown as number
   }
 
   private nextStep(): void {

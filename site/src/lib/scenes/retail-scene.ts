@@ -20,6 +20,8 @@ export class RetailScene implements Scene {
   private currentStep: 'idle' | 'scanning' | 'payment' | 'complete' = 'idle'
   private animationProgress = 0
   private completionCallback?: () => void
+  private intervalId: number | null = null
+  private timeoutIds: number[] = []
 
   async init(container: HTMLElement, options?: SceneInitOptions): Promise<void> {
     this.container = container
@@ -94,6 +96,16 @@ export class RetailScene implements Scene {
   }
 
   dispose(): void {
+    // Clear interval to prevent memory leak
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId)
+      this.intervalId = null
+    }
+
+    // Clear all timeouts to prevent memory leak
+    this.timeoutIds.forEach(id => clearTimeout(id))
+    this.timeoutIds = []
+
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame)
       this.animationFrame = null
@@ -120,34 +132,40 @@ export class RetailScene implements Scene {
 
   private startDemo(): void {
     // Start with first product scan after 1 second
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (this.currentStep === 'idle') {
         this.currentStep = 'scanning'
         this.scanProducts()
       }
-    }, 1000)
+    }, 1000) as unknown as number
+    this.timeoutIds.push(timeoutId)
   }
 
   private scanProducts(): void {
     let scannedCount = 0
-    const scanInterval = setInterval(() => {
+    this.intervalId = setInterval(() => {
       if (scannedCount < this.products.length) {
         this.products[scannedCount].scanned = true
         scannedCount++
       } else {
-        clearInterval(scanInterval)
+        if (this.intervalId !== null) {
+          clearInterval(this.intervalId)
+          this.intervalId = null
+        }
         this.currentStep = 'payment'
-        setTimeout(() => this.processPayment(), 500)
+        const timeoutId = setTimeout(() => this.processPayment(), 500) as unknown as number
+        this.timeoutIds.push(timeoutId)
       }
-    }, 1500)
+    }, 1500) as unknown as number
   }
 
   private processPayment(): void {
     // Simulate payment processing
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       this.currentStep = 'complete'
       this.onComplete?.()
-    }, 2000)
+    }, 2000) as unknown as number
+    this.timeoutIds.push(timeoutId)
   }
 
   private nextStep(): void {

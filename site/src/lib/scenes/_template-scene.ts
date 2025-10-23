@@ -17,6 +17,7 @@ export class TemplateScene implements Scene {
   private isPaused = false
   private animationTime = 0
   private completionCallback?: () => void
+  private intervalId: number | null = null
 
   // Scene-specific state
   private currentStep = 0
@@ -98,6 +99,12 @@ export class TemplateScene implements Scene {
   }
 
   dispose(): void {
+    // Clear interval to prevent memory leak
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId)
+      this.intervalId = null
+    }
+
     if (this.canvas && this.container) {
       this.container.removeChild(this.canvas)
     }
@@ -119,14 +126,17 @@ export class TemplateScene implements Scene {
   private startDemo(): void {
     // Implement your auto-play demo sequence
     // Example: step through interactions automatically
-    const stepInterval = setInterval(() => {
+    this.intervalId = setInterval(() => {
       if (this.currentStep < this.totalSteps - 1) {
         this.currentStep++
       } else {
-        clearInterval(stepInterval)
+        if (this.intervalId !== null) {
+          clearInterval(this.intervalId)
+          this.intervalId = null
+        }
         this.onComplete()
       }
-    }, 2000)
+    }, 2000) as unknown as number
   }
 
   private nextStep(): void {

@@ -11,6 +11,7 @@ import type { ScrollExperienceValue } from '@/components/hooks/useScrollExperien
  * - Achievement feedback
  */
 export class EducationScene implements Scene {
+  private intervalId: number | null = null
   private container: HTMLElement | null = null
   private canvas: HTMLCanvasElement | null = null
   private ctx: CanvasRenderingContext2D | null = null
@@ -101,6 +102,12 @@ export class EducationScene implements Scene {
   }
 
   dispose(): void {
+    // Clear interval to prevent memory leak
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId)
+      this.intervalId = null
+    }
+
     if (this.canvas && this.container) {
       this.container.removeChild(this.canvas)
     }
@@ -121,16 +128,19 @@ export class EducationScene implements Scene {
 
   private startDemo(): void {
     // Auto-advance through steps
-    const stepInterval = setInterval(() => {
+    this.intervalId = setInterval(() => {
       if (this.currentStep < this.totalSteps - 1) {
         this.currentStep++
         this.showHint = false
         this.animationTime = 0
       } else {
-        clearInterval(stepInterval)
+        if (this.intervalId !== null) {
+          clearInterval(this.intervalId)
+          this.intervalId = null
+        }
         this.onComplete?.()
       }
-    }, 2000)
+    }, 2000) as unknown as number
   }
 
   private nextStep(): void {

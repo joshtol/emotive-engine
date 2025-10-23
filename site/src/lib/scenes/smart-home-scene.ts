@@ -18,6 +18,7 @@ export class SmartHomeScene implements Scene {
   private animationTime = 0
   private devices: Device[] = []
   private completionCallback?: () => void
+  private intervalId: number | null = null
 
   async init(container: HTMLElement, options?: SceneInitOptions): Promise<void> {
     this.container = container
@@ -96,6 +97,12 @@ export class SmartHomeScene implements Scene {
   }
 
   dispose(): void {
+    // Clear interval to prevent memory leak
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId)
+      this.intervalId = null
+    }
+
     if (this.canvas && this.container) {
       this.container.removeChild(this.canvas)
     }
@@ -118,15 +125,18 @@ export class SmartHomeScene implements Scene {
   private startDemo(): void {
     // Activate devices one by one
     let deviceIndex = 0
-    const activationInterval = setInterval(() => {
+    this.intervalId = setInterval(() => {
       if (deviceIndex < this.devices.length) {
         this.devices[deviceIndex].status = 'on'
         deviceIndex++
       } else {
-        clearInterval(activationInterval)
+        if (this.intervalId !== null) {
+          clearInterval(this.intervalId)
+          this.intervalId = null
+        }
         this.onComplete?.()
       }
-    }, 1500)
+    }, 1500) as unknown as number
   }
 
   private activateNextDevice(): void {
