@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import ScheduleModal from '@/components/ScheduleModal'
@@ -24,6 +25,7 @@ import LazyFeaturesShowcase from '@/components/LazyFeaturesShowcase'
  * - CLS: 0.29 → < 0.1 (fixed hydration issues)
  */
 export default function HomePage() {
+  const router = useRouter()
   const lastGestureRef = useRef<number>(-1)
   const lastZIndexRef = useRef<number>(100)
   const [containerZIndex, setContainerZIndex] = useState(100)
@@ -430,6 +432,7 @@ export default function HomePage() {
             {/* Cherokee Language - FLAGSHIP (Mobile First) */}
             <Link
               href="/use-cases/cherokee"
+              prefetch={false}
               style={{
                 background: 'linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.1) 100%)',
                 borderRadius: 'clamp(20px, 4vw, 24px)',
@@ -445,9 +448,11 @@ export default function HomePage() {
                 transition: 'all 0.3s ease',
               }}
               onMouseEnter={(e) => {
+                router.prefetch('/use-cases/cherokee')
                 e.currentTarget.style.transform = 'translateY(-6px)'
                 e.currentTarget.style.boxShadow = '0 24px 80px rgba(245,158,11,0.4)'
               }}
+              onTouchStart={() => router.prefetch('/use-cases/cherokee')}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
                 e.currentTarget.style.boxShadow = '0 10px 40px rgba(245,158,11,0.2)'
@@ -503,6 +508,7 @@ export default function HomePage() {
             {/* Retail Experience */}
             <Link
               href="/use-cases/retail"
+              prefetch={false}
               style={{
                 background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%)',
                 borderRadius: 'clamp(16px, 3vw, 20px)',
@@ -516,9 +522,11 @@ export default function HomePage() {
                 transition: 'all 0.3s ease',
               }}
               onMouseEnter={(e) => {
+                router.prefetch('/use-cases/retail')
                 e.currentTarget.style.transform = 'translateY(-4px)'
                 e.currentTarget.style.boxShadow = '0 20px 60px rgba(139,92,246,0.3)'
               }}
+              onTouchStart={() => router.prefetch('/use-cases/retail')}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
                 e.currentTarget.style.boxShadow = 'none'
@@ -556,6 +564,7 @@ export default function HomePage() {
             {/* Smart Home */}
             <Link
               href="/use-cases/smart-home"
+              prefetch={false}
               style={{
                 background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%)',
                 borderRadius: 'clamp(16px, 3vw, 20px)',
@@ -569,9 +578,11 @@ export default function HomePage() {
                 transition: 'all 0.3s ease',
               }}
               onMouseEnter={(e) => {
+                router.prefetch('/use-cases/smart-home')
                 e.currentTarget.style.transform = 'translateY(-4px)'
                 e.currentTarget.style.boxShadow = '0 20px 60px rgba(139,92,246,0.3)'
               }}
+              onTouchStart={() => router.prefetch('/use-cases/smart-home')}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
                 e.currentTarget.style.boxShadow = 'none'
@@ -609,6 +620,7 @@ export default function HomePage() {
             {/* Adaptive Learning */}
             <Link
               href="/use-cases/education"
+              prefetch={false}
               style={{
                 background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%)',
                 borderRadius: 'clamp(16px, 3vw, 20px)',
@@ -622,9 +634,11 @@ export default function HomePage() {
                 transition: 'all 0.3s ease',
               }}
               onMouseEnter={(e) => {
+                router.prefetch('/use-cases/education')
                 e.currentTarget.style.transform = 'translateY(-4px)'
                 e.currentTarget.style.boxShadow = '0 20px 60px rgba(59,130,246,0.3)'
               }}
+              onTouchStart={() => router.prefetch('/use-cases/education')}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
                 e.currentTarget.style.boxShadow = 'none'

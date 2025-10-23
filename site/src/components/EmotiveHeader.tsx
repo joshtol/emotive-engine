@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import TrackSelectionModal from './TrackSelectionModal'
 
@@ -23,6 +23,7 @@ interface EmotiveHeaderProps {
 
 export default function EmotiveHeader({ showMusicControls = false, mascot, onMessage, docsNavigation, onMobileMenuChange }: EmotiveHeaderProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isUseCasesOpen, setIsUseCasesOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mobileUseCasesExpanded, setMobileUseCasesExpanded] = useState(false)
@@ -282,8 +283,11 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
                 <Link
                   key={useCase.href}
                   href={useCase.href}
+                  prefetch={false}
                   className={`use-case-item ${pathname.startsWith(useCase.href) ? 'active' : ''}`}
                   onClick={() => setIsUseCasesOpen(false)}
+                  onMouseEnter={() => router.prefetch(useCase.href)}
+                  onTouchStart={() => router.prefetch(useCase.href)}
                 >
                   {useCase.name}
                 </Link>
@@ -339,8 +343,10 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
               <Link
                 key={useCase.href}
                 href={useCase.href}
+                prefetch={false}
                 className="mobile-menu-item mobile-menu-subitem"
                 onClick={() => setIsMobileMenuOpen(false)}
+                onTouchStart={() => router.prefetch(useCase.href)}
               >
                 {useCase.name}
               </Link>
