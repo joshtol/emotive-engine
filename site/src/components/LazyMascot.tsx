@@ -31,10 +31,8 @@ export default function LazyMascot({ containerZIndex, onMascotLoaded }: LazyMasc
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true)
-            observer.disconnect() // Only need to detect once
-          }
+          // Keep observer active, update visibility state dynamically
+          setIsVisible(entry.isIntersecting)
         })
       },
       {

@@ -19,10 +19,10 @@ export default function LazyFeaturesShowcase() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          // Keep observer active, persist visibility once loaded
+          if (entry.isIntersecting && !isVisible) {
             setIsVisible(true)
             setIsMobile(window.innerWidth < 768)
-            observer.disconnect()
           }
         })
       },
@@ -35,7 +35,7 @@ export default function LazyFeaturesShowcase() {
     observer.observe(containerRef.current)
 
     return () => observer.disconnect()
-  }, [])
+  }, [isVisible])
 
   // Window resize handler (only after visible)
   useEffect(() => {
