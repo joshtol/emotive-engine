@@ -136,20 +136,29 @@ export default function SmartHomePage() {
 
         mascotInstance.start()
 
-        setMascot(mascotInstance)
+        // Check if component is still mounted before setting state
+        if (!cancelled) {
+          setMascot(mascotInstance)
 
-        initializedRef.current = true
-        initializingRef.current = false
+          initializedRef.current = true
+          initializingRef.current = false
 
-        if (typeof mascotInstance.fadeIn === 'function') {
-          mascotInstance.fadeIn(1500)
-        }
-
-        setTimeout(() => {
-          if (typeof mascotInstance.express === 'function') {
-            mascotInstance.express('wave')
+          if (typeof mascotInstance.fadeIn === 'function') {
+            mascotInstance.fadeIn(1500)
           }
-        }, 800)
+
+          setTimeout(() => {
+            if (!cancelled && typeof mascotInstance.express === 'function') {
+              mascotInstance.express('wave')
+            }
+          }, 800)
+        } else {
+          // Component unmounted during init, clean up immediately
+          mascotInstance.stop()
+          if (typeof mascotInstance.destroy === 'function') {
+            mascotInstance.destroy()
+          }
+        }
 
       } catch (error) {
         console.error('Failed to initialize mascot:', error)
@@ -161,8 +170,27 @@ export default function SmartHomePage() {
 
     return () => {
       cancelled = true
+
+      // Cleanup mascot instance to prevent memory leaks
       if (mascot) {
-        mascot.stop()
+        try {
+          mascot.stop()
+          if (typeof mascot.destroy === 'function') {
+            mascot.destroy()
+          }
+
+          // Clear canvas to release GPU resources
+          if (canvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d')
+            if (ctx) {
+              ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+            }
+          }
+        } catch (error) {
+          console.error('Error cleaning up mascot:', error)
+        }
+
+        setMascot(null)
         initializedRef.current = false
         initializingRef.current = false
       }
