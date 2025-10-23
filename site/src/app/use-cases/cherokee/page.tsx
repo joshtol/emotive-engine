@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import ScheduleModal from '@/components/ScheduleModal'
+import { useTimeoutManager } from '@/hooks/useTimeoutManager'
 
 export default function CherokeePage() {
+  const { setTimeout: setManagedTimeout } = useTimeoutManager()
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -80,7 +82,7 @@ export default function CherokeePage() {
       if (response.ok) {
         setFeedbackStatus('success')
         setFeedbackForm({ name: '', email: '', message: '' })
-        setTimeout(() => {
+        setManagedTimeout(() => {
           setShowFeedbackModal(false)
           setFeedbackStatus('idle')
         }, 2000)
@@ -382,7 +384,7 @@ export default function CherokeePage() {
             mascotInstance.fadeIn(1500)
           }
 
-          setTimeout(() => {
+          setManagedTimeout(() => {
             if (!cancelled && typeof mascotInstance.express === 'function') {
               mascotInstance.express('wave')
             }
@@ -561,13 +563,19 @@ export default function CherokeePage() {
   useEffect(() => {
     if (selectedPhraseIndex === null || !cardCanvasRef.current) return
 
+    let cancelled = false
+    const timeoutIds: NodeJS.Timeout[] = []
+    let gestureInterval: NodeJS.Timeout | null = null
+
     const initCardMascot = async () => {
       // Wait for EmotiveMascot to load (lean bundle)
       let attempts = 0
-      while (!(window as any).EmotiveMascotLean && attempts < 50) {
+      while (!(window as any).EmotiveMascotLean && attempts < 50 && !cancelled) {
         await new Promise(resolve => setTimeout(resolve, 100))
         attempts++
       }
+
+      if (cancelled) return
 
       const canvas = cardCanvasRef.current
       if (!canvas) return
@@ -612,9 +620,20 @@ export default function CherokeePage() {
           emotionTransitionSpeed: 300,
         })
 
+        if (cancelled) {
+          cardMascot.destroy?.()
+          return
+        }
+
         cardMascotRef.current = cardMascot
 
         await cardMascot.init(canvas)
+
+        if (cancelled) {
+          cardMascot.destroy?.()
+          return
+        }
+
         cardMascot.start()
 
         // Position mascot
@@ -625,7 +644,9 @@ export default function CherokeePage() {
         }
 
         // Apply configuration
-        setTimeout(() => {
+        const configTimeout = setTimeout(() => {
+          if (cancelled) return
+
           if (cardMascot.setEmotion) {
             cardMascot.setEmotion(greeting.emotion, greeting.intensity)
           }
@@ -636,28 +657,29 @@ export default function CherokeePage() {
 
           // Trigger gestures
           const triggerGestures = () => {
+            if (cancelled) return
             greeting.gestures.forEach((gesture) => {
-              setTimeout(() => {
+              const gestureTimeout = setTimeout(() => {
+                if (cancelled) return
                 if (gesture.name === 'drift' && cardMascot.chain) {
                   cardMascot.chain('drift')
                 } else if (cardMascot.express) {
                   cardMascot.express(gesture.name)
                 }
               }, gesture.delay)
+              timeoutIds.push(gestureTimeout)
             })
           }
 
           triggerGestures()
 
           // Repeat gestures
-          const gestureInterval = setInterval(() => {
-            if (cardMascotRef.current) {
-              triggerGestures()
-            }
+          gestureInterval = setInterval(() => {
+            if (cancelled || !cardMascotRef.current) return
+            triggerGestures()
           }, 8000)
-
-          ;(cardMascot as any)._gestureInterval = gestureInterval
         }, 200)
+        timeoutIds.push(configTimeout)
 
       } catch (err) {
         console.error('Failed to initialize card mascot:', err)
@@ -667,9 +689,16 @@ export default function CherokeePage() {
     initCardMascot()
 
     return () => {
+      cancelled = true
+
+      // Clear all timeouts
+      timeoutIds.forEach(id => clearTimeout(id))
+
+      // Clear interval
+      if (gestureInterval) clearInterval(gestureInterval)
+
+      // Cleanup mascot
       if (cardMascotRef.current) {
-        const interval = (cardMascotRef.current as any)._gestureInterval
-        if (interval) clearInterval(interval)
         cardMascotRef.current.stop?.()
         cardMascotRef.current.destroy?.()
         cardMascotRef.current = null
