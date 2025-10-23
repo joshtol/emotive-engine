@@ -347,8 +347,6 @@ export default function SmartHomePage() {
         position: 'relative',
         zIndex: 1,
       }}>
-        contain: 'layout style paint',
-        willChange: 'scroll-position',
         {/* Hero Section - Apple Style */}
         <section style={{
           minHeight: '75vh',
