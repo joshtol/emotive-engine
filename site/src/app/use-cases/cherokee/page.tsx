@@ -689,8 +689,6 @@ export default function CherokeePage() {
           justifyContent: 'center',
           padding: '4rem 2rem',
           position: 'relative',
-          contentVisibility: 'auto',
-          containIntrinsicSize: '0 75vh',
         }}>
           {/* Background layers */}
           <div style={{
@@ -869,8 +867,6 @@ export default function CherokeePage() {
           margin: '0 auto',
           position: 'relative',
           zIndex: 2,
-          contentVisibility: 'auto',
-          containIntrinsicSize: '0 800px',
         }}>
           <div style={{
             display: 'grid',
@@ -959,8 +955,6 @@ export default function CherokeePage() {
           margin: '0 auto',
           position: 'relative',
           zIndex: 2,
-          contentVisibility: 'auto',
-          containIntrinsicSize: '0 1200px',
         }}>
           {/* Glow effect */}
           <div style={{
