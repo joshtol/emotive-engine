@@ -416,6 +416,17 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
 
       {/* Styles for dropdown */}
       <style jsx global>{`
+        /* Logo responsive sizing */
+        .emotive-logo {
+          flex-shrink: 0; /* Prevent logo from shrinking */
+          overflow: hidden; /* Prevent logo from extending header */
+        }
+
+        .emotive-logo-svg {
+          display: block;
+          max-width: 100%; /* Ensure logo doesn't overflow container */
+        }
+
         .use-cases-dropdown {
           position: relative;
           display: inline-block;
@@ -538,6 +549,7 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
           align-items: center;
           gap: 0.75rem;
           z-index: 10;
+          max-width: calc(100vw - 13rem); /* Prevent overflow on small screens */
         }
 
         .music-control-btn {
@@ -716,6 +728,7 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
           color: #667eea;
         }
 
+        /* Tablet and below - show mobile menu */
         @media (max-width: 768px) {
           .header-navigation {
             display: none !important;
@@ -734,6 +747,73 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
             left: auto;
             right: 4.5rem;
             transform: none;
+            max-width: calc(100vw - 11rem);
+          }
+        }
+
+        /* Small mobile devices - adjust spacing */
+        @media (max-width: 480px) {
+          .emotive-logo {
+            max-width: 120px; /* Reduce logo size on very small screens */
+          }
+
+          .emotive-logo-svg {
+            max-height: 28px; /* Ensure logo doesn't get too tall */
+          }
+
+          .mobile-menu-btn {
+            right: 0.75rem; /* Slightly less padding */
+            width: 2.5rem;
+            height: 2.5rem;
+          }
+
+          .header-music-controls {
+            right: 3.75rem; /* Adjust for smaller hamburger button */
+            gap: 0.5rem; /* Reduce gap between music buttons */
+            max-width: calc(100vw - 9rem);
+          }
+
+          .music-control-btn {
+            width: 2.25rem;
+            height: 2.25rem;
+          }
+        }
+
+        /* Extra small devices - further optimization */
+        @media (max-width: 360px) {
+          .emotive-logo {
+            max-width: 100px;
+          }
+
+          .emotive-logo-svg {
+            max-height: 24px;
+          }
+
+          .mobile-menu-btn {
+            right: 0.5rem;
+            width: 2.25rem;
+            height: 2.25rem;
+          }
+
+          .header-music-controls {
+            right: 3.25rem;
+            gap: 0.375rem;
+            max-width: calc(100vw - 8rem);
+          }
+
+          .music-control-btn {
+            width: 2rem;
+            height: 2rem;
+          }
+
+          .music-control-btn svg {
+            width: 16px;
+            height: 16px;
+          }
+
+          .mobile-menu-btn svg {
+            width: 20px;
+            height: 20px;
           }
         }
       `}</style>
