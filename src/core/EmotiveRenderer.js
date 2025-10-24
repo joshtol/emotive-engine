@@ -224,7 +224,10 @@ class EmotiveRenderer {
             zenEnter: null,
             zenExit: null
         };
-        
+
+        // Timeout tracking for cleanup
+        this.wakeJitterTimeout = null;
+
         // Offscreen canvas for double buffering
         this.offscreenCanvas = null;
         this.offscreenCtx = null;
@@ -2641,11 +2644,17 @@ class EmotiveRenderer {
         
         // Animate eye opening
         this.animateEyeOpen();
-        
+
+        // Clear any existing jitter timeout
+        if (this.wakeJitterTimeout) {
+            clearTimeout(this.wakeJitterTimeout);
+        }
+
         // Quick shake animation
         this.state.coreJitter = true;
-        setTimeout(() => {
+        this.wakeJitterTimeout = setTimeout(() => {
             this.state.coreJitter = false;
+            this.wakeJitterTimeout = null;
         }, 200);
         
     }
@@ -3272,6 +3281,12 @@ class EmotiveRenderer {
                 cancelAnimationFrame(this.animationFrameIds[key]);
                 this.animationFrameIds[key] = null;
             }
+        }
+
+        // Clear any pending timeouts
+        if (this.wakeJitterTimeout) {
+            clearTimeout(this.wakeJitterTimeout);
+            this.wakeJitterTimeout = null;
         }
 
         // Clear animation states
