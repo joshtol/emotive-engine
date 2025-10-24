@@ -138,8 +138,9 @@ class Particle {
      * @param {Object} undertoneModifier - Optional undertone modifications
      * @param {Object} gestureMotion - Optional gesture motion to apply
      * @param {number} gestureProgress - Progress of the gesture (0-1)
+     * @param {Object} containmentBounds - Optional containment bounds {width, height}
      */
-    update(deltaTime, centerX, centerY, undertoneModifier = null, gestureMotion = null, gestureProgress = 0) {
+    update(deltaTime, centerX, centerY, undertoneModifier = null, gestureMotion = null, gestureProgress = 0, containmentBounds = null) {
         // Cap deltaTime to prevent huge jumps
         const cappedDeltaTime = Math.min(deltaTime, 50);
         // Normalize to 60 FPS equivalent for consistent physics
@@ -178,29 +179,42 @@ class Particle {
             this.y += this.vy * dt;
         }
         
-        // HARD BOUNDARY CONSTRAINTS - particles NEVER leave canvas
-        // Get actual canvas dimensions from the DOM
-        const canvas = document.getElementById('card-mascot') ||
-                      document.getElementById('cherokee-guide-mascot') ||
-                      document.querySelector('canvas');
-        const canvasWidth = canvas ? canvas.width : centerX * 2;
-        const canvasHeight = canvas ? canvas.height : centerY * 2;
+        // HARD BOUNDARY CONSTRAINTS - particles NEVER leave bounds
+        // Use containment bounds if provided, otherwise use full canvas
+        let boundsWidth, boundsHeight;
+        if (containmentBounds) {
+            // Use containment bounds (element dimensions)
+            boundsWidth = containmentBounds.width;
+            boundsHeight = containmentBounds.height;
+        } else {
+            // Get actual canvas dimensions from the DOM
+            const canvas = document.getElementById('card-mascot') ||
+                          document.getElementById('cherokee-guide-mascot') ||
+                          document.querySelector('canvas');
+            boundsWidth = canvas ? canvas.width : centerX * 2;
+            boundsHeight = canvas ? canvas.height : centerY * 2;
+        }
         const margin = 20;
-        
-        // Bounce off boundaries
-        if (this.x - this.size < margin) {
-            this.x = margin + this.size;
+
+        // Bounce off boundaries (relative to center)
+        const leftBound = centerX - boundsWidth / 2 + margin;
+        const rightBound = centerX + boundsWidth / 2 - margin;
+        const topBound = centerY - boundsHeight / 2 + margin;
+        const bottomBound = centerY + boundsHeight / 2 - margin;
+
+        if (this.x - this.size < leftBound) {
+            this.x = leftBound + this.size;
             this.vx = Math.abs(this.vx) * 0.5;
-        } else if (this.x + this.size > canvasWidth - margin) {
-            this.x = canvasWidth - margin - this.size;
+        } else if (this.x + this.size > rightBound) {
+            this.x = rightBound - this.size;
             this.vx = -Math.abs(this.vx) * 0.5;
         }
-        
-        if (this.y - this.size < margin) {
-            this.y = margin + this.size;
+
+        if (this.y - this.size < topBound) {
+            this.y = topBound + this.size;
             this.vy = Math.abs(this.vy) * 0.5;
-        } else if (this.y + this.size > canvasHeight - margin) {
-            this.y = canvasHeight - margin - this.size;
+        } else if (this.y + this.size > bottomBound) {
+            this.y = bottomBound - this.size;
             this.vy = -Math.abs(this.vy) * 0.5;
         }
         

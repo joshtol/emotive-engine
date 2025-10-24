@@ -72,32 +72,29 @@ export default function RetailPage() {
         canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
         canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
-        // Load EmotiveMascot (lean bundle) - check window first
+        // Load EmotiveMascot (lean bundle) - ALWAYS reload to get latest version
+        const existingScript = document.querySelector('script[src^="/emotive-engine-lean.js"]')
+        if (existingScript) {
+          existingScript.remove()
+          delete (window as any).EmotiveMascotLean
+        }
+
+        const script = document.createElement('script')
+        script.src = `/emotive-engine-lean.js?v=${Date.now()}`
+        script.async = false  // Load synchronously to ensure it's available
+
+        await new Promise((resolve, reject) => {
+          script.onload = () => resolve(null)
+          script.onerror = reject
+          document.head.appendChild(script)
+        })
+
+        // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
         let EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
 
         if (!EmotiveMascot) {
-          const existingScript = document.querySelector('script[src^="/emotive-engine-lean.js"]')
-          let script = existingScript as HTMLScriptElement
-
-          if (!existingScript) {
-            script = document.createElement('script')
-            script.src = `/emotive-engine-lean.js`
-            script.async = true
-
-            await new Promise((resolve, reject) => {
-              script.onload = resolve
-              script.onerror = reject
-              document.head.appendChild(script)
-            })
-          }
-
-          // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
-          EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
-
-          if (!EmotiveMascot) {
-            console.error('EmotiveMascot not found on window object')
-            return
-          }
+          console.error('[RetailPage] EmotiveMascot not found on window object after load')
+          return
         }
 
         const mascotInstance = new EmotiveMascot({
@@ -222,7 +219,10 @@ export default function RetailPage() {
         const isMobileDevice = viewportWidth < 768
 
         // Update position smoothly on every frame for consistent motion
-        if (mascot && typeof mascot.setPosition === 'function') {
+        // BUT: Don't update if mascot is attached to an element
+        const isAttached = mascot && typeof mascot.isAttachedToElement === 'function' && mascot.isAttachedToElement();
+
+        if (mascot && typeof mascot.setPosition === 'function' && !isAttached) {
           const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
           const yOffset = isMobileDevice
             ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
@@ -244,13 +244,20 @@ export default function RetailPage() {
         let opacity = 1
         let zIndex = 100
 
-        if (scrollY >= demoSectionStart) {
-          const fadeProgress = Math.min((scrollY - demoSectionStart) / fadeRange, 1)
-          opacity = Math.max(0, 1 - fadeProgress)
-        }
+        // When mascot is attached to an element, lower z-index so UI panels appear on top
+        if (isAttached) {
+          zIndex = 5  // Lower than UI panels (which have zIndex: 10)
+          opacity = 1
+        } else {
+          // Normal scroll behavior when not attached
+          if (scrollY >= demoSectionStart) {
+            const fadeProgress = Math.min((scrollY - demoSectionStart) / fadeRange, 1)
+            opacity = Math.max(0, 1 - fadeProgress)
+          }
 
-        if (scrollY >= heroHeight) {
-          zIndex = opacity > 0.1 ? 1 : -1
+          if (scrollY >= heroHeight) {
+            zIndex = opacity > 0.1 ? 1 : -1
+          }
         }
 
         // Update z-index ONLY when it changes (threshold-based, not continuous)
@@ -842,7 +849,7 @@ export default function RetailPage() {
               </div>
 
               {/* Main checkout interface */}
-              <CheckoutSimulation />
+              <CheckoutSimulation mascot={mascot} />
             </div>
           </div>
         </section>

@@ -56,6 +56,9 @@ export {
 // Error Handling
 export { default as ErrorBoundary } from './core/ErrorBoundary.js';
 
+// Position Controller (CRITICAL for setPosition/animateToPosition)
+export { default as PositionController } from './utils/PositionController.js';
+
 // Color utilities (interpolation only, no undertone saturation)
 export { interpolateHsl } from './utils/colorUtils.js';
 

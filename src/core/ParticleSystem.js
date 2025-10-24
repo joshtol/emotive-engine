@@ -87,11 +87,14 @@ class ParticleSystem {
         
         // Active particles
         this.particles = [];
-        
+
         // Object pool for performance - reduced to prevent memory buildup
         this.pool = [];
         this.poolSize = Math.min(maxParticles, 50); // Limit pool to max 50 particles
-        
+
+        // Containment bounds (null = no containment)
+        this.containmentBounds = null;
+
         // Memory leak detection
         this.totalParticlesCreated = 0;
         this.totalParticlesDestroyed = 0;
@@ -539,7 +542,7 @@ class ParticleSystem {
         // PERFORMANCE OPTIMIZATION: Use simple filter instead of complex loop
         // More efficient for small particle counts
         this.particles = this.particles.filter(particle => {
-            particle.update(deltaTime, centerX, centerY, undertoneModifier, gestureMotion, gestureProgress);
+            particle.update(deltaTime, centerX, centerY, undertoneModifier, gestureMotion, gestureProgress, this.containmentBounds);
             return particle.isAlive();
         });
         
@@ -1066,6 +1069,14 @@ class ParticleSystem {
         for (const particle of this.particles) {
             particle.life = 0; // Mark as dead - they'll be filtered out on next update
         }
+    }
+
+    /**
+     * Set containment bounds for particles
+     * @param {Object|null} bounds - {width, height} in pixels, or null to disable containment
+     */
+    setContainmentBounds(bounds) {
+        this.containmentBounds = bounds;
     }
 
     /**

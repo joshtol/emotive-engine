@@ -98,6 +98,7 @@ export default function LearningSimulation() {
   const [streak, setStreak] = useState(0)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mascotRef = useRef<any>(null)
+  const initializingRef = useRef<boolean>(false)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -121,23 +122,79 @@ export default function LearningSimulation() {
   }, [])
 
   useEffect(() => {
+    console.log('[LearningSimulation] useEffect fired')
     let cancelled = false
     const initMascot = async () => {
-      if (!canvasRef.current || cancelled) return
+      console.log('[LearningSimulation] initMascot started')
+      console.log('[LearningSimulation] canvasRef.current:', !!canvasRef.current)
+      console.log('[LearningSimulation] cancelled:', cancelled)
+      console.log('[LearningSimulation] initializingRef.current:', initializingRef.current)
+      console.log('[LearningSimulation] mascotRef.current:', !!mascotRef.current)
+
+      // Prevent multiple simultaneous initializations
+      if (initializingRef.current || mascotRef.current) {
+        console.log('[LearningSimulation] Already initializing or initialized, skipping')
+        return
+      }
+
+      if (!canvasRef.current || cancelled) {
+        console.log('[LearningSimulation] Early return - no canvas or cancelled')
+        return
+      }
+
+      initializingRef.current = true
+      console.log('[LearningSimulation] Set initializingRef to true')
+
       try {
-        let attempts = 0
-        while (!(window as any).EmotiveMascot && attempts < 50) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          attempts++
+        console.log('[LearningSimulation] Checking window for EmotiveMascot...')
+        console.log('[LearningSimulation] window.EmotiveMascot:', !!(window as any).EmotiveMascot)
+        console.log('[LearningSimulation] window.EmotiveMascotLean:', !!(window as any).EmotiveMascotLean)
+        console.log('[LearningSimulation] window.EmotiveMascot?.default:', !!(window as any).EmotiveMascot?.default)
+        console.log('[LearningSimulation] window.EmotiveMascotLean?.default:', !!(window as any).EmotiveMascotLean?.default)
+
+        // Try to get EmotiveMascot from window (either lean or full bundle)
+        let EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot || (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
+
+        console.log('[LearningSimulation] Initial EmotiveMascot found:', !!EmotiveMascot)
+
+        // If not available, wait for it to load (with timeout)
+        if (!EmotiveMascot) {
+          console.log('[LearningSimulation] EmotiveMascot not immediately available, polling...')
+          let attempts = 0
+          while (!(window as any).EmotiveMascot && !(window as any).EmotiveMascotLean && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100))
+            attempts++
+            if (attempts % 10 === 0) {
+              console.log(`[LearningSimulation] Still polling... attempt ${attempts}/50`)
+            }
+          }
+          EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot || (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
+          console.log('[LearningSimulation] After polling - EmotiveMascot found:', !!EmotiveMascot)
         }
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
-        if (!EmotiveMascot) return
+
+        if (!EmotiveMascot) {
+          console.error('[LearningSimulation] EmotiveMascot not found after waiting')
+          console.error('[LearningSimulation] Final window state:', {
+            EmotiveMascot: !!(window as any).EmotiveMascot,
+            EmotiveMascotLean: !!(window as any).EmotiveMascotLean,
+            allWindowKeys: Object.keys(window).filter(k => k.toLowerCase().includes('emotive'))
+          })
+          return
+        }
+
+        console.log('[LearningSimulation] Creating mascot instance...')
         const canvas = canvasRef.current
-        if (!canvas) return
+        if (!canvas) {
+          console.error('[LearningSimulation] Canvas lost after polling')
+          return
+        }
+
         const rect = canvas.getBoundingClientRect()
         const dpr = window.devicePixelRatio || 1
+        console.log('[LearningSimulation] Canvas size:', { width: rect.width, height: rect.height, dpr })
         canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
         canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
+
         const mascot = new EmotiveMascot({
           canvasId: 'learning-mascot',
           enableAudio: false,
@@ -146,24 +203,47 @@ export default function LearningSimulation() {
           targetFPS: isMobile ? 30 : 60,
           maxParticles: isMobile ? 50 : 100,
         })
+        console.log('[LearningSimulation] Mascot instance created, calling init...')
+
         await mascot.init(canvas)
+
+        // Check if component was unmounted during async init
+        if (cancelled) {
+          console.log('[LearningSimulation] Component unmounted during init, destroying mascot')
+          mascot.stop?.()
+          mascot.destroy?.()
+          initializingRef.current = false
+          return
+        }
+
+        console.log('[LearningSimulation] Mascot init complete, starting...')
         mascot.start()
+        console.log('[LearningSimulation] Mascot started successfully')
         mascot.setPosition(0, 0, 0)
         mascot.setScale({ core: isMobile ? 1.4 : 1.2, particles: isMobile ? 2.0 : 1.8 })
         mascot.setBackdrop({ enabled: true, radius: 3.0, intensity: 0.8 })
         mascotRef.current = mascot
-        setManagedTimeout(() => mascot.express?.('wave'), 500)
+        setManagedTimeout(() => {
+          if (mascot && !cancelled) {
+            mascot.express?.('wave')
+          }
+        }, 500)
       } catch (error) {
-        console.error('Failed to initialize mascot:', error)
+        console.error('[LearningSimulation] Failed to initialize mascot:', error)
+        initializingRef.current = false
       }
     }
     initMascot()
     return () => {
+      console.log('[LearningSimulation] Cleanup function called')
       cancelled = true
       if (mascotRef.current) {
+        console.log('[LearningSimulation] Destroying mascot')
         mascotRef.current.stop?.()
         mascotRef.current.destroy?.()
+        mascotRef.current = null
       }
+      initializingRef.current = false
     }
   }, [])
 

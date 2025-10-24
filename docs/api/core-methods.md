@@ -290,6 +290,123 @@ mascot.clearParticles()
 
 ---
 
+### setContainment(bounds, scale)
+
+Sets particle containment bounds and mascot scale.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `bounds` | `Object \| null` | Yes | - | Containment bounds `{width, height}` or `null` |
+| `scale` | `number` | No | `1` | Scale factor (0.1-3.0) |
+
+```javascript
+// Contain particles to 400x500px, scale to 60%
+mascot.setContainment({ width: 400, height: 500 }, 0.6)
+
+// Scale without containment
+mascot.setContainment(null, 0.3)
+
+// Reset
+mascot.setContainment(null, 1)
+```
+
+**When to use:**
+- Constraining particles to element boundaries
+- Scaling mascot for compact layouts
+- Shopping carts, chat panels, cards
+
+---
+
+### attachToElement(elementOrSelector, options)
+
+Attaches mascot to a DOM element with scaling and containment.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `elementOrSelector` | `HTMLElement \| string` | Yes | Target element or CSS selector |
+| `options` | `Object` | No | Attachment options |
+
+**Options:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `offsetX` | `number` | `0` | X offset from element center (px) |
+| `offsetY` | `number` | `0` | Y offset from element center (px) |
+| `animate` | `boolean` | `true` | Animate the movement |
+| `duration` | `number` | `1000` | Animation duration (ms) |
+| `scale` | `number` | `1` | Mascot scale factor |
+| `containParticles` | `boolean` | `false` | Constrain particles to element |
+
+```javascript
+// Basic attachment
+mascot.attachToElement('#checkout-stage')
+
+// With scaling and containment
+mascot.attachToElement('#cart', {
+    scale: 0.3,              // 30% size
+    containParticles: true,  // Particles stay within bounds
+    animate: true,
+    duration: 800
+})
+```
+
+**Complete Example:**
+
+```javascript
+// Scroll-based attachment
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            mascot.attachToElement(entry.target, {
+                scale: 0.4,
+                containParticles: true
+            })
+            mascot.setEmotion('calm')
+        } else {
+            mascot.detachFromElement()
+        }
+    })
+}, { threshold: 0.2 })
+
+observer.observe(document.getElementById('checkout-stage'))
+```
+
+---
+
+### detachFromElement()
+
+Detaches mascot from current element.
+
+```javascript
+mascot.detachFromElement()
+```
+
+**What it does:**
+- Returns mascot to viewport center
+- Resets scale to 1.0
+- Clears particle containment
+- Smooth animation transition
+
+---
+
+### isAttachedToElement()
+
+Checks if mascot is attached to an element.
+
+**Returns:** `boolean`
+
+```javascript
+if (mascot.isAttachedToElement()) {
+    console.log('Currently attached')
+}
+```
+
+---
+
 ## Backdrop Methods
 
 ### setBackdrop(options)

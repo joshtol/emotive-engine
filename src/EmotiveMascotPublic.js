@@ -73,6 +73,9 @@ class EmotiveMascotPublic {
         }
 
         try {
+            // Store canvas reference for fallback positioning
+            this._canvas = typeof canvas === 'string' ? document.getElementById(canvas) : canvas;
+
             // Create engine instance with canvas
             const engineConfig = {
                 ...this._config,
@@ -620,6 +623,37 @@ class EmotiveMascotPublic {
     }
 
     /**
+     * Set particle containment bounds
+     * @param {Object} bounds - Bounds object {width, height} in pixels, null to disable containment
+     * @param {number} scale - Scale factor for mascot (1 = normal, 0.5 = half size, etc.)
+     */
+    setContainment(bounds, scale = 1) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+
+        // Set bounds on particle system
+        if (engine.particleSystem) {
+            engine.particleSystem.setContainmentBounds(bounds);
+        }
+
+        // CRITICAL: Set scale on PositionController (affects both core and particles)
+        // The renderer recalculates scaleFactor every frame from effectiveCenter.coreScale
+        // so we must set it on the PositionController which provides effectiveCenter
+        if (engine.positionController) {
+            engine.positionController.coreScaleOverride = scale;
+            engine.positionController.particleScaleOverride = scale;
+        }
+
+        // Also update existing particles immediately (new particles will use PositionController scale)
+        if (engine.particleSystem && engine.particleSystem.particles) {
+            engine.particleSystem.particles.forEach(p => {
+                p.scaleFactor = scale;
+                p.size = p.baseSize * scale;
+            });
+        }
+    }
+
+    /**
      * Set mascot position offset from viewport center
      * @param {number} x - X offset from center
      * @param {number} y - Y offset from center
@@ -634,6 +668,16 @@ class EmotiveMascotPublic {
                 engine.positionController.onUpdate = () => {};
             }
             engine.positionController.setOffset(x, y, z);
+        } else {
+            // Fallback: directly manipulate canvas transform if positionController doesn't exist
+            if (this._canvas) {
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                const translateX = centerX + x;
+                const translateY = centerY + y;
+                const scale = 1 + (z * 0.001); // z affects scale
+                this._canvas.style.transform = `translate(${translateX}px, ${translateY}px) translate(-50%, -50%) scale(${scale})`;
+            }
         }
     }
 
@@ -654,6 +698,10 @@ class EmotiveMascotPublic {
                 engine.positionController.onUpdate = () => {};
             }
             engine.positionController.animateOffset(x, y, z, duration, easing);
+        } else {
+            // Fallback: simple animation using setPosition if positionController doesn't exist
+            // Just immediately set position (animation would require requestAnimationFrame loop)
+            this.setPosition(x, y, z);
         }
     }
 
@@ -682,6 +730,159 @@ class EmotiveMascotPublic {
         if (engine.setParticleSystemCanvasDimensions) {
             engine.setParticleSystemCanvasDimensions(width, height);
         }
+        return this;
+    }
+
+    /**
+     * Attach mascot to a DOM element - mascot will position itself in the center of the element
+     * and follow it automatically on scroll/resize
+     * @param {string|HTMLElement} elementOrSelector - DOM element or CSS selector
+     * @param {Object} options - Positioning options
+     * @param {number} options.offsetX - Additional X offset in pixels (default: 0)
+     * @param {number} options.offsetY - Additional Y offset in pixels (default: 0)
+     * @param {boolean} options.animate - Animate to position (default: true)
+     * @param {number} options.duration - Animation duration in ms (default: 1000)
+     * @param {number} options.scale - Scale factor for mascot (default: 1, e.g., 0.5 = half size)
+     * @param {boolean} options.containParticles - Whether to contain particles within element bounds (default: true)
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    attachToElement(elementOrSelector, options = {}) {
+        console.log('[EmotiveMascot] attachToElement called', elementOrSelector, options);
+
+        const engine = this._getReal();
+        if (!engine) {
+            console.error('[EmotiveMascot] Engine not initialized');
+            throw new Error('Engine not initialized. Call init() first.');
+        }
+
+        // Get the target element
+        const element = typeof elementOrSelector === 'string'
+            ? document.querySelector(elementOrSelector)
+            : elementOrSelector;
+
+        if (!element) {
+            console.error(`[EmotiveMascot] Element not found: ${elementOrSelector}`);
+            return this;
+        }
+
+        console.log('[EmotiveMascot] Element found, storing tracking info');
+
+        // Store element tracking info
+        this._attachedElement = element;
+        this._attachOptions = {
+            offsetX: options.offsetX || 0,
+            offsetY: options.offsetY || 0,
+            animate: options.animate !== false,
+            duration: options.duration || 1000,
+            scale: options.scale || 1,
+            containParticles: options.containParticles !== false
+        };
+
+        // Set containment bounds and scale if requested
+        const rect = element.getBoundingClientRect();
+        if (this._attachOptions.containParticles) {
+            this.setContainment({ width: rect.width, height: rect.height }, this._attachOptions.scale);
+        } else if (this._attachOptions.scale !== 1) {
+            this.setContainment(null, this._attachOptions.scale);
+        }
+
+        // Position mascot at element - INLINE to prevent tree-shaking
+        const canvas = this._canvas;
+
+        if (canvas) {
+            // Get viewport center
+            const viewportCenterX = window.innerWidth / 2;
+            const viewportCenterY = window.innerHeight / 2;
+
+            // Get element center in viewport coordinates
+            const elementCenterX = rect.left + rect.width / 2;
+            const elementCenterY = rect.top + rect.height / 2;
+
+            // Calculate offset from viewport center (what setPosition expects)
+            const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
+            const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
+
+            console.log('[EmotiveMascot] attachToElement positioning:', {
+                rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+                viewportCenter: { x: viewportCenterX, y: viewportCenterY },
+                elementCenter: { x: elementCenterX, y: elementCenterY },
+                offset: { x: offsetX, y: offsetY }
+            });
+
+            // Use animation on first attach, instant updates on scroll/resize
+            const isFirstAttach = !this._hasAttachedBefore;
+            this._hasAttachedBefore = true;
+
+            if (isFirstAttach && this._attachOptions.animate) {
+                console.log('[EmotiveMascot] Animating to position:', offsetX, offsetY);
+                this.animateToPosition(offsetX, offsetY, 0, this._attachOptions.duration);
+            } else {
+                console.log('[EmotiveMascot] Setting position:', offsetX, offsetY);
+                this.setPosition(offsetX, offsetY, 0);
+            }
+        }
+
+        // Set up automatic tracking on scroll and resize - INLINE to prevent tree-shaking
+        if (!this._elementTrackingHandlers) {
+            this._elementTrackingHandlers = {
+                scroll: () => {
+                    if (!this._attachedElement || !this._canvas) return;
+
+                    const rect = this._attachedElement.getBoundingClientRect();
+                    const viewportCenterX = window.innerWidth / 2;
+                    const viewportCenterY = window.innerHeight / 2;
+                    const elementCenterX = rect.left + rect.width / 2;
+                    const elementCenterY = rect.top + rect.height / 2;
+                    const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
+                    const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
+
+                    this.setPosition(offsetX, offsetY, 0);
+                },
+                resize: () => {
+                    if (!this._attachedElement || !this._canvas) return;
+
+                    const rect = this._attachedElement.getBoundingClientRect();
+                    const viewportCenterX = window.innerWidth / 2;
+                    const viewportCenterY = window.innerHeight / 2;
+                    const elementCenterX = rect.left + rect.width / 2;
+                    const elementCenterY = rect.top + rect.height / 2;
+                    const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
+                    const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
+
+                    this.setPosition(offsetX, offsetY, 0);
+                }
+            };
+            window.addEventListener('scroll', this._elementTrackingHandlers.scroll, { passive: true });
+            window.addEventListener('resize', this._elementTrackingHandlers.resize);
+        }
+
+        return this;
+    }
+
+    /**
+     * Check if mascot is attached to an element
+     * @returns {boolean} True if attached to an element
+     */
+    isAttachedToElement() {
+        return !!this._attachedElement;
+    }
+
+    /**
+     * Detach mascot from tracked element
+     */
+    detachFromElement() {
+        this._attachedElement = null;
+
+        // Remove event listeners
+        if (this._elementTrackingHandlers) {
+            window.removeEventListener('scroll', this._elementTrackingHandlers.scroll);
+            window.removeEventListener('resize', this._elementTrackingHandlers.resize);
+            this._elementTrackingHandlers = null;
+        }
+
+        // Clear containment and reset scale
+        this.setContainment(null, 1);
+
         return this;
     }
 
@@ -1443,7 +1644,10 @@ class EmotiveMascotPublic {
         this._timeline = [];
         this._isRecording = false;
         this._isPlaying = false;
-        
+
+        // Clean up element tracking
+        this.detachFromElement();
+
         const engine = this._getReal();
         if (engine && engine.destroy) {
             engine.destroy();

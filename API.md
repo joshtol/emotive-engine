@@ -782,6 +782,126 @@ mascot.setPosition(200, 100);
 mascot.clearParticles();
 ```
 
+### `setContainment(bounds, scale)`
+
+Sets particle containment bounds and mascot scale. Useful for constraining
+particles to a specific element or area, preventing them from escaping the
+container.
+
+**Parameters:**
+
+- `bounds` (Object|null): Containment bounds in pixels
+    - `width` (number): Container width in pixels
+    - `height` (number): Container height in pixels
+    - Set to `null` to disable containment
+- `scale` (number, optional): Scale factor for entire mascot (default: 1)
+    - `1` = normal size (100%)
+    - `0.5` = half size (50%)
+    - `2` = double size (200%)
+
+**Examples:**
+
+```javascript
+// Contain particles to 400x500px area, scale to 60%
+mascot.setContainment({ width: 400, height: 500 }, 0.6);
+
+// Contain to element bounds
+const element = document.getElementById('mascot-container');
+const rect = element.getBoundingClientRect();
+mascot.setContainment({ width: rect.width, height: rect.height }, 0.8);
+
+// Scale mascot without containment
+mascot.setContainment(null, 0.3);
+
+// Remove containment and reset scale
+mascot.setContainment(null, 1);
+```
+
+**Use Cases:**
+
+- **Checkout flows**: Small mascot in shopping cart (30% scale)
+- **Chat interfaces**: Contained mascot in message panel
+- **Card components**: Mascot constrained to card boundaries
+- **Mobile layouts**: Smaller mascot for compact screens
+
+### `attachToElement(elementOrSelector, options)`
+
+Attaches the mascot to a specific DOM element and optionally scales/contains it.
+
+**Parameters:**
+
+- `elementOrSelector` (HTMLElement|string): Target element or CSS selector
+- `options` (Object, optional):
+    - `offsetX` (number): X offset from element center in pixels (default: 0)
+    - `offsetY` (number): Y offset from element center in pixels (default: 0)
+    - `animate` (boolean): Animate the movement (default: true)
+    - `duration` (number): Animation duration in ms (default: 1000)
+    - `scale` (number): Scale mascot size (default: 1)
+    - `containParticles` (boolean): Constrain particles to element bounds
+      (default: false)
+
+**Examples:**
+
+```javascript
+// Basic attachment
+mascot.attachToElement('#checkout-stage');
+
+// Small mascot with particle containment
+mascot.attachToElement(document.getElementById('cart'), {
+    animate: true,
+    duration: 800,
+    scale: 0.3, // 30% of original size
+    containParticles: true, // Particles stay within element
+});
+
+// Attach with offset
+mascot.attachToElement('.chat-panel', {
+    offsetX: 50,
+    offsetY: -20,
+    scale: 0.5,
+});
+```
+
+**Typical Workflow:**
+
+```javascript
+// Attach when scrolled into view
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            mascot.attachToElement(entry.target, {
+                scale: 0.4,
+                containParticles: true,
+            });
+            mascot.setEmotion('calm');
+        } else {
+            mascot.detachFromElement();
+        }
+    });
+});
+
+observer.observe(document.getElementById('checkout-stage'));
+```
+
+### `detachFromElement()`
+
+Detaches the mascot from its current element and returns it to viewport center.
+Automatically clears particle containment and resets scale to 1.
+
+```javascript
+mascot.detachFromElement();
+```
+
+### `isAttachedToElement()`
+
+Returns whether the mascot is currently attached to an element.
+
+```javascript
+if (mascot.isAttachedToElement()) {
+    console.log('Mascot is attached');
+}
+```
+
 ## Events
 
 The mascot emits various events you can listen to:

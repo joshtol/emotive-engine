@@ -142,6 +142,26 @@ await mascot.perform('celebrating_epic', {
   depth
 - **Smooth Transitions** - Fluid morphing between emotional states
 
+### Element Attachment & Containment
+
+- **Smart Attachment** - Attach mascot to any DOM element with one call
+- **Particle Containment** - Constrain particles within element boundaries
+- **Auto-scaling** - Resize mascot for cards, chat panels, and compact layouts
+- **Scroll Tracking** - Intersection Observer integration for scroll-based
+  attachment
+
+```javascript
+// Attach to checkout cart with containment
+mascot.attachToElement('#cart', {
+    scale: 0.3, // 30% size
+    containParticles: true, // Particles stay within bounds
+    animate: true,
+});
+
+// Set emotion when attached
+mascot.setEmotion('calm');
+```
+
 ### Visual Systems
 
 - **15+ Particle Behaviors** - Orbiting, scattering, connecting, surveillance,

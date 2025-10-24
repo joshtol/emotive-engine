@@ -8,7 +8,12 @@
       "Bash(cp:*)",
       "Bash(rm:*)",
       "Bash(git commit:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(mkdir:*)",
+      "Bash(xcopy /E /I /Y skills \"%USERPROFILE%\\.claude\\skills\\emotive-mascot-skills\")",
+      "Bash(npm run build:lean:*)",
+      "Bash(npm run build:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

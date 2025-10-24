@@ -14,6 +14,7 @@ interface Product {
 interface CheckoutSimulationProps {
   onStepChange?: (step: number, emotion: string) => void
   openAIChat?: () => void
+  mascot?: any  // Guide mascot instance from parent
 }
 
 const DEMO_PRODUCTS: Product[] = [
@@ -29,7 +30,7 @@ interface Message {
   content: string
 }
 
-export default function CheckoutSimulation({ onStepChange, openAIChat }: CheckoutSimulationProps) {
+export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }: CheckoutSimulationProps) {
   const { setTimeout: setManagedTimeout } = useTimeoutManager()
   const [currentStep, setCurrentStep] = useState(0)
   const [cart, setCart] = useState<Product[]>([])
@@ -39,8 +40,8 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
   const [completed, setCompleted] = useState(false)
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null)
   const [showAIHelp, setShowAIHelp] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const mascotRef = useRef<any>(null)
+  const mascotStageRef = useRef<HTMLDivElement>(null)
+  const mascotRef = useRef<any>(mascot)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
@@ -54,6 +55,13 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Update mascot ref when prop changes
+  useEffect(() => {
+    if (mascot) {
+      mascotRef.current = mascot
+    }
+  }, [mascot])
 
   useEffect(() => {
     if (openAIChat) {
@@ -82,84 +90,55 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
   //   }
   // }, [messages])
 
-  // Initialize mascot - ONCE
+  // Attach mascot to stage when scrolled into view
   useEffect(() => {
-    let cancelled = false
+    if (!mascot || !mascotStageRef.current) return
 
-    const initMascot = async () => {
-      if (!canvasRef.current || cancelled) return
+    // Use Intersection Observer to detect when the stage comes into view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !mascotRef.current) {
+            // Stage is in view and mascot not yet attached
+            if (typeof mascot.attachToElement !== 'function') {
+              return
+            }
 
-      try {
-        let attempts = 0
-        while (!(window as any).EmotiveMascotLean && !(window as any).EmotiveMascot && attempts < 50) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          attempts++
-        }
+            mascot.attachToElement(mascotStageRef.current, {
+              animate: true,
+              duration: 800,
+              scale: 0.7,  // Scale mascot to 70% of original size
+              containParticles: true  // Keep particles within the stage bounds
+            })
 
-        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean || (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
-        if (!EmotiveMascot) return
+            // Set emotion to calm when attached
+            mascot.setEmotion('calm')
 
-        const canvas = canvasRef.current
-        if (!canvas) return
-
-        const rect = canvas.getBoundingClientRect()
-        const dpr = window.devicePixelRatio || 1
-        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
-
-        const mascot = new EmotiveMascot({
-          canvasId: 'checkout-mascot',
-          enableAudio: false,
-          soundEnabled: false,
-          defaultEmotion: 'neutral',
-          enableGazeTracking: false,
-          enableIdleBehaviors: true,
-          targetFPS: isMobile ? 30 : 60,
-          maxParticles: isMobile ? 40 : 100,
+            mascotRef.current = mascot
+          } else if (!entry.isIntersecting && mascotRef.current) {
+            // Stage is out of view, detach mascot
+            if (typeof mascot.detachFromElement === 'function') {
+              mascot.detachFromElement()
+            }
+            mascotRef.current = null
+          }
         })
-
-        await mascot.init(canvas)
-        mascot.start()
-
-        mascot.setPosition(0, 0, 0)
-        mascot.setScale({
-          core: isMobile ? 1.3 : 1.2,
-          particles: isMobile ? 1.5 : 1.8
-        })
-
-        mascot.setBackdrop({
-          enabled: true,
-          radius: 3.5,
-          intensity: 0.9,
-          blendMode: 'normal',
-          falloff: 'smooth',
-          edgeSoftness: 0.95,
-          coreTransparency: 0.2,
-          responsive: true
-        })
-
-        mascotRef.current = mascot
-
-        setManagedTimeout(() => {
-          mascot.express?.('wave')
-        }, 500)
-
-      } catch (error) {
-        console.error('Failed to initialize mascot:', error)
+      },
+      {
+        threshold: 0.2, // Trigger when 20% of the element is visible
+        rootMargin: '0px'
       }
-    }
+    )
 
-    initMascot()
+    observer.observe(mascotStageRef.current)
 
     return () => {
-      cancelled = true
-      // Timeouts are auto-cleaned by useTimeoutManager hook
-      if (mascotRef.current) {
-        mascotRef.current.stop?.()
-        mascotRef.current.destroy?.()
+      observer.disconnect()
+      if (mascot && typeof mascot.detachFromElement === 'function') {
+        mascot.detachFromElement()
       }
     }
-  }, [])
+  }, [mascot])
 
   const handleScanProduct = async () => {
     setScanning(true)
@@ -405,25 +384,22 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
           {!showAIHelp ? (
             /* CHECKOUT VIEW */
             <>
-              <div style={{
-                height: '22vh',
-                minHeight: '140px',
-                maxHeight: '180px',
-                width: '100%',
-                position: 'relative',
-                background: 'rgba(0, 0, 0, 0.3)',
-                borderBottom: '1px solid rgba(0, 217, 255, 0.3)'
-              }}>
-                <canvas
-                  ref={canvasRef}
-                  id="checkout-mascot"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    filter: 'drop-shadow(0 10px 40px rgba(0, 217, 255, 0.6))',
-                  }}
-                />
-              </div>
+              {/* Mascot Stage - Mobile (persistent across all steps) */}
+              <div
+                ref={mascotStageRef}
+                style={{
+                  background: 'radial-gradient(circle at center, rgba(0, 217, 255, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%)',
+                  borderRadius: '0 0 16px 16px',
+                  border: '2px solid rgba(0, 217, 255, 0.25)',
+                  borderTop: 'none',
+                  minHeight: '220px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: 'inset 0 0 60px rgba(0, 217, 255, 0.1)',
+                  zIndex: 1,
+                  flexShrink: 0
+                }}
+              />
 
               <div style={{
                 flex: 1,
@@ -695,29 +671,8 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
               </div>
             </>
           ) : (
-            /* AI CHAT VIEW - SAME MASCOT! */
+            /* AI CHAT VIEW */
             <>
-              {/* Mascot - SAME CANVAS */}
-              <div style={{
-                height: '22vh',
-                minHeight: '140px',
-                maxHeight: '180px',
-                width: '100%',
-                position: 'relative',
-                background: 'rgba(0, 0, 0, 0.3)',
-                borderBottom: '1px solid rgba(0, 217, 255, 0.3)'
-              }}>
-                <canvas
-                  ref={canvasRef}
-                  id="checkout-mascot"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    filter: 'drop-shadow(0 10px 40px rgba(0, 217, 255, 0.6))',
-                  }}
-                />
-              </div>
-
               {/* Header with close */}
               <div style={{
                 padding: '0.75rem 1rem',
@@ -903,10 +858,10 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
           )}
         </>
       ) : (
-        /* DESKTOP - Three column layout */
+        /* DESKTOP - Three column layout with mascot stage in center */
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 500px 1fr',
+          gridTemplateColumns: '1fr 400px 1fr',
           gap: '2rem',
           padding: '2rem',
           minHeight: '700px',
@@ -920,7 +875,9 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
             padding: '2rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.5rem'
+            gap: '1.5rem',
+            position: 'relative',
+            zIndex: 10
           }}>
             {currentStep === 0 && (
               <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -1166,24 +1123,21 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
             )}
           </div>
 
-          {/* CENTER: Mascot */}
-          <div style={{
-            height: '700px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative'
-          }}>
-            <canvas
-              ref={canvasRef}
-              id="checkout-mascot"
-              style={{
-                width: '100%',
-                height: '100%',
-                filter: 'drop-shadow(0 20px 80px rgba(0, 217, 255, 0.6))',
-              }}
-            />
-          </div>
+          {/* CENTER: Mascot Stage */}
+          <div
+            ref={mascotStageRef}
+            style={{
+              background: 'radial-gradient(circle at center, rgba(0, 217, 255, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(0, 217, 255, 0.25)',
+              minHeight: '500px',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: 'inset 0 0 80px rgba(0, 217, 255, 0.1)',
+              zIndex: 1
+            }}
+          />
+
 
           {/* RIGHT: AI Chat */}
           <div style={{
@@ -1192,7 +1146,9 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
             border: '1px solid rgba(0, 217, 255, 0.2)',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            position: 'relative',
+            zIndex: 10
           }}>
             {/* Chat Header */}
             <div style={{

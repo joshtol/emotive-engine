@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    reactStrictMode: false, // Disabled to prevent demo mascot double-mount issues
     images: {
         domains: ['firebaseapp.com'],
     },

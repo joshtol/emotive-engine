@@ -624,13 +624,12 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
             /* DEVICE CONTROLS VIEW */
             <>
               <div style={{
-                height: '22vh',
-                minHeight: '140px',
-                maxHeight: '180px',
+                height: 'clamp(140px, 20vh, 180px)',
                 width: '100%',
                 position: 'relative',
                 background: 'rgba(0, 0, 0, 0.3)',
-                borderBottom: `1px solid ${COLORS.background.cardBorder}`
+                borderBottom: `1px solid ${COLORS.background.cardBorder}`,
+                flexShrink: 0
               }}>
                 <canvas
                   ref={canvasRef}
@@ -647,7 +646,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 flex: 1,
                 overflow: 'auto',
                 padding: '0.75rem',
-                background: COLORS.background.main
+                background: COLORS.background.main,
+                WebkitOverflowScrolling: 'touch'
               }}>
                 {/* Scene buttons */}
                 <div style={{
@@ -888,13 +888,12 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
             /* AI CHAT VIEW */
             <>
               <div style={{
-                height: '22vh',
-                minHeight: '140px',
-                maxHeight: '180px',
+                height: 'clamp(140px, 20vh, 180px)',
                 width: '100%',
                 position: 'relative',
                 background: 'rgba(0, 0, 0, 0.3)',
-                borderBottom: `1px solid ${COLORS.background.cardBorder}`
+                borderBottom: `1px solid ${COLORS.background.cardBorder}`,
+                flexShrink: 0
               }}>
                 <canvas
                   ref={canvasRef}
@@ -967,7 +966,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 background: COLORS.background.main,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem'
+                gap: '1rem',
+                WebkitOverflowScrolling: 'touch'
               }}>
                 {messages.map((msg, i) => (
                   <div key={i} style={{
