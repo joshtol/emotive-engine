@@ -82,7 +82,10 @@ class IdleBehavior {
         this.swayOffset = { x: 0, y: 0 };
         this.swayTarget = { x: 0, y: 0 };
         this.swayStart = { x: 0, y: 0 };
-        
+
+        // Track timeouts for cleanup
+        this.wakeUpTimeout = null;
+
         // Callbacks
         this.callbacks = {
             onBlink: null,
@@ -90,7 +93,7 @@ class IdleBehavior {
             onSleep: null,
             onWake: null
         };
-        
+
     }
     
     /**
@@ -319,17 +322,23 @@ class IdleBehavior {
         this.timers.sway = 0;
         
         if (this.callbacks.onSway) {
-            this.callbacks.onSway({ 
+            this.callbacks.onSway({
                 phase: 'wake',
                 offset: this.swayOffset
             });
         }
-        
+
+        // Clear any existing timeout
+        if (this.wakeUpTimeout) {
+            clearTimeout(this.wakeUpTimeout);
+        }
+
         // Return to neutral after stretch
-        setTimeout(() => {
+        this.wakeUpTimeout = setTimeout(() => {
             this.swayStart = { ...this.swayOffset };
             this.swayTarget = { x: 0, y: 0 };
             this.timers.sway = 0;
+            this.wakeUpTimeout = null;
         }, 1000);
     }
     
@@ -438,6 +447,12 @@ class IdleBehavior {
      * Clean up
      */
     destroy() {
+        // Clear any pending timeouts
+        if (this.wakeUpTimeout) {
+            clearTimeout(this.wakeUpTimeout);
+            this.wakeUpTimeout = null;
+        }
+
         this.callbacks = {
             onBlink: null,
             onSway: null,

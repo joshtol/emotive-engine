@@ -23,16 +23,17 @@ export class AudioAnalyzer {
         this.isAnalyzing = false;
         this.connectedElement = null;
         this.gainNode = null;  // Store gain node for cleanup
-        
+        this.animationFrameId = null;  // Track RAF for cleanup
+
         // Frequency band configuration
         this.frequencyBands = 32;
         this.smoothingFactor = 0.3; // Lower smoothing for better responsiveness
-        
+
         // Vocal detection
         this.vocalRange = { min: 80, max: 1000 }; // Hz - typical vocal range
         this.currentAmplitude = 0;
         this.currentFrequencies = new Array(this.frequencyBands).fill(0);
-        
+
         // Beat detection (for rhythm sync)
         this.beatThreshold = 0.3;
         this.lastBeatTime = 0;
@@ -123,7 +124,7 @@ export class AudioAnalyzer {
     analyze() {
         if (!this.isAnalyzing) return;
 
-        requestAnimationFrame(() => this.analyze());
+        this.animationFrameId = requestAnimationFrame(() => this.analyze());
 
         // Get frequency data
         this.analyser.getByteFrequencyData(this.dataArray);
@@ -254,7 +255,13 @@ export class AudioAnalyzer {
      */
     stop() {
         this.isAnalyzing = false;
-        
+
+        // Cancel animation frame to prevent memory leak
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+
         if (this.gainNode) {
             try {
                 this.gainNode.disconnect();
@@ -263,7 +270,7 @@ export class AudioAnalyzer {
             }
             this.gainNode = null;
         }
-        
+
         // Reconnect element source to analyser if it was disconnected
         if (this.elementSource && this.connectedElement) {
             try {
@@ -289,12 +296,18 @@ export class AudioAnalyzer {
      */
     destroy() {
         this.stop();
-        
+
+        // Ensure animation frame is cancelled
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+
         if (this.audioContext) {
             this.audioContext.close();
             this.audioContext = null;
         }
-        
+
         this.analyser = null;
         this.dataArray = null;
         this.beatCallbacks = [];

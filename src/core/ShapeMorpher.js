@@ -42,7 +42,10 @@ class ShapeMorpher {
         this.visualProgress = 0; // Smoothed visual progress for rendering
         this.morphStartTime = null;
         this.isTransitioning = false;
-        
+
+        // Track timeouts for cleanup
+        this.queuedMorphTimeout = null;
+
         // Shape data cache
         this.shapeCache = new Map();
         this.currentPoints = [];
@@ -351,10 +354,11 @@ class ShapeMorpher {
         if (!skipQueue && this.queuedMorph) {
             const queued = this.queuedMorph;
             this.queuedMorph = null; // Clear queue before morphing
-            
+
             // Small delay to ensure smooth transition
-            setTimeout(() => {
+            this.queuedMorphTimeout = setTimeout(() => {
                 this.morphTo(queued.targetShape, queued.options);
+                this.queuedMorphTimeout = null;
             }, 50);
         }
     }
@@ -372,6 +376,12 @@ class ShapeMorpher {
      */
     clearQueue() {
         this.queuedMorph = null;
+
+        // Clear pending timeout
+        if (this.queuedMorphTimeout) {
+            clearTimeout(this.queuedMorphTimeout);
+            this.queuedMorphTimeout = null;
+        }
     }
     
     /**
@@ -1189,6 +1199,41 @@ class ShapeMorpher {
      */
     isInTransition() {
         return this.isTransitioning;
+    }
+
+    /**
+     * Cleanup and destroy
+     */
+    destroy() {
+        // Clear any pending timeouts
+        if (this.queuedMorphTimeout) {
+            clearTimeout(this.queuedMorphTimeout);
+            this.queuedMorphTimeout = null;
+        }
+
+        // Clear queued morph
+        this.queuedMorph = null;
+
+        // Clear caches
+        this.shapeCache.clear();
+        this.canvasPointsCache = null;
+
+        // Release array pool resources
+        if (this.frequencyData) {
+            arrayPool.release(this.frequencyData);
+            this.frequencyData = null;
+        }
+        if (this.bassHistory) {
+            arrayPool.release(this.bassHistory);
+            this.bassHistory = null;
+        }
+        if (this.vocalHistory) {
+            arrayPool.release(this.vocalHistory);
+            this.vocalHistory = null;
+        }
+
+        // Clear audio analyzer reference
+        this.audioAnalyzer = null;
     }
 }
 

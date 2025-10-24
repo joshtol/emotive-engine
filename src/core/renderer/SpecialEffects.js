@@ -500,7 +500,7 @@ export class SpecialEffects {
         if (this.chromaticAberration.active) {
             // Fade out the effect
             this.chromaticAberration.intensity -= this.chromaticAberration.fadeSpeed;
-            
+
             if (this.chromaticAberration.intensity <= 0) {
                 this.chromaticAberration.intensity = 0;
                 this.chromaticAberration.active = false;
@@ -508,6 +508,35 @@ export class SpecialEffects {
                 // CSS Chromatic effect completion logging removed for production
             }
         }
+    }
+
+    /**
+     * Cleanup and destroy
+     */
+    destroy() {
+        // Clear effect arrays
+        this.speakingRings = [];
+        this.sleepZ = [];
+        this.sparkles = [];
+
+        // Reset effect states
+        this.recordingActive = false;
+        this.sleepMode = false;
+        this.speakingActive = false;
+        this.zenModeActive = false;
+
+        // Reset chromatic aberration
+        this.chromaticAberration.active = false;
+        this.chromaticAberration.intensity = 0;
+        this.chromaticAberration.targetIntensity = 0;
+
+        // Clear timers
+        this.ringSpawnTimer = 0;
+
+        // Clear renderer references
+        this.renderer = null;
+        this.ctx = null;
+        this.canvas = null;
     }
 }
 

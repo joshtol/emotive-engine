@@ -82,7 +82,8 @@ export class MobileOptimization {
         this.batteryLevel = 1.0;
         this.isCharging = true;
         this.lowPowerMode = false;
-        
+        this.batteryRef = null; // Store battery API reference for cleanup
+
         // Performance adjustments for mobile
         this.mobilePerformanceSettings = {
             reducedParticles: this.isMobile,
@@ -247,24 +248,29 @@ export class MobileOptimization {
      */
     async setupBatteryMonitoring() {
         if (!navigator.getBattery) return;
-        
+
         try {
             const battery = await navigator.getBattery();
-            
+            this.batteryRef = battery;
+
             this.batteryLevel = battery.level;
             this.isCharging = battery.charging;
-            
-            // Listen for battery changes
-            battery.addEventListener('levelchange', () => {
+
+            // Store bound handlers for cleanup
+            this.boundBatteryLevelChange = () => {
                 this.batteryLevel = battery.level;
                 this.onBatteryChange();
-            });
-            
-            battery.addEventListener('chargingchange', () => {
+            };
+
+            this.boundBatteryChargingChange = () => {
                 this.isCharging = battery.charging;
                 this.onBatteryChange();
-            });
-            
+            };
+
+            // Listen for battery changes
+            battery.addEventListener('levelchange', this.boundBatteryLevelChange);
+            battery.addEventListener('chargingchange', this.boundBatteryChargingChange);
+
             // Initial battery optimization
             this.onBatteryChange();
         } catch (_error) {
@@ -872,6 +878,17 @@ export class MobileOptimization {
         window.removeEventListener('resize', this.handleViewportChange);
         window.removeEventListener('orientationchange', this.handleOrientationChange);
         document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+
+        // Remove battery event listeners
+        if (this.batteryRef) {
+            if (this.boundBatteryLevelChange) {
+                this.batteryRef.removeEventListener('levelchange', this.boundBatteryLevelChange);
+            }
+            if (this.boundBatteryChargingChange) {
+                this.batteryRef.removeEventListener('chargingchange', this.boundBatteryChargingChange);
+            }
+            this.batteryRef = null;
+        }
 
         this.touches.clear();
         this.gestureHistory = [];
