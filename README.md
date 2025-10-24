@@ -2,8 +2,14 @@
   <img src="assets/emotive-engine-full-BW.svg" alt="Emotive Engine" width="600" />
 
 [![npm version](https://img.shields.io/npm/v/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/joshtol/emotive-engine/test.yml?branch=main&label=tests)](https://github.com/joshtol/emotive-engine/actions)
+[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://github.com/joshtol/emotive-engine/actions)
 [![License: Dual](<https://img.shields.io/badge/License-Dual%20(MIT%2FCommercial)-yellow.svg>)](./LICENSE.md)
 [![Performance](https://img.shields.io/badge/Performance-60fps-green.svg)](https://github.com/joshtol/emotive-engine)
+[![Security](https://img.shields.io/badge/Security-Policy-blue.svg)](./SECURITY.md)
+[![Node Version](https://img.shields.io/node/v/@joshtol/emotive-engine.svg)](https://nodejs.org)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@joshtol/emotive-engine.svg)](https://bundlephobia.com/package/@joshtol/emotive-engine)
+[![Downloads](https://img.shields.io/npm/dm/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 
 **Real-time emotional visualization engine for next-generation UIs**
 

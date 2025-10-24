@@ -14,10 +14,10 @@
     },
     "./package.json": "./package.json"
   },
-  "private": true,
+  "private": false,
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "files": [
     "dist",
@@ -73,7 +73,20 @@
     "ai-assistant",
     "llm",
     "chatbot",
-    "emotive"
+    "emotive",
+    "emotional-intelligence",
+    "particle-system",
+    "60fps",
+    "high-performance",
+    "enterprise",
+    "typescript",
+    "react",
+    "vue",
+    "angular",
+    "real-time",
+    "visual-effects",
+    "canvas2d",
+    "fortune-500"
   ],
   "author": "Joshua Tollette",
   "license": "SEE LICENSE IN LICENSE.md",
@@ -97,6 +110,7 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@vitest/coverage-v8": "^3.2.4",
     "bundlesize2": "^0.0.35",
+    "canvas": "^3.2.0",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "html-minifier-terser": "^7.2.0",

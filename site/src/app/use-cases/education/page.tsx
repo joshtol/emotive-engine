@@ -27,13 +27,10 @@ export default function EducationPage() {
   const tickingRef = useRef(false)
   const lastZIndexRef = useRef(100)
 
-  // Detect mobile and set fixed viewport height
+  // Detect mobile
   useEffect(() => {
     setIsClient(true)
     setIsMobile(window.innerWidth < 768)
-
-    // Fix mobile address bar height changes
-    document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`)
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
@@ -344,7 +341,7 @@ export default function EducationPage() {
           top: 0,
           left: 0,
           width: '100%',
-          height: 'var(--app-height, 100vh)',
+          height: '100dvh',
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
@@ -356,7 +353,7 @@ export default function EducationPage() {
           id="education-hero-mascot"
           style={{
             width: '100%',
-            height: 'var(--app-height, 100vh)',
+            height: '100dvh',
             objectFit: 'contain',
             filter: 'drop-shadow(0 10px 40px rgba(124, 58, 237, 0.4))',
           }}

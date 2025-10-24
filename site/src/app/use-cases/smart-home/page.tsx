@@ -30,9 +30,6 @@ export default function SmartHomePage() {
     setIsClient(true)
     setIsMobile(window.innerWidth < 768)
 
-    // Fix mobile address bar height changes
-    document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`)
-
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
     }
@@ -341,7 +338,7 @@ export default function SmartHomePage() {
           top: 0,
           left: 0,
           width: '100%',
-          height: 'var(--app-height, 100vh)',
+          height: '100dvh',
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
@@ -353,7 +350,7 @@ export default function SmartHomePage() {
           id="smart-home-hero-mascot"
           style={{
             width: '100%',
-            height: 'var(--app-height, 100vh)',
+            height: '100dvh',
             objectFit: 'contain',
             filter: 'drop-shadow(0 10px 40px rgba(139, 92, 246, 0.5))',
           }}
