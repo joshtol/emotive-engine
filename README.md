@@ -424,11 +424,17 @@ Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) first.
 
 For detailed documentation, see the [`docs/`](./docs/) directory:
 
-- [Production Readiness Plan](./docs/PRODUCTION-READY-PLAN.md) - 10-day
-  production launch plan
-- [Rhythm System](./docs/RHYTHM_SYSTEM.md) - Complete rhythm integration guide
-- [Performance Optimization](./docs/PERFORMANCE.md) - Performance tuning and
-  monitoring
+- [Documentation Index](./docs/README.md) - Complete documentation catalog
+- [API Reference](./API.md) - Complete API documentation
+- [Quick Reference](./docs/guides/quick-reference.md) - URLs, files, and color
+  schemes
+- [Testing Guide](./docs/guides/testing.md) - Use case portfolio testing
+- [Recording Integration](./docs/guides/recording-integration.md) - Dual-path
+  recording system
+- [Performance Benchmarks](./docs/performance/benchmarks.md) - Performance
+  tuning and monitoring
+- [Launch Readiness](./docs/planning/launch-readiness.md) - Production launch
+  roadmap
 
 ## Credits
 

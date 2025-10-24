@@ -1,5 +1,7 @@
 # EMOTIVE ENGINE - LAUNCH READINESS CHECKLIST
 
+> **Status**: DRAFT - This is a planning document. Many features are not yet implemented.
+
 **Last Updated:** January 18, 2026 **Current Status:** Pre-Launch (Month 0)
 **Target Launch:** Week 4 (Product Hunt + MCP Release)
 

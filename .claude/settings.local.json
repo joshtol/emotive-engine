@@ -15,7 +15,11 @@
       "Bash(npm run build:*)",
       "Bash(awk:*)",
       "Bash(git add:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Read(//c/Users/raven/.claude/skills/**)",
+      "Bash(test:*)",
+      "Skill(superpowers:verification-before-completion)",
+      "Bash(rmdir:*)"
     ],
     "deny": [],
     "ask": []

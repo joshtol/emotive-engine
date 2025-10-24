@@ -338,7 +338,7 @@ export default function SmartHomePage() {
           top: 0,
           left: 0,
           width: '100%',
-          height: '100dvh',
+          height: '100svh',
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
@@ -350,7 +350,7 @@ export default function SmartHomePage() {
           id="smart-home-hero-mascot"
           style={{
             width: '100%',
-            height: '100dvh',
+            height: '100svh',
             objectFit: 'contain',
             filter: 'drop-shadow(0 10px 40px rgba(139, 92, 246, 0.5))',
           }}

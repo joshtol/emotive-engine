@@ -341,7 +341,7 @@ export default function EducationPage() {
           top: 0,
           left: 0,
           width: '100%',
-          height: '100dvh',
+          height: '100svh',
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
@@ -353,7 +353,7 @@ export default function EducationPage() {
           id="education-hero-mascot"
           style={{
             width: '100%',
-            height: '100dvh',
+            height: '100svh',
             objectFit: 'contain',
             filter: 'drop-shadow(0 10px 40px rgba(124, 58, 237, 0.4))',
           }}
