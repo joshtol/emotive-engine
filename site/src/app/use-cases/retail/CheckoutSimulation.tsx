@@ -389,12 +389,18 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
               borderRadius: '0 0 16px 16px',
               border: '2px solid rgba(0, 217, 255, 0.25)',
               borderTop: 'none',
+              width: '100%',
+              height: '220px',
               minHeight: '220px',
+              maxHeight: '220px',
               position: 'relative',
-              overflow: 'hidden',
+              overflow: 'visible',
               boxShadow: 'inset 0 0 60px rgba(0, 217, 255, 0.1)',
-              zIndex: 1,
-              flexShrink: 0
+              zIndex: 10,
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           />
 

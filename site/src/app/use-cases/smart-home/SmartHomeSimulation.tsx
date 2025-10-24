@@ -568,14 +568,18 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
               borderRadius: '0 0 16px 16px',
               border: `2px solid ${COLORS.background.cardBorder}`,
               borderTop: 'none',
+              width: '100%',
               height: '180px',
               minHeight: '180px',
               maxHeight: '180px',
               position: 'relative',
-              overflow: 'hidden',
+              overflow: 'visible',
               boxShadow: 'inset 0 0 60px rgba(255, 107, 53, 0.1)',
               zIndex: 10,
-              flexShrink: 0
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           />
 

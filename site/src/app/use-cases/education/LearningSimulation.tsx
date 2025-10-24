@@ -335,10 +335,13 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
             borderRadius: '16px',
             border: '2px solid rgba(124, 58, 237, 0.25)',
             boxShadow: 'inset 0 0 60px rgba(124, 58, 237, 0.1)',
-            overflow: 'hidden',
+            overflow: 'visible',
             marginBottom: '0.75rem',
             zIndex: 10,
-            flexShrink: 0
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         />
       )}
