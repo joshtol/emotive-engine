@@ -197,6 +197,7 @@ export default function Home() {
         showMusicControls={true}
         mascot={mascot}
         onMessage={addMessage}
+        onGesture={handleGesture}
       />
       <div className="emotive-main">
         <div className="gesture-menus-wrapper">

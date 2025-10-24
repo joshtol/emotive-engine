@@ -125,7 +125,7 @@
 
 /* Auto-dismiss Animation */
 .message-item.auto-dismiss {
-  animation: slideInFromTop 0.3s ease, slideOutToTop 0.3s ease 2.7s;
+  animation: slideInFromTop 0.3s ease;
   animation-fill-mode: both;
 }
 

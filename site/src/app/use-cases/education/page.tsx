@@ -14,6 +14,7 @@ export default function EducationPage() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const mascotRef = useRef<any>(null)
   const [mascot, setMascot] = useState<any>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -49,6 +50,9 @@ export default function EducationPage() {
 
   // Initialize scroll-following mascot
   useEffect(() => {
+    // Wait for client-side hydration before initializing
+    if (!isClient) return
+
     let cancelled = false
 
     const initializeEngine = async () => {
@@ -56,7 +60,7 @@ export default function EducationPage() {
 
       if (initializedRef.current) return
       if (initializingRef.current) return
-      if (mascot) return
+      if (mascotRef.current) return
 
       initializingRef.current = true
 
@@ -138,6 +142,7 @@ export default function EducationPage() {
 
         // Check if component is still mounted before setting state
         if (!cancelled) {
+          mascotRef.current = mascotInstance
           setMascot(mascotInstance)
 
           initializedRef.current = true
@@ -172,11 +177,11 @@ export default function EducationPage() {
       cancelled = true
 
       // Cleanup mascot instance to prevent memory leaks
-      if (mascot) {
+      if (mascotRef.current) {
         try {
-          mascot.stop()
-          if (typeof mascot.destroy === 'function') {
-            mascot.destroy()
+          mascotRef.current.stop()
+          if (typeof mascotRef.current.destroy === 'function') {
+            mascotRef.current.destroy()
           }
 
           // Clear canvas to release GPU resources
@@ -190,12 +195,13 @@ export default function EducationPage() {
           console.error('Error cleaning up mascot:', error)
         }
 
+        mascotRef.current = null
         setMascot(null)
         initializedRef.current = false
         initializingRef.current = false
       }
     }
-  }, [])
+  }, [isClient])
 
   // Scroll-driven animation with optimized performance
   useEffect(() => {
@@ -349,8 +355,6 @@ export default function EducationPage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
-        contain: 'layout style paint',
-        willChange: 'scroll-position',
       }}>
         {/* Hero Section */}
         <section style={{
@@ -448,6 +452,25 @@ export default function EducationPage() {
                 ? 'AI that detects confusion in real-time, adapting with personalized help.'
                 : 'Emotive AI that detects student confusion and frustration in real-time, adapting lessons with personalized encouragement and progressive hints.'}
             </p>
+
+            {/* Branding Callout */}
+            {!isMobile && (
+              <div style={{
+                display: 'inline-block',
+                padding: '1rem 1.75rem',
+                background: 'linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(124,58,237,0.08) 100%)',
+                border: '1px solid rgba(124,58,237,0.35)',
+                borderRadius: '16px',
+                marginBottom: '3rem',
+                fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+                color: 'rgba(255,255,255,0.85)',
+                lineHeight: '1.5',
+                maxWidth: '650px',
+                boxShadow: '0 4px 20px rgba(124,58,237,0.15)',
+              }}>
+                <strong style={{ color: '#C4B5FD' }}>📚 Built for Your Curriculum:</strong> The learning assistant reflects your educational brand—custom mascot designs, institutional colors, and subject-specific visual themes.
+              </div>
+            )}
 
             <div style={{
               display: 'flex',
@@ -859,6 +882,8 @@ export default function EducationPage() {
           position: 'relative',
           zIndex: 2,
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
         }}>
           {/* Top gradient line */}
           <div style={{

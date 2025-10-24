@@ -13,6 +13,7 @@ export default function SmartHomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const mascotRef = useRef<any>(null)
   const [mascot, setMascot] = useState<any>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -46,6 +47,9 @@ export default function SmartHomePage() {
 
   // Initialize scroll-following mascot
   useEffect(() => {
+    // Wait for client-side hydration before initializing
+    if (!isClient) return
+
     let cancelled = false
 
     const initializeEngine = async () => {
@@ -53,7 +57,7 @@ export default function SmartHomePage() {
 
       if (initializedRef.current) return
       if (initializingRef.current) return
-      if (mascot) return
+      if (mascotRef.current) return
 
       initializingRef.current = true
 
@@ -138,6 +142,7 @@ export default function SmartHomePage() {
 
         // Check if component is still mounted before setting state
         if (!cancelled) {
+          mascotRef.current = mascotInstance
           setMascot(mascotInstance)
 
           initializedRef.current = true
@@ -172,11 +177,11 @@ export default function SmartHomePage() {
       cancelled = true
 
       // Cleanup mascot instance to prevent memory leaks
-      if (mascot) {
+      if (mascotRef.current) {
         try {
-          mascot.stop()
-          if (typeof mascot.destroy === 'function') {
-            mascot.destroy()
+          mascotRef.current.stop()
+          if (typeof mascotRef.current.destroy === 'function') {
+            mascotRef.current.destroy()
           }
 
           // Clear canvas to release GPU resources
@@ -190,12 +195,13 @@ export default function SmartHomePage() {
           console.error('Error cleaning up mascot:', error)
         }
 
+        mascotRef.current = null
         setMascot(null)
         initializedRef.current = false
         initializingRef.current = false
       }
     }
-  }, [])
+  }, [isClient])
 
   // Scroll-driven animation
   useEffect(() => {
@@ -416,7 +422,7 @@ export default function SmartHomePage() {
               backgroundClip: 'text',
               textShadow: '0 0 80px rgba(139, 92, 246, 0.3)',
             }}>
-              Your Home, Reimagined
+              Smart Home Control
             </h1>
 
             <h2 style={{
@@ -427,7 +433,7 @@ export default function SmartHomePage() {
               color: 'rgba(255,255,255,0.95)',
               letterSpacing: '-0.02em'
             }}>
-              Interfaces That Feel Alive
+              Increase User Engagement by 65%
             </h2>
 
             <p style={{
@@ -439,8 +445,25 @@ export default function SmartHomePage() {
               maxWidth: '700px',
               margin: '0 auto 3rem auto',
             }}>
-              Real-time visual feedback that responds to every interaction. Watch the mascot morph shapes, express emotions, and react to your commands with delightful animations.
+              Emotive AI that responds to device states and user actions with expressive animations, transforming cold automation into warm, intuitive experiences.
             </p>
+
+            {/* Branding Callout */}
+            <div style={{
+              display: 'inline-block',
+              padding: '1rem 1.75rem',
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0.08) 100%)',
+              border: '1px solid rgba(139,92,246,0.35)',
+              borderRadius: '16px',
+              marginBottom: '3rem',
+              fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+              color: 'rgba(255,255,255,0.85)',
+              lineHeight: '1.5',
+              maxWidth: '650px',
+              boxShadow: '0 4px 20px rgba(139,92,246,0.15)',
+            }}>
+              <strong style={{ color: '#a78bfa' }}>🏠 Designed for Your Ecosystem:</strong> Seamlessly adapts to your smart home platform's visual language—custom icons, brand colors, and device-specific animations.
+            </div>
 
             <div style={{
               display: 'flex',
@@ -676,12 +699,29 @@ export default function SmartHomePage() {
                 fontSize: 'clamp(1.15rem, 2.2vw, 1.4rem)',
                 color: 'rgba(255, 255, 255, 0.75)',
                 maxWidth: '900px',
-                margin: '0 auto',
+                margin: '0 auto 3rem',
                 lineHeight: 1.7,
                 fontWeight: '500'
               }}>
                 See how visual feedback brings your interface to life. The mascot morphs shapes, changes emotions, and responds with animations to every interaction. Powered by Emotive Engine.
               </p>
+
+              {/* Branding Callout */}
+              <div style={{
+                display: 'inline-block',
+                padding: '1rem 1.75rem',
+                background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0.08) 100%)',
+                border: '1px solid rgba(139,92,246,0.35)',
+                borderRadius: '16px',
+                marginBottom: '3rem',
+                fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+                color: 'rgba(255,255,255,0.85)',
+                lineHeight: '1.5',
+                maxWidth: '650px',
+                boxShadow: '0 4px 20px rgba(139,92,246,0.15)',
+              }}>
+                <strong style={{ color: '#a78bfa' }}>🏠 Designed for Your Ecosystem:</strong> Seamlessly adapts to your smart home platform's visual language—custom icons, brand colors, and device-specific animations.
+              </div>
             </div>
 
             {/* Simulation */}
@@ -726,6 +766,8 @@ export default function SmartHomePage() {
           position: 'relative',
           zIndex: 2,
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
         }}>
           <div style={{
             position: 'absolute',

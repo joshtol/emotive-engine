@@ -104,7 +104,7 @@ export default function CherokeePage() {
       meaning: 'It\'s good to see you',
       context: 'Universal greeting for all occasions',
       color: '#DAA520',
-      bgColor: 'rgba(218,165,32,0.25)',
+      bgColor: 'rgba(218,165,32,0.5)',
       borderColor: 'rgba(218,165,32,0.4)',
       emoji: '👋',
       emotion: 'surprise',
@@ -121,7 +121,7 @@ export default function CherokeePage() {
       meaning: 'Hi / Hey',
       context: 'Casual greeting among friends',
       color: '#FFB347',
-      bgColor: 'rgba(255,179,71,0.25)',
+      bgColor: 'rgba(255,179,71,0.5)',
       borderColor: 'rgba(255,179,71,0.4)',
       emoji: '😊',
       emotion: 'surprise',
@@ -137,7 +137,7 @@ export default function CherokeePage() {
       meaning: 'Response to "How are you?"',
       context: 'Can also mean "I\'m good"',
       color: '#82C4C3',
-      bgColor: 'rgba(130,196,195,0.25)',
+      bgColor: 'rgba(130,196,195,0.5)',
       borderColor: 'rgba(130,196,195,0.4)',
       emoji: '✨',
       emotion: 'calm',
@@ -153,7 +153,7 @@ export default function CherokeePage() {
       meaning: 'Morning greeting',
       context: 'Used until midday',
       color: '#F8B739',
-      bgColor: 'rgba(248,183,57,0.25)',
+      bgColor: 'rgba(248,183,57,0.5)',
       borderColor: 'rgba(248,183,57,0.4)',
       emoji: '🌅',
       emotion: 'euphoria',
@@ -170,7 +170,7 @@ export default function CherokeePage() {
       meaning: 'Asking about someone\'s wellbeing',
       context: 'Common conversation starter',
       color: '#F7DC6F',
-      bgColor: 'rgba(247,220,111,0.25)',
+      bgColor: 'rgba(247,220,111,0.5)',
       borderColor: 'rgba(247,220,111,0.4)',
       emoji: '💬',
       emotion: 'neutral',
@@ -187,7 +187,7 @@ export default function CherokeePage() {
       meaning: 'Expression of gratitude',
       context: 'Shows respect and appreciation',
       color: '#98D8C8',
-      bgColor: 'rgba(152,216,200,0.25)',
+      bgColor: 'rgba(152,216,200,0.5)',
       borderColor: 'rgba(152,216,200,0.4)',
       emoji: '🙏',
       emotion: 'love',
@@ -204,7 +204,7 @@ export default function CherokeePage() {
       meaning: 'Evening farewell',
       context: 'Used when parting in the evening',
       color: '#9B59B6',
-      bgColor: 'rgba(155,89,182,0.25)',
+      bgColor: 'rgba(155,89,182,0.5)',
       borderColor: 'rgba(155,89,182,0.4)',
       emoji: '🌙',
       emotion: 'resting',
@@ -222,7 +222,7 @@ export default function CherokeePage() {
       meaning: 'There is no word for "goodbye" in Cherokee',
       context: 'Reflects belief in continued connection',
       color: '#C39BD3',
-      bgColor: 'rgba(195,155,211,0.25)',
+      bgColor: 'rgba(195,155,211,0.5)',
       borderColor: 'rgba(195,155,211,0.4)',
       emoji: '🤝',
       emotion: 'neutral',
@@ -381,7 +381,7 @@ export default function CherokeePage() {
           initializingRef.current = false
 
           if (typeof mascotInstance.fadeIn === 'function') {
-            mascotInstance.fadeIn(1500)
+            mascotInstance.fadeIn(2250)
           }
 
           setManagedTimeout(() => {
@@ -743,8 +743,6 @@ export default function CherokeePage() {
         position: 'relative',
         zIndex: 1,
         overflow: 'hidden',
-        contain: 'layout style paint',
-        willChange: 'scroll-position',
       }}>
         {/* Hero Section with Parallax */}
         <section style={{
@@ -842,6 +840,23 @@ export default function CherokeePage() {
               Discover common Cherokee phrases through interactive cards with emotional AI that responds to each greeting's unique cultural meaning.
             </p>
 
+            {/* Branding Callout */}
+            <div style={{
+              display: 'inline-block',
+              padding: '1rem 1.75rem',
+              background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',
+              border: '1px solid rgba(218,165,32,0.35)',
+              borderRadius: '16px',
+              marginBottom: '3rem',
+              fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+              color: 'rgba(255,255,255,0.85)',
+              lineHeight: '1.5',
+              maxWidth: '650px',
+              boxShadow: '0 4px 20px rgba(218,165,32,0.15)',
+            }}>
+              <strong style={{ color: '#FFD700' }}>✨ Fully Customizable:</strong> The mascot adapts to your brand—custom shapes, colors, animations, and logos, all optimized for AI-powered emotional intelligence.
+            </div>
+
             {/* CTA Buttons */}
             <div style={{
               display: 'flex',
@@ -929,12 +944,15 @@ export default function CherokeePage() {
           margin: '0 auto',
           position: 'relative',
           zIndex: 2,
+          transform: 'translateZ(0)',
+          willChange: 'transform',
         }}>
           <div style={{
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '1.5rem',
             gridAutoRows: 'minmax(200px, auto)',
+            transform: 'translateZ(0)',
           }}>
             {greetings.map((greeting, index) => (
               <div
@@ -950,7 +968,6 @@ export default function CherokeePage() {
                   overflow: 'hidden',
                   gridColumn: index === 0 || index === 7 ? (isMobile ? 'span 1' : 'span 2') : 'span 1',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                  willChange: 'transform',
                   transform: 'translateZ(0)',
                 }}
                 onMouseEnter={(e) => {
@@ -2019,6 +2036,8 @@ export default function CherokeePage() {
               onClick={(e) => e.stopPropagation()}
               style={{
                 maxWidth: isMobile ? '500px' : '800px',
+                transform: 'translateZ(0)',
+                willChange: 'transform',
                 width: '100%',
                 background: selected.bgColor,                borderRadius: '24px',
                 padding: isMobile ? '2.5rem 2rem' : '3rem 2.5rem',
@@ -2054,29 +2073,27 @@ export default function CherokeePage() {
                   position: 'absolute',
                   top: '1rem',
                   right: '1rem',
-                  background: 'rgba(0,0,0,0.5)',                  border: 'none',
-                  borderRadius: '50%',
-                  width: '44px',
-                  height: '44px',
-                  fontSize: '1.5rem',
-                  color: 'white',
+                  background: 'transparent',
+                  border: 'none',
+                  width: '56px',
+                  height: '56px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   zIndex: 10,
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0,0,0,0.7)'
                   e.currentTarget.style.transform = 'scale(1.1)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0,0,0,0.5)'
                   e.currentTarget.style.transform = 'scale(1)'
                 }}
               >
-                ×
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
 
               {/* Previous button */}

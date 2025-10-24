@@ -167,6 +167,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
     // Don't initialize until client-side rendering is complete
     if (!isClient) return
 
+    // Prevent re-initialization if mascot already exists
+    if (mascotRef.current) return
+
     let cancelled = false
 
     const initMascot = async () => {
@@ -253,12 +256,19 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
     return () => {
       cancelled = true
+    }
+  }, [isClient])
+
+  // Cleanup mascot on component unmount
+  useEffect(() => {
+    return () => {
       if (mascotRef.current) {
         mascotRef.current.stop?.()
         mascotRef.current.destroy?.()
+        mascotRef.current = null
       }
     }
-  }, [isClient, isMobile])
+  }, [])
 
   const toggleDevice = async (roomId: string, deviceId: string) => {
     const device = rooms.find(r => r.id === roomId)?.devices.find(d => d.id === deviceId)
@@ -604,7 +614,9 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
       width: '100%',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      transform: 'translateZ(0)',
+      willChange: 'transform'
     }}>
       {isMobile ? (
         <>

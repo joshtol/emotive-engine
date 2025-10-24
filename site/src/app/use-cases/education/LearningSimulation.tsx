@@ -165,7 +165,7 @@ export default function LearningSimulation() {
         mascotRef.current.destroy?.()
       }
     }
-  }, [isMobile])
+  }, [])
 
   const checkAnswer = async () => {
     // Prevent checking if already correct
@@ -289,6 +289,8 @@ export default function LearningSimulation() {
       padding: isMobile ? '0.75rem' : '2rem',
       overflow: 'hidden',
       transition: 'grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      transform: 'translateZ(0)',
+      willChange: 'transform',
       alignItems: 'start',
       width: isMobile ? '100%' : 'auto',
       boxSizing: 'border-box'

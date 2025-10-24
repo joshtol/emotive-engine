@@ -17,11 +17,12 @@ interface EmotiveHeaderProps {
   showMusicControls?: boolean
   mascot?: any
   onMessage?: (type: string, content: string, duration?: number) => void
+  onGesture?: (gesture: string) => void
   docsNavigation?: NavSection[]
   onMobileMenuChange?: (isOpen: boolean) => void
 }
 
-export default function EmotiveHeader({ showMusicControls = false, mascot, onMessage, docsNavigation, onMobileMenuChange }: EmotiveHeaderProps) {
+export default function EmotiveHeader({ showMusicControls = false, mascot, onMessage, onGesture, docsNavigation, onMobileMenuChange }: EmotiveHeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [isUseCasesOpen, setIsUseCasesOpen] = useState(false)
@@ -110,6 +111,27 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
         setIsPlaying(true)
         if (mascot) {
           await connectAudioToMascot(audio)
+
+          // Fire a random combo when audio starts
+          const combos = ['rise', 'flow', 'burst', 'drift', 'chaos', 'morph', 'rhythm', 'spiral', 'routine', 'radiance', 'twinkle', 'stream']
+          const randomCombo = combos[Math.floor(Math.random() * combos.length)]
+
+          if (typeof mascot.chain === 'function') {
+            setTimeout(() => {
+              mascot.chain(randomCombo)
+              onMessage?.('info', '💃 Dance to the music by hitting the gesture buttons!', 5000)
+
+              // After the message displays, fire running man and nod with visual highlighting
+              setTimeout(() => {
+                if (onGesture) {
+                  onGesture('runman')
+                  setTimeout(() => {
+                    onGesture('nod')
+                  }, 1000)
+                }
+              }, 5500) // Wait for dance message to finish (5000ms) + buffer
+            }, 500)
+          }
         }
       }
 

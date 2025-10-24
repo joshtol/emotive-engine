@@ -14,6 +14,7 @@ export default function RetailPage() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const mascotRef = useRef<any>(null)
   const [mascot, setMascot] = useState<any>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -58,7 +59,7 @@ export default function RetailPage() {
 
       if (initializedRef.current) return
       if (initializingRef.current) return
-      if (mascot) return
+      if (mascotRef.current) return
 
       initializingRef.current = true
 
@@ -141,6 +142,7 @@ export default function RetailPage() {
 
         // Check if component is still mounted before setting state
         if (!cancelled) {
+          mascotRef.current = mascotInstance
           setMascot(mascotInstance)
 
           initializedRef.current = true
@@ -179,11 +181,11 @@ export default function RetailPage() {
       clearTimeout(timer)
 
       // Cleanup mascot instance to prevent memory leaks
-      if (mascot) {
+      if (mascotRef.current) {
         try {
-          mascot.stop()
-          if (typeof mascot.destroy === 'function') {
-            mascot.destroy()
+          mascotRef.current.stop()
+          if (typeof mascotRef.current.destroy === 'function') {
+            mascotRef.current.destroy()
           }
 
           // Clear canvas to release GPU resources
@@ -197,6 +199,7 @@ export default function RetailPage() {
           console.error('Error cleaning up mascot:', error)
         }
 
+        mascotRef.current = null
         setMascot(null)
         initializedRef.current = false
         initializingRef.current = false
@@ -362,8 +365,6 @@ export default function RetailPage() {
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
-        contain: 'layout style paint',
-        willChange: 'scroll-position',
       }}>
         {/* Hero Section */}
         <section style={{
@@ -454,6 +455,23 @@ export default function RetailPage() {
             }}>
               Emotive AI that detects customer frustration in real-time and responds with genuine empathy, turning checkout stress into satisfaction.
             </p>
+
+            {/* Branding Callout */}
+            <div style={{
+              display: 'inline-block',
+              padding: '1rem 1.75rem',
+              background: 'linear-gradient(135deg, rgba(221,74,154,0.18) 0%, rgba(221,74,154,0.08) 100%)',
+              border: '1px solid rgba(221,74,154,0.35)',
+              borderRadius: '16px',
+              marginBottom: '3rem',
+              fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+              color: 'rgba(255,255,255,0.85)',
+              lineHeight: '1.5',
+              maxWidth: '650px',
+              boxShadow: '0 4px 20px rgba(221,74,154,0.15)',
+            }}>
+              <strong style={{ color: '#FF6B9D' }}>🛍️ Match Your Store Brand:</strong> The assistant seamlessly integrates with your retail identity—custom colors, logo, and checkout flow optimized for conversational AI.
+            </div>
 
             <div style={{
               display: 'flex',
@@ -844,6 +862,8 @@ export default function RetailPage() {
           position: 'relative',
           zIndex: 2,
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
         }}>
           {/* Top gradient line */}
           <div style={{

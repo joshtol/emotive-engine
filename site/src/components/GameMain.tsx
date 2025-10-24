@@ -233,7 +233,10 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
   }, [])
 
   return (
-    <div className="canvas-container">
+    <div className="canvas-container" style={{
+      transform: 'translateZ(0)',
+      willChange: 'transform',
+    }}>
       <div className="game-canvas-area">
         {/* Engine Canvas - Ready for particle system */}
         <canvas ref={canvasRef} id="emotive-canvas"></canvas>

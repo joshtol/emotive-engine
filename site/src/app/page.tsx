@@ -173,8 +173,6 @@ export default function HomePage() {
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
-        contain: 'layout style paint',
-        willChange: 'scroll-position',
       }}>
 
         {/* Hero Section - Critical Path */}
@@ -182,8 +180,6 @@ export default function HomePage() {
           minHeight: '100vh',
           display: 'flex',
           alignItems: 'center',
-          contentVisibility: 'auto',
-          containIntrinsicSize: '0 100vh',
           justifyContent: 'center',
           padding: 'clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 2rem)',
           position: 'relative',
@@ -239,7 +235,7 @@ export default function HomePage() {
                 position: 'relative',
                 zIndex: 10,
               }}>
-                Emotional AI • 15 Emotions • 50+ Gestures
+                Emotional AI • Custom Branding • 15 Emotions • 50+ Gestures
               </div>
 
               <h1 style={{
@@ -269,6 +265,23 @@ export default function HomePage() {
               }}>
                 Create emotionally responsive user experiences with real-time particle-based animations that react to sentiment, interaction, and context.
               </p>
+
+              {/* Branding Callout */}
+              <div style={{
+                display: 'inline-block',
+                padding: '1rem 1.75rem',
+                background: 'linear-gradient(135deg, rgba(102,126,234,0.18) 0%, rgba(102,126,234,0.08) 100%)',
+                border: '1px solid rgba(102,126,234,0.35)',
+                borderRadius: '16px',
+                marginBottom: '3rem',
+                fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+                color: 'rgba(255,255,255,0.85)',
+                lineHeight: '1.5',
+                maxWidth: '650px',
+                boxShadow: '0 4px 20px rgba(102,126,234,0.15)',
+              }}>
+                <strong style={{ color: '#a5b4fc' }}>✨ Your Brand, Your Way:</strong> Every element—from particle shapes to core design—tailored to your visual identity and powered by emotional AI.
+              </div>
 
               {/* CTA Buttons */}
               <div style={{

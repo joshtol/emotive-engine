@@ -159,7 +159,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
         mascotRef.current.destroy?.()
       }
     }
-  }, [isMobile])
+  }, [])
 
   const handleScanProduct = async () => {
     setScanning(true)
@@ -396,7 +396,9 @@ export default function CheckoutSimulation({ onStepChange, openAIChat }: Checkou
       width: '100%',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      transform: 'translateZ(0)',
+      willChange: 'transform'
     }}>
       {isMobile ? (
         <>
