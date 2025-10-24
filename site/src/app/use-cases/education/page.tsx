@@ -217,8 +217,12 @@ export default function EducationPage() {
         const viewportWidth = window.innerWidth
         const isMobileDevice = viewportWidth < 768
 
+        // Check if mascot is attached to an element
+        const isAttached = mascot && typeof mascot.isAttachedToElement === 'function' && mascot.isAttachedToElement()
+
         // Update mascot position
-        if (mascot && typeof mascot.setPosition === 'function') {
+        // BUT: Don't update if mascot is attached to an element
+        if (mascot && typeof mascot.setPosition === 'function' && !isAttached) {
           const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
           const yOffset = isMobileDevice
             ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
@@ -240,13 +244,20 @@ export default function EducationPage() {
         let opacity = 1
         let zIndex = 100
 
-        if (scrollY >= demoSectionStart) {
-          const fadeProgress = Math.min((scrollY - demoSectionStart) / fadeRange, 1)
-          opacity = Math.max(0, 1 - fadeProgress)
-        }
+        // When mascot is attached to an element, lower z-index so UI panels appear on top
+        if (isAttached) {
+          zIndex = 5  // Lower than UI panels (which have zIndex: 10)
+          opacity = 1
+        } else {
+          // Normal scroll behavior when not attached
+          if (scrollY >= demoSectionStart) {
+            const fadeProgress = Math.min((scrollY - demoSectionStart) / fadeRange, 1)
+            opacity = Math.max(0, 1 - fadeProgress)
+          }
 
-        if (scrollY >= heroHeight) {
-          zIndex = opacity > 0.1 ? 1 : -1
+          if (scrollY >= heroHeight) {
+            zIndex = opacity > 0.1 ? 1 : -1
+          }
         }
 
         // Update z-index ONLY when it changes (threshold-based, not continuous)
@@ -878,7 +889,7 @@ export default function EducationPage() {
               </div>
 
               {/* Main learning interface */}
-              <LearningSimulation />
+              <LearningSimulation mascot={mascot} />
             </div>
           </div>
         </section>

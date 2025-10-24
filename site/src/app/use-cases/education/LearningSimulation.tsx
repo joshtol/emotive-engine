@@ -85,7 +85,11 @@ const DEMO_PROBLEMS: Problem[] = [
   },
 ]
 
-export default function LearningSimulation() {
+interface LearningSimulationProps {
+  mascot?: any  // Guide mascot instance from parent
+}
+
+export default function LearningSimulation({ mascot }: LearningSimulationProps) {
   const { setTimeout: setManagedTimeout } = useTimeoutManager()
   const [currentProblem, setCurrentProblem] = useState(0)
   const [answer, setAnswer] = useState('120')
@@ -96,8 +100,8 @@ export default function LearningSimulation() {
   const [currentHint, setCurrentHint] = useState(0)
   const [showExplanation, setShowExplanation] = useState(false)
   const [streak, setStreak] = useState(0)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const mascotRef = useRef<any>(null)
+  const mascotStageRef = useRef<HTMLDivElement>(null)
+  const mascotRef = useRef<any>(mascot)
   const initializingRef = useRef<boolean>(false)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -121,131 +125,52 @@ export default function LearningSimulation() {
     }
   }, [])
 
+  // Attach mascot to stage when scrolled into view
   useEffect(() => {
-    console.log('[LearningSimulation] useEffect fired')
-    let cancelled = false
-    const initMascot = async () => {
-      console.log('[LearningSimulation] initMascot started')
-      console.log('[LearningSimulation] canvasRef.current:', !!canvasRef.current)
-      console.log('[LearningSimulation] cancelled:', cancelled)
-      console.log('[LearningSimulation] initializingRef.current:', initializingRef.current)
-      console.log('[LearningSimulation] mascotRef.current:', !!mascotRef.current)
+    if (!mascot || !mascotStageRef.current) return
 
-      // Prevent multiple simultaneous initializations
-      if (initializingRef.current || mascotRef.current) {
-        console.log('[LearningSimulation] Already initializing or initialized, skipping')
-        return
-      }
-
-      if (!canvasRef.current || cancelled) {
-        console.log('[LearningSimulation] Early return - no canvas or cancelled')
-        return
-      }
-
-      initializingRef.current = true
-      console.log('[LearningSimulation] Set initializingRef to true')
-
-      try {
-        console.log('[LearningSimulation] Checking window for EmotiveMascot...')
-        console.log('[LearningSimulation] window.EmotiveMascot:', !!(window as any).EmotiveMascot)
-        console.log('[LearningSimulation] window.EmotiveMascotLean:', !!(window as any).EmotiveMascotLean)
-        console.log('[LearningSimulation] window.EmotiveMascot?.default:', !!(window as any).EmotiveMascot?.default)
-        console.log('[LearningSimulation] window.EmotiveMascotLean?.default:', !!(window as any).EmotiveMascotLean?.default)
-
-        // Try to get EmotiveMascot from window (either lean or full bundle)
-        let EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot || (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
-
-        console.log('[LearningSimulation] Initial EmotiveMascot found:', !!EmotiveMascot)
-
-        // If not available, wait for it to load (with timeout)
-        if (!EmotiveMascot) {
-          console.log('[LearningSimulation] EmotiveMascot not immediately available, polling...')
-          let attempts = 0
-          while (!(window as any).EmotiveMascot && !(window as any).EmotiveMascotLean && attempts < 50) {
-            await new Promise(resolve => setTimeout(resolve, 100))
-            attempts++
-            if (attempts % 10 === 0) {
-              console.log(`[LearningSimulation] Still polling... attempt ${attempts}/50`)
+    // Use Intersection Observer to detect when the stage comes into view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !mascotRef.current) {
+            // Stage is in view and mascot not yet attached
+            if (typeof mascot.attachToElement !== 'function') {
+              return
             }
+
+            mascot.attachToElement(mascotStageRef.current, {
+              animate: true,
+              duration: 800,
+              scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
+              containParticles: true  // Keep particles within the stage bounds
+            })
+
+            // Set emotion to calm when attached
+            mascot.setEmotion('calm')
+
+            mascotRef.current = mascot
+          } else if (!entry.isIntersecting && mascotRef.current) {
+            // Stage is out of view, detach mascot
+            if (typeof mascot.detachFromElement === 'function') {
+              mascot.detachFromElement()
+            }
+            mascotRef.current = null
           }
-          EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot || (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
-          console.log('[LearningSimulation] After polling - EmotiveMascot found:', !!EmotiveMascot)
-        }
-
-        if (!EmotiveMascot) {
-          console.error('[LearningSimulation] EmotiveMascot not found after waiting')
-          console.error('[LearningSimulation] Final window state:', {
-            EmotiveMascot: !!(window as any).EmotiveMascot,
-            EmotiveMascotLean: !!(window as any).EmotiveMascotLean,
-            allWindowKeys: Object.keys(window).filter(k => k.toLowerCase().includes('emotive'))
-          })
-          return
-        }
-
-        console.log('[LearningSimulation] Creating mascot instance...')
-        const canvas = canvasRef.current
-        if (!canvas) {
-          console.error('[LearningSimulation] Canvas lost after polling')
-          return
-        }
-
-        const rect = canvas.getBoundingClientRect()
-        const dpr = window.devicePixelRatio || 1
-        console.log('[LearningSimulation] Canvas size:', { width: rect.width, height: rect.height, dpr })
-        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
-
-        const mascot = new EmotiveMascot({
-          canvasId: 'learning-mascot',
-          enableAudio: false,
-          soundEnabled: false,
-          defaultEmotion: 'neutral',
-          targetFPS: isMobile ? 30 : 60,
-          maxParticles: isMobile ? 50 : 100,
         })
-        console.log('[LearningSimulation] Mascot instance created, calling init...')
-
-        await mascot.init(canvas)
-
-        // Check if component was unmounted during async init
-        if (cancelled) {
-          console.log('[LearningSimulation] Component unmounted during init, destroying mascot')
-          mascot.stop?.()
-          mascot.destroy?.()
-          initializingRef.current = false
-          return
-        }
-
-        console.log('[LearningSimulation] Mascot init complete, starting...')
-        mascot.start()
-        console.log('[LearningSimulation] Mascot started successfully')
-        mascot.setPosition(0, 0, 0)
-        mascot.setScale({ core: isMobile ? 1.4 : 1.2, particles: isMobile ? 2.0 : 1.8 })
-        mascot.setBackdrop({ enabled: true, radius: 3.0, intensity: 0.8 })
-        mascotRef.current = mascot
-        setManagedTimeout(() => {
-          if (mascot && !cancelled) {
-            mascot.express?.('wave')
-          }
-        }, 500)
-      } catch (error) {
-        console.error('[LearningSimulation] Failed to initialize mascot:', error)
-        initializingRef.current = false
+      },
+      {
+        threshold: 0.2, // Trigger when 20% of the element is visible
+        rootMargin: '0px'
       }
-    }
-    initMascot()
+    )
+
+    observer.observe(mascotStageRef.current)
+
     return () => {
-      console.log('[LearningSimulation] Cleanup function called')
-      cancelled = true
-      if (mascotRef.current) {
-        console.log('[LearningSimulation] Destroying mascot')
-        mascotRef.current.stop?.()
-        mascotRef.current.destroy?.()
-        mascotRef.current = null
-      }
-      initializingRef.current = false
+      observer.disconnect()
     }
-  }, [])
+  }, [mascot, mascotStageRef, isMobile])
 
   const checkAnswer = async () => {
     // Prevent checking if already correct
@@ -377,50 +302,45 @@ export default function LearningSimulation() {
       maxWidth: '100%',
       boxSizing: 'border-box'
     }}>
-      {/* Mascot Column - Hidden on mobile */}
+      {/* Mascot Stage - Desktop (Hidden on mobile) */}
       {!isMobile && (
-        <div style={{
-          position: 'sticky',
-          top: '2rem',
-          width: '100%',
-          height: '680px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <canvas
-            ref={canvasRef}
-            id="learning-mascot"
-            style={{
-              width: '100%',
-              height: '100%',
-              filter: 'drop-shadow(0 20px 80px rgba(124, 58, 237, 0.6))'
-            }}
-          />
-        </div>
+        <div
+          ref={mascotStageRef}
+          style={{
+            position: 'sticky',
+            top: '2rem',
+            width: '100%',
+            minHeight: '500px',
+            background: 'radial-gradient(circle at center, rgba(124, 58, 237, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%)',
+            borderRadius: '20px',
+            border: '2px solid rgba(124, 58, 237, 0.25)',
+            boxShadow: 'inset 0 0 80px rgba(124, 58, 237, 0.1)',
+            overflow: 'hidden',
+            zIndex: 10
+          }}
+        />
       )}
 
-      {/* Mobile mascot - scaled larger */}
+      {/* Mascot Stage - Mobile */}
       {isMobile && (
-        <div style={{
-          position: 'relative',
-          width: '100%',
-          height: '250px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '0.75rem'
-        }}>
-          <canvas
-            ref={canvasRef}
-            id="learning-mascot"
-            style={{
-              width: '100%',
-              height: '100%',
-              filter: 'drop-shadow(0 10px 40px rgba(124, 58, 237, 0.5))'
-            }}
-          />
-        </div>
+        <div
+          ref={mascotStageRef}
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '180px',
+            minHeight: '180px',
+            maxHeight: '180px',
+            background: 'radial-gradient(circle at center, rgba(124, 58, 237, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%)',
+            borderRadius: '16px',
+            border: '2px solid rgba(124, 58, 237, 0.25)',
+            boxShadow: 'inset 0 0 60px rgba(124, 58, 237, 0.1)',
+            overflow: 'hidden',
+            marginBottom: '0.75rem',
+            zIndex: 10,
+            flexShrink: 0
+          }}
+        />
       )}
 
       {/* Problem Column */}
