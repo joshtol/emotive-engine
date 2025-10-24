@@ -48,7 +48,7 @@ const DEMO_PROBLEMS: Problem[] = [
       'Use H for hydrogen and O for oxygen'
     ],
     explanation: 'Perfect! H₂O means 2 hydrogen atoms bonded to 1 oxygen atom - that\'s water!',
-    mascotShape: 'droplet',
+    mascotShape: 'sphere',
     mascotEmotion: 'joy'
   },
   {
@@ -283,16 +283,18 @@ export default function LearningSimulation() {
     <div style={{
       position: 'relative',
       minHeight: isMobile ? 'auto' : '750px',
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : showAIHelp ? '450px 1fr 480px' : '450px 1fr',
+      display: isMobile ? 'flex' : 'grid',
+      flexDirection: isMobile ? 'column' : undefined,
+      gridTemplateColumns: isMobile ? undefined : showAIHelp ? '450px 1fr 480px' : '450px 1fr',
       gap: isMobile ? '0' : '2.5rem',
-      padding: isMobile ? '0.75rem' : '2rem',
+      padding: isMobile ? '0' : '2rem',
       overflow: 'hidden',
       transition: 'grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
       transform: 'translateZ(0)',
       willChange: 'transform',
       alignItems: 'start',
-      width: isMobile ? '100%' : 'auto',
+      width: '100%',
+      maxWidth: '100%',
       boxSizing: 'border-box'
     }}>
       {/* Mascot Column - Hidden on mobile */}
@@ -345,12 +347,17 @@ export default function LearningSimulation() {
       <div style={{
         position: 'relative',
         width: '100%',
-        order: isMobile ? 2 : 1
+        maxWidth: '100%',
+        order: isMobile ? 2 : 1,
+        boxSizing: 'border-box'
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(15, 18, 35, 0.98) 100%)',          borderRadius: isMobile ? '12px' : '24px',
-          padding: isMobile ? '1rem' : '2rem',
-          border: '2px solid rgba(124, 58, 237, 0.2)',
+          background: 'linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(15, 18, 35, 0.98) 100%)',
+          borderRadius: isMobile ? '0' : '24px',
+          padding: isMobile ? '1.5rem' : '2rem',
+          border: isMobile ? 'none' : '2px solid rgba(124, 58, 237, 0.2)',
+          borderTop: isMobile ? '2px solid rgba(124, 58, 237, 0.2)' : undefined,
+          borderBottom: isMobile ? '2px solid rgba(124, 58, 237, 0.2)' : undefined,
           boxShadow: '0 30px 90px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(124, 58, 237, 0.1)',
           position: 'relative',
           overflow: 'hidden',
@@ -360,6 +367,7 @@ export default function LearningSimulation() {
           flexDirection: 'column',
           justifyContent: isMobile ? 'flex-start' : 'space-between',
           width: '100%',
+          maxWidth: '100%',
           boxSizing: 'border-box'
         }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.8), transparent)' }} />
@@ -824,14 +832,19 @@ export default function LearningSimulation() {
       {showAIHelp && isMobile && (
         <div style={{
           width: '100%',
-          marginTop: '1rem',
-          background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',          borderRadius: '20px',
-          border: '2px solid rgba(124, 58, 237, 0.3)',
+          maxWidth: '100%',
+          marginTop: '0',
+          background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.98) 0%, rgba(26, 31, 58, 0.95) 100%)',
+          borderRadius: '0',
+          border: 'none',
+          borderTop: '2px solid rgba(124, 58, 237, 0.3)',
+          borderBottom: '2px solid rgba(124, 58, 237, 0.3)',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
           overflow: 'hidden',
           minHeight: '500px',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          boxSizing: 'border-box'
         }}>
           <PremiumAIAssistant
             title="AI Tutor"

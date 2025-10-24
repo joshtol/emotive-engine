@@ -113,7 +113,7 @@ function generateSuspicion(numPoints) {
     const points = [];
     for (let i = 0; i < numPoints; i++) {
         const t = (i / numPoints) * Math.PI * 2;
-        
+
         let x, y;
         if (t < Math.PI) {
             // Right side - outer arc of the grin
@@ -125,7 +125,7 @@ function generateSuspicion(numPoints) {
             x = Math.cos(innerT) * 0.25 - 0.1;
             y = Math.sin(innerT) * 0.35;
         }
-        
+
         points.push({
             x: 0.5 + x,
             y: 0.5 + y
@@ -240,6 +240,10 @@ function generateTriangle(numPoints) {
  */
 export const SHAPE_DEFINITIONS = {
     circle: {
+        points: generateCircle(64),
+        shadow: { type: 'none' }
+    },
+    sphere: {
         points: generateCircle(64),
         shadow: { type: 'none' }
     },
