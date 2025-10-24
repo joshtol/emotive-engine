@@ -31,6 +31,9 @@ export default function RetailPage() {
     setIsClient(true)
     setIsMobile(window.innerWidth < 768)
 
+    // Fix mobile address bar height changes
+    document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`)
+
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
     }
@@ -342,7 +345,7 @@ export default function RetailPage() {
           top: 0,
           left: 0,
           width: '100%',
-          height: '100%',
+          height: 'var(--app-height, 100vh)',
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
@@ -354,7 +357,7 @@ export default function RetailPage() {
           id="retail-hero-mascot"
           style={{
             width: '100%',
-            height: '100%',
+            height: 'var(--app-height, 100vh)',
             objectFit: 'contain',
             filter: 'drop-shadow(0 10px 40px rgba(221, 74, 154, 0.4))',
           }}

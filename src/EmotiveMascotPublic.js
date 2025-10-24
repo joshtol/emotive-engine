@@ -796,22 +796,8 @@ class EmotiveMascotPublic {
 
             // Calculate offset from viewport center (what setPosition expects)
             const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
-            let offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
+            const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
 
-            // Mobile adjustment: account for canvas object-fit: contain offset
-            // When canvas uses object-fit, it may be letterboxed, shifting the visual center
-            const isMobile = window.innerWidth < 768;
-            if (isMobile && canvas) {
-                const canvasRect = canvas.getBoundingClientRect();
-                const canvasAspect = canvasRect.width / canvasRect.height;
-
-                // If canvas is letterboxed vertically (width constrained)
-                if (canvasAspect < 1) {
-                    const actualCanvasHeight = canvasRect.width; // Square canvas
-                    const verticalOffset = (canvasRect.height - actualCanvasHeight) / 2;
-                    offsetY -= verticalOffset;
-                }
-            }
 
             // Use animation on first attach, instant updates on scroll/resize
             const isFirstAttach = !this._hasAttachedBefore;
@@ -836,19 +822,8 @@ class EmotiveMascotPublic {
                     const elementCenterX = rect.left + rect.width / 2;
                     const elementCenterY = rect.top + rect.height / 2;
                     const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
-                    let offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
+                    const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
 
-                    // Mobile adjustment for object-fit: contain
-                    const isMobile = window.innerWidth < 768;
-                    if (isMobile && this._canvas) {
-                        const canvasRect = this._canvas.getBoundingClientRect();
-                        const canvasAspect = canvasRect.width / canvasRect.height;
-                        if (canvasAspect < 1) {
-                            const actualCanvasHeight = canvasRect.width;
-                            const verticalOffset = (canvasRect.height - actualCanvasHeight) / 2;
-                            offsetY -= verticalOffset;
-                        }
-                    }
 
                     this.setPosition(offsetX, offsetY, 0);
                 },
@@ -861,19 +836,8 @@ class EmotiveMascotPublic {
                     const elementCenterX = rect.left + rect.width / 2;
                     const elementCenterY = rect.top + rect.height / 2;
                     const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
-                    let offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
+                    const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
 
-                    // Mobile adjustment for object-fit: contain
-                    const isMobile = window.innerWidth < 768;
-                    if (isMobile && this._canvas) {
-                        const canvasRect = this._canvas.getBoundingClientRect();
-                        const canvasAspect = canvasRect.width / canvasRect.height;
-                        if (canvasAspect < 1) {
-                            const actualCanvasHeight = canvasRect.width;
-                            const verticalOffset = (canvasRect.height - actualCanvasHeight) / 2;
-                            offsetY -= verticalOffset;
-                        }
-                    }
 
                     this.setPosition(offsetX, offsetY, 0);
                 }
