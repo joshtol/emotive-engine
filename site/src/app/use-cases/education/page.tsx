@@ -352,14 +352,9 @@ export default function EducationPage() {
           ref={canvasRef}
           id="education-hero-mascot"
           style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '100vmin',
-            height: '100vmin',
-            maxWidth: '100%',
-            maxHeight: '100%',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
             filter: 'drop-shadow(0 10px 40px rgba(124, 58, 237, 0.4))',
           }}
         />

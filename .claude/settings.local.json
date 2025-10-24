@@ -13,7 +13,9 @@
       "Bash(xcopy /E /I /Y skills \"%USERPROFILE%\\.claude\\skills\\emotive-mascot-skills\")",
       "Bash(npm run build:lean:*)",
       "Bash(npm run build:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(git add:*)",
+      "Bash(git push)"
     ],
     "deny": [],
     "ask": []
