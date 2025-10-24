@@ -3283,6 +3283,14 @@ class EmotiveRenderer {
             }
         }
 
+        // Unregister all animation loop callbacks to prevent accumulation
+        for (const key in this.loopCallbackIds) {
+            if (this.loopCallbackIds[key]) {
+                animationLoopManager.unregister(this.loopCallbackIds[key]);
+                this.loopCallbackIds[key] = null;
+            }
+        }
+
         // Clear any pending timeouts
         if (this.wakeJitterTimeout) {
             clearTimeout(this.wakeJitterTimeout);
@@ -3304,6 +3312,11 @@ class EmotiveRenderer {
         // Clear gesture compositor cache
         if (this.gestureCompositor) {
             this.gestureCompositor.clearCache();
+        }
+
+        // Destroy modular components
+        if (this.specialEffects) {
+            this.specialEffects.destroy();
         }
     }
 }
