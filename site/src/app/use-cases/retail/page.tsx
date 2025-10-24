@@ -330,8 +330,8 @@ export default function RetailPage() {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '100%',
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
@@ -356,7 +356,7 @@ export default function RetailPage() {
         position: 'relative',
         zIndex: 1,
         width: '100%',
-        maxWidth: '100vw',
+        maxWidth: '100%',
         overflowX: 'hidden',
       }}>
         {/* Hero Section */}

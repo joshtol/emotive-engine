@@ -325,8 +325,8 @@ export default function EducationPage() {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '100%',
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
@@ -350,6 +350,9 @@ export default function EducationPage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
+        overflowX: 'hidden',
+        width: '100%',
+        maxWidth: '100%',
       }}>
         {/* Hero Section */}
         <section style={{
@@ -361,7 +364,7 @@ export default function EducationPage() {
           background: 'radial-gradient(ellipse at top, rgba(124,58,237,0.15) 0%, transparent 50%), linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
           position: 'relative',
           width: '100%',
-          maxWidth: '100vw',
+          maxWidth: '100%',
           boxSizing: 'border-box',
           overflow: 'hidden',
         }}>
@@ -371,7 +374,8 @@ export default function EducationPage() {
             top: 0,
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '800px',
+            width: '100%',
+            maxWidth: '800px',
             height: '400px',
             background: 'radial-gradient(ellipse, rgba(124, 58, 237, 0.08) 0%, transparent 70%)',
             filter: 'blur(80px)',
@@ -636,15 +640,18 @@ export default function EducationPage() {
 
         {/* Full Learning Experience - THE PRIMARY DEMO */}
         <section id="demo" style={{
-          padding: '2rem',
+          padding: isMobile ? '1rem' : '2rem',
           maxWidth: '100%',
           margin: '0 auto',
           position: 'relative',
           zIndex: 2,
-          minHeight: '100vh',
+          minHeight: isMobile ? 'auto' : '100vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          width: '100%',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
         }}>
           {/* Ambient background */}
           <div style={{
@@ -662,7 +669,8 @@ export default function EducationPage() {
             position: 'absolute',
             bottom: '20%',
             right: '15%',
-            width: '600px',
+            width: '100%',
+            maxWidth: '600px',
             height: '600px',
             background: 'radial-gradient(circle, rgba(20, 184, 166, 0.04) 0%, transparent 70%)',
             pointerEvents: 'none',
@@ -670,21 +678,24 @@ export default function EducationPage() {
           }} />
 
           <div style={{
-            maxWidth: '1600px',
+            maxWidth: isMobile ? '100%' : '1600px',
             width: '100%',
-            position: 'relative'
+            position: 'relative',
+            boxSizing: 'border-box'
           }}>
             {/* Demo Header */}
             <div style={{
               textAlign: 'center',
-              marginBottom: '4rem',
-              padding: '3rem',
+              marginBottom: isMobile ? '2rem' : '4rem',
+              padding: isMobile ? '1.5rem' : '3rem',
               background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(20, 184, 166, 0.05) 100%)',
-              borderRadius: '32px',
+              borderRadius: isMobile ? '16px' : '32px',
               border: '2px solid rgba(124, 58, 237, 0.2)',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(124, 58, 237, 0.1)',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              width: '100%',
+              boxSizing: 'border-box'
             }}>
               {/* Top accent */}
               <div style={{
@@ -742,8 +753,10 @@ export default function EducationPage() {
             {/* Full-width Learning Interface */}
             <div style={{
               background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%)',
-              borderRadius: isMobile ? '20px' : '40px',
-              border: isMobile ? '2px solid rgba(124, 58, 237, 0.2)' : '3px solid rgba(124, 58, 237, 0.2)',
+              borderRadius: isMobile ? '0' : '40px',
+              border: isMobile ? 'none' : '3px solid rgba(124, 58, 237, 0.2)',
+              borderTop: isMobile ? '3px solid rgba(124, 58, 237, 0.2)' : undefined,
+              borderBottom: isMobile ? '3px solid rgba(124, 58, 237, 0.2)' : undefined,
               boxShadow: `
                 0 40px 120px rgba(0, 0, 0, 0.7),
                 0 0 0 1px rgba(124, 58, 237, 0.1),
@@ -752,6 +765,7 @@ export default function EducationPage() {
               overflow: 'hidden',
               position: 'relative',
               width: '100%',
+              maxWidth: '100%',
               boxSizing: 'border-box'
             }}>
               {/* Top accent */}
@@ -867,17 +881,20 @@ export default function EducationPage() {
 
         {/* Features Section */}
         <section id="features" style={{
-          padding: '6rem 2rem',
+          padding: isMobile ? '3rem 1rem' : '6rem 2rem',
           maxWidth: '1400px',
-          margin: '4rem auto 6rem auto',
+          margin: isMobile ? '2rem auto 3rem auto' : '4rem auto 6rem auto',
           background: 'rgba(10, 10, 10, 0.95)',
-          borderRadius: '32px',
+          borderRadius: isMobile ? '16px' : '32px',
           border: '1px solid rgba(124, 58, 237, 0.15)',
           position: 'relative',
           zIndex: 2,
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
           transform: 'translateZ(0)',
           willChange: 'transform',
+          width: '100%',
+          maxWidth: isMobile ? 'calc(100% - 2rem)' : '1400px',
+          boxSizing: 'border-box',
         }}>
           {/* Top gradient line */}
           <div style={{
@@ -915,7 +932,7 @@ export default function EducationPage() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: 'clamp(1.5rem, 3vw, 2.5rem)',
           }}>
             {[
@@ -1009,21 +1026,26 @@ export default function EducationPage() {
 
         {/* Target Market */}
         <section style={{
-          padding: '6rem 2rem',
+          padding: isMobile ? '3rem 1rem' : '6rem 2rem',
           maxWidth: '1400px',
-          margin: '4rem auto 6rem auto',
+          margin: isMobile ? '2rem auto 3rem auto' : '4rem auto 6rem auto',
           position: 'relative',
           zIndex: 2,
+          width: '100%',
+          maxWidth: isMobile ? 'calc(100% - 2rem)' : '1400px',
+          boxSizing: 'border-box',
         }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.18) 0%, rgba(167, 139, 250, 0.12) 100%)',
-            borderRadius: '32px',
-            padding: 'clamp(3rem, 5vw, 4rem)',
+            borderRadius: isMobile ? '16px' : '32px',
+            padding: isMobile ? '2rem 1.5rem' : 'clamp(3rem, 5vw, 4rem)',
             border: '1px solid rgba(124, 58, 237, 0.3)',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
             textAlign: 'center',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             {/* Top gradient line */}
             <div style={{
@@ -1055,7 +1077,7 @@ export default function EducationPage() {
             </p>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
               gap: 'clamp(1.5rem, 3vw, 2rem)',
               marginTop: '2rem'
             }}>

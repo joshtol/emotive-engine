@@ -326,8 +326,8 @@ export default function SmartHomePage() {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '100%',
           pointerEvents: 'none',
           zIndex: 100,
           opacity: 1,
@@ -351,6 +351,9 @@ export default function SmartHomePage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
+        width: '100%',
+        maxWidth: '100%',
+        overflowX: 'hidden',
       }}>
         {/* Hero Section - Apple Style */}
         <section style={{
@@ -362,8 +365,9 @@ export default function SmartHomePage() {
           background: 'radial-gradient(ellipse at top, rgba(139,92,246,0.15) 0%, transparent 50%), linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
           position: 'relative',
           width: '100%',
-          maxWidth: '100vw',
+          maxWidth: '100%',
           boxSizing: 'border-box',
+          overflow: 'hidden',
         }}>
           {/* Ambient light effect */}
           <div style={{
@@ -371,7 +375,8 @@ export default function SmartHomePage() {
             top: 0,
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '800px',
+            width: '100%',
+            maxWidth: '800px',
             height: '400px',
             background: 'radial-gradient(ellipse, rgba(139, 92, 246, 0.1) 0%, transparent 70%)',
             filter: 'blur(80px)',
@@ -594,15 +599,18 @@ export default function SmartHomePage() {
 
         {/* Interactive Demo Section */}
         <section id="demo" style={{
-          padding: '2rem',
+          padding: isMobile ? '1rem' : '2rem',
           maxWidth: '100%',
           margin: '0 auto',
           position: 'relative',
           zIndex: 2,
-          minHeight: '100vh',
+          minHeight: isMobile ? 'auto' : '100vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          width: '100%',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
         }}>
           {/* Ambient background */}
           <div style={{
@@ -623,14 +631,16 @@ export default function SmartHomePage() {
             {/* Header */}
             <div style={{
               textAlign: 'center',
-              marginBottom: '4rem',
-              padding: '3rem',
+              marginBottom: isMobile ? '2rem' : '4rem',
+              padding: isMobile ? '1.5rem' : '3rem',
               background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)',
-              borderRadius: '32px',
+              borderRadius: isMobile ? '16px' : '32px',
               border: '2px solid rgba(139, 92, 246, 0.2)',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(139, 92, 246, 0.1)',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              width: '100%',
+              boxSizing: 'border-box'
             }}>
               <div style={{
                 position: 'absolute',
@@ -659,35 +669,36 @@ export default function SmartHomePage() {
               </div>
               <h2 style={{
                 fontFamily: 'var(--font-primary)',
-                fontSize: 'clamp(3rem, 6vw, 5rem)',
+                fontSize: 'clamp(1.5rem, 5vw, 5rem)',
                 fontWeight: '900',
                 marginBottom: '1rem',
-                letterSpacing: '-0.03em',
+                letterSpacing: '-0.02em',
                 background: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 textShadow: '0 0 60px rgba(139, 92, 246, 0.3)',
+                lineHeight: 1.1,
               }}>
                 Your Smart Home Hub
               </h2>
               <p style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'clamp(1.15rem, 2.2vw, 1.4rem)',
+                fontSize: 'clamp(0.95rem, 2.2vw, 1.4rem)',
                 color: 'rgba(255, 255, 255, 0.75)',
                 maxWidth: '900px',
                 margin: '0 auto',
                 lineHeight: 1.7,
                 fontWeight: '500'
               }}>
-                See how visual feedback brings your interface to life. The mascot morphs shapes, changes emotions, and responds with animations to every interaction. Powered by Emotive Engine.
+                See how visual feedback brings your interface to life. The mascot morphs shapes, changes emotions, and responds with animations to every interaction.
               </p>
             </div>
 
             {/* Simulation */}
             <div style={{
               background: 'linear-gradient(135deg, rgba(15, 18, 35, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%)',
-              borderRadius: isMobile ? '20px' : '40px',
+              borderRadius: isMobile ? '16px' : '40px',
               border: '3px solid rgba(139, 92, 246, 0.2)',
               boxShadow: `
                 0 40px 120px rgba(0, 0, 0, 0.7),
@@ -696,9 +707,13 @@ export default function SmartHomePage() {
               `,
               overflow: 'hidden',
               position: 'relative',
-              height: isMobile ? 'calc(100vh - 2rem)' : 'auto',
+              height: isMobile ? 'clamp(500px, 80vh, 700px)' : 'auto',
+              minHeight: isMobile ? '500px' : 'auto',
+              maxHeight: isMobile ? '700px' : 'none',
               display: isMobile ? 'flex' : 'block',
-              flexDirection: isMobile ? 'column' : undefined
+              flexDirection: isMobile ? 'column' : undefined,
+              width: '100%',
+              boxSizing: 'border-box'
             }}>
               <div style={{
                 position: 'absolute',
@@ -717,17 +732,20 @@ export default function SmartHomePage() {
 
         {/* Features Section - Bento Grid */}
         <section id="features" style={{
-          padding: '6rem 2rem',
+          padding: isMobile ? '3rem 1rem' : '6rem 2rem',
           maxWidth: '1400px',
-          margin: '4rem auto 6rem auto',
+          margin: isMobile ? '2rem auto 3rem auto' : '4rem auto 6rem auto',
           background: 'rgba(10, 10, 10, 0.95)',
-          borderRadius: '32px',
+          borderRadius: isMobile ? '16px' : '32px',
           border: '1px solid rgba(139, 92, 246, 0.15)',
           position: 'relative',
           zIndex: 2,
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
           transform: 'translateZ(0)',
           willChange: 'transform',
+          width: '100%',
+          maxWidth: isMobile ? 'calc(100% - 2rem)' : '1400px',
+          boxSizing: 'border-box',
         }}>
           <div style={{
             position: 'absolute',
@@ -764,7 +782,7 @@ export default function SmartHomePage() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: 'clamp(1.5rem, 3vw, 2.5rem)',
           }}>
             {[
@@ -858,21 +876,26 @@ export default function SmartHomePage() {
 
         {/* Integration Info */}
         <section style={{
-          padding: '6rem 2rem',
+          padding: isMobile ? '3rem 1rem' : '6rem 2rem',
           maxWidth: '1400px',
-          margin: '4rem auto 6rem auto',
+          margin: isMobile ? '2rem auto 3rem auto' : '4rem auto 6rem auto',
           position: 'relative',
           zIndex: 2,
+          width: '100%',
+          maxWidth: isMobile ? 'calc(100% - 2rem)' : '1400px',
+          boxSizing: 'border-box',
         }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%)',
-            borderRadius: '32px',
-            padding: 'clamp(3rem, 5vw, 4rem)',
+            borderRadius: isMobile ? '16px' : '32px',
+            padding: isMobile ? '2rem 1.5rem' : 'clamp(3rem, 5vw, 4rem)',
             border: '1px solid rgba(139, 92, 246, 0.3)',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
             textAlign: 'center',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             <div style={{
               position: 'absolute',
@@ -903,7 +926,7 @@ export default function SmartHomePage() {
             </p>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
               gap: 'clamp(1.5rem, 3vw, 2rem)',
               marginTop: '2rem'
             }}>
@@ -942,21 +965,26 @@ export default function SmartHomePage() {
 
         {/* Final CTA Section */}
         <section style={{
-          padding: '8rem 2rem',
+          padding: isMobile ? '4rem 1rem' : '8rem 2rem',
           maxWidth: '1200px',
           margin: '0 auto',
           textAlign: 'center',
           position: 'relative',
           zIndex: 2,
+          width: '100%',
+          maxWidth: isMobile ? 'calc(100% - 2rem)' : '1200px',
+          boxSizing: 'border-box',
         }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%)',
-            borderRadius: '32px',
-            padding: 'clamp(3rem, 5vw, 5rem)',
+            borderRadius: isMobile ? '16px' : '32px',
+            padding: isMobile ? '2rem 1.5rem' : 'clamp(3rem, 5vw, 5rem)',
             border: '2px solid rgba(139, 92, 246, 0.3)',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             {/* Glow effect */}
             <div style={{
@@ -964,7 +992,8 @@ export default function SmartHomePage() {
               top: '-50%',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '600px',
+              width: '100%',
+              maxWidth: '600px',
               height: '600px',
               background: 'radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%)',
               filter: 'blur(60px)',

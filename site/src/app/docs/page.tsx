@@ -10,6 +10,8 @@ export default function DocsHomePage() {
         padding: '4rem',
         maxWidth: '1000px',
         margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box',
       }}
     >
       <h1 style={{

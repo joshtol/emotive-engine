@@ -75,15 +75,16 @@ export default function DocsContent({ title, content }: DocsContentProps) {
       className="docs-article"
       style={{
         flex: 1,
-        padding: '3rem 4rem',
+        padding: 'clamp(2rem, 5vw, 3rem) clamp(1rem, 5vw, 4rem)',
         maxWidth: '900px',
         margin: '0 auto',
         width: '100%',
+        boxSizing: 'border-box',
       }}
     >
       {/* Title */}
       <h1 style={{
-        fontSize: '3rem',
+        fontSize: 'clamp(2rem, 6vw, 3rem)',
         fontWeight: '700',
         marginBottom: '2rem',
         color: '#ffffff',

@@ -28,6 +28,8 @@ export default function HomePage() {
   const router = useRouter()
   const lastGestureRef = useRef<number>(-1)
   const lastZIndexRef = useRef<number>(100)
+  const rafRef = useRef<number | null>(null)
+  const tickingRef = useRef(false)
   const mascotContainerRef = useRef<HTMLDivElement>(null)
   const [mascot, setMascot] = useState<any>(null)
   const [waitlistEmail, setWaitlistEmail] = useState('')
@@ -39,7 +41,8 @@ export default function HomePage() {
   useEffect(() => {
     if (!mascot) return
 
-    const handleScroll = () => {
+    const updateMascotOnScroll = () => {
+      try {
       const scrollY = window.scrollY
       const viewportHeight = window.innerHeight
       const viewportWidth = window.innerWidth
@@ -101,6 +104,21 @@ export default function HomePage() {
 
         lastGestureRef.current = currentZone
       }
+      } catch (error) {
+        console.error('Scroll update error:', error)
+      } finally {
+        tickingRef.current = false
+      }
+    }
+
+    const handleScroll = () => {
+      if (!tickingRef.current) {
+        tickingRef.current = true
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current)
+        }
+        rafRef.current = requestAnimationFrame(updateMascotOnScroll)
+      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -108,6 +126,11 @@ export default function HomePage() {
 
     return () => {
       window.removeEventListener('scroll', handleScroll)
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+      tickingRef.current = false
     }
   }, [mascot])
 
@@ -171,7 +194,7 @@ export default function HomePage() {
         position: 'relative',
         zIndex: 1,
         width: '100%',
-        maxWidth: '100vw',
+        maxWidth: '100%',
         overflowX: 'hidden',
       }}>
 
@@ -184,7 +207,7 @@ export default function HomePage() {
           padding: 'clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 2rem)',
           position: 'relative',
           width: '100%',
-          maxWidth: '100vw',
+          maxWidth: '100%',
           boxSizing: 'border-box',
         }}>
           {/* Premium gradient background layers */}
@@ -203,7 +226,8 @@ export default function HomePage() {
             top: '15%',
             left: '50%',
             transform: 'translate(-50%, 0)',
-            width: 'min(1000px, 90vw)',
+            width: '100%',
+            maxWidth: '1000px',
             height: 'min(500px, 50vh)',
             background: 'radial-gradient(ellipse, rgba(102, 126, 234, 0.12) 0%, rgba(165, 180, 252, 0.08) 40%, transparent 70%)',
             filter: 'blur(100px)',
@@ -571,7 +595,7 @@ export default function HomePage() {
                 opacity: 0.6,
                 fontWeight: '600',
               }}>
-                +25% conversion rate
+                Real-time emotion detection
               </div>
             </Link>
 
@@ -627,7 +651,7 @@ export default function HomePage() {
                 opacity: 0.6,
                 fontWeight: '600',
               }}>
-                +35% user satisfaction
+                Context-aware automation
               </div>
             </Link>
 
@@ -683,7 +707,7 @@ export default function HomePage() {
                 opacity: 0.6,
                 fontWeight: '600',
               }}>
-                +50% task completion
+                Frustration detection
               </div>
             </Link>
 
