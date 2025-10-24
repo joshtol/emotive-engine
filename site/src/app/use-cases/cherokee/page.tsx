@@ -31,6 +31,7 @@ export default function CherokeePage() {
   const cardCanvasRef = useRef<HTMLCanvasElement>(null)
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
+  const [showAudioMessage, setShowAudioMessage] = useState(false)
 
   // Feedback modal state
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
@@ -240,6 +241,7 @@ export default function CherokeePage() {
       ? (selectedPhraseIndex + 1) % greetings.length
       : (selectedPhraseIndex - 1 + greetings.length) % greetings.length
     setSelectedPhraseIndex(newIndex)
+    setShowAudioMessage(false) // Reset audio message on card change
   }
 
   // Touch handlers for swipe
@@ -1993,7 +1995,10 @@ export default function CherokeePage() {
 
         return (
           <div
-            onClick={() => setSelectedPhraseIndex(null)}
+            onClick={() => {
+              setSelectedPhraseIndex(null)
+              setShowAudioMessage(false)
+            }}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -2051,7 +2056,10 @@ export default function CherokeePage() {
 
               {/* Close button */}
               <button
-                onClick={() => setSelectedPhraseIndex(null)}
+                onClick={() => {
+                  setSelectedPhraseIndex(null)
+                  setShowAudioMessage(false)
+                }}
                 style={{
                   position: 'absolute',
                   top: '1rem',
@@ -2193,8 +2201,46 @@ export default function CherokeePage() {
                     <div style={{
                       fontSize: 'clamp(1rem, 2vw, 1.3rem)',
                       opacity: 0.8,
-                      fontStyle: 'italic'
+                      fontStyle: 'italic',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: isMobile ? 'center' : 'flex-start',
+                      gap: '0.75rem'
                     }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowAudioMessage(!showAudioMessage)
+                        }}
+                        style={{
+                          background: 'rgba(255,255,255,0.1)',
+                          border: `1px solid ${selected.color}40`,
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          boxShadow: `0 2px 8px ${selected.color}30`,
+                          flexShrink: 0
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = `${selected.color}30`
+                          e.currentTarget.style.transform = 'scale(1.1)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                          e.currentTarget.style.transform = 'scale(1)'
+                        }}
+                        aria-label="Audio pronunciation"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M11 5L6 9H2v6h4l5 4V5z" fill={selected.color} opacity="0.9"/>
+                          <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" stroke={selected.color} strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
+                        </svg>
+                      </button>
                       <strong>{selected.pronunciation}</strong>
                     </div>
                   </div>
@@ -2232,6 +2278,104 @@ export default function CherokeePage() {
               }}>
                 💡 <span style={{ opacity: 0.7 }}>{selected.context}</span>
               </div>
+
+              {/* Audio message popup - shows when speaker button clicked */}
+              {showAudioMessage && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowAudioMessage(false)
+                  }}
+                  style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.6)',
+                    zIndex: 1100,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '2rem',
+                    animation: 'fadeIn 0.2s ease-out',
+                  }}
+                >
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      maxWidth: '500px',
+                      width: '100%',
+                      padding: '2rem 2.5rem',
+                      background: `linear-gradient(135deg, ${selected.color}35, ${selected.color}15)`,
+                      backdropFilter: 'blur(40px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                      borderRadius: '20px',
+                      border: `1px solid ${selected.color}60`,
+                      textAlign: 'center',
+                      boxShadow: `0 20px 60px ${selected.color}40, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
+                      animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* Close button */}
+                    <button
+                      onClick={() => setShowAudioMessage(false)}
+                      style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        background: 'transparent',
+                        border: 'none',
+                        width: '40px',
+                        height: '40px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.1)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)'
+                      }}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+
+                    <div style={{ marginBottom: '1rem', fontSize: '3rem' }}>🎙️</div>
+                    <div style={{
+                      fontSize: 'clamp(1.1rem, 2vw, 1.3rem)',
+                      color: 'rgba(255,255,255,0.95)',
+                      fontWeight: '600',
+                      lineHeight: 1.5,
+                      marginBottom: '1rem'
+                    }}>
+                      Audio Pronunciation Coming Soon
+                    </div>
+                    <div style={{
+                      fontSize: 'clamp(0.95rem, 1.5vw, 1.05rem)',
+                      color: 'rgba(255,255,255,0.85)',
+                      lineHeight: 1.6,
+                      marginBottom: '1rem'
+                    }}>
+                      Audio will be added through partnership with fluent native Cherokee speakers
+                    </div>
+                    <div style={{
+                      fontSize: '0.9rem',
+                      opacity: 0.7,
+                      fontStyle: 'italic',
+                      color: selected.color
+                    }}>
+                      We're committed to authentic representation of the Cherokee language
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Progress indicator */}
               <div style={{
