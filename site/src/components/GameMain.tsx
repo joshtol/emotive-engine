@@ -88,8 +88,6 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
       if (!canvasRef.current) return
 
       try {
-        console.log('[GameMain] Starting engine initialization...')
-
         // Measure canvas area and calculate 2x supersampling
         const canvasArea = document.querySelector('.game-canvas-area')
         if (canvasArea && canvasRef.current) {
@@ -151,7 +149,6 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
           }
         })
 
-        console.log('[GameMain] Mascot instance created')
         mascotRef.current = mascot
         setMascot(mascot) // Set mascot state
 
@@ -162,11 +159,9 @@ export default function GameMain({ engine, score, combo, currentUndertone, onGes
 
         // Initialize the engine with canvas element
         await mascot.init(canvasRef.current)
-        console.log('[GameMain] Mascot initialized with canvas')
 
         // Start the engine
         mascot.start()
-        console.log('[GameMain] Engine started')
 
       } catch (error) {
         console.error('[GameMain] Engine initialization failed:', error)

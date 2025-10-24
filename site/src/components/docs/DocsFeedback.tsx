@@ -30,7 +30,6 @@ export default function DocsFeedback({ docPath }: DocsFeedbackProps) {
       //   userAgent: navigator.userAgent,
       // })
 
-      console.log('Feedback submitted:', { docPath, helpful: isHelpful })
     } catch (error) {
       console.error('Failed to submit feedback:', error)
     }

@@ -178,7 +178,7 @@ export default function AICheckoutAssistant({ onLLMResponse }: AICheckoutAssista
           }
         }
       } catch (apiError) {
-        console.log('API unavailable, using demo mode')
+        // API unavailable, will fall back to demo mode
       }
 
       // Fallback to demo mode if API fails

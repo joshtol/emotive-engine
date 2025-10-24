@@ -126,7 +126,6 @@ export class RetailScene implements Scene {
   }
 
   onComplete(): void {
-    console.log('Retail checkout complete!')
     this.completionCallback?.()
   }
 

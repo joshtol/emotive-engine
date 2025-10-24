@@ -125,7 +125,6 @@ export class HealthcareScene implements Scene {
   }
 
   onComplete(): void {
-    console.log('Healthcare form submitted!')
     this.completionCallback?.()
   }
 

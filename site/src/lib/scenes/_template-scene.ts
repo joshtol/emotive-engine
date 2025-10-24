@@ -119,7 +119,6 @@ export class TemplateScene implements Scene {
   }
 
   onComplete(): void {
-    console.log('Template scene completed!')
     this.completionCallback?.()
   }
 

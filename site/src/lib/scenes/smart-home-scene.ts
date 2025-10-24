@@ -118,7 +118,6 @@ export class SmartHomeScene implements Scene {
   }
 
   onComplete(): void {
-    console.log('All smart home devices activated!')
     this.completionCallback?.()
   }
 

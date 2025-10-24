@@ -142,7 +142,6 @@ export class SceneManager {
     // Set completion callback
     if (scene.setOnCompleteCallback) {
       scene.setOnCompleteCallback(() => {
-        console.log(`Scene completed: ${sectionId}`)
         this.onSceneComplete?.(sectionId)
       })
     }

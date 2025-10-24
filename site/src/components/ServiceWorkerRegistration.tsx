@@ -28,7 +28,6 @@ export default function ServiceWorkerRegistration() {
           scope: '/'
         })
 
-        console.log('[SW] Service Worker registered:', registration.scope)
 
         // Check for updates periodically
         registration.addEventListener('updatefound', () => {
@@ -38,7 +37,6 @@ export default function ServiceWorkerRegistration() {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // New version available
-                console.log('[SW] New version available, refresh to update')
 
                 // Optionally show update notification to user
                 if (confirm('New version available! Reload to update?')) {
@@ -52,7 +50,6 @@ export default function ServiceWorkerRegistration() {
 
         // Listen for controller change (new SW activated)
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('[SW] Controller changed, reloading page')
           window.location.reload()
         })
 

@@ -299,7 +299,7 @@ export default function AISmartHomeAssistant({ onEmotionChange, onLLMResponse }:
           }
         }
       } catch (apiError) {
-        console.log('API unavailable, using demo mode')
+        // API unavailable, will fall back to demo mode
       }
 
       // Fallback to demo mode

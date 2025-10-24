@@ -122,7 +122,6 @@ export class EducationScene implements Scene {
   }
 
   onComplete(): void {
-    console.log('Math problem solved!')
     this.completionCallback?.()
   }
 
