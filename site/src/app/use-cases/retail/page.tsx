@@ -353,8 +353,14 @@ export default function RetailPage() {
           ref={canvasRef}
           id="retail-hero-mascot"
           style={{
-            width: '100%',
-            height: '100%',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '100vmin',
+            height: '100vmin',
+            maxWidth: '100%',
+            maxHeight: '100%',
             filter: 'drop-shadow(0 10px 40px rgba(221, 74, 154, 0.4))',
           }}
         />
