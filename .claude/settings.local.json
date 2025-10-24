@@ -19,7 +19,8 @@
       "Read(//c/Users/raven/.claude/skills/**)",
       "Bash(test:*)",
       "Skill(superpowers:verification-before-completion)",
-      "Bash(rmdir:*)"
+      "Bash(rmdir:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
