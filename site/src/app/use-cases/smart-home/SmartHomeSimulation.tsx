@@ -25,6 +25,7 @@ interface Message {
 
 interface SmartHomeSimulationProps {
   onDeviceChange?: (deviceType: string, action: string) => void
+  mascot?: any  // Guide mascot instance from parent
 }
 
 const INITIAL_ROOMS_DESKTOP: Room[] = [
@@ -116,7 +117,7 @@ const COLORS = {
   }
 }
 
-export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulationProps) {
+export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHomeSimulationProps) {
   const { setTimeout: setManagedTimeout } = useTimeoutManager()
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -124,8 +125,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
   const [activeScene, setActiveScene] = useState<string | null>(null)
   const [showAIHelp, setShowAIHelp] = useState(false)
   const [energyUsage, setEnergyUsage] = useState(42)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const mascotRef = useRef<any>(null)
+  const mascotStageRef = useRef<HTMLDivElement>(null)
+  const mascotRef = useRef<any>(mascot)
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
@@ -162,113 +163,52 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Initialize mascot - ONCE
+  // Attach mascot to stage when scrolled into view
   useEffect(() => {
-    // Don't initialize until client-side rendering is complete
-    if (!isClient) return
+    if (!mascot || !mascotStageRef.current) return
 
-    // Prevent re-initialization if mascot already exists
-    if (mascotRef.current) return
+    // Use Intersection Observer to detect when the stage comes into view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !mascotRef.current) {
+            // Stage is in view and mascot not yet attached
+            if (typeof mascot.attachToElement !== 'function') {
+              return
+            }
 
-    let cancelled = false
+            mascot.attachToElement(mascotStageRef.current, {
+              animate: true,
+              duration: 800,
+              scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
+              containParticles: true  // Keep particles within the stage bounds
+            })
 
-    const initMascot = async () => {
-      if (!canvasRef.current || cancelled) return
+            // Set emotion to calm when attached
+            mascot.setEmotion('calm')
 
-      try {
-        let attempts = 0
-        while (!(window as any).EmotiveMascot && attempts < 50) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          attempts++
-        }
-
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
-        if (!EmotiveMascot) return
-
-        const canvas = canvasRef.current
-        if (!canvas) return
-
-        // Wait for canvas to have dimensions
-        let retries = 0
-        while ((canvas.offsetWidth === 0 || canvas.offsetHeight === 0) && retries < 20) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          retries++
-        }
-
-        const rect = canvas.getBoundingClientRect()
-        const dpr = window.devicePixelRatio || 1
-        const width = Math.round(rect.width * dpr)
-        const height = Math.round(rect.height * dpr)
-
-        if (width === 0 || height === 0) {
-          console.error('Canvas has zero dimensions:', { width, height, rect })
-          return
-        }
-
-        canvas.setAttribute('width', width.toString())
-        canvas.setAttribute('height', height.toString())
-
-        const mascot = new EmotiveMascot({
-          canvasId: 'home-control-mascot',
-          enableAudio: false,
-          soundEnabled: false,
-          defaultEmotion: 'neutral',
-          enableGazeTracking: false,
-          enableIdleBehaviors: true,
-          targetFPS: isMobile ? 30 : 60,
-          maxParticles: isMobile ? 40 : 100,
-          primaryColor: COLORS.primary,
-          secondaryColor: COLORS.secondary,
+            mascotRef.current = mascot
+          } else if (!entry.isIntersecting && mascotRef.current) {
+            // Stage is out of view, detach mascot
+            if (typeof mascot.detachFromElement === 'function') {
+              mascot.detachFromElement()
+            }
+            mascotRef.current = null
+          }
         })
-
-        await mascot.init(canvas)
-        mascot.start()
-
-        mascot.setPosition(0, 0, 0)
-        mascot.setScale({
-          core: isMobile ? 1.3 : 1.2,
-          particles: isMobile ? 1.5 : 1.8
-        })
-
-        mascot.setBackdrop({
-          enabled: true,
-          radius: 3.5,
-          intensity: 0.9,
-          blendMode: 'normal',
-          falloff: 'smooth',
-          edgeSoftness: 0.95,
-          coreTransparency: 0.2,
-          responsive: true
-        })
-
-        mascotRef.current = mascot
-
-        setManagedTimeout(() => {
-          mascot.express?.('wave')
-        }, 500)
-
-      } catch (error) {
-        console.error('Failed to initialize mascot:', error)
+      },
+      {
+        threshold: 0.2, // Trigger when 20% of the element is visible
+        rootMargin: '0px'
       }
-    }
+    )
 
-    initMascot()
+    observer.observe(mascotStageRef.current)
 
     return () => {
-      cancelled = true
+      observer.disconnect()
     }
-  }, [isClient])
-
-  // Cleanup mascot on component unmount
-  useEffect(() => {
-    return () => {
-      if (mascotRef.current) {
-        mascotRef.current.stop?.()
-        mascotRef.current.destroy?.()
-        mascotRef.current = null
-      }
-    }
-  }, [])
+  }, [mascot, mascotStageRef, isMobile])
 
   const toggleDevice = async (roomId: string, deviceId: string) => {
     const device = rooms.find(r => r.id === roomId)?.devices.find(d => d.id === deviceId)
@@ -620,40 +560,40 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
     }}>
       {isMobile ? (
         <>
+          {/* Mascot Stage - Mobile (persistent across all views) */}
+          <div
+            ref={mascotStageRef}
+            style={{
+              background: 'radial-gradient(circle at center, rgba(255, 107, 53, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%)',
+              borderRadius: '0 0 16px 16px',
+              border: `2px solid ${COLORS.background.cardBorder}`,
+              borderTop: 'none',
+              height: '180px',
+              minHeight: '180px',
+              maxHeight: '180px',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: 'inset 0 0 60px rgba(255, 107, 53, 0.1)',
+              zIndex: 10,
+              flexShrink: 0
+            }}
+          />
+
           {!showAIHelp ? (
             /* DEVICE CONTROLS VIEW */
             <>
               <div style={{
-                height: 'clamp(140px, 20vh, 180px)',
-                width: '100%',
-                position: 'relative',
-                background: 'rgba(0, 0, 0, 0.3)',
-                borderBottom: `1px solid ${COLORS.background.cardBorder}`,
-                flexShrink: 0
-              }}>
-                <canvas
-                  ref={canvasRef}
-                  id="home-control-mascot"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    filter: 'drop-shadow(0 10px 40px rgba(255, 107, 53, 0.6))',
-                  }}
-                />
-              </div>
-
-              <div style={{
                 flex: 1,
                 overflow: 'auto',
-                padding: '0.75rem',
+                padding: '0.65rem',
                 background: COLORS.background.main,
                 WebkitOverflowScrolling: 'touch'
               }}>
                 {/* Scene buttons */}
                 <div style={{
                   display: 'flex',
-                  gap: '0.5rem',
-                  marginBottom: '1rem',
+                  gap: '0.4rem',
+                  marginBottom: '0.75rem',
                   flexWrap: 'wrap'
                 }}>
                   {[
@@ -693,8 +633,8 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr',
-                  gap: '0.75rem',
-                  marginBottom: '1rem'
+                  gap: '0.65rem',
+                  marginBottom: '0.75rem'
                 }}>
                   {rooms.map((room) => (
                     <div
@@ -702,7 +642,7 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
                       style={{
                         background: COLORS.background.card,
                         borderRadius: '12px',
-                        padding: '1rem',
+                        padding: '0.85rem',
                         border: `1px solid ${COLORS.background.cardBorder}`
                       }}
                     >
@@ -835,14 +775,14 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
 
                 {/* Energy usage */}
                 <div style={{
-                  padding: '1rem',
+                  padding: '0.85rem',
                   background: 'rgba(0, 168, 120, 0.1)',
                   borderRadius: '10px',
                   border: `1px solid ${COLORS.text.secondary}`,
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '0.75rem'
+                  marginBottom: '0.65rem'
                 }}>
                   <div>
                     <div style={{
@@ -887,25 +827,6 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
           ) : (
             /* AI CHAT VIEW */
             <>
-              <div style={{
-                height: 'clamp(140px, 20vh, 180px)',
-                width: '100%',
-                position: 'relative',
-                background: 'rgba(0, 0, 0, 0.3)',
-                borderBottom: `1px solid ${COLORS.background.cardBorder}`,
-                flexShrink: 0
-              }}>
-                <canvas
-                  ref={canvasRef}
-                  id="home-control-mascot"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    filter: 'drop-shadow(0 10px 40px rgba(255, 107, 53, 0.6))',
-                  }}
-                />
-              </div>
-
               {/* Header with close */}
               <div style={{
                 padding: '0.75rem 1rem',
@@ -1347,28 +1268,20 @@ export default function SmartHomeSimulation({ onDeviceChange }: SmartHomeSimulat
             </div>
           </div>
 
-          {/* CENTER: Mascot */}
-          <div style={{
-            height: '700px',
-            width: '500px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            background: 'rgba(255, 107, 53, 0.03)',
-            borderRadius: '20px',
-            border: `1px solid ${COLORS.background.cardBorder}`
-          }}>
-            <canvas
-              ref={canvasRef}
-              id="home-control-mascot"
-              style={{
-                width: '100%',
-                height: '100%',
-                filter: 'drop-shadow(0 20px 80px rgba(255, 107, 53, 0.6))',
-              }}
-            />
-          </div>
+          {/* CENTER: Mascot Stage */}
+          <div
+            ref={mascotStageRef}
+            style={{
+              background: 'radial-gradient(circle at center, rgba(255, 107, 53, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%)',
+              borderRadius: '20px',
+              border: `2px solid ${COLORS.background.cardBorder}`,
+              minHeight: '500px',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: 'inset 0 0 80px rgba(255, 107, 53, 0.1)',
+              zIndex: 10
+            }}
+          />
 
           {/* RIGHT: Remaining Rooms + Compact AI Chat */}
           <div style={{

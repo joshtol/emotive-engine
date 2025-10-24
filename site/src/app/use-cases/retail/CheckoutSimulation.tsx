@@ -107,7 +107,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
             mascot.attachToElement(mascotStageRef.current, {
               animate: true,
               duration: 800,
-              scale: 0.7,  // Scale mascot to 70% of original size
+              scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
               containParticles: true  // Keep particles within the stage bounds
             })
 
@@ -381,26 +381,26 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
     }}>
       {isMobile ? (
         <>
+          {/* Mascot Stage - Mobile (persistent across all views) */}
+          <div
+            ref={mascotStageRef}
+            style={{
+              background: 'radial-gradient(circle at center, rgba(0, 217, 255, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%)',
+              borderRadius: '0 0 16px 16px',
+              border: '2px solid rgba(0, 217, 255, 0.25)',
+              borderTop: 'none',
+              minHeight: '220px',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: 'inset 0 0 60px rgba(0, 217, 255, 0.1)',
+              zIndex: 1,
+              flexShrink: 0
+            }}
+          />
+
           {!showAIHelp ? (
             /* CHECKOUT VIEW */
             <>
-              {/* Mascot Stage - Mobile (persistent across all steps) */}
-              <div
-                ref={mascotStageRef}
-                style={{
-                  background: 'radial-gradient(circle at center, rgba(0, 217, 255, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%)',
-                  borderRadius: '0 0 16px 16px',
-                  border: '2px solid rgba(0, 217, 255, 0.25)',
-                  borderTop: 'none',
-                  minHeight: '220px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: 'inset 0 0 60px rgba(0, 217, 255, 0.1)',
-                  zIndex: 1,
-                  flexShrink: 0
-                }}
-              />
-
               <div style={{
                 flex: 1,
                 overflow: 'auto',
