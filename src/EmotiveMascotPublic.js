@@ -883,6 +883,10 @@ class EmotiveMascotPublic {
         // Clear containment and reset scale
         this.setContainment(null, 1);
 
+        // Reset to neutral state
+        this.setEmotion('neutral');
+        this.morphTo('sphere', { duration: 800 });
+
         return this;
     }
 
