@@ -72,28 +72,32 @@ export default function RetailPage() {
         canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
         canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
-        // Load EmotiveMascot (lean bundle)
-        const existingScript = document.querySelector('script[src^="/emotive-engine-lean.js"]')
-        let script = existingScript as HTMLScriptElement
-
-        if (!existingScript) {
-          script = document.createElement('script')
-          script.src = `/emotive-engine-lean.js`
-          script.async = true
-
-          await new Promise((resolve, reject) => {
-            script.onload = resolve
-            script.onerror = reject
-            document.head.appendChild(script)
-          })
-        }
-
-        // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
-        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
+        // Load EmotiveMascot (lean bundle) - check window first
+        let EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
 
         if (!EmotiveMascot) {
-          console.error('EmotiveMascot not found on window object')
-          return
+          const existingScript = document.querySelector('script[src^="/emotive-engine-lean.js"]')
+          let script = existingScript as HTMLScriptElement
+
+          if (!existingScript) {
+            script = document.createElement('script')
+            script.src = `/emotive-engine-lean.js`
+            script.async = true
+
+            await new Promise((resolve, reject) => {
+              script.onload = resolve
+              script.onerror = reject
+              document.head.appendChild(script)
+            })
+          }
+
+          // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
+          EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
+
+          if (!EmotiveMascot) {
+            console.error('EmotiveMascot not found on window object')
+            return
+          }
         }
 
         const mascotInstance = new EmotiveMascot({

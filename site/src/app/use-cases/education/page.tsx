@@ -73,27 +73,31 @@ export default function EducationPage() {
         canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
         canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
-        // Load EmotiveMascot
-        const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
-        let script = existingScript as HTMLScriptElement
-
-        if (!existingScript) {
-          script = document.createElement('script')
-          script.src = `/emotive-engine.js`
-          script.async = true
-
-          await new Promise((resolve, reject) => {
-            script.onload = resolve
-            script.onerror = reject
-            document.head.appendChild(script)
-          })
-        }
-
-        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+        // Load EmotiveMascot - check window first
+        let EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
 
         if (!EmotiveMascot) {
-          console.error('EmotiveMascot not found on window object')
-          return
+          const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
+          let script = existingScript as HTMLScriptElement
+
+          if (!existingScript) {
+            script = document.createElement('script')
+            script.src = `/emotive-engine.js`
+            script.async = true
+
+            await new Promise((resolve, reject) => {
+              script.onload = resolve
+              script.onerror = reject
+              document.head.appendChild(script)
+            })
+          }
+
+          EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
+
+          if (!EmotiveMascot) {
+            console.error('EmotiveMascot not found on window object')
+            return
+          }
         }
 
         const mascotInstance = new EmotiveMascot({
