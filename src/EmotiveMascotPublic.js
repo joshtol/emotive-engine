@@ -747,8 +747,6 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     attachToElement(elementOrSelector, options = {}) {
-        console.log('[EmotiveMascot] attachToElement called', elementOrSelector, options);
-
         const engine = this._getReal();
         if (!engine) {
             console.error('[EmotiveMascot] Engine not initialized');
@@ -764,8 +762,6 @@ class EmotiveMascotPublic {
             console.error(`[EmotiveMascot] Element not found: ${elementOrSelector}`);
             return this;
         }
-
-        console.log('[EmotiveMascot] Element found, storing tracking info');
 
         // Store element tracking info
         this._attachedElement = element;
@@ -802,22 +798,13 @@ class EmotiveMascotPublic {
             const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
             const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
 
-            console.log('[EmotiveMascot] attachToElement positioning:', {
-                rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
-                viewportCenter: { x: viewportCenterX, y: viewportCenterY },
-                elementCenter: { x: elementCenterX, y: elementCenterY },
-                offset: { x: offsetX, y: offsetY }
-            });
-
             // Use animation on first attach, instant updates on scroll/resize
             const isFirstAttach = !this._hasAttachedBefore;
             this._hasAttachedBefore = true;
 
             if (isFirstAttach && this._attachOptions.animate) {
-                console.log('[EmotiveMascot] Animating to position:', offsetX, offsetY);
                 this.animateToPosition(offsetX, offsetY, 0, this._attachOptions.duration);
             } else {
-                console.log('[EmotiveMascot] Setting position:', offsetX, offsetY);
                 this.setPosition(offsetX, offsetY, 0);
             }
         }
