@@ -9,6 +9,7 @@ import EmotiveFooter from '@/components/EmotiveFooter'
 import ScheduleModal from '@/components/ScheduleModal'
 import AILearningAssistant from './AILearningAssistant'
 import LearningSimulation from './LearningSimulation'
+import UseCaseNav from '@/components/UseCaseNav'
 
 export default function EducationPage() {
   const router = useRouter()
@@ -24,11 +25,7 @@ export default function EducationPage() {
   const lastGestureRef = useRef<number>(-1)
   const rafRef = useRef<number | null>(null)
   const tickingRef = useRef(false)
-  const frameCountRef = useRef(0)
-  const lastOpacityRef = useRef(1)
   const lastZIndexRef = useRef(100)
-  const lastVisibilityRef = useRef<string>('visible')
-  const lastHiddenStateRef = useRef<boolean>(false)
 
   // Detect mobile
   useEffect(() => {
@@ -82,7 +79,7 @@ export default function EducationPage() {
 
         if (!existingScript) {
           script = document.createElement('script')
-          script.src = `/emotive-engine.js?v=${Date.now()}`
+          script.src = `/emotive-engine.js`
           script.async = true
 
           await new Promise((resolve, reject) => {
@@ -253,8 +250,6 @@ export default function EducationPage() {
         if (zIndex !== lastZIndexRef.current && containerRef.current) {
           lastZIndexRef.current = zIndex
           containerRef.current.style.zIndex = String(zIndex)
-          containerRef.current.style.opacity = zIndex <= 1 ? '0' : '1'
-          containerRef.current.style.visibility = zIndex <= 1 ? 'hidden' : 'visible'
         }
 
         // Gesture points (only if visible)
@@ -435,7 +430,7 @@ export default function EducationPage() {
               letterSpacing: '-0.02em',
               padding: isMobile ? '0 0.5rem' : '0'
             }}>
-              {isMobile ? '73% More Engagement' : 'Boost Student Engagement by 73%'}
+              {isMobile ? 'Turn Frustration Into Flow' : 'Transform Struggling Students Into Confident Learners'}
             </h2>
 
             <p style={{
@@ -565,75 +560,74 @@ export default function EducationPage() {
               </button>
             </div>
 
-            {/* Stats */}
+            {/* Key Features */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: isMobile ? '1.5rem' : '2rem',
-              maxWidth: '800px',
-              margin: '0 auto',
-              paddingTop: isMobile ? '2rem' : '3rem',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+              gap: isMobile ? '2rem' : '3rem',
+              maxWidth: '900px',
+              margin: '3rem auto 0 auto',
+              paddingTop: '3rem',
               borderTop: '1px solid rgba(124, 58, 237, 0.2)',
-              padding: isMobile ? '2rem 1rem 0 1rem' : '3rem 0 0 0'
             }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '1.5rem' : '1.8rem',
+                  fontWeight: '700',
                   color: '#7C3AED',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(124, 58, 237, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
                 }}>
-                  73%
+                  Real-time
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  More Engagement
+                  Confusion Detection
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '1.5rem' : '1.8rem',
+                  fontWeight: '700',
                   color: '#7C3AED',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(124, 58, 237, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
                 }}>
-                  92%
+                  Adaptive
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  Retention Rate
+                  Difficulty Scaling
                 </div>
               </div>
-              <div style={{ textAlign: 'center', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
+              <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '1.5rem' : '1.8rem',
+                  fontWeight: '700',
                   color: '#7C3AED',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(124, 58, 237, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
                 }}>
-                  2.5x
+                  Personal
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  Faster Learning
+                  Encouragement
                 </div>
               </div>
             </div>
@@ -1066,10 +1060,10 @@ export default function EducationPage() {
               marginTop: '2rem'
             }}>
               {[
-                { icon: '📈', label: 'Increase Completion Rates', value: 'Students finish 2.5x more courses' },
-                { icon: '⭐', label: 'Boost Satisfaction', value: 'Transform struggling into thriving' },
-                { icon: '⚡', label: 'Faster Mastery', value: 'Adaptive pacing for each student' },
-                { icon: '💰', label: 'ROI in 6 Months', value: 'Higher retention = recurring revenue' },
+                { icon: '📈', label: 'Reduce Drop-off', value: 'Keep students engaged when they hit roadblocks' },
+                { icon: '⭐', label: 'Build Confidence', value: 'Transform struggling into thriving' },
+                { icon: '⚡', label: 'Personal Pacing', value: 'Adapts to each student\'s learning speed' },
+                { icon: '💰', label: 'Proven Value', value: 'Higher retention drives recurring revenue' },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -1098,44 +1092,11 @@ export default function EducationPage() {
           </div>
         </section>
 
-        {/* Back navigation */}
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          padding: '2rem',
-          textAlign: 'center',
-        }}>
-          <Link
-            href="/"
-            prefetch={false}
-            style={{
-              display: 'inline-block',
-              padding: '1rem 2rem',
-              background: 'rgba(124, 58, 237, 0.2)',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              color: 'white',
-              fontSize: '1.1rem',
-              border: '1px solid rgba(124, 58, 237, 0.4)',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              router.prefetch('/')
-              e.currentTarget.style.background = 'rgba(124, 58, 237, 0.3)'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-            }}
-            onTouchStart={() => router.prefetch('/')}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(124, 58, 237, 0.2)'
-              e.currentTarget.style.transform = 'translateY(0)'
-            }}
-          >
-            ← Back to All Use Cases
-          </Link>
-        </div>
+        {/* Use Case Navigation */}
+        <UseCaseNav currentPath="/use-cases/education" />
 
         {/* Footer Spacing */}
-        <div style={{ height: '4rem' }} />
+        <div style={{ height: '2rem' }} />
       </main>
 
       <EmotiveFooter />

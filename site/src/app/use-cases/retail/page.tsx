@@ -24,10 +24,7 @@ export default function RetailPage() {
   const lastGestureRef = useRef<number>(-1)
   const rafRef = useRef<number | null>(null)
   const tickingRef = useRef(false)
-  const frameCountRef = useRef(0)
-  const lastOpacityRef = useRef<number>(1)
   const lastZIndexRef = useRef<number>(100)
-  const lastHiddenStateRef = useRef<boolean>(false)
 
   // Detect mobile
   useEffect(() => {
@@ -81,7 +78,7 @@ export default function RetailPage() {
 
         if (!existingScript) {
           script = document.createElement('script')
-          script.src = `/emotive-engine-lean.js?v=${Date.now()}`
+          script.src = `/emotive-engine-lean.js`
           script.async = true
 
           await new Promise((resolve, reject) => {
@@ -215,15 +212,13 @@ export default function RetailPage() {
 
     const updateMascotOnScroll = () => {
       try {
-        frameCountRef.current++
-
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
         const viewportWidth = window.innerWidth
         const isMobileDevice = viewportWidth < 768
 
-        // Only update position every 3 frames to reduce blocking
-        if (frameCountRef.current % 3 === 0 && mascot && typeof mascot.setPosition === 'function') {
+        // Update position smoothly on every frame for consistent motion
+        if (mascot && typeof mascot.setPosition === 'function') {
           const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
           const yOffset = isMobileDevice
             ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
@@ -259,8 +254,6 @@ export default function RetailPage() {
         if (zIndex !== lastZIndexRef.current && containerRef.current) {
           lastZIndexRef.current = zIndex
           containerRef.current.style.zIndex = String(zIndex)
-          containerRef.current.style.opacity = zIndex <= 1 ? '0' : '1'
-          containerRef.current.style.visibility = zIndex <= 1 ? 'hidden' : 'visible'
         }
 
         // Gesture points (only if visible and not too frequent)
@@ -441,7 +434,7 @@ export default function RetailPage() {
               color: 'rgba(255,255,255,0.95)',
               letterSpacing: '-0.02em'
             }}>
-              Reduce Cart Abandonment by 40%
+              Turn Checkout Frustration Into Confidence
             </h2>
 
             <p style={{
@@ -551,75 +544,74 @@ export default function RetailPage() {
               </button>
             </div>
 
-            {/* Stats */}
+            {/* Key Features */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: isMobile ? '1.5rem' : '2rem',
-              maxWidth: '800px',
-              margin: '0 auto',
-              paddingTop: isMobile ? '2rem' : '3rem',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+              gap: isMobile ? '2rem' : '3rem',
+              maxWidth: '900px',
+              margin: '3rem auto 0 auto',
+              paddingTop: '3rem',
               borderTop: '1px solid rgba(221, 74, 154, 0.2)',
-              padding: isMobile ? '2rem 1rem 0 1rem' : '3rem 0 0 0'
             }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '1.5rem' : '1.8rem',
+                  fontWeight: '700',
                   color: '#DD4A9A',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(221, 74, 154, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(221, 74, 154, 0.3)',
                 }}>
-                  40%
+                  Real-time
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  Less Abandonment
+                  Frustration Detection
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '1.5rem' : '1.8rem',
+                  fontWeight: '700',
                   color: '#DD4A9A',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(221, 74, 154, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(221, 74, 154, 0.3)',
                 }}>
-                  85%
+                  Contextual
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  Satisfaction
+                  Assistance
                 </div>
               </div>
-              <div style={{ textAlign: 'center', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
+              <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '1.5rem' : '1.8rem',
+                  fontWeight: '700',
                   color: '#DD4A9A',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(221, 74, 154, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(221, 74, 154, 0.3)',
                 }}>
-                  35%
+                  Empathetic
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
-                  Faster Checkout
+                  Responses
                 </div>
               </div>
             </div>
@@ -1046,10 +1038,10 @@ export default function RetailPage() {
               marginTop: '2rem'
             }}>
               {[
-                { icon: '📉', label: 'Reduce Cart Abandonment', value: 'Save millions in lost revenue' },
-                { icon: '⭐', label: 'Improve NPS Scores', value: 'Turn frustrated shoppers into promoters' },
-                { icon: '⚡', label: 'Faster Throughput', value: 'Process more customers per hour' },
-                { icon: '💰', label: 'ROI in 3 Months', value: '$2.3M+ annual revenue recovery' },
+                { icon: '📉', label: 'Reduce Cart Abandonment', value: 'Detect hesitation and provide timely assistance' },
+                { icon: '⭐', label: 'Build Customer Confidence', value: 'Turn frustrated shoppers into promoters' },
+                { icon: '⚡', label: 'Streamline Checkout', value: 'Guide customers through purchase decisions' },
+                { icon: '💰', label: 'Measurable Impact', value: 'Track emotional triggers that drive conversions' },
               ].map((item, i) => (
                 <div
                   key={i}

@@ -7,6 +7,7 @@ import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import ScheduleModal from '@/components/ScheduleModal'
 import SmartHomeSimulation from './SmartHomeSimulation'
+import UseCaseNav from '@/components/UseCaseNav'
 
 export default function SmartHomePage() {
   const router = useRouter()
@@ -22,10 +23,7 @@ export default function SmartHomePage() {
   const lastGestureRef = useRef<number>(-1)
   const rafRef = useRef<number | null>(null)
   const tickingRef = useRef(false)
-  const frameCountRef = useRef(0)
-  const lastOpacityRef = useRef<number>(1)
   const lastZIndexRef = useRef<number>(100)
-  const lastHiddenStateRef = useRef<boolean>(false)
 
   // Detect mobile
   useEffect(() => {
@@ -79,7 +77,7 @@ export default function SmartHomePage() {
 
         if (!existingScript) {
           script = document.createElement('script')
-          script.src = `/emotive-engine.js?v=${Date.now()}`
+          script.src = `/emotive-engine.js`
           script.async = true
 
           await new Promise((resolve, reject) => {
@@ -211,15 +209,13 @@ export default function SmartHomePage() {
 
     const updateMascotOnScroll = () => {
       try {
-        frameCountRef.current++
-
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
         const viewportWidth = window.innerWidth
         const isMobileDevice = viewportWidth < 768
 
-        // Only update position every 3 frames to reduce blocking
-        if (frameCountRef.current % 3 === 0 && mascot && typeof mascot.setPosition === 'function') {
+        // Update position smoothly on every frame for consistent motion
+        if (mascot && typeof mascot.setPosition === 'function') {
           const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
           const yOffset = isMobileDevice
             ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
@@ -255,8 +251,6 @@ export default function SmartHomePage() {
         if (zIndex !== lastZIndexRef.current && containerRef.current) {
           lastZIndexRef.current = zIndex
           containerRef.current.style.zIndex = String(zIndex)
-          containerRef.current.style.opacity = zIndex <= 1 ? '0' : '1'
-          containerRef.current.style.visibility = zIndex <= 1 ? 'hidden' : 'visible'
         }
 
         // Gesture points
@@ -433,7 +427,7 @@ export default function SmartHomePage() {
               color: 'rgba(255,255,255,0.95)',
               letterSpacing: '-0.02em'
             }}>
-              Increase User Engagement by 65%
+              Make Automation Feel Human
             </h2>
 
             <p style={{
@@ -448,22 +442,6 @@ export default function SmartHomePage() {
               Emotive AI that responds to device states and user actions with expressive animations, transforming cold automation into warm, intuitive experiences.
             </p>
 
-            {/* Branding Callout */}
-            <div style={{
-              display: 'inline-block',
-              padding: '1rem 1.75rem',
-              background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0.08) 100%)',
-              border: '1px solid rgba(139,92,246,0.35)',
-              borderRadius: '16px',
-              marginBottom: '3rem',
-              fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
-              color: 'rgba(255,255,255,0.85)',
-              lineHeight: '1.5',
-              maxWidth: '650px',
-              boxShadow: '0 4px 20px rgba(139,92,246,0.15)',
-            }}>
-              <strong style={{ color: '#a78bfa' }}>🏠 Designed for Your Ecosystem:</strong> Seamlessly adapts to your smart home platform's visual language—custom icons, brand colors, and device-specific animations.
-            </div>
 
             <div style={{
               display: 'flex',
@@ -543,29 +521,28 @@ export default function SmartHomePage() {
             {/* Stats - Emotive Engine Capabilities */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: isMobile ? '1.5rem' : '2rem',
-              maxWidth: '800px',
-              margin: '0 auto',
-              paddingTop: isMobile ? '2rem' : '3rem',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+              gap: isMobile ? '2rem' : '3rem',
+              maxWidth: '900px',
+              margin: '3rem auto 0 auto',
+              paddingTop: '3rem',
               borderTop: '1px solid rgba(139, 92, 246, 0.2)',
-              padding: isMobile ? '2rem 1rem 0 1rem' : '3rem 0 0 0'
             }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '2rem' : '2.5rem',
+                  fontWeight: '700',
                   color: '#8B5CF6',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(139, 92, 246, 0.3)',
                 }}>
                   35+
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
                   Built-in Gestures
@@ -573,39 +550,39 @@ export default function SmartHomePage() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '2rem' : '2.5rem',
+                  fontWeight: '700',
                   color: '#8B5CF6',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(139, 92, 246, 0.3)',
                 }}>
                   15
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
                   Core Emotions
                 </div>
               </div>
-              <div style={{ textAlign: 'center', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
+              <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: isMobile ? '2.5rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
-                  fontWeight: '800',
+                  fontSize: isMobile ? '2rem' : '2.5rem',
+                  fontWeight: '700',
                   color: '#8B5CF6',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  textShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
+                  marginBottom: '0.75rem',
+                  textShadow: '0 0 20px rgba(139, 92, 246, 0.3)',
                 }}>
                   ∞
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '0.65rem' : '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textTransform: 'uppercase',
-                  letterSpacing: isMobile ? '0.5px' : '1px',
+                  letterSpacing: '1px',
                   fontWeight: '600',
                 }}>
                   Infinitely Custom
@@ -699,29 +676,12 @@ export default function SmartHomePage() {
                 fontSize: 'clamp(1.15rem, 2.2vw, 1.4rem)',
                 color: 'rgba(255, 255, 255, 0.75)',
                 maxWidth: '900px',
-                margin: '0 auto 3rem',
+                margin: '0 auto',
                 lineHeight: 1.7,
                 fontWeight: '500'
               }}>
                 See how visual feedback brings your interface to life. The mascot morphs shapes, changes emotions, and responds with animations to every interaction. Powered by Emotive Engine.
               </p>
-
-              {/* Branding Callout */}
-              <div style={{
-                display: 'inline-block',
-                padding: '1rem 1.75rem',
-                background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0.08) 100%)',
-                border: '1px solid rgba(139,92,246,0.35)',
-                borderRadius: '16px',
-                marginBottom: '3rem',
-                fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
-                color: 'rgba(255,255,255,0.85)',
-                lineHeight: '1.5',
-                maxWidth: '650px',
-                boxShadow: '0 4px 20px rgba(139,92,246,0.15)',
-              }}>
-                <strong style={{ color: '#a78bfa' }}>🏠 Designed for Your Ecosystem:</strong> Seamlessly adapts to your smart home platform's visual language—custom icons, brand colors, and device-specific animations.
-              </div>
             </div>
 
             {/* Simulation */}
@@ -1103,44 +1063,11 @@ export default function SmartHomePage() {
           </div>
         </section>
 
-        {/* Back navigation */}
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          padding: '2rem',
-          textAlign: 'center',
-        }}>
-          <Link
-            href="/"
-            prefetch={false}
-            style={{
-              display: 'inline-block',
-              padding: '1rem 2rem',
-              background: 'rgba(139, 92, 246, 0.2)',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              color: 'white',
-              fontSize: '1.1rem',
-              border: '1px solid rgba(139, 92, 246, 0.4)',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              router.prefetch('/')
-              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-            }}
-            onTouchStart={() => router.prefetch('/')}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)'
-              e.currentTarget.style.transform = 'translateY(0)'
-            }}
-          >
-            ← Back to All Use Cases
-          </Link>
-        </div>
+        {/* Use Case Navigation */}
+        <UseCaseNav currentPath="/use-cases/smart-home" />
 
         {/* Footer Spacing */}
-        <div style={{ height: '4rem' }} />
+        <div style={{ height: '2rem' }} />
       </main>
 
       <EmotiveFooter />

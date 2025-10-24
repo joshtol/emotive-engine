@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import ScheduleModal from '@/components/ScheduleModal'
+import UseCaseNav from '@/components/UseCaseNav'
 import { useTimeoutManager } from '@/hooks/useTimeoutManager'
 
 export default function CherokeePage() {
@@ -22,10 +23,7 @@ export default function CherokeePage() {
   const lastGestureRef = useRef<number>(-1)
   const rafRef = useRef<number | null>(null)
   const tickingRef = useRef(false)
-  const frameCountRef = useRef(0)
-  const lastOpacityRef = useRef<number>(1)
   const lastZIndexRef = useRef<number>(100)
-  const lastHiddenStateRef = useRef<boolean>(false)
 
   // Card modal state
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState<number | null>(null)
@@ -314,7 +312,7 @@ export default function CherokeePage() {
 
         if (!existingScript) {
           script = document.createElement('script')
-          script.src = `/emotive-engine-lean.js?v=${Date.now()}`
+          script.src = `/emotive-engine-lean.js`
           script.async = true
 
           await new Promise((resolve, reject) => {
@@ -448,8 +446,6 @@ export default function CherokeePage() {
 
     const updateMascotOnScroll = () => {
       try {
-        frameCountRef.current++
-
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
         const viewportWidth = window.innerWidth
@@ -479,9 +475,9 @@ export default function CherokeePage() {
 
         let zIndex: number
         if (selectedPhraseIndex !== null) {
-          zIndex = 1  // Hidden when modal is open
+          zIndex = -1  // Hidden when modal is open
         } else if (isPastHero) {
-          zIndex = 0  // Behind content when past hero
+          zIndex = -1  // Behind content when past hero
         } else {
           zIndex = 100  // In front during hero section
         }
@@ -491,8 +487,6 @@ export default function CherokeePage() {
         if (zIndex !== lastZIndexRef.current && containerRef.current) {
           lastZIndexRef.current = zIndex
           containerRef.current.style.zIndex = String(zIndex)
-          containerRef.current.style.opacity = zIndex === 1 || zIndex === 0 ? '0' : '1'
-          containerRef.current.style.visibility = zIndex === 1 || zIndex === 0 ? 'hidden' : 'visible'
         }
 
         // Gesture points (only if visible and not too frequent)
@@ -959,7 +953,10 @@ export default function CherokeePage() {
                 key={greeting.english}
                 onClick={() => setSelectedPhraseIndex(index)}
                 style={{
-                  background: greeting.bgColor,                  border: `2px solid ${greeting.borderColor}`,
+                  background: `linear-gradient(135deg, ${greeting.bgColor.replace('0.5', '0.25')}, ${greeting.bgColor.replace('0.5', '0.15')})`,
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: `1px solid ${greeting.borderColor.replace('0.4', '0.5')}`,
                   borderRadius: '20px',
                   padding: '2.5rem',
                   cursor: 'pointer',
@@ -967,7 +964,7 @@ export default function CherokeePage() {
                   position: 'relative',
                   overflow: 'hidden',
                   gridColumn: index === 0 || index === 7 ? (isMobile ? 'span 1' : 'span 2') : 'span 1',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                   transform: 'translateZ(0)',
                 }}
                 onMouseEnter={(e) => {
@@ -1103,24 +1100,27 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',                  border: '2px solid rgba(218,165,32,0.3)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(218,165,32,0.4)',
                   borderRadius: '24px',
                   textAlign: 'center',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   cursor: 'pointer',
-                  boxShadow: '0 8px 32px rgba(218,165,32,0.2)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-12px) scale(1.03)'
-                  e.currentTarget.style.boxShadow = '0 20px 60px rgba(218,165,32,0.4)'
+                  e.currentTarget.style.boxShadow = '0 20px 60px rgba(218,165,32,0.5), inset 0 1px 0 rgba(255,255,255,0.15)'
                   e.currentTarget.style.borderColor = 'rgba(218,165,32,0.6)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(218,165,32,0.2)'
-                  e.currentTarget.style.borderColor = 'rgba(218,165,32,0.3)'
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  e.currentTarget.style.borderColor = 'rgba(218,165,32,0.4)'
                 }}
               >
                 <div style={{
@@ -1157,24 +1157,27 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',                  border: '2px solid rgba(218,165,32,0.3)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(218,165,32,0.4)',
                   borderRadius: '24px',
                   textAlign: 'center',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   cursor: 'pointer',
-                  boxShadow: '0 8px 32px rgba(218,165,32,0.2)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-12px) scale(1.03)'
-                  e.currentTarget.style.boxShadow = '0 20px 60px rgba(218,165,32,0.4)'
+                  e.currentTarget.style.boxShadow = '0 20px 60px rgba(218,165,32,0.5), inset 0 1px 0 rgba(255,255,255,0.15)'
                   e.currentTarget.style.borderColor = 'rgba(218,165,32,0.6)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(218,165,32,0.2)'
-                  e.currentTarget.style.borderColor = 'rgba(218,165,32,0.3)'
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  e.currentTarget.style.borderColor = 'rgba(218,165,32,0.4)'
                 }}
               >
                 <div style={{
@@ -1205,24 +1208,27 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',                  border: '2px solid rgba(218,165,32,0.3)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.2) 0%, rgba(218,165,32,0.1) 100%)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(218,165,32,0.4)',
                   borderRadius: '24px',
                   textAlign: 'center',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   cursor: 'pointer',
-                  boxShadow: '0 8px 32px rgba(218,165,32,0.2)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-12px) scale(1.03)'
-                  e.currentTarget.style.boxShadow = '0 20px 60px rgba(218,165,32,0.4)'
+                  e.currentTarget.style.boxShadow = '0 20px 60px rgba(218,165,32,0.5), inset 0 1px 0 rgba(255,255,255,0.15)'
                   e.currentTarget.style.borderColor = 'rgba(218,165,32,0.6)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(218,165,32,0.2)'
-                  e.currentTarget.style.borderColor = 'rgba(218,165,32,0.3)'
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  e.currentTarget.style.borderColor = 'rgba(218,165,32,0.4)'
                 }}
               >
                 <div style={{
@@ -1295,20 +1301,23 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',                  border: '2px solid rgba(218,165,32,0.25)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(218,165,32,0.35)',
                   borderRadius: '24px',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-8px)'
-                  e.currentTarget.style.boxShadow = '0 16px 48px rgba(218,165,32,0.3)'
+                  e.currentTarget.style.boxShadow = '0 16px 48px rgba(218,165,32,0.4), inset 0 1px 0 rgba(255,255,255,0.12)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
                 }}
               >
                 <div style={{
@@ -1343,20 +1352,23 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',                  border: '2px solid rgba(218,165,32,0.25)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(218,165,32,0.35)',
                   borderRadius: '24px',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-8px)'
-                  e.currentTarget.style.boxShadow = '0 16px 48px rgba(218,165,32,0.3)'
+                  e.currentTarget.style.boxShadow = '0 16px 48px rgba(218,165,32,0.4), inset 0 1px 0 rgba(255,255,255,0.12)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
                 }}
               >
                 <div style={{
@@ -1391,20 +1403,23 @@ export default function CherokeePage() {
               <div
                 style={{
                   padding: '2.5rem',
-                  background: 'linear-gradient(135deg, rgba(218,165,32,0.15) 0%, rgba(218,165,32,0.05) 100%)',                  border: '2px solid rgba(218,165,32,0.25)',
+                  background: 'linear-gradient(135deg, rgba(218,165,32,0.18) 0%, rgba(218,165,32,0.08) 100%)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(218,165,32,0.35)',
                   borderRadius: '24px',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-8px)'
-                  e.currentTarget.style.boxShadow = '0 16px 48px rgba(218,165,32,0.3)'
+                  e.currentTarget.style.boxShadow = '0 16px 48px rgba(218,165,32,0.4), inset 0 1px 0 rgba(255,255,255,0.12)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
                 }}
               >
                 <div style={{
@@ -1965,45 +1980,10 @@ export default function CherokeePage() {
           </div>
         </section>
 
-        {/* Back navigation */}
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          padding: '2rem',
-          textAlign: 'center',
-        }}>
-          <Link
-            href="/"
-            prefetch={false}
-            style={{
-              display: 'inline-block',
-              padding: '1rem 2rem',
-              background: 'rgba(218, 165, 32, 0.2)',              borderRadius: '12px',
-              textDecoration: 'none',
-              color: 'white',
-              fontSize: '1.1rem',
-              border: '1px solid rgba(218, 165, 32, 0.4)',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-            }}
-            onMouseEnter={(e) => {
-              router.prefetch('/')
-              e.currentTarget.style.background = 'rgba(218, 165, 32, 0.3)'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(218, 165, 32, 0.3)'
-            }}
-            onTouchStart={() => router.prefetch('/')}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(218, 165, 32, 0.2)'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)'
-            }}
-          >
-            ← Back to All Use Cases
-          </Link>
-        </div>
+        {/* Use Case Navigation */}
+        <UseCaseNav currentPath="/use-cases/cherokee" />
 
-        <div style={{ height: '4rem' }} />
+        <div style={{ height: '2rem' }} />
       </main>
 
       {/* Card Modal with Navigation */}
@@ -2039,14 +2019,17 @@ export default function CherokeePage() {
                 transform: 'translateZ(0)',
                 willChange: 'transform',
                 width: '100%',
-                background: selected.bgColor,                borderRadius: '24px',
+                background: `linear-gradient(135deg, ${selected.bgColor.replace('0.5', '0.3')}, ${selected.bgColor.replace('0.5', '0.2')})`,
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                borderRadius: '24px',
                 padding: isMobile ? '2.5rem 2rem' : '3rem 2.5rem',
                 paddingBottom: isMobile ? '3rem' : '4rem',
-                border: `2px solid ${selected.borderColor}`,
+                border: `1px solid ${selected.borderColor.replace('0.4', '0.6')}`,
                 textAlign: 'center',
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: `0 20px 80px ${selected.borderColor.replace('0.4', '0.6')}`,
+                boxShadow: `0 20px 80px ${selected.borderColor.replace('0.4', '0.8')}, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
                 animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
             >
