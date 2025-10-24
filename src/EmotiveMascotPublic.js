@@ -76,6 +76,12 @@ class EmotiveMascotPublic {
             // Store canvas reference for fallback positioning
             this._canvas = typeof canvas === 'string' ? document.getElementById(canvas) : canvas;
 
+            // Force 1:1 aspect ratio - prevent squishing
+            if (this._canvas) {
+                this._canvas.style.aspectRatio = '1 / 1';
+                this._canvas.style.objectFit = 'contain';
+            }
+
             // Create engine instance with canvas
             const engineConfig = {
                 ...this._config,
