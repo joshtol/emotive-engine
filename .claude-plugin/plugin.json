@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "author": "Joshua Tollette",
   "repository": "https://github.com/joshtol/emotive-engine",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "skills": [
     "emotion-choreographer",
     "mascot-integrator",
