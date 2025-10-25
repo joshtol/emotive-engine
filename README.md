@@ -427,4 +427,6 @@ Created by Joshua Tollette
 
 <div align="center">
   <i>Making invisible states visible through coordinated particle chaos</i>
+  <br><br>
+  <sub>Emotive Engine™ is a trademark of Joshua Tollette. The Emotive Engine name and logo are not included in the MIT license.</sub>
 </div>

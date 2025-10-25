@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<!--
+  HERO BANNER CAPTURE FOR GITHUB README
+
+  Purpose: Generate animated GIF header (1280x400px) for README.md
+
+  How to capture:
+  1. Open this file in Chrome/Edge
+  2. Use a screen recorder:
+     - Windows: Xbox Game Bar (Win + G) or OBS Studio
+     - Mac: QuickTime Player (File > New Screen Recording)
+     - Chrome Extension: "Screen Recorder" or "Loom"
+  3. Record for ~10 seconds (full emotion cycle)
+  4. Convert to GIF:
+     - Use ezgif.com/video-to-gif
+     - Set width: 1280px
+     - Frame rate: 20-30 fps (balance quality/size)
+     - Colors: 256 colors
+     - Target: <5MB file size
+  5. Save as: assets/hero-banner.gif
+  6. Update README.md:
+     <img src="assets/hero-banner.gif" alt="Emotive Engine" width="100%" />
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine - Hero Banner Capture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Banner container - GitHub README width */
+        .banner {
+            width: 1280px;
+            height: 400px;
+            background: #E8E7E7;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle gradient accent */
+        .banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(135deg,
+                rgba(221, 74, 154, 0.04) 0%,
+                rgba(132, 207, 197, 0.05) 50%,
+                rgba(50, 172, 226, 0.04) 100%
+            );
+            opacity: 0.7;
+        }
+
+        /* Content layout */
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 80px;
+        }
+
+        /* Left side - Text */
+        .text-side {
+            flex: 1;
+            color: #0E0E0E;
+        }
+
+        .logo-wrapper {
+            margin-bottom: 28px;
+        }
+
+        .logo-wrapper svg {
+            width: 340px;
+            height: auto;
+        }
+
+        .text-side .tagline {
+            font-size: 17px;
+            font-weight: 400;
+            color: rgba(14, 14, 14, 0.65);
+            margin-bottom: 32px;
+            letter-spacing: 0.2px;
+            line-height: 1.6;
+            max-width: 480px;
+        }
+
+        .text-side .features {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .feature-pill {
+            background: rgba(14, 14, 14, 0.04);
+            padding: 7px 14px;
+            border-radius: 5px;
+            font-size: 12.5px;
+            font-weight: 500;
+            border: 1px solid rgba(14, 14, 14, 0.08);
+            color: rgba(14, 14, 14, 0.75);
+            letter-spacing: 0.2px;
+        }
+
+        /* Right side - Mascot */
+        .mascot-side {
+            flex: 0 0 500px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #mascot-canvas {
+            border-radius: 16px;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+        }
+
+        /* Current emotion indicator */
+        .emotion-label {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(14, 14, 14, 0.06);
+            border: 1px solid rgba(14, 14, 14, 0.1);
+            color: rgba(14, 14, 14, 0.7);
+            padding: 7px 18px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <div class="content">
+            <div class="text-side">
+                <div class="logo-wrapper">
+                    <img src="./assets/emotive-engine-full-BW.svg" alt="Emotive Engine" class="logo">
+                </div>
+                <div class="tagline">Real-Time Character Animation for AI Interfaces</div>
+
+                <div class="features">
+                    <div class="feature-pill">Pure Canvas 2D</div>
+                    <div class="feature-pill">Open Source</div>
+                    <div class="feature-pill">TypeScript Support</div>
+                    <div class="feature-pill">MIT Licensed</div>
+                </div>
+            </div>
+
+            <div class="mascot-side">
+                <canvas id="mascot-canvas" width="450" height="350"></canvas>
+                <div class="emotion-label" id="emotion-label">Neutral</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Emotive Engine (use site's public build) -->
+    <script>
+        // Suppress feature flags fetch errors (harmless for standalone demo)
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            if (args[0]?.includes?.('feature-flags')) {
+                return Promise.reject(new Error('Feature flags disabled for standalone demo'));
+            }
+            return originalFetch.apply(this, args);
+        };
+
+        // Suppress console errors from feature flags
+        const originalError = console.error;
+        console.error = function(...args) {
+            const msg = args[0]?.toString?.() || '';
+            if (msg.includes('feature flags') || msg.includes('Failed to fetch')) {
+                return; // Suppress
+            }
+            originalError.apply(console, args);
+        };
+    </script>
+    <script src="./site/public/emotive-engine.js"></script>
+
+    <script>
+        // Initialize mascot using window.EmotiveMascot (same pattern as site)
+        async function initMascot() {
+            const canvas = document.getElementById('mascot-canvas');
+            const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+
+            if (!EmotiveMascot) {
+                console.error('EmotiveMascot not found on window');
+                return;
+            }
+
+            const mascot = new EmotiveMascot({
+                canvasId: 'mascot-canvas',
+                targetFPS: 60,
+                enableAudio: false,
+                soundEnabled: false,
+                maxParticles: 120,
+                defaultEmotion: 'neutral',
+                enableGazeTracking: false,
+                enableIdleBehaviors: true,
+            });
+
+            await mascot.init(canvas);
+            mascot.start();
+
+            return mascot;
+        }
+
+        let mascot = null;
+        initMascot().then(m => mascot = m);
+
+        // Auto-cycle through emotions for banner capture
+        const emotionSequence = [
+            { emotion: 'neutral', gesture: null, label: 'Neutral', duration: 1500 },
+            { emotion: 'joy', gesture: 'bounce', label: 'Joy', duration: 2000 },
+            { emotion: 'love', gesture: 'pulse', label: 'Love', duration: 2000 },
+            { emotion: 'surprise', gesture: 'expand', label: 'Surprise', duration: 1800 },
+            { emotion: 'calm', gesture: 'breathe', label: 'Calm', duration: 2200 }
+        ];
+
+        let currentIndex = 0;
+
+        async function autoCycle() {
+            const item = emotionSequence[currentIndex];
+
+            // Set emotion
+            mascot.setEmotion(item.emotion);
+            document.getElementById('emotion-label').textContent = item.label;
+
+            // Add gesture if specified
+            if (item.gesture) {
+                setTimeout(() => {
+                    mascot.express(item.gesture);
+                }, 300);
+            }
+
+            currentIndex = (currentIndex + 1) % emotionSequence.length;
+            setTimeout(autoCycle, item.duration);
+        }
+
+        // Start auto-cycling after 1 second
+        setTimeout(autoCycle, 1000);
+    </script>
+</body>
+</html>
