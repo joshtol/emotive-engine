@@ -421,7 +421,7 @@ For detailed documentation, see the [`docs/`](./docs/) directory:
 
 ## Credits
 
-Created by Josh Tolhurst
+Created by Joshua Tollette
 
 ---
 
