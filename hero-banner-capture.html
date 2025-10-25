@@ -47,25 +47,36 @@
         .banner {
             width: 1280px;
             height: 400px;
-            background: #E8E7E7;
+            background: linear-gradient(135deg,
+                #0f0f23 0%,
+                #1a1a2e 50%,
+                #16213e 100%
+            );
             position: relative;
             overflow: hidden;
         }
 
-        /* Subtle gradient accent */
+        /* Animated gradient overlay */
         .banner::before {
             content: '';
             position: absolute;
-            top: 0;
-            right: 0;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(135deg,
-                rgba(221, 74, 154, 0.04) 0%,
-                rgba(132, 207, 197, 0.05) 50%,
-                rgba(50, 172, 226, 0.04) 100%
+            top: -50%;
+            right: -20%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle,
+                rgba(221, 74, 154, 0.15) 0%,
+                rgba(132, 207, 197, 0.12) 40%,
+                rgba(50, 172, 226, 0.10) 80%,
+                transparent 100%
             );
-            opacity: 0.7;
+            opacity: 0.6;
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
+            50% { transform: scale(1.1) rotate(5deg); opacity: 0.8; }
         }
 
         /* Content layout */
@@ -82,48 +93,53 @@
         /* Left side - Text */
         .text-side {
             flex: 1;
-            color: #0E0E0E;
+            color: #ffffff;
         }
 
         .logo-wrapper {
             margin-bottom: 28px;
+            filter: drop-shadow(0 4px 20px rgba(132, 207, 197, 0.3));
         }
 
-        .logo-wrapper svg {
-            width: 340px;
+        .logo-wrapper img {
+            width: 360px;
             height: auto;
+            filter: brightness(0) invert(1);
         }
 
         .text-side .tagline {
-            font-size: 17px;
-            font-weight: 400;
-            color: rgba(14, 14, 14, 0.65);
+            font-size: 19px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.85);
             margin-bottom: 32px;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.3px;
             line-height: 1.6;
-            max-width: 480px;
+            max-width: 500px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
         .text-side .features {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
         .feature-pill {
-            background: rgba(14, 14, 14, 0.04);
-            padding: 7px 14px;
-            border-radius: 5px;
-            font-size: 12.5px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: 500;
-            border: 1px solid rgba(14, 14, 14, 0.08);
-            color: rgba(14, 14, 14, 0.75);
-            letter-spacing: 0.2px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         /* Right side - Mascot */
         .mascot-side {
-            flex: 0 0 500px;
+            flex: 0 0 520px;
             height: 100%;
             display: flex;
             align-items: center;
@@ -132,8 +148,10 @@
         }
 
         #mascot-canvas {
-            border-radius: 16px;
-            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+            border-radius: 20px;
+            filter: drop-shadow(0 20px 50px rgba(132, 207, 197, 0.4));
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         /* Current emotion indicator */
@@ -142,15 +160,17 @@
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(14, 14, 14, 0.06);
-            border: 1px solid rgba(14, 14, 14, 0.1);
-            color: rgba(14, 14, 14, 0.7);
-            padding: 7px 18px;
-            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.95);
+            padding: 8px 20px;
+            border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
+            letter-spacing: 1.5px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
     </style>
@@ -165,10 +185,10 @@
                 <div class="tagline">Real-Time Character Animation for AI Interfaces</div>
 
                 <div class="features">
-                    <div class="feature-pill">Pure Canvas 2D</div>
+                    <div class="feature-pill">Plug & Play</div>
+                    <div class="feature-pill">Lightweight</div>
                     <div class="feature-pill">Open Source</div>
-                    <div class="feature-pill">TypeScript Support</div>
-                    <div class="feature-pill">MIT Licensed</div>
+                    <div class="feature-pill">TypeScript Ready</div>
                 </div>
             </div>
 
@@ -235,11 +255,12 @@
 
         // Auto-cycle through emotions for banner capture
         const emotionSequence = [
-            { emotion: 'neutral', gesture: null, label: 'Neutral', duration: 1500 },
-            { emotion: 'joy', gesture: 'bounce', label: 'Joy', duration: 2000 },
-            { emotion: 'love', gesture: 'pulse', label: 'Love', duration: 2000 },
-            { emotion: 'surprise', gesture: 'expand', label: 'Surprise', duration: 1800 },
-            { emotion: 'calm', gesture: 'breathe', label: 'Calm', duration: 2200 }
+            { emotion: 'joy', gesture: 'bounce', shape: 'sun', label: 'Joy', duration: 2200 },
+            { emotion: 'excited', gesture: 'spin', shape: 'solar', label: 'Excited', duration: 2000 },
+            { emotion: 'love', gesture: 'pulse', shape: 'heart', label: 'Love', duration: 2200 },
+            { emotion: 'surprise', gesture: 'expand', shape: 'star', label: 'Surprise', duration: 1800 },
+            { emotion: 'calm', gesture: 'breathe', shape: 'moon', label: 'Calm', duration: 2000 },
+            { emotion: 'focused', gesture: 'glow', shape: 'lunar', label: 'Focused', duration: 2200 }
         ];
 
         let currentIndex = 0;
@@ -251,11 +272,18 @@
             mascot.setEmotion(item.emotion);
             document.getElementById('emotion-label').textContent = item.label;
 
+            // Morph shape if specified
+            if (item.shape) {
+                setTimeout(() => {
+                    mascot.morphTo(item.shape);
+                }, 200);
+            }
+
             // Add gesture if specified
             if (item.gesture) {
                 setTimeout(() => {
                     mascot.express(item.gesture);
-                }, 300);
+                }, 400);
             }
 
             currentIndex = (currentIndex + 1) % emotionSequence.length;
