@@ -81,7 +81,7 @@ builds.push({
             name: 'EmotiveMascot',
             exports: 'named',
             sourcemap: true,
-            banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
+            banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | MIT License */`
         },
         {
             // UMD development bundle
@@ -96,7 +96,7 @@ builds.push({
             file: 'dist/mascot.js',
             format: 'es',
             sourcemap: true,
-            banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | Proprietary License */`
+            banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | MIT License */`
         },
         {
             // ES Module development bundle
@@ -122,7 +122,7 @@ builds.push({
             file: 'dist/emotive-mascot.minimal.js',
             format: 'es',
             sourcemap: true,
-            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.5.1'} | Proprietary License */`
+            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.5.1'} | MIT License */`
         },
         {
             file: 'dist/emotive-mascot.minimal.umd.js',
@@ -130,7 +130,7 @@ builds.push({
             name: 'EmotiveMascotMinimal',
             exports: 'named',
             sourcemap: true,
-            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.5.1'} | Proprietary License */`
+            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.5.1'} | MIT License */`
         }
     ],
     plugins: [
@@ -149,7 +149,7 @@ builds.push({
             file: 'dist/emotive-mascot.audio.js',
             format: 'es',
             sourcemap: true,
-            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.5.1'} | Proprietary License */`
+            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.5.1'} | MIT License */`
         },
         {
             file: 'dist/emotive-mascot.audio.umd.js',
@@ -157,7 +157,7 @@ builds.push({
             name: 'EmotiveMascotAudio',
             exports: 'named',
             sourcemap: true,
-            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.5.1'} | Proprietary License */`
+            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.5.1'} | MIT License */`
         }
     ],
     plugins: [

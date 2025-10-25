@@ -723,7 +723,6 @@ protection.
 
 ---
 
-**Copyright © 2025 Joshua Duane Tollette. All Rights Reserved.**
+**Copyright © 2025 Joshua Tollette**
 
-This changelog is part of the proprietary Emotive Engine codebase. Unauthorized
-use, reproduction, or distribution is strictly prohibited.
+Released under the MIT License. See [LICENSE.md](./LICENSE.md) for details.

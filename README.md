@@ -97,36 +97,13 @@ mascot.setEmotion(emotion);
 mascot.express(gesture);
 ```
 
-## Bundle Sizes
-
-Emotive Engine offers multiple build variants optimized for different use cases:
-
-| Build       | Size (raw) | Size (gzip) | Use Case                                       |
-| ----------- | ---------- | ----------- | ---------------------------------------------- |
-| **Full**    | ~845KB     | ~234KB      | Complete feature set with audio analysis       |
-| **Minimal** | ~782KB     | ~216KB      | Core animations without some advanced features |
-| **Audio**   | ~801KB     | ~221KB      | Audio-reactive features with visualization     |
-
-### Importing Specific Builds
+## Installation & Import
 
 ```javascript
-// Full build (default)
+// ES6 Modules (recommended)
 import EmotiveMascot from '@joshtol/emotive-engine';
 
-// Minimal build
-import EmotiveMascot from '@joshtol/emotive-engine/dist/emotive-mascot.minimal.js';
-
-// Audio build
-import EmotiveMascot from '@joshtol/emotive-engine/dist/emotive-mascot.audio.js';
-```
-
-### Tree-Shaking
-
-When using modern bundlers (Webpack 5+, Rollup, Vite), you can import only what
-you need:
-
-```javascript
-// Import specific features for smallest bundle
+// Tree-shaking with modern bundlers
 import { getEmotion, applyGesture } from '@joshtol/emotive-engine';
 ```
 
@@ -420,12 +397,9 @@ npm run build
 
 ## License
 
-Dual-licensed:
+MIT License - see [LICENSE.md](./LICENSE.md) for details.
 
-- **MIT License** - Free for open-source projects
-- **Commercial License** - Required for proprietary/commercial use
-
-See [LICENSE.md](./LICENSE.md) for details.
+Free for personal, commercial, and open-source use.
 
 ## Contributing
 
