@@ -5,7 +5,7 @@
 [![Build Status](https://img.shields.io/github/actions/workflow/status/joshtol/emotive-engine/test.yml?branch=main&label=tests)](https://github.com/joshtol/emotive-engine/actions)
 [![Coverage](https://img.shields.io/badge/coverage-47%25-yellow.svg)](https://github.com/joshtol/emotive-engine/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
-[![Performance](https://img.shields.io/badge/Performance-60fps-green.svg)](https://github.com/joshtol/emotive-engine)
+[![Performance](https://img.shields.io/badge/Performance-Optimized-green.svg)](https://github.com/joshtol/emotive-engine)
 [![Security](https://img.shields.io/badge/Security-Policy-blue.svg)](./SECURITY.md)
 [![Node Version](https://img.shields.io/node/v/@joshtol/emotive-engine.svg)](https://nodejs.org)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@joshtol/emotive-engine.svg)](https://bundlephobia.com/package/@joshtol/emotive-engine)
@@ -13,8 +13,8 @@
 
 **Open-source animation engine for AI-controlled emotional visualizations**
 
-Pure Canvas 2D • 60fps with 1000+ particles • No WebGL required • MIT Licensed •
-AI Integration Ready
+Pure Canvas 2D • High-performance particle system • No WebGL required • MIT
+Licensed • AI Integration Ready
 
 </div>
 
@@ -31,8 +31,7 @@ behaviors and smooth animations.
 ### Open Source + Premium Assets
 
 - **Core Engine**: MIT License - completely free and open source
-- **Premium Mascots**: [Emotive UI Pro](#) - $299-$999 for 20+ professional
-  character designs
+- **Premium Mascots**: Professional character designs available separately
 - **Revenue Model**: Inspired by Tailwind CSS - free engine, paid premium assets
 
 ## Quick Start
@@ -111,11 +110,10 @@ import { getEmotion, applyGesture } from '@joshtol/emotive-engine';
 
 ### ⭐ Semantic Performance System (NEW in v3.0)
 
-- **44 Built-in Performances** - Express AI intent through choreographed
-  animations
+- **Built-in Performances** - Express AI intent through choreographed animations
 - **Context-Aware Intensity** - Automatic adjustment based on user frustration,
   urgency, and magnitude
-- **98% Code Reduction** - Replace 50+ lines of manual choreography with 1 line
+- **Simplified API** - Replace manual choreography with semantic calls
 - **Universal Archetypes** - Conversational, feedback, and state performances
 
 ```javascript
@@ -130,7 +128,7 @@ await mascot.perform('celebrating_epic', {
 
 ### Emotional Intelligence
 
-- **13+ Emotional States** - Joy, anger, love, fear, surprise, sadness,
+- **Multiple Emotional States** - Joy, anger, love, fear, surprise, sadness,
   contemplation, and more
 - **Dynamic Undertones** - Intense, subdued, energetic modifiers for emotional
   depth
@@ -158,9 +156,9 @@ mascot.setEmotion('calm');
 
 ### Visual Systems
 
-- **15+ Particle Behaviors** - Orbiting, scattering, connecting, surveillance,
+- **Rich Particle Behaviors** - Orbiting, scattering, connecting, surveillance,
   and more
-- **26 Gesture Animations** - Bounce, spin, pulse, wave, shake, and complex
+- **Extensive Gesture Library** - Bounce, spin, pulse, wave, shake, and complex
   combinations
 - **Shape Morphing** - Transform between hearts, stars, triangles, circles with
   smooth interpolation
@@ -177,7 +175,7 @@ mascot.setEmotion('calm');
 
 ### Performance
 
-- **60fps Guaranteed** - Adaptive quality system maintains smooth framerate
+- **Smooth Framerate** - Adaptive quality system maintains performance
 - **Particle Pooling** - Efficient memory management with object recycling
 - **Web Worker Support** - Offload computations from main thread
 - **Mobile Optimized** - Touch support with performance scaling
