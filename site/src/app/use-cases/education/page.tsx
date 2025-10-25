@@ -887,39 +887,6 @@ export default function EducationPage() {
                   {/* Help button will be rendered here via portal */}
                   <div id="help-button-container" />
                 </div>
-
-                {/* Powered by Emotive Engine watermark */}
-                <div style={{
-                  position: 'absolute',
-                  top: isMobile ? '1rem' : '1.5rem',
-                  right: isMobile ? '1rem' : '2rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-end',
-                  gap: '0.25rem',
-                  opacity: 0.5,
-                  transition: 'opacity 0.2s ease',
-                  pointerEvents: 'none'
-                }}>
-                  <div style={{
-                    fontSize: isMobile ? '0.5rem' : '0.65rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    fontWeight: '600',
-                    color: 'rgba(255,255,255,0.6)'
-                  }}>
-                    Powered by
-                  </div>
-                  <img
-                    src="/assets/emotive-engine-full-BW.svg"
-                    alt="Emotive Engine"
-                    style={{
-                      height: isMobile ? '16px' : '20px',
-                      width: 'auto',
-                      filter: 'brightness(1.2)'
-                    }}
-                  />
-                </div>
               </div>
 
               {/* Main learning interface */}
