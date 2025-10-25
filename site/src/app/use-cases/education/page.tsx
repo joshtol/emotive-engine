@@ -594,7 +594,7 @@ export default function EducationPage() {
                 <div style={{
                   fontSize: isMobile ? '1.5rem' : '1.8rem',
                   fontWeight: '700',
-                  color: '#7C3AED',
+                  color: '#A78BFA',
                   marginBottom: '0.75rem',
                   textShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
                 }}>
@@ -614,7 +614,7 @@ export default function EducationPage() {
                 <div style={{
                   fontSize: isMobile ? '1.5rem' : '1.8rem',
                   fontWeight: '700',
-                  color: '#7C3AED',
+                  color: '#A78BFA',
                   marginBottom: '0.75rem',
                   textShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
                 }}>
@@ -634,7 +634,7 @@ export default function EducationPage() {
                 <div style={{
                   fontSize: isMobile ? '1.5rem' : '1.8rem',
                   fontWeight: '700',
-                  color: '#7C3AED',
+                  color: '#A78BFA',
                   marginBottom: '0.75rem',
                   textShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
                 }}>
@@ -745,7 +745,7 @@ export default function EducationPage() {
                 fontWeight: '900',
                 marginBottom: '1rem',
                 letterSpacing: '-0.03em',
-                background: 'linear-gradient(135deg, #7C3AED 0%, #14B8A6 100%)',
+                background: 'linear-gradient(135deg, #A78BFA 0%, #5EEAD4 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -826,7 +826,7 @@ export default function EducationPage() {
                     <div style={{
                       fontWeight: '800',
                       fontSize: isMobile ? '1.1rem' : '1.4rem',
-                      background: 'linear-gradient(135deg, #7C3AED 0%, #14B8A6 100%)',
+                      background: 'linear-gradient(135deg, #A78BFA 0%, #5EEAD4 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
@@ -886,6 +886,39 @@ export default function EducationPage() {
 
                   {/* Help button will be rendered here via portal */}
                   <div id="help-button-container" />
+                </div>
+
+                {/* Powered by Emotive Engine watermark */}
+                <div style={{
+                  position: 'absolute',
+                  top: isMobile ? '1rem' : '1.5rem',
+                  right: isMobile ? '1rem' : '2rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-end',
+                  gap: '0.25rem',
+                  opacity: 0.5,
+                  transition: 'opacity 0.2s ease',
+                  pointerEvents: 'none'
+                }}>
+                  <div style={{
+                    fontSize: isMobile ? '0.5rem' : '0.65rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    fontWeight: '600',
+                    color: 'rgba(255,255,255,0.6)'
+                  }}>
+                    Powered by
+                  </div>
+                  <img
+                    src="/assets/emotive-engine-full-BW.svg"
+                    alt="Emotive Engine"
+                    style={{
+                      height: isMobile ? '16px' : '20px',
+                      width: 'auto',
+                      filter: 'brightness(1.2)'
+                    }}
+                  />
                 </div>
               </div>
 
@@ -956,7 +989,7 @@ export default function EducationPage() {
                 icon: '🧠',
                 title: 'Real-Time Confusion Detection',
                 description: 'AI analyzes response patterns and time spent to detect when students are struggling—before they give up.',
-                color: '#7C3AED'
+                color: '#A78BFA'
               },
               {
                 icon: '💡',
@@ -968,19 +1001,19 @@ export default function EducationPage() {
                 icon: '😊',
                 title: 'Emotional Encouragement',
                 description: 'Mascot visually celebrates wins and provides genuine support during challenges, creating connection and motivation.',
-                color: '#14B8A6'
+                color: '#5EEAD4'
               },
               {
                 icon: '🎯',
                 title: 'Adaptive Difficulty',
                 description: 'Automatically adjusts lesson difficulty based on performance and emotional state for optimal learning flow.',
-                color: '#06B6D4'
+                color: '#22D3EE'
               },
               {
                 icon: '⚡',
                 title: 'Instant Intervention',
                 description: 'Detects frustration patterns and intervenes with encouragement before students disengage.',
-                color: '#10B981'
+                color: '#34D399'
               },
               {
                 icon: '📊',
@@ -1076,7 +1109,7 @@ export default function EducationPage() {
             <h2 style={{
               fontSize: 'clamp(2rem, 4vw, 2.5rem)',
               marginBottom: '1rem',
-              color: '#7C3AED',
+              color: '#A78BFA',
               fontWeight: '700',
               letterSpacing: '-0.02em'
             }}>

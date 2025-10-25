@@ -393,7 +393,7 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
             {streak > 0 && (
               <div style={{
                 position: 'absolute',
-                top: '3rem',
+                top: isMobile ? '3rem' : '4.5rem',
                 right: isMobile ? '0.5rem' : '1.5rem',
                 display: 'flex',
                 alignItems: 'center',
