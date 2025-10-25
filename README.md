@@ -124,7 +124,7 @@ await mascot.perform('celebrating_epic', {
 });
 ```
 
-**[📖 Semantic Performance Docs →](./docs/api/semantic-performances.md)**
+**See API Reference below for full performance list**
 
 ### Emotional Intelligence
 
@@ -402,22 +402,6 @@ Free for personal, commercial, and open-source use.
 ## Contributing
 
 Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) first.
-
-## Documentation
-
-For detailed documentation, see the [`docs/`](./docs/) directory:
-
-- [Documentation Index](./docs/README.md) - Complete documentation catalog
-- [API Reference](./API.md) - Complete API documentation
-- [Quick Reference](./docs/guides/quick-reference.md) - URLs, files, and color
-  schemes
-- [Testing Guide](./docs/guides/testing.md) - Use case portfolio testing
-- [Recording Integration](./docs/guides/recording-integration.md) - Dual-path
-  recording system
-- [Performance Benchmarks](./docs/performance/benchmarks.md) - Performance
-  tuning and monitoring
-- [Launch Readiness](./docs/planning/launch-readiness.md) - Production launch
-  roadmap
 
 ## Credits
 
