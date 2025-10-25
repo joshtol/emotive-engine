@@ -2,7 +2,7 @@
   "type": "module",
   "name": "@joshtol/emotive-engine",
   "version": "2.5.1",
-  "description": "Proprietary animation engine with musical time synchronization",
+  "description": "Open-source animation engine for AI-controlled emotional visualizations with musical time synchronization",
   "main": "dist/emotive-engine.min.js",
   "module": "src/index.js",
   "types": "dist/emotive-engine.d.ts",
@@ -89,7 +89,7 @@
     "fortune-500"
   ],
   "author": "Joshua Tollette",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "homepage": "https://github.com/joshtol/emotive-engine",
   "repository": {
     "type": "git",

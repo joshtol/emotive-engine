@@ -4,25 +4,36 @@
 [![npm version](https://img.shields.io/npm/v/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/joshtol/emotive-engine/test.yml?branch=main&label=tests)](https://github.com/joshtol/emotive-engine/actions)
 [![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://github.com/joshtol/emotive-engine/actions)
-[![License: Dual](<https://img.shields.io/badge/License-Dual%20(MIT%2FCommercial)-yellow.svg>)](./LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
 [![Performance](https://img.shields.io/badge/Performance-60fps-green.svg)](https://github.com/joshtol/emotive-engine)
 [![Security](https://img.shields.io/badge/Security-Policy-blue.svg)](./SECURITY.md)
 [![Node Version](https://img.shields.io/node/v/@joshtol/emotive-engine.svg)](https://nodejs.org)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@joshtol/emotive-engine.svg)](https://bundlephobia.com/package/@joshtol/emotive-engine)
 [![Downloads](https://img.shields.io/npm/dm/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 
-**Real-time emotional visualization engine for next-generation UIs**
+**Open-source animation engine for AI-controlled emotional visualizations**
 
-Pure Canvas 2D • 60fps with 1000+ particles • No WebGL required
+Pure Canvas 2D • 60fps with 1000+ particles • No WebGL required • MIT Licensed •
+AI Integration Ready
 
 </div>
 
 ## Overview
 
-Emotive Engine is a high-performance particle animation system that brings
-emotional intelligence to user interfaces. Create living, breathing mascots that
-respond to user interactions, music, and emotional states with sophisticated
-particle behaviors and smooth animations.
+Emotive Engine is an **open-source** high-performance particle animation system
+that enables AI assistants (ChatGPT, Claude, etc.) to express emotions through
+visual feedback. Create living, breathing mascots that respond to conversation
+context, user sentiment, and emotional cues with sophisticated particle
+behaviors and smooth animations.
+
+**The AI controls the emotions. Emotive Engine handles the rendering.**
+
+### Open Source + Premium Assets
+
+- **Core Engine**: MIT License - completely free and open source
+- **Premium Mascots**: [Emotive UI Pro](#) - $299-$999 for 20+ professional
+  character designs
+- **Revenue Model**: Inspired by Tailwind CSS - free engine, paid premium assets
 
 ## Quick Start
 

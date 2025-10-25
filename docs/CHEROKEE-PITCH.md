@@ -37,7 +37,7 @@ An interactive installation where visitors learn the Cherokee syllabary through 
 
 ### Already Built (Phase 1):
 - ✅ Interactive syllabary grid (MVP with 6 characters)
-- ✅ Emotional AI responses (joy, encouragement, pride)
+- ✅ AI-controlled emotional responses (joy, encouragement, pride)
 - ✅ Cultural context panels
 - ✅ Multi-phase learning flow
 - ✅ Works on web, kiosks, touchscreens
@@ -97,17 +97,28 @@ An interactive installation where visitors learn the Cherokee syllabary through 
 - Long-term commitment to language preservation
 
 ### Technical Expertise:
-- Built emotional AI engine from scratch
-- Portfolio of working demos across industries
-- Platform-agnostic (works anywhere)
+- Built animation engine for AI-controlled visualizations from scratch
+- Portfolio of working demos across industries (education, gaming, healthcare)
+- Platform-agnostic (works anywhere: web, kiosks, mobile)
+
+### Open Source = Data Sovereignty:
+- **MIT License**: Emotive Engine core is completely open source
+- **Tribal Control**: Cherokee Nation can audit, fork, and modify all code
+- **No Vendor Lock-in**: Heritage Center can self-host without ongoing fees
+- **Aligns with Paula Starr's Data Sovereignty Task Force priorities**
+- **Transparent Code**: Cultural content handling is auditable by tribal IT
 
 ### Collaborative Approach:
 - Partner with Cherokee language experts
 - Get Nation approval before public launch
-- Revenue sharing model if commercialized
-- Ongoing maintenance and updates
+- **All Cherokee cultural content is FREE** - never sold or commercialized
+- Open source (MIT License) enables tribal sovereignty and community ownership
+- Ongoing maintenance and updates at no cost
+- This is about cultural preservation, not profit
 
 ## Budget Estimate (Phase 2)
+
+**Note:** The core Emotive Engine is open source (free). These costs are for Cherokee-specific development and Heritage Center integration.
 
 ### Development (3-4 months):
 - Cherokee syllabary SVG library: $X,XXX
@@ -118,15 +129,18 @@ An interactive installation where visitors learn the Cherokee syllabary through 
 - Testing and refinement: $X,XXX
 
 **Total Development:** $XX,XXX - $XX,XXX
+**Funding Source:** Grant funding (NEH, IMLS) or Cherokee Nation cultural education budget
 
-### Installation:
+### Installation (One-Time):
 - Kiosk hardware (if needed): $X,XXX per unit
 - Installation and setup: $X,XXX
 - Training for Heritage Center staff: $XXX
 
 ### Ongoing:
-- Maintenance and updates: $XXX/month
-- Content additions: As needed
+- **Software maintenance:** FREE (open source community + my commitment)
+- **Hardware maintenance:** Standard IT support
+- **Content additions:** As needed (collaborative with Cherokee language experts)
+- **No licensing fees:** MIT License = free forever
 
 ## Funding Opportunities
 

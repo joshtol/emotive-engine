@@ -769,15 +769,17 @@ point.
     - [ ] Claim: JSON-based cultural adaptation system for emotional AI
     - [ ] File Month 3
 
-### 8.4 Open Source Licensing
+### 8.4 Open Source Licensing (TAILWIND MODEL)
 
-- [ ] **License public repos**
-    - [ ] emotive-js: MIT License (most permissive)
-    - [ ] emotive-mcp: Apache 2.0 License (includes patent grant)
-    - [ ] emotive-examples: MIT License
+- [x] **License ALL core repos as MIT** (Open Source Strategy - see OPEN_SOURCE_STRATEGY.md)
+    - [x] @emotive/engine: MIT License (core engine, completely open)
+    - [ ] @emotive/templates: MIT License (free mascot templates)
+    - [ ] @emotive/mcp: MIT License (Claude integration)
+    - [ ] emotive-examples: MIT License (code examples)
 
-- [ ] **Keep core private**
-    - [ ] emotive-core: NO license (proprietary, all rights reserved)
+- [ ] **Keep premium assets private**
+    - [ ] @emotive/ui-pro: Commercial License (paid mascot packs, $299-$999)
+    - [ ] Culture packs: Commercial License with 20% revenue share
 
 ### 8.5 Contributor License Agreement (CLA)
 
@@ -881,25 +883,27 @@ point.
 
 ---
 
-## 10. ENTERPRISE FEATURES (Month 6-12)
+## 10. PREMIUM ASSETS & ENTERPRISE (Month 6-12)
 
-**Goal:** Build enterprise-grade features for $500-5,000/month customers.
+**Goal:** Build Emotive UI Pro (Tailwind UI model) - premium mascots/templates for $299-$999 one-time.
 
-### 10.1 Self-Hosted Packages
+### 10.1 Emotive UI Pro Package (@emotive/ui-pro)
 
-- [ ] **Create WASM build**
-    - [ ] Compile core rendering engine to WebAssembly
-    - [ ] Obfuscate to prevent reverse-engineering
+- [ ] **Create premium mascot library**
+    - [ ] 20+ professional character designs
+    - [ ] Industry themes (education, healthcare, gaming, retail)
+    - [ ] Advanced animations & gesture libraries
+    - [ ] Figma source files
 
-- [ ] **Docker deployment**
-    - [ ] Create Dockerfile
-    - [ ] Docker Compose for easy setup
-    - [ ] Document deployment to AWS/GCP/Azure
+- [ ] **Pricing structure**
+    - [ ] Individual: $299 (unlimited projects, 1 developer)
+    - [ ] Team: $999 (unlimited projects, up to 25 developers)
+    - [ ] Enterprise: Custom (unlimited developers, custom mascots)
 
-- [ ] **License key system**
-    - [ ] Generate license keys per customer
-    - [ ] Validate keys in WASM build
-    - [ ] Expiration and renewal logic
+- [ ] **Distribution**
+    - [ ] Private GitHub repo access (not npm - like Tailwind UI)
+    - [ ] Download zip with license key
+    - [ ] Automatic updates for 1 year
 
 ### 10.2 Custom Branding
 
@@ -950,14 +954,20 @@ point.
 
 ---
 
-## 11. CULTURE PACK SYSTEM (Month 4-6)
+## 11. THEME PACK SYSTEM (Month 4-6)
 
-**Goal:** Build dynamic culture pack loading system.
+**Goal:** Build dynamic theme pack loading system.
+
+**IMPORTANT TERMINOLOGY:**
+- **"Cultural Heritage Packs"** = Indigenous content (Cherokee, Navajo, etc.) - **ALWAYS FREE, NEVER SOLD**
+- **"Industry Theme Packs"** = Corporate branding (Startup Culture, Healthcare, Gaming, etc.) - **CAN BE SOLD**
+- Old term "Culture Pack" is deprecated to avoid confusion
 
 ### 11.1 JSON Schema Definition
 
-- [ ] **Create CulturePackManifest.schema.json**
-    - [ ] Pack metadata (id, name, version, author)
+- [ ] **Create ThemePackManifest.schema.json**
+    - [ ] Pack metadata (id, name, version, author, type)
+    - [ ] Type field: "cultural-heritage" (free) or "industry-theme" (can be paid)
     - [ ] Emotions object (color, particles, speed)
     - [ ] Gestures object (keyframes, easing)
     - [ ] Particle patterns (spawn rate, direction)
@@ -968,12 +978,13 @@ point.
 
 ### 11.2 Pack Loader Implementation
 
-- [ ] **Create CulturePackLoader.js**
+- [ ] **Create ThemePackLoader.js**
     - [ ] `loadPack(url)` - Fetch and parse JSON
-    - [ ] `validatePack(pack)` - Schema validation
+    - [ ] `validatePack(pack)` - Schema validation (enforce type field)
     - [ ] `registerPack(pack)` - Override emotion/gesture definitions
-    - [ ] `listPacks()` - List loaded packs
+    - [ ] `listPacks()` - List loaded packs (separate cultural-heritage from industry-theme)
     - [ ] `switchPack(packId)` - Switch between packs
+    - [ ] **ENFORCE:** cultural-heritage type packs must have price = 0
 
 - [ ] **Emotion registry refactor**
     - [ ] Make emotion definitions dynamic (not hard-coded)
@@ -988,26 +999,31 @@ point.
 - [ ] **Create pack upload UI**
     - [ ] emotive-engine.com/packs/upload
     - [ ] Upload JSON + preview images
-    - [ ] Set price ($0 = free, $5-50 = paid)
+    - [ ] **Type selection:** "Cultural Heritage" or "Industry Theme"
+    - [ ] **Enforce:** Cultural Heritage type CANNOT set price (always $0)
+    - [ ] Industry Theme can set price ($0 = free, $49-199 = paid)
 
 - [ ] **Advisory Board review queue**
-    - [ ] Cultural packs require Advisory Board approval
-    - [ ] Non-cultural packs auto-approved (community moderation)
+    - [ ] **Cultural Heritage packs:** Require Advisory Board approval (Cherokee Nation, cultural experts)
+    - [ ] **Industry Theme packs:** Auto-approved (community moderation, no cultural sensitivity needed)
 
 - [ ] **Pack marketplace homepage**
     - [ ] emotive-engine.com/packs
+    - [ ] **Separate tabs:** "Cultural Heritage" (all free) and "Industry Themes" (free + paid)
     - [ ] Browse packs (free, paid, trending)
-    - [ ] Search by tags (anime, sci-fi, cultural, minimal)
+    - [ ] Search by tags (startup, healthcare, gaming, financial, etc.)
 
-### 11.4 Revenue Sharing
+### 11.4 Revenue Sharing (Industry Theme Packs ONLY)
 
 - [ ] **Implement payment system**
-    - [ ] Stripe Connect for pack creators
+    - [ ] Stripe Connect for Industry Theme pack creators
     - [ ] 80% to creator, 20% to Emotive Engine
+    - [ ] **Cultural Heritage packs:** NO payment system (always free)
 
 - [ ] **Quarterly payouts**
     - [ ] Minimum $100 threshold
     - [ ] Automated Stripe transfers
+    - [ ] **Only for Industry Theme pack sales** (not cultural heritage)
 
 ---
 

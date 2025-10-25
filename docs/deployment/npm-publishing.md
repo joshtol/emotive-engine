@@ -1,39 +1,41 @@
 # NPM Publishing Guide for Emotive Engine
 
+**Updated for Open Source (MIT License) - Tailwind Model**
+
+This guide covers publishing the **open-source** `@emotive/engine` package to npmjs.org.
+
+For the **commercial** `@emotive/ui-pro` package, see [UI-PRO-PUBLISHING.md](./UI-PRO-PUBLISHING.md).
+
+---
+
+## Package Structure (Post-Open Source)
+
+| Package | License | Registry | Access |
+|---------|---------|----------|--------|
+| **@emotive/engine** | MIT | npmjs.org | Public |
+| **@emotive/ui-pro** | Commercial | Private repo | Paid customers only |
+
+---
+
 ## Initial Setup (One Time)
 
-### 1. Generate GitHub Personal Access Token
-1. Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Click "Generate new token (classic)"
-3. Name: `npm-emotive-engine`
-4. Required scopes:
-   - `write:packages` - Upload packages
-   - `read:packages` - Download packages
-   - `repo` - Access private repositories
-5. Copy the token immediately!
+### 1. Create npmjs.com Account
+1. Go to https://www.npmjs.com/signup
+2. Create account (free)
+3. Verify email
 
-### 2. Configure Authentication
-
-#### Windows (Command Prompt):
-```cmd
-set GITHUB_TOKEN=your_token_here
-npm whoami --registry https://npm.pkg.github.com
-```
-
-#### Windows (PowerShell):
-```powershell
-$env:GITHUB_TOKEN = "your_token_here"
-npm whoami --registry https://npm.pkg.github.com
-```
-
-#### macOS/Linux:
+### 2. Login via CLI
 ```bash
-export GITHUB_TOKEN=your_token_here
-npm whoami --registry https://npm.pkg.github.com
+npm login
+# Enter username, password, email
+# Verify with OTP if enabled
 ```
 
-Or run the provided setup script:
-- Windows: `publish-setup.bat` or `publish-setup.ps1`
+### 3. Verify Access
+```bash
+npm whoami
+# Should show your npm username
+```
 
 ## Publishing
 
@@ -56,44 +58,52 @@ npm run publish:major
 
 ## Using the Package in Other Projects
 
-### 1. Create .npmrc in your project
-```
-@joshtol:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
-
-### 2. Install the package
+### 1. Install the package (no auth needed - it's public!)
 ```bash
+npm install @emotive/engine
+# OR
 npm install @joshtol/emotive-engine
 ```
 
-### 3. Import in your code
+### 2. Import in your code
 ```javascript
-import EmotiveMascot from '@joshtol/emotive-engine';
+import EmotiveMascot from '@emotive/engine';
 
 // Initialize
 const mascot = new EmotiveMascot({
-    containerEl: document.getElementById('mascot-container'),
+    canvasId: 'mascot-canvas',
     emotion: 'joy'
 });
+
+mascot.start();
+```
+
+### 3. For premium mascots (optional)
+```bash
+# Purchase license at emotive-engine.com/ui-pro
+# Then clone private repo or download zip
+git clone https://github.com/joshtol/emotive-ui-pro.git
+
+# Use premium mascots
+import { robotMascot } from './emotive-ui-pro/mascots/robot';
 ```
 
 ## Package Contents
 
-When published, the package includes:
-- `/dist` - Production builds
-- `/src` - Source code
+When published, `@emotive/engine` includes:
+- `/dist` - Production builds (UMD, ESM, CJS)
+- `/src` - Source code (completely visible - it's MIT!)
 - `/types` - TypeScript definitions
 - `/assets` - Logo SVGs
 - `README.md` - Documentation
-- `LICENSE` - Custom license
+- `LICENSE.md` - MIT License
 
 Excluded from package:
-- Demo HTML files
-- Test files
-- Build configuration
-- Git files
-- DEFENSIVE_PUBLICATION.md
+- Demo HTML files (`/site`)
+- Test files (`*.test.js`)
+- Build configuration (`rollup.config.js`)
+- Git files (`.git`, `.gitignore`)
+- Internal docs (`/docs/internal`)
 
 ## Troubleshooting
 
@@ -119,5 +129,6 @@ Excluded from package:
 
 ## License
 
-This is proprietary software. See LICENSE file for details.
-Unauthorized use, reproduction, or distribution is strictly prohibited.
+**@emotive/engine** is MIT licensed - completely free and open source!
+
+**@emotive/ui-pro** (premium mascots) is commercially licensed - see UI-PRO-PUBLISHING.md.
