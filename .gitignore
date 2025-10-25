@@ -65,6 +65,14 @@ coverage/
 tmp/
 temp/
 
+# Testing/development HTML files
+hero-*-capture.html
+hero-capture.html
+
+# Temporary GIF generation scripts (delete before publishing)
+scripts/create-banner.js
+scripts/generate-banner-gif.js
+
 # Playwright test artifacts
 site/test-results/
 site/playwright-report/

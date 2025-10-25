@@ -3,14 +3,14 @@
   "name": "@joshtol/emotive-engine",
   "version": "2.5.1",
   "description": "Open-source animation engine for AI-controlled emotional visualizations with musical time synchronization",
-  "main": "dist/emotive-engine.min.js",
-  "module": "src/index.js",
-  "types": "dist/emotive-engine.d.ts",
+  "main": "dist/emotive-mascot.umd.js",
+  "module": "dist/mascot.js",
+  "types": "types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/emotive-engine.d.ts",
-      "import": "./src/index.js",
-      "require": "./dist/emotive-engine.min.js"
+      "types": "./types/index.d.ts",
+      "import": "./dist/mascot.js",
+      "require": "./dist/emotive-mascot.umd.js"
     },
     "./package.json": "./package.json"
   },
@@ -26,7 +26,7 @@
     "assets/emotive-engine-icon.svg",
     "assets/emotive-engine-full-BW.svg",
     "README.md",
-    "LICENSE"
+    "LICENSE.md"
   ],
   "scripts": {
     "build": "rollup -c --environment NODE_ENV:production && node scripts/copy-built-files.js",
@@ -51,7 +51,6 @@
     "lint:fix": "eslint src/**/*.js --fix",
     "format": "prettier --write \"src/**/*.{js,json}\"",
     "format:check": "prettier --check \"src/**/*.{js,json}\"",
-    "size": "bundlesize",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
     "publish:patch": "npm version patch && npm publish",
@@ -109,13 +108,12 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@vitest/coverage-v8": "^3.2.4",
-    "bundlesize2": "^0.0.35",
     "canvas": "^3.2.0",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
+    "gif.js": "^0.2.0",
     "html-minifier-terser": "^7.2.0",
     "husky": "^9.1.7",
-    "javascript-obfuscator": "^4.1.1",
     "jsdoc": "^4.0.4",
     "jsdoc-to-markdown": "^9.1.2",
     "jsdom": "^27.0.0",
@@ -140,37 +138,5 @@
     "*.{json,md}": [
       "prettier --write"
     ]
-  },
-  "bundlesize": [
-    {
-      "path": "./dist/emotive-mascot.umd.js",
-      "maxSize": "900 KB",
-      "compression": "none"
-    },
-    {
-      "path": "./dist/emotive-mascot.umd.js",
-      "maxSize": "250 KB",
-      "compression": "gzip"
-    },
-    {
-      "path": "./dist/emotive-mascot.minimal.js",
-      "maxSize": "400 KB",
-      "compression": "none"
-    },
-    {
-      "path": "./dist/emotive-mascot.minimal.js",
-      "maxSize": "120 KB",
-      "compression": "gzip"
-    },
-    {
-      "path": "./dist/emotive-mascot.audio.js",
-      "maxSize": "700 KB",
-      "compression": "none"
-    },
-    {
-      "path": "./dist/emotive-mascot.audio.js",
-      "maxSize": "200 KB",
-      "compression": "gzip"
-    }
-  ]
+  }
 }
