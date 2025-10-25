@@ -356,8 +356,8 @@ console.log('Emotive Engine version:', window.EmotiveMascot.VERSION);
 ## Support
 
 - **Documentation**: https://docs.emotive-engine.com
-- **GitHub**: https://github.com/joshtol/emotive-core
-- **Issues**: https://github.com/joshtol/emotive-core/issues
+- **GitHub**: https://github.com/joshtol/emotive-engine
+- **Issues**: https://github.com/joshtol/emotive-engine/issues
 - **NPM**: https://www.npmjs.com/package/@joshtol/emotive-engine
 
 ---
