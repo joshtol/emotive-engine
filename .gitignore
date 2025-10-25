@@ -71,3 +71,4 @@ site/playwright-report/
 site/playwright/.cache/
 
 .vercel
+*.tsbuildinfo
