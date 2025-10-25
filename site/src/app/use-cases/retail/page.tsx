@@ -890,7 +890,7 @@ export default function RetailPage() {
               marginBottom: '1rem',
               letterSpacing: '-0.02em',
             }}>
-              Why Retailers Choose Emotive AI
+              Retail Features
             </h2>
             <p style={{
               fontFamily: 'var(--font-heading)',
@@ -911,8 +911,8 @@ export default function RetailPage() {
             {[
               {
                 icon: '🔍',
-                title: 'Real-Time Emotion Detection',
-                description: 'AI analyzes tone, word choice, and interaction patterns to detect frustration levels instantly.',
+                title: 'Expressive Character Responses',
+                description: 'Character animations respond to conversation context, visually reflecting customer sentiment and interaction patterns.',
                 color: '#DD4A9A'
               },
               {
@@ -923,8 +923,8 @@ export default function RetailPage() {
               },
               {
                 icon: '😊',
-                title: 'Empathetic Responses',
-                description: 'Mascot visually responds to customer emotions, creating genuine connection and trust.',
+                title: 'Empathetic Animations',
+                description: 'Character visually responds to conversation flow with appropriate emotional states and gestures.',
                 color: '#84CFC5'
               },
               {
@@ -1032,7 +1032,7 @@ export default function RetailPage() {
               fontWeight: '700',
               letterSpacing: '-0.02em'
             }}>
-              Perfect For Major Retailers
+              Designed for Retail Applications
             </h2>
             <p style={{
               fontSize: 'clamp(1.1rem, 2.2vw, 1.3rem)',
@@ -1041,7 +1041,7 @@ export default function RetailPage() {
               maxWidth: '700px',
               margin: '0 auto 2.5rem auto'
             }}>
-              Walmart • Target • Home Depot • Kroger • CVS • Amazon Go
+              E-commerce • In-Store Kiosks • Product Demos • Customer Support
             </p>
             <div style={{
               display: 'grid',

@@ -3,7 +3,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/joshtol/emotive-engine/test.yml?branch=main&label=tests)](https://github.com/joshtol/emotive-engine/actions)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://github.com/joshtol/emotive-engine/actions)
+[![Coverage](https://img.shields.io/badge/coverage-47%25-yellow.svg)](https://github.com/joshtol/emotive-engine/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
 [![Performance](https://img.shields.io/badge/Performance-60fps-green.svg)](https://github.com/joshtol/emotive-engine)
 [![Security](https://img.shields.io/badge/Security-Policy-blue.svg)](./SECURITY.md)

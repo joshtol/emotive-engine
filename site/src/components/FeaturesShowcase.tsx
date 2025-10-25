@@ -27,7 +27,7 @@ export default function FeaturesShowcase() {
     },
     {
       icon: '💭',
-      title: '15 Core Emotions',
+      title: 'Emotional States',
       description: 'Full emotional spectrum from joy to contemplation',
       color: '#F59E0B',
       bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%)',
@@ -45,8 +45,8 @@ export default function FeaturesShowcase() {
     },
     {
       icon: '📦',
-      title: '234KB Gzipped',
-      description: 'Tiny bundle with massive capabilities',
+      title: 'Lightweight Bundle',
+      description: 'Optimized builds for every use case',
       color: '#a5b4fc',
       bgGradient: 'linear-gradient(135deg, rgba(165, 180, 252, 0.15) 0%, rgba(165, 180, 252, 0.05) 100%)',
       borderColor: 'rgba(165, 180, 252, 0.3)',
@@ -72,8 +72,8 @@ export default function FeaturesShowcase() {
     },
     {
       icon: '👋',
-      title: '50+ Gestures',
-      description: 'Wave, bounce, pulse, and more',
+      title: 'Rich Gestures',
+      description: 'Wave, bounce, pulse, spin, and more',
       color: '#EC4899',
       bgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%)',
       borderColor: 'rgba(236, 72, 153, 0.3)',

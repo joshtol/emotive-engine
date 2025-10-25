@@ -70,7 +70,6 @@ jobs:
 
       - name: Check bundle sizes
         run: npm run size
-        continue-on-error: true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

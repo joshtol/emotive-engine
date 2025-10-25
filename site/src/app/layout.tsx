@@ -47,7 +47,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Resource hints for faster external connections */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://firebaseapp.com" />
         <link rel="dns-prefetch" href="https://api.anthropic.com" />
       </head>
       <body className={`${poppins.variable} ${montserrat.variable}`}>

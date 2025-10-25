@@ -44,8 +44,24 @@ const PUBLIC_FILES_TO_COPY = [
         dest: 'emotive-engine.js'
     },
     {
+        src: 'emotive-mascot.umd.js.map',
+        dest: 'emotive-mascot.umd.js.map'
+    },
+    {
         src: 'emotive-mascot.lean.umd.js',
         dest: 'emotive-engine-lean.js'
+    },
+    {
+        src: 'emotive-mascot.lean.umd.js.map',
+        dest: 'emotive-mascot.lean.umd.js.map'
+    },
+    {
+        src: 'emotive-mascot.minimal.umd.js',
+        dest: 'emotive-engine-minimal.js'
+    },
+    {
+        src: 'emotive-mascot.minimal.umd.js.map',
+        dest: 'emotive-mascot.minimal.umd.js.map'
     }
 ];
 

@@ -32,10 +32,7 @@ export default function HomePage() {
   const tickingRef = useRef(false)
   const mascotContainerRef = useRef<HTMLDivElement>(null)
   const [mascot, setMascot] = useState<any>(null)
-  const [waitlistEmail, setWaitlistEmail] = useState('')
-  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
-  const [waitlistMessage, setWaitlistMessage] = useState('')
 
   // Scroll handler for mascot position and z-index
   useEffect(() => {
@@ -134,48 +131,6 @@ export default function HomePage() {
     }
   }, [mascot])
 
-  // Handle waitlist signup
-  const handleWaitlistSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setWaitlistStatus('loading')
-
-    try {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(waitlistEmail)) {
-        setWaitlistStatus('error')
-        setWaitlistMessage('Please enter a valid email address')
-        setTimeout(() => {
-          setWaitlistStatus('idle')
-          setWaitlistMessage('')
-        }, 3000)
-        return
-      }
-
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: waitlistEmail }),
-      })
-
-      if (response.ok) {
-        setWaitlistStatus('success')
-        setWaitlistMessage('Successfully joined! Check your email.')
-        setWaitlistEmail('')
-      } else {
-        setWaitlistStatus('error')
-        setWaitlistMessage('Failed to join waitlist. Please try again.')
-      }
-    } catch (error) {
-      console.error('Waitlist error:', error)
-      setWaitlistStatus('error')
-      setWaitlistMessage('Failed to join waitlist. Please try again.')
-    }
-
-    setTimeout(() => {
-      setWaitlistStatus('idle')
-      setWaitlistMessage('')
-    }, 5000)
-  }
 
   return (
     <>
@@ -259,7 +214,7 @@ export default function HomePage() {
                 position: 'relative',
                 zIndex: 10,
               }}>
-                Emotional AI • Custom Branding • 15 Emotions • 50+ Gestures
+                Open Source • Pure Canvas 2D • Emotional States • Rich Gestures
               </div>
 
               <h1 style={{
@@ -276,7 +231,7 @@ export default function HomePage() {
                 position: 'relative',
                 zIndex: 10,
               }}>
-                Emotional AI That Feels
+                Real-Time Character Animation
               </h1>
 
               <p style={{
@@ -287,7 +242,7 @@ export default function HomePage() {
                 maxWidth: '700px',
                 margin: '0 auto 3rem',
               }}>
-                Create emotionally responsive user experiences with real-time particle-based animations that react to sentiment, interaction, and context.
+                Create expressive user interfaces with real-time particle animations. Pure Canvas 2D, 60fps performance, and emotional state system for AI-powered interactions.
               </p>
 
               {/* Branding Callout */}
@@ -304,7 +259,7 @@ export default function HomePage() {
                 maxWidth: '650px',
                 boxShadow: '0 4px 20px rgba(102,126,234,0.15)',
               }}>
-                <strong style={{ color: '#a5b4fc' }}>✨ Your Brand, Your Way:</strong> Every element—from particle shapes to core design—tailored to your visual identity and powered by emotional AI.
+                <strong style={{ color: '#a5b4fc' }}>✨ MIT Licensed:</strong> Open source animation engine with customizable particles, shapes, colors, and behaviors. Built for React, Vue, vanilla JS, and TypeScript.
               </div>
 
               {/* CTA Buttons */}
@@ -313,7 +268,7 @@ export default function HomePage() {
                 gap: '1rem',
                 justifyContent: 'center',
                 flexWrap: 'wrap',
-                marginBottom: '3rem'
+                marginBottom: '2rem'
               }}>
                 <Link href="/demo" style={{
                   padding: '1rem 2.5rem',
@@ -347,83 +302,56 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Waitlist Form */}
-              <form onSubmit={handleWaitlistSubmit} style={{
-                maxWidth: '500px',
-                margin: '0 auto',
+              {/* Quick Links - Compact horizontal layout */}
+              <div style={{
+                display: 'flex',
+                gap: '1rem',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                fontSize: '0.95rem',
               }}>
-                <div style={{
-                  display: 'flex',
-                  gap: '1rem',
-                  flexWrap: 'wrap',
-                  justifyContent: 'center'
-                }}>
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={waitlistEmail}
-                    onChange={(e) => setWaitlistEmail(e.target.value)}
-                    disabled={waitlistStatus === 'loading'}
-                    style={{
-                      flex: '1',
-                      minWidth: '250px',
-                      padding: '0.875rem 1.5rem',
-                      fontSize: '1rem',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '50px',
-                      color: 'white',
-                      outline: 'none',
-                    }}
-                  />
-                  <button
-                    type="submit"
-                    disabled={waitlistStatus === 'loading'}
-                    style={{
-                      padding: '0.875rem 2rem',
-                      fontSize: '1rem',
-                      fontWeight: '600',
-                      background: waitlistStatus === 'success'
-                        ? 'rgba(16, 185, 129, 0.2)'
-                        : waitlistStatus === 'error'
-                        ? 'rgba(239, 68, 68, 0.2)'
-                        : 'rgba(102, 126, 234, 0.2)',
-                      color: waitlistStatus === 'success'
-                        ? '#10B981'
-                        : waitlistStatus === 'error'
-                        ? '#EF4444'
-                        : '#a5b4fc',
-                      border: `1px solid ${
-                        waitlistStatus === 'success'
-                          ? '#10B981'
-                          : waitlistStatus === 'error'
-                          ? '#EF4444'
-                          : '#667eea'
-                      }`,
-                      borderRadius: '50px',
-                      cursor: waitlistStatus === 'loading' ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    {waitlistStatus === 'loading'
-                      ? 'Joining...'
-                      : waitlistStatus === 'success'
-                      ? '✓ Joined'
-                      : waitlistStatus === 'error'
-                      ? '✗ Error'
-                      : 'Join Waitlist'}
-                  </button>
-                </div>
-                {waitlistMessage && (
-                  <p style={{
-                    marginTop: '1rem',
-                    fontSize: '0.9rem',
-                    color: waitlistStatus === 'success' ? '#10B981' : '#EF4444',
-                  }}>
-                    {waitlistMessage}
-                  </p>
-                )}
-              </form>
+                <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Open Source:</span>
+                <a
+                  href="https://github.com/joshtol/emotive-engine"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: '#a5b4fc',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    borderRadius: '20px',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <span>⭐</span>
+                  <span>GitHub</span>
+                </a>
+                <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+                <a
+                  href="https://www.npmjs.com/package/@joshtol/emotive-engine"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: '#f87171',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    background: 'rgba(203, 56, 55, 0.1)',
+                    borderRadius: '20px',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <span>📦</span>
+                  <span>npm install</span>
+                </a>
+              </div>
             </div>
           </div>
         </section>

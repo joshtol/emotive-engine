@@ -464,8 +464,8 @@ export default function EducationPage() {
               padding: isMobile ? '0 0.5rem' : '0'
             }}>
               {isMobile
-                ? 'AI that detects confusion in real-time, adapting with personalized help.'
-                : 'Emotive AI that detects student confusion and frustration in real-time, adapting lessons with personalized encouragement and progressive hints.'}
+                ? 'Interactive learning assistant with expressive character animations that respond to student progress.'
+                : 'Educational demo featuring expressive character animations that respond to student progress, with personalized encouragement and progressive hints powered by Claude AI.'}
             </p>
 
             {/* Branding Callout */}
@@ -762,7 +762,7 @@ export default function EducationPage() {
                 lineHeight: 1.7,
                 fontWeight: '500'
               }}>
-                Experience AI that detects confusion and adapts in real-time. Watch how emotional intelligence transforms learning from frustrating to empowering.
+                Experience expressive character animations that respond to student progress. Watch how visual feedback transforms learning from frustrating to empowering.
               </p>
             </div>
 
@@ -954,8 +954,8 @@ export default function EducationPage() {
             {[
               {
                 icon: '🧠',
-                title: 'Real-Time Confusion Detection',
-                description: 'AI analyzes response patterns and time spent to detect when students are struggling—before they give up.',
+                title: 'Responsive Animation System',
+                description: 'Character animations adapt to student progress and interaction patterns, providing visual feedback and encouragement.',
                 color: '#A78BFA'
               },
               {
@@ -966,20 +966,20 @@ export default function EducationPage() {
               },
               {
                 icon: '😊',
-                title: 'Emotional Encouragement',
-                description: 'Mascot visually celebrates wins and provides genuine support during challenges, creating connection and motivation.',
+                title: 'Expressive Character Animations',
+                description: 'Character visually celebrates wins and provides support during challenges with emotional states and gestures.',
                 color: '#5EEAD4'
               },
               {
                 icon: '🎯',
                 title: 'Adaptive Difficulty',
-                description: 'Automatically adjusts lesson difficulty based on performance and emotional state for optimal learning flow.',
+                description: 'Demo application adjusts lesson difficulty based on student performance for optimal learning flow.',
                 color: '#22D3EE'
               },
               {
                 icon: '⚡',
-                title: 'Instant Intervention',
-                description: 'Detects frustration patterns and intervenes with encouragement before students disengage.',
+                title: 'Visual Feedback',
+                description: 'Character provides immediate visual feedback through emotional states and animations throughout the learning experience.',
                 color: '#34D399'
               },
               {

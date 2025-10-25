@@ -140,8 +140,8 @@ export default function DocsHomePage() {
           gap: '1rem',
         }}>
           {[
-            { icon: '🎭', title: '15+ Emotions', desc: 'Joy, anger, love, fear, and more with dynamic undertones' },
-            { icon: '🎨', title: '50+ Gestures', desc: 'Bounce, spin, wave, pulse with musical timing' },
+            { icon: '🎭', title: 'Emotional States', desc: 'Joy, anger, love, fear, and more with dynamic undertones' },
+            { icon: '🎨', title: 'Rich Gestures', desc: 'Bounce, spin, wave, pulse with musical timing' },
             { icon: '🎵', title: 'Audio Reactive', desc: 'Real-time beat detection and rhythm synchronization' },
             { icon: '⚡', title: '60fps Performance', desc: 'Optimized particle pooling and adaptive quality' },
             { icon: '📱', title: 'Mobile Optimized', desc: 'Touch support with performance scaling' },

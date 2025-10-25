@@ -837,7 +837,7 @@ export default function CherokeePage() {
               maxWidth: '700px',
               margin: '0 auto 3rem',
             }}>
-              Discover common Cherokee phrases through interactive cards with emotional AI that responds to each greeting's unique cultural meaning.
+              Discover common Cherokee phrases through interactive cards with expressive character animations that respond to each greeting's unique cultural meaning.
             </p>
 
             {/* Branding Callout */}
@@ -854,7 +854,7 @@ export default function CherokeePage() {
               maxWidth: '650px',
               boxShadow: '0 4px 20px rgba(218,165,32,0.15)',
             }}>
-              <strong style={{ color: '#FFD700' }}>✨ Fully Customizable:</strong> The mascot adapts to your brand—custom shapes, colors, animations, and logos, all optimized for AI-powered emotional intelligence.
+              <strong style={{ color: '#FFD700' }}>✨ Fully Customizable:</strong> The mascot adapts to your brand—custom shapes, colors, animations, and logos with an emotional state system for expressive interactions.
             </div>
 
             {/* CTA Buttons */}
@@ -1732,7 +1732,7 @@ export default function CherokeePage() {
             </div>
           </div>
 
-          {/* Coming Soon with Partnership */}
+          {/* Potential Future Features */}
           <div style={{
             position: 'relative',
             background: 'linear-gradient(135deg, rgba(15,15,20,0.8) 0%, rgba(10,10,15,0.9) 100%)',            borderRadius: '32px',
@@ -1773,7 +1773,7 @@ export default function CherokeePage() {
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
               }}>
-                Coming Soon
+                Concept Demo
               </div>
 
               <h3 style={{
@@ -1784,7 +1784,7 @@ export default function CherokeePage() {
                 letterSpacing: '-0.04em',
                 lineHeight: 1.2,
               }}>
-                With Cherokee Nation Partnership
+                Potential Applications
               </h3>
 
               <p style={{
@@ -1795,7 +1795,7 @@ export default function CherokeePage() {
                 lineHeight: 1.7,
                 color: '#E0E0E0',
               }}>
-                This demo showcases the <span style={{color: '#FFD700', fontWeight: '600'}}>Emotive Engine's potential for culturally respectful language learning</span>. Full implementation requires official Cherokee Nation approval and collaboration.
+                This demo showcases the <span style={{color: '#FFD700', fontWeight: '600'}}>Emotive Engine's capabilities for culturally respectful language learning applications</span>. Real implementations would require collaboration with native speakers and cultural authorities.
               </p>
             </div>
 
@@ -1981,7 +1981,7 @@ export default function CherokeePage() {
                   fontSize: 'clamp(0.95rem, 2vw, 1.05rem)',
                   lineHeight: 1.6,
                   color: '#D0D0D0',
-                }}>Practice full dialogues with emotionally responsive AI</div>
+                }}>Practice full dialogues with emotionally responsive characters</div>
               </div>
             </div>
           </div>
@@ -2368,7 +2368,7 @@ export default function CherokeePage() {
                       lineHeight: 1.6,
                       marginBottom: '1rem'
                     }}>
-                      Audio will be added through partnership with fluent native Cherokee speakers
+                      Audio would be sourced from fluent native Cherokee speakers in a real application
                     </div>
                     <div style={{
                       fontSize: '0.9rem',
@@ -2376,7 +2376,7 @@ export default function CherokeePage() {
                       fontStyle: 'italic',
                       color: selected.color
                     }}>
-                      We're committed to authentic representation of the Cherokee language
+                      Real implementations require authentic representation from cultural authorities
                     </div>
                   </div>
                 </div>

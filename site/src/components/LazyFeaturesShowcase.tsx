@@ -57,7 +57,7 @@ export default function LazyFeaturesShowcase() {
     },
     {
       icon: '💭',
-      title: '15 Core Emotions',
+      title: 'Emotional States',
       description: 'Full emotional spectrum from joy to contemplation',
       color: '#F59E0B',
       priority: 1
@@ -73,8 +73,8 @@ export default function LazyFeaturesShowcase() {
     // Priority 2 (Top 8 - Desktop only)
     {
       icon: '📦',
-      title: '234KB Gzipped',
-      description: 'Lightweight bundle optimized for web',
+      title: 'Lightweight Bundle',
+      description: 'Optimized builds for every use case',
       color: '#8B5CF6',
       priority: 2
     },
@@ -94,7 +94,7 @@ export default function LazyFeaturesShowcase() {
     },
     {
       icon: '👋',
-      title: '50+ Gestures',
+      title: 'Rich Gestures',
       description: 'Wave, bounce, explode, shimmer, and more',
       color: '#F97316',
       priority: 2
@@ -235,7 +235,7 @@ export default function LazyFeaturesShowcase() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>
-            Why Developers Choose Emotive
+            Core Features
           </h2>
 
           <div style={{

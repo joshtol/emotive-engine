@@ -8,10 +8,10 @@ interface HeroSectionProps {
 
 const HERO_HIGHLIGHTS = [
     'Real-time Response',
-    '15 Core Emotions',
+    'Emotional States',
     'Cross-platform',
     'Battery-optimized',
-    '50+ Gesture Animations',
+    'Rich Gesture Library',
     'No GPU Required',
 ];
 
