@@ -30,26 +30,17 @@ behaviors and smooth animations.
 
 **The AI controls the emotions. Emotive Engine handles the rendering.**
 
-### ✨ 6 Core Emotions
-
-<div align="center">
-  <img src="assets/emotions/joy.svg" width="120" alt="Joy" />
-  <img src="assets/emotions/excited.svg" width="120" alt="Excited" />
-  <img src="assets/emotions/love.svg" width="120" alt="Love" />
-  <img src="assets/emotions/surprise.svg" width="120" alt="Surprise" />
-  <img src="assets/emotions/calm.svg" width="120" alt="Calm" />
-  <img src="assets/emotions/focused.svg" width="120" alt="Focused" />
-</div>
-
 ### 🚀 Key Features
 
-<div align="center">
-  <img src="assets/features/real-time-animation.svg" alt="Real-Time Animation" width="100%" style="max-width: 600px;" />
-  <br/><br/>
-  <img src="assets/features/shape-morphing.svg" alt="Shape Morphing" width="100%" style="max-width: 600px;" />
-  <br/><br/>
-  <img src="assets/features/plug-and-play.svg" alt="Plug & Play" width="100%" style="max-width: 600px;" />
-</div>
+- **15 Core Emotions** - Joy, calm, anger, fear, surprise, sadness, love, and
+  more
+- **Shape Morphing** - Transform between hearts, stars, moons, circles with
+  smooth transitions
+- **Dynamic Gestures** - Bounce, spin, pulse, breathe, wave, and complex
+  combinations
+- **High Performance** - Pure Canvas 2D rendering at 60 FPS
+- **TypeScript Ready** - Full type definitions with autocomplete
+- **AI Integration** - Built for AI-controlled emotional visualization
 
 ### Open Source + Premium Assets
 
@@ -63,33 +54,35 @@ behaviors and smooth animations.
 npm install @joshtol/emotive-engine
 ```
 
+<table>
+<tr>
+<td width="50%" valign="top">
+
 ### JavaScript
 
 ```javascript
 import EmotiveMascot from '@joshtol/emotive-engine';
 
-// Create mascot
 const mascot = new EmotiveMascot({
     canvasId: 'mascot-canvas',
-    emotion: 'neutral',
 });
 
-// Start animation
+await mascot.init();
 mascot.start();
 
-// Express emotions
-mascot.setEmotion('joy');
-mascot.express('bounce');
-
-// ⭐ NEW in v3.0: Semantic Performance System
-await mascot.perform('celebrating', {
-    context: { frustration: 0, urgency: 'low', magnitude: 'epic' },
-});
-
-// Control rotation (v2.6.0)
-mascot.setRotationSpeed(5); // Degrees per frame
-await mascot.renderer.rotationBrake.brakeToUpright();
+mascot.setEmotion('calm');
+mascot.morphTo('moon');
+mascot.express('breathe');
 ```
+
+</td>
+<td width="50%" valign="top">
+
+<img src="assets/emotion-demo.gif" alt="Emotion Demo" width="100%" />
+
+</td>
+</tr>
+</table>
 
 ### TypeScript
 
@@ -425,6 +418,24 @@ Free for personal, commercial, and open-source use.
 ## Contributing
 
 Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) first.
+
+## Meta: These Assets Were Made With Emotive Engine
+
+This README's banner and demo GIF were created using the engine itself. Want to
+see how? Check out the HTML files that generated them:
+
+- **[Hero Banner Generator](examples/hero-banner-capture.html)** - Creates the
+  animated banner at the top
+- **[Emotion Demo Generator](examples/emotion-demo-capture.html)** - Creates the
+  usage demo GIF
+
+These files demonstrate advanced usage patterns including particle systems,
+emotion sequencing, shape morphing, and gesture choreography. Open them in a
+browser to see the engine in action, or modify them to experiment with different
+effects.
+
+See [examples/README.md](examples/README.md) for detailed documentation on
+regenerating these assets.
 
 ## Credits
 

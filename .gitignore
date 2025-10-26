@@ -65,9 +65,9 @@ coverage/
 tmp/
 temp/
 
-# Testing/development HTML files
-hero-*-capture.html
-hero-capture.html
+# Testing/development HTML files (examples/ directory is tracked)
+# hero-*-capture.html  (moved to examples/)
+# hero-capture.html
 
 # Temporary GIF generation scripts (delete before publishing)
 scripts/create-banner.js
