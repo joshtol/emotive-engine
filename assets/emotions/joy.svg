@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <style>
+    .glow {
+      animation: glow 2s ease-in-out infinite;
+    }
+    @keyframes glow {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+        transform: scale(1);
+      }
+      50% {
+        filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.9));
+        transform: scale(1.05);
+      }
+    }
+  </style>
+  <circle class="glow" cx="60" cy="60" r="45" fill="#FFD700" opacity="0.9"/>
+  <text x="60" y="75" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#0a0a1a">JOY</text>
+</svg>

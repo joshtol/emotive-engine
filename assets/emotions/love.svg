@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <style>
+    .pulse {
+      animation: pulse 1.5s ease-in-out infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+  </style>
+  <path class="pulse" d="M60,85 C45,70 25,55 25,40 C25,25 35,20 45,20 C52,20 57,25 60,30 C63,25 68,20 75,20 C85,20 95,25 95,40 C95,55 75,70 60,85 Z" fill="#DD4A9A" opacity="0.9"/>
+  <text x="60" y="105" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#DD4A9A">LOVE</text>
+</svg>

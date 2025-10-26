@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120">
+  <style>
+    .card {
+      fill: #1a1a2e;
+      rx: 12;
+    }
+    .morph {
+      animation: morph 4s ease-in-out infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+    @keyframes morph {
+      0%, 100% { d: path("M 340,45 L 355,55 L 350,70 L 335,70 L 330,55 Z"); }
+      33% { d: path("M 340,45 A 15 15 0 1 1 340 75 A 15 15 0 1 1 340 45"); }
+      66% { d: path("M 330,60 L 340,45 L 350,60 L 340,75 Z"); }
+    }
+  </style>
+  <rect class="card" x="10" y="10" width="380" height="100" rx="12" fill="#1a1a2e" stroke="#4090CE" stroke-width="2"/>
+  <text x="30" y="45" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#4090CE">🔄 Shape Morphing</text>
+  <text x="30" y="70" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" opacity="0.8">Smooth transitions between 6 different forms</text>
+  <path class="morph" d="M 340,45 L 355,55 L 350,70 L 335,70 L 330,55 Z" fill="#4090CE" opacity="0.8"/>
+</svg>

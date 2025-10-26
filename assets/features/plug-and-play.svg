@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120">
+  <style>
+    .card {
+      fill: #1a1a2e;
+      rx: 12;
+    }
+    .plug {
+      animation: plug 3s ease-in-out infinite;
+    }
+    @keyframes plug {
+      0%, 100% { transform: translateX(0); opacity: 1; }
+      50% { transform: translateX(10px); opacity: 0.7; }
+    }
+  </style>
+  <rect class="card" x="10" y="10" width="380" height="100" rx="12" fill="#1a1a2e" stroke="#84CFC5" stroke-width="2"/>
+  <text x="30" y="45" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#84CFC5">🚀 Plug & Play</text>
+  <text x="30" y="70" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" opacity="0.8">3 lines of code to get started</text>
+  <g class="plug">
+    <rect x="320" y="48" width="25" height="15" rx="2" fill="#84CFC5" opacity="0.8"/>
+    <rect x="350" y="48" width="20" height="15" rx="2" fill="#84CFC5" opacity="0.8"/>
+    <line x1="345" y1="55" x2="350" y2="55" stroke="#0a0a1a" stroke-width="2"/>
+  </g>
+</svg>

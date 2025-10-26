@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <style>
+    .focus-glow {
+      animation: focusGlow 3s ease-in-out infinite;
+    }
+    .focus-ring {
+      animation: focusRing 3s ease-in-out infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+    @keyframes focusGlow {
+      0%, 100% {
+        filter: drop-shadow(0 0 5px rgba(64, 144, 206, 0.5));
+      }
+      50% {
+        filter: drop-shadow(0 0 15px rgba(64, 144, 206, 0.9));
+      }
+    }
+    @keyframes focusRing {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 0.4; }
+    }
+  </style>
+  <circle class="focus-ring" cx="60" cy="60" r="48" fill="none" stroke="#4090CE" stroke-width="2"/>
+  <circle class="focus-glow" cx="60" cy="60" r="40" fill="#4090CE" opacity="0.9"/>
+  <text x="60" y="108" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#4090CE">FOCUSED</text>
+</svg>

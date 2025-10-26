@@ -1,6 +1,8 @@
 <div align="center">
   <img src="assets/hero-banner.gif" alt="Emotive Engine - Real-Time Character Animation for AI Interfaces" width="100%" />
 
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&pause=1000&color=DD4A9A&center=true&vCenter=true&width=1000&lines=Real-time+character+animation+for+modern+interfaces;6+emotions+%E2%80%A2+Shape+morphing+%E2%80%A2+Dynamic+gestures;TypeScript+ready+%E2%80%A2+Plug+%26+Play+%E2%80%A2+Open+Source;Pure+Canvas+2D+%E2%80%A2+60+FPS+%E2%80%A2+No+WebGL+required)](https://git.io/typing-svg)
+
 [![npm version](https://img.shields.io/npm/v/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/joshtol/emotive-engine/test.yml?branch=main&label=tests)](https://github.com/joshtol/emotive-engine/actions)
 [![Coverage](https://img.shields.io/badge/coverage-47%25-yellow.svg)](https://github.com/joshtol/emotive-engine/actions)
@@ -27,6 +29,27 @@ context, user sentiment, and emotional cues with sophisticated particle
 behaviors and smooth animations.
 
 **The AI controls the emotions. Emotive Engine handles the rendering.**
+
+### ✨ 6 Core Emotions
+
+<div align="center">
+  <img src="assets/emotions/joy.svg" width="120" alt="Joy" />
+  <img src="assets/emotions/excited.svg" width="120" alt="Excited" />
+  <img src="assets/emotions/love.svg" width="120" alt="Love" />
+  <img src="assets/emotions/surprise.svg" width="120" alt="Surprise" />
+  <img src="assets/emotions/calm.svg" width="120" alt="Calm" />
+  <img src="assets/emotions/focused.svg" width="120" alt="Focused" />
+</div>
+
+### 🚀 Key Features
+
+<div align="center">
+  <img src="assets/features/real-time-animation.svg" alt="Real-Time Animation" width="100%" style="max-width: 600px;" />
+  <br/><br/>
+  <img src="assets/features/shape-morphing.svg" alt="Shape Morphing" width="100%" style="max-width: 600px;" />
+  <br/><br/>
+  <img src="assets/features/plug-and-play.svg" alt="Plug & Play" width="100%" style="max-width: 600px;" />
+</div>
 
 ### Open Source + Premium Assets
 
