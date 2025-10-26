@@ -1,29 +1,26 @@
 <!DOCTYPE html>
 <!--
-  EMOTION SHOWCASE CAPTURE FOR GITHUB README - SINGLE CYCLING
+  EMOTION DEMO CAPTURE FOR GITHUB README
 
-  Purpose: Generate animated GIF showcasing ALL 15 core emotions
-  Layout: Single centered mascot (600x600px)
+  Purpose: Generate mobile-friendly demo GIF for Quick Start section
+  Layout: Single centered mascot (400x400px - optimized for mobile GitHub)
   Features:
-  - One mascot cycles through all 15 emotions
-  - Backdrop intensity and gestures for visual interest
-  - Clean, simple presentation
-  - Mobile-friendly square format
-  - Seamless loop
+  - Calm emotion with moon morph and breathe gesture
+  - Clean composition following rule of thirds
+  - Small file size for fast README loading
+  - Seamless 8-second loop
 
-  Animation flow:
-  1. Display emotion for 2 seconds
-  2. Perform gesture
-  3. Transition to next emotion
-  4. Repeat through all 15 emotions (30 second loop)
+  Animation sequence:
+  1. Calm (3s)
+  2. Moon morph (2s)
+  3. Breathe gesture (3s)
 
   How to capture:
   1. Open this file in Chrome/Edge at 100% zoom
-  2. Use ScreenToGif - record exactly 600x600px region
-  3. Record for ~30 seconds (full emotion cycle)
-  4. Optimize GIF (aim for <2MB)
-  5. Save as: assets/emotion-showcase.gif
-  6. Reference in README.md emotion showcase section
+  2. Use ScreenToGif - record exactly 400x400px region
+  3. Record for ~8 seconds (1 full loop)
+  4. Optimize to ~300-500KB
+  5. Save as: assets/emotion-demo.gif
 -->
 <html lang="en">
 <head>
@@ -38,8 +35,8 @@
         }
 
         html, body {
-            width: 600px;
-            height: 600px;
+            width: 400px;
+            height: 400px;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -126,13 +123,13 @@
         <div class="color-wash"></div>
 
         <div class="mascot-wrapper">
-            <canvas id="mascot-canvas" width="600" height="600"></canvas>
+            <canvas id="mascot-canvas" width="400" height="400"></canvas>
         </div>
 
         <div class="emotion-label" id="emotion-label">Neutral</div>
     </div>
 
-    <script src="./site/public/emotive-engine.js"></script>
+    <script src="../site/public/emotive-engine.js"></script>
 
     <script>
         // Simple animation sequence matching a basic code example
@@ -172,10 +169,10 @@
             await mascot.init(canvas);
 
             // Set particle system dimensions to match canvas
-            mascot.setParticleSystemCanvasDimensions(600, 600);
+            mascot.setParticleSystemCanvasDimensions(400, 400);
 
             // Remove particle containment for full canvas coverage
-            mascot.setContainment(null, 2.5);
+            mascot.setContainment(null, 2.0);
 
             // Configure backdrop for depth
             mascot.setBackdrop({
@@ -189,10 +186,10 @@
                 responsive: true
             });
 
-            // Scale mascot (smaller for rule of thirds composition)
+            // Scale mascot (optimized for smaller 400x400 canvas)
             mascot.setScale({
-                core: 2.0,
-                particles: 1.6
+                core: 1.5,
+                particles: 1.2
             });
 
             // Center in canvas
