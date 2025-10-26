@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 <!--
-  HERO BANNER CAPTURE FOR GITHUB README
+  HERO BANNER CAPTURE FOR GITHUB README - PURE VISUAL
 
   Purpose: Generate animated GIF header (1280x400px) for README.md
+  Features:
+  - Pure visual banner (logo + animated mascot only, no text overlay)
+  - Mascot cycles through 6 emotions (joy, excited, love, surprise, calm, focused)
+  - Shape morphing (sun, solar, heart, star, moon, lunar)
+  - Gesture animations (bounce, spin, pulse, expand, breathe, glow)
+  - Backdrop glow effect for depth
+  - Large particles (2x scale) bouncing across full banner
+  - Aurora background with brand color gradients
+  - Seamless ~13 second loop
+
+  Composition:
+  - Logo: Top-left corner (200px, subtle)
+  - Mascot: Centered (2.5x scale with backdrop)
+  - Particles: 2x scale, full banner movement
+  - Background: Dark with aurora gradients
 
   How to capture:
-  1. Open this file in Chrome/Edge
-  2. Press F11 for fullscreen OR set browser zoom to 100%
-  3. Use ScreenToGif - record exactly 1280x400px region
-  4. Record for ~13 seconds (2 full emotion cycles)
+  1. Open this file in Chrome/Edge at 100% zoom
+  2. Use ScreenToGif - record exactly 1280x400px region
+  3. Record for ~13 seconds (one complete emotion cycle)
+  4. Optimize GIF (aim for <2MB)
   5. Save as: assets/hero-banner.gif
-  6. Update README.md:
-     <img src="assets/hero-banner.gif" alt="Emotive Engine" width="100%" />
 -->
 <html lang="en">
 <head>
@@ -35,298 +48,219 @@
             background: #FFFFFF;
         }
 
-        /* Banner container - GitHub README width */
+        /* Banner container */
         .banner {
             width: 100%;
             height: 100%;
             background: linear-gradient(135deg,
-                #0f0f23 0%,
-                #1a1a2e 50%,
-                #16213e 100%
+                #0a0a1a 0%,
+                #16213e 50%,
+                #1a1a2e 100%
             );
             position: relative;
-            overflow: hidden;
+            overflow: visible; /* Allow glow effects to extend beyond */
             border: 4px solid #FFFFFF;
             border-radius: 12px;
             box-sizing: border-box;
         }
 
-        /* Diffuse floating particle overlays */
-        .banner::before,
-        .banner::after {
-            content: '';
+        /* Simplified aurora - less competing, more supporting */
+        .color-wash {
             position: absolute;
-            width: 800px;
-            height: 800px;
-            border-radius: 50%;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
             pointer-events: none;
-        }
-
-        .banner::before {
-            top: -300px;
-            left: -200px;
-            background: radial-gradient(circle,
-                rgba(132, 207, 197, 0.25) 0%,
-                rgba(50, 172, 226, 0.15) 40%,
-                transparent 70%
+            opacity: 0.25; /* Reduced from 0.35 - more subtle */
+            transition: background 3s cubic-bezier(0.4, 0, 0.2, 1); /* Slower transition */
+            z-index: 1;
+            filter: blur(100px); /* More blur = softer */
+            background: radial-gradient(circle at 50% 50%,
+                rgba(221, 74, 154, 0.15) 0%,   /* Reduced intensity */
+                rgba(64, 144, 206, 0.10) 30%,
+                rgba(132, 207, 197, 0.06) 60%,
+                transparent 100%
             );
-            animation: floatSlow1 25s ease-in-out infinite;
         }
 
-        .banner::after {
-            bottom: -400px;
-            right: -300px;
-            background: radial-gradient(circle,
-                rgba(221, 74, 154, 0.2) 0%,
-                rgba(132, 207, 197, 0.12) 40%,
-                transparent 75%
-            );
-            animation: floatSlow2 30s ease-in-out infinite;
-        }
-
-        @keyframes floatSlow1 {
-            0%, 100% {
-                transform: translate(0, 0) scale(1);
-                opacity: 0.5;
-            }
-            33% {
-                transform: translate(50px, -30px) scale(1.1);
-                opacity: 0.3;
-            }
-            66% {
-                transform: translate(-30px, 40px) scale(0.95);
-                opacity: 0.6;
-            }
-        }
-
-        @keyframes floatSlow2 {
-            0%, 100% {
-                transform: translate(0, 0) scale(1);
-                opacity: 0.4;
-            }
-            40% {
-                transform: translate(-60px, 50px) scale(1.15);
-                opacity: 0.25;
-            }
-            80% {
-                transform: translate(40px, -40px) scale(0.9);
-                opacity: 0.5;
-            }
-        }
-
-        /* Content layout */
-        .content {
-            position: relative;
-            z-index: 10;
+        /* Floating particles layer */
+        .particle-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 80px;
+            pointer-events: none;
+            z-index: 2;
         }
 
-        /* Left side - Text */
-        .text-side {
-            flex: 1;
-            color: #ffffff;
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            transition: all 1.2s ease-out;
         }
 
+        .particle.active {
+            opacity: 1;
+        }
+
+        /* Simple logo - top left corner, minimal */
         .logo-wrapper {
-            margin-bottom: 28px;
+            position: absolute;
+            top: 30px;
+            left: 40px;
+            z-index: 10;
             filter: drop-shadow(0 4px 20px rgba(132, 207, 197, 0.3));
         }
 
         .logo-wrapper img {
-            width: 360px;
+            width: 200px;
             height: auto;
             filter: brightness(0) invert(1);
+            opacity: 0.9;
         }
 
-        .text-side .tagline {
-            font-size: 19px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 32px;
-            letter-spacing: 0.3px;
-            line-height: 1.6;
-            max-width: 500px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .text-side .features {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .feature-pill {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.9);
-            letter-spacing: 0.3px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Right side - Mascot */
-        .mascot-side {
-            flex: 0 0 520px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        #mascot-canvas {
-            border-radius: 20px;
-            filter: drop-shadow(0 20px 50px rgba(132, 207, 197, 0.4));
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Current emotion indicator */
-        .emotion-label {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.95);
-            padding: 6px 16px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
 
     </style>
 </head>
 <body>
     <div class="banner">
-        <div class="content">
-            <div class="text-side">
-                <div class="logo-wrapper">
-                    <img src="./assets/emotive-engine-full-BW.svg" alt="Emotive Engine" class="logo">
-                </div>
-                <div class="tagline">Real-Time Character Animation for AI Interfaces</div>
+        <div class="color-wash" id="color-wash"></div>
+        <div class="particle-layer" id="particle-layer"></div>
 
-                <div class="features">
-                    <div class="feature-pill">Plug & Play</div>
-                    <div class="feature-pill">Lightweight</div>
-                    <div class="feature-pill">Open Source</div>
-                    <div class="feature-pill">TypeScript Ready</div>
-                </div>
-            </div>
-
-            <div class="mascot-side">
-                <canvas id="mascot-canvas" width="450" height="350"></canvas>
-                <div class="emotion-label" id="emotion-label">Neutral</div>
-            </div>
+        <!-- Simple logo in corner -->
+        <div class="logo-wrapper">
+            <img src="./assets/emotive-engine-full-BW.svg" alt="Emotive Engine" class="logo">
         </div>
+
+        <!-- Mascot container - fixed, full banner size -->
+        <div id="mascot-container" style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        ">
+            <canvas id="mascot-canvas" style="
+                width: 100%;
+                height: 100%;
+                filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+            "></canvas>
+        </div>
+
     </div>
 
-    <!-- Load Emotive Engine (use site's public build) -->
-    <script>
-        // Suppress feature flags fetch errors (harmless for standalone demo)
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            if (args[0]?.includes?.('feature-flags')) {
-                return Promise.reject(new Error('Feature flags disabled for standalone demo'));
-            }
-            return originalFetch.apply(this, args);
-        };
-
-        // Suppress console errors from feature flags
-        const originalError = console.error;
-        console.error = function(...args) {
-            const msg = args[0]?.toString?.() || '';
-            if (msg.includes('feature flags') || msg.includes('Failed to fetch')) {
-                return; // Suppress
-            }
-            originalError.apply(console, args);
-        };
-    </script>
     <script src="./site/public/emotive-engine.js"></script>
 
     <script>
-        // Initialize mascot using window.EmotiveMascot (same pattern as site)
+        // Initialize mascot properly
         async function initMascot() {
             const canvas = document.getElementById('mascot-canvas');
             const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
 
             if (!EmotiveMascot) {
-                console.error('EmotiveMascot not found on window');
-                return;
+                console.error('EmotiveMascot not found');
+                return null;
             }
+
+            // Set canvas dimensions to match banner
+            canvas.width = 1280;
+            canvas.height = 400;
 
             const mascot = new EmotiveMascot({
                 canvasId: 'mascot-canvas',
                 targetFPS: 60,
                 enableAudio: false,
                 soundEnabled: false,
-                maxParticles: 120,
+                maxParticles: 150,
                 defaultEmotion: 'neutral',
                 enableGazeTracking: false,
-                enableIdleBehaviors: true,
+                enableIdleBehaviors: false
             });
 
             await mascot.init(canvas);
+
+            // Set particle system dimensions to match full banner
+            mascot.setParticleSystemCanvasDimensions(1280, 400);
+
+            // Remove particle containment - let them move freely across entire banner
+            mascot.setContainment(null, 2.5);
+
+            // Configure backdrop for depth and polish (like use cases)
+            mascot.setBackdrop({
+                enabled: true,
+                radius: 3.5,
+                intensity: 0.9,
+                blendMode: 'normal',
+                falloff: 'smooth',
+                edgeSoftness: 0.95,
+                coreTransparency: 0.25,
+                responsive: true
+            });
+
+            // Scale mascot - larger core AND larger particles
+            mascot.setScale({
+                core: 2.5,
+                particles: 2.0  // Bigger particles!
+            });
+
+            // Position at perfect center - no text to balance
+            mascot.setPosition(0, 0, 0);
+
             mascot.start();
 
             return mascot;
         }
 
         let mascot = null;
-        initMascot().then(m => mascot = m);
+        initMascot().then(m => {
+            mascot = m;
+            if (mascot) {
+                startAnimationSequence();
+            }
+        });
 
-        // Auto-cycle through emotions for banner capture
+        // Emotion config with gestures for wow factor
         const emotionSequence = [
-            { emotion: 'joy', gesture: 'bounce', shape: 'sun', label: 'Joy', duration: 2200 },
-            { emotion: 'excited', gesture: 'spin', shape: 'solar', label: 'Excited', duration: 2000 },
-            { emotion: 'love', gesture: 'pulse', shape: 'heart', label: 'Love', duration: 2200 },
-            { emotion: 'surprise', gesture: 'expand', shape: 'star', label: 'Surprise', duration: 1800 },
-            { emotion: 'calm', gesture: 'breathe', shape: 'moon', label: 'Calm', duration: 2000 },
-            { emotion: 'focused', gesture: 'glow', shape: 'lunar', label: 'Focused', duration: 2200 }
+            { emotion: 'joy', shape: 'sun', gesture: 'bounce', duration: 2200 },
+            { emotion: 'excited', shape: 'solar', gesture: 'spin', duration: 2000 },
+            { emotion: 'love', shape: 'heart', gesture: 'pulse', duration: 2200 },
+            { emotion: 'surprise', shape: 'star', gesture: 'expand', duration: 1800 },
+            { emotion: 'calm', shape: 'moon', gesture: 'breathe', duration: 2000 },
+            { emotion: 'focused', shape: 'lunar', gesture: 'glow', duration: 2200 }
         ];
 
         let currentIndex = 0;
 
-        async function autoCycle() {
+        function cycleEmotions() {
+            if (!mascot) return;
+
             const item = emotionSequence[currentIndex];
 
-            // Set emotion
+            // Update mascot emotion
             mascot.setEmotion(item.emotion);
-            document.getElementById('emotion-label').textContent = item.label;
 
-            // Morph shape if specified
+            // Morph shape
             if (item.shape) {
-                setTimeout(() => {
-                    mascot.morphTo(item.shape);
-                }, 200);
+                setTimeout(() => mascot.morphTo(item.shape), 200);
             }
 
-            // Add gesture if specified
+            // Trigger gesture for wow factor
             if (item.gesture) {
-                setTimeout(() => {
-                    mascot.express(item.gesture);
-                }, 400);
+                setTimeout(() => mascot.express(item.gesture), 400);
             }
 
             currentIndex = (currentIndex + 1) % emotionSequence.length;
-            setTimeout(autoCycle, item.duration);
+            setTimeout(cycleEmotions, item.duration);
         }
 
-        // Start auto-cycling after 1 second
-        setTimeout(autoCycle, 1000);
+        function startAnimationSequence() {
+            cycleEmotions();
+        }
     </script>
 </body>
 </html>
