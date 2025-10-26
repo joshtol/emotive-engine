@@ -48,11 +48,33 @@ mascot.express('breathe');
 - **Shape Morphing** - Hearts, stars, moons, circles with smooth transitions
 - **Dynamic Gestures** - Bounce, spin, pulse, breathe, wave, and more
 - **Audio Reactive** - Beat detection and frequency visualization
+- **Semantic Performances** - Context-aware emotional choreography (44 built-in)
 - **TypeScript** - Full type definitions included
 - **High Performance** - Smooth on mobile with adaptive quality
 
+## Real-World Applications
+
+Emotive Engine powers emotional AI interfaces across multiple industries:
+
+| Industry          | Use Case                   | Live Demo                                                   | Value Proposition                                                       |
+| ----------------- | -------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 🛒 **Retail**     | AI Shopping Assistant      | [View Demo](https://emotiveengine.com/use-cases/retail)     | Reduce cart abandonment with empathetic, celebratory interactions       |
+| 📚 **Education**  | Cherokee Language Learning | [View Demo](https://emotiveengine.com/use-cases/cherokee)   | Cultural preservation through engaging, emotionally-responsive tutoring |
+| 🏥 **Healthcare** | Patient Check-in Interface | _Coming Soon_                                               | Improve satisfaction scores with calming, empathetic avatars            |
+| 🏠 **Smart Home** | Voice Assistant Avatar     | [View Demo](https://emotiveengine.com/use-cases/smart-home) | Visual feedback for voice commands with personality                     |
+| 🎮 **Gaming**     | Music-Synced NPCs          | [Examples](examples/)                                       | Characters that react to soundtrack with emotional expressions          |
+
+**Proven in Production:** Live demos at
+[emotiveengine.com](https://emotiveengine.com) with 60 FPS performance on mobile
+devices.
+
 See [full documentation](https://github.com/joshtol/emotive-engine/wiki) for API
 reference, advanced features, and examples.
+
+**For Business/Acquisition Inquiries:**
+
+- 📊 [Business Potential & Revenue Models](docs/BUSINESS_POTENTIAL.md)
+- 🔬 [Technical Innovations & Patent-Eligible Systems](docs/INNOVATIONS.md)
 
 ## Examples Gallery
 
@@ -92,6 +114,16 @@ All examples are vanilla HTML/JS - no build tools required!
 - Fully tree-shakeable ES modules
 - TypeScript definitions included
 - Source maps for debugging
+
+## Documentation
+
+- [API Reference](https://github.com/joshtol/emotive-engine/wiki) - Complete API
+  docs
+- [Examples](examples/) - Interactive code examples
+- [Technical Innovations](docs/INNOVATIONS.md) - Patent-eligible systems
+- [Business Potential](docs/BUSINESS_POTENTIAL.md) - Market analysis & revenue
+  models
+- [Changelog](CHANGELOG.md) - Version history with innovation timestamps
 
 ## Contributing
 
