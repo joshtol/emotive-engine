@@ -1,27 +1,17 @@
 # GitHub Setup Guide
 
-This guide will help you complete the repository setup to maximize visibility
-and enable the live demo.
+This guide will help you complete the repository setup to maximize visibility.
 
 ## ✅ Completed
 
-- [x] Created live demo at `docs/demo/index.html`
-- [x] Added GitHub Actions workflow for auto-deployment
+- [x] Live demo already exists at `emotiveengine.com/demo`
 - [x] Updated README with Examples Gallery
 - [x] Added Performance & Compatibility section
+- [x] Linked to actual domain instead of GitHub Pages
 
-## 🚀 Manual Steps Required
+## 🚀 Manual Steps Required (10 minutes total)
 
-### 1. Enable GitHub Pages (5 minutes)
-
-The live demo is ready but needs GitHub Pages enabled:
-
-1. Go to **Settings** → **Pages** in your GitHub repo
-2. Under **Source**, select: **GitHub Actions**
-3. The workflow will automatically deploy on the next push to `main`
-4. Your demo will be live at: `https://joshtol.github.io/emotive-engine/demo/`
-
-### 2. Add GitHub Topics for Discoverability (2 minutes)
+### 1. Add GitHub Topics for Discoverability (2 minutes)
 
 Topics help users discover your project through GitHub search.
 
@@ -37,17 +27,17 @@ Topics help users discover your project through GitHub search.
 
 **Expected impact**: 10-20x more discoverability in GitHub search
 
-### 3. Update Repository Description (1 minute)
+### 2. Update Repository Description (1 minute)
 
 While in the "About" settings:
 
 1. **Description**:
    `Real-time particle animation engine for AI interfaces with emotion-driven motion and musical beat synchronization`
-2. **Website**: `https://joshtol.github.io/emotive-engine/demo/`
+2. **Website**: `https://emotiveengine.com`
 3. Check ✅ **Use topics**
 4. Click "Save changes"
 
-### 4. Wiki Documentation (Optional - Later)
+### 3. Wiki Documentation (Optional - Later)
 
 Your README links to the Wiki but it's not populated. Two options:
 
@@ -63,7 +53,7 @@ Your README links to the Wiki but it's not populated. Two options:
 
     - [README](https://github.com/joshtol/emotive-engine#readme)
     - [Examples](https://github.com/joshtol/emotive-engine/tree/main/examples)
-    - [Live Demo](https://joshtol.github.io/emotive-engine/demo/)
+    - [Live Demo](https://emotiveengine.com/demo)
     - [API Reference](https://github.com/joshtol/emotive-engine/blob/main/CHANGELOG.md)
     ```
 
@@ -72,7 +62,7 @@ Your README links to the Wiki but it's not populated. Two options:
 - Move docs from `CHANGELOG.md` sections to organized Wiki pages
 - Create separate pages for API, Gestures, Emotions, etc.
 
-### 5. Create Social Preview Image (Optional - 10 min)
+### 4. Create Social Preview Image (Optional - 10 min)
 
 GitHub shows a preview image when people share your repo:
 
@@ -80,7 +70,8 @@ GitHub shows a preview image when people share your repo:
 2. Go to **Settings** → Scroll to **Social preview**
 3. Upload your image
 
-**Recommendation**: Screenshot your hero banner or the rhythm demo in action
+**Recommendation**: Screenshot your hero banner or the demo at
+emotiveengine.com/demo in action
 
 ## 📊 Success Metrics
 
@@ -99,38 +90,23 @@ After completing these steps, you should see:
 4. **Dev.to article** - Tutorial on building with Emotive Engine
 5. **Example showcase** - Create gallery of projects using the engine
 
-## 📝 Deployment Commands
+## 📝 Deployment
 
-To deploy the demo immediately:
-
-```bash
-# Commit the new changes
-git add .
-git commit -m "feat: add live demo and enhanced README"
-git push origin main
-```
-
-The GitHub Actions workflow will automatically deploy to Pages!
+Your demo is already live at **emotiveengine.com/demo** via Vercel! No
+additional deployment needed.
 
 ## ❓ Troubleshooting
-
-**Demo not loading?**
-
-- Check GitHub Actions tab for deployment status
-- Ensure Pages is set to "GitHub Actions" not "Deploy from branch"
-- Wait 2-3 minutes after first deployment
 
 **Topics not showing?**
 
 - Make sure you clicked "Save changes" in the About section
 - Topics should appear below the repo description
 
-**Demo 404 error?**
+**Demo not loading?**
 
-- Verify the workflow completed successfully
-- Check that `docs/demo/index.html` exists in the main branch
-- Try accessing: `https://joshtol.github.io/emotive-engine/demo/index.html`
+- Your demo is hosted on Vercel at emotiveengine.com/demo
+- Check Vercel dashboard for deployment status
 
 ---
 
-**Questions?** Open an issue or check GitHub Pages documentation.
+**Questions?** Open an issue or reach out.

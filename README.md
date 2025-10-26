@@ -10,7 +10,7 @@
 Particle-based emotional visualization • Shape morphing • Dynamic gestures •
 Pure Canvas 2D • TypeScript ready
 
-[🎮 Live Demo](https://joshtol.github.io/emotive-engine/demo/) •
+[🎮 Live Demo](https://emotiveengine.com/demo) •
 [Documentation](https://github.com/joshtol/emotive-engine/wiki) •
 [Examples](examples/) •
 [NPM](https://www.npmjs.com/package/@joshtol/emotive-engine)
@@ -58,14 +58,14 @@ reference, advanced features, and examples.
 
 Explore interactive examples showing different capabilities:
 
-| Example                                             | Description                                                 | Demo                                                       |
-| --------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
-| **[Rhythm Sync](examples/rhythm-sync-demo.html)**   | Upload music and watch the mascot dance with beat detection | [Try it →](https://joshtol.github.io/emotive-engine/demo/) |
-| **[Basic Usage](examples/basic-usage.html)**        | Minimal setup showing core emotion and gesture APIs         | [View](examples/basic-usage.html)                          |
-| **[Breathing App](examples/breathing-app.html)**    | Guided breathing exercise with calm animations              | [View](examples/breathing-app.html)                        |
-| **[Custom Gestures](examples/custom-gesture.html)** | Create your own gesture animations                          | [View](examples/custom-gesture.html)                       |
-| **[Event Handling](examples/event-handling.html)**  | Listen to engine events and react to state changes          | [View](examples/event-handling.html)                       |
-| **[LLM Integration](examples/llm-integration/)**    | Connect to Claude AI for dynamic emotional responses        | [View](examples/llm-integration/)                          |
+| Example                                                      | Description                                                   | Demo                                                |
+| ------------------------------------------------------------ | ------------------------------------------------------------- | --------------------------------------------------- |
+| **[Interactive Playground](https://emotiveengine.com/demo)** | Full-featured demo with gestures, emotions, music, and combos | [**Try it live →**](https://emotiveengine.com/demo) |
+| **[Rhythm Sync](examples/rhythm-sync-demo.html)**            | Upload music and watch the mascot dance with beat detection   | [View code](examples/rhythm-sync-demo.html)         |
+| **[Basic Usage](examples/basic-usage.html)**                 | Minimal setup showing core emotion and gesture APIs           | [View code](examples/basic-usage.html)              |
+| **[Breathing App](examples/breathing-app.html)**             | Guided breathing exercise with calm animations                | [View code](examples/breathing-app.html)            |
+| **[Custom Gestures](examples/custom-gesture.html)**          | Create your own gesture animations                            | [View code](examples/custom-gesture.html)           |
+| **[LLM Integration](examples/llm-integration/)**             | Connect to Claude AI for dynamic emotional responses          | [View code](examples/llm-integration/)              |
 
 All examples are vanilla HTML/JS - no build tools required!
 
