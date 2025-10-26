@@ -7,8 +7,8 @@
 
 **Real-time character animation for AI interfaces**
 
-Particle-based emotional visualization • 15 emotions • Shape morphing • Pure
-Canvas 2D • TypeScript ready
+Particle-based emotional visualization • Shape morphing • Dynamic gestures •
+Pure Canvas 2D • TypeScript ready
 
 [Documentation](https://github.com/joshtol/emotive-engine/wiki) •
 [Examples](examples/) •
@@ -43,12 +43,12 @@ mascot.express('breathe');
 
 ## Features
 
-- **15 Emotions** - Joy, calm, anger, fear, surprise, sadness, love, and more
+- **Rich Emotions** - Joy, calm, anger, fear, surprise, sadness, love, and more
 - **Shape Morphing** - Hearts, stars, moons, circles with smooth transitions
-- **Dynamic Gestures** - Bounce, spin, pulse, breathe, wave
+- **Dynamic Gestures** - Bounce, spin, pulse, breathe, wave, and more
 - **Audio Reactive** - Beat detection and frequency visualization
 - **TypeScript** - Full type definitions included
-- **Performance** - 60 FPS on mobile, adaptive quality system
+- **High Performance** - Smooth on mobile with adaptive quality
 
 See [full documentation](https://github.com/joshtol/emotive-engine/wiki) for API
 reference, advanced features, and examples.
