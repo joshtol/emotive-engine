@@ -65,11 +65,12 @@ MIT License - see [LICENSE.md](./LICENSE.md)
 
 <div align="center">
 
-**Made with Emotive Engine**
+**Meta: Made with Emotive Engine**
 
-This README's [hero banner](examples/hero-banner-capture.html) and
-[demo GIF](examples/emotion-demo-capture.html) were created using the engine
-itself.
+The assets in this README were created using the engine itself:
+
+- [Hero Banner Generator](examples/hero-banner-capture.html) (HTML + live code)
+- [Demo GIF Generator](examples/emotion-demo-capture.html) (HTML + live code)
 
 Created by [Joshua Tollette](https://github.com/joshtol)
 
