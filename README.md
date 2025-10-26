@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/emotive-engine-full-BW.svg" alt="Emotive Engine" width="600" />
+  <img src="assets/hero-banner.gif" alt="Emotive Engine - Real-Time Character Animation for AI Interfaces" width="100%" />
 
 [![npm version](https://img.shields.io/npm/v/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/joshtol/emotive-engine/test.yml?branch=main&label=tests)](https://github.com/joshtol/emotive-engine/actions)
