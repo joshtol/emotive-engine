@@ -83,3 +83,4 @@ site/playwright/.cache/
 
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
+best.code-workspace
