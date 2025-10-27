@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPM Comparison - Real Engine Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .canvas-wrapper {
+            display: inline-block;
+            position: relative;
+            width: 600px;
+            height: 300px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+        .canvas-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 9px solid #fff;
+            border-radius: 24px;
+            pointer-events: none;
+            z-index: 100;
+            box-sizing: border-box;
+        }
+        .canvas-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 999;
+            border: 9px solid #fff;
+        }
+        .side {
+            position: absolute;
+            top: 0;
+            width: 300px;
+            height: 300px;
+            background: #000;
+            overflow: hidden;
+        }
+        .side:first-child {
+            left: 0;
+        }
+        .side:last-child {
+            left: 299px;
+        }
+        canvas {
+            display: block;
+            width: 300px !important;
+            height: 300px !important;
+            background: #000 !important;
+        }
+        .beat-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            z-index: 10;
+            transition: all 0.1s;
+        }
+        .beat-indicator.active {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.8);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-wrapper">
+        <div class="side">
+            <div class="beat-indicator" id="leftBeat"></div>
+            <canvas id="leftCanvas"></canvas>
+        </div>
+        <div class="side">
+            <div class="beat-indicator" id="rightBeat"></div>
+            <canvas id="rightCanvas"></canvas>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot from '../dist/mascot.js';
+
+        const leftCanvas = document.getElementById('leftCanvas');
+        const rightCanvas = document.getElementById('rightCanvas');
+        const leftBeat = document.getElementById('leftBeat');
+        const rightBeat = document.getElementById('rightBeat');
+
+        let leftMascot = null;
+        let rightMascot = null;
+        let leftInterval = null;
+        let rightInterval = null;
+        let beatInterval = null;
+
+        // Morph sequence: sun -> solar -> heart -> repeat
+        const morphSequence = ['sun', 'solar', 'heart'];
+        let leftMorphIndex = 0;
+        let rightMorphIndex = 0;
+
+        // Set canvas sizes
+        leftCanvas.width = 300;
+        leftCanvas.height = 300;
+        rightCanvas.width = 300;
+        rightCanvas.height = 300;
+
+        async function initMascots() {
+            console.log('Initializing mascots...');
+
+            // Clean up existing
+            if (leftMascot) {
+                leftMascot.stop?.();
+                leftMascot = null;
+            }
+            if (rightMascot) {
+                rightMascot.stop?.();
+                rightMascot = null;
+            }
+            if (leftInterval) clearInterval(leftInterval);
+            if (rightInterval) clearInterval(rightInterval);
+            if (beatInterval) clearInterval(beatInterval);
+
+            const emotion = 'euphoria';
+
+            // Left side: Hardcoded 500ms timing (WRONG for 90 BPM)
+            console.log('Creating left mascot...');
+            leftMascot = new EmotiveMascot({
+                canvasId: 'leftCanvas',
+                targetFPS: 60,
+                enableAudio: false,
+                soundEnabled: false,
+                maxParticles: 300,
+                defaultEmotion: 'neutral',
+                enableGazeTracking: false,
+                enableIdleBehaviors: false
+            });
+
+            console.log('Initializing left mascot with canvas...');
+            await leftMascot.init(leftCanvas);
+            leftMascot.setParticleSystemCanvasDimensions(300, 300);
+            leftMascot.setContainment(null, 2.0);
+
+            // Enhanced backdrop
+            leftMascot.setBackdrop({
+                enabled: true,
+                radius: 3.5,
+                intensity: 0.9,
+                blendMode: 'normal',
+                falloff: 'smooth',
+                edgeSoftness: 0.95,
+                coreTransparency: 0.25,
+                responsive: true
+            });
+
+            leftMascot.setScale({ core: 1.5, particles: 1.2 });
+            leftMascot.setPosition(0, 0, 0);
+
+            console.log('Starting left mascot...');
+            leftMascot.start();
+            leftMascot.setEmotion(emotion);
+            console.log('Left mascot started!');
+
+            // Right side: Musical time at 45 BPM (CORRECT)
+            console.log('Creating right mascot...');
+            rightMascot = new EmotiveMascot({
+                canvasId: 'rightCanvas',
+                bpm: 45,
+                targetFPS: 60,
+                enableAudio: false,
+                soundEnabled: false,
+                maxParticles: 300,
+                defaultEmotion: 'neutral',
+                enableGazeTracking: false,
+                enableIdleBehaviors: false
+            });
+
+            console.log('Initializing right mascot with canvas...');
+            await rightMascot.init(rightCanvas);
+            rightMascot.setParticleSystemCanvasDimensions(300, 300);
+            rightMascot.setContainment(null, 2.0);
+
+            // Enhanced backdrop
+            rightMascot.setBackdrop({
+                enabled: true,
+                radius: 3.5,
+                intensity: 0.9,
+                blendMode: 'normal',
+                falloff: 'smooth',
+                edgeSoftness: 0.95,
+                coreTransparency: 0.25,
+                responsive: true
+            });
+
+            rightMascot.setScale({ core: 1.5, particles: 1.2 });
+            rightMascot.setPosition(0, 0, 0);
+
+            console.log('Starting right mascot...');
+            rightMascot.start();
+            rightMascot.setEmotion(emotion);
+            console.log('Right mascot started!');
+
+            // Trigger gesture + morph every 1000ms on left (hardcoded, wrong)
+            leftInterval = setInterval(() => {
+                const shape = morphSequence[leftMorphIndex];
+                leftMascot.morphTo(shape, 800);
+                leftMascot.express('bounce');
+                leftBeat.classList.add('active');
+                setTimeout(() => leftBeat.classList.remove('active'), 100);
+
+                leftMorphIndex = (leftMorphIndex + 1) % morphSequence.length;
+            }, 1000);
+
+            // Trigger gesture + morph every beat on right (musical time, correct)
+            const beatMs = 60000 / 45; // 1333ms per beat at 45 BPM
+            rightInterval = setInterval(() => {
+                const shape = morphSequence[rightMorphIndex];
+                rightMascot.morphTo(shape, 800);
+                rightMascot.express('bounce');
+                rightBeat.classList.add('active');
+                setTimeout(() => rightBeat.classList.remove('active'), 100);
+
+                rightMorphIndex = (rightMorphIndex + 1) % morphSequence.length;
+            }, beatMs);
+
+            // Also trigger immediately
+            leftMascot.morphTo(morphSequence[0], 800);
+            leftMascot.express('bounce');
+            leftMorphIndex = 1;
+
+            rightMascot.morphTo(morphSequence[0], 800);
+            rightMascot.express('bounce');
+            rightMorphIndex = 1;
+        }
+
+        // Auto-start on page load
+        window.addEventListener('load', () => {
+            initMascots();
+        });
+    </script>
+</body>
+</html>

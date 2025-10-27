@@ -80,6 +80,38 @@ devices.
 See [full documentation](https://github.com/joshtol/emotive-engine/wiki) for API
 reference, advanced features, and examples.
 
+## How It Works: Musical Time vs Clock Time
+
+Most animation libraries work in milliseconds. Music works in beats. Emotive
+Engine bridges the gap:
+
+<div align="center">
+  <img src="assets/bpm-comparison.gif" alt="BPM Comparison" width="600" />
+</div>
+
+**The Problem:** Hardcode an animation to bounce for 500ms. Perfect at 120 BPM.
+Switch to a 90 BPM song? Everything drifts off-rhythm because 500ms is now 0.75
+beats.
+
+**The Solution:** Emotive Engine uses **musical time** as the atomic unit.
+Specify animations in beats, not milliseconds:
+
+```javascript
+// Traditional approach (breaks when tempo changes)
+setTimeout(() => bounce(), 500);
+
+// Emotive Engine approach (adapts to any tempo)
+mascot.express('bounce'); // Automatically becomes 667ms at 90 BPM
+```
+
+A "bounce" specified as "1 beat" automatically becomes:
+
+- 500ms at 120 BPM
+- 667ms at 90 BPM
+- 353ms at 170 BPM
+
+Change the tempo, everything adjusts. No recalculation needed.
+
 **For Business/Acquisition Inquiries:**
 
 - 📊 [Business Potential & Revenue Models](docs/BUSINESS_POTENTIAL.md)
