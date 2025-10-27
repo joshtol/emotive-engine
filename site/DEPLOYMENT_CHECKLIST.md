@@ -1,190 +1,384 @@
-# 🎬 Dual-Path Recording Deployment Checklist
+# 🚀 Emotive Engine Site Deployment Checklist
 
-## ✅ **Integration Complete**
+## Pre-Deployment Verification
 
-### **What's Implemented:**
+### ✅ Code Quality
 
-- ✅ **Frontend Dual-Path System**
-    - Live canvas recording for instant feedback
-    - Frame data capture during recording (10 FPS)
-    - Animation state logging (emotions, particles, audio sync)
-    - Processing status indicators
+- [ ] All tests passing: `npm test`
+- [ ] Linting clean: `npm run lint`
+- [ ] Build successful: `npm run build`
+- [ ] TypeScript checks pass: `npx tsc --noEmit`
 
-- ✅ **Backend Processing Pipeline**
-    - Node.js API endpoints (`/api/process-recording`, `/api/processed-video`)
-    - Real Canvas.js rendering at 4K resolution
-    - FFmpeg integration for professional video encoding
-    - Frame-by-frame high-quality rendering
+### ✅ Environment Configuration
 
-- ✅ **Quality Improvements**
-    - Perfect glow effect preservation (`screen` blend mode)
-    - 3840x3840 native resolution rendering
-    - Professional H.264 encoding with `-crf 15`
-    - Optimized for streaming (`+faststart`)
+**Required Environment Variables:**
 
-## 🚀 **Deployment Steps**
+```bash
+# .env.local (create from .env.example if available)
+ANTHROPIC_API_KEY=sk-ant-...          # For AI chat features
+NEXT_PUBLIC_SITE_URL=https://...     # Production URL
+```
 
-### **1. Environment Setup**
+**Check Configuration:**
+
+```bash
+# Verify Next.js config
+cat next.config.js
+
+# Verify API routes exist
+ls src/app/api/
+```
+
+### ✅ Dependencies
 
 ```bash
 cd site
-npm install ffmpeg-static canvas fs-extra temp
-# Verify installations
-node -e "console.log('FFmpeg:', require('ffmpeg-static'), 'Canvas:', require('canvas'))"
+npm install
+npm audit fix  # Fix any security issues
 ```
 
-### **2. Production Configuration**
+## Build & Deploy
 
-**File:** `next.config.js`
+### Option 1: Vercel (Recommended)
+
+**Initial Setup:**
+
+```bash
+npm install -g vercel
+vercel login
+```
+
+**Deploy to Production:**
+
+```bash
+vercel --prod
+```
+
+**Environment Variables in Vercel:**
+
+1. Go to Project Settings → Environment Variables
+2. Add `ANTHROPIC_API_KEY` (Production)
+3. Add `NEXT_PUBLIC_SITE_URL` (Production)
+
+### Option 2: Static Export
+
+**Build Static Site:**
+
+```bash
+npm run build
+npm run export  # If export script exists
+```
+
+**Deploy to Static Hosting:**
+
+- Upload `/out` directory to:
+    - Netlify
+    - GitHub Pages
+    - AWS S3 + CloudFront
+    - Any static host
+
+### Option 3: Node.js Server
+
+**Build:**
+
+```bash
+npm run build
+```
+
+**Start Production Server:**
+
+```bash
+NODE_ENV=production npm start
+```
+
+**Server Requirements:**
+
+- Node.js 18+
+- 2GB RAM minimum
+- PM2 for process management (recommended)
+
+## Post-Deployment Verification
+
+### ✅ Functionality Tests
+
+**Homepage:**
+
+- [ ] Hero section loads with mascot animation
+- [ ] Mascot responds to interactions
+- [ ] Emotion buttons work
+- [ ] Shape morphing works
+- [ ] Gesture animations work
+
+**Music Section (if enabled):**
+
+- [ ] Audio files load: `/assets/tracks/music/electric-glow-f.wav`
+- [ ] Audio files load: `/assets/tracks/music/electric-glow-m.wav`
+- [ ] BPM sync works correctly
+- [ ] Track selection modal works
+
+**AI Features (if enabled):**
+
+- [ ] `/api/chat` endpoint responds
+- [ ] AI responses trigger mascot emotions
+- [ ] Sentiment analysis works
+- [ ] Rate limiting active
+
+**Use Cases Pages:**
+
+- [ ] `/use-cases/education` loads
+- [ ] `/use-cases/smart-home` loads
+- [ ] `/use-cases/retail` loads
+- [ ] Mascot demos work on each page
+
+### ✅ Performance
+
+**Core Web Vitals:**
+
+```bash
+# Test with Lighthouse
+npm install -g lighthouse
+lighthouse https://your-site.com --view
+```
+
+**Target Metrics:**
+
+- LCP (Largest Contentful Paint): < 2.5s
+- FID (First Input Delay): < 100ms
+- CLS (Cumulative Layout Shift): < 0.1
+
+**Asset Optimization:**
+
+- [ ] Images optimized (WebP/AVIF)
+- [ ] Bundle size acceptable (< 500KB JS)
+- [ ] Audio files compressed
+- [ ] Fonts optimized
+
+### ✅ Browser Compatibility
+
+**Test Browsers:**
+
+- [ ] Chrome/Edge (Chromium 90+)
+- [ ] Firefox (90+)
+- [ ] Safari (14+)
+- [ ] Mobile Safari (iOS 14+)
+- [ ] Mobile Chrome (Android 10+)
+
+**Canvas/WebGL:**
+
+- [ ] Mascot renders correctly
+- [ ] Particles render smoothly
+- [ ] Glow effects work
+- [ ] No WebGL errors in console
+
+### ✅ Security
+
+**Headers:**
+
+```bash
+# Check security headers
+curl -I https://your-site.com
+```
+
+**Should include:**
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Strict-Transport-Security: max-age=...`
+
+**API Rate Limiting:**
+
+- [ ] `/api/chat` has rate limiting
+- [ ] API keys not exposed in client code
+- [ ] CORS configured correctly
+
+### ✅ Monitoring
+
+**Setup Monitoring:**
+
+```bash
+# Add to your deployment
+- Error tracking (Sentry/LogRocket)
+- Analytics (Google Analytics/Plausible)
+- Uptime monitoring (UptimeRobot/Pingdom)
+```
+
+## Rollback Plan
+
+**If deployment fails:**
+
+```bash
+# Vercel - Instant rollback
+vercel rollback
+
+# Manual rollback
+git revert HEAD
+git push origin main
+# Redeploy previous version
+```
+
+## Common Issues & Solutions
+
+### Issue: Mascot not rendering
+
+**Check:**
+
+```bash
+# Verify UMD bundle exists
+ls site/public/emotive-engine.js
+
+# Check browser console for errors
+# Look for: "EmotiveMascot is not defined"
+```
+
+**Fix:** Rebuild the engine
+
+```bash
+cd ..  # Back to root
+npm run build:dev
+```
+
+### Issue: Audio files 404
+
+**Check:**
+
+```bash
+# Verify audio files exist
+ls site/public/assets/tracks/music/
+
+# Should see:
+# electric-glow-f.wav (34.5 MB)
+# electric-glow-m.wav (32.9 MB)
+```
+
+**Fix:** Audio files must be in `site/public/assets/`
+
+### Issue: API endpoints failing
+
+**Check:**
+
+```bash
+# Test API locally
+curl http://localhost:3000/api/chat -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"message":"test"}'
+```
+
+**Fix:** Verify environment variables set in production
+
+### Issue: Build fails
+
+**Common causes:**
+
+- Missing dependencies: `npm install`
+- TypeScript errors: `npx tsc --noEmit`
+- Next.js config issues: Check `next.config.js`
+
+## Performance Optimization
+
+### Before Launch:
+
+**1. Optimize Assets:**
+
+```bash
+# Compress images
+npm install -g sharp-cli
+sharp -i input.png -o output.webp
+
+# Analyze bundle
+npm run build -- --analyze  # If configured
+```
+
+**2. Enable Caching:**
 
 ```javascript
+// next.config.js
 module.exports = {
-    experimental: {
-        serverComponentsExternalPackages: ['canvas', 'ffmpeg-static'],
-    },
-    webpack: config => {
-        config.externals.push({
-            canvas: 'canvas',
-        });
-        return config;
-    },
+    headers: async () => [
+        {
+            source: '/assets/:path*',
+            headers: [
+                {
+                    key: 'Cache-Control',
+                    value: 'public, max-age=31536000, immutable',
+                },
+            ],
+        },
+    ],
 };
 ```
 
-### **3. Server Requirements**
+**3. Lazy Loading:**
 
-- **RAM:** Minimum 4GB for 4K rendering
-- **CPU:** Multi-core recommended for FFmpeg encoding
-- **Storage:** Space for temporary frame files
-- **FFmpeg:** Static binary included
+- [ ] Heavy components lazy loaded
+- [ ] Audio files loaded on demand
+- [ ] Use cases loaded with React.lazy()
 
-### **4. Testing**
+## Documentation Updates
 
-**Start Development:**
+**After successful deployment:**
 
-```bash
-npm run dev
-```
+- [ ] Update main README with live site URL
+- [ ] Update CONTRIBUTING.md with deployment info
+- [ ] Tag release: `git tag v1.0.0 && git push --tags`
+- [ ] Create GitHub release with changelog
 
-**Test API Endpoints:**
+## Success Criteria
 
-```bash
-node test-api.js
-```
+### ✅ Site is Live
 
-**Manual Test Flow:**
+- URL accessible globally
+- SSL certificate valid
+- DNS propagated
 
-1. Open `http://localhost:3000`
-2. Select track → Click record 🎥
-3. Interact with mascot during recording
-4. Stop recording → Processing indicator appears
-5. Wait 2-5 minutes → High-quality video ready
-6. Export → Get 4K MP4 file
+### ✅ Core Features Work
 
-## 📊 **Expected Performance**
+- Mascot renders and animates
+- Interactions respond correctly
+- Audio sync works (if enabled)
+- AI features work (if enabled)
 
-### **Live Recording (Immediate):**
+### ✅ Performance Acceptable
 
-- ⏱️ Available: **Instant**
-- 🎯 Quality: Browser canvas quality (~800px)
-- 📁 File size: 10-20 MB for 2 minutes
-- ✅ Use case: Quick social sharing
+- Page load < 3s
+- Animation smooth (60 FPS)
+- No console errors
+- Works on mobile
 
-### **Background Processing (Perfect):**
+### ✅ Monitoring Active
 
-- ⏱️ Processing time: **2-5 minutes** (for 2-minute recording)
-- 🎯 Quality: **3840x3840 native resolution**
-- 📁 File size: 50-100 MB for 2 minutes
-- ✅ Use case: Professional content
-
-## 🔧 **Troubleshooting**
-
-### **Common Issues:**
-
-**FFmpeg Not Found:**
-
-```bash
-# Verify installation
-ls node_modules/ffmpeg-static/vendor/node_modules/ffmpeg-static
-```
-
-**Canvas Import Error:**
-
-```bash
-# Use proper import syntax
-import { createCanvas } from 'canvas'
-```
-
-**Memory Issues:**
-
-- Reduce `targetResolution` to `1920x1920`
-- Lower `frameCount` or capture interval
-
-**Large File Processing:**
-
-- Implement job queue (Redis/BullJS)
-- Add cloud storage (AWS S3/Azure Blob)
-
-## 🎯 **Production Architecture**
-
-### **Scaling Recommendations:**
-
-1. **Job Queue System:**
-
-    ```javascript
-    // Add Redis/BullJS for job management
-    const Queue = require('bull');
-    const processingQueue = new Queue('video processing');
-    ```
-
-2. **Cloud Storage:**
-
-    ```javascript
-    // Upload processed videos to cloud
-    import AWS from 'aws-sdk'
-    const s3 = new AWS.S3({...})
-    ```
-
-3. **Progress Updates:**
-    ```javascript
-    // WebSocket for real-time progress
-    io.emit('processing-progress', { jobId, progress });
-    ```
-
-## ✅ **Final Verification**
-
-### **User Experience Flow:**
-
-1. User plays music and interacts ✅
-2. Instant video export available ✅
-3. Background processing starts ✅
-4. Professional quality video ready ✅
-5. User gets both instant and perfect versions ✅
-
-### **Quality Validation:**
-
-- [ ] Glow effects preserved perfectly
-- [ ] Resolution exceeds browser capabilities
-- [ ] Audio sync maintained
-- [ ] File sizes optimized
-- [ ] Processing time acceptable
+- Error tracking configured
+- Analytics collecting data
+- Uptime monitoring active
 
 ---
 
-## 🎬 **Success Metrics**
+## Quick Deploy Commands
 
-**Before (Browser-only):**
+**Fresh deployment:**
 
-- Quality: ⭐⭐☆☆☆
-- Resolution: 800px
-- Glow: Degraded
-- Processing: Instant but limiting
+```bash
+# From project root
+cd site
+npm install
+npm run build
+vercel --prod
+```
 
-**After (Dual-Path):**
+**Update deployment:**
 
-- Quality: ⭐⭐⭐⭐⭐
-- Resolution: 3840px (4K)
-- Glow: Perfect
-- Processing: Instant + Perfect
+```bash
+git add -A
+git commit -m "feat: update site"
+git push origin main
+# Auto-deploys if CI/CD configured
+```
 
-**Result: INSTANT GRATIFICATION + EVENTUAL PERFECTION!** 🎉
+**Emergency rollback:**
+
+```bash
+vercel rollback
+```
+
+---
+
+**Last Updated:** 2025-10-27 **Status:** ✅ Ready for production deployment
