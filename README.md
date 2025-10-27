@@ -30,13 +30,21 @@ npm install @joshtol/emotive-engine
 ```javascript
 import EmotiveMascot from '@joshtol/emotive-engine';
 
+// Get canvas element
+const canvas = document.getElementById('mascot-canvas');
+
+// Create mascot instance
 const mascot = new EmotiveMascot({
     canvasId: 'mascot-canvas',
+    targetFPS: 60,
+    defaultEmotion: 'neutral',
 });
 
-await mascot.init();
+// CRITICAL: Initialize with canvas element
+await mascot.init(canvas);
 mascot.start();
 
+// Try these commands
 mascot.setEmotion('calm');
 mascot.morphTo('moon');
 mascot.express('breathe');
@@ -53,9 +61,10 @@ mascot.express('breathe');
 
 ## Features
 
-- **Rich Emotions** - Joy, calm, anger, fear, surprise, sadness, love, and more
-- **Shape Morphing** - Hearts, stars, moons, circles with smooth transitions
-- **Dynamic Gestures** - Bounce, spin, pulse, breathe, wave, and more
+- **Rich Emotions** - Joy, calm, excited, sadness, love, focused, empathy,
+  neutral
+- **Shape Morphing** - Circle, heart, star, sun, moon with smooth transitions
+- **Dynamic Gestures** - Bounce, spin, pulse, glow, breathe, expand
 - **Audio Reactive** - Beat detection and frequency visualization
 - **Semantic Performances** - Context-aware emotional choreography (44 built-in)
 - **TypeScript** - Full type definitions included
