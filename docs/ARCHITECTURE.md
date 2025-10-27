@@ -483,23 +483,28 @@ FPS < 30 for 60 frames?
 
 ## Event System
 
-The mascot emits events you can listen to:
+The mascot emits events you can listen to (from [examples/event-handling.html](../examples/event-handling.html)):
 
 ```javascript
-mascot.on('emotionChange', (emotion) => {
-    console.log('Emotion changed to:', emotion);
+// Real events from working examples
+mascot.on('gesture', (data) => {
+    console.log('Gesture triggered:', data.name);
 });
 
-mascot.on('gestureStart', (gesture) => {
-    console.log('Gesture started:', gesture);
+mascot.on('shapeMorphStarted', (data) => {
+    console.log('Shape morphing:', data.from, '→', data.to);
 });
 
-mascot.on('gestureComplete', (gesture) => {
-    console.log('Gesture completed:', gesture);
+mascot.on('resize', (data) => {
+    console.log('Canvas resized:', data.width, 'x', data.height);
 });
 
-mascot.on('error', (error) => {
-    console.error('Error:', error);
+mascot.on('paused', () => {
+    console.log('Animation paused');
+});
+
+mascot.on('resumed', () => {
+    console.log('Animation resumed');
 });
 ```
 
