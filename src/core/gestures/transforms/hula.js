@@ -8,6 +8,8 @@
  * @fileoverview Hula-hoop variation of orbital with vertical oscillation
  * @author Emotive Engine Team
  * @module gestures/transforms/hula
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  * 
  * VISUAL EFFECT:
  * Like a hula-hoop spinning around the orb - particles orbit horizontally while

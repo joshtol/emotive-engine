@@ -8,6 +8,8 @@
  * @fileoverview Directional gesture - move particles in specific direction
  * @author Emotive Engine Team
  * @module gestures/effects/directional
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  */
 
 export default {

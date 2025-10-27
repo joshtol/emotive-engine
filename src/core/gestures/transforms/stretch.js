@@ -8,6 +8,8 @@
  * @fileoverview Stretch gesture - scale particles along axes
  * @author Emotive Engine Team
  * @module gestures/transforms/stretch
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

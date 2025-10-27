@@ -8,6 +8,8 @@
  * @fileoverview Heart shape for love and affection emotions
  * @author Emotive Engine Team
  * @module shapes/organic/heart
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  */
 
 import { SHAPE_CATEGORIES } from '../index.js';

@@ -8,6 +8,8 @@
  * @fileoverview Paranoid twitching motion for suspicious/nervous states
  * @author Emotive Engine Team
  * @module gestures/motions/twitch
+ * @complexity ⭐⭐ Intermediate
+ * @audience Motion patterns for particle animations
  * 
  * GESTURE TYPE:
  * type: 'blending' - Adds to existing particle motion

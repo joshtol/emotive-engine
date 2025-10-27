@@ -1,6 +1,8 @@
 /**
  * StateCoordinator - Manages emotion states and transitions
  * @module mascot/StateCoordinator
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Modify this when changing state validation or transition logic
  */
 
 import { getEmotion, getEmotionVisualParams } from '../core/emotions/index.js';

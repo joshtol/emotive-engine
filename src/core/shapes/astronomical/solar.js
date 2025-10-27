@@ -8,6 +8,8 @@
  * @fileoverview Solar eclipse - sun with black shadow overlay
  * @author Emotive Engine Team
  * @module shapes/astronomical/solar
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  */
 
 import { SHAPE_CATEGORIES } from '../index.js';

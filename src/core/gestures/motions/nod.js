@@ -8,6 +8,8 @@
  * @fileoverview Nod gesture - vertical agreement motion
  * @author Emotive Engine Team
  * @module gestures/motions/nod
+ * @complexity ⭐⭐ Intermediate
+ * @audience Motion patterns for particle animations
  */
 
 export default {

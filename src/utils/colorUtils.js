@@ -11,6 +11,8 @@
  * @author Emotive Engine Team
  * @version 2.1.0
  * @module ColorUtils
+ * @complexity ⭐ Beginner-friendly
+ * @audience Useful utility functions for color manipulation. Well-tested and documented.
  * @changelog 2.1.0 - Added undertone saturation modifiers for dynamic depth
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════

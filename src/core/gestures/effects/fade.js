@@ -8,6 +8,8 @@
  * @fileoverview Fade gesture - opacity fade effect
  * @author Emotive Engine Team
  * @module gestures/effects/fade
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  */
 
 export default {

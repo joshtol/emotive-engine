@@ -8,6 +8,8 @@
  * @fileoverview Suspicion shape - the sly grin discovered by accident!
  * @author Emotive Engine Team
  * @module shapes/organic/suspicion
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  * 
  * HAPPY ACCIDENT ORIGIN:
  * This shape was discovered when trying to create a moon shape. The broken

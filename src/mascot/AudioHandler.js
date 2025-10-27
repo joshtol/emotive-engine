@@ -1,6 +1,8 @@
 /**
  * AudioHandler - Manages all audio-related functionality for EmotiveMascot
  * @module mascot/AudioHandler
+ * @complexity ⭐⭐⭐⭐ Advanced (Web Audio API complexity)
+ * @audience Modify this for audio sync features or BPM detection changes
  */
 
 export class AudioHandler {

@@ -8,6 +8,8 @@
  * @fileoverview Glow gesture - based on pulse but focused on luminosity without movement
  * @author Emotive Engine Team
  * @module gestures/effects/glow
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE

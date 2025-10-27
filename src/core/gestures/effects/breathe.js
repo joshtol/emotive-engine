@@ -8,6 +8,8 @@
  * @fileoverview Breathe gesture - inhale/exhale particle motion
  * @author Emotive Engine Team
  * @module gestures/effects/breathe
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  */
 
 export default {

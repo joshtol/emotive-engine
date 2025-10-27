@@ -8,6 +8,8 @@
  * @fileoverview Jump gesture - squash, leap, and land animation
  * @author Emotive Engine Team
  * @module gestures/transforms/jump
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

@@ -8,6 +8,8 @@
  * @fileoverview Glitch emotional state - surprised sadness with rainbow colors and glitch wiggle (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/glitch
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

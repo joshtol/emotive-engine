@@ -8,6 +8,8 @@
  * @fileoverview Spin gesture - orbital rotation around center
  * @author Emotive Engine Team
  * @module gestures/transforms/spin
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

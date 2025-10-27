@@ -8,6 +8,8 @@
  * @fileoverview Disgust emotional state - revulsion with repelling particles (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/disgust
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

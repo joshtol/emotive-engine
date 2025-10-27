@@ -8,6 +8,8 @@
  * @fileoverview Charleston gesture - classic hip-hop shuffle with modern twist
  * @author Emotive Engine Team
  * @module gestures/effects/charleston
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  */
 
 export default {

@@ -8,6 +8,8 @@
  * @fileoverview Resting emotional state - deep relaxation with slow drift (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/resting
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

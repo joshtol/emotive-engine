@@ -8,6 +8,8 @@
  * @fileoverview Tilt gesture - particles gather and sway together
  * @author Emotive Engine Team
  * @module gestures/transforms/tilt
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

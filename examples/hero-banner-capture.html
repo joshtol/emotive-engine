@@ -1,29 +1,39 @@
 <!DOCTYPE html>
 <!--
-  HERO BANNER CAPTURE FOR GITHUB README - PURE VISUAL
+  HERO BANNER CAPTURE - Emotive Engine
 
-  Purpose: Generate animated GIF header (1280x400px) for README.md
-  Features:
-  - Pure visual banner (logo + animated mascot only, no text overlay)
-  - Mascot cycles through 6 emotions (joy, excited, love, surprise, calm, focused)
-  - Shape morphing (sun, solar, heart, star, moon, lunar)
-  - Gesture animations (bounce, spin, pulse, expand, breathe, glow)
-  - Backdrop glow effect for depth
-  - Large particles (2x scale) bouncing across full banner
-  - Aurora background with brand color gradients
-  - Seamless ~13 second loop
+  Purpose: Generate animated hero banner GIF for README/documentation
 
-  Composition:
-  - Logo: Top-left corner (200px, subtle)
-  - Mascot: Centered (2.5x scale with backdrop)
-  - Particles: 2x scale, full banner movement
-  - Background: Dark with aurora gradients
+  This example demonstrates:
+  - Full-width banner animations (1280x400px)
+  - Emotion sequencing with perfect timing
+  - Coordinated shape morphing + gestures
+  - Large-scale mascot rendering (2.5x core, 2x particles)
+  - Full-banner particle movement (no containment)
+  - Aurora background effects
+  - Professional capture setup
 
-  How to capture:
-  1. Open this file in Chrome/Edge at 100% zoom
-  2. Use ScreenToGif - record exactly 1280x400px region
-  3. Record for ~13 seconds (one complete emotion cycle)
-  4. Optimize GIF (aim for <2MB)
+  Technical showcase:
+  - State machine for emotion sequences
+  - Timing coordination (emotion + morph + gesture)
+  - Scale configuration for banner size
+  - Particle system canvas dimensions
+  - Containment removal for full freedom
+
+  Use cases:
+  1. Generate README hero banners
+  2. Create marketing materials
+  3. Learn animation sequencing
+  4. See professional banner composition
+
+  Complexity: ⭐⭐⭐ Advanced
+  Demonstrates: Banner-scale animations, professional captures
+
+  Capture instructions:
+  1. Open in Chrome/Edge at 100% zoom
+  2. Use ScreenToGif - record 1280x400px region
+  3. Record for ~13 seconds (full cycle)
+  4. Optimize to <2MB
   5. Save as: assets/hero-banner.gif
 -->
 <html lang="en">
@@ -132,7 +142,7 @@
 
         <!-- Simple logo in corner -->
         <div class="logo-wrapper">
-            <img src="./assets/emotive-engine-full-BW.svg" alt="Emotive Engine" class="logo">
+            <img src="../assets/emotive-engine-full-BW.svg" alt="Emotive Engine" class="logo">
         </div>
 
         <!-- Mascot container - fixed, full banner size -->
@@ -157,44 +167,59 @@
     <script src="../site/public/emotive-engine.js"></script>
 
     <script>
-        // Initialize mascot properly
+        /**
+         * HERO BANNER INITIALIZATION
+         *
+         * This shows how to configure the mascot for wide banner formats.
+         * Key differences from standard setup:
+         * - Wide canvas dimensions (1280x400 vs 400x400)
+         * - Larger scale for visibility (2.5x core, 2x particles)
+         * - No containment so particles fill entire banner
+         * - Disabled idle behaviors for predictable capture
+         */
+
+        let mascot = null;
+        let currentIndex = 0;
+
+        // STEP 1: Initialize mascot for banner size
         async function initMascot() {
             const canvas = document.getElementById('mascot-canvas');
             const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
 
             if (!EmotiveMascot) {
-                console.error('EmotiveMascot not found');
+                console.error('❌ EmotiveMascot not loaded');
                 return null;
             }
 
-            // Set canvas dimensions to match banner
+            // Set wide banner dimensions
             canvas.width = 1280;
             canvas.height = 400;
 
+            // Create mascot optimized for banner capture
             const mascot = new EmotiveMascot({
                 canvasId: 'mascot-canvas',
-                targetFPS: 60,
+                targetFPS: 60,                  // Smooth for GIF capture
                 enableAudio: false,
                 soundEnabled: false,
-                maxParticles: 150,
+                maxParticles: 150,              // Plenty for wide banner
                 defaultEmotion: 'neutral',
-                enableGazeTracking: false,
-                enableIdleBehaviors: false
+                enableGazeTracking: false,      // No interaction for capture
+                enableIdleBehaviors: false      // Predictable animations only
             });
 
             await mascot.init(canvas);
 
-            // Set particle system dimensions to match full banner
+            // Configure particle system for full banner
             mascot.setParticleSystemCanvasDimensions(1280, 400);
 
-            // Remove particle containment - let them move freely across entire banner
+            // Remove containment - particles can move across entire banner
             mascot.setContainment(null, 2.5);
 
-            // Configure backdrop for depth and polish (like use cases)
+            // Configure backdrop glow for depth
             mascot.setBackdrop({
                 enabled: true,
-                radius: 3.5,
-                intensity: 0.9,
+                radius: 3.5,              // Large glow
+                intensity: 0.9,           // Bright
                 blendMode: 'normal',
                 falloff: 'smooth',
                 edgeSoftness: 0.95,
@@ -202,65 +227,82 @@
                 responsive: true
             });
 
-            // Scale mascot - larger core AND larger particles
+            // Scale up for banner visibility
             mascot.setScale({
-                core: 2.5,
-                particles: 2.0  // Bigger particles!
+                core: 2.5,         // 2.5x larger core
+                particles: 2.0     // 2x larger particles
             });
 
-            // Position at perfect center - no text to balance
+            // Center in banner
             mascot.setPosition(0, 0, 0);
 
             mascot.start();
+            console.log('✅ Banner mascot initialized');
 
             return mascot;
         }
 
-        let mascot = null;
-        initMascot().then(m => {
-            mascot = m;
-            if (mascot) {
-                startAnimationSequence();
-            }
-        });
-
-        // Emotion config with gestures for wow factor
+        /**
+         * ANIMATION SEQUENCE CONFIGURATION
+         *
+         * Each step coordinates 3 actions with timing:
+         * 1. Emotion change (immediate)
+         * 2. Shape morph (200ms delay)
+         * 3. Gesture animation (400ms delay)
+         *
+         * Total loop: ~13 seconds for seamless GIF
+         */
         const emotionSequence = [
-            { emotion: 'joy', shape: 'sun', gesture: 'bounce', duration: 2200 },
-            { emotion: 'excited', shape: 'solar', gesture: 'spin', duration: 2000 },
-            { emotion: 'love', shape: 'heart', gesture: 'pulse', duration: 2200 },
-            { emotion: 'surprise', shape: 'star', gesture: 'expand', duration: 1800 },
-            { emotion: 'calm', shape: 'moon', gesture: 'breathe', duration: 2000 },
-            { emotion: 'focused', shape: 'lunar', gesture: 'glow', duration: 2200 }
+            { emotion: 'joy',      shape: 'sun',   gesture: 'bounce',  duration: 2200 },
+            { emotion: 'excited',  shape: 'solar', gesture: 'spin',    duration: 2000 },
+            { emotion: 'love',     shape: 'heart', gesture: 'pulse',   duration: 2200 },
+            { emotion: 'surprise', shape: 'star',  gesture: 'expand',  duration: 1800 },
+            { emotion: 'calm',     shape: 'moon',  gesture: 'breathe', duration: 2000 },
+            { emotion: 'focused',  shape: 'lunar', gesture: 'glow',    duration: 2200 }
         ];
 
-        let currentIndex = 0;
-
+        // STEP 2: Run animation sequence
         function cycleEmotions() {
             if (!mascot) return;
 
-            const item = emotionSequence[currentIndex];
+            const step = emotionSequence[currentIndex];
 
-            // Update mascot emotion
-            mascot.setEmotion(item.emotion);
+            // Apply emotion change
+            mascot.setEmotion(step.emotion);
+            console.log(`▶ ${step.emotion.toUpperCase()}`);
 
-            // Morph shape
-            if (item.shape) {
-                setTimeout(() => mascot.morphTo(item.shape), 200);
+            // Morph shape after 200ms (gives emotion time to start)
+            if (step.shape) {
+                setTimeout(() => {
+                    mascot.morphTo(step.shape);
+                    console.log(`  → Shape: ${step.shape}`);
+                }, 200);
             }
 
-            // Trigger gesture for wow factor
-            if (item.gesture) {
-                setTimeout(() => mascot.express(item.gesture), 400);
+            // Trigger gesture after 400ms (after morph begins)
+            if (step.gesture) {
+                setTimeout(() => {
+                    mascot.express(step.gesture);
+                    console.log(`  → Gesture: ${step.gesture}`);
+                }, 400);
             }
 
+            // Move to next step (loops back to 0)
             currentIndex = (currentIndex + 1) % emotionSequence.length;
-            setTimeout(cycleEmotions, item.duration);
+
+            // Schedule next emotion change
+            setTimeout(cycleEmotions, step.duration);
         }
 
-        function startAnimationSequence() {
-            cycleEmotions();
-        }
+        // STEP 3: Start the sequence
+        initMascot().then(m => {
+            mascot = m;
+            if (mascot) {
+                console.log('🎬 Starting animation sequence...');
+                console.log('📹 Ready for screen capture!');
+                cycleEmotions();
+            }
+        });
     </script>
 </body>
 </html>

@@ -8,6 +8,8 @@
  * @fileoverview Triangle shape - equilateral by default
  * @author Emotive Engine Team
  * @module shapes/geometric/triangle
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  */
 
 import { SHAPE_CATEGORIES } from '../index.js';

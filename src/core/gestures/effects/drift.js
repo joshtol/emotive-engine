@@ -8,6 +8,8 @@
  * @fileoverview Drift gesture - controlled floating motion
  * @author Emotive Engine Team
  * @module gestures/effects/drift
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

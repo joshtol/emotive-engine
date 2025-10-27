@@ -1,6 +1,8 @@
 /**
  * ConfigurationManager - Manages settings and configuration
  * @module mascot/ConfigurationManager
+ * @complexity ⭐⭐ Intermediate
+ * @audience Modify this when adding new configuration options
  */
 
 export class ConfigurationManager {

@@ -8,6 +8,8 @@
  * @fileoverview Basic circle shape - the default orb form
  * @author Emotive Engine Team
  * @module shapes/geometric/circle
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  */
 
 import { SHAPE_CATEGORIES } from '../index.js';

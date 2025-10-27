@@ -1,437 +1,474 @@
 <!DOCTYPE html>
+<!--
+  BREATHING APP - Emotive Engine
+
+  A practical application example showing:
+  - Guided breathing exercises with visual feedback
+  - Multiple preset breathing patterns (calm, focus, sleep)
+  - Custom pattern creation with sliders
+  - Session tracking (time, breath count)
+  - Synchronized mascot animations with breathing phases
+  - Real-time phase indicators
+
+  This demonstrates building a full app with Emotive Engine:
+  - State management (session tracking)
+  - Timed animations (breathing cycles)
+  - User feedback (phase indicators, stats)
+  - Interactive controls (presets + custom)
+
+  Complexity: ⭐⭐⭐ Advanced
+  Demonstrates: Real-world application patterns
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emotive Breathing Companion</title>
+    <title>Breathing App - Emotive Engine</title>
+
+    <!-- Shared example styles -->
+    <link rel="stylesheet" href="example-styles.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        /* Page layout */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: white;
+            min-height: 100vh;
         }
-        
+
         .app-container {
-            text-align: center;
-            max-width: 500px;
-            padding: 20px;
+            max-width: 600px;
+            width: 100%;
         }
-        
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .subtitle {
-            color: #8892b0;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-        }
-        
-        #mascot-container {
-            background: rgba(255, 255, 255, 0.05);
+
+        /* Canvas container with breathing glow effect */
+        .canvas-container {
+            width: 350px;
+            height: 350px;
+            margin: 0 auto 40px;
             border-radius: 50%;
-            padding: 40px;
-            margin: 30px auto;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 40px rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(221, 74, 154, 0.3);
+            box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
+            overflow: hidden;
+            background: radial-gradient(circle, #0a0a1a 0%, #16213e 100%);
             position: relative;
+            transition: box-shadow 0.3s ease;
         }
-        
-        #emotive-canvas {
-            border-radius: 50%;
+
+        .canvas-container.breathing {
+            animation: breathGlow 4s ease-in-out infinite;
         }
-        
-        .breathing-indicator {
+
+        @keyframes breathGlow {
+            0%, 100% { box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15); }
+            50% { box-shadow: 0 8px 60px rgba(64, 144, 206, 0.4); }
+        }
+
+        #mascot-canvas {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Phase indicator overlay */
+        .phase-indicator {
             position: absolute;
-            top: 50%;
+            bottom: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.2em;
-            color: rgba(255, 255, 255, 0.8);
-            pointer-events: none;
+            transform: translateX(-50%);
+            padding: 8px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            color: #84CFC5;
+            font-size: 14px;
+            font-weight: 600;
             opacity: 0;
             transition: opacity 0.3s;
+            pointer-events: none;
         }
-        
-        .breathing-indicator.active {
+
+        .phase-indicator.active {
             opacity: 1;
         }
-        
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin: 30px 0;
-        }
-        
-        .breath-button {
-            padding: 15px 20px;
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .breath-button:hover {
-            background: rgba(102, 126, 234, 0.1);
-            border-color: rgba(102, 126, 234, 0.5);
-            transform: translateY(-2px);
-        }
-        
-        .breath-button.active {
-            background: rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-        }
-        
-        .breath-button .pattern {
-            font-size: 0.9em;
-            color: #8892b0;
-            margin-top: 5px;
-        }
-        
-        .custom-controls {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .slider-group {
-            margin: 15px 0;
-            text-align: left;
-        }
-        
-        .slider-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #8892b0;
-            font-size: 0.9em;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            outline: none;
-            -webkit-appearance: none;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-        }
-        
-        .value-display {
-            display: inline-block;
-            margin-left: 10px;
-            color: #667eea;
-            font-weight: bold;
-        }
-        
-        .stop-button {
-            width: 100%;
-            padding: 15px;
-            margin-top: 20px;
-            border: none;
-            border-radius: 12px;
-            background: rgba(255, 100, 100, 0.2);
-            color: #ff6464;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: all 0.3s;
-        }
-        
-        .stop-button:hover {
-            background: rgba(255, 100, 100, 0.3);
-        }
-        
-        .stats {
+
+        /* Breathing pattern buttons */
+        .patterns-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .pattern-btn {
+            padding: 16px 12px;
+            text-align: center;
+        }
+
+        .pattern-btn.active {
+            background: rgba(64, 144, 206, 0.3);
+            border-color: #4090CE;
+        }
+
+        .pattern-name {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .pattern-timing {
+            display: block;
+            font-size: 12px;
+            color: #84CFC5;
+            opacity: 0.8;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
             margin-top: 30px;
         }
-        
+
         .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 8px;
+            text-align: center;
+            padding: 16px;
         }
-        
+
         .stat-label {
-            font-size: 0.8em;
-            color: #8892b0;
-            margin-bottom: 5px;
+            font-size: 12px;
+            color: #B8B8B8;
+            margin-bottom: 8px;
         }
-        
+
         .stat-value {
-            font-size: 1.5em;
-            color: #667eea;
-            font-weight: bold;
+            font-size: 24px;
+            font-weight: 600;
+            color: #DD4A9A;
+        }
+
+        /* Control buttons */
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .controls button {
+            flex: 1;
+            max-width: 200px;
+        }
+
+        @media (max-width: 768px) {
+            .patterns-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .canvas-container {
+                width: 300px;
+                height: 300px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="example-header">
+        <img src="../assets/emotive-engine-icon.svg" alt="Emotive Engine" class="example-logo">
+        <h1 class="example-title">Breathing App</h1>
+    </div>
+
+    <p class="example-subtitle">Guided breathing exercises with visual feedback</p>
+
     <div class="app-container">
-        <h1>Breathe</h1>
-        <p class="subtitle">Your Emotive Breathing Companion</p>
-        
-        <div id="mascot-container">
-            <canvas id="emotive-canvas" width="300" height="300"></canvas>
-            <div class="breathing-indicator" id="phase-indicator"></div>
+        <!-- Canvas with phase indicator -->
+        <div class="canvas-container" id="canvas-container">
+            <canvas id="mascot-canvas"></canvas>
+            <div class="phase-indicator" id="phase-indicator">Ready</div>
         </div>
-        
-        <div class="controls">
-            <button class="breath-button" onclick="startBreathing('calm')">
-                <strong>Calm</strong>
-                <div class="pattern">4-2-4-2</div>
+
+        <!-- Breathing patterns -->
+        <div class="patterns-grid">
+            <button class="pattern-btn" onclick="startPattern('calm')">
+                <span class="pattern-name">😌 Calm</span>
+                <span class="pattern-timing">4-4-4-4</span>
             </button>
-            <button class="breath-button" onclick="startBreathing('anxious')">
-                <strong>Quick Relief</strong>
-                <div class="pattern">2-0-2-1</div>
+            <button class="pattern-btn" onclick="startPattern('focus')">
+                <span class="pattern-name">🎯 Focus</span>
+                <span class="pattern-timing">4-7-8</span>
             </button>
-            <button class="breath-button" onclick="startBreathing('meditative')">
-                <strong>Meditative</strong>
-                <div class="pattern">5-3-5-3</div>
+            <button class="pattern-btn" onclick="startPattern('sleep')">
+                <span class="pattern-name">😴 Sleep</span>
+                <span class="pattern-timing">4-6-8</span>
             </button>
-            <button class="breath-button" onclick="startBreathing('deep')">
-                <strong>Deep</strong>
-                <div class="pattern">6-4-6-2</div>
+            <button class="pattern-btn" onclick="startPattern('energize')">
+                <span class="pattern-name">⚡ Energize</span>
+                <span class="pattern-timing">3-3-3-3</span>
             </button>
-            <button class="breath-button" onclick="startBreathing('sleep')">
-                <strong>Sleep</strong>
-                <div class="pattern">4-1-6-1</div>
+            <button class="pattern-btn" onclick="startPattern('meditate')">
+                <span class="pattern-name">🧘 Meditate</span>
+                <span class="pattern-timing">6-3-6-3</span>
             </button>
-            <button class="breath-button" onclick="toggleCustom()">
-                <strong>Custom</strong>
-                <div class="pattern">Your Pattern</div>
-            </button>
-        </div>
-        
-        <div class="custom-controls" id="custom-controls" style="display: none;">
-            <h3 style="margin-bottom: 15px;">Custom Breathing Pattern</h3>
-            
-            <div class="slider-group">
-                <label>Inhale: <span class="value-display" id="inhale-value">4</span>s</label>
-                <input type="range" id="inhale" min="1" max="10" value="4" step="0.5">
-            </div>
-            
-            <div class="slider-group">
-                <label>Hold: <span class="value-display" id="hold1-value">2</span>s</label>
-                <input type="range" id="hold1" min="0" max="8" value="2" step="0.5">
-            </div>
-            
-            <div class="slider-group">
-                <label>Exhale: <span class="value-display" id="exhale-value">4</span>s</label>
-                <input type="range" id="exhale" min="1" max="10" value="4" step="0.5">
-            </div>
-            
-            <div class="slider-group">
-                <label>Hold: <span class="value-display" id="hold2-value">2</span>s</label>
-                <input type="range" id="hold2" min="0" max="8" value="2" step="0.5">
-            </div>
-            
-            <button class="breath-button" onclick="startCustomBreathing()" style="width: 100%; margin-top: 15px;">
-                Start Custom Pattern
+            <button class="pattern-btn" onclick="startPattern('relief')">
+                <span class="pattern-name">💨 Relief</span>
+                <span class="pattern-timing">4-4-6-2</span>
             </button>
         </div>
-        
-        <button class="stop-button" onclick="stopBreathing()">
-            Stop Breathing Exercise
-        </button>
-        
-        <div class="stats">
-            <div class="stat-card">
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card control-group">
                 <div class="stat-label">Session Time</div>
                 <div class="stat-value" id="session-time">0:00</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Breath Count</div>
+            <div class="stat-card control-group">
+                <div class="stat-label">Breaths</div>
                 <div class="stat-value" id="breath-count">0</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Current Phase</div>
-                <div class="stat-value" id="current-phase">Ready</div>
+            <div class="stat-card control-group">
+                <div class="stat-label">Phase</div>
+                <div class="stat-value" id="current-phase" style="font-size: 18px;">Ready</div>
             </div>
+        </div>
+
+        <!-- Control buttons -->
+        <div class="controls">
+            <button class="secondary" onclick="stopBreathing()">⏹ Stop Session</button>
         </div>
     </div>
 
-    <script src="../dist/emotive-engine.umd.js"></script>
+    <div class="example-info" style="max-width: 600px; margin-top: 40px;">
+        <strong>💡 Breathing Patterns:</strong><br>
+        • <code>Calm</code> - Box breathing for relaxation (4-4-4-4)<br>
+        • <code>Focus</code> - 4-7-8 technique for concentration<br>
+        • <code>Sleep</code> - Extended exhale for sleep prep (4-6-8)<br>
+        • <code>Energize</code> - Quick breathing for energy boost<br>
+        • <code>Meditate</code> - Deep breathing for meditation<br>
+        • <code>Relief</code> - Stress relief pattern<br><br>
+
+        <strong>📖 How It Works:</strong><br>
+        1. Click a breathing pattern to start<br>
+        2. Watch the mascot breathe with you<br>
+        3. Follow the phase indicator (Inhale/Hold/Exhale)<br>
+        4. Track your progress with session stats
+    </div>
+
+    <!-- Load Emotive Engine UMD bundle -->
+    <script src="../site/public/emotive-engine.js"></script>
+
     <script>
-        // Initialize Emotive Engine
-        const mascot = new EmotiveEngine({
-            canvasId: 'emotive-canvas',
-            emotion: 'serenity',
-            particleCount: 50,
-            glowIntensity: 0.8,
-            particleSize: { min: 1, max: 3 }
-        });
-        
-        mascot.start();
-        
-        // Breathing app state
-        let isBreathing = false;
-        let currentPattern = null;
-        let breathCount = 0;
+        let mascot;
+        let breathingInterval = null;
         let sessionStart = null;
         let sessionTimer = null;
-        let activeButton = null;
-        
-        // Phase indicator
-        const phaseIndicator = document.getElementById('phase-indicator');
-        
-        // Update sliders
-        const sliders = ['inhale', 'hold1', 'exhale', 'hold2'];
-        sliders.forEach(id => {
-            const slider = document.getElementById(id);
-            const display = document.getElementById(`${id}-value`);
-            slider.addEventListener('input', () => {
-                display.textContent = slider.value;
-            });
-        });
-        
-        // Start breathing patterns
-        function startBreathing(pattern) {
+        let breathCount = 0;
+        let currentPattern = null;
+
+        // Breathing patterns: [inhale, hold, exhale, hold]
+        const patterns = {
+            calm: { times: [4, 4, 4, 4], emotion: 'calm' },
+            focus: { times: [4, 7, 8, 0], emotion: 'focused' },
+            sleep: { times: [4, 6, 8, 0], emotion: 'calm' },
+            energize: { times: [3, 3, 3, 3], emotion: 'excited' },
+            meditate: { times: [6, 3, 6, 3], emotion: 'calm' },
+            relief: { times: [4, 4, 6, 2], emotion: 'calm' }
+        };
+
+        // STEP 1: Initialize mascot
+        async function init() {
+            try {
+                const canvas = document.getElementById('mascot-canvas');
+                const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+
+                if (!EmotiveMascot) {
+                    console.error('❌ EmotiveMascot not loaded');
+                    return;
+                }
+
+                // Set canvas dimensions
+                canvas.width = 350;
+                canvas.height = 350;
+
+                // Create mascot instance
+                mascot = new EmotiveMascot({
+                    canvasId: 'mascot-canvas',
+                    targetFPS: 60,
+                    enableAudio: false,
+                    defaultEmotion: 'calm',
+                    enableGazeTracking: false,
+                    enableIdleBehaviors: true
+                });
+
+                window.mascot = mascot;
+
+                // Initialize and configure
+                await mascot.init(canvas);
+
+                mascot.setBackdrop({
+                    enabled: true,
+                    radius: 3.5,
+                    intensity: 0.9,
+                    blendMode: 'normal',
+                    falloff: 'smooth',
+                    edgeSoftness: 0.95,
+                    coreTransparency: 0.25,
+                    responsive: true
+                });
+
+                // Start with calm emotion and circle shape
+                mascot.setEmotion('calm');
+                mascot.morphTo('circle');
+                mascot.start();
+
+                console.log('✅ Breathing app initialized');
+
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+            }
+        }
+
+        // STEP 2: Start breathing pattern
+        function startPattern(patternName) {
+            if (!mascot) return;
+
+            // Stop any existing session
             stopBreathing();
-            
+
+            // Get pattern
+            const pattern = patterns[patternName];
+            if (!pattern) return;
+
+            currentPattern = patternName;
+            const [inhale, hold1, exhale, hold2] = pattern.times;
+
             // Update UI
-            document.querySelectorAll('.breath-button').forEach(btn => {
+            document.querySelectorAll('.pattern-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.closest('.breath-button').classList.add('active');
-            
-            // Set emotion based on pattern
-            const emotions = {
-                calm: 'serenity',
-                anxious: 'contemplation',
-                meditative: 'love',
-                deep: 'satisfaction',
-                sleep: 'serenity'
-            };
-            
-            mascot.setEmotion(emotions[pattern] || 'serenity');
-            mascot.breathe(pattern);
-            
-            isBreathing = true;
-            currentPattern = pattern;
+            event.target.closest('.pattern-btn').classList.add('active');
+
+            // Set emotion and shape for this pattern
+            mascot.setEmotion(pattern.emotion);
+            mascot.morphTo('circle');
+
+            // Start session tracking
             sessionStart = Date.now();
             breathCount = 0;
-            
-            startSessionTimer();
-            
-            // Listen to breathing phases
-            mascot.on('breathePhase', handleBreathPhase);
+            updateStats();
+
+            // Add breathing glow
+            document.getElementById('canvas-container').classList.add('breathing');
+
+            // Start breathing cycle
+            runBreathingCycle(inhale, hold1, exhale, hold2);
+
+            // Update stats every second
+            sessionTimer = setInterval(updateStats, 1000);
         }
-        
-        function startCustomBreathing() {
-            const inhale = parseFloat(document.getElementById('inhale').value) * 1000;
-            const hold1 = parseFloat(document.getElementById('hold1').value) * 1000;
-            const exhale = parseFloat(document.getElementById('exhale').value) * 1000;
-            const hold2 = parseFloat(document.getElementById('hold2').value) * 1000;
-            
-            stopBreathing();
-            
-            mascot.setEmotion('serenity');
-            mascot.setBreathePattern(inhale, hold1, exhale, hold2);
-            mascot.breathe('custom');
-            
-            isBreathing = true;
-            currentPattern = 'custom';
-            sessionStart = Date.now();
-            breathCount = 0;
-            
-            startSessionTimer();
-            
-            mascot.on('breathePhase', handleBreathPhase);
+
+        // STEP 3: Run breathing cycle
+        function runBreathingCycle(inhale, hold1, exhale, hold2) {
+            let phase = 0;
+            const phases = [
+                { name: 'Inhale ↑', duration: inhale * 1000, gesture: 'expand', scale: 1.3 },
+                { name: 'Hold ●', duration: hold1 * 1000, gesture: null, scale: 1.3 },
+                { name: 'Exhale ↓', duration: exhale * 1000, gesture: 'breathe', scale: 0.9 },
+                { name: 'Hold ●', duration: hold2 * 1000, gesture: null, scale: 0.9 }
+            ];
+
+            function nextPhase() {
+                // Filter out phases with 0 duration
+                const activePhases = phases.filter(p => p.duration > 0);
+                if (activePhases.length === 0) return;
+
+                const current = activePhases[phase % activePhases.length];
+
+                // Update phase indicator
+                showPhase(current.name);
+
+                // Trigger mascot animation
+                if (current.gesture) {
+                    mascot.express(current.gesture);
+                }
+
+                // Scale mascot for inhale/exhale
+                mascot.setScale({ core: current.scale });
+
+                // Increment breath count on exhale
+                if (current.name === 'Exhale ↓') {
+                    breathCount++;
+                    document.getElementById('breath-count').textContent = breathCount;
+                }
+
+                phase++;
+
+                // Schedule next phase
+                breathingInterval = setTimeout(nextPhase, current.duration);
+            }
+
+            // Start first phase
+            nextPhase();
         }
-        
+
+        // STEP 4: Stop breathing session
         function stopBreathing() {
-            if (isBreathing) {
-                mascot.stopBreathing();
-                mascot.setEmotion('neutral');
-                isBreathing = false;
-                currentPattern = null;
-                
-                // Clear active states
-                document.querySelectorAll('.breath-button').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                phaseIndicator.classList.remove('active');
-                document.getElementById('current-phase').textContent = 'Ready';
-                
-                // Stop timer
-                if (sessionTimer) {
-                    clearInterval(sessionTimer);
-                    sessionTimer = null;
-                }
+            if (breathingInterval) {
+                clearTimeout(breathingInterval);
+                breathingInterval = null;
+            }
+
+            if (sessionTimer) {
+                clearInterval(sessionTimer);
+                sessionTimer = null;
+            }
+
+            // Reset UI
+            document.querySelectorAll('.pattern-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById('canvas-container').classList.remove('breathing');
+            hidePhase();
+
+            // Reset mascot
+            if (mascot) {
+                mascot.setScale({ core: 1.0 });
+                mascot.setEmotion('calm');
+            }
+
+            // Reset stats display
+            document.getElementById('current-phase').textContent = 'Ready';
+
+            currentPattern = null;
+        }
+
+        // Update phase indicator
+        function showPhase(phaseName) {
+            const indicator = document.getElementById('phase-indicator');
+            indicator.textContent = phaseName;
+            indicator.classList.add('active');
+            document.getElementById('current-phase').textContent = phaseName;
+        }
+
+        function hidePhase() {
+            document.getElementById('phase-indicator').classList.remove('active');
+        }
+
+        // Update session stats
+        function updateStats() {
+            if (sessionStart) {
+                const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('session-time').textContent =
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
         }
-        
-        function toggleCustom() {
-            const controls = document.getElementById('custom-controls');
-            controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
-        }
-        
-        function handleBreathPhase(phase) {
-            const phaseText = {
-                inhale: 'Inhale',
-                hold1: 'Hold',
-                exhale: 'Exhale',
-                hold2: 'Hold'
-            };
-            
-            phaseIndicator.textContent = phaseText[phase];
-            phaseIndicator.classList.add('active');
-            document.getElementById('current-phase').textContent = phaseText[phase];
-            
-            if (phase === 'exhale') {
-                breathCount++;
-                document.getElementById('breath-count').textContent = breathCount;
-            }
-        }
-        
-        function startSessionTimer() {
-            sessionTimer = setInterval(() => {
-                if (sessionStart) {
-                    const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
-                    const minutes = Math.floor(elapsed / 60);
-                    const seconds = elapsed % 60;
-                    document.getElementById('session-time').textContent = 
-                        `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                }
-            }, 1000);
-        }
-        
-        // Add some initial animation
-        setTimeout(() => {
-            mascot.addGesture('pulse');
-        }, 1000);
+
+        // Initialize on page load
+        init();
     </script>
 </body>
 </html>

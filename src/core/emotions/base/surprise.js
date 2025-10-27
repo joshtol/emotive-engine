@@ -8,6 +8,8 @@
  * @fileoverview Surprise emotional state - sudden shock with explosive particles (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/surprise
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

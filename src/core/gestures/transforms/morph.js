@@ -8,6 +8,8 @@
  * @fileoverview Morph gesture - form geometric patterns
  * @author Emotive Engine Team
  * @module gestures/transforms/morph
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

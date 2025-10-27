@@ -8,6 +8,8 @@
  * @fileoverview 3D orbital gesture - particles orbit with dynamic z-depth changes
  * @author Emotive Engine Team
  * @module gestures/transforms/orbital
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  * 
  * GESTURE TYPE:
  * type: 'override' - Takes complete control of particle motion

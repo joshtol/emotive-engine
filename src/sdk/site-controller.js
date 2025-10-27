@@ -1,6 +1,8 @@
 ﻿/**
  * SiteController - thin wrapper around EmotiveMascot for site integrations.
  * Provides a stable entry point for positioning, gesture, and playback helpers.
+ * @complexity ⭐⭐ Intermediate
+ * @audience Useful for integrating the mascot into websites with positioning helpers
  */
 export class SiteController {
     /**

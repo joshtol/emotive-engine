@@ -8,6 +8,8 @@
  * @fileoverview Sadness emotional state - melancholic sorrow (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/sadness
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

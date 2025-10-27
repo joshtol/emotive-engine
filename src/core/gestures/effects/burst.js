@@ -8,6 +8,8 @@
  * @fileoverview Burst gesture - explosive outward motion
  * @author Emotive Engine Team
  * @module gestures/effects/burst
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  */
 
 export default {

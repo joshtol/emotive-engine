@@ -8,6 +8,8 @@
  * @fileoverview Love emotional state - warm affection with orbiting particles (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/love
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

@@ -2,6 +2,9 @@
  * EmotiveMascotPublic - Public API wrapper for Emotive Engine
  * Provides safe, controlled access to engine functionality
  * @module EmotiveMascotPublic
+ * @complexity ⭐⭐ Intermediate (Main entry point for users)
+ * @audience This is the file users interact with. Good place to add new public methods.
+ * @see docs/ARCHITECTURE.md for how this relates to EmotiveMascot.js
  */
 
 import EmotiveMascot from './EmotiveMascot.js';

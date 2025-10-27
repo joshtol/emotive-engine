@@ -8,6 +8,8 @@
  * @fileoverview Pulse gesture - radial expansion and contraction
  * @author Emotive Engine Team
  * @module gestures/motions/pulse
+ * @complexity ⭐⭐ Intermediate
+ * @audience Motion patterns for particle animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

@@ -8,6 +8,8 @@
  * @fileoverview Fear emotional state - anxious state with fleeing particles (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/fear
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

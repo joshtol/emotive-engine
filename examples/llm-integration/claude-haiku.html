@@ -1,84 +1,124 @@
 <!DOCTYPE html>
+<!--
+  CLAUDE HAIKU INTEGRATION - Emotive Engine
+
+  Purpose: Demo chat interface with emotional mascot responses
+
+  This example demonstrates:
+  - Chat interface with emotional feedback
+  - Emotion mapping from message sentiment
+  - Shape morphing based on context
+  - Gesture coordination with responses
+  - Demo fallback responses (no API required)
+
+  Note: This is a demo/template showing the PATTERN for LLM integration.
+  In production, you would:
+  1. Replace demo responses with real API calls
+  2. Use Claude/OpenAI to analyze sentiment
+  3. Extract emotions from AI response metadata
+  4. Map emotions to mascot states
+
+  Key concepts:
+  - Sentiment → Emotion mapping
+  - Context-aware shape selection
+  - Gesture timing with messages
+  - Fallback demo mode
+
+  Complexity: ⭐⭐⭐⭐ Advanced
+  Demonstrates: LLM integration patterns, sentiment analysis
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emotive Mascot + Claude Haiku Integration</title>
+    <title>Claude Haiku + Emotive Engine</title>
+
+    <!-- Shared example styles -->
+    <link rel="stylesheet" href="../example-styles.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-            color: white;
-        }
-
-        h1 {
-            margin-bottom: 0.5rem;
-            font-size: 2rem;
-        }
-
-        .subtitle {
-            opacity: 0.8;
-            margin-bottom: 2rem;
-            font-size: 1.1rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            width: 100%;
             display: grid;
-            grid-template-columns: 400px 1fr;
-            gap: 2rem;
+            grid-template-columns: 450px 1fr;
+            gap: 30px;
             align-items: start;
+            padding: 40px;
+            min-height: 100vh;
         }
 
-        .mascot-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        /* Left column - Mascot */
+        .mascot-panel {
+            position: sticky;
+            top: 40px;
         }
 
-        #emotive-canvas {
+        .canvas-container {
             width: 100%;
-            height: 400px;
-            border-radius: 10px;
+            height: 450px;
+            border: 2px solid rgba(221, 74, 154, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #1a1a2e 100%);
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #mascot-canvas {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+            border: none;
+        }
+
+        /* Current emotion indicator */
+        .emotion-display {
+            text-align: center;
+            padding: 12px;
+            background: rgba(42, 42, 42, 0.6);
+            border-radius: 8px;
+            border: 1px solid rgba(242, 241, 241, 0.1);
+        }
+
+        .emotion-label {
+            font-size: 12px;
+            color: #B8B8B8;
+            margin-bottom: 4px;
+        }
+
+        .emotion-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #DD4A9A;
+        }
+
+        /* Right column - Chat */
+        .chat-panel {
+            max-width: 700px;
         }
 
         .chat-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: rgba(42, 42, 42, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(242, 241, 241, 0.1);
+            padding: 20px;
+            height: calc(100vh - 200px);
             display: flex;
             flex-direction: column;
-            height: 600px;
         }
 
         .messages {
             flex: 1;
             overflow-y: auto;
-            margin-bottom: 1rem;
+            margin-bottom: 20px;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 12px;
         }
 
         .message {
-            padding: 1rem 1.5rem;
-            border-radius: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
             max-width: 80%;
             animation: slideIn 0.3s ease;
         }
@@ -95,102 +135,113 @@
         }
 
         .message.user {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #DD4A9A 0%, #4090CE 100%);
             align-self: flex-end;
-            color: white;
+            color: #F2F1F1;
         }
 
         .message.assistant {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(132, 207, 197, 0.2);
             align-self: flex-start;
-            color: white;
-        }
-
-        .input-area {
-            display: flex;
-            gap: 1rem;
-        }
-
-        input {
-            flex: 1;
-            padding: 1rem 1.5rem;
-            border: none;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        button {
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 25px;
-            background: white;
-            color: #667eea;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .status {
-            text-align: center;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            opacity: 0.7;
+            color: #F2F1F1;
+            border: 1px solid rgba(132, 207, 197, 0.3);
         }
 
         .examples {
             display: flex;
-            gap: 0.5rem;
+            gap: 8px;
             flex-wrap: wrap;
-            margin-bottom: 1rem;
+            margin-bottom: 15px;
         }
 
         .example-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 15px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 0.85rem;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            background: rgba(132, 207, 197, 0.2);
+            border: 1px solid rgba(132, 207, 197, 0.3);
+            color: #84CFC5;
             cursor: pointer;
         }
 
         .example-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(132, 207, 197, 0.3);
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(242, 241, 241, 0.1);
+            color: #F2F1F1;
+            font-size: 14px;
+        }
+
+        .input-area input::placeholder {
+            color: #B8B8B8;
+        }
+
+        .input-area button {
+            padding: 12px 24px;
+        }
+
+        @media (max-width: 1024px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+
+            .mascot-panel {
+                position: relative;
+                top: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>🤖 Claude Haiku + Emotive Mascot</h1>
-    <p class="subtitle">Watch the mascot respond emotionally to AI conversations</p>
-
-    <div class="container">
-        <div class="mascot-container">
-            <canvas id="emotive-canvas"></canvas>
-            <div class="status" id="status">Initializing...</div>
+    <!-- Left: Mascot Panel -->
+    <div class="mascot-panel">
+        <div class="example-header">
+            <img src="../../assets/emotive-engine-icon.svg" alt="Emotive Engine" class="example-logo">
+            <h1 class="example-title">Claude Chat</h1>
         </div>
 
+        <p class="example-subtitle">Emotional AI Assistant</p>
+
+        <div class="canvas-container">
+            <canvas id="mascot-canvas"></canvas>
+        </div>
+
+        <div class="emotion-display">
+            <div class="emotion-label">Current Emotion</div>
+            <div class="emotion-value" id="current-emotion">Neutral</div>
+        </div>
+
+        <div class="example-info" style="margin-top: 20px;">
+            <strong>💡 Watch the mascot:</strong><br>
+            • Emotion changes with message sentiment<br>
+            • Shape morphs based on context<br>
+            • Gestures coordinate with responses<br><br>
+
+            <strong>📖 Demo mode:</strong><br>
+            This uses fallback responses (no API key needed).
+            Replace <code>getDemoResponse()</code> with real API calls.
+        </div>
+    </div>
+
+    <!-- Right: Chat Panel -->
+    <div class="chat-panel">
         <div class="chat-container">
             <div class="examples">
-                <button class="example-btn" onclick="sendExample('How do I scan an item?')">📦 How to scan</button>
-                <button class="example-btn" onclick="sendExample('This scanner is broken!')">😤 Frustrated</button>
-                <button class="example-btn" onclick="sendExample('Thank you so much!')">❤️ Thanks</button>
                 <button class="example-btn" onclick="sendExample('Hello!')">👋 Greeting</button>
+                <button class="example-btn" onclick="sendExample('How do I use this?')">❓ Question</button>
+                <button class="example-btn" onclick="sendExample('This is broken!')">😤 Frustrated</button>
+                <button class="example-btn" onclick="sendExample('Thank you so much!')">❤️ Grateful</button>
             </div>
 
             <div class="messages" id="messages"></div>
@@ -207,93 +258,131 @@
         </div>
     </div>
 
-    <script type="module">
-        import EmotiveMascot from '../../dist/emotive-mascot.js';
+    <!-- Load Emotive Engine UMD bundle -->
+    <script src="../../site/public/emotive-engine.js"></script>
 
-        // Initialize mascot
-        const mascot = new EmotiveMascot({
-            canvasId: 'emotive-canvas',
-            emotion: 'neutral',
-            particleCount: 150,
-            enableGazeTracking: true,
-            enableIdleBehaviors: true
-        });
+    <script>
+        let mascot;
 
-        mascot.start();
+        // STEP 1: Initialize mascot
+        async function init() {
+            try {
+                const canvas = document.getElementById('mascot-canvas');
+                const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
 
-        // Configure LLM handler with custom settings
-        mascot.configureLLMHandler({
-            autoMorphShapes: true,
-            morphDuration: 1000,
-            autoExpressGestures: true,
-            gestureTiming: 300,
-            gestureIntensity: 0.8,
-            // Custom emotion-to-shape mappings
-            emotionToShapeMap: {
-                joy: 'star',
-                empathy: 'heart',
-                excitement: 'sun'
+                if (!EmotiveMascot) {
+                    console.error('❌ EmotiveMascot not loaded');
+                    return;
+                }
+
+                canvas.width = 450;
+                canvas.height = 450;
+
+                mascot = new EmotiveMascot({
+                    canvasId: 'mascot-canvas',
+                    targetFPS: 60,
+                    enableAudio: false,
+                    defaultEmotion: 'neutral',
+                    enableGazeTracking: false,
+                    enableIdleBehaviors: true
+                });
+
+                window.mascot = mascot;
+
+                await mascot.init(canvas);
+
+                mascot.setBackdrop({
+                    enabled: true,
+                    radius: 3.5,
+                    intensity: 0.9,
+                    blendMode: 'normal',
+                    falloff: 'smooth',
+                    edgeSoftness: 0.95,
+                    coreTransparency: 0.25,
+                    responsive: true
+                });
+
+                mascot.start();
+                console.log('✅ Claude chat demo ready');
+
+                // Add welcome message
+                addMessage('assistant', "Hi! I'm your AI assistant with emotional awareness. How can I help you today?");
+
+            } catch (error) {
+                console.error('Failed to initialize:', error);
             }
-        });
+        }
 
-        document.getElementById('status').textContent = 'Ready! Say hello.';
-
-        // Add welcome message
-        addMessage('assistant', "Hi! I'm your AI assistant with an emotional mascot. How can I help you today?");
-
-        window.sendMessage = async function() {
+        // STEP 2: Send message and update mascot
+        async function sendMessage() {
             const input = document.getElementById('input');
             const message = input.value.trim();
 
             if (!message) return;
 
-            // Add user message
+            // Add user message to chat
             addMessage('user', message);
             input.value = '';
 
             // Disable input while processing
+            const button = document.querySelector('.input-area button');
             input.disabled = true;
-            document.querySelector('button').disabled = true;
+            button.disabled = true;
 
             try {
-                // Call your Claude Haiku API endpoint
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
-                });
+                // In production: Replace this with actual API call
+                // const response = await fetch('/api/chat', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ message })
+                // });
+                // const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(`API error: ${response.status}`);
+                // Demo mode: Use fallback response
+                const data = getDemoResponse(message);
+
+                // STEP 3: Update mascot based on response
+                if (mascot) {
+                    // Set emotion from sentiment
+                    mascot.setEmotion(data.emotion);
+                    document.getElementById('current-emotion').textContent =
+                        data.emotion.charAt(0).toUpperCase() + data.emotion.slice(1);
+
+                    // Morph shape if specified
+                    if (data.shape) {
+                        setTimeout(() => mascot.morphTo(data.shape), 300);
+                    }
+
+                    // Trigger gesture if specified
+                    if (data.gesture) {
+                        setTimeout(() => mascot.express(data.gesture), 600);
+                    }
+
+                    console.log(`🎭 Emotion: ${data.emotion}, Shape: ${data.shape}, Gesture: ${data.gesture}`);
                 }
 
-                const data = await response.json();
-
-                // Handle LLM response with mascot
-                await mascot.handleLLMResponse(data);
-
                 // Display assistant message
-                addMessage('assistant', data.message);
+                setTimeout(() => {
+                    addMessage('assistant', data.message);
+                }, 400);
 
             } catch (error) {
                 console.error('Error:', error);
-
-                // Demo fallback response
-                const demoResponse = getDemoResponse(message);
-                await mascot.handleLLMResponse(demoResponse);
-                addMessage('assistant', demoResponse.message);
+                addMessage('assistant', "I'm having trouble connecting. Please try again!");
             } finally {
                 input.disabled = false;
-                document.querySelector('button').disabled = false;
+                button.disabled = false;
                 input.focus();
             }
-        };
+        }
 
-        window.sendExample = function(text) {
+        // Quick send example
+        function sendExample(text) {
             document.getElementById('input').value = text;
             sendMessage();
-        };
+        }
 
+        // Add message to chat
         function addMessage(role, content) {
             const messagesDiv = document.getElementById('messages');
             const messageDiv = document.createElement('div');
@@ -303,68 +392,69 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        // Demo fallback responses
+        /**
+         * DEMO RESPONSE GENERATOR
+         *
+         * In production, this would be replaced by actual LLM API calls.
+         * The response structure shows what metadata you should extract
+         * from your LLM to drive the mascot's emotional responses.
+         */
         function getDemoResponse(message) {
             const msg = message.toLowerCase();
 
-            if (msg.includes('scan') || msg.includes('barcode')) {
+            // Pattern matching for demo responses
+            if (msg.includes('hello') || msg.includes('hi') || msg.includes('hey')) {
                 return {
-                    message: "Hold the barcode about 6 inches from the scanner until you hear a beep. Make sure the entire barcode is visible!",
-                    emotion: 'calm',
-                    sentiment: 'neutral',
-                    action: 'guide',
-                    frustrationLevel: 15,
-                    shape: 'square',
-                    gesture: 'point'
+                    message: "Hello! I'm here to make your experience delightful. What can I help you with?",
+                    emotion: 'joy',              // Emotion to display
+                    sentiment: 'positive',        // Overall sentiment
+                    shape: 'sun',                // Shape to morph to
+                    gesture: 'bounce'            // Gesture to perform
                 };
             }
 
-            if (msg.includes('thank') || msg.includes('thanks')) {
+            if (msg.includes('thank') || msg.includes('grateful')) {
                 return {
-                    message: "You're so welcome! I'm thrilled I could help. Have a wonderful day!",
-                    emotion: 'joy',
+                    message: "You're so welcome! It makes me happy to help. Have a wonderful day!",
+                    emotion: 'love',
                     sentiment: 'positive',
-                    action: 'celebrate',
-                    frustrationLevel: 0,
                     shape: 'heart',
-                    gesture: 'sparkle'
+                    gesture: 'glow'
                 };
             }
 
-            if (msg.includes('frustrat') || msg.includes('broken') || msg.includes('help')) {
+            if (msg.includes('broken') || msg.includes('frustrat') || msg.includes('angry')) {
                 return {
-                    message: "I completely understand your frustration! Let me get you some immediate help. An attendant is being notified right now.",
+                    message: "I completely understand your frustration. Let me help you resolve this right away!",
                     emotion: 'empathy',
                     sentiment: 'negative',
-                    action: 'offer_help',
-                    frustrationLevel: 80,
                     shape: 'heart',
-                    gesture: 'reach'
+                    gesture: 'pulse'
                 };
             }
 
-            if (msg.includes('hello') || msg.includes('hi')) {
+            if (msg.includes('how') || msg.includes('what') || msg.includes('?')) {
                 return {
-                    message: "Hello! I'm here to make your experience smooth and easy. How can I help you today?",
-                    emotion: 'joy',
-                    sentiment: 'positive',
-                    action: 'greet',
-                    frustrationLevel: 0,
-                    shape: 'sun',
-                    gesture: 'wave'
+                    message: "Great question! Let me explain that clearly for you...",
+                    emotion: 'focused',
+                    sentiment: 'neutral',
+                    shape: 'circle',
+                    gesture: 'breathe'
                 };
             }
 
+            // Default response
             return {
-                message: "I'd be happy to help with that! Could you tell me more about what you need?",
+                message: "I'd be happy to help with that! Could you tell me more?",
                 emotion: 'calm',
                 sentiment: 'neutral',
-                action: 'listen',
-                frustrationLevel: 20,
                 shape: 'circle',
-                gesture: 'nod'
+                gesture: 'pulse'
             };
         }
+
+        // Initialize on load
+        init();
     </script>
 </body>
 </html>

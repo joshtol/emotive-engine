@@ -11,6 +11,8 @@
  * @author Emotive Engine Team
  * @version 2.0.0
  * @module Easing
+ * @complexity ⭐ Beginner-friendly
+ * @audience Standard easing functions (easeInOut, easeElastic, etc.). Well-tested.
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

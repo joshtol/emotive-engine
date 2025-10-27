@@ -8,6 +8,8 @@
  * @fileoverview Twist gesture - alternating rotational dance motion
  * @author Emotive Engine Team
  * @module gestures/transforms/twist
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE

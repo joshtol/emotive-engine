@@ -1,6 +1,8 @@
 /**
  * GestureController - Manages gesture animations and protocols
  * @module mascot/GestureController
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Modify this when adding gesture features or changing execution logic
  */
 
 import { getGesture } from '../core/gestures/index.js';

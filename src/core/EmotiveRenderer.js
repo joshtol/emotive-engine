@@ -2,15 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                      ◐ ◑ ◒ ◓  EMOTIVE RENDERER  ◓ ◒ ◑ ◐                      
- *                                                                                    
+ *  └─○═╝
+ *                      ◐ ◑ ◒ ◓  EMOTIVE RENDERER  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Emotive Renderer - Visual Rendering Engine
  * @author Emotive Engine Team
  * @version 2.4.0
  * @module EmotiveRenderer
+ * @complexity ⭐⭐⭐⭐ Advanced (Large file >150KB with complex canvas/WebGL logic)
+ * @audience Modify this when changing visual output, particle rendering, or effects
+ * @see docs/ARCHITECTURE.md for rendering pipeline overview
  * @changelog 2.4.0 - Added offscreen canvas caching for glow gradients
  * @changelog 2.3.0 - Optimized color transitions to use main render loop
  * @changelog 2.2.0 - Dynamic visual resampling on resize for consistent quality

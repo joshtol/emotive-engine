@@ -8,6 +8,8 @@
  * @fileoverview Vibrate gesture - high frequency micro-shake
  * @author Emotive Engine Team
  * @module gestures/motions/vibrate
+ * @complexity ⭐⭐ Intermediate
+ * @audience Motion patterns for particle animations
  */
 
 export default {

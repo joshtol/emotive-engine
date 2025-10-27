@@ -8,6 +8,8 @@
  * @fileoverview 3D orbital motion where particles circle around the orb
  * @author Emotive Engine Team
  * @module gestures/motions/orbit
+ * @complexity ⭐⭐ Intermediate
+ * @audience Motion patterns for particle animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

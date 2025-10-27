@@ -8,6 +8,8 @@
  * @fileoverview Joy emotional state - playful happiness (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/joy
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 /**

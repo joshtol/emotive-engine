@@ -8,6 +8,8 @@
  * @fileoverview Running Man gesture - hip-hop shuffle dance move
  * @author Emotive Engine Team
  * @module gestures/effects/runningman
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  */
 
 export default {

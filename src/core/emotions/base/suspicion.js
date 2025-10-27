@@ -8,6 +8,8 @@
  * @fileoverview Suspicion emotional state - paranoid watchfulness with surveillance scanning (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/suspicion
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

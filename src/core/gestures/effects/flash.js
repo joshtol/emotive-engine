@@ -8,6 +8,8 @@
  * @fileoverview Flash gesture - bright burst effect
  * @author Emotive Engine Team
  * @module gestures/effects/flash
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  */
 
 export default {

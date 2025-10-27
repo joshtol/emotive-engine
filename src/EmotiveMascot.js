@@ -2,15 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                   ◐ ◑ ◒ ◓  EMOTIVE MASCOT  ◓ ◒ ◑ ◐                   
- *                                                                                    
+ *  └─○═╝
+ *                   ◐ ◑ ◒ ◓  EMOTIVE MASCOT  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview EmotiveMascot - Main API Class for the Emotive Engine
  * @author Emotive Engine Team
  * @version 2.1.0
  * @module EmotiveMascot
+ * @complexity ⭐⭐⭐⭐ Advanced (Core orchestrator - 3,096 lines)
+ * @audience Most contributors won't need to modify this file. It coordinates all subsystems.
+ * @see docs/ARCHITECTURE.md for system overview
  * @changelog 2.1.0 - Added resize handling with visual resampling for consistent quality
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════

@@ -8,6 +8,8 @@
  * @fileoverview Settle gesture - gradually reduce velocity
  * @author Emotive Engine Team
  * @module gestures/effects/settle
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  */
 
 export default {

@@ -2,13 +2,15 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE v4.0 - Emotion Registry
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Central emotion registry with full plugin support
  * @author Emotive Engine Team
  * @version 4.0.0
  * @module emotions
+ * @complexity ⭐⭐ Intermediate
+ * @audience Modify this to register new emotions or change emotion loading logic
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

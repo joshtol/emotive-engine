@@ -1,6 +1,53 @@
+<!--
+  ⚠️ VUE INTEGRATION TEMPLATE - Emotive Engine
+
+  IMPORTANT: This is a TEMPLATE/GUIDE, not a working example!
+
+  This file shows HOW to integrate Emotive Engine with Vue, but uses
+  placeholder patterns that need adaptation for your specific project.
+
+  📖 Before using this template:
+  1. Study the working HTML examples first (especially hello-world.html)
+  2. Understand the UMD bundle loading pattern
+  3. Review the actual API methods available
+  4. Test integration in a small prototype first
+
+  🚨 What's different from working examples:
+  - Uses ES module imports (your build tool must support this)
+  - Wraps mascot in Vue lifecycle hooks
+  - Requires proper bundler configuration (vite, webpack, etc.)
+  - May need additional setup for canvas refs
+
+  ✅ Actual API methods (from working examples):
+  - mascot.init(canvas) - Initialize with canvas element
+  - mascot.setEmotion(emotion) - Change emotion
+  - mascot.express(gesture) - Trigger gesture
+  - mascot.morphTo(shape) - Change shape
+  - mascot.setBackdrop(config) - Configure backdrop glow
+  - mascot.setScale(config) - Scale mascot
+  - mascot.start() / mascot.stop() - Control animation
+  - mascot.on(event, handler) - Listen to events
+
+  📋 Valid emotions: joy, calm, excited, sadness, love, focused, empathy, neutral
+  📋 Valid gestures: bounce, spin, pulse, glow, breathe, expand
+  📋 Valid shapes: circle, heart, star, sun, moon
+  📋 Real events: gesture, shapeMorphStarted, resize, paused, resumed
+
+  💡 Integration approach:
+  1. Load UMD bundle via script tag in your HTML or use ES modules if configured
+  2. Create canvas ref in Vue component
+  3. Initialize mascot in mounted() hook after canvas is available
+  4. Clean up mascot in beforeUnmount() hook
+  5. Update mascot state via watchers
+
+  See examples/hello-world.html for the simplest working implementation!
+
+  Complexity: ⭐⭐⭐⭐ Advanced (Requires Vue + bundler knowledge)
+-->
+
 <template>
   <div class="emotive-container">
-    <canvas 
+    <canvas
       ref="emotiveCanvas"
       :width="width"
       :height="height"
@@ -10,204 +57,211 @@
 </template>
 
 <script>
-import EmotiveEngine from 'emotive-engine';
+// OPTION 1: If using ES modules with a bundler
+// import EmotiveMascot from 'emotive-engine';
+
+// OPTION 2: If loaded via UMD bundle in HTML (more common)
+// Access via: window.EmotiveMascot?.default || window.EmotiveMascot
 
 export default {
   name: 'EmotiveMascot',
-  
+
   props: {
+    // Emotion prop - valid emotions from working examples
     emotion: {
       type: String,
       default: 'neutral',
       validator(value) {
         return [
-          'neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise',
-          'disgust', 'love', 'curiosity', 'excitement', 'contemplation',
-          'determination', 'serenity', 'pride', 'embarrassment', 'amusement',
-          'awe', 'satisfaction', 'sympathy', 'triumph', 'speaking', 'suspicion'
+          'joy', 'calm', 'excited', 'sadness',
+          'love', 'focused', 'empathy', 'neutral'
         ].includes(value);
       }
     },
-    
-    particleCount: {
-      type: Number,
-      default: 100
-    },
-    
+
+    // Canvas dimensions
     width: {
       type: Number,
       default: 400
     },
-    
+
     height: {
       type: Number,
       default: 400
     },
-    
-    glowIntensity: {
-      type: Number,
-      default: 1.2
+
+    // Enable backdrop glow
+    enableBackdrop: {
+      type: Boolean,
+      default: true
     },
-    
-    undertone: {
-      type: String,
-      default: null,
-      validator(value) {
-        return !value || [
-          'calm', 'energetic', 'melancholic', 
-          'hopeful', 'anxious', 'confident'
-        ].includes(value);
-      }
-    },
-    
+
+    // Auto start animation
     autoStart: {
       type: Boolean,
       default: true
     }
   },
-  
+
   data() {
     return {
       mascot: null,
-      isBreathing: false,
-      currentGesture: null
+      isInitialized: false
     };
   },
-  
+
   watch: {
+    // Update emotion when prop changes
     emotion(newEmotion) {
-      if (this.mascot) {
+      if (this.mascot && this.isInitialized) {
         this.mascot.setEmotion(newEmotion);
-      }
-    },
-    
-    undertone(newUndertone) {
-      if (this.mascot && newUndertone) {
-        this.mascot.addUndertone(newUndertone);
       }
     }
   },
-  
-  mounted() {
-    this.initializeMascot();
+
+  // STEP 1: Initialize mascot when component mounts
+  async mounted() {
+    await this.initializeMascot();
   },
-  
+
+  // STEP 2: Clean up mascot when component unmounts
   beforeUnmount() {
     if (this.mascot) {
-      this.mascot.destroy();
+      this.mascot.stop();
+      // Note: EmotiveMascot doesn't have destroy() method
+      // The stop() method pauses animation
       this.mascot = null;
     }
   },
-  
+
   methods: {
-    initializeMascot() {
-      if (!this.$refs.emotiveCanvas) return;
-      
-      // Create mascot instance
-      this.mascot = new EmotiveEngine({
-        canvas: this.$refs.emotiveCanvas,
-        emotion: this.emotion,
-        particleCount: this.particleCount,
-        width: this.width,
-        height: this.height,
-        glowIntensity: this.glowIntensity,
-        enableGestures: true,
-        adaptivePerformance: true
+    // Initialize mascot with real API
+    async initializeMascot() {
+      if (!this.$refs.emotiveCanvas) {
+        console.error('❌ Canvas ref not available');
+        return;
+      }
+
+      try {
+        // Get EmotiveMascot from window (UMD bundle)
+        // OR use imported class if using ES modules
+        const EmotiveMascotClass = window.EmotiveMascot?.default || window.EmotiveMascot;
+
+        if (!EmotiveMascotClass) {
+          console.error('❌ EmotiveMascot not loaded. Make sure UMD bundle is included.');
+          return;
+        }
+
+        // Create mascot instance with real API
+        this.mascot = new EmotiveMascotClass({
+          canvasId: this.$refs.emotiveCanvas.id || 'mascot-canvas',
+          targetFPS: 60,
+          enableAudio: false,
+          defaultEmotion: this.emotion,
+          enableGazeTracking: false,
+          enableIdleBehaviors: true
+        });
+
+        // CRITICAL: Initialize with canvas element
+        await this.mascot.init(this.$refs.emotiveCanvas);
+
+        // Configure backdrop glow (optional)
+        if (this.enableBackdrop) {
+          this.mascot.setBackdrop({
+            enabled: true,
+            radius: 3.5,
+            intensity: 0.9,
+            blendMode: 'normal',
+            falloff: 'smooth',
+            edgeSoftness: 0.95,
+            coreTransparency: 0.25,
+            responsive: true
+          });
+        }
+
+        // Set up event listeners (real events)
+        this.setupEventListeners();
+
+        // Auto start if enabled
+        if (this.autoStart) {
+          this.mascot.start();
+        }
+
+        this.isInitialized = true;
+
+        // Emit ready event to parent
+        this.$emit('ready', this.mascot);
+
+        console.log('✅ Mascot initialized in Vue component');
+
+      } catch (error) {
+        console.error('Failed to initialize mascot:', error);
+      }
+    },
+
+    // Set up event listeners for real mascot events
+    setupEventListeners() {
+      if (!this.mascot) return;
+
+      // Listen for gesture events
+      this.mascot.on('gesture', (data) => {
+        this.$emit('gesture', data);
       });
-      
-      // Apply undertone if provided
-      if (this.undertone) {
-        this.mascot.addUndertone(this.undertone);
-      }
-      
-      // Set up event listeners
-      this.mascot.on('stateChange', this.handleStateChange);
-      this.mascot.on('gestureComplete', this.handleGestureComplete);
-      this.mascot.on('breathePhase', this.handleBreathePhase);
-      
-      // Auto start if enabled
-      if (this.autoStart) {
-        this.mascot.start();
-      }
-      
-      // Emit ready event
-      this.$emit('ready', this.mascot);
+
+      // Listen for shape morph events
+      this.mascot.on('shapeMorphStarted', (data) => {
+        this.$emit('shapeMorphStarted', data);
+      });
+
+      // Listen for resize events
+      this.mascot.on('resize', (data) => {
+        this.$emit('resize', data);
+      });
+
+      // Listen for pause/resume events
+      this.mascot.on('paused', () => {
+        this.$emit('paused');
+      });
+
+      this.mascot.on('resumed', () => {
+        this.$emit('resumed');
+      });
     },
-    
-    handleStateChange(state) {
-      this.$emit('stateChange', state);
-    },
-    
-    handleGestureComplete(gestureName) {
-      this.currentGesture = null;
-      this.$emit('gestureComplete', gestureName);
-    },
-    
-    handleBreathePhase(phase) {
-      this.$emit('breathePhase', phase);
-    },
-    
-    // Public methods that can be called via refs
-    setEmotion(emotion, intensity) {
-      if (this.mascot) {
-        this.mascot.setEmotion(emotion, intensity);
+
+    // Public methods using real API
+    setEmotion(emotion) {
+      if (this.mascot && this.isInitialized) {
+        this.mascot.setEmotion(emotion);
       }
     },
-    
-    addGesture(gestureName, options) {
-      if (this.mascot) {
-        this.currentGesture = gestureName;
-        this.mascot.addGesture(gestureName, options);
+
+    express(gesture) {
+      if (this.mascot && this.isInitialized) {
+        this.mascot.express(gesture);
       }
     },
-    
-    queueGestures(gestures) {
-      if (this.mascot) {
-        this.mascot.queueGestures(gestures);
+
+    morphTo(shape) {
+      if (this.mascot && this.isInitialized) {
+        this.mascot.morphTo(shape);
       }
     },
-    
-    blendEmotions(emotions, weights) {
-      if (this.mascot) {
-        this.mascot.blendEmotions(emotions, weights);
+
+    setScale(config) {
+      if (this.mascot && this.isInitialized) {
+        this.mascot.setScale(config);
       }
     },
-    
-    startBreathing(pattern = 'calm') {
-      if (this.mascot && !this.isBreathing) {
-        this.mascot.breathe(pattern);
-        this.isBreathing = true;
-      }
-    },
-    
-    stopBreathing() {
-      if (this.mascot && this.isBreathing) {
-        this.mascot.stopBreathing();
-        this.isBreathing = false;
-      }
-    },
-    
-    setBreathePattern(inhale, hold1, exhale, hold2) {
-      if (this.mascot) {
-        this.mascot.setBreathePattern(inhale, hold1, exhale, hold2);
-      }
-    },
-    
+
     start() {
       if (this.mascot) {
         this.mascot.start();
       }
     },
-    
+
     stop() {
       if (this.mascot) {
         this.mascot.stop();
-      }
-    },
-    
-    resize(width, height) {
-      if (this.mascot) {
-        this.mascot.resize(width, height);
       }
     }
   }
@@ -222,31 +276,37 @@ export default {
 
 .emotive-canvas {
   display: block;
-  border-radius: 10px;
+  border-radius: 12px;
+  border: 2px solid rgba(221, 74, 154, 0.3);
+  box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
 }
 </style>
 
-<!-- Example usage in parent component:
+<!--
+  ========================================
+  EXAMPLE USAGE IN PARENT COMPONENT
+  ========================================
+
+  This shows how to use the EmotiveMascot component with real API methods.
 
 <template>
   <div class="app">
     <h1>Vue Emotive Engine Demo</h1>
-    
+
     <EmotiveMascot
       ref="mascot"
       :emotion="currentEmotion"
-      :particle-count="100"
       :width="400"
       :height="400"
-      undertone="calm"
       @ready="onMascotReady"
-      @stateChange="onStateChange"
-      @gestureComplete="onGestureComplete"
+      @gesture="onGesture"
+      @shapeMorphStarted="onShapeMorph"
     />
-    
+
     <div class="controls">
-      <button 
-        v-for="emotion in emotions" 
+      <h3>Emotions</h3>
+      <button
+        v-for="emotion in emotions"
         :key="emotion"
         @click="currentEmotion = emotion"
         :class="{ active: currentEmotion === emotion }"
@@ -254,20 +314,26 @@ export default {
         {{ emotion }}
       </button>
     </div>
-    
+
     <div class="gesture-controls">
-      <button 
-        v-for="gesture in gestures" 
+      <h3>Gestures</h3>
+      <button
+        v-for="gesture in gestures"
         :key="gesture"
         @click="triggerGesture(gesture)"
       >
         {{ gesture }}
       </button>
     </div>
-    
-    <div class="breathing-controls">
-      <button @click="toggleBreathing">
-        {{ isBreathing ? 'Stop' : 'Start' }} Breathing
+
+    <div class="shape-controls">
+      <h3>Shapes</h3>
+      <button
+        v-for="shape in shapes"
+        :key="shape"
+        @click="triggerShape(shape)"
+      >
+        {{ shape }}
       </button>
     </div>
   </div>
@@ -280,46 +346,100 @@ export default {
   components: {
     EmotiveMascot
   },
-  
+
   data() {
     return {
-      currentEmotion: 'neutral',
-      isBreathing: false,
+      currentEmotion: 'joy',
+      // Real emotions from working examples
       emotions: [
-        'neutral', 'joy', 'curiosity', 
-        'contemplation', 'excitement', 'love'
+        'joy', 'calm', 'excited', 'sadness',
+        'love', 'focused', 'empathy', 'neutral'
       ],
-      gestures: ['wave', 'nod', 'pulse', 'bounce']
+      // Real gestures from working examples
+      gestures: ['bounce', 'spin', 'pulse', 'glow', 'breathe', 'expand'],
+      // Real shapes from working examples
+      shapes: ['circle', 'heart', 'star', 'sun', 'moon']
     };
   },
-  
+
   methods: {
     onMascotReady(mascot) {
-      console.log('Mascot ready!', mascot);
+      console.log('✅ Mascot ready!', mascot);
     },
-    
-    onStateChange(state) {
-      console.log('State changed:', state);
+
+    onGesture(data) {
+      console.log('Gesture triggered:', data);
     },
-    
-    onGestureComplete(gestureName) {
-      console.log('Gesture completed:', gestureName);
+
+    onShapeMorph(data) {
+      console.log('Shape morphing:', data);
     },
-    
+
     triggerGesture(gesture) {
-      this.$refs.mascot.addGesture(gesture);
+      this.$refs.mascot.express(gesture);
     },
-    
-    toggleBreathing() {
-      if (this.isBreathing) {
-        this.$refs.mascot.stopBreathing();
-      } else {
-        this.$refs.mascot.startBreathing('calm');
-      }
-      this.isBreathing = !this.isBreathing;
+
+    triggerShape(shape) {
+      this.$refs.mascot.morphTo(shape);
     }
   }
 };
 </script>
+
+<style scoped>
+.app {
+  padding: 40px;
+  text-align: center;
+  background: linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #1a1a2e 100%);
+  min-height: 100vh;
+  color: #F2F1F1;
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #DD4A9A 0%, #4090CE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 40px;
+}
+
+h3 {
+  color: #DD4A9A;
+  margin-bottom: 15px;
+  margin-top: 30px;
+}
+
+.controls,
+.gesture-controls,
+.shape-controls {
+  max-width: 600px;
+  margin: 30px auto;
+}
+
+button {
+  padding: 12px 24px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(64, 144, 206, 0.2);
+  color: #F2F1F1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+button:hover {
+  background: rgba(64, 144, 206, 0.3);
+  transform: translateY(-2px);
+}
+
+button.active {
+  background: #DD4A9A;
+  box-shadow: 0 4px 12px rgba(221, 74, 154, 0.3);
+}
+</style>
 
 -->

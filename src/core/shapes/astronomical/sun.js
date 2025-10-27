@@ -8,6 +8,8 @@
  * @fileoverview Sun shape with corona, plasma texture, and solar flares
  * @author Emotive Engine Team
  * @module shapes/astronomical/sun
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  */
 
 import { SHAPE_CATEGORIES } from '../index.js';

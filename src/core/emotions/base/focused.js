@@ -8,6 +8,8 @@
  * @fileoverview Focused emotional state - intense concentration with directed flow (base configuration without rhythm)
  * @author Emotive Engine Team
  * @module emotions/base/focused
+ * @complexity ⭐ Beginner-friendly
+ * @audience Good example to learn emotion structure. Copy this to create new emotions.
  */
 
 export default {

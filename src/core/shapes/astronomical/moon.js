@@ -8,6 +8,8 @@
  * @fileoverview Moon shape with crescent shadow effect
  * @author Emotive Engine Team
  * @module shapes/astronomical/moon
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  */
 
 import { SHAPE_CATEGORIES } from '../index.js';

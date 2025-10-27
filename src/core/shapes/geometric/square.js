@@ -8,6 +8,8 @@
  * @fileoverview Square shape with optional rounded corners
  * @author Emotive Engine Team
  * @module shapes/geometric/square
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  */
 
 import { SHAPE_CATEGORIES } from '../index.js';

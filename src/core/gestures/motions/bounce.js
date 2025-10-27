@@ -8,6 +8,8 @@
  * @fileoverview Bounce gesture - vertical oscillation motion
  * @author Emotive Engine Team
  * @module gestures/motions/bounce
+ * @complexity ⭐⭐ Intermediate
+ * @audience Motion patterns for particle animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

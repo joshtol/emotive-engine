@@ -8,6 +8,8 @@
  * @fileoverview Flicker gesture - opacity and motion variation
  * @author Emotive Engine Team
  * @module gestures/effects/flicker
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

@@ -1,742 +1,540 @@
 <!DOCTYPE html>
+<!--
+  EVENT HANDLING - Emotive Engine
+
+  This example demonstrates:
+  - Detecting when emotions change
+  - Tracking gesture completion
+  - Monitoring animation state changes
+  - Building event-driven UIs
+  - Real-time event logging and filtering
+
+  Key concepts:
+  - Event listener pattern (on/off methods)
+  - Event data structures
+  - Filtering and displaying events
+  - Building responsive UIs from events
+
+  Complexity: ⭐⭐⭐ Advanced
+  Next: Build your own event-driven application
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emotive Engine - Event Handling Demo</title>
+    <title>Event Handling - Emotive Engine</title>
+
+    <!-- Shared example styles -->
+    <link rel="stylesheet" href="example-styles.css">
+
     <style>
         body {
-            margin: 0;
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
             display: grid;
             grid-template-columns: 400px 1fr;
-            gap: 20px;
+            gap: 30px;
+            align-items: start;
+            padding: 40px;
         }
 
-        .panel {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        /* Left column */
+        .controls-panel {
+            max-width: 400px;
         }
 
-        h1 {
-            color: #333;
-            margin-top: 0;
-        }
-
-        h2 {
-            color: #555;
-            font-size: 18px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-
+        /* Canvas container */
         .canvas-container {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
+            width: 400px;
+            height: 400px;
+            border: 2px solid rgba(221, 74, 154, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
+            margin-bottom: 30px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #1a1a2e 100%);
+            position: relative;
+        }
+
+        #mascot-canvas {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+            border: none;
+        }
+
+        /* Event log panel */
+        .log-panel {
+            background: rgba(42, 42, 42, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(242, 241, 241, 0.1);
             padding: 20px;
+            height: calc(100vh - 80px);
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
 
-        #mascot-canvas {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 8px;
+        .log-header h2 {
+            margin: 0;
+            color: #DD4A9A;
+            font-size: 18px;
         }
 
+        .log-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-controls button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Event filters */
+        .event-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: rgba(64, 144, 206, 0.2);
+            border: 1px solid rgba(64, 144, 206, 0.3);
+        }
+
+        .filter-btn.active {
+            background: rgba(64, 144, 206, 0.5);
+            border-color: #4090CE;
+        }
+
+        /* Event log */
         .event-log {
-            background: #1a202c;
-            color: #a0aec0;
-            border-radius: 8px;
-            padding: 15px;
-            height: 400px;
+            flex: 1;
             overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
             font-family: 'Courier New', monospace;
             font-size: 12px;
         }
 
         .event-entry {
+            padding: 10px;
             margin-bottom: 8px;
-            padding: 8px;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            border-left: 3px solid #667eea;
-            animation: slideIn 0.3s ease;
+            border-radius: 6px;
+            border-left: 3px solid #DD4A9A;
+            animation: slideIn 0.2s ease;
         }
 
         @keyframes slideIn {
             from {
-                transform: translateX(-20px);
+                transform: translateY(-10px);
                 opacity: 0;
             }
             to {
-                transform: translateX(0);
+                transform: translateY(0);
                 opacity: 1;
             }
         }
 
-        .event-type {
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        .event-time {
-            color: #718096;
-            font-size: 11px;
-        }
-
-        .event-data {
-            color: #cbd5e0;
-            margin-top: 4px;
+        .event-entry.emotion {
+            border-left-color: #DD4A9A;
         }
 
         .event-entry.gesture {
-            border-left-color: #48bb78;
-        }
-
-        .event-entry.gesture .event-type {
-            color: #48bb78;
-        }
-
-        .event-entry.emotion {
-            border-left-color: #ed8936;
-        }
-
-        .event-entry.emotion .event-type {
-            color: #ed8936;
-        }
-
-        .event-entry.rhythm {
-            border-left-color: #9f7aea;
-        }
-
-        .event-entry.rhythm .event-type {
-            color: #9f7aea;
-        }
-
-        .event-entry.interaction {
-            border-left-color: #f687b3;
-        }
-
-        .event-entry.interaction .event-type {
-            color: #f687b3;
+            border-left-color: #4090CE;
         }
 
         .event-entry.system {
-            border-left-color: #4299e1;
+            border-left-color: #84CFC5;
         }
 
-        .event-entry.system .event-type {
-            color: #4299e1;
+        .event-time {
+            color: #B8B8B8;
+            font-size: 10px;
         }
 
-        .controls {
-            margin-top: 20px;
+        .event-type {
+            color: #DD4A9A;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 8px;
         }
 
-        .control-group {
-            margin-bottom: 15px;
+        .event-data {
+            color: #84CFC5;
+            margin-top: 6px;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
 
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 6px;
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-right: 8px;
-            margin-bottom: 8px;
-        }
-
-        button:hover {
-            background: #5a67d8;
-            transform: translateY(-1px);
-        }
-
-        button.active {
-            background: #48bb78;
-        }
-
-        .filter-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .filter-button {
-            padding: 6px 12px;
-            background: #e2e8f0;
-            color: #4a5568;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-
-        .filter-button.active {
-            background: #667eea;
-            color: white;
-        }
-
+        /* Stats */
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(242, 241, 241, 0.1);
         }
 
-        .stat-card {
-            background: #f7fafc;
-            padding: 10px;
-            border-radius: 6px;
+        .stat-item {
             text-align: center;
         }
 
         .stat-value {
             font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
+            font-weight: 600;
+            color: #DD4A9A;
         }
 
         .stat-label {
-            font-size: 12px;
-            color: #718096;
+            font-size: 11px;
+            color: #B8B8B8;
             margin-top: 4px;
         }
 
-        .event-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .listener-list {
-            background: #f7fafc;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 13px;
-        }
-
-        .listener-item {
-            padding: 5px;
-            margin-bottom: 5px;
-            background: white;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .custom-event {
+        /* Trigger buttons */
+        .triggers-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
         }
 
-        input[type="text"] {
-            padding: 8px;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        @media (max-width: 768px) {
-            .container {
+        @media (max-width: 1024px) {
+            body {
                 grid-template-columns: 1fr;
+            }
+
+            .log-panel {
+                height: 500px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Control Panel -->
-        <div class="panel">
-            <h1>📡 Event System Demo</h1>
+    <div class="controls-panel">
+        <div class="example-header">
+            <img src="../assets/emotive-engine-icon.svg" alt="Emotive Engine" class="example-logo">
+            <h1 class="example-title">Event Handling</h1>
+        </div>
 
-            <div class="canvas-container">
-                <canvas id="mascot-canvas" width="300" height="300"></canvas>
-            </div>
+        <p class="example-subtitle">Monitor mascot events in real-time</p>
 
-            <h2>Trigger Events</h2>
-            <div class="controls">
-                <div class="control-group">
-                    <button onclick="mascot.triggerGesture('bounce')">Trigger Bounce</button>
-                    <button onclick="mascot.triggerGesture('spin')">Trigger Spin</button>
-                    <button onclick="mascot.setEmotion('happy')">Set Happy</button>
-                    <button onclick="mascot.setEmotion('sad')">Set Sad</button>
-                </div>
+        <div class="canvas-container">
+            <canvas id="mascot-canvas"></canvas>
+        </div>
 
-                <div class="control-group">
-                    <button onclick="toggleRhythm()">Toggle Rhythm</button>
-                    <button onclick="simulateInteraction()">Simulate Click</button>
-                    <button onclick="triggerError()">Trigger Error</button>
-                </div>
-            </div>
-
-            <h2>Event Listeners</h2>
-            <div class="listener-list" id="listener-list">
-                <div class="listener-item">
-                    <span>gesture</span>
-                    <button onclick="toggleListener('gesture')">On</button>
-                </div>
-                <div class="listener-item">
-                    <span>emotion</span>
-                    <button onclick="toggleListener('emotion')">On</button>
-                </div>
-                <div class="listener-item">
-                    <span>rhythm:beat</span>
-                    <button onclick="toggleListener('rhythm:beat')">On</button>
-                </div>
-                <div class="listener-item">
-                    <span>interaction</span>
-                    <button onclick="toggleListener('interaction')">On</button>
-                </div>
-                <div class="listener-item">
-                    <span>error</span>
-                    <button onclick="toggleListener('error')">On</button>
-                </div>
-            </div>
-
-            <h2>Custom Event</h2>
-            <div class="custom-event">
-                <input type="text" id="custom-event-name" placeholder="Event name">
-                <input type="text" id="custom-event-data" placeholder="Event data (JSON)">
-                <button onclick="emitCustomEvent()" style="grid-column: span 2;">Emit Custom Event</button>
-            </div>
-
-            <h2>Statistics</h2>
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-value" id="total-events">0</div>
-                    <div class="stat-label">Total Events</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="events-per-sec">0</div>
-                    <div class="stat-label">Events/Sec</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="unique-types">0</div>
-                    <div class="stat-label">Event Types</div>
-                </div>
+        <div class="control-group">
+            <h3>Trigger Actions</h3>
+            <div class="triggers-grid">
+                <button onclick="triggerEmotion('joy')">😊 Joy</button>
+                <button onclick="triggerEmotion('calm')">😌 Calm</button>
+                <button onclick="triggerEmotion('excited')">🎉 Excited</button>
+                <button onclick="triggerEmotion('sadness')">😢 Sadness</button>
+                <button onclick="triggerGesture('bounce')">Bounce</button>
+                <button onclick="triggerGesture('spin')">Spin</button>
+                <button onclick="triggerGesture('pulse')">Pulse</button>
+                <button onclick="triggerGesture('glow')">Glow</button>
             </div>
         </div>
 
-        <!-- Event Log Panel -->
-        <div class="panel">
-            <div class="event-controls">
-                <h2>Event Log</h2>
-                <div>
-                    <button onclick="clearLog()" style="background: #e53e3e;">Clear</button>
-                    <button onclick="pauseLog()" id="pause-button">Pause</button>
-                    <button onclick="exportLog()">Export</button>
-                </div>
-            </div>
+        <div class="example-info">
+            <strong>💡 What to observe:</strong><br>
+            • Each action triggers an event<br>
+            • Events show when they occur<br>
+            • Event data contains useful information<br>
+            • You can filter by event type<br><br>
 
-            <div class="filter-buttons">
-                <button class="filter-button active" onclick="filterEvents('all')">All</button>
-                <button class="filter-button" onclick="filterEvents('gesture')">Gesture</button>
-                <button class="filter-button" onclick="filterEvents('emotion')">Emotion</button>
-                <button class="filter-button" onclick="filterEvents('rhythm')">Rhythm</button>
-                <button class="filter-button" onclick="filterEvents('interaction')">Interaction</button>
-                <button class="filter-button" onclick="filterEvents('system')">System</button>
-                <button class="filter-button" onclick="filterEvents('custom')">Custom</button>
-            </div>
+            <strong>📖 Event Types:</strong><br>
+            • <code style="color: #DD4A9A;">emotion</code> - Emotional state changes<br>
+            • <code style="color: #4090CE;">gesture</code> - Animation triggers<br>
+            • <code style="color: #84CFC5;">system</code> - System messages<br><br>
 
-            <div class="event-log" id="event-log"></div>
+            <strong>Build your own:</strong><br>
+            Use <code>mascot.on('event', handler)</code> to listen for events and build responsive, event-driven UIs.
         </div>
     </div>
 
-    <script type="module">
-        import EmotiveMascot from '../site/src/EmotiveMascotPublic.js';
+    <div class="log-panel">
+        <div class="log-header">
+            <h2>📡 Event Log</h2>
+            <div class="log-controls">
+                <button class="secondary" onclick="clearLog()">Clear</button>
+                <button class="secondary" onclick="togglePause()" id="pause-btn">Pause</button>
+            </div>
+        </div>
 
+        <div class="event-filters">
+            <button class="filter-btn active" onclick="setFilter('all')">All</button>
+            <button class="filter-btn" onclick="setFilter('emotion')">Emotions</button>
+            <button class="filter-btn" onclick="setFilter('gesture')">Gestures</button>
+            <button class="filter-btn" onclick="setFilter('system')">System</button>
+        </div>
+
+        <div class="event-log" id="event-log"></div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="total-events">0</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="emotion-count">0</div>
+                <div class="stat-label">Emotions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="gesture-count">0</div>
+                <div class="stat-label">Gestures</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Emotive Engine UMD bundle -->
+    <script src="../site/public/emotive-engine.js"></script>
+
+    <script>
         let mascot;
         let eventLog = [];
-        let eventStats = {
-            total: 0,
-            byType: {},
-            startTime: Date.now()
-        };
-        let isPaused = false;
         let currentFilter = 'all';
-        let listeners = {};
-        let rhythmEnabled = false;
+        let isPaused = false;
+        let stats = {
+            total: 0,
+            emotion: 0,
+            gesture: 0,
+            system: 0
+        };
 
+        // STEP 1: Initialize mascot
         async function init() {
             try {
+                const canvas = document.getElementById('mascot-canvas');
+                const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+
+                if (!EmotiveMascot) {
+                    logEvent('system', 'Error: EmotiveMascot not loaded');
+                    return;
+                }
+
+                canvas.width = 400;
+                canvas.height = 400;
+
                 mascot = new EmotiveMascot({
-                    particleIntensity: 0.8,
-                    glowIntensity: 0.7
+                    canvasId: 'mascot-canvas',
+                    targetFPS: 60,
+                    enableAudio: false,
+                    defaultEmotion: 'neutral',
+                    enableGazeTracking: false,
+                    enableIdleBehaviors: false
                 });
 
                 window.mascot = mascot;
 
-                const canvas = document.getElementById('mascot-canvas');
                 await mascot.init(canvas);
-                mascot.start();
 
-                setupEventListeners();
-                startStatsUpdate();
-
-                logEvent('system', 'initialized', {
-                    version: '2.0.0',
-                    features: ['gestures', 'emotions', 'rhythm', 'particles']
+                mascot.setBackdrop({
+                    enabled: true,
+                    radius: 3.5,
+                    intensity: 0.9,
+                    blendMode: 'normal',
+                    falloff: 'smooth',
+                    edgeSoftness: 0.95,
+                    coreTransparency: 0.25,
+                    responsive: true
                 });
 
+                mascot.start();
+
+                // STEP 2: Set up event listeners
+                setupEventListeners();
+
+                logEvent('system', 'Mascot initialized successfully');
+                console.log('✅ Event handling demo ready');
+
             } catch (error) {
+                logEvent('system', `Initialization error: ${error.message}`);
                 console.error('Failed to initialize:', error);
-                logEvent('error', 'initialization_failed', { error: error.message });
             }
         }
 
+        // STEP 2: Set up event listeners
         function setupEventListeners() {
-            // Gesture events
-            listeners.gesture = (data) => {
-                logEvent('gesture', 'gesture', data);
-            };
-            mascot.on('gesture', listeners.gesture);
-
-            // Emotion events
-            listeners.emotion = (data) => {
-                logEvent('emotion', 'emotion_change', data);
-            };
-            mascot.on('emotion', listeners.emotion);
-
-            // Rhythm events
-            listeners['rhythm:beat'] = (data) => {
-                logEvent('rhythm', 'beat', data);
-            };
-            mascot.on('rhythm:beat', listeners['rhythm:beat']);
-
-            // Interaction events
-            listeners.interaction = (data) => {
-                logEvent('interaction', 'user_interaction', data);
-            };
-            mascot.on('interaction', listeners.interaction);
-
-            // Error events
-            listeners.error = (data) => {
-                logEvent('error', 'error_occurred', data);
-            };
-            mascot.on('error', listeners.error);
-
-            // Additional events
-            mascot.on('gesture:start', (data) => {
-                logEvent('gesture', 'gesture_start', data);
+            // Listen for gesture events (emitted automatically)
+            mascot.on('gesture', (data) => {
+                logEvent('gesture', `Gesture executed: ${data.name}`, data);
             });
 
-            mascot.on('gesture:complete', (data) => {
-                logEvent('gesture', 'gesture_complete', data);
+            // Listen for shape morph events
+            mascot.on('shapeMorphStarted', (data) => {
+                logEvent('system', `Shape morphing: ${data.from} → ${data.to}`, data);
             });
 
-            mascot.on('rhythm:bpmDetected', (data) => {
-                logEvent('rhythm', 'bpm_detected', data);
+            // Listen for resize events
+            mascot.on('resize', (data) => {
+                logEvent('system', `Canvas resized: ${data.width}x${data.height}`, data);
             });
 
-            mascot.on('animation:frame', (data) => {
-                // Too frequent, only log if specifically requested
-                if (currentFilter === 'system') {
-                    logEvent('system', 'animation_frame', data);
-                }
+            // Listen for pause/resume events
+            mascot.on('paused', () => {
+                logEvent('system', 'Animation paused');
             });
 
-            // Canvas interaction
-            const canvas = document.getElementById('mascot-canvas');
-            canvas.addEventListener('click', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                mascot.emit('interaction', {
-                    type: 'click',
-                    position: { x, y }
-                });
-
-                // Trigger a random gesture on click
-                const gestures = ['bounce', 'spin', 'pulse', 'wave'];
-                const gesture = gestures[Math.floor(Math.random() * gestures.length)];
-                mascot.triggerGesture(gesture);
+            mascot.on('resumed', () => {
+                logEvent('system', 'Animation resumed');
             });
 
-            canvas.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                // Throttle mousemove events
-                if (!this.lastMouseMove || Date.now() - this.lastMouseMove > 100) {
-                    mascot.emit('interaction', {
-                        type: 'mousemove',
-                        position: { x, y }
-                    });
-                    this.lastMouseMove = Date.now();
-                }
+            // Listen for performance events
+            mascot.on('performanceDegradation', (data) => {
+                logEvent('system', 'Performance degradation applied', data);
             });
+
+            mascot.on('performanceRecovery', (data) => {
+                logEvent('system', 'Performance recovered', data);
+            });
+
+            logEvent('system', 'Event listeners registered successfully');
+            console.log('📡 Listening for: gesture, shapeMorphStarted, resize, paused, resumed, performance events');
         }
 
-        function logEvent(category, type, data = {}) {
+        // STEP 3: Trigger actions
+        function triggerEmotion(emotion) {
+            if (!mascot) return;
+
+            mascot.setEmotion(emotion);
+
+            // Manual log for emotion changes (no event emitted by setEmotion currently)
+            logEvent('emotion', `Emotion changed to: ${emotion}`, { emotion });
+        }
+
+        function triggerGesture(gesture) {
+            if (!mascot) return;
+
+            // Gesture events are emitted automatically, no manual logging needed!
+            mascot.express(gesture);
+        }
+
+        // STEP 4: Log events to UI
+        function logEvent(type, message, data = null) {
             if (isPaused) return;
 
             const event = {
-                id: eventLog.length + 1,
-                category,
                 type,
+                message,
                 data,
-                timestamp: Date.now()
+                timestamp: new Date().toLocaleTimeString()
             };
 
-            eventLog.push(event);
-            eventStats.total++;
-
-            // Update stats
-            if (!eventStats.byType[category]) {
-                eventStats.byType[category] = 0;
-            }
-            eventStats.byType[category]++;
-
-            // Display event
-            if (currentFilter === 'all' || currentFilter === category) {
-                displayEvent(event);
-            }
+            eventLog.unshift(event);
 
             // Keep log size manageable
-            if (eventLog.length > 1000) {
-                eventLog.shift();
+            if (eventLog.length > 100) {
+                eventLog.pop();
             }
 
+            // Update stats
+            stats.total++;
+            if (stats[type] !== undefined) {
+                stats[type]++;
+            }
             updateStats();
+
+            // Display if matches filter
+            if (currentFilter === 'all' || currentFilter === type) {
+                displayEvent(event);
+            }
         }
 
         function displayEvent(event) {
             const logElement = document.getElementById('event-log');
 
-            const eventDiv = document.createElement('div');
-            eventDiv.className = `event-entry ${event.category}`;
+            const entry = document.createElement('div');
+            entry.className = `event-entry ${event.type}`;
 
-            const time = new Date(event.timestamp).toLocaleTimeString();
-            const dataStr = JSON.stringify(event.data, null, 2);
-
-            eventDiv.innerHTML = `
-                <span class="event-type">[${event.category}]</span>
-                <span class="event-time">${time}</span>
-                <div class="event-data">
-                    ${event.type}
-                    ${Object.keys(event.data).length > 0 ? `<br><pre>${dataStr}</pre>` : ''}
-                </div>
+            let html = `
+                <span class="event-time">${event.timestamp}</span>
+                <span class="event-type">[${event.type}]</span>
             `;
 
-            logElement.insertBefore(eventDiv, logElement.firstChild);
+            html += `<div class="event-data">${event.message}</div>`;
 
-            // Keep only last 100 visible events
-            while (logElement.children.length > 100) {
+            if (event.data) {
+                html += `<div class="event-data">${JSON.stringify(event.data, null, 2)}</div>`;
+            }
+
+            entry.innerHTML = html;
+
+            logElement.insertBefore(entry, logElement.firstChild);
+
+            // Keep only last 50 visible
+            while (logElement.children.length > 50) {
                 logElement.removeChild(logElement.lastChild);
             }
         }
 
-        function filterEvents(filter) {
+        function setFilter(filter) {
             currentFilter = filter;
 
             // Update button states
-            document.querySelectorAll('.filter-button').forEach(btn => {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.textContent.toLowerCase() === filter ||
-                    (filter === 'all' && btn.textContent === 'All')) {
-                    btn.classList.add('active');
-                }
             });
+            event.target.classList.add('active');
 
             // Redisplay filtered events
             const logElement = document.getElementById('event-log');
             logElement.innerHTML = '';
 
-            const filteredEvents = filter === 'all'
-                ? eventLog.slice(-100)
-                : eventLog.filter(e => e.category === filter).slice(-100);
+            const filtered = currentFilter === 'all'
+                ? eventLog
+                : eventLog.filter(e => e.type === currentFilter);
 
-            filteredEvents.reverse().forEach(event => {
-                displayEvent(event);
-            });
+            filtered.slice(0, 50).forEach(displayEvent);
+
+            logEvent('system', `Filter changed to: ${filter}`);
         }
 
         function clearLog() {
             eventLog = [];
-            eventStats.total = 0;
-            eventStats.byType = {};
-            eventStats.startTime = Date.now();
+            stats = {
+                total: 0,
+                emotion: 0,
+                gesture: 0,
+                system: 0
+            };
             document.getElementById('event-log').innerHTML = '';
             updateStats();
-            logEvent('system', 'log_cleared');
+            logEvent('system', 'Event log cleared');
         }
 
-        function pauseLog() {
+        function togglePause() {
             isPaused = !isPaused;
-            const button = document.getElementById('pause-button');
-            button.textContent = isPaused ? 'Resume' : 'Pause';
-            button.style.background = isPaused ? '#48bb78' : '#667eea';
+            const btn = document.getElementById('pause-btn');
+            btn.textContent = isPaused ? 'Resume' : 'Pause';
+            btn.style.background = isPaused ? '#48bb78' : '';
 
-            if (isPaused) {
-                logEvent('system', 'logging_paused');
-            } else {
-                logEvent('system', 'logging_resumed');
+            if (!isPaused) {
+                logEvent('system', 'Event logging resumed');
             }
-        }
-
-        function exportLog() {
-            const data = {
-                events: eventLog,
-                stats: eventStats,
-                exported: new Date().toISOString()
-            };
-
-            const json = JSON.stringify(data, null, 2);
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `event-log-${Date.now()}.json`;
-            a.click();
-
-            logEvent('system', 'log_exported', { eventCount: eventLog.length });
-        }
-
-        function toggleListener(eventName) {
-            const button = event.target;
-            const isOn = button.textContent === 'On';
-
-            if (isOn) {
-                // Remove listener
-                if (listeners[eventName]) {
-                    mascot.off(eventName, listeners[eventName]);
-                    button.textContent = 'Off';
-                    button.style.background = '#e53e3e';
-                    logEvent('system', 'listener_removed', { event: eventName });
-                }
-            } else {
-                // Add listener
-                if (listeners[eventName]) {
-                    mascot.on(eventName, listeners[eventName]);
-                    button.textContent = 'On';
-                    button.style.background = '#48bb78';
-                    logEvent('system', 'listener_added', { event: eventName });
-                }
-            }
-        }
-
-        function toggleRhythm() {
-            rhythmEnabled = !rhythmEnabled;
-
-            if (rhythmEnabled) {
-                mascot.enableRhythmSync();
-                mascot.setBPM(120);
-                logEvent('system', 'rhythm_enabled', { bpm: 120 });
-            } else {
-                mascot.disableRhythmSync();
-                logEvent('system', 'rhythm_disabled');
-            }
-        }
-
-        function simulateInteraction() {
-            const x = Math.random() * 300;
-            const y = Math.random() * 300;
-
-            mascot.emit('interaction', {
-                type: 'simulated_click',
-                position: { x, y }
-            });
-
-            mascot.triggerGesture('flash');
-        }
-
-        function triggerError() {
-            try {
-                // Intentionally trigger an error
-                mascot.triggerGesture('nonexistent_gesture_xyz');
-                mascot.setEmotion('invalid_emotion_abc');
-            } catch (error) {
-                mascot.emit('error', {
-                    message: error.message,
-                    stack: error.stack
-                });
-            }
-
-            // Also emit a custom error
-            mascot.emit('error', {
-                type: 'test_error',
-                message: 'This is a test error',
-                severity: 'warning'
-            });
-        }
-
-        function emitCustomEvent() {
-            const name = document.getElementById('custom-event-name').value;
-            const dataStr = document.getElementById('custom-event-data').value;
-
-            if (!name) {
-                alert('Please enter an event name');
-                return;
-            }
-
-            let data = {};
-            if (dataStr) {
-                try {
-                    data = JSON.parse(dataStr);
-                } catch (e) {
-                    data = { value: dataStr };
-                }
-            }
-
-            mascot.emit(name, data);
-            logEvent('custom', name, data);
-
-            // Clear inputs
-            document.getElementById('custom-event-name').value = '';
-            document.getElementById('custom-event-data').value = '';
         }
 
         function updateStats() {
-            document.getElementById('total-events').textContent = eventStats.total;
-            document.getElementById('unique-types').textContent = Object.keys(eventStats.byType).length;
+            document.getElementById('total-events').textContent = stats.total;
+            document.getElementById('emotion-count').textContent = stats.emotion;
+            document.getElementById('gesture-count').textContent = stats.gesture;
         }
-
-        function startStatsUpdate() {
-            setInterval(() => {
-                const elapsed = (Date.now() - eventStats.startTime) / 1000;
-                const eventsPerSec = elapsed > 0 ? (eventStats.total / elapsed).toFixed(1) : 0;
-                document.getElementById('events-per-sec').textContent = eventsPerSec;
-            }, 1000);
-        }
-
-        // Make functions globally available
-        window.toggleListener = toggleListener;
-        window.toggleRhythm = toggleRhythm;
-        window.simulateInteraction = simulateInteraction;
-        window.triggerError = triggerError;
-        window.emitCustomEvent = emitCustomEvent;
-        window.filterEvents = filterEvents;
-        window.clearLog = clearLog;
-        window.pauseLog = pauseLog;
-        window.exportLog = exportLog;
 
         // Initialize
-        window.addEventListener('DOMContentLoaded', init);
+        init();
     </script>
 </body>
 </html>

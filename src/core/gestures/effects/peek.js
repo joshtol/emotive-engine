@@ -8,6 +8,8 @@
  * @fileoverview Quick peek/hide motion for suspicious checking behavior
  * @author Emotive Engine Team
  * @module gestures/effects/peek
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  * 
  * GESTURE TYPE:
  * type: 'effect' - Visual effect without changing core position

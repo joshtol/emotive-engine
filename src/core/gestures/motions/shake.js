@@ -8,6 +8,8 @@
  * @fileoverview Shake gesture - random jitter motion
  * @author Emotive Engine Team
  * @module gestures/motions/shake
+ * @complexity ⭐⭐ Intermediate
+ * @audience Motion patterns for particle animations
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

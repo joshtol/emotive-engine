@@ -8,6 +8,8 @@
  * @fileoverview Searchlight scanning gesture for suspicious states
  * @author Emotive Engine Team
  * @module gestures/transforms/scan
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  * 
  * GESTURE TYPE:
  * type: 'override' - Takes complete control of particle motion

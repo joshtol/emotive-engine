@@ -8,6 +8,8 @@
  * @fileoverview Wave gesture - infinity pattern flow
  * @author Emotive Engine Team
  * @module gestures/effects/wave
+ * @complexity ⭐⭐ Intermediate
+ * @audience Good examples for creating custom gesture effects
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         

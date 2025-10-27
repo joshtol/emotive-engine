@@ -8,6 +8,8 @@
  * @fileoverview Star shape with configurable points
  * @author Emotive Engine Team
  * @module shapes/geometric/star
+ * @complexity ⭐ Beginner-friendly
+ * @audience Shape definitions for morphing. Copy these to create custom shapes.
  */
 
 import { SHAPE_CATEGORIES } from '../index.js';
