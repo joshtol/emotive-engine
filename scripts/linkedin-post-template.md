@@ -55,7 +55,7 @@ But that's just one innovation. The platform also includes:
 
 Built for: Character.AI-style companions, voice assistant avatars, healthcare patient interfaces, educational AI tutors, and gaming NPCs.
 
-Proven in production across 5 verticals including a unique Cherokee language preservation partnership.
+Proven in production across 5 verticals including a unique Cherokee language learning demo.
 
 Open-source (MIT) | TypeScript | Zero dependencies | Live demo
 
@@ -79,7 +79,7 @@ What would you build with music-synchronized emotional AI?
 Today, it's a production-ready platform with:
 - 🎨 4 patent-eligible innovations (musical sync, semantic choreography)
 - 📊 Proven across 5 industries (retail, healthcare, education, smart home, gaming)
-- 🌍 Social impact (Cherokee language preservation partnership)
+- 🌍 Social impact (Cherokee language learning demo)
 - 💻 Battle-tested (60 FPS on mobile, 324 automated tests, live demos)
 
 The key lesson: **Strategic documentation matters as much as code.**
@@ -170,11 +170,11 @@ What emotional states would you add to your AI?
 - **Avoid:** Weekends, early mornings, late nights
 
 ### Engagement Tips
-1. **Post Template 1 first** (Cherokee partnership - most unique)
+1. **Post Template 1 first** (Cherokee language learning demo - most unique)
 2. **Reply to all comments** within first 2 hours
 3. **Tag relevant people/companies:**
    - @Character.AI (if posting Template 2 or 3)
-   - Cherokee Nation official account (if they have one)
+   - Cherokee language official account (if they have one)
    - Tech for Good organizations
 
 4. **Cross-post to Twitter** with shorter version + demo video

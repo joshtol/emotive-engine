@@ -130,7 +130,7 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 - 6+ months of dev time saved
 - Proven production-ready tech
 - Novel IP (musical sync, semantic performances)
-- Cherokee partnership = positive PR/ESG angle
+- Cherokee use case = positive PR/ESG angle
 
 **Valuation range:** $10-50M depending on earnout structure
 
@@ -273,7 +273,7 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 1. **Content Marketing**
    - Dev.to article: "Building an Emotional AI Interface"
    - YouTube tutorial: "Add Personality to Your Chatbot in 5 Minutes"
-   - Twitter thread: Behind-the-scenes of Cherokee partnership
+   - Twitter thread: Behind-the-scenes of Cherokee use case
 
 2. **Product Hunt Launch**
    - "Product of the Day" target
@@ -319,7 +319,7 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 
 **Tactics:**
 1. **Case Studies**
-   - Cherokee Nation partnership (cultural tech)
+   - Cherokee language learning use case (cultural tech)
    - Retail POC with conversion lift metrics
    - Healthcare patient satisfaction scores
 
@@ -369,7 +369,7 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 - **Time-to-market:** 6-9 month head start on competitors
 - **Talent acquisition:** Proven product-minded engineer (founder)
 - **Platform potential:** Marketplace/ecosystem opportunity
-- **Social impact PR:** Cherokee partnership = positive press
+- **Social impact PR:** Cherokee use case = positive press
 
 **Comparable Acquisitions:**
 - Lottie (acquired by Airbnb) - Valuation not disclosed, but team acqui-hire
@@ -461,7 +461,7 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 ## 🎯 Recommendation
 
 ### For Acquisition Discussions:
-**Lead with:** Cherokee partnership + semantic performances (unique)
+**Lead with:** Cherokee use case + semantic performances (unique)
 **Support with:** Technical innovations (defensible IP)
 **Close with:** Production-ready + 4 verticals (de-risked)
 
@@ -480,7 +480,7 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 1. **Immediate (This Week)**
    - [ ] Add "Business Potential" link to README
    - [ ] Create one-page pitch deck (10 slides)
-   - [ ] Draft LinkedIn post about Cherokee partnership
+   - [ ] Draft LinkedIn post about Cherokee use case
 
 2. **Short-term (This Month)**
    - [ ] Product Hunt launch
