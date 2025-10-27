@@ -9,6 +9,90 @@ and this project uses
 
 ## [Unreleased]
 
+### 📚 Documentation Overhaul - 2025-10-27
+
+#### Examples Standardization
+
+- **FIXED** All 10 examples to use ONLY real API methods (removed all fake
+  methods)
+- **ADDED** Educational STEP-by-step comments to all examples
+- **CREATED** [examples/example-styles.css](examples/example-styles.css) for
+  consistent branding
+- **ADDED** Complexity ratings (⭐ to ⭐⭐⭐⭐) to all examples
+- **FIXED** [examples/hello-world.html](examples/hello-world.html) with proper
+  canvas gradient pattern
+- **REBUILT** [examples/basic-usage.html](examples/basic-usage.html) with
+  best-practice layout
+- **REBUILT** [examples/breathing-app.html](examples/breathing-app.html) with
+  timed animation sequences
+- **UPDATED** [examples/event-handling.html](examples/event-handling.html) to
+  use REAL event system
+- **IMPROVED** [examples/rhythm-sync-demo.html](examples/rhythm-sync-demo.html)
+  with better tap tempo detection
+- **UPDATED**
+  [examples/llm-integration/claude-haiku.html](examples/llm-integration/claude-haiku.html)
+  with real API
+- **UPDATED** [examples/react-component.jsx](examples/react-component.jsx) as
+  template with warnings
+- **UPDATED** [examples/vue-component.vue](examples/vue-component.vue) as
+  template with warnings
+
+#### Documentation Fixes
+
+- **FIXED** [README.md](README.md) Quick Start code - added missing
+  `mascot.init(canvas)` call
+- **UPDATED** README.md emotions list to match actual API (joy, calm, excited,
+  sadness, love, focused, empathy, neutral)
+- **UPDATED** README.md shapes list (circle, heart, star, sun, moon)
+- **UPDATED** README.md gestures list (bounce, spin, pulse, glow, breathe,
+  expand)
+- **FIXED** [CONTRIBUTING.md](CONTRIBUTING.md) build output path to
+  `site/public/emotive-engine.js`
+- **FIXED** CONTRIBUTING.md examples references (removed non-existent
+  hello-world-cdn.html)
+- **FIXED** CONTRIBUTING.md project structure diagram
+- **UPDATED** CONTRIBUTING.md license from "dual MIT/Commercial" to "MIT
+  License"
+- **FIXED** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) event examples to use
+  real events
+- **REWROTE** [site/DEPLOYMENT_CHECKLIST.md](site/DEPLOYMENT_CHECKLIST.md) for
+  actual Next.js site
+- **FIXED** [examples/README.md](examples/README.md) to remove fake API methods
+- **FIXED**
+  [examples/llm-integration/README.md](examples/llm-integration/README.md) with
+  real integration patterns
+
+#### Open Source Cleanup
+
+- **DELETED** `scripts/add-copyright.js` (proprietary copyright script)
+- **UPDATED** [docs/INNOVATIONS.md](docs/INNOVATIONS.md) to remove proprietary
+  language
+- **CHANGED** "Trade Secrets" section to "Implementation Details" with source
+  links
+- **ADDED** "Open Source Philosophy" section to INNOVATIONS.md
+- **REMOVED** patent filing recommendations
+
+#### Asset Cleanup
+
+- **DELETED** Entire `site/assets/` directory (duplicates of
+  site/public/assets/)
+- **DELETED** Duplicate emotion SVGs from `assets/emotions/`
+- **DELETED** Obsolete `site/docs/` directory
+- **DELETED** Unused audio files and SVGs
+- **REMOVED** 49+ duplicate/unused files
+
+### 🎯 Impact
+
+All documentation now uses ONLY real API methods from working examples. No more
+fake methods like:
+
+- ❌ `addGesture()`, `blendEmotions()`, `queueGestures()` (never existed)
+- ❌ Emotions: anger, fear, curiosity, excitement (not in working examples)
+- ❌ Events: emotionChange, gestureStart, gestureComplete (fake)
+
+✅ Everything now matches [examples/hello-world.html](examples/hello-world.html)
+and other working examples!
+
 ## [3.0.0] - 2025-10-20 - Semantic Performance System 🎭
 
 ### 🎯 Major Feature: Context-Aware Performance Choreography
