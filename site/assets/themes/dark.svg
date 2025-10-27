@@ -1,9 +1,0 @@
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <mask id="crescent">
-      <rect width="24" height="24" fill="white"/>
-      <circle cx="17" cy="6" r="7" fill="black"/>
-    </mask>
-  </defs>
-  <circle cx="12" cy="12" r="10" fill="currentColor" mask="url(#crescent)"/>
-</svg>
