@@ -4,15 +4,11 @@
 
 We provide security updates for the following versions of Emotive Engine:
 
-| Version | Supported        | End of Support |
-| ------- | ---------------- | -------------- |
-| 2.5.x   | ✅ Yes (Current) | TBD            |
-| 2.4.x   | ✅ Yes           | 2026-06-30     |
-| 2.3.x   | ✅ Yes           | 2026-03-31     |
-| < 2.3   | ❌ No            | Ended          |
-
-**LTS (Long-Term Support) Policy**: Major versions receive security patches for
-18 months after the next major release.
+| Version | Supported        |
+| ------- | ---------------- |
+| 2.5.x   | ✅ Yes (Current) |
+| 2.4.x   | ✅ Yes           |
+| < 2.4   | ❌ No            |
 
 ---
 
@@ -25,7 +21,9 @@ Engine, please report it responsibly.
 
 **DO NOT** open a public GitHub issue for security vulnerabilities.
 
-Instead, please email: **security@emotiveengine.com**
+Instead, please use
+**[GitHub Security Advisories](https://github.com/joshtol/emotive-engine/security/advisories/new)**
+to privately report security issues.
 
 Include in your report:
 
@@ -35,29 +33,19 @@ Include in your report:
 - Suggested fix (if available)
 - Your contact information for follow-up
 
-### 🔐 PGP Encryption (Optional)
-
-For sensitive disclosures, you may encrypt your report using our PGP key:
-
-- **Key ID**: [To be added]
-- **Fingerprint**: [To be added]
-- **Public Key**: Available at
-  `https://emotiveengine.com/.well-known/pgp-key.txt`
-
 ---
 
 ## Response Timeline
 
 We are committed to handling security reports promptly:
 
-| Stage                  | Timeline | Description                                         |
-| ---------------------- | -------- | --------------------------------------------------- |
-| **Acknowledgment**     | 24 hours | We confirm receipt of your report                   |
-| **Initial Assessment** | 72 hours | We evaluate severity and impact                     |
-| **Status Update**      | 7 days   | We provide a detailed response and timeline         |
-| **Fix Development**    | Varies   | Depends on complexity (typically 7-30 days)         |
-| **Patch Release**      | ASAP     | Critical: <7 days, High: <14 days, Medium: <30 days |
-| **Public Disclosure**  | 90 days  | After patch release or by mutual agreement          |
+| Stage                  | Timeline | Description                                 |
+| ---------------------- | -------- | ------------------------------------------- |
+| **Acknowledgment**     | 72 hours | We confirm receipt of your report           |
+| **Initial Assessment** | 7 days   | We evaluate severity and impact             |
+| **Fix Development**    | Varies   | Depends on complexity (typically 7-30 days) |
+| **Patch Release**      | ASAP     | Critical: <14 days, High: <30 days          |
+| **Public Disclosure**  | 90 days  | After patch release or by mutual agreement  |
 
 ---
 
@@ -68,23 +56,22 @@ We use the following severity levels based on CVSS v3.1 scoring:
 ### 🔴 Critical (CVSS 9.0-10.0)
 
 - Remote code execution
-- Authentication bypass
-- Data exfiltration at scale
-- **Response**: Patch within 7 days
+- Arbitrary code injection
+- **Response**: Patch within 14 days
 
 ### 🟠 High (CVSS 7.0-8.9)
 
-- Privilege escalation
-- SQL injection / XSS
+- XSS vulnerabilities
+- Prototype pollution
 - Denial of service
-- **Response**: Patch within 14 days
+- **Response**: Patch within 30 days
 
 ### 🟡 Medium (CVSS 4.0-6.9)
 
 - Information disclosure
 - CSRF vulnerabilities
 - Logic flaws
-- **Response**: Patch within 30 days
+- **Response**: Patch in next minor release
 
 ### 🟢 Low (CVSS 0.1-3.9)
 
@@ -121,9 +108,9 @@ Emotive Engine implements multiple security layers:
 
 ### Monitoring
 
-- **Sentry Integration**: Real-time error tracking and anomaly detection
-- **Performance Monitoring**: Unusual behavior detection
-- **Audit Logging**: Security-relevant events logged (enterprise tier)
+- **Sentry Integration**: Optional error tracking (user-configured)
+- **Performance Monitoring**: Built-in performance APIs
+- **Audit Logging**: Available through custom event handlers
 
 ---
 
@@ -136,9 +123,8 @@ Stay informed about security updates:
 1. **GitHub Security Advisories**:
    https://github.com/joshtol/emotive-engine/security/advisories
 2. **npm Security Advisories**: Automatic notifications for npm users
-3. **Security Mailing List**: security-announce@emotiveengine.com (enterprise
-   customers)
-4. **RSS Feed**: https://emotiveengine.com/security.rss
+3. **GitHub Releases**: https://github.com/joshtol/emotive-engine/releases
+4. **GitHub Watch**: Click "Watch" → "Custom" → "Security alerts"
 
 ### Update Procedure
 
@@ -180,20 +166,6 @@ We follow **responsible disclosure** principles:
 - We will work with you to coordinate disclosure timing
 - We will publish a security advisory when patches are available
 - We will credit researchers who follow responsible disclosure
-
----
-
-## Bug Bounty Program
-
-**Status**: 🚧 Coming Soon
-
-We are developing a bug bounty program to reward security researchers. Details
-will be announced at:
-
-- https://emotiveengine.com/security/bounty
-
-**Interested in participating?** Email security@emotiveengine.com to join our
-early notification list.
 
 ---
 
@@ -324,19 +296,21 @@ have minimal practical risk for typical use cases.
 
 Emotive Engine is designed to support compliance with:
 
-- ✅ **GDPR** (EU General Data Protection Regulation)
-- ✅ **CCPA** (California Consumer Privacy Act)
-- ✅ **WCAG 2.1 AA** (Web Content Accessibility Guidelines)
-- 🚧 **SOC 2 Type II** (In progress for enterprise tier)
-- 🚧 **ISO 27001** (Planned for 2025)
+- ✅ **GDPR** (EU General Data Protection Regulation) - No personal data
+  collection by default
+- ✅ **CCPA** (California Consumer Privacy Act) - No personal data collection by
+  default
+- ✅ **WCAG 2.1 AA** (Web Content Accessibility Guidelines) - Accessible
+  animation controls
 
 ---
 
 ## Contact
 
-- **Security Issues**: security@emotiveengine.com
-- **General Questions**: support@emotiveengine.com
-- **Enterprise Support**: enterprise@emotiveengine.com
+- **Security Issues**: Use
+  [GitHub Security Advisories](https://github.com/joshtol/emotive-engine/security/advisories/new)
+- **General Questions**:
+  [Open an issue](https://github.com/joshtol/emotive-engine/issues)
 
 ---
 
@@ -350,7 +324,7 @@ We thank the following security researchers for responsible disclosure:
 
 ---
 
-**Last Updated**: 2025-01-24 **Version**: 1.0
+**Last Updated**: 2025-01-27 **Version**: 2.0
 
 ---
 
