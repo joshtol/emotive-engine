@@ -61,8 +61,8 @@ mascot.express('breathe');
 
 ## Features
 
-- **Rich Emotions** - Joy, calm, excited, sadness, love, focused, empathy,
-  neutral
+- **Rich Emotions** - 15 emotions including joy, calm, excited, sadness, love,
+  focused, anger, fear, surprise, and more
 - **Shape Morphing** - Circle, heart, star, sun, moon with smooth transitions
 - **Dynamic Gestures** - Bounce, spin, pulse, glow, breathe, expand
 - **Audio Reactive** - Beat detection and frequency visualization
