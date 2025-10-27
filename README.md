@@ -39,7 +39,7 @@ mascot.express('breathe');
 ```
 
 <div align="center">
-  <img src="assets/emotion-demo.gif" alt="Emotion Demo" width="400" height="400" />
+  <img src="assets/emotion-demo.gif" alt="Emotion Demo" width="300" height="300" />
 </div>
 
 ## Features
