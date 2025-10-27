@@ -23,6 +23,10 @@ Pure Canvas 2D • TypeScript ready
 npm install @joshtol/emotive-engine
 ```
 
+<table>
+<tr>
+<td width="50%">
+
 ```javascript
 import EmotiveMascot from '@joshtol/emotive-engine';
 
@@ -38,9 +42,14 @@ mascot.morphTo('moon');
 mascot.express('breathe');
 ```
 
-<div align="center">
-  <img src="assets/emotion-demo.gif" alt="Emotion Demo" width="300" height="300" />
-</div>
+</td>
+<td width="50%" align="center">
+
+<img src="assets/emotion-demo.gif" alt="Emotion Demo" width="300" height="300" />
+
+</td>
+</tr>
+</table>
 
 ## Features
 
