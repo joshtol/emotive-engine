@@ -1,58 +1,38 @@
 # GitHub Setup Guide
 
-This guide will help you complete the repository setup to maximize visibility.
+This guide covers the remaining setup tasks to complete your GitHub repository.
 
-## ✅ Completed
+## ✅ Already Completed
 
-- [x] Live demo already exists at `emotiveengine.com/demo`
-- [x] Updated README with Examples Gallery
-- [x] Added Performance & Compatibility section
-- [x] Linked to actual domain instead of GitHub Pages
+- [x] Repository description set
+- [x] Topics configured (17 topics)
+- [x] Homepage URL set (https://www.emotiveengine.com)
+- [x] Discussions enabled
+- [x] Wiki enabled
+- [x] Issues enabled
+- [x] README with badges and examples
+- [x] Live demo deployed (emotiveengine.com/demo)
+- [x] Community files (CODE_OF_CONDUCT.md, CONTRIBUTING.md, SECURITY.md)
 
-## 🚀 Manual Steps Required (10 minutes total)
+## 🚀 Remaining Tasks (30 minutes)
 
-### 1. Add GitHub Topics for Discoverability (2 minutes)
+### 1. Set Up GitHub Discussions (15 minutes)
 
-Topics help users discover your project through GitHub search.
+You have Discussions enabled but need to populate it with initial content.
 
-1. Go to your repo homepage: https://github.com/joshtol/emotive-engine
-2. Click the ⚙️ gear icon next to "About" (top right)
-3. Add these topics (comma-separated):
-    ```
-    animation, particles, canvas2d, emotion, gesture, ai-interface,
-    typescript, javascript, music-visualization, beat-detection,
-    web-animation, particle-system, real-time, mascot, character-animation
-    ```
-4. Click "Save changes"
+#### Create Welcome Post
 
-**Expected impact**: 10-20x more discoverability in GitHub search
+1. Go to https://github.com/joshtol/emotive-engine/discussions
+2. Click **New discussion**
+3. Select **Announcements** category
 
-### 2. Update Repository Description (1 minute)
+**Title:**
 
-While in the "About" settings:
+```
+Welcome to Emotive Engine Discussions!
+```
 
-1. **Description**:
-   `Real-time particle animation engine for AI interfaces with emotion-driven motion and musical beat synchronization`
-2. **Website**: `https://emotiveengine.com`
-3. Check ✅ **Use topics**
-4. Click "Save changes"
-
-### 3. Enable GitHub Discussions (5 minutes)
-
-GitHub Discussions provides a community forum for questions, ideas, and
-showcases.
-
-#### Step 1: Enable Discussions
-
-1. Go to **Settings** → **Features**
-2. Check ✅ **Discussions**
-3. Click **Set up discussions**
-
-#### Step 2: Create Welcome Post (Announcements)
-
-**Category:** Announcements **Title:** `Welcome to Emotive Engine Discussions!`
-
-**Body:**
+**Body:** (Copy/paste this)
 
 ```markdown
 # 👋 Welcome to Emotive Engine!
@@ -113,54 +93,46 @@ This is a welcoming, inclusive community. Please:
 you're building! 🎉
 ```
 
-**After posting:** Pin this discussion (click "..." → "Pin discussion")
+4. Click **Start discussion**
+5. After posted, click **...** → **Pin discussion**
 
-#### Step 3: Configure Discussion Categories
+#### Configure Discussion Categories
 
-Go to **Discussions** tab → **Categories** (⚙️ icon) → Configure each:
+1. Go to Discussions → Click **Categories** (⚙️ icon)
+2. Create these new categories:
 
-**Existing Categories to Keep:**
+**Q&A** ❓
 
-1. **Announcements** 📢
-    - Description: `Updates and news from maintainers`
-    - Format: Announcement
-    - ✅ Keep as-is
+- Description:
+  `Ask the community for help with implementation, APIs, or troubleshooting`
+- Format: **Question / Answer**
+- ✅ Enable "Mark as answer"
 
-2. **General** 💬
-    - Description: `Chat about anything and everything here`
-    - Format: Open-ended discussion
-    - ✅ Keep as-is
+**Show and Tell** 🎨
 
-**New Categories to Create:**
+- Description:
+  `Share projects, demos, and creative use cases built with Emotive Engine`
+- Format: **Open-ended discussion**
 
-3. **Q&A** ❓
-    - Description:
-      `Ask the community for help with implementation, APIs, or troubleshooting`
-    - Format: Question / Answer
-    - ✅ Enable "Mark as answer"
+**Ideas** 💡
 
-4. **Show and Tell** 🎨
-    - Description:
-      `Share projects, demos, and creative use cases built with Emotive Engine`
-    - Format: Open-ended discussion
+- Description:
+  `Share ideas for new features, emotions, gestures, or improvements`
+- Format: **Open-ended discussion**
 
-5. **Ideas** 💡
-    - Description:
-      `Share ideas for new features, emotions, gestures, or improvements`
-    - Format: Open-ended discussion
+**Performance & Optimization** ⚡
 
-6. **Performance & Optimization** ⚡
-    - Description:
-      `Discuss performance tips, optimization techniques, and benchmarks`
-    - Format: Open-ended discussion
+- Description:
+  `Discuss performance tips, optimization techniques, and benchmarks`
+- Format: **Open-ended discussion**
 
-#### Step 4: Create Example Discussions
+#### Create Example Discussions
 
-Create one example in each category to show users how to post:
+Create these 4 example discussions to show users the format:
 
-**Q&A Example:** **Title:** `How do I sync animations to a custom BPM?`
+**1. Q&A Example**
 
-**Body:**
+Category: **Q&A** Title: `How do I sync animations to a custom BPM?` Body:
 
 ````markdown
 I'm building a music visualizer and want to sync the mascot's animations to a
@@ -172,7 +144,6 @@ specific BPM from my audio analysis.
 const mascot = new EmotiveMascot({ canvasId: 'canvas' });
 mascot.setBPM(120); // This sets the BPM
 ```
-````
 
 **Question:** How do I dynamically update the BPM based on real-time beat
 detection?
@@ -181,196 +152,298 @@ detection?
 
 - Emotive Engine: v2.5.1
 - Framework: React 18
-
 ````
 
-*(Then reply to your own question with the answer to show how Q&A works)*
+Then **reply to yourself** with:
 
----
+````markdown
+Great question! You can update the BPM dynamically using `setBPM()` in your beat
+detection callback:
 
-**Show and Tell Example:**
-**Title:** `AI Tutor with Emotional Responses - Cherokee Language Learning`
-
-**Body:**
-```markdown
-I built an AI language tutor that uses Emotive Engine to provide emotional feedback!
-
-![Demo GIF or Screenshot](https://emotiveengine.com/use-cases/cherokee)
-
-## Features
-- 😊 Celebrates correct answers with 'joy' emotion
-- 💙 Shows empathy with 'love' undertone for mistakes
-- 🎵 Syncs animations to background cultural music
-
-## Tech Stack
-- Emotive Engine v2.5.1
-- Claude AI for tutoring
-- React + Next.js
-
-## Code Snippet
 ```javascript
-// Celebrate correct answer
-if (isCorrect) {
-  mascot.setEmotion('joy');
-  mascot.perform('celebrating');
-}
+// Assuming you have a beat detector
+beatDetector.onBeatDetected(detectedBPM => {
+    mascot.setBPM(detectedBPM);
+});
+
+// Or update periodically
+setInterval(() => {
+    const currentBPM = analyzeBPM(audioContext);
+    mascot.setBPM(currentBPM);
+}, 1000); // Update every second
+```
+
+The mascot will automatically adjust all animation timings to match the new BPM!
+
+Check out the
+[audio integration example](https://github.com/joshtol/emotive-engine/tree/main/examples)
+for more details.
 ````
+
+**2. Show and Tell Example**
+
+Category: **Show and Tell** Title:
+`Cherokee Language Flashcard App with Emotional Animations` Body:
+
+````markdown
+I built an interactive Cherokee language learning app that uses Emotive Engine
+to bring each phrase to life!
 
 **Live Demo:** https://emotiveengine.com/use-cases/cherokee
 
-Would love feedback! 🎉
+## What It Does
 
+- 📚 Displays Cherokee greetings with pronunciation and cultural context
+- 🎨 Each phrase triggers unique emotions and gestures
+- 🌙 Shape morphing (sun for morning, moon for night greetings)
+- 🎵 Musical timing for smooth animation sequences
+- 📱 Fully responsive with touch swipe navigation
+
+## Example: "Thank you" (ᏩᏙ)
+
+```javascript
+{
+  cherokee: 'ᏩᏙ',
+  pronunciation: 'wah-doh',
+  emotion: 'love',
+  intensity: 1.0,
+  gestures: [
+    {name: 'glow', delay: 300},
+    {name: 'pulse', delay: 500}
+  ]
+}
+```
+
+## Tech Stack
+
+- Emotive Engine v2.5.1
+- React + Next.js
+- Cherokee syllabary (ᏣᎳᎩ ᎧᏬᏂᎯᏍᏗ)
+
+## What I Learned
+
+- Different emotions for different cultural contexts (reverence for "thank you")
+- Gesture chaining with musical timing creates natural sequences
+- Shape morphing adds semantic meaning (sun/moon shapes)
+
+Cultural preservation through interactive technology! 🎉
 ````
+
+**3. Ideas Example**
+
+Category: **Ideas** Title: `Example: How to submit feature requests` Body:
+
+````markdown
+This is an example of how to submit a feature request! Here's the format we'd
+love to see:
 
 ---
 
-**Ideas Example:**
-**Title:** `[Feature Request] Add 'curious' emotion with tilting gesture`
-
-**Body:**
-```markdown
 ## Problem
-I'm building a chatbot interface and want the mascot to show curiosity when the user asks a question.
+
+Describe what you're trying to build and what's missing.
+
+_Example: "I'm building a chatbot interface and want the mascot to show
+curiosity when the user asks a question."_
 
 ## Proposed Solution
-Add a new 'curious' emotion with:
-- **Visual**: Particles lean toward cursor/element
-- **Undertone**: Light blue-green with sparkles
-- **Gesture**: Tilt gesture (mascot leans forward)
 
-## Example Use Case
+Be specific about what you'd like added:
+
+- Visual appearance
+- Behavior/animation
+- API usage
+
+_Example:_
+
 ```javascript
 // User asks a question
 chatbot.on('question', () => {
-  mascot.setEmotion('curious');
-  mascot.express('tilt');
+    mascot.setEmotion('curious');
+    mascot.express('tilt');
 });
-````
+```
 
 ## Alternatives Considered
 
-- Using 'focused' emotion (too intense)
-- Using 'neutral' with custom particles (loses semantic meaning)
+Show you've thought it through - what else did you try?
 
-Would this be useful for others? Open to contributing a PR!
+## Willing to Contribute?
 
-````
+Let us know if you'd be open to submitting a PR!
 
 ---
 
-**Performance & Optimization Example:**
-**Title:** `Performance benchmarks: 500 particles at 60 FPS on mobile`
+**Your turn!** Create a new discussion with your feature idea using this format.
+````
 
-**Body:**
-```markdown
-I ran some benchmarks on different devices and wanted to share results:
+**4. Performance Example**
+
+Category: **Performance & Optimization** Title:
+`Example: Sharing performance benchmarks` Body:
+
+````markdown
+This is an example of how to share performance data! Here's the format we'd love
+to see:
+
+---
 
 ## Desktop Performance
-- **Device:** MacBook Pro M1
-- **Particles:** 500
-- **FPS:** Stable 60
-- **CPU:** ~15%
+
+- **Device**: Your device specs
+- **Particles**: Number of particles
+- **FPS**: Average frame rate
+- **CPU**: CPU usage percentage
 
 ## Mobile Performance
-- **Device:** iPhone 12
-- **Particles:** 200 (auto-scaled)
-- **FPS:** Stable 60
-- **Battery:** Minimal impact
 
-## Optimization Tips
-1. Use `adaptiveQuality: true` for automatic scaling
-2. Lower `particleCount` on mobile
-3. Disable glow effects on older devices
+- **Device**: Your mobile device
+- **Particles**: Number (often auto-scaled)
+- **FPS**: Average frame rate
+- **Battery**: Impact if measured
+
+## Your Configuration
 
 ```javascript
 const mascot = new EmotiveMascot({
-  canvasId: 'canvas',
-  adaptiveQuality: true,
-  particleCount: isMobile ? 150 : 400
+    canvasId: 'canvas',
+    adaptiveQuality: true,
+    particleCount: isMobile ? 150 : 400,
 });
-````
+```
 
-Anyone else have benchmark data to share?
+## Tips You Discovered
 
+Share any optimization tricks you found!
+
+---
+
+**Your turn!** Create a new discussion with your benchmark results using this
+format.
 ````
 
 ---
 
-#### Step 5: Update Repository Links
+### 2. Set Up Wiki (10 minutes)
 
-Your README already links to Discussions correctly at line 198. No changes needed!
+Your README links to the Wiki but it's empty. Quick setup:
 
-### 4. Wiki Documentation (Optional - Later)
+1. Go to https://github.com/joshtol/emotive-engine/wiki
+2. Click **Create the first page**
+3. Title: `Home`
+4. Content:
 
-Your README links to the Wiki but it's not populated. Two options:
+```markdown
+# Emotive Engine Documentation
 
-**Option A: Quick Fix (5 min)**
+Welcome to the Emotive Engine wiki! This is the complete documentation for
+building emotionally intelligent interfaces.
 
-1. Go to **Wiki** tab → Create first page
-2. Add basic content:
+## 📚 Quick Links
 
-    ```markdown
-    # Emotive Engine Documentation
+- [README](https://github.com/joshtol/emotive-engine#readme) - Project overview
+  and quick start
+- [Examples](https://github.com/joshtol/emotive-engine/tree/main/examples) - 10
+  working code examples
+- [Live Demo](https://emotiveengine.com/demo) - Interactive playground
+- [CHANGELOG](https://github.com/joshtol/emotive-engine/blob/main/CHANGELOG.md) -
+  Version history and innovations
 
-    Full documentation is being migrated. For now, see:
+## 🚀 Getting Started
 
-    - [README](https://github.com/joshtol/emotive-engine#readme)
-    - [Examples](https://github.com/joshtol/emotive-engine/tree/main/examples)
-    - [Live Demo](https://emotiveengine.com/demo)
-    - [API Reference](https://github.com/joshtol/emotive-engine/blob/main/CHANGELOG.md)
-    ```
+New to Emotive Engine? Start here:
 
-**Option B: Full Migration (30 min)**
+1. **[Installation](#installation)** - npm install and setup
+2. **[Quick Start](#quick-start)** - Your first mascot in 5 minutes
+3. **[Core Concepts](#core-concepts)** - Understanding emotions, gestures, and
+   shapes
+4. **[API Reference](#api-reference)** - Complete method documentation
 
-- Move docs from `CHANGELOG.md` sections to organized Wiki pages
-- Create separate pages for API, Gestures, Emotions, etc.
+## 📖 Documentation Structure
 
-### 4. Create Social Preview Image (Optional - 10 min)
+_(Pages coming soon - for now, see the README and examples)_
 
-GitHub shows a preview image when people share your repo:
+- **Installation & Setup**
+- **Core Concepts**
+- **API Reference**
+- **Emotions Guide**
+- **Gestures Guide**
+- **Shapes & Morphing**
+- **Musical Time Synchronization**
+- **Performance Optimization**
+- **Plugin System**
+- **Troubleshooting**
 
-1. Create a 1280x640px image (use Canva, Figma, or screenshot your demo)
-2. Go to **Settings** → Scroll to **Social preview**
-3. Upload your image
+## 🎨 Use Cases
 
-**Recommendation**: Screenshot your hero banner or the demo at
-emotiveengine.com/demo in action
+Check out real-world implementations:
+
+- [Cherokee Language Learning](https://emotiveengine.com/use-cases/cherokee)
+- [E-commerce Retail](https://emotiveengine.com/use-cases/retail)
+- [Smart Home Interface](https://emotiveengine.com/use-cases/smart-home)
+- [Education Platform](https://emotiveengine.com/use-cases/education)
+
+## 🤝 Contributing
+
+Want to help improve the docs? See our
+[Contributing Guide](https://github.com/joshtol/emotive-engine/blob/main/CONTRIBUTING.md).
+
+---
+
+**Note:** Full wiki documentation is in progress. Current documentation is in
+the README and examples folder.
+```
+
+5. Click **Save Page**
+
+---
+
+### 3. Add Social Preview Image (5 minutes)
+
+Make your repo look professional when shared:
+
+1. Go to **Settings** → Scroll to **Social preview**
+2. Click **Upload an image**
+3. Use your hero banner: `assets/hero-banner.gif` or create a 1280x640px static
+   image
+4. Click **Save**
+
+**Tip:** If you want a static image instead of GIF, take a screenshot of
+https://emotiveengine.com/demo in action.
+
+---
+
+### 4. Optional: Create First GitHub Release
+
+Create v2.5.1 release for visibility:
+
+1. Go to **Releases** → **Create a new release**
+2. Click **Choose a tag** → Type `v2.5.1` → **Create new tag**
+3. **Release title:** `v2.5.1 - Open Source Launch`
+4. **Description:** Copy first section from CHANGELOG.md
+5. Check ✅ **Set as the latest release**
+6. Click **Publish release**
+
+---
 
 ## 📊 Success Metrics
 
-After completing these steps, you should see:
+After completing these tasks, you'll have:
 
-- **GitHub search ranking**: Improved discoverability
-- **Click-through rate**: 50%+ from README to demo
-- **Time on page**: Increased as people try the demo
-- **Stars/forks**: Should start growing organically
+✅ Active community space (Discussions with examples) ✅ Documentation hub (Wiki
+homepage) ✅ Professional social sharing (Preview image) ✅ Version tracking
+(GitHub Releases)
 
-## 🎯 Next Steps (Future Enhancements)
+## 🎯 Next Steps (Future)
 
-1. **Blog post** - Write about the technical implementation
-2. **Product Hunt** - Launch when you hit 10-20 stars
-3. **Twitter/LinkedIn** - Share the live demo with a video
-4. **Dev.to article** - Tutorial on building with Emotive Engine
-5. **Example showcase** - Create gallery of projects using the engine
+Once you have community traction:
 
-## 📝 Deployment
-
-Your demo is already live at **emotiveengine.com/demo** via Vercel! No
-additional deployment needed.
-
-## ❓ Troubleshooting
-
-**Topics not showing?**
-
-- Make sure you clicked "Save changes" in the About section
-- Topics should appear below the repo description
-
-**Demo not loading?**
-
-- Your demo is hosted on Vercel at emotiveengine.com/demo
-- Check Vercel dashboard for deployment status
+1. **Blog post** - Write about musical time synchronization
+2. **Product Hunt** - Launch when you hit 20-50 stars
+3. **Dev.to article** - Tutorial on building with Emotive Engine
+4. **Video demo** - Screen recording for social media
+5. **Newsletter outreach** - Use content from LAUNCH_ANNOUNCEMENTS.md
 
 ---
 
-**Questions?** Open an issue or reach out.
-````
+**Questions?** Open an issue or start a discussion!
