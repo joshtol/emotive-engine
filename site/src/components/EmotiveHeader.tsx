@@ -5,42 +5,31 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import TrackSelectionModal from './TrackSelectionModal'
 
-interface NavSection {
-  category: string
-  items: Array<{
-    title: string
-    slug: string[]
-  }>
-}
-
 interface EmotiveHeaderProps {
   showMusicControls?: boolean
   mascot?: any
   onMessage?: (type: string, content: string, duration?: number) => void
   onGesture?: (gesture: string) => void
-  docsNavigation?: NavSection[]
   onMobileMenuChange?: (isOpen: boolean) => void
 }
 
-export default function EmotiveHeader({ showMusicControls = false, mascot, onMessage, onGesture, docsNavigation, onMobileMenuChange }: EmotiveHeaderProps) {
+export default function EmotiveHeader({ showMusicControls = false, mascot, onMessage, onGesture, onMobileMenuChange }: EmotiveHeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [isUseCasesOpen, setIsUseCasesOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mobileUseCasesExpanded, setMobileUseCasesExpanded] = useState(false)
-  const [mobileDocsExpanded, setMobileDocsExpanded] = useState<Record<string, boolean>>({})
 
   // Notify parent when mobile menu state changes
   const toggleMobileMenu = useCallback(() => {
     const newState = !isMobileMenuOpen
     setIsMobileMenuOpen(newState)
-    // Expand Use Cases by default when opening mobile menu, unless on docs pages
+    // Expand Use Cases by default when opening mobile menu
     if (newState) {
-      const isDocsPage = pathname.startsWith('/docs')
-      setMobileUseCasesExpanded(!isDocsPage)
+      setMobileUseCasesExpanded(true)
     }
     onMobileMenuChange?.(newState)
-  }, [isMobileMenuOpen, onMobileMenuChange, pathname])
+  }, [isMobileMenuOpen, onMobileMenuChange])
   const [showTrackModal, setShowTrackModal] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<string | null>(null)
@@ -320,12 +309,14 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
           )}
         </div>
 
-        <Link
-          href="/docs"
-          className={`nav-link ${pathname.startsWith('/docs') ? 'active' : ''}`}
+        <a
+          href="https://github.com/joshtol/emotive-engine"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="nav-link"
         >
           Docs
-        </Link>
+        </a>
       </div>
     </div>
 
@@ -376,57 +367,15 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
               </Link>
             ))}
 
-            <Link href="/docs" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+            <a
+              href="https://github.com/joshtol/emotive-engine"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mobile-menu-item"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               Docs
-            </Link>
-
-            {/* Docs Navigation (only shows when on docs pages) */}
-            {docsNavigation && docsNavigation.length > 0 && (
-              <>
-                <div className="mobile-menu-divider" style={{ marginTop: '1.5rem' }}>Documentation</div>
-                {docsNavigation.map((section) => {
-                  const sectionExpanded = mobileDocsExpanded[section.category] || false
-                  return (
-                    <div key={section.category}>
-                      <button
-                        className="mobile-menu-section-title mobile-menu-collapsible"
-                        onClick={() => setMobileDocsExpanded(prev => ({
-                          ...prev,
-                          [section.category]: !sectionExpanded
-                        }))}
-                      >
-                        {section.category}
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          style={{
-                            marginLeft: 'auto',
-                            transform: sectionExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                            transition: 'transform 0.2s ease',
-                          }}
-                        >
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                      </button>
-                      {sectionExpanded && section.items.map((item) => (
-                        <Link
-                          key={item.slug.join('/')}
-                          href={`/docs/${item.slug.join('/')}`}
-                          className={`mobile-menu-item mobile-menu-subitem ${pathname === `/docs/${item.slug.join('/')}` ? 'active' : ''}`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          {item.title}
-                        </Link>
-                      ))}
-                    </div>
-                  )
-                })}
-              </>
-            )}
+            </a>
           </div>
         </>
       )}
