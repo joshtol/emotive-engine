@@ -247,9 +247,9 @@ export class AccessibilityManager {
     
     /**
      * Handle key up events
-     * @param {KeyboardEvent} event - Keyboard event
+     * @param {KeyboardEvent} _event - Keyboard event (unused but kept for event handler signature)
      */
-    handleKeyUp(event) {
+    handleKeyUp(_event) {
         // Could be used for specific key release actions
     }
     

@@ -266,7 +266,7 @@ class GrooveTemplates {
         if (!groove || !groove.pattern) return 0;
 
         const beatInMeasure = beatNumber % 4; // Assuming 4/4 for now
-        const position = beatInMeasure + subdivision;
+        const _position = beatInMeasure + subdivision; // Unused - kept for future use
 
         // Find closest pattern position
         const patternIndex = groove.pattern.subdivisions.findIndex(
@@ -285,7 +285,7 @@ class GrooveTemplates {
         if (!groove || !groove.pattern) return 1.0;
 
         const beatInMeasure = beatNumber % 4;
-        const position = beatInMeasure + subdivision;
+        const _position = beatInMeasure + subdivision; // Unused - kept for future use
 
         const patternIndex = groove.pattern.subdivisions.findIndex(
             sub => Math.abs(sub - subdivision) < 0.01

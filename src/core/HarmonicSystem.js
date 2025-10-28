@@ -257,7 +257,7 @@ class HarmonicSystem {
         const startTime = baseTime || this.audioContext.currentTime;
         let currentTime = startTime;
         
-        notes.forEach((note, index) => {
+        notes.forEach((note, _index) => {
             if (note.isRest) {
                 currentTime += note.duration;
                 return;
@@ -358,7 +358,7 @@ class HarmonicSystem {
             excited: () => {
                 // Excited creates ascending arpeggios
                 const scale = this.musicTheory.generateScale(this.currentKey, 'lydian');
-                const arpeggio = scale.map((freq, i) => ({
+                const arpeggio = scale.map((freq, _i) => ({
                     frequency: freq,
                     duration: 0.1,
                     isRest: false

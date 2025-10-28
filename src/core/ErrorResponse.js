@@ -86,10 +86,10 @@ export class ErrorResponse {
     /**
    * Generate recovery actions based on error type
    * @param {string} type - Error type
-   * @param {Object} context - Error context
+   * @param {Object} _context - Error context (unused but kept for API consistency)
    * @returns {Array} Array of recovery suggestions
    */
-    generateRecoveryActions(type, context) {
+    generateRecoveryActions(type, _context) {
         const recoveryMap = {
             'INVALID_EMOTION': [
                 'Check if emotion is one of: joy, sadness, anger, fear, surprise, disgust, contempt, neutral',

@@ -115,9 +115,9 @@ export class AudioLevelProcessor {
 
     /**
      * Update audio level from analyser (called each frame)
-     * @param {number} deltaTime - Time since last frame in milliseconds
+     * @param {number} _deltaTime - Time since last frame in milliseconds (unused but kept for API consistency)
      */
-    updateAudioLevel(deltaTime = 16) {
+    updateAudioLevel(_deltaTime = 16) {
         if (!this.isActive || !this.analyser || !this.dataArray) {
             return;
         }

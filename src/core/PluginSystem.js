@@ -247,9 +247,9 @@ export class PluginSystem {
             
             // Limited console
             console: {
-                log: (...args) => null,
-                warn: (...args) => null,
-                error: (...args) => null
+                log: (..._args) => null,
+                warn: (..._args) => null,
+                error: (..._args) => null
             },
             
             // No access to window, document, or other globals
@@ -347,8 +347,8 @@ export class PluginSystem {
             });
             
             return true;
-            
-        } catch (error) {
+
+        } catch (_error) {
             // Failed to register plugin
             return false;
         } finally {
@@ -545,7 +545,7 @@ export class PluginSystem {
             ]);
             
             return result !== false;
-        } catch (error) {
+        } catch (_error) {
             // Plugin initialization error
             return false;
         }
@@ -599,7 +599,7 @@ export class PluginSystem {
             this.emitPluginEvent('pluginUnregistered', { name: pluginName });
             
             return true;
-        } catch (error) {
+        } catch (_error) {
             // Failed to unregister plugin
             return false;
         }
@@ -655,7 +655,7 @@ export class PluginSystem {
             try {
                 const result = await hook.handler(data);
                 results.push({ pluginName: hook.pluginName, result });
-            } catch (error) {
+            } catch (_error) {
                 // Hook error in plugin
             }
         }
@@ -749,29 +749,29 @@ export class PluginSystem {
     
     /**
      * Listen for plugin events
-     * @param {string} eventName - Event name
-     * @param {Function} handler - Event handler
+     * @param {string} _eventName - Event name (unused but kept for API compatibility)
+     * @param {Function} _handler - Event handler (unused but kept for API compatibility)
      */
-    onPluginEvent(eventName, handler) {
+    onPluginEvent(_eventName, _handler) {
         // This would integrate with the main event system
         // Placeholder for event listening
     }
     
     /**
      * Log from plugin context
-     * @param {string} pluginName - Plugin name
-     * @param {...*} args - Log arguments
+     * @param {string} _pluginName - Plugin name (unused but kept for API compatibility)
+     * @param {...*} _args - Log arguments (unused but kept for API compatibility)
      */
-    logFromPlugin(pluginName, ...args) {
+    logFromPlugin(_pluginName, ..._args) {
         // Plugin log message
     }
     
     /**
      * Error from plugin context
-     * @param {string} pluginName - Plugin name
-     * @param {...*} args - Error arguments
+     * @param {string} _pluginName - Plugin name (unused but kept for API compatibility)
+     * @param {...*} _args - Error arguments (unused but kept for API compatibility)
      */
-    errorFromPlugin(pluginName, ...args) {
+    errorFromPlugin(_pluginName, ..._args) {
         // Plugin error message
     }
     
@@ -817,7 +817,7 @@ export class PluginSystem {
         return { ...existing, ...incoming }; // Merge properties
     }
     
-    rejectConflict(existing, incoming) {
+    rejectConflict(existing, _incoming) {
         return existing; // Keep existing, reject new
     }
     

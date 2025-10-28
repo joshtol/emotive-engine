@@ -345,9 +345,9 @@ class EmotiveStateMachine {
 
     /**
      * Updates undertone transition progress
-     * @param {number} deltaTime - Time since last update in milliseconds
+     * @param {number} _deltaTime - Time since last update in milliseconds (unused but kept for API consistency)
      */
-    updateUndertoneTransition(deltaTime) {
+    updateUndertoneTransition(_deltaTime) {
         const transition = this.transitions.undertone;
         
         // Calculate elapsed time

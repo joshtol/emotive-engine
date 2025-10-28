@@ -2002,9 +2002,9 @@ class EmotiveMascot {
 
     /**
      * Renders debug information overlay
-     * @param {number} deltaTime - Time since last frame in milliseconds
+     * @param {number} _deltaTime - Time since last frame in milliseconds (unused but kept for API consistency)
      */
-    renderDebugInfo(deltaTime) {
+    renderDebugInfo(_deltaTime) {
         const ctx = this.canvasManager.getContext();
         ctx.save();
         

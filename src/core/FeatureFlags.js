@@ -59,7 +59,7 @@ export class FeatureFlags {
             if (typeof localStorage !== 'undefined') {
                 return localStorage.getItem('emotive-user-id');
             }
-        } catch (e) {
+        } catch (_e) {
             // Storage not available
         }
         return null;
@@ -70,7 +70,7 @@ export class FeatureFlags {
             if (typeof localStorage !== 'undefined') {
                 localStorage.setItem('emotive-user-id', userId);
             }
-        } catch (e) {
+        } catch (_e) {
             // Storage not available
         }
     }
@@ -332,7 +332,7 @@ export class FeatureFlags {
     getEnabledFlags() {
         const enabled = [];
 
-        for (const [key, value] of this.flags) {
+        for (const [key, _value] of this.flags) {
             if (this.isEnabled(key)) {
                 enabled.push(key);
             }
@@ -391,7 +391,7 @@ export class FeatureFlags {
             if (this.config.storage === 'sessionStorage' && typeof sessionStorage !== 'undefined') {
                 return sessionStorage;
             }
-        } catch (e) {
+        } catch (_e) {
             // Storage not available
         }
         return null;

@@ -74,7 +74,7 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import PerformanceMonitor from './PerformanceMonitor.js';
+// import PerformanceMonitor from './PerformanceMonitor.js'; // Unused - available for future performance monitoring
 import SimpleFPSCounter from './SimpleFPSCounter.js';
 import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 
@@ -530,11 +530,11 @@ class AnimationController {
 
     /**
      * Sets the target FPS (delegated to PerformanceMonitor)
-     * @param {number} fps - Target FPS value
+     * @param {number} _fps - Target FPS value (unused - FPS changes disabled)
      */
-    setTargetFPS(fps) {
+    setTargetFPS(_fps) {
         // DISABLED - no FPS changes allowed
-        
+
     }
 
     /**

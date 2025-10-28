@@ -34,16 +34,16 @@
 import { initializeBehavior, updateBehavior } from './particles/behaviors/index.js';
 
 // Import utilities
-import { selectWeightedColor } from './particles/utils/colorUtils.js';
+// import { selectWeightedColor } from './particles/utils/colorUtils.js'; // Unused - available for future use
 
 // Import config
-import { PHYSICS } from './particles/config/physics.js';
+// import { PHYSICS } from './particles/config/physics.js'; // Unused - available for future use
 
 // Import gesture system - NOW USING MODULAR GESTURES!
-import { 
+import {
     applyGestureMotion as applyFullGestureMotion,
-    isGestureOverriding,
-    isGestureBlending 
+    isGestureOverriding
+    // isGestureBlending // Unused - available for future use
 } from './gestures/GestureMotion.js';
 
 /**
@@ -140,7 +140,7 @@ class Particle {
      * @param {number} gestureProgress - Progress of the gesture (0-1)
      * @param {Object} containmentBounds - Optional containment bounds {width, height}
      */
-    update(deltaTime, centerX, centerY, undertoneModifier = null, gestureMotion = null, gestureProgress = 0, containmentBounds = null) {
+    update(deltaTime, centerX, centerY, _undertoneModifier = null, gestureMotion = null, gestureProgress = 0, containmentBounds = null) {
         // Cap deltaTime to prevent huge jumps
         const cappedDeltaTime = Math.min(deltaTime, 50);
         // Normalize to 60 FPS equivalent for consistent physics
@@ -255,10 +255,10 @@ class Particle {
     /**
      * DEPRECATED - Undertones no longer affect particle motion
      * Kept for compatibility but does nothing
-     * @param {number} dt - Normalized delta time
-     * @param {Object} modifier - Undertone modifier settings
+     * @param {number} _dt - Normalized delta time (unused but kept for API compatibility)
+     * @param {Object} _modifier - Undertone modifier settings (unused but kept for API compatibility)
      */
-    applyUndertoneModifier(dt, modifier) {
+    applyUndertoneModifier(_dt, _modifier) {
         // Undertones no longer affect particles
         // They only affect color saturation and core behaviors
         

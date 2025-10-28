@@ -4,9 +4,7 @@
     "es2021": true,
     "node": true
   },
-  "extends": [
-    "eslint:recommended"
-  ],
+  "extends": ["eslint:recommended"],
   "parserOptions": {
     "ecmaVersion": 2021,
     "sourceType": "module"
@@ -16,17 +14,20 @@
     "linebreak-style": ["error", "unix"],
     "quotes": ["error", "single", { "avoidEscape": true }],
     "semi": ["error", "always"],
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
     "no-console": ["warn", { "allow": ["warn", "error"] }],
     "prefer-const": "error",
     "arrow-parens": ["error", "as-needed"],
     "arrow-spacing": "error",
     "no-var": "error",
     "object-shorthand": "error",
-    "prefer-destructuring": ["error", {
-      "object": true,
-      "array": false
-    }],
+    "prefer-destructuring": [
+      "error",
+      {
+        "object": true,
+        "array": false
+      }
+    ],
     "prefer-template": "error",
     "template-curly-spacing": ["error", "never"],
     "no-eval": "error",
@@ -73,12 +74,5 @@
       }
     }
   ],
-  "ignorePatterns": [
-    "dist/",
-    "node_modules/",
-    "site/dist/",
-    "coverage/",
-    "*.min.js",
-    "*.old.js"
-  ]
+  "ignorePatterns": ["dist/", "node_modules/", "site/dist/", "coverage/", "*.min.js", "*.old.js"]
 }

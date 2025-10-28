@@ -40,7 +40,8 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import { getGesture, getGestureProperties } from './gestures/gestureCacheWrapper.js';
+import { getGesture } from './gestures/gestureCacheWrapper.js';
+// import { getGestureProperties } from './gestures/gestureCacheWrapper.js'; // Unused - available for future use
 import { getEmotionModifiers } from './emotions/index.js';
 import { emotionCache } from './cache/EmotionCache.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';

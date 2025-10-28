@@ -734,8 +734,8 @@ class ParticleSystem {
         // Batch render with minimized state changes
         ctx.save();
         let lastFillStyle = null;
-        let lastStrokeStyle = null;
-        let lastLineWidth = null;
+        const lastStrokeStyle = null;
+        const lastLineWidth = null;
 
         for (const particle of visibleParticles) {
             // For cell-shaded, use original render (they need complex stroke/fill combos)
@@ -743,8 +743,8 @@ class ParticleSystem {
                 particle.render(ctx, emotionColor);
                 // Reset cached values since particle.render may have changed them
                 lastFillStyle = null;
-                lastStrokeStyle = null;
-                lastLineWidth = null;
+                const _lastStrokeStyle = null; // Unused - kept for future use
+                const _lastLineWidth = null; // Unused - kept for future use
             } else {
                 // Batch-optimized rendering for regular particles
                 const particleColor = particle.color || emotionColor;

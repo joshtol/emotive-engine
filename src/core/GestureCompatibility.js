@@ -450,10 +450,10 @@ export class GestureCompatibility {
      * Get next beat timing for a gesture (for rhythm game mode)
      * @param {string} gestureName - Name of the gesture
      * @param {number} currentBeat - Current beat number
-     * @param {number} bpm - Current BPM
+     * @param {number} _bpm - Current BPM (unused but kept for API consistency)
      * @returns {number} - Next beat to trigger on
      */
-    getNextBeatTiming(gestureName, currentBeat, bpm) {
+    getNextBeatTiming(gestureName, currentBeat, _bpm) {
         // In rhythm game mode, this will be determined by the game logic
         // For now, just return the next appropriate beat based on gesture type
         const nextBeat = this.getNextBeatForGesture(gestureName, currentBeat);

@@ -301,10 +301,10 @@ class GazeTracker {
     
     /**
      * Get current gaze offset for rendering
-     * @param {number} coreRadius - The radius of the core
+     * @param {number} _coreRadius - The radius of the core (unused but kept for API consistency)
      * @returns {Object} Gaze offset {x, y}
      */
-    getGazeOffset(coreRadius) {
+    getGazeOffset(_coreRadius) {
         return {
             x: this.currentGaze.x,
             y: this.currentGaze.y

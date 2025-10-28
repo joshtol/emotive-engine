@@ -18,7 +18,8 @@
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
-import { getGesture, getGestureProperties } from './gestures/gestureCacheWrapper.js';
+import { getGesture } from './gestures/gestureCacheWrapper.js';
+// import { getGestureProperties } from './gestures/gestureCacheWrapper.js'; // Unused - available for future use
 import rhythmEngine from './rhythm.js';
 import rhythmIntegration from './rhythmIntegration.js';
 import musicalDuration from './MusicalDuration.js';

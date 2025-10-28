@@ -87,13 +87,13 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import { interpolateHsl, applyUndertoneSaturation, rgbToHex, hexToRgb } from '../utils/colorUtils.js';
+// import { interpolateHsl, applyUndertoneSaturation, rgbToHex, hexToRgb } from '../utils/colorUtils.js'; // Unused imports - available for future use
 import GestureCompositor from './GestureCompositor.js';
 import { getEmotion } from './emotions/index.js';
 import { emotionCache } from './cache/EmotionCache.js';
 import { getEffect, applyEffect, isEffectActive } from './effects/index.js';
-import { getGesture } from './gestures/index.js';
-import musicalDuration from './MusicalDuration.js';
+// import { getGesture } from './gestures/index.js'; // Unused import - available for future use
+// import musicalDuration from './MusicalDuration.js'; // Unused import - available for future use
 
 // Import modular renderer components
 import { GestureAnimator } from './renderer/GestureAnimator.js';
@@ -866,8 +866,8 @@ class EmotiveRenderer {
         } else {
             // Normal breathing behavior
             // Zen uses full breath depth regardless of breathRate
-            const effectiveBreathDepth = this.state.emotion === 'zen' ? this.state.breathDepth : 
-                this.state.breathDepth * this.state.breathRate;
+            const _effectiveBreathDepth = this.state.emotion === 'zen' ? this.state.breathDepth :
+                this.state.breathDepth * this.state.breathRate; // Calculated but unused - kept for future use
             // Get breathing scale from BreathingAnimator
             const breathingScale = this.breathingAnimator.getBreathingScale();
             coreBreathFactor = breathingScale;
@@ -909,7 +909,7 @@ class EmotiveRenderer {
         // Handle episodic effects for undertones
         if (this.currentUndertone && this.episodicEffects[this.currentUndertone]) {
             const episode = this.episodicEffects[this.currentUndertone];
-            const modifier = this.undertoneModifiers[this.currentUndertone];
+            const _modifier = this.undertoneModifiers[this.currentUndertone]; // Available for future use
             const now = performance.now();
             
             // Check if it's time to trigger a new episode
@@ -1200,10 +1200,10 @@ class EmotiveRenderer {
             
             if (this.shapeMorpher) {
                 morphProgress = this.shapeMorpher.getProgress();
-                const {currentShape} = this.shapeMorpher;
-                const {targetShape} = this.shapeMorpher;
-                const fromLunar = currentShape === 'lunar' || currentShape === 'eclipse';
-                const toLunar = targetShape === 'lunar' || targetShape === 'eclipse';
+                const {currentShape: innerCurrentShape} = this.shapeMorpher;
+                const {targetShape: innerTargetShape} = this.shapeMorpher;
+                const _fromLunar = innerCurrentShape === 'lunar' || innerCurrentShape === 'eclipse'; // Unused - kept for future use
+                const _toLunar = innerTargetShape === 'lunar' || innerTargetShape === 'eclipse'; // Unused - kept for future use
                 
                 const slideDistance = coreRadius * 2.5;
                 
@@ -1601,7 +1601,7 @@ class EmotiveRenderer {
         }
         
         // Generate different beads for entering vs leaving
-        const beadKey = isTransitioningToSolar ? 'entering' : 'leaving';
+        const _beadKey = isTransitioningToSolar ? 'entering' : 'leaving'; // Unused - kept for future use
         
         // Check if we need to generate new beads (first time shadow centers for this transition)
         if (!this._beadStartTime) {
@@ -1705,9 +1705,9 @@ class EmotiveRenderer {
     /**
      * Render moon/lunar shadow overlay
      * @param {boolean} isSolarOverlay - True if this is being called for solar eclipse effect
-     * @param {number} rotation - Rotation angle to apply
+     * @param {number} _rotation - Rotation angle to apply (unused but kept for API consistency)
      */
-    renderMoonShadow(x, y, radius, shadow, shapePoints, isSolarOverlay = false, rotation = 0) {
+    renderMoonShadow(x, y, radius, shadow, shapePoints, isSolarOverlay = false, _rotation = 0) {
         const {ctx} = this;
 
         ctx.save();
@@ -1722,12 +1722,12 @@ class EmotiveRenderer {
             // Get morph progress to animate the shadow sliding in
             let shadowProgress = 1.0; // Default to fully visible
             let animatedOffset = shadow.offset || 0.7; // Default to the shadow's offset
-            
+
             if (this.shapeMorpher) {
                 const morphProgress = this.shapeMorpher.getProgress();
-                const {currentShape} = this.shapeMorpher;
+                const _currentShape = this.shapeMorpher.currentShape; // Unused - kept for future use
                 const {targetShape} = this.shapeMorpher;
-                
+
                 // Animate shadow sliding in when morphing TO moon (and shadow.offset is not being controlled)
                 if (targetShape === 'moon' && morphProgress !== undefined && morphProgress < 1 && !shadow.shadowX) {
                     // Shadow slides in from the left
@@ -1991,7 +1991,7 @@ class EmotiveRenderer {
             this.ctx.arc(0, 0, radius, 0, Math.PI * 2, false);
             
             // CLEAN LOTUS SILHOUETTE - matching reference image
-            const lotusSize = radius * 0.95; // Lotus fills nearly ALL of the orb
+            const _lotusSize = radius * 0.95; // Lotus fills nearly ALL of the orb (unused - kept for future use)
             
             // MORPHING LOTUS PETALS - animated based on lotusMorph value
             const morph = this.zenTransition.lotusMorph;
@@ -2046,7 +2046,7 @@ class EmotiveRenderer {
             
                 // Bottom smile - morphs from straight to curved smile
                 if (smile > 0) {
-                    const smileDepth = radius * 0.2 * smile; // How deep the smile curves
+                    const _smileDepth = radius * 0.2 * smile; // How deep the smile curves (unused - kept for future use)
                     this.ctx.moveTo(-radius * 0.6, radius * (0.5 - 0.1 * smile));   // Corners rise with smile
                     this.ctx.quadraticCurveTo(
                         0, radius * (0.5 + 0.1 * smile),     // Center dips for smile
@@ -2450,9 +2450,9 @@ class EmotiveRenderer {
     
     /**
      * Set BPM for rhythm features
-     * @param {number} bpm - Beats per minute
+     * @param {number} _bpm - Beats per minute (unused but kept for API compatibility)
      */
-    setBPM(bpm) {
+    setBPM(_bpm) {
         // BPM-locked rotation has been removed
         // This method is kept for other rhythm-related features
     }

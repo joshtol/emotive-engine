@@ -415,7 +415,7 @@ export class MobileOptimization {
         
         // Detect swipe gesture
         if (distance > this.config.swipeThreshold) {
-            const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+            const _angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI; // Unused - kept for future use
             
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
                 this.currentGesture = deltaX > 0 ? 'swipeRight' : 'swipeLeft';
@@ -543,9 +543,9 @@ export class MobileOptimization {
     
     /**
      * Handle touch cancel
-     * @param {TouchEvent} event - Touch event
+     * @param {TouchEvent} _event - Touch event (unused but kept for event handler signature)
      */
-    handleTouchCancel(event) {
+    handleTouchCancel(_event) {
         // Clear all touches
         this.touches.clear();
         this.currentGesture = null;
@@ -557,9 +557,9 @@ export class MobileOptimization {
     
     /**
      * Handle orientation change
-     * @param {Event} event - Orientation change event
+     * @param {Event} _event - Orientation change event (unused but kept for event handler signature)
      */
-    handleOrientationChange(event) {
+    handleOrientationChange(_event) {
         this.orientation = this.getOrientation();
         
         // Emit orientation change event
@@ -589,9 +589,9 @@ export class MobileOptimization {
     
     /**
      * Handle viewport change
-     * @param {Event} event - Resize event
+     * @param {Event} _event - Resize event (unused but kept for event handler signature)
      */
-    handleViewportChange(event) {
+    handleViewportChange(_event) {
         const now = Date.now();
         
         // Debounce viewport changes
@@ -621,9 +621,9 @@ export class MobileOptimization {
     
     /**
      * Handle visibility change
-     * @param {Event} event - Visibility change event
+     * @param {Event} _event - Visibility change event (unused but kept for event handler signature)
      */
-    handleVisibilityChange(event) {
+    handleVisibilityChange(_event) {
         const isVisible = !document.hidden;
         
         this.emitTouchEvent('visibilityChange', {
