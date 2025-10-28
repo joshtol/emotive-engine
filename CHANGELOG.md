@@ -9,7 +9,45 @@ and this project uses
 
 ## [Unreleased]
 
-### 🔌 Plugin System Documentation Fixes - 2025-10-27
+### 🔌 Plugin System - Critical Fix - 2025-10-27
+
+#### BREAKING: Plugin Adapter Exposure (Fixes Non-Functional Plugin System)
+
+**Critical bug discovered and fixed**: Plugin adapters were not accessible to
+plugins, making the entire emotion/gesture plugin system non-functional.
+
+**What was broken:**
+
+- Plugins expected `this.mascot.Emotions.pluginAdapter` to exist
+- EmotiveMascot did not expose `Emotions`, `Gestures`, or `ParticleBehaviors`
+  modules
+- Plugin adapters were not exported from `src/index.js`
+- Result: `example-emotion-plugin.js` and `example-gesture-plugin.js` would fail
+  silently
+
+**What was fixed:**
+
+- **ADDED** `this.Emotions` exposure on EmotiveMascot instance
+  ([src/EmotiveMascot.js:183](src/EmotiveMascot.js#L183))
+- **ADDED** `this.Gestures` exposure on EmotiveMascot instance
+  ([src/EmotiveMascot.js:184](src/EmotiveMascot.js#L184))
+- **ADDED** `this.ParticleBehaviors` exposure on EmotiveMascot instance
+  ([src/EmotiveMascot.js:185](src/EmotiveMascot.js#L185))
+- **EXPORTED** `emotionPluginAdapter` from [src/index.js](src/index.js#L64)
+- **EXPORTED** `gesturePluginAdapter` from [src/index.js](src/index.js#L76)
+- **EXPORTED** `particleBehaviorPluginAdapter` from
+  [src/index.js](src/index.js#L81)
+
+**How plugins now work:**
+
+```javascript
+// In plugin init(mascot):
+const adapter = mascot.Emotions.pluginAdapter;
+adapter.registerPluginEmotion('custom', emotionDef);
+```
+
+**Impact**: All example plugins now functional. Third-party plugins can now
+register emotions, gestures, and particle behaviors.
 
 #### Plugin Documentation Updates
 

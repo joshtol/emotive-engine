@@ -60,7 +60,8 @@ export {
     getEmotionVisualParams,
     hasEmotion,
     listEmotions,
-    getEmotionGestures
+    getEmotionGestures,
+    pluginAdapter as emotionPluginAdapter
 } from './core/emotions/index.js';
 
 // Gestures
@@ -71,8 +72,14 @@ export {
     applyGesture,
     listGestures,
     GESTURE_REGISTRY,
-    GESTURE_TYPES
+    GESTURE_TYPES,
+    pluginAdapter as gesturePluginAdapter
 } from './core/gestures/index.js';
+
+// Particle Behaviors
+export {
+    pluginAdapter as particleBehaviorPluginAdapter
+} from './core/particles/behaviors/index.js';
 
 // Groove Templates
 export { default as GrooveTemplates } from './core/GrooveTemplates.js';

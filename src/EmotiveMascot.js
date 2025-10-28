@@ -50,6 +50,9 @@ import GazeTracker from './core/GazeTracker.js';
 import IdleBehavior from './core/IdleBehavior.js';
 import { getEmotionVisualParams, getEmotion } from './core/emotions/index.js';
 import { getGesture } from './core/gestures/index.js';
+import * as Emotions from './core/emotions/index.js';
+import * as Gestures from './core/gestures/index.js';
+import * as ParticleBehaviors from './core/particles/behaviors/index.js';
 import PositionController from './utils/PositionController.js';
 import { initSentry, captureError, addBreadcrumb } from './utils/sentry.js';
 import { SoundSystem } from './core/SoundSystem.js';
@@ -175,6 +178,11 @@ class EmotiveMascot {
         };
 
         this.config = { ...defaults, ...config };
+
+        // Expose Emotions, Gestures, and ParticleBehaviors modules for plugin access
+        this.Emotions = Emotions;
+        this.Gestures = Gestures;
+        this.ParticleBehaviors = ParticleBehaviors;
 
         // Initialize Sentry if configured
         if (this.config.sentry && this.config.sentry.enabled) {
