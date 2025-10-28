@@ -113,9 +113,9 @@ Reduces animation choreography from 50+ lines to a single method call:
 ```javascript
 // Before (50+ lines of manual choreography)
 const intensity = frustration > 60 ? 1.0 : 0.7;
-mascot.setEmotion('empathy', intensity);
-setTimeout(() => mascot.express('shake'), 200);
-setTimeout(() => mascot.express('nod'), 600);
+mascot.setEmotion('calm', intensity);  // Real emotion showing understanding
+setTimeout(() => mascot.express('pulse'), 200);
+setTimeout(() => mascot.express('breathe'), 600);
 
 // After (1 line with semantic API)
 await mascot.perform('offering_urgent_help', {
@@ -155,14 +155,15 @@ A **dual-layer emotional expression system** that combines primary emotions with
 
 #### 3.1 Two-Tier Emotion Model
 ```
-Primary Emotion (12 states): neutral, joy, sadness, anger, fear,
-                             surprise, love, euphoria, excited, etc.
+Primary Emotion (15 states): anger, calm, disgust, euphoria, excited,
+                             fear, focused, glitch, joy, love, neutral,
+                             resting, sadness, surprise, suspicion
 
 Behavioral Undertone (6 modifiers): nervous, intense, tired,
                                      confident, subdued, clear
 ```
 
-**Novel aspect:** Any emotion can be combined with any undertone, creating 72 unique emotional states from 18 total definitions.
+**Novel aspect:** Any emotion can be combined with any undertone, creating 90 unique emotional states from 21 total definitions (15 emotions × 6 undertones).
 
 #### 3.2 Particle Behavior Modulation
 Each emotion-undertone combination produces unique particle physics:
@@ -178,9 +179,10 @@ Each emotion-undertone combination produces unique particle physics:
 Not all gestures work with all emotions. The system includes a compatibility matrix:
 
 ```javascript
-compatibilityMatrix = {
-    'joy': ['bounce', 'spin', 'sparkle'],      // High energy
-    'calm': ['breathe', 'sway', 'float'],      // Low energy
+// Conceptual example (illustrative, not actual API code)
+emotionGestureAffinities = {
+    'joy': ['bounce', 'spin', 'expand'],       // High energy
+    'calm': ['breathe', 'pulse', 'float'],     // Low energy
     'anger': ['shake', 'pulse', 'flash']       // Impact-based
 }
 ```

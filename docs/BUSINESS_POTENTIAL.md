@@ -169,9 +169,9 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 
 **Problem:** Online shoppers abandon carts due to impersonal experience
 **Solution:** Emotional shopping assistant that:
-- Celebrates item additions with "joy + excited"
-- Empathizes with errors using "calm + confident"
-- Creates urgency with "surprise + intense" for limited stock
+- Celebrates item additions with joyful, excited expressions
+- Empathizes with errors using calm, confident expressions
+- Creates urgency with intense surprise for limited stock
 
 **Market Opportunity:**
 - 2.1B digital shoppers globally
@@ -210,9 +210,9 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 
 **Problem:** Healthcare AI feels cold and clinical
 **Solution:** Patient-facing avatar that:
-- Detects frustration (long wait times) and adapts to "empathy + calm"
-- Celebrates appointment scheduling with "joy + subdued"
-- Uses semantic performances: `reassuring_patient`, `explaining_procedure`
+- Detects frustration (long wait times) and adapts to calm, subdued expressions
+- Celebrates appointment scheduling with gentle joy
+- Uses gesture combinations like calm + breathe for reassurance during procedures
 
 **Market Opportunity:**
 - $4.3B healthcare AI assistant market
@@ -233,9 +233,9 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 
 **Problem:** Voice assistants lack personality and visual feedback
 **Solution:** Avatar companion that:
-- Pulses with "calm + clear" while listening
-- Bounces with "joy" when executing commands
-- Shows "focus" state when processing complex requests
+- Pulses with calm expression while listening
+- Bounces with joy when executing commands
+- Shows focused state when processing complex requests
 
 **Market Opportunity:**
 - 8.2B connected devices by 2030
@@ -251,8 +251,8 @@ The market for AI interfaces with emotional intelligence is **emerging but rapid
 
 **Problem:** Game NPCs have static emotions, don't react to soundtrack
 **Solution:** Characters that:
-- Dance to battle music with "excited + intense"
-- Sway to ambient exploration music with "calm + clear"
+- Dance to battle music with intense excitement
+- Sway to ambient exploration music with calm expressions
 - React to player actions with emotion-gesture combos
 
 **Market Opportunity:**

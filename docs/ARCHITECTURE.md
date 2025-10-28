@@ -181,7 +181,7 @@ GestureController.executeGesture('wave')
 [EmotiveRenderer] Renders animated gesture
        │
        ▼
-[EventEmitter] Fires 'gestureComplete' event
+[EventEmitter] Fires 'gesture' event
 ```
 
 ### Render Loop Flow
@@ -384,7 +384,7 @@ The system is designed to be extensible. Here's how to add your own customizatio
 ```javascript
 // Define in src/core/emotions/states/myEmotion.js
 export const myEmotion = {
-    name: 'excited',
+    name: 'energized', // Use a custom name (not an existing emotion)
     color: '#FF6B6B',
     particleSpeed: 5,
     particleCount: 100,
@@ -443,11 +443,11 @@ export class MyPlugin {
 
     init() {
         // Plugin initialization
-        this.mascot.on('emotionChange', this.handleEmotionChange);
+        this.mascot.on('gesture', this.handleGesture);
     }
 
-    handleEmotionChange(emotion) {
-        console.log('Emotion changed to:', emotion);
+    handleGesture(data) {
+        console.log('Gesture triggered:', data.name);
     }
 }
 ```
