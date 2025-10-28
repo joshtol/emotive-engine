@@ -49,12 +49,11 @@ import EmotiveRenderer from './core/EmotiveRenderer.js';
 import GazeTracker from './core/GazeTracker.js';
 import IdleBehavior from './core/IdleBehavior.js';
 import { getEmotionVisualParams, getEmotion } from './core/emotions/index.js';
-import { getGesture } from './core/gestures/index.js';
 import * as Emotions from './core/emotions/index.js';
 import * as Gestures from './core/gestures/index.js';
 import * as ParticleBehaviors from './core/particles/behaviors/index.js';
 import PositionController from './utils/PositionController.js';
-import { initSentry, captureError, addBreadcrumb } from './utils/sentry.js';
+import { initSentry, addBreadcrumb } from './utils/sentry.js';
 import { SoundSystem } from './core/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/AudioLevelProcessor.js';
@@ -141,7 +140,6 @@ class EmotiveMascot {
     initialize(config) {
         // Get browser-specific optimizations
         const browserOpts = browserCompatibility.browserOptimizations.getOptimizations();
-        const {capabilities: _capabilities} = browserCompatibility;
         
         // Default configuration with browser-specific optimizations
         const defaults = {
@@ -366,8 +364,9 @@ class EmotiveMascot {
             this.animationController = new AnimationController(this.errorBoundary, {
                 targetFPS: this.config.targetFPS
             });
-        } catch (_error) {
-            // Failed to initialize AnimationController
+        } catch (error) {
+            // Failed to initialize AnimationController - log the error
+            console.error('AnimationController initialization failed:', error);
             // Fallback: create a minimal animation controller interface
             this.animationController = {
                 isAnimating: () => this.isRunning,
@@ -597,11 +596,6 @@ class EmotiveMascot {
             // Check if any particle has an active gesture
             const hasActiveGesture = this.particleSystem.particles.some(p => p.gestureProgress < 1);
             if (!hasActiveGesture) {
-                const _emotionalContext = {
-                    emotion: this.stateMachine.getCurrentState().emotion,
-                    properties: this.stateMachine.getCurrentEmotionalProperties()
-                };
-                
                 // Execute pulse gesture through express method
                 this.express('pulse');
                 const success = true;
@@ -1809,7 +1803,8 @@ class EmotiveMascot {
             if (renderState.emotion === 'suspicion' && this.gazeTracker) {
                 const suspicionEmotion = getEmotion('suspicion');
                 if (suspicionEmotion && suspicionEmotion.visual) {
-                    const gazeState = this.gazeTracker.getState();
+                    // Use gazeState to adjust suspicion rendering
+                    this.gazeTracker.getState();
                     const {mousePos} = this.gazeTracker;
                     const centerX = this.canvasManager.width / 2;
                     const centerY = this.canvasManager.height / 2 - this.config.topOffset;

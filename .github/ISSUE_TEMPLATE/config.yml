@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/joshtol/emotive-engine/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🎮 Interactive Demo
+    url: https://emotiveengine.com/demo
+    about: Try the live demo to see all features in action
+  - name: 📚 Documentation
+    url: https://github.com/joshtol/emotive-engine/wiki
+    about: Read the full API documentation and guides

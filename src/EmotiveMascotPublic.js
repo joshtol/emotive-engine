@@ -819,11 +819,11 @@ class EmotiveMascotPublic {
                 scroll: () => {
                     if (!this._attachedElement || !this._canvas) return;
 
-                    const rect = this._attachedElement.getBoundingClientRect();
+                    const elementRect = this._attachedElement.getBoundingClientRect();
                     const viewportCenterX = window.innerWidth / 2;
                     const viewportCenterY = window.innerHeight / 2;
-                    const elementCenterX = rect.left + rect.width / 2;
-                    const elementCenterY = rect.top + rect.height / 2;
+                    const elementCenterX = elementRect.left + elementRect.width / 2;
+                    const elementCenterY = elementRect.top + elementRect.height / 2;
                     const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
                     const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
 
@@ -833,11 +833,11 @@ class EmotiveMascotPublic {
                 resize: () => {
                     if (!this._attachedElement || !this._canvas) return;
 
-                    const rect = this._attachedElement.getBoundingClientRect();
+                    const elementRect = this._attachedElement.getBoundingClientRect();
                     const viewportCenterX = window.innerWidth / 2;
                     const viewportCenterY = window.innerHeight / 2;
-                    const elementCenterX = rect.left + rect.width / 2;
-                    const elementCenterY = rect.top + rect.height / 2;
+                    const elementCenterX = elementRect.left + elementRect.width / 2;
+                    const elementCenterY = elementRect.top + elementRect.height / 2;
                     const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
                     const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
 
@@ -1084,7 +1084,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setSpeed(speed) {
-        const engine = this._getReal();
+        this._getReal(); // Ensure engine is initialized
         speed = Math.max(0.1, Math.min(10, speed));
 
         // Store speed multiplier for potential future use
