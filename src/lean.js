@@ -69,7 +69,7 @@ export { easeInOutQuad, easeOutCubic, easeInOutSine, applyEasing } from './utils
 // VERSION INFO
 // ============================================================================
 
-export const VERSION = '2.5.1-lean';
+export const VERSION = '3.0.0-lean';
 export const ENGINE_NAME = 'Emotive Engine Lean';
 export const BUILD_TYPE = 'lean';
 

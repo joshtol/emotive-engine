@@ -9,6 +9,40 @@ and this project uses
 
 ## [Unreleased]
 
+## [3.0.0] - 2025-10-28 - Open Source Launch
+
+### 🎉 MAJOR RELEASE: Open Source Community Edition
+
+This major release marks the official open source launch of Emotive Engine with
+complete community infrastructure, comprehensive documentation, critical plugin
+system fixes, and professional GitHub repository setup.
+
+**What's New:**
+
+- Complete open source community files (CODE_OF_CONDUCT.md, CONTRIBUTING.md,
+  SECURITY.md)
+- GitHub Wiki with 5 comprehensive pages (Home, API Reference, Examples Gallery,
+  Installation & Setup, Troubleshooting)
+- GitHub Discussions configured with welcome post, categories, and example
+  discussions
+- Professional social preview image (1280x640px GIF) for repository sharing
+- Social preview capture tool (examples/social-preview-capture.html)
+- 3 critical plugin system fixes making the plugin architecture fully functional
+
+**Breaking Changes:**
+
+- Plugin lifecycle now requires proper `update()` and `render()` implementation
+- Plugin adapters now properly exposed through EmotiveMascot API
+
+**Community Infrastructure:**
+
+- Contributor Covenant Code of Conduct
+- Comprehensive contributing guidelines
+- Security policy for vulnerability reporting
+- Issue templates (bug report, feature request, Q&A)
+- Pull request template with checklist
+- GitHub Discussions with 4 categories + welcome post
+
 ### 📚 Plugin Documentation - Clarification - 2025-10-28
 
 #### Documentation: Clarified Plugin Templates vs Exports

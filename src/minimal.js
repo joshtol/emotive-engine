@@ -71,7 +71,7 @@ export { UNDERTONE_MODIFIERS } from './config/undertoneModifiers.js';
 // VERSION INFO
 // ============================================================================
 
-export const VERSION = '2.5.1-minimal';
+export const VERSION = '3.0.0-minimal';
 export const ENGINE_NAME = 'Emotive Engine Minimal';
 export const BUILD_TYPE = 'minimal';
 
