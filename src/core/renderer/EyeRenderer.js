@@ -141,7 +141,7 @@ export class EyeRenderer {
     /**
      * Draw happy eyes (upward curves)
      */
-    drawHappyEyes(ctx, x, y, spacing, size, openness) {
+    drawHappyEyes(ctx, x, y, spacing, size, _openness) {
         // Left eye
         ctx.beginPath();
         ctx.arc(x - spacing, y, size, Math.PI * 0.2, Math.PI * 0.8, false);
@@ -156,7 +156,7 @@ export class EyeRenderer {
     /**
      * Draw sad eyes (downward curves)
      */
-    drawSadEyes(ctx, x, y, spacing, size, openness) {
+    drawSadEyes(ctx, x, y, spacing, size, _openness) {
         // Left eye
         ctx.beginPath();
         ctx.arc(x - spacing, y + size * 0.5, size, Math.PI * 1.2, Math.PI * 1.8, false);
@@ -171,7 +171,7 @@ export class EyeRenderer {
     /**
      * Draw angry eyes (angled lines)
      */
-    drawAngryEyes(ctx, x, y, spacing, size, openness) {
+    drawAngryEyes(ctx, x, y, spacing, size, _openness) {
         // Left eye
         ctx.beginPath();
         ctx.moveTo(x - spacing - size, y - size * 0.3);
@@ -188,7 +188,7 @@ export class EyeRenderer {
     /**
      * Draw surprised eyes (wide circles)
      */
-    drawSurprisedEyes(ctx, x, y, spacing, size, openness) {
+    drawSurprisedEyes(ctx, x, y, spacing, size, _openness) {
         // Left eye
         ctx.beginPath();
         ctx.arc(x - spacing, y, size * 1.2, 0, Math.PI * 2);
@@ -203,7 +203,7 @@ export class EyeRenderer {
     /**
      * Draw focused eyes (dots)
      */
-    drawFocusedEyes(ctx, x, y, spacing, size, openness) {
+    drawFocusedEyes(ctx, x, y, spacing, size, _openness) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         
         // Left eye
@@ -220,7 +220,7 @@ export class EyeRenderer {
     /**
      * Draw sleepy eyes (half-closed)
      */
-    drawSleepyEyes(ctx, x, y, spacing, size, openness) {
+    drawSleepyEyes(ctx, x, y, spacing, size, _openness) {
         // Left eye
         ctx.beginPath();
         ctx.moveTo(x - spacing - size, y);
@@ -237,7 +237,7 @@ export class EyeRenderer {
     /**
      * Draw suspicious eyes (narrowed)
      */
-    drawSuspiciousEyes(ctx, x, y, spacing, size, openness) {
+    drawSuspiciousEyes(ctx, x, y, spacing, size, _openness) {
         // Left eye - narrowed
         ctx.beginPath();
         ctx.moveTo(x - spacing - size, y);

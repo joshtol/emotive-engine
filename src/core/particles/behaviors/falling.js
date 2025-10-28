@@ -68,7 +68,7 @@ export function initializeFalling(particle) {
  * @param {number} centerX - Orb center X (unused)
  * @param {number} centerY - Orb center Y (unused)
  */
-export function updateFalling(particle, dt, centerX, centerY) {
+export function updateFalling(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
     
     // Apply gravity

@@ -77,7 +77,7 @@ export function initSentry(options = {}) {
         },
     });
 
-    console.log(`Sentry initialized in ${environment} mode`);
+    // console.log(`Sentry initialized in ${environment} mode`); // Disabled by linter
 }
 
 /**

@@ -79,7 +79,7 @@ export default {
      * Apply fade effect to particle
      * Smoothly transitions opacity based on configuration
      */
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, _dt, _centerX, _centerY) {
         if (!particle.gestureData?.fade) {
             this.initialize(particle);
         }

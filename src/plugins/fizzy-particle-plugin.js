@@ -247,7 +247,7 @@ class FizzyParticlePlugin {
      * @param {number} deltaTime - Time since last frame in ms
      * @param {Object} state - Current mascot state
      */
-    update(deltaTime, state) {
+    update(_deltaTime, _state) {
         // Particles are updated by the modular system - nothing needed here!
     }
     
@@ -257,7 +257,7 @@ class FizzyParticlePlugin {
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {Object} state - Current mascot state
      */
-    render(ctx, state) {
+    render(_ctx, _state) {
         // Particles are rendered by the core system
         // Add any additional visual effects here if needed
     }

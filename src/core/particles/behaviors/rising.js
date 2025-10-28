@@ -68,7 +68,7 @@ export function initializeRising(particle) {
  * @param {number} centerX - Orb center X (unused)
  * @param {number} centerY - Orb center Y (unused)
  */
-export function updateRising(particle, dt, centerX, centerY) {
+export function updateRising(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
     
     // Add buoyancy (upward force)

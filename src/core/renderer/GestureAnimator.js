@@ -409,7 +409,7 @@ export class GestureAnimator {
      * Update active gestures
      * @param {number} deltaTime - Time since last frame
      */
-    update(deltaTime) {
+    update(_deltaTime) {
         // Update logic moved to applyGestureAnimations
         return this.applyGestureAnimations();
     }
@@ -939,14 +939,14 @@ export class GestureAnimator {
         };
     }
     
-    applyBreathHold(anim, progress) {
+    applyBreathHold(anim, _progress) {
         // Hold at expanded state
         return {
             scale: anim.params.scaleAmount
         };
     }
     
-    applyBreathHoldEmpty(anim, progress) {
+    applyBreathHoldEmpty(anim, _progress) {
         // Hold at contracted state
         return {
             scale: anim.params.scaleAmount
@@ -1049,7 +1049,7 @@ export class GestureAnimator {
         };
     }
     
-    applyOrbital(anim, progress) {
+    applyOrbital(_anim, _progress) {
         // Orbital motion - particles orbit around core, core stays still
         // This gesture is for particle motion only, not core movement
         return {
@@ -1078,7 +1078,7 @@ export class GestureAnimator {
         // Sparkle effect - make particles glow like fireflies
         // Each particle gets its own random phase for async blinking
         const intensity = anim.params?.intensity || 2.0;
-        const baseGlow = 0.8;
+        const _baseGlow = 0.8;
         
         // Create firefly-like glow pattern for particles
         // Using time-based phase shifting for each particle

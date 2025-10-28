@@ -111,7 +111,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize(particle, motion, centerX, centerY) {
+    initialize(particle, _motion, _centerX, _centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -139,7 +139,7 @@ export default {
             this.initialize(particle, motion, centerX, centerY);
         }
 
-        const data = particle.gestureData.glow;
+        const _data = particle.gestureData.glow;
         const config = { ...this.config, ...motion };
 
         // Apply easing

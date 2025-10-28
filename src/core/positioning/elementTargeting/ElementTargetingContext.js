@@ -387,7 +387,7 @@ class ElementTargetingContext extends ElementTargeting {
      * Destroy the context-aware targeting system
      */
     destroy() {
-        this.scrollCallbacks.forEach((callback, id) => {
+        this.scrollCallbacks.forEach((callback, _id) => {
             window.removeEventListener('scroll', callback);
         });
         this.scrollCallbacks.clear();

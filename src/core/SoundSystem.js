@@ -129,7 +129,7 @@ export class SoundSystem {
             // SoundSystem: Successfully initialized Web Audio API
             return true;
 
-        } catch (error) {
+        } catch (_error) {
             // SoundSystem: Failed to initialize Web Audio API
             this.isEnabled = false;
             return false;
@@ -144,7 +144,7 @@ export class SoundSystem {
             try {
                 await this.context.resume();
                 // Silently resume without logging
-            } catch (error) {
+            } catch (_error) {
                 // Silently fail - this is expected before user interaction
             }
         }
@@ -265,7 +265,7 @@ export class SoundSystem {
             }
 
             // SoundSystem: Cleaned up audio resources
-        } catch (error) {
+        } catch (_error) {
             // SoundSystem: Error during cleanup
         } finally {
             // Always reset state regardless of errors
@@ -348,7 +348,7 @@ export class SoundSystem {
 
             // SoundSystem: Started ambient tone
 
-        } catch (error) {
+        } catch (_error) {
             // SoundSystem: Failed to set ambient tone
         }
     }
@@ -380,7 +380,7 @@ export class SoundSystem {
 
             // SoundSystem: Stopped ambient tone
 
-        } catch (error) {
+        } catch (_error) {
             // SoundSystem: Failed to stop ambient tone
         }
     }
@@ -404,7 +404,7 @@ export class SoundSystem {
             const {currentTime} = this.context;
       
             this.currentGain.gain.exponentialRampToValueAtTime(targetVolume, currentTime + 0.1);
-        } catch (error) {
+        } catch (_error) {
             // SoundSystem: Failed to update ambient volume
         }
     }
@@ -466,7 +466,7 @@ export class SoundSystem {
 
             // SoundSystem: Playing gesture sound
 
-        } catch (error) {
+        } catch (_error) {
             // SoundSystem: Failed to play gesture sound
         }
     }

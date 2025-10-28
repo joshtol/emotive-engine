@@ -110,7 +110,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    initialize(particle, motion, centerX, centerY) {
+    initialize(particle, motion, centerX, _centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }

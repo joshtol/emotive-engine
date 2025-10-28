@@ -122,7 +122,7 @@ class CustomGesturePlugin {
                 emoji: this.getGestureEmoji(name),
                 description: config.description,
                 config,
-                apply: (particle, progress, motion, dt, centerX, centerY) => {
+                apply: (particle, progress, _motion, _dt, _centerX, _centerY) => {
                     // Create a temporary animation state if needed
                     if (!this.activeAnimations.has(name)) {
                         this.startGesture(name, {});
@@ -205,7 +205,7 @@ class CustomGesturePlugin {
      * @param {number} deltaTime - Time since last frame
      * @param {Object} state - Current mascot state
      */
-    update(deltaTime, state) {
+    update(_deltaTime, _state) {
         // Update all active animations
         this.activeAnimations.forEach((animation, gestureName) => {
             if (!animation.active) {
@@ -449,7 +449,7 @@ class CustomGesturePlugin {
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {Object} state - Current mascot state
      */
-    render(ctx, state) {
+    render(ctx, _state) {
         // Add visual indicators for active gestures (optional)
         this.activeAnimations.forEach((animation, gestureName) => {
             if (gestureName === 'figure8' && animation.progress < 1) {

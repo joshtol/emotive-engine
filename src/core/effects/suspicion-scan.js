@@ -69,7 +69,7 @@ export default {
         this.state.scanPhase = -1; // Start by looking left
     },
     
-    updateScan(now, deltaTime) {
+    updateScan(now, _deltaTime) {
         const elapsed = now - this.state.scanStartTime;
         const progress = elapsed / this.config.scanDuration;
         

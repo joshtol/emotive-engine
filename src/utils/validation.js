@@ -217,7 +217,7 @@ export class Validator {
             // Attempt conversion
             try {
                 value = String(value);
-            } catch (error) {
+            } catch (_error) {
                 return ErrorResponse.failure(
                     ErrorTypes.INVALID_PARAMETER,
                     `${paramName} cannot be converted to string`,

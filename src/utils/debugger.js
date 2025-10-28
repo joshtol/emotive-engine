@@ -563,7 +563,7 @@ export class RuntimeCapabilities {
                    typeof Promise !== 'undefined' && 
                    typeof Map !== 'undefined' && 
                    typeof Set !== 'undefined';
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -576,11 +576,11 @@ export class RuntimeCapabilities {
                        try { 
                            // Check if async functions are supported without using Function constructor
                            return typeof (async function(){}).constructor === 'function'; 
-                       } catch(e) { 
+                       } catch (_e) { 
                            return false; 
                        } 
                    })();
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -588,7 +588,7 @@ export class RuntimeCapabilities {
     detectModules() {
         try {
             return typeof document !== 'undefined' && 'noModule' in document.createElement('script');
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -597,7 +597,7 @@ export class RuntimeCapabilities {
         try {
             const canvas = document.createElement('canvas');
             return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -606,7 +606,7 @@ export class RuntimeCapabilities {
         try {
             const canvas = document.createElement('canvas');
             return !!canvas.getContext('webgl2');
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -634,7 +634,7 @@ export class RuntimeCapabilities {
     detectLocalStorage() {
         try {
             return typeof localStorage !== 'undefined' && localStorage !== null;
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -642,7 +642,7 @@ export class RuntimeCapabilities {
     detectSessionStorage() {
         try {
             return typeof sessionStorage !== 'undefined' && sessionStorage !== null;
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -675,7 +675,7 @@ export class RuntimeCapabilities {
         try {
             const canvas = document.createElement('canvas');
             return !!canvas.getContext('2d');
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -685,7 +685,7 @@ export class RuntimeCapabilities {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             return 'filter' in ctx;
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -721,7 +721,7 @@ export class RuntimeCapabilities {
                 ctx.fillRect(Math.random() * 100, Math.random() * 100, 10, 10);
             }
             measurements.canvasPerformance = performance.now() - canvasStart;
-        } catch (e) {
+        } catch (_e) {
             measurements.canvasPerformance = null;
         }
 

@@ -86,14 +86,14 @@ class ModuleLoader {
                     
                     registry[mod.name] = mod;
                     
-                } catch (error) {
+                } catch (_error) {
                     // Failed to load module
                 }
             }
             
             return registry;
             
-        } catch (error) {
+        } catch (_error) {
             // Failed to load modules matching pattern
             return registry;
         }
@@ -122,7 +122,7 @@ class ModuleLoader {
                 
                 registry[mod.name] = mod;
                 
-            } catch (error) {
+            } catch (_error) {
                 // Failed to load module
             }
         }
@@ -150,8 +150,8 @@ class ModuleLoader {
      * @param {string} typeName - Type name for error messages
      * @returns {Function} Validator function
      */
-    static createValidator(requiredFields, typeName) {
-        return (module, path) => {
+    static createValidator(requiredFields, _typeName) {
+        return (module, _path) => {
             for (const field of requiredFields) {
                 if (!(field in module)) {
                     // Module missing required field

@@ -213,7 +213,7 @@ export default {
         ctx.beginPath();
         
         // Simplified flame shape - less calculations
-        const addFlame = (angle, length, width, flicker, turb) => {
+        const addFlame = (angle, length, width, flicker, _turb) => {
             const cos = Math.cos(angle);
             const sin = Math.sin(angle);
             const baseX = cos * radius;

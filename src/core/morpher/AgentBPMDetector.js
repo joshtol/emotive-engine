@@ -147,7 +147,7 @@ export class AgentBPMDetector {
         const alignment = 1 - phaseDiff;
 
         // Strong peaks matter more
-        const weightedAlignment = alignment * peakStrength;
+        const _weightedAlignment = alignment * peakStrength;
 
         // Update agent stats (more aggressive confidence building)
         if (alignment > 0.7) { // Lower threshold

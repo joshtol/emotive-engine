@@ -286,7 +286,7 @@ class CustomParticlePlugin {
      * @param {number} deltaTime - Time since last frame
      * @param {Object} state - Current mascot state
      */
-    update(deltaTime, state) {
+    update(_deltaTime, _state) {
         // No need to manually update particles - the modular system handles it!
         // This is where you could add additional plugin logic if needed
     }
@@ -297,7 +297,7 @@ class CustomParticlePlugin {
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {Object} state - Current mascot state
      */
-    render(ctx, state) {
+    render(_ctx, _state) {
         // Particles are rendered by the core system
         // Add any additional visual effects here if needed
     }

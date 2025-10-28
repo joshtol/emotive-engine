@@ -87,7 +87,7 @@ export default {
         }
     },
     
-    initialize(particle, motion) {
+    initialize(particle, _motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -97,7 +97,7 @@ export default {
         };
     },
     
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, _centerX, _centerY) {
         if (!particle.gestureData?.nod?.initialized) {
             this.initialize(particle, motion);
         }

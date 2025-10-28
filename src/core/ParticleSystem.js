@@ -734,8 +734,8 @@ class ParticleSystem {
         // Batch render with minimized state changes
         ctx.save();
         let lastFillStyle = null;
-        const lastStrokeStyle = null;
-        const lastLineWidth = null;
+        const _lastStrokeStyle = null;
+        const _lastLineWidth = null;
 
         for (const particle of visibleParticles) {
             // For cell-shaded, use original render (they need complex stroke/fill combos)

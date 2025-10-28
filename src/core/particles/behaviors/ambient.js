@@ -69,7 +69,7 @@ export function initializeAmbient(particle) {
  * @param {number} centerX - Orb center X (unused but kept for consistency)
  * @param {number} centerY - Orb center Y (unused but kept for consistency)
  */
-export function updateAmbient(particle, dt, centerX, centerY) {
+export function updateAmbient(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
     
     // Apply friction to y velocity only (frame-rate independent)

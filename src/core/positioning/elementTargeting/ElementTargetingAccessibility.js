@@ -360,7 +360,7 @@ class ElementTargetingAccessibility extends ElementTargeting {
      */
     destroy() {
         // Remove keyboard listeners
-        this.keyboardListeners.forEach((listener, id) => {
+        this.keyboardListeners.forEach((listener, _id) => {
             listener.events.forEach(({ event, handler }) => {
                 listener.element.removeEventListener(event, handler);
             });

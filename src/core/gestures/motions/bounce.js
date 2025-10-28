@@ -130,7 +130,7 @@ export default {
      * @param {Particle} particle - The particle to initialize
      * @param {Object} motion - Gesture motion configuration
      */
-    initialize(particle, motion) {
+    initialize(particle, _motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -153,7 +153,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, _centerX, _centerY) {
         // Initialize on first frame
         if (!particle.gestureData?.bounce?.initialized) {
             this.initialize(particle, motion);

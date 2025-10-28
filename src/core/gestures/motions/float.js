@@ -69,7 +69,7 @@ export default {
      * @param {number} centerX - Orb center X
      * @param {number} centerY - Orb center Y
      */
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, _centerX, _centerY) {
         // Store original values on first frame
         if (!particle.gestureData) {
             particle.gestureData = {};

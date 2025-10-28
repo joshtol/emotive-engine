@@ -72,7 +72,7 @@ export function initializeResting(particle) {
  * @param {number} centerX - X coordinate of the orb's center (unused)
  * @param {number} centerY - Y coordinate of the orb's center (unused)
  */
-export function updateResting(particle, dt, centerX, centerY) {
+export function updateResting(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
     
     // STEP 1: Apply friction to vertical velocity only

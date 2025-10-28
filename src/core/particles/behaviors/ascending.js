@@ -85,7 +85,7 @@ export function initializeAscending(particle) {
  * @param {number} centerX - X coordinate of the orb's center (unused)
  * @param {number} centerY - Y coordinate of the orb's center (unused)
  */
-export function updateAscending(particle, dt, centerX, centerY) {
+export function updateAscending(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
     
     // Validate data exists

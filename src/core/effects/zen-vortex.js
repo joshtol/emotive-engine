@@ -119,7 +119,7 @@ export default {
         ctx.save();
         
         const eyeWidth = radius * 0.4;
-        const eyeHeight = radius * 0.3;
+        const _eyeHeight = radius * 0.3;
         const eyeSpacing = radius * 0.3;
         
         ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * intensity})`;

@@ -71,7 +71,7 @@ export function initializeAggressive(particle) {
  * @param {number} centerX - Orb center X (unused)
  * @param {number} centerY - Orb center Y (unused)
  */
-export function updateAggressive(particle, dt, centerX, centerY) {
+export function updateAggressive(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
     
     // Add jitter to movement

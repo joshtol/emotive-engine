@@ -58,7 +58,7 @@ export class TransitionManager {
      * Update transition progress
      * @param {number} deltaTime - Time since last frame
      */
-    update(deltaTime) {
+    update(_deltaTime) {
         if (!this.isTransitioning) return;
         
         const now = performance.now();

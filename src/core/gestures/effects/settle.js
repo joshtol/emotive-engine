@@ -110,7 +110,7 @@ export default {
      * Apply settling effect to particle
      * Gradually reduces velocity until particles come to rest
      */
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, _centerX, _centerY) {
         const damping = motion.damping || this.config.damping;
         const threshold = motion.threshold || this.config.threshold;
         

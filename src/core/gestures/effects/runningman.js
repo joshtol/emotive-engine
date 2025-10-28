@@ -44,7 +44,7 @@ export default {
      * Apply running man motion - handled by GestureAnimator
      * This is a placeholder for the gesture system
      */
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(_particle, _progress, _motion, _dt, _centerX, _centerY) {
         // Motion is handled by GestureAnimator.applyRunningMan()
         return false;
     },
@@ -52,7 +52,7 @@ export default {
     /**
      * Blend with existing motion
      */
-    blend(particle, progress, motion) {
+    blend(_particle, _progress, _motion) {
         // Allow blending with other gestures
         return false;
     }

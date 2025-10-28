@@ -46,7 +46,7 @@ export default {
     /**
      * Initialize particle state for surveillance behavior
      */
-    initialize(particle, config) {
+    initialize(particle, _config) {
         // Set particle color from emotion palette
         if (particle.emotionColors && particle.emotionColors.length > 0) {
             particle.color = selectWeightedColor(particle.emotionColors);
@@ -141,7 +141,7 @@ export default {
     /**
      * Scanning mode - slow searchlight sweeps
      */
-    updateScanning(particle, dt, state, config) {
+    updateScanning(particle, dt, state, _config) {
         // Update scan angle
         if (state.pauseTimer > 0) {
             // Pausing at edge of scan
@@ -170,7 +170,7 @@ export default {
     /**
      * Darting mode - quick repositioning
      */
-    updateDarting(particle, dt, state, config) {
+    updateDarting(particle, dt, state, _config) {
         const dx = state.dartTarget.x - particle.x;
         const dy = state.dartTarget.y - particle.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -189,7 +189,7 @@ export default {
     /**
      * Frozen mode - watchful stillness
      */
-    updateFrozen(particle, dt, state, config) {
+    updateFrozen(particle, _dt, _state, _config) {
         // Almost no movement, just tiny vibrations
         particle.vx *= 0.95;
         particle.vy *= 0.95;
@@ -204,7 +204,7 @@ export default {
     /**
      * Patrolling mode - edge surveillance
      */
-    updatePatrolling(particle, dt, state, config) {
+    updatePatrolling(particle, dt, state, _config) {
         // Patrol in a circle around the edge
         state.patrolAngle += 0.01 * dt;
         

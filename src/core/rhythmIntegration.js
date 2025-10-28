@@ -111,10 +111,10 @@ class RhythmIntegration {
     /**
      * Apply rhythm modulation to a gesture
      */
-    applyGestureRhythm(gesture, particle, progress, dt) {
+    applyGestureRhythm(gesture, _particle, _progress, _dt) {
         if (!this.enabled || !gesture.rhythm?.enabled) return {};
         
-        const timeInfo = this.adapter.getTimeInfo();
+        const _timeInfo = this.adapter.getTimeInfo();
         const rhythmConfig = gesture.rhythm;
         const modulation = {};
         
@@ -160,7 +160,7 @@ class RhythmIntegration {
     /**
      * Apply rhythm modulation to particle emission
      */
-    applyParticleRhythm(emotionState, particleSystem) {
+    applyParticleRhythm(emotionState, _particleSystem) {
         if (!this.enabled || !emotionState.rhythm?.enabled) return {};
         
         const timeInfo = this.adapter.getTimeInfo();
@@ -205,7 +205,7 @@ class RhythmIntegration {
     /**
      * Apply rhythm to particle behavior
      */
-    applyBehaviorRhythm(behavior, particle, dt) {
+    applyBehaviorRhythm(behavior, _particle, _dt) {
         if (!this.enabled || !behavior.rhythm?.enabled) return {};
         
         const timeInfo = this.adapter.getTimeInfo();

@@ -382,7 +382,7 @@ export class MusicDetector {
      * @param {number} beatInterval - Beat interval in ms
      * @returns {number} Confidence score (0-1) for waltz pattern
      */
-    testWaltzPattern(onsets, beatInterval) {
+    testWaltzPattern(onsets, _beatInterval) {
         // Look for groups of 3 beats with strong-weak-weak pattern
         let waltzGroups = 0;
         let totalGroups = 0;

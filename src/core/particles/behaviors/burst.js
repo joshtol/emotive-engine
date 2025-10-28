@@ -107,7 +107,7 @@ export function initializeBurst(particle) {
  * @param {number} centerX - Orb center X (unused)
  * @param {number} centerY - Orb center Y (unused)
  */
-export function updateBurst(particle, dt, centerX, centerY) {
+export function updateBurst(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
     
     // Surprise particles: burst out then STOP suddenly

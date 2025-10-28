@@ -239,7 +239,7 @@ class CustomEmotionPlugin {
     update(deltaTime, state) {
         // Check if current emotion is one of ours
         if (this.emotions[state.emotion]) {
-            const config = this.emotions[state.emotion];
+            const _config = this.emotions[state.emotion];
             
             // Apply any dynamic behaviors specific to our custom emotions
             if (state.emotion === 'nostalgic') {
@@ -301,7 +301,7 @@ class CustomEmotionPlugin {
      * Render speed lines effect
      * @private
      */
-    renderSpeedLines(ctx, state) {
+    renderSpeedLines(ctx, _state) {
         const centerX = ctx.canvas.width / 2;
         const centerY = ctx.canvas.height / 2;
         

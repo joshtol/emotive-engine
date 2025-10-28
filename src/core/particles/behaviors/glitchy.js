@@ -98,7 +98,7 @@ export default {
     /**
      * Initialize particle state for glitchy behavior
      */
-    initialize(particle, config, centerX, centerY) {
+    initialize(particle, _config, _centerX, _centerY) {
         // Set particle color from emotion palette
         if (particle.emotionColors && particle.emotionColors.length > 0) {
             particle.color = selectWeightedColor(particle.emotionColors);

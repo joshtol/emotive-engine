@@ -112,7 +112,7 @@ export default {
      * Apply hold effect to particle
      * Freezes or slows particle movement based on configuration
      */
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, _dt, _centerX, _centerY) {
         if (!particle.gestureData?.hold) {
             this.initialize(particle);
         }

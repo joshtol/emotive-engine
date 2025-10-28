@@ -36,7 +36,7 @@ export default {
     // ┌─────────────────────────────────────────────────────────────────────────────────
     // │ INITIALIZATION
     // └─────────────────────────────────────────────────────────────────────────────────
-    initialize(particle, centerX, centerY, canvasWidth, canvasHeight) {
+    initialize(particle, centerX, centerY, _canvasWidth, _canvasHeight) {
         // Set initial direction toward center
         const dx = centerX - particle.x;
         const dy = centerY - particle.y;

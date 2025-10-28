@@ -38,7 +38,7 @@ export default {
     // ┌─────────────────────────────────────────────────────────────────────────────────
     // │ INITIALIZATION
     // └─────────────────────────────────────────────────────────────────────────────────
-    initialize(particle, centerX, centerY, canvasWidth, canvasHeight) {
+    initialize(particle, _centerX, _centerY, _canvasWidth, _canvasHeight) {
         // Start with upward velocity
         particle.vx = (Math.random() - 0.5) * 2;
         particle.vy = -this.config.baseRiseSpeed - Math.random() * 2;

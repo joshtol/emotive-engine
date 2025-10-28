@@ -73,7 +73,7 @@ export default {
         }
     },
     
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, dt, _centerX, _centerY) {
         // Initialize twitch data if needed
         if (!particle.gestureData) {
             particle.gestureData = {};

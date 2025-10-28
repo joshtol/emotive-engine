@@ -97,11 +97,11 @@ const createPlaceholderGesture = (name, emoji = '✨') => ({
         crossfadePoint: 'anyBeat',
         maxQueue: 3
     },
-    apply: (particle, progress, params) => {
+    apply: (_particle, _progress, _params) => {
         // No-op - handled by GestureAnimator
         return false;
     },
-    blend: (particle, progress, params) => {
+    blend: (_particle, _progress, _params) => {
         // No-op - handled by GestureAnimator
         return false;
     }
@@ -126,13 +126,13 @@ const shimmer = {
         durationSync: { mode: 'bars', bars: 1 }, // Musical: 1 bar
         intensity: 0.8
     },
-    override: (particle, progress, params) => {
+    override: (particle, progress, _params) => {
         // Shimmer makes particles sparkle with wave effect
         particle.shimmerEffect = true;
         particle.shimmerProgress = progress;
         return true;
     },
-    blend: (particle, progress, params) => {
+    blend: (_particle, _progress, _params) => {
         // Blend with other gestures
         return false;
     }
@@ -161,14 +161,14 @@ const rain = {
         durationSync: { mode: 'bars', bars: 2 }, // Musical: 2 bars
         intensity: 0.8
     },
-    apply: (particle, progress, params) => {
+    apply: (particle, progress, _params) => {
         // The doppler behavior is handled by the particle system
         // This just marks particles as being affected by rain
         particle.rainEffect = true;
         particle.rainProgress = progress;
         return true;
     },
-    blend: (particle, progress, params) => {
+    blend: (_particle, _progress, _params) => {
         // Blend with other gestures
         return false;
     }

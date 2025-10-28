@@ -197,7 +197,7 @@ export class ColorUtilities {
     /**
      * Update color transition
      */
-    updateColorTransition(deltaTime) {
+    updateColorTransition(_deltaTime) {
         if (!this.colorTransition || !this.colorTransition.active) return null;
         
         const elapsed = performance.now() - this.colorTransition.startTime;

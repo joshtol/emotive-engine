@@ -79,7 +79,7 @@ class AmbientDanceAnimator {
     /**
      * Get current animation transform
      */
-    getTransform(deltaTime) {
+    getTransform(_deltaTime) {
         const transform = {
             x: this.blendState.x,
             y: this.blendState.y,
