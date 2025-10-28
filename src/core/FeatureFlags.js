@@ -59,7 +59,7 @@ export class FeatureFlags {
             if (typeof localStorage !== 'undefined') {
                 return localStorage.getItem('emotive-user-id');
             }
-        } catch (_e) {
+        } catch {
             // Storage not available
         }
         return null;
@@ -70,7 +70,7 @@ export class FeatureFlags {
             if (typeof localStorage !== 'undefined') {
                 localStorage.setItem('emotive-user-id', userId);
             }
-        } catch (_e) {
+        } catch {
             // Storage not available
         }
     }
@@ -391,7 +391,7 @@ export class FeatureFlags {
             if (this.config.storage === 'sessionStorage' && typeof sessionStorage !== 'undefined') {
                 return sessionStorage;
             }
-        } catch (_e) {
+        } catch {
             // Storage not available
         }
         return null;

@@ -168,7 +168,7 @@ export class DegradationManager {
     detectReducedMotion() {
         try {
             return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        } catch (_e) {
+        } catch {
             return false;
         }
     }
@@ -180,7 +180,7 @@ export class DegradationManager {
     detectHighContrast() {
         try {
             return window.matchMedia('(prefers-contrast: high)').matches;
-        } catch (_e) {
+        } catch {
             return false;
         }
     }

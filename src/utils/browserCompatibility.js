@@ -71,7 +71,7 @@ export class FeatureDetection {
     detectWebAudio() {
         try {
             return !!(window.AudioContext || window.webkitAudioContext);
-        } catch (_e) {
+        } catch {
             return false;
         }
     }
@@ -84,7 +84,7 @@ export class FeatureDetection {
         try {
             const canvas = document.createElement('canvas');
             return !!(canvas.getContext && canvas.getContext('2d'));
-        } catch (_e) {
+        } catch {
             return false;
         }
     }
@@ -121,7 +121,7 @@ export class FeatureDetection {
             // Don't create a test context - just check if the class exists
             // Creating contexts is expensive and has limits
             return true;
-        } catch (_e) {
+        } catch {
             return false;
         }
     }
@@ -253,7 +253,7 @@ export class PolyfillManager {
             this.applied.add(feature);
             // Applied polyfill for feature
             return true;
-        } catch (_error) {
+        } catch {
             // Failed to apply polyfill for feature
             return false;
         }
@@ -428,7 +428,7 @@ export class CanvasContextRecovery {
             this.recoveryCallbacks.forEach(callback => {
                 try {
                     callback(this.context);
-                } catch (_error) {
+                } catch {
                     // Context recovery callback failed
                 }
             });
@@ -447,7 +447,7 @@ export class CanvasContextRecovery {
         if (!this.context) {
             try {
                 this.context = this.canvas.getContext('2d');
-            } catch (_error) {
+            } catch {
                 // Failed to get canvas context
                 return null;
             }
@@ -487,7 +487,7 @@ export class CanvasContextRecovery {
                 this.isContextLost = false;
                 return true;
             }
-        } catch (_error) {
+        } catch {
             // Manual context recovery failed
         }
 
@@ -615,7 +615,7 @@ export class BrowserOptimizations {
                 if (optimizedContext) {
                     // Applied willReadFrequently optimization
                 }
-            } catch (_error) {
+            } catch {
                 // Failed to apply canvas optimization
             }
         }

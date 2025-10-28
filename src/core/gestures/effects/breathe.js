@@ -178,7 +178,7 @@ export default {
             this.initialize(particle, motion, centerX, centerY);
         }
         
-        const _data = particle.gestureData.breathe;
+
         const config = { ...this.config, ...motion };
         
         // Calculate breath phase - creates smooth sine wave between exhale and inhale

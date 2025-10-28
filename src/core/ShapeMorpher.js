@@ -396,7 +396,7 @@ class ShapeMorpher {
         
         try {
             normalizedPoints = this.getInterpolatedPoints();
-        } catch (_e) {
+        } catch {
             normalizedPoints = this.generateFallbackCircle();
         }
         
@@ -504,7 +504,7 @@ class ShapeMorpher {
                     const targetDy = target.y - cy;
                     
                     // Ease the expansion with a smooth curve
-                    const _expandProgress = this.applyEasing(progress);
+
                     
                     // Start from center point for first half, then expand outward
                     if (progress < 0.3) {
@@ -905,7 +905,7 @@ class ShapeMorpher {
             // First 70%: Shadow smoothly exits
             if (easedProgress < 0.7) {
                 const shadowProgress = easedProgress / 0.7; // 0 to 1 for shadow exit
-                const _smoothExit = Math.sin(shadowProgress * Math.PI / 2); // Smooth acceleration
+
                 const angle = this.transitionConfig.exitAngle * Math.PI / 180;
                 
                 // Gradual transformation and movement

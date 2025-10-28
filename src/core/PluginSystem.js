@@ -348,7 +348,7 @@ export class PluginSystem {
             
             return true;
 
-        } catch (_error) {
+        } catch {
             // Failed to register plugin
             return false;
         } finally {
@@ -545,7 +545,7 @@ export class PluginSystem {
             ]);
             
             return result !== false;
-        } catch (_error) {
+        } catch {
             // Plugin initialization error
             return false;
         }
@@ -599,7 +599,7 @@ export class PluginSystem {
             this.emitPluginEvent('pluginUnregistered', { name: pluginName });
             
             return true;
-        } catch (_error) {
+        } catch {
             // Failed to unregister plugin
             return false;
         }
@@ -655,7 +655,7 @@ export class PluginSystem {
             try {
                 const result = await hook.handler(data);
                 results.push({ pluginName: hook.pluginName, result });
-            } catch (_error) {
+            } catch {
                 // Hook error in plugin
             }
         }

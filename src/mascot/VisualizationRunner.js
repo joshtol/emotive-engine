@@ -40,7 +40,7 @@ export class VisualizationRunner {
             if (this.mascot.config.renderingStyle === 'classic' && this.mascot.particleSystem) {
                 const currentState = this.mascot.stateMachine.getCurrentState();
                 const {emotion} = currentState;
-                const {undertone} = currentState;
+                // undertone not used for classic rendering
                 const emotionParams = getEmotionVisualParams(emotion);
                 
                 // Get the actual orb position from the renderer (includes gaze offset)

@@ -86,14 +86,14 @@ class ModuleLoader {
                     
                     registry[mod.name] = mod;
                     
-                } catch (_error) {
+                } catch {
                     // Failed to load module
                 }
             }
             
             return registry;
             
-        } catch (_error) {
+        } catch {
             // Failed to load modules matching pattern
             return registry;
         }
@@ -122,7 +122,7 @@ class ModuleLoader {
                 
                 registry[mod.name] = mod;
                 
-            } catch (_error) {
+            } catch {
                 // Failed to load module
             }
         }

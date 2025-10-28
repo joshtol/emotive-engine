@@ -25,7 +25,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {Object} offset - Pixel offset
      * @param {Object} options - Path options
      */
-    moveToElementWithPath(targetSelector, pathPoints = [], position = 'right', offset = { x: 20, y: 0 }, options = {}) {
+    moveToElementWithPath(targetSelector, pathPoints = [], _position = 'right', offset = { x: 20, y: 0 }, options = {}) {
         const pathId = `path-${Date.now()}-${Math.random()}`;
         const element = document.querySelector(targetSelector);
 

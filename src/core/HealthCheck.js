@@ -303,7 +303,7 @@ export class HealthCheck {
                     result.status = 'warning';
                     result.message = `Storage usage high: ${percentage.toFixed(1)}%`;
                 }
-            } catch (_error) {
+            } catch {
                 result.status = 'unknown';
                 result.message = 'Storage API error';
             }
@@ -354,7 +354,7 @@ export class HealthCheck {
                 result.status = 'warning';
                 result.message = `Slow response time: ${responseTime.toFixed(0)}ms`;
             }
-        } catch (_error) {
+        } catch {
             result.details.online = navigator.onLine;
             if (!navigator.onLine) {
                 result.status = 'critical';

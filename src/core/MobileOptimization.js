@@ -273,7 +273,7 @@ export class MobileOptimization {
 
             // Initial battery optimization
             this.onBatteryChange();
-        } catch (_error) {
+        } catch {
             // Ignore battery optimization errors
         }
     }
@@ -415,7 +415,7 @@ export class MobileOptimization {
         
         // Detect swipe gesture
         if (distance > this.config.swipeThreshold) {
-            const _angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI; // Unused - kept for future use
+
             
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
                 this.currentGesture = deltaX > 0 ? 'swipeRight' : 'swipeLeft';

@@ -191,7 +191,7 @@ export async function loadShapes() {
         }
         
         return true;
-    } catch (_error) {
+    } catch {
         // Fallback - register basic shapes
         registerBasicShapes();
         return false;

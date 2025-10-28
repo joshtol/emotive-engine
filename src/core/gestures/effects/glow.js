@@ -139,7 +139,7 @@ export default {
             this.initialize(particle, motion, centerX, centerY);
         }
 
-        const _data = particle.gestureData.glow;
+
         const config = { ...this.config, ...motion };
 
         // Apply easing

@@ -114,7 +114,7 @@ class RhythmIntegration {
     applyGestureRhythm(gesture, _particle, _progress, _dt) {
         if (!this.enabled || !gesture.rhythm?.enabled) return {};
         
-        const _timeInfo = this.adapter.getTimeInfo();
+
         const rhythmConfig = gesture.rhythm;
         const modulation = {};
         

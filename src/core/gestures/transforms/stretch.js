@@ -231,8 +231,8 @@ export default {
         if (progress === 1) return 1;
         
         const overshoot = config.overshoot || 0.1;
-        const p = 0.3;
-        const _s = p / 4;
+
+
         
         if (progress < 0.5) {
             // Ease in with slight pull back

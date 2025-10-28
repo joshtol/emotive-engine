@@ -3,7 +3,8 @@
  * @module core/renderer/GestureAnimator
  */
 
-import { getGesture, getGestureProperties } from '../gestures/gestureCacheWrapper.js';
+import { getGesture } from '../gestures/gestureCacheWrapper.js';
+// import { getGestureProperties } from '../gestures/gestureCacheWrapper.js'; // Unused
 import musicalDuration from '../MusicalDuration.js';
 
 export class GestureAnimator {
@@ -1078,7 +1079,7 @@ export class GestureAnimator {
         // Sparkle effect - make particles glow like fireflies
         // Each particle gets its own random phase for async blinking
         const intensity = anim.params?.intensity || 2.0;
-        const _baseGlow = 0.8;
+
         
         // Create firefly-like glow pattern for particles
         // Using time-based phase shifting for each particle
@@ -1420,7 +1421,7 @@ export class GestureAnimator {
     pauseCurrentAnimation() {
         // Store pause time for all active animations
         const now = performance.now();
-        for (const [type, anim] of Object.entries(this.gestureAnimations)) {
+        for (const [, anim] of Object.entries(this.gestureAnimations)) {
             if (anim.active) {
                 anim.pausedAt = now;
                 anim.pausedProgress = anim.progress;
@@ -1436,7 +1437,7 @@ export class GestureAnimator {
         if (!this.isPaused) return;
 
         const now = performance.now();
-        for (const [type, anim] of Object.entries(this.gestureAnimations)) {
+        for (const [, anim] of Object.entries(this.gestureAnimations)) {
             if (anim.active && anim.pausedAt) {
                 // Adjust start time to account for pause
                 const pauseDuration = now - anim.pausedAt;
@@ -1456,7 +1457,7 @@ export class GestureAnimator {
      */
     reset() {
         // Clear all active animations
-        for (const [type, anim] of Object.entries(this.gestureAnimations)) {
+        for (const [, anim] of Object.entries(this.gestureAnimations)) {
             anim.active = false;
             anim.progress = 0;
             anim.params = {};

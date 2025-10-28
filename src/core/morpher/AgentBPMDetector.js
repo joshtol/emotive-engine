@@ -138,7 +138,7 @@ export class AgentBPMDetector {
     /**
      * Score agent based on how well it predicts this peak
      */
-    scoreAgent(agent, peakTime, peakStrength) {
+    scoreAgent(agent, peakTime, _peakStrength) {
         const timeSinceLastBeat = peakTime - agent.lastBeatTime;
         const expectedNextBeat = agent.beatInterval;
 
@@ -147,7 +147,7 @@ export class AgentBPMDetector {
         const alignment = 1 - phaseDiff;
 
         // Strong peaks matter more
-        const _weightedAlignment = alignment * peakStrength;
+
 
         // Update agent stats (more aggressive confidence building)
         if (alignment > 0.7) { // Lower threshold
@@ -231,7 +231,7 @@ export class AgentBPMDetector {
      * Auto-select subdivision based on BPM range
      */
     autoSelectSubdivision() {
-        for (const [range, config] of Object.entries(this.subdivisionPreference)) {
+        for (const [, config] of Object.entries(this.subdivisionPreference)) {
             if (this.lockedBPM >= config.min && this.lockedBPM < config.max) {
                 // Find agent with preferred subdivision
                 const preferredAgent = this.agents.find(a =>
@@ -318,7 +318,7 @@ export class AgentBPMDetector {
 
             // Check BPM range preferences
             const {bpm} = bestAgent;
-            for (const [range, config] of Object.entries(this.subdivisionPreference)) {
+            for (const [, config] of Object.entries(this.subdivisionPreference)) {
                 if (bpm >= config.min && bpm < config.max) {
                     return config.prefer;
                 }

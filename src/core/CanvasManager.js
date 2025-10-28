@@ -158,7 +158,7 @@ class CanvasManager {
         this.resizeCallbacks.forEach(callback => {
             try {
                 callback(this.width, this.height, this.dpr);
-            } catch (_error) {
+            } catch {
                 // Ignore callback errors
             }
         });

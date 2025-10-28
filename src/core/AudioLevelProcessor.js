@@ -388,7 +388,7 @@ export class AudioLevelProcessor {
                     timestamp: currentTime,
                     history: this.getLevelHistory()
                 });
-            } catch (_error) {
+            } catch {
                 // Ignore callback errors
             }
         }
@@ -402,7 +402,7 @@ export class AudioLevelProcessor {
         if (this.callbacks.volumeSpike) {
             try {
                 this.callbacks.volumeSpike(spikeData);
-            } catch (_error) {
+            } catch {
                 // Ignore callback errors
             }
         }
@@ -422,7 +422,7 @@ export class AudioLevelProcessor {
                     error,
                     timestamp: performance.now()
                 });
-            } catch (_callbackError) {
+            } catch {
                 // Ignore callback errors
             }
         }

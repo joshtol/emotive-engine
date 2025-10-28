@@ -130,7 +130,7 @@ class CustomParticlePlugin {
                 
                 // Boundary avoidance
                 const margin = 50 * particle.scaleFactor;
-                const canvas = particle.canvas || { width: 800, height: 600 };
+
                 
                 if (particle.x < margin) particle.vx += 0.1 * dt;
                 if (particle.x > centerX * 2 - margin) particle.vx -= 0.1 * dt;

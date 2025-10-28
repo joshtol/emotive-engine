@@ -239,7 +239,7 @@ class CustomEmotionPlugin {
     update(deltaTime, state) {
         // Check if current emotion is one of ours
         if (this.emotions[state.emotion]) {
-            const _config = this.emotions[state.emotion];
+
             
             // Apply any dynamic behaviors specific to our custom emotions
             if (state.emotion === 'nostalgic') {

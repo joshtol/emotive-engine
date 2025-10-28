@@ -265,8 +265,8 @@ class GrooveTemplates {
     getEmphasis(groove, beatNumber, subdivision) {
         if (!groove || !groove.pattern) return 0;
 
-        const beatInMeasure = beatNumber % 4; // Assuming 4/4 for now
-        const _position = beatInMeasure + subdivision; // Unused - kept for future use
+
+
 
         // Find closest pattern position
         const patternIndex = groove.pattern.subdivisions.findIndex(
@@ -284,8 +284,8 @@ class GrooveTemplates {
     getVelocity(groove, beatNumber, subdivision) {
         if (!groove || !groove.pattern) return 1.0;
 
-        const beatInMeasure = beatNumber % 4;
-        const _position = beatInMeasure + subdivision; // Unused - kept for future use
+
+
 
         const patternIndex = groove.pattern.subdivisions.findIndex(
             sub => Math.abs(sub - subdivision) < 0.01

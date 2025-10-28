@@ -866,8 +866,7 @@ class EmotiveRenderer {
         } else {
             // Normal breathing behavior
             // Zen uses full breath depth regardless of breathRate
-            const _effectiveBreathDepth = this.state.emotion === 'zen' ? this.state.breathDepth :
-                this.state.breathDepth * this.state.breathRate; // Calculated but unused - kept for future use
+            // (effectiveBreathDepth calculation removed - unused)
             // Get breathing scale from BreathingAnimator
             const breathingScale = this.breathingAnimator.getBreathingScale();
             coreBreathFactor = breathingScale;
@@ -909,7 +908,7 @@ class EmotiveRenderer {
         // Handle episodic effects for undertones
         if (this.currentUndertone && this.episodicEffects[this.currentUndertone]) {
             const episode = this.episodicEffects[this.currentUndertone];
-            const _modifier = this.undertoneModifiers[this.currentUndertone]; // Available for future use
+
             const now = performance.now();
             
             // Check if it's time to trigger a new episode
@@ -1200,10 +1199,10 @@ class EmotiveRenderer {
             
             if (this.shapeMorpher) {
                 morphProgress = this.shapeMorpher.getProgress();
-                const {currentShape: innerCurrentShape} = this.shapeMorpher;
-                const {targetShape: innerTargetShape} = this.shapeMorpher;
-                const _fromLunar = innerCurrentShape === 'lunar' || innerCurrentShape === 'eclipse'; // Unused - kept for future use
-                const _toLunar = innerTargetShape === 'lunar' || innerTargetShape === 'eclipse'; // Unused - kept for future use
+                const {currentShape: _innerCurrentShape} = this.shapeMorpher;
+                const {targetShape: _innerTargetShape} = this.shapeMorpher;
+
+
                 
                 const slideDistance = coreRadius * 2.5;
                 
@@ -1601,7 +1600,7 @@ class EmotiveRenderer {
         }
         
         // Generate different beads for entering vs leaving
-        const _beadKey = isTransitioningToSolar ? 'entering' : 'leaving'; // Unused - kept for future use
+
         
         // Check if we need to generate new beads (first time shadow centers for this transition)
         if (!this._beadStartTime) {
@@ -1725,7 +1724,7 @@ class EmotiveRenderer {
 
             if (this.shapeMorpher) {
                 const morphProgress = this.shapeMorpher.getProgress();
-                const _currentShape = this.shapeMorpher.currentShape; // Unused - kept for future use
+
                 const {targetShape} = this.shapeMorpher;
 
                 // Animate shadow sliding in when morphing TO moon (and shadow.offset is not being controlled)
@@ -1991,7 +1990,7 @@ class EmotiveRenderer {
             this.ctx.arc(0, 0, radius, 0, Math.PI * 2, false);
             
             // CLEAN LOTUS SILHOUETTE - matching reference image
-            const _lotusSize = radius * 0.95; // Lotus fills nearly ALL of the orb (unused - kept for future use)
+
             
             // MORPHING LOTUS PETALS - animated based on lotusMorph value
             const morph = this.zenTransition.lotusMorph;
@@ -2046,7 +2045,7 @@ class EmotiveRenderer {
             
                 // Bottom smile - morphs from straight to curved smile
                 if (smile > 0) {
-                    const _smileDepth = radius * 0.2 * smile; // How deep the smile curves (unused - kept for future use)
+
                     this.ctx.moveTo(-radius * 0.6, radius * (0.5 - 0.1 * smile));   // Corners rise with smile
                     this.ctx.quadraticCurveTo(
                         0, radius * (0.5 + 0.1 * smile),     // Center dips for smile

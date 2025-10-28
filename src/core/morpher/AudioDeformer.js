@@ -78,7 +78,7 @@ export class AudioDeformer {
             
             // Calculate dynamic threshold
             const avgBass = this.morpher.bassPeakHistory.reduce((a, b) => a + b, 0) / this.morpher.bassPeakHistory.length;
-            const _maxBass = Math.max(...this.morpher.bassPeakHistory);
+
             
             // THUMP = small increase above baseline
             // Check if we're using microphone (lower levels) or audio file (higher levels)
@@ -113,8 +113,8 @@ export class AudioDeformer {
             // Band 4: 3000-3750 Hz
             // Band 5: 3750-4500 Hz
             
-            const _vocalPresenceEnergy = 0;
-            const _vocalBandCount = 0;
+
+
             
             // SPECTRAL FLUX: Detect onsets in the VOCAL RANGE you identified (bands 4-15, emphasis on 11)
             // This targets the actual vocal/lead frequencies in Electric Glow
@@ -250,7 +250,7 @@ export class AudioDeformer {
             this.vocalPresence = spectralFlux;
             
             // No spectral contrast needed
-            const _spectralContrast = 0;
+
             
             // Update rolling averages for smarter detection
             this.morpher.bassHistory[this.morpher.historyIndex] = this.bassEnergy;
@@ -258,8 +258,8 @@ export class AudioDeformer {
             this.morpher.historyIndex = (this.morpher.historyIndex + 1) % this.morpher.bassHistory.length;
             
             // Calculate averages
-            const _bassAvg = this.morpher.bassHistory.reduce((a, b) => a + b, 0) / this.morpher.bassHistory.length;
-            const _vocalAvg = this.morpher.vocalHistory.reduce((a, b) => a + b, 0) / this.morpher.vocalHistory.length;
+
+
             
             // Bass effect is now controlled by thump detection above
             this.morpher.bassEffectActive = this.morpher.bassThumpTimer > 0;
@@ -271,7 +271,7 @@ export class AudioDeformer {
             // 3. Either sudden spike OR sustained presence
             
             this.morpher.lastVocalPresence = this.morpher.lastVocalPresence || 0;
-            const _vocalDelta = this.vocalPresence - this.morpher.lastVocalPresence;
+
             this.morpher.lastVocalPresence = this.vocalPresence;
             
             // Transient detection - triggers on musical onsets
@@ -325,7 +325,7 @@ export class AudioDeformer {
         
         const deformed = [];
         const center = { x: 0.5, y: 0.5 };
-        const _time = Date.now() / 1000; // Time in seconds
+
         
         // Update undulation phase only when bass is active
         if (this.morpher.bassEffectActive) {
