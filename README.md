@@ -177,7 +177,31 @@ All examples are vanilla HTML/JS - no build tools required!
 
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md)
+We welcome contributions from the community! 🎉
+
+- **[Contributing Guide](./CONTRIBUTING.md)** - Development setup, coding
+  standards, and workflow
+- **[Code of Conduct](./CODE_OF_CONDUCT.md)** - Our community standards
+- **[Contributors](./CONTRIBUTORS.md)** - Hall of fame for our contributors
+
+### Quick Start for Contributors
+
+1. Fork and clone the repository
+2. Install dependencies: `npm install`
+3. Run development build: `npm run build:dev`
+4. Run tests: `npm test`
+5. See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines
+
+Found a bug? Have a feature request? Open an issue on GitHub!
+
+## Community
+
+- **[GitHub Discussions](https://github.com/joshtol/emotive-engine/discussions)** -
+  Ask questions, share ideas
+- **[Issue Tracker](https://github.com/joshtol/emotive-engine/issues)** - Report
+  bugs, request features
+- **[Twitter](https://twitter.com/search?q=%23EmotiveEngine)** - Follow
+  `#EmotiveEngine` for updates
 
 ## License
 
