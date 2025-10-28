@@ -1199,11 +1199,7 @@ class EmotiveRenderer {
             
             if (this.shapeMorpher) {
                 morphProgress = this.shapeMorpher.getProgress();
-                const {currentShape: _innerCurrentShape} = this.shapeMorpher;
-                const {targetShape: _innerTargetShape} = this.shapeMorpher;
 
-
-                
                 const slideDistance = coreRadius * 2.5;
                 
                 if (isTransitioningToSolar && morphProgress < 1) {

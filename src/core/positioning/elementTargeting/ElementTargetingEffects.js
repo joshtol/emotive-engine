@@ -38,7 +38,7 @@ class ElementTargetingEffects extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithTrail(targetSelector, trailOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithTrail(targetSelector, trailOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -126,7 +126,7 @@ class ElementTargetingEffects extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithParticles(targetSelector, particleOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithParticles(targetSelector, particleOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -219,7 +219,7 @@ class ElementTargetingEffects extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithGlow(targetSelector, glowOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithGlow(targetSelector, glowOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);

@@ -87,7 +87,7 @@ export default {
      * @param {number} progress - Morph progress (0-1)
      * @param {Object} options - Additional render options
      */
-    render(ctx, x, y, radius, progress, options = {}) {
+    render(ctx, x, y, radius, progress, _options = {}) {
         // Safety check for invalid parameters
         if (!radius || !isFinite(radius) || radius <= 0) {
             return; // Don't render if radius is invalid

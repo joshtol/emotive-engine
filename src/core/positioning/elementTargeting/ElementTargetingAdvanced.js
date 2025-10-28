@@ -208,7 +208,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithEasing(targetSelector, easingFunction, duration = 1000, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithEasing(targetSelector, easingFunction, duration = 1000, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -256,7 +256,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithCollision(targetSelector, obstacles = [], avoidanceDistance = 100, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithCollision(targetSelector, obstacles = [], avoidanceDistance = 100, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -336,7 +336,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithAudio(targetSelector, audioStream, sensitivity = 50, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithAudio(targetSelector, audioStream, sensitivity = 50, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -392,7 +392,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithGaze(targetSelector, gazeOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithGaze(targetSelector, gazeOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);

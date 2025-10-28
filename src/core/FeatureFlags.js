@@ -332,7 +332,7 @@ export class FeatureFlags {
     getEnabledFlags() {
         const enabled = [];
 
-        for (const [key, _value] of this.flags) {
+        for (const [key] of this.flags) {
             if (this.isEnabled(key)) {
                 enabled.push(key);
             }

@@ -35,7 +35,7 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithHover(targetSelector, hoverOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithHover(targetSelector, hoverOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -122,7 +122,7 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithClick(targetSelector, clickOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithClick(targetSelector, clickOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -133,7 +133,6 @@ class ElementTargetingInteractions extends ElementTargeting {
         const {
             onClick = null,
             onDoubleClick = null,
-            clickCount = 0,
             maxClicks = 3
         } = clickOptions;
 
@@ -185,7 +184,7 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithTouch(targetSelector, touchOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithTouch(targetSelector, touchOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -278,7 +277,7 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithFocus(targetSelector, focusOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithFocus(targetSelector, focusOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -348,7 +347,7 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithKeyboard(targetSelector, keyboardOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithKeyboard(targetSelector, keyboardOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);

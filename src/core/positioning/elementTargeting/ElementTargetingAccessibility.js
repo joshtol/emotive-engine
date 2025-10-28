@@ -167,7 +167,6 @@ class ElementTargetingAccessibility extends ElementTargeting {
         }
 
         const {
-            contrastRatio = 4.5,
             backgroundColor = '#000000',
             textColor = '#ffffff',
             borderColor = '#ffffff',
@@ -201,7 +200,6 @@ class ElementTargetingAccessibility extends ElementTargeting {
         }
 
         const {
-            instant = false,
             duration = 0,
             easing = 'linear'
         } = motionOptions;

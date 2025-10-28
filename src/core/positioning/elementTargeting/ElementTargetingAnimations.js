@@ -34,7 +34,7 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithBounce(targetSelector, bounceOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithBounce(targetSelector, bounceOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -93,7 +93,7 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithShake(targetSelector, shakeOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithShake(targetSelector, shakeOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -151,7 +151,7 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithPulse(targetSelector, pulseOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithPulse(targetSelector, pulseOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -207,7 +207,7 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithWiggle(targetSelector, wiggleOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithWiggle(targetSelector, wiggleOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -266,7 +266,7 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithCustom(targetSelector, animationFunction, animationOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithCustom(targetSelector, animationFunction, animationOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);

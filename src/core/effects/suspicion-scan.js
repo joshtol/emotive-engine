@@ -33,7 +33,7 @@ export default {
     },
     
     apply(ctx, params) {
-        const { _x, _y, _radius, deltaTime = 16.67 } = params;
+        const { deltaTime = 16.67 } = params;
         const now = Date.now();
         
         // Update squint amount

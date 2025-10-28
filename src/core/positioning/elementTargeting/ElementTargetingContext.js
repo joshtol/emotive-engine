@@ -40,7 +40,7 @@ class ElementTargetingContext extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithScroll(targetSelector, scrollOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithScroll(targetSelector, scrollOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -112,7 +112,7 @@ class ElementTargetingContext extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithPhysics(targetSelector, physicsOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithPhysics(targetSelector, physicsOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -253,7 +253,7 @@ class ElementTargetingContext extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithResponsive(targetSelector, responsiveOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithResponsive(targetSelector, responsiveOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -295,7 +295,7 @@ class ElementTargetingContext extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithAccessibility(targetSelector, accessibilityOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithAccessibility(targetSelector, accessibilityOptions = {}, _position = 'right', _offset = { x: 20, y: 0 }) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);

@@ -93,14 +93,13 @@ export default {
         const data = particle.gestureData.twitch;
         const {config} = this;
         let intensity = motion.intensity || config.intensity;
-        let {frequency} = config;
-        
+
         // Apply rhythm modulation if present
         if (motion.rhythmModulation) {
             intensity *= (motion.rhythmModulation.amplitudeMultiplier || 1);
             intensity *= (motion.rhythmModulation.accentMultiplier || 1);
             if (motion.rhythmModulation.probabilityMultiplier) {
-                frequency *= motion.rhythmModulation.probabilityMultiplier;
+                // Frequency modulation applied
             }
         }
         

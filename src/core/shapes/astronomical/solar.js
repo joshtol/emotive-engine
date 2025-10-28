@@ -89,7 +89,7 @@ export default {
      * @param {number} progress - Morph progress (0-1)
      * @param {Object} options - Additional render options
      */
-    render(ctx, x, y, radius, progress, options = {}) {
+    render(ctx, x, y, radius, progress, _options = {}) {
         // The renderer will handle all sun effects (corona, flares, etc)
         // We just add the eclipse shadow overlay on top
         

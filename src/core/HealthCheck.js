@@ -446,7 +446,7 @@ export class HealthCheck {
         const results = {};
         const promises = [];
 
-        for (const [name, _check] of this.checks) {
+        for (const [name] of this.checks) {
             promises.push(
                 this.runCheck(name).then(result => {
                     results[name] = result;

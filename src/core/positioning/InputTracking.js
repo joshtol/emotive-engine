@@ -100,7 +100,7 @@ class InputTracking {
      * @param {number} sensitivity - Sensitivity multiplier
      * @param {Object} options - Audio tracking options
      */
-    moveToAudio(level = 0, sensitivity = 50, options = {}) {
+    moveToAudio(_level = 0, sensitivity = 50, options = {}) {
         if (!this.audioContext) {
             this.initAudioContext();
         }
