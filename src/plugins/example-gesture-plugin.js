@@ -37,10 +37,10 @@
  * │ const mascot = new EmotiveMascot(canvas);                                         
  * │ mascot.registerPlugin(new GesturePlugin());                                       
  * │                                                                                    
- * │ // Trigger custom gestures!                                                       
- * │ mascot.triggerGesture('wobble');                                                  
- * │ mascot.triggerGesture('figure8');                                                 
- * │ mascot.triggerGesture('heartbeat');                                               
+ * │ // Trigger custom gestures!
+ * │ mascot.express('wobble');
+ * │ mascot.express('figure8');
+ * │ mascot.express('heartbeat');                                               
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ═══════════════════════════════════════════════════════════════════════════════════════

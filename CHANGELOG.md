@@ -9,6 +9,47 @@ and this project uses
 
 ## [Unreleased]
 
+### 🔌 Plugin System Documentation Fixes - 2025-10-27
+
+#### Plugin Documentation Updates
+
+- **FIXED** [src/plugins/README.md](src/plugins/README.md) initialization
+  pattern - added missing `await mascot.init(canvas)` call
+- **FIXED** src/plugins/README.md method references - changed `triggerGesture()`
+  to `express()` (primary API)
+- **REMOVED** fake `setParticleBehavior()` method reference from plugin docs
+- **UPDATED** Plugin API properties section with warning about internal vs
+  public API
+- **FIXED**
+  [src/plugins/example-emotion-plugin.js](src/plugins/example-emotion-plugin.js)
+  to use `express()` instead of `triggerGesture()`
+- **FIXED**
+  [src/plugins/example-gesture-plugin.js](src/plugins/example-gesture-plugin.js)
+  header comments to use `express()`
+
+#### Technical Documentation Accuracy
+
+- **FIXED** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - changed fake
+  'gestureComplete' event to real 'gesture' event
+- **FIXED** docs/ARCHITECTURE.md custom emotion example to use unique name
+  'energized' instead of existing 'excited'
+- **FIXED** docs/ARCHITECTURE.md plugin example to use real 'gesture' event
+  instead of fake 'emotionChange'
+- **FIXED** [docs/BUSINESS_POTENTIAL.md](docs/BUSINESS_POTENTIAL.md) - removed
+  fake 'empathy' emotion references
+- **FIXED** docs/BUSINESS_POTENTIAL.md - removed fake semantic performance API
+  references
+- **FIXED** docs/BUSINESS_POTENTIAL.md - clarified emotion+undertone notation as
+  descriptive language
+- **FIXED** [docs/INNOVATIONS.md](docs/INNOVATIONS.md) - corrected emotion count
+  from 12 to 15 with complete list
+- **FIXED** docs/INNOVATIONS.md - changed fake 'empathy' emotion to 'calm' in
+  code examples
+- **FIXED** docs/INNOVATIONS.md - corrected emotion×undertone math from 72 to 90
+  unique states
+- **FIXED** docs/INNOVATIONS.md gesture compatibility matrix with clarifying
+  comment
+
 ### 📚 Documentation Overhaul - 2025-10-27
 
 #### Examples Standardization

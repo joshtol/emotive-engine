@@ -245,12 +245,12 @@ class CustomEmotionPlugin {
             if (state.emotion === 'nostalgic') {
                 // Add subtle random drift for nostalgic feeling
                 if (Math.random() < 0.01) { // 1% chance per frame
-                    this.mascot.triggerGesture('drift');
+                    this.mascot.express('drift');
                 }
             } else if (state.emotion === 'determined') {
                 // Add occasional strong pulses for determination
                 if (Math.random() < 0.005) { // 0.5% chance per frame
-                    this.mascot.triggerGesture('pulse');
+                    this.mascot.express('pulse');
                 }
             }
         }
