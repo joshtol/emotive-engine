@@ -9,6 +9,51 @@ and this project uses
 
 ## [Unreleased]
 
+### 🔌 Plugin System - Critical Fix #3 - 2025-10-27
+
+#### BREAKING: Plugin Lifecycle Integration (Fixes Missing update/render Calls)
+
+**Third critical bug discovered**: Plugin update() and render() methods were
+never called, making plugins static and non-functional.
+
+**What was broken:**
+
+- PluginSystem.js had NO update() or render() methods
+- EmotiveMascot never called plugin update/render
+- Example plugins define update() and render() but they were never executed
+- Result: Plugins could register emotions/gestures but couldn't animate or
+  render custom effects
+
+**What was fixed:**
+
+- **ADDED** PluginSystem.update(deltaTime, state) method
+  ([src/core/PluginSystem.js:852](src/core/PluginSystem.js#L852))
+- **ADDED** PluginSystem.render(ctx, state) method
+  ([src/core/PluginSystem.js:875](src/core/PluginSystem.js#L875))
+- **ADDED** pluginSystem.update() call in VisualizationRunner
+  ([src/mascot/VisualizationRunner.js:191](src/mascot/VisualizationRunner.js#L191))
+- **ADDED** pluginSystem.render() call in EmotiveMascot render loop
+  ([src/EmotiveMascot.js:1982](src/EmotiveMascot.js#L1982))
+
+**Plugin lifecycle now complete:**
+
+```javascript
+// 1. Plugin init - called once when registered
+init(api) { this.mascot = api.mascot; }
+
+// 2. Plugin update - called every frame (60 FPS)
+update(deltaTime, state) { /* animate based on current emotion */ }
+
+// 3. Plugin render - called every frame
+render(ctx, state) { /* draw custom effects */ }
+
+// 4. Plugin destroy - called when unregistered
+destroy() { /* cleanup */ }
+```
+
+**Impact**: Plugins now have full lifecycle. Custom animations and rendering
+effects work. Example emotion plugin's vignette and speed lines now render.
+
 ### 🔌 Plugin System - Critical Fix #2 - 2025-10-27
 
 #### BREAKING: PluginSystem Integration (Fixes Architectural Mismatch)

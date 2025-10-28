@@ -186,6 +186,12 @@ export class VisualizationRunner {
                 }
             }
         }
+
+        // Update plugins
+        if (this.mascot.pluginSystem) {
+            const state = this.mascot.stateMachine.getCurrentState();
+            this.mascot.pluginSystem.update(deltaTime, state);
+        }
     }
 
     /**

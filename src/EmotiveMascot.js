@@ -1977,7 +1977,13 @@ class EmotiveMascot {
 
             // Render FOREGROUND particles (in front of orb)
             this.particleSystem.renderForeground(this.canvasManager.getContext(), emotionParams.glowColor, gestureTransform);
-            
+
+            // Render plugins
+            if (this.pluginSystem) {
+                const state = this.stateMachine.getCurrentState();
+                this.pluginSystem.render(this.canvasManager.getContext(), state);
+            }
+
             // Draw debug information if enabled
             if (this.config.showFPS || this.config.showDebug) {
                 this.renderDebugInfo(deltaTime);

@@ -845,6 +845,52 @@ export class PluginSystem {
     }
     
     /**
+     * Update all active plugins
+     * @param {number} deltaTime - Time since last frame
+     * @param {Object} state - Current mascot state
+     */
+    update(deltaTime, state) {
+        if (!this.config.enablePlugins) {
+            return;
+        }
+
+        for (const pluginName of this.activePlugins) {
+            const plugin = this.plugins.get(pluginName);
+            if (plugin && typeof plugin.update === 'function') {
+                try {
+                    plugin.update(deltaTime, state);
+                } catch (error) {
+                    // Plugin update error - silently continue
+                    this.errorFromPlugin(pluginName, 'Update error:', error);
+                }
+            }
+        }
+    }
+
+    /**
+     * Render all active plugins
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {Object} state - Current mascot state
+     */
+    render(ctx, state) {
+        if (!this.config.enablePlugins) {
+            return;
+        }
+
+        for (const pluginName of this.activePlugins) {
+            const plugin = this.plugins.get(pluginName);
+            if (plugin && typeof plugin.render === 'function') {
+                try {
+                    plugin.render(ctx, state);
+                } catch (error) {
+                    // Plugin render error - silently continue
+                    this.errorFromPlugin(pluginName, 'Render error:', error);
+                }
+            }
+        }
+    }
+
+    /**
      * Destroy plugin system
      */
     async destroy() {
