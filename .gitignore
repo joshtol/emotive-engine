@@ -32,8 +32,9 @@ Thumbs.db
 *.swo
 *~
 
-# Strategy documents
+# Personal/strategy documents
 DELETEME-STRATEGIES.md
+LAUNCH_ANNOUNCEMENTS.md
 
 # Firebase service account credentials
 service-account.json
