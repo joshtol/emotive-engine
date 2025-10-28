@@ -1,9 +1,14 @@
 # 🔌 Emotive Engine Plugin System
 
-Welcome to the plugin directory! Here you'll find examples of how to extend the
-Emotive Engine with custom emotions, gestures, particles, and more.
+Welcome to the plugin directory! Here you'll find **example templates** showing
+how to extend the Emotive Engine with custom emotions, gestures, particles, and
+more.
 
-## 📦 Available Example Plugins
+> **⚠️ IMPORTANT**: These are **template files** for you to copy and customize,
+> not pre-built plugins to import from the package. Copy the example plugin file
+> to your project, modify it for your needs, then register it with your mascot.
+
+## 📦 Available Example Plugin Templates
 
 ### 1. **Custom Emotion Plugin** (`example-emotion-plugin.js`)
 
@@ -30,11 +35,21 @@ Adds new particle effects:
 
 ## 🚀 Quick Start
 
+**Step 1:** Copy an example plugin file to your project (e.g.,
+`example-emotion-plugin.js`)
+
+**Step 2:** Customize it for your needs (change emotions, colors, behaviors)
+
+**Step 3:** Use it in your code:
+
 ```javascript
-import EmotiveMascot from '../EmotiveMascot.js';
-import CustomEmotionPlugin from './plugins/example-emotion-plugin.js';
-import CustomGesturePlugin from './plugins/example-gesture-plugin.js';
-import CustomParticlePlugin from './plugins/example-particle-plugin.js';
+// If using ES6 modules in your project:
+import EmotiveMascot from 'emotive-engine';
+import MyCustomPlugin from './my-custom-plugin.js'; // Your copied/modified plugin
+
+// If using UMD bundle via CDN:
+// <script src="https://unpkg.com/emotive-engine/dist/emotive-engine.js"></script>
+// <script src="./my-custom-plugin.js"></script>
 
 // Get canvas element
 const canvas = document.getElementById('mascot-canvas');
@@ -48,18 +63,20 @@ const mascot = new EmotiveMascot({
 // CRITICAL: Initialize with canvas element
 await mascot.init(canvas);
 
-// Register plugins
-mascot.registerPlugin(new CustomEmotionPlugin());
-mascot.registerPlugin(new CustomGesturePlugin());
-mascot.registerPlugin(new CustomParticlePlugin());
+// Register your custom plugin
+mascot.registerPlugin(new MyCustomPlugin());
 
 // Start animation
 mascot.start();
 
-// Use new features!
-mascot.setEmotion('nostalgic');
-mascot.express('wobble'); // Trigger custom gesture
+// Use your custom features!
+mascot.setEmotion('nostalgic'); // If your plugin adds this emotion
+mascot.express('wobble'); // If your plugin adds this gesture
 ```
+
+> **Note**: The example plugins in this folder are **source templates**. They
+> are not exported from the emotive-engine package. Copy them to your project
+> and customize them.
 
 ## 🛠️ Creating Your Own Plugin
 
@@ -70,13 +87,14 @@ Every plugin must have:
 1. A `type` property: `'emotion'`, `'gesture'`, `'particle'`, `'renderer'`, or
    `'behavior'`
 2. Required lifecycle methods:
-    - `init(mascot)` - Called when plugin is registered
-    - `update(deltaTime, state)` - Called every frame
+    - `init(api)` - Called when plugin is registered (receives pluginAPI with
+      `api.mascot`)
+    - `update(deltaTime, state)` - Called every frame (~60 FPS)
     - `destroy()` - Called when plugin is unregistered
 
 Optional methods:
 
-- `render(ctx, state)` - For custom rendering
+- `render(ctx, state)` - For custom rendering effects
 - `getInfo()` - Returns plugin metadata
 
 ### Basic Plugin Template
@@ -89,9 +107,15 @@ class MyCustomPlugin {
         this.version = '1.0.0';
     }
 
-    init(mascot) {
-        this.mascot = mascot;
-        // Setup your plugin
+    init(api) {
+        // Get mascot instance from plugin API
+        this.mascot = api.mascot || api; // Support both patterns
+
+        // Access plugin adapters for registration
+        // this.mascot.Emotions.pluginAdapter.registerPluginEmotion(...)
+        // this.mascot.Gestures.pluginAdapter.registerPluginGesture(...)
+        // this.mascot.ParticleBehaviors.pluginAdapter.registerPluginBehavior(...)
+
         // Plugin initialized
     }
 

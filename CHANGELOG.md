@@ -9,6 +9,46 @@ and this project uses
 
 ## [Unreleased]
 
+### 📚 Plugin Documentation - Clarification - 2025-10-28
+
+#### Documentation: Clarified Plugin Templates vs Exports
+
+**Documentation issue discovered**: Plugin README was misleading about how to
+use example plugins.
+
+**What was unclear:**
+
+- README showed
+  `import CustomEmotionPlugin from './plugins/example-emotion-plugin.js'`
+- Implied example plugins were importable from the emotive-engine package
+- Users would try to import plugins that aren't exported
+- No clear explanation that plugins are templates to copy, not pre-built exports
+
+**What was fixed:**
+
+- **ADDED** clear warning at top: "These are template files for you to copy and
+  customize"
+- **UPDATED** Quick Start with proper workflow: copy → customize → use
+- **FIXED** `init(mascot)` signature to `init(api)` with correct pattern
+- **ADDED** note about plugin adapters: `api.mascot.Emotions.pluginAdapter`
+- **CLARIFIED** plugins are source templates, not package exports
+
+**Correct usage:**
+
+```javascript
+// 1. Copy example-emotion-plugin.js to your project
+// 2. Customize it (rename, change emotions, etc.)
+// 3. Import YOUR copy:
+import MyPlugin from './my-plugin.js'; // YOUR file, not from package
+
+const mascot = new EmotiveMascot({ canvasId: 'canvas' });
+await mascot.init(canvas);
+mascot.registerPlugin(new MyPlugin());
+```
+
+**Impact**: Users now understand plugins are templates to customize, not
+ready-to-use imports.
+
 ### 🔌 Plugin System - Critical Fix #3 - 2025-10-27
 
 #### BREAKING: Plugin Lifecycle Integration (Fixes Missing update/render Calls)
