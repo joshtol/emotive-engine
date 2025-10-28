@@ -9,12 +9,62 @@ and this project uses
 
 ## [Unreleased]
 
-### 🔌 Plugin System - Critical Fix - 2025-10-27
+### 🔌 Plugin System - Critical Fix #2 - 2025-10-27
+
+#### BREAKING: PluginSystem Integration (Fixes Architectural Mismatch)
+
+**Second critical bug discovered**: PluginSystem.js did not pass mascot
+reference to plugins, creating architectural mismatch between PluginSystem and
+plugin adapters.
+
+**Architecture discovered:**
+
+- **Two separate plugin systems exist:**
+    1. **PluginSystem.js** (867 lines) - Enterprise system with validation,
+       sandboxing, hooks
+    2. **Plugin Adapters** - Simple Map-based registries (emotion, gesture,
+       particle)
+- **Example plugins use adapter pattern** but PluginSystem didn't provide access
+
+**What was broken:**
+
+- PluginSystem called `plugin.init(pluginAPI)` but pluginAPI had no mascot
+  reference
+- PluginSystem constructor never received mascot instance
+- Plugins expected `init(mascot)` or `init(api.mascot)`
+- Result: Plugins received `{registerHook, emit, on, ...}` but no mascot
+
+**What was fixed:**
+
+- **ADDED** mascot parameter to PluginSystem constructor
+  ([src/core/PluginSystem.js:59](src/core/PluginSystem.js#L59))
+- **ADDED** `mascot: this.mascot` to pluginAPI
+  ([src/core/PluginSystem.js:118](src/core/PluginSystem.js#L118))
+- **UPDATED** EmotiveMascot to pass `mascot: this` to PluginSystem
+  ([src/EmotiveMascot.js:351](src/EmotiveMascot.js#L351))
+- **UPDATED** all example plugins to handle `init(api)` with fallback
+  ([src/plugins/example-emotion-plugin.js:122](src/plugins/example-emotion-plugin.js#L122))
+
+**How plugins now work:**
+
+```javascript
+// Plugin receives pluginAPI with mascot:
+init(api) {
+    this.mascot = api.mascot || api;  // Support both patterns
+    const adapter = this.mascot.Emotions.pluginAdapter;
+    adapter.registerPluginEmotion('custom', emotionDef);
+}
+```
+
+**Impact**: PluginSystem.js and plugin adapters now properly integrated. Full
+plugin lifecycle works end-to-end.
+
+### 🔌 Plugin System - Critical Fix #1 - 2025-10-27
 
 #### BREAKING: Plugin Adapter Exposure (Fixes Non-Functional Plugin System)
 
-**Critical bug discovered and fixed**: Plugin adapters were not accessible to
-plugins, making the entire emotion/gesture plugin system non-functional.
+**First critical bug discovered and fixed**: Plugin adapters were not accessible
+to plugins, making the entire emotion/gesture plugin system non-functional.
 
 **What was broken:**
 
@@ -38,16 +88,16 @@ plugins, making the entire emotion/gesture plugin system non-functional.
 - **EXPORTED** `particleBehaviorPluginAdapter` from
   [src/index.js](src/index.js#L81)
 
-**How plugins now work:**
+**How plugins access adapters:**
 
 ```javascript
-// In plugin init(mascot):
+// Via mascot instance:
 const adapter = mascot.Emotions.pluginAdapter;
 adapter.registerPluginEmotion('custom', emotionDef);
 ```
 
-**Impact**: All example plugins now functional. Third-party plugins can now
-register emotions, gestures, and particle behaviors.
+**Impact**: Plugin adapters now accessible. Combined with Fix #2, entire plugin
+system now functional.
 
 #### Plugin Documentation Updates
 

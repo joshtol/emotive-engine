@@ -346,8 +346,9 @@ class EmotiveMascot {
         // Set canvas for mobile optimization
         this.mobileOptimization.setCanvas(this.canvas);
         
-        // Initialize plugin system
+        // Initialize plugin system with mascot reference
         this.pluginSystem = new PluginSystem({
+            mascot: this,
             enablePlugins: this.config.enablePlugins !== false,
             validatePlugins: this.config.validatePlugins !== false,
             sandboxPlugins: this.config.sandboxPlugins !== false

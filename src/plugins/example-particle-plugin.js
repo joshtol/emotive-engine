@@ -65,15 +65,15 @@ class CustomParticlePlugin {
     
     /**
      * Initialize the plugin (called when registered)
-     * @param {EmotiveMascot} mascot - The mascot instance
+     * @param {Object} api - Plugin API from PluginSystem
      */
-    init(mascot) {
-        this.mascot = mascot;
+    init(api) {
+        this.mascot = api.mascot || api;  // Support both PluginSystem API and direct mascot
         this.initialized = true;
-        
+
         // Register our custom behaviors with the modular system
         this.registerBehaviors();
-        
+
     }
     
     /**

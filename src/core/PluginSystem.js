@@ -54,6 +54,9 @@ export class PluginSystem {
             allowOverrides: config.allowOverrides !== false,
             ...config
         };
+
+        // Store mascot reference for plugin access
+        this.mascot = config.mascot || null;
         
         // Plugin registry
         this.plugins = new Map();
@@ -111,26 +114,29 @@ export class PluginSystem {
      */
     createPluginAPI() {
         return {
+            // Mascot instance access (primary interface for plugins)
+            mascot: this.mascot,
+
             // Core functionality
             registerHook: this.registerHook.bind(this),
             emit: this.emitPluginEvent.bind(this),
             on: this.onPluginEvent.bind(this),
-            
+
             // Access to other plugins
             getPlugin: this.getPlugin.bind(this),
             hasPlugin: this.hasPlugin.bind(this),
-            
+
             // Utilities
             log: this.logFromPlugin.bind(this),
             error: this.errorFromPlugin.bind(this),
-            
+
             // State management
             setState: this.setPluginState.bind(this),
             getState: this.getPluginState.bind(this),
-            
+
             // Configuration
             getConfig: () => ({ ...this.config }),
-            
+
             // Version info
             version: '1.0.0'
         };
