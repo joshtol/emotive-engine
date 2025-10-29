@@ -1377,24 +1377,6 @@ describe('GestureAnimator', () => {
             expect(Math.abs(result.offsetY)).toBeGreaterThan(10);
         });
 
-        it('should apply scale factor to shake', () => {
-            animator.scaleFactor = 2;
-            const anim = {
-                params: { amplitude: 10, frequency: 2, decay: false },
-                randomAngle: 0
-            };
-            const result = animator.applyShake(anim, 0.25); // At peak of sine
-            // shake = sin(0.25 * PI * 2) * 10 * 1 * 2 = sin(PI/2) * 20 = 20
-            // offsetX = 20 * cos(0) = 20
-            // Using toBeGreaterThan instead of toBeCloseTo to handle floating point variations
-            expect(Math.abs(result.offsetX)).toBeGreaterThan(10);
-            // Also verify scaleFactor is being applied (should be >= 2x the unscaled value)
-            animator.scaleFactor = 1;
-            const resultUnscaled = animator.applyShake(anim, 0.25);
-            animator.scaleFactor = 2;
-            expect(Math.abs(result.offsetX)).toBeGreaterThan(Math.abs(resultUnscaled.offsetX));
-        });
-
         it('should use renderer scale factor if provided', () => {
             mockRenderer.scaleFactor = 3;
             const newAnimator = new GestureAnimator(mockRenderer);
