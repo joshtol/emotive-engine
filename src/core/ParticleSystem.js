@@ -78,56 +78,48 @@ import { applyUndertoneSaturationToArray } from '../utils/colorUtils.js';
 import rhythmIntegration from './rhythmIntegration.js';
 import { getEmotion } from './emotions/index.js';
 import { emotionCache } from './cache/EmotionCache.js';
+import ParticlePool from './particle/ParticlePool.js';
 
 class ParticleSystem {
     constructor(maxParticles = 50, errorBoundary = null) {
         this.errorBoundary = errorBoundary;
         this.maxParticles = maxParticles;
         this.absoluteMaxParticles = maxParticles * 2; // Hard limit to prevent leaks
-        
+
         // Active particles
         this.particles = [];
 
-        // Object pool for performance - reduced to prevent memory buildup
-        this.pool = [];
-        this.poolSize = Math.min(maxParticles, 50); // Limit pool to max 50 particles
+        // Object pool - now managed by ParticlePool class
+        this.particlePool = new ParticlePool(maxParticles);
 
         // Containment bounds (null = no containment)
         this.containmentBounds = null;
 
-        // Memory leak detection
-        this.totalParticlesCreated = 0;
-        this.totalParticlesDestroyed = 0;
+        // Delegate memory/performance tracking to pool
         this.stateChangeCount = 0;
         this.lastMemoryCheck = Date.now();
         this.lastLeakedCount = 0;
-        
+
         // TIME-BASED spawning using accumulation for smooth, consistent particle creation
         this.spawnAccumulator = 0; // Accumulates time to spawn particles
-        
+
         // Performance tracking
         this.particleCount = 0;
-        this.poolHits = 0;
-        this.poolMisses = 0;
-        
+
         // Cleanup timer to prevent memory buildup
         this.cleanupTimer = 0;
         this.cleanupInterval = 5000; // Clean up every 5 seconds
-        
-        // Initialize object pool
-        this.initializePool();
-        
+
         // ParticleSystem initialized
     }
 
-    /**
-     * Initialize the object pool with pre-created particles
-     */
-    initializePool() {
-        // Don't pre-create particles - create them lazily as needed
-        // This prevents memory buildup on initialization
-        this.pool = [];
-    }
+    // Delegate pool properties for backward compatibility
+    get pool() { return this.particlePool.pool; }
+    get poolSize() { return this.particlePool.poolSize; }
+    get poolHits() { return this.particlePool.poolHits; }
+    get poolMisses() { return this.particlePool.poolMisses; }
+    get totalParticlesCreated() { return this.particlePool.totalParticlesCreated; }
+    get totalParticlesDestroyed() { return this.particlePool.totalParticlesDestroyed; }
 
     /**
      * Gets a particle from the pool or creates a new one
@@ -137,29 +129,14 @@ class ParticleSystem {
      * @returns {Particle} Particle instance
      */
     getParticleFromPool(x, y, behavior) {
-        let particle;
-        
-        if (this.pool.length > 0) {
-            // Reuse from pool
-            particle = this.pool.pop();
-            particle.reset(x, y, behavior, this.scaleFactor || 1, this.particleSizeMultiplier || 1, this.currentEmotionColors);
-            this.poolHits++;
-        } else {
-            // Create new particle
-            particle = new Particle(x, y, behavior, this.scaleFactor || 1, this.particleSizeMultiplier || 1, this.currentEmotionColors);
-            this.poolMisses++;
-            this.totalParticlesCreated++;
-        }
-        
-        // Set the emotion for behavior customization
-        particle.emotion = this.currentEmotion;
-        
-        // Apply gesture behavior if active (e.g., doppler for rain)
-        if (this.gestureBehavior) {
-            particle.gestureBehavior = this.gestureBehavior;
-        }
-        
-        return particle;
+        return this.particlePool.getParticle(
+            x, y, behavior,
+            this.scaleFactor || 1,
+            this.particleSizeMultiplier || 1,
+            this.currentEmotionColors,
+            this.currentEmotion,
+            this.gestureBehavior
+        );
     }
 
     /**
@@ -167,21 +144,7 @@ class ParticleSystem {
      * @param {Particle} particle - Particle to return to pool
      */
     returnParticleToPool(particle) {
-        if (this.pool.length < this.poolSize) {
-            // Clear references before pooling
-            particle.cachedGradient = null;
-            particle.cachedGradientKey = null;
-            // Clear behaviorData properties but keep the object
-            if (particle.behaviorData) {
-                for (const key in particle.behaviorData) {
-                    delete particle.behaviorData[key];
-                }
-            }
-            this.pool.push(particle);
-        } else {
-            // If pool is full, count as destroyed since it will be GC'd
-            this.totalParticlesDestroyed++;
-        }
+        this.particlePool.returnParticle(particle);
     }
 
     /**
@@ -1060,10 +1023,8 @@ class ParticleSystem {
      * Used when scale changes to ensure new particles use updated scale factor
      */
     refreshPool() {
-        // Clear the entire pool - forces creation of new particles with updated scale
-        this.pool.length = 0;
-        this.poolHits = 0;
-        this.poolMisses = 0;
+        // Delegate to ParticlePool and clear its stats
+        this.particlePool.clear();
 
         // Also kill all active particles so they'll be replaced with properly scaled ones
         for (const particle of this.particles) {
@@ -1084,9 +1045,7 @@ class ParticleSystem {
      */
     destroy() {
         this.clear();
-        this.pool.length = 0;
-        this.poolHits = 0;
-        this.poolMisses = 0;
+        this.particlePool.clear();
         // ParticleSystem destroyed
     }
 }
