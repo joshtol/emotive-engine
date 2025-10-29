@@ -79,6 +79,7 @@ import rhythmIntegration from './rhythmIntegration.js';
 import { getEmotion } from './emotions/index.js';
 import { emotionCache } from './cache/EmotionCache.js';
 import ParticlePool from './particle/ParticlePool.js';
+import ParticleSpawner from './particle/ParticleSpawner.js';
 
 class ParticleSystem {
     constructor(maxParticles = 50, errorBoundary = null) {
@@ -92,6 +93,9 @@ class ParticleSystem {
         // Object pool - now managed by ParticlePool class
         this.particlePool = new ParticlePool(maxParticles);
 
+        // Spawner - now managed by ParticleSpawner class
+        this.particleSpawner = new ParticleSpawner();
+
         // Containment bounds (null = no containment)
         this.containmentBounds = null;
 
@@ -99,9 +103,6 @@ class ParticleSystem {
         this.stateChangeCount = 0;
         this.lastMemoryCheck = Date.now();
         this.lastLeakedCount = 0;
-
-        // TIME-BASED spawning using accumulation for smooth, consistent particle creation
-        this.spawnAccumulator = 0; // Accumulates time to spawn particles
 
         // Performance tracking
         this.particleCount = 0;
@@ -120,6 +121,10 @@ class ParticleSystem {
     get poolMisses() { return this.particlePool.poolMisses; }
     get totalParticlesCreated() { return this.particlePool.totalParticlesCreated; }
     get totalParticlesDestroyed() { return this.particlePool.totalParticlesDestroyed; }
+
+    // Delegate spawner properties for backward compatibility
+    get spawnAccumulator() { return this.particleSpawner.spawnAccumulator; }
+    set spawnAccumulator(value) { this.particleSpawner.spawnAccumulator = value; }
 
     /**
      * Gets a particle from the pool or creates a new one
@@ -183,7 +188,7 @@ class ParticleSystem {
      * Resets the spawn accumulator (for tab switches)
      */
     resetAccumulator() {
-        this.spawnAccumulator = 0;
+        this.particleSpawner.resetAccumulator();
     }
 
     /**
@@ -265,25 +270,29 @@ class ParticleSystem {
         // Don't spawn if rate is 0
         if (rhythmModulatedRate <= 0) return;
         
-        // TIME-BASED SPAWNING using accumulation
-        // rhythmModulatedRate represents desired particles at 60 FPS
-        // So rate of 1 = 1 particle per 60 frames = 1 particle per second at 60fps
-        // Cap deltaTime to prevent huge accumulation spikes
-        const cappedDeltaTime = Math.min(deltaTime, 50);
-        const particlesPerSecond = rhythmModulatedRate; // Direct mapping: rate = particles/second
-        const particlesPerMs = particlesPerSecond / 1000;
-        
-        // Accumulate spawn time with capped delta
-        this.spawnAccumulator += particlesPerMs * cappedDeltaTime;
-        
-        // Cap accumulator to prevent excessive spawning after long pauses
-        this.spawnAccumulator = Math.min(this.spawnAccumulator, 3.0);
-        
-        // Spawn accumulated particles smoothly
-        while (this.spawnAccumulator >= 1.0 && this.particles.length < maxParticles) {
+        // Calculate how many particles to spawn using ParticleSpawner
+        const particlesToSpawn = this.particleSpawner.calculateSpawnRate(rhythmModulatedRate, deltaTime);
+
+        // Spawn the calculated number of particles
+        for (let i = 0; i < particlesToSpawn && this.particles.length < maxParticles; i++) {
             this.spawnSingleParticle(behavior, centerX, centerY);
-            this.spawnAccumulator -= 1.0;
         }
+    }
+
+    /**
+     * Backward compatibility wrapper for getSpawnPosition
+     * @deprecated Use particleSpawner.getSpawnPosition instead
+     */
+    getSpawnPosition(behavior, centerX, centerY, canvasWidth, canvasHeight) {
+        return this.particleSpawner.getSpawnPosition(behavior, centerX, centerY, canvasWidth, canvasHeight, this.currentEmotion);
+    }
+
+    /**
+     * Backward compatibility wrapper for clampToCanvas
+     * @deprecated Use particleSpawner.clampToCanvas instead
+     */
+    clampToCanvas(x, y, canvasWidth, canvasHeight, margin = 30) {
+        return this.particleSpawner.clampToCanvas(x, y, canvasWidth, canvasHeight, margin);
     }
 
     /**
@@ -298,14 +307,14 @@ class ParticleSystem {
             return;
         }
 
-        // Calculate spawn position based on behavior
+        // Calculate spawn position based on behavior using ParticleSpawner
         // Pass canvas size for proper calculation when mascot is offset
         const canvasWidth = this.canvasWidth || (centerX * 2);
         const canvasHeight = this.canvasHeight || (centerY * 2);
-        const spawnPos = this.getSpawnPosition(behavior, centerX, centerY, canvasWidth, canvasHeight);
+        const spawnPos = this.particleSpawner.getSpawnPosition(behavior, centerX, centerY, canvasWidth, canvasHeight, this.currentEmotion);
 
         // CLAMP spawn position to canvas boundaries
-        const clampedPos = this.clampToCanvas(spawnPos.x, spawnPos.y, canvasWidth, canvasHeight);
+        const clampedPos = this.particleSpawner.clampToCanvas(spawnPos.x, spawnPos.y, canvasWidth, canvasHeight);
         spawnPos.x = clampedPos.x;
         spawnPos.y = clampedPos.y;
         
@@ -328,146 +337,6 @@ class ParticleSystem {
         // }
     }
 
-    /**
-     * Calculates spawn position based on behavior type
-     * @param {string} behavior - Particle behavior type
-     * @param {number} centerX - Center X coordinate (mascot position, may be offset)
-     * @param {number} centerY - Center Y coordinate (mascot position, may be offset)
-     * @param {number} canvasWidth - Actual canvas width
-     * @param {number} canvasHeight - Actual canvas height
-     * @returns {Object} Spawn position {x, y}
-     */
-    getSpawnPosition(behavior, centerX, centerY, canvasWidth, canvasHeight) {
-        // Calculate orb radius based on canvas size (matching EmotiveRenderer)
-        const canvasSize = Math.min(canvasWidth, canvasHeight);
-        const orbRadius = canvasSize / 12;  // Core radius
-        const glowRadius = orbRadius * 2.5; // Glow extends this far
-        
-        // CONSTRAIN spawn positions to stay within canvas boundaries
-        const margin = 30; // Keep spawns away from edges
-        
-        // Spawn particles outside the glow radius so they're visible
-        const minSpawnRadius = glowRadius * 1.1; // 10% beyond glow edge
-        // Constrain to distance from mascot to canvas edge
-        const maxDistX = Math.min(centerX - margin, canvasWidth - centerX - margin);
-        const maxDistY = Math.min(centerY - margin, canvasHeight - centerY - margin);
-        const maxSpawnRadius = Math.min(glowRadius * 1.5, maxDistX, maxDistY);
-        
-        switch (behavior) {
-        case 'ambient':
-        case 'resting': {
-            // Spawn at edge of glow where particles become visible
-            // They'll move outward to create "emanating from center" effect
-            const ambientAngle = Math.random() * Math.PI * 2;
-            const ambientRadius = glowRadius * 0.9; // Just at glow edge
-            return {
-                x: centerX + Math.cos(ambientAngle) * ambientRadius,
-                y: centerY + Math.sin(ambientAngle) * ambientRadius,
-                angle: ambientAngle  // Pass angle for outward velocity
-            };
-        }
-                
-        case 'rising':
-        case 'falling': {
-            // These can spawn from outside for visibility
-            const angle = Math.random() * Math.PI * 2;
-            const radius = minSpawnRadius + Math.random() * (maxSpawnRadius - minSpawnRadius);
-            return {
-                x: centerX + Math.cos(angle) * radius,
-                y: centerY + Math.sin(angle) * radius
-            };
-        }
-                
-        case 'aggressive': {
-            // Spawn just outside the glow for aggressive burst effect
-            const aggressiveAngle = Math.random() * Math.PI * 2;
-            const aggressiveRadius = glowRadius + Math.random() * orbRadius;
-            return {
-                x: centerX + Math.cos(aggressiveAngle) * aggressiveRadius,
-                y: centerY + Math.sin(aggressiveAngle) * aggressiveRadius
-            };
-        }
-                
-        case 'scattering':
-            // Spawn at center for outward movement (scattering needs this)
-            return { x: centerX, y: centerY };
-                
-        case 'burst': {
-            // Spawn at edge of orb so particles are visible
-            const burstAngle = Math.random() * Math.PI * 2;
-            if (this.currentEmotion === 'suspicion') {
-                const burstRadius = orbRadius * 1.5; // Further outside for suspicion
-                return {
-                    x: centerX + Math.cos(burstAngle) * burstRadius,
-                    y: centerY + Math.sin(burstAngle) * burstRadius
-                };
-            } else if (this.currentEmotion === 'surprise') {
-                // Surprise spawns around the orb edge for visibility
-                const burstRadius = orbRadius * 1.2; // Just outside the orb
-                return {
-                    x: centerX + Math.cos(burstAngle) * burstRadius,
-                    y: centerY + Math.sin(burstAngle) * burstRadius
-                };
-            } else {
-                // Other emotions spawn at center
-                return { x: centerX, y: centerY };
-            }
-        }
-                
-        case 'repelling': {
-            // Spawn at edge of glow so particles are visible
-            const repelAngle = Math.random() * Math.PI * 2;
-            const repelRadius = glowRadius * 0.9; // Just at glow edge
-            return {
-                x: centerX + Math.cos(repelAngle) * repelRadius,
-                y: centerY + Math.sin(repelAngle) * repelRadius
-            };
-        }
-                
-        case 'orbiting': {
-            // Spawn at orbital distance outside the glow
-            const orbitAngle = Math.random() * Math.PI * 2;
-            const orbitRadius = glowRadius * 1.2 + Math.random() * glowRadius * 0.5;
-            return {
-                x: centerX + Math.cos(orbitAngle) * orbitRadius,
-                y: centerY + Math.sin(orbitAngle) * orbitRadius
-            };
-        }
-                
-        case 'glitchy': {
-            // Spawn glitch particles at various distances from center for wide spread
-            const glitchAngle = Math.random() * Math.PI * 2;
-            const glitchRadius = glowRadius * 3 + Math.random() * glowRadius * 4; // Much wider spread (3-7x glow radius)
-            return {
-                x: centerX + Math.cos(glitchAngle) * glitchRadius,
-                y: centerY + Math.sin(glitchAngle) * glitchRadius
-            };
-        }
-                
-        case 'spaz': {
-            // Spawn spaz particles in a wide ring around the center for explosive effect
-            const spazAngle = Math.random() * Math.PI * 2;
-            const spazRadius = glowRadius * 2 + Math.random() * glowRadius * 3; // Very wide spread (2-5x glow radius)
-            return {
-                x: centerX + Math.cos(spazAngle) * spazRadius,
-                y: centerY + Math.sin(spazAngle) * spazRadius
-            };
-        }
-                
-        default:
-            return { x: centerX, y: centerY };
-        }
-    }
-    
-    /**
-     * Clamps a position to stay within canvas boundaries
-     */
-    clampToCanvas(x, y, canvasWidth, canvasHeight, margin = 30) {
-        return {
-            x: Math.max(margin, Math.min(canvasWidth - margin, x)),
-            y: Math.max(margin, Math.min(canvasHeight - margin, y))
-        };
-    }
 
     /**
      * Updates all particles and manages lifecycle
