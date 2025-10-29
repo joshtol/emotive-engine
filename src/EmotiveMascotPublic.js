@@ -258,8 +258,9 @@ class EmotiveMascotPublic {
      */
     getAudioAnalysis() {
         const engine = this._getReal();
-        if (!engine || !engine.audioAnalyzer) return null;
-        
+        if (!engine) return null;
+        if (!engine.audioAnalyzer) return null;
+
         return {
             bpm: engine.rhythmIntegration?.getBPM() || 0,
             beats: engine.rhythmIntegration?.getBeatMarkers() || [],
@@ -300,19 +301,20 @@ class EmotiveMascotPublic {
      */
     getSpectrumData() {
         const engine = this._getReal();
-        if (!engine || !engine.audioAnalyzer) return [];
-        
+        if (!engine) return [];
+        if (!engine.audioAnalyzer) return [];
+
         // Get raw frequency data from the analyzer
         if (engine.audioAnalyzer.dataArray) {
             // Convert Uint8Array to regular array and normalize to 0-1
             return Array.from(engine.audioAnalyzer.dataArray).map(v => v / 255);
         }
-        
+
         // Try alternative sources
         if (engine.shapeMorpher && engine.shapeMorpher.frequencyData) {
             return Array.from(engine.shapeMorpher.frequencyData);
         }
-        
+
         return [];
     }
     
@@ -351,25 +353,25 @@ class EmotiveMascotPublic {
     getPerformanceMetrics() {
         const engine = this._getReal();
         if (!engine) return { fps: 0, frameTime: 0 };
-        
+
         // Try to get from performance monitor
-        if (this._engine.performanceMonitor) {
+        if (engine.performanceMonitor) {
             return {
-                fps: this._engine.performanceMonitor.getCurrentFPS() || 0,
-                frameTime: this._engine.performanceMonitor.getAverageFrameTime() || 0,
-                particleCount: this._engine.particleSystem?.activeParticles || 0
+                fps: engine.performanceMonitor.getCurrentFPS() || 0,
+                frameTime: engine.performanceMonitor.getAverageFrameTime() || 0,
+                particleCount: engine.particleSystem?.activeParticles || 0
             };
         }
-        
+
         // Fallback to animation controller
-        if (this._engine.animationController) {
+        if (engine.animationController) {
             return {
-                fps: this._engine.animationController.currentFPS || 0,
+                fps: engine.animationController.currentFPS || 0,
                 frameTime: 1000 / 60, // Default to 60fps timing
                 particleCount: 0
             };
         }
-        
+
         return { fps: 0, frameTime: 0, particleCount: 0 };
     }
 
@@ -919,13 +921,14 @@ class EmotiveMascotPublic {
         };
 
         const settings = qualityMap[level] || qualityMap['medium'];
+        const engine = this._getReal();
 
-        if (this._engine.performanceMonitor) {
-            this._engine.performanceMonitor.setTargetFPS(settings.fps);
+        if (engine && engine.performanceMonitor) {
+            engine.performanceMonitor.setTargetFPS(settings.fps);
         }
 
-        if (this._engine.particleSystem) {
-            this._engine.particleSystem.setMaxParticles(settings.particleCount);
+        if (engine && engine.particleSystem) {
+            engine.particleSystem.setMaxParticles(settings.particleCount);
         }
     }
 
@@ -1364,8 +1367,11 @@ class EmotiveMascotPublic {
      * @param {Array} timeline - Timeline to play
      */
     playTimeline(timeline) {
-        if (!timeline || !timeline.length) return;
-        
+        if (!timeline || !timeline.length) {
+            this._isPlaying = false;
+            return;
+        }
+
         this._isPlaying = true;
         this._playbackStartTime = Date.now();
         
@@ -1490,9 +1496,9 @@ class EmotiveMascotPublic {
      * @returns {string} Data URL
      */
     getFrameData(format = 'png') {
-        const canvas = this.canvas || this._engine.canvas;
+        const canvas = this._canvas || this.canvas || (this._getReal() && this._getReal().canvas);
         if (!canvas) return null;
-        
+
         return canvas.toDataURL(`image/${format}`);
     }
 
@@ -1502,9 +1508,9 @@ class EmotiveMascotPublic {
      * @returns {Promise<Blob>} Image blob
      */
     getFrameBlob(format = 'png') {
-        const canvas = this.canvas || this._engine.canvas;
-        if (!canvas) return null;
-        
+        const canvas = this._canvas || this.canvas || (this._getReal() && this._getReal().canvas);
+        if (!canvas) return Promise.resolve(null);
+
         return new Promise(resolve => {
             canvas.toBlob(blob => resolve(blob), `image/${format}`);
         });

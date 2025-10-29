@@ -121,11 +121,14 @@ export default [
                 afterEach: 'readonly',
                 beforeAll: 'readonly',
                 afterAll: 'readonly',
-                jest: 'readonly'
+                jest: 'readonly',
+                vi: 'readonly',
+                global: 'writable'
             }
         },
         rules: {
-            'no-console': 'off'
+            'no-console': 'off',
+            'require-await': 'off'
         }
     },
 
