@@ -78,17 +78,6 @@ jobs:
     - name: Build library
       run: npm run build
 
-    - name: Build demo
-      run: npm run build:demo
-
-    - name: Check bundle size
-      run: |
-        echo "Library bundle size:"
-        ls -lh dist/emotive-engine.min.js
-        echo ""
-        echo "Demo bundle size:"
-        ls -lh site/dist/
-
     - name: Run bundle size check
       run: npm run size
 
@@ -96,9 +85,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: dist
-        path: |
-          dist/
-          site/dist/
+        path: dist/
 
   analyze:
     runs-on: ubuntu-latest
