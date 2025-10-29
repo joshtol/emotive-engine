@@ -175,8 +175,8 @@ inclusive environment for all contributors.
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
-- npm >= 8.0.0
+- Node.js >= 20.0.0
+- npm >= 10.0.0
 
 ### Installation
 
