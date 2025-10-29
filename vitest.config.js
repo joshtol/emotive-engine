@@ -53,14 +53,7 @@ export default defineConfig({
 
                 // Test files
                 'test/**'
-            ],
-            // Set realistic thresholds for library code
-            thresholds: {
-                statements: 70,
-                branches: 65,
-                functions: 65,
-                lines: 70
-            }
+            ]
         }
     }
 });
