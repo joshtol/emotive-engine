@@ -80,6 +80,7 @@ import { TTSManager } from '../audio/TTSManager.js';
 import { SpeechReactivityManager } from '../audio/SpeechReactivityManager.js';
 import { CanvasResizeManager } from '../rendering/CanvasResizeManager.js';
 import { OffsetPositionManager } from '../rendering/OffsetPositionManager.js';
+import { RotationController } from '../rendering/RotationController.js';
 import { FrustrationContextManager } from '../state/FrustrationContextManager.js';
 import { PerformanceBehaviorManager } from '../performance/PerformanceBehaviorManager.js';
 import { DebugProfilingManager } from '../debug/DebugProfilingManager.js';
@@ -503,6 +504,7 @@ export class InitializationManager {
         this.mascot.speechReactivityManager = new SpeechReactivityManager(this.mascot);
         this.mascot.canvasResizeManager = new CanvasResizeManager(this.mascot);
         this.mascot.offsetPositionManager = new OffsetPositionManager(this.mascot);
+        this.mascot.rotationController = new RotationController(this.mascot);
         this.mascot.frustrationContextManager = new FrustrationContextManager(this.mascot);
         this.mascot.performanceBehaviorManager = new PerformanceBehaviorManager(this.mascot);
         this.mascot.debugProfilingManager = new DebugProfilingManager(this.mascot);

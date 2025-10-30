@@ -102,6 +102,7 @@ import { TTSManager } from './mascot/audio/TTSManager.js';
 import { SpeechReactivityManager } from './mascot/audio/SpeechReactivityManager.js';
 import { CanvasResizeManager } from './mascot/rendering/CanvasResizeManager.js';
 import { OffsetPositionManager } from './mascot/rendering/OffsetPositionManager.js';
+import { RotationController } from './mascot/rendering/RotationController.js';
 import { FrustrationContextManager } from './mascot/state/FrustrationContextManager.js';
 import { PerformanceBehaviorManager } from './mascot/performance/PerformanceBehaviorManager.js';
 import { DebugProfilingManager } from './mascot/debug/DebugProfilingManager.js';
@@ -301,12 +302,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setBPM(bpm) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer && this.renderer.setBPM) {
-                this.renderer.setBPM(bpm);
-            }
-            return this;
-        }, 'bpm-update', this)();
+        return this.rotationController.setBPM(bpm);
     }
 
     /**
@@ -316,12 +312,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setRotationSpeed(speed) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer && this.renderer.setRotationSpeed) {
-                this.renderer.setRotationSpeed(speed);
-            }
-            return this;
-        }, 'rotation-speed-update', this)();
+        return this.rotationController.setRotationSpeed(speed);
     }
 
     /**
@@ -330,12 +321,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setRotationAngle(angle) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer && this.renderer.setRotationAngle) {
-                this.renderer.setRotationAngle(angle);
-            }
-            return this;
-        }, 'rotation-angle-update', this)();
+        return this.rotationController.setRotationAngle(angle);
     }
 
     /**
