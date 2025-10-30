@@ -111,6 +111,7 @@ import { RotationManager } from './renderer/RotationManager.js';
 import { GazeTracker } from './renderer/GazeTracker.js';
 import { CanvasSetupManager } from './renderer/CanvasSetupManager.js';
 import { RenderPerformanceManager } from './renderer/RenderPerformanceManager.js';
+import { TransformMerger } from './renderer/TransformMerger.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -149,6 +150,7 @@ class EmotiveRenderer {
         this.gazeTracker = new GazeTracker(this);
         this.canvasSetupManager = new CanvasSetupManager(this);
         this.renderPerformanceManager = new RenderPerformanceManager(this);
+        this.transformMerger = new TransformMerger(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -651,20 +653,8 @@ class EmotiveRenderer {
         // Frame initialization: performance markers and cleanup (delegated to RenderPerformanceManager)
         const frameStartTime = this.renderPerformanceManager.initializeFrame();
 
-        // Get ambient dance transform and merge with gesture transform
-        const ambientTransform = this.ambientDanceAnimator.getTransform(deltaTime);
-        if (gestureTransform) {
-            // Merge transforms
-            gestureTransform.x = (gestureTransform.x || 0) + (ambientTransform.x || 0);
-            gestureTransform.y = (gestureTransform.y || 0) + (ambientTransform.y || 0);
-            gestureTransform.rotation = (gestureTransform.rotation || 0) + (ambientTransform.rotation || 0);
-            gestureTransform.scale = (gestureTransform.scale || 1) * (ambientTransform.scale || 1);
-        } else {
-            gestureTransform = ambientTransform;
-        }
-
-        // Store gestureTransform for use in other methods
-        this.gestureTransform = gestureTransform;
+        // Merge ambient dance and gesture transforms (delegated to TransformMerger)
+        gestureTransform = this.transformMerger.mergeAndStoreTransforms(gestureTransform, deltaTime);
 
         // Setup canvas: offscreen size, dimensions, context switching (delegated to CanvasSetupManager)
         const { logicalWidth, logicalHeight, originalCtx } = this.canvasSetupManager.setupCanvas();
