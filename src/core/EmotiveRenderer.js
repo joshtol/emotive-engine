@@ -119,6 +119,7 @@ import { PositionJitterManager } from './renderer/PositionJitterManager.js';
 import { RotationRenderManager } from './renderer/RotationRenderManager.js';
 import { EffectsRenderManager } from './renderer/EffectsRenderManager.js';
 import { CoreShapeRenderManager } from './renderer/CoreShapeRenderManager.js';
+import { RenderFinalizationManager } from './renderer/RenderFinalizationManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -165,6 +166,7 @@ class EmotiveRenderer {
         this.rotationRenderManager = new RotationRenderManager(this);
         this.effectsRenderManager = new EffectsRenderManager(this);
         this.coreShapeRenderManager = new CoreShapeRenderManager(this);
+        this.renderFinalizationManager = new RenderFinalizationManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -707,39 +709,11 @@ class EmotiveRenderer {
         this.coreShapeRenderManager.renderCoreAndShapes({
             coreX, coreY, coreRadius, totalRotation, sleepOpacityMod, deltaTime
         });
-        
-        // Recording indicator is now handled by the recording-glow effect module
-        // which draws a small indicator in the corner
-        
-        // Add sleep indicator if sleeping
-        if (this.state.sleeping) {
-            this.renderSleepIndicator(centerX, centerY - glowRadius - this.scaleValue(20), deltaTime);
-        }
-        
-        // Restore original context AFTER all rendering is done
-        this.ctx = originalCtx;
 
-        // Blit offscreen canvas to main canvas
-        // CRITICAL: Specify dimensions to properly scale DPR-sized offscreen canvas
-        // back to logical size on the main canvas
-        originalCtx.drawImage(this.offscreenCanvas, 0, 0, logicalWidth, logicalHeight);
-        
-        // Draw recording indicator on TOP of everything, with no transforms
-        if (isEffectActive('recording-glow', this.state)) {
-            const recordingEffect = getEffect('recording-glow');
-            if (recordingEffect && recordingEffect.drawRecordingIndicator) {
-                // Use original context to draw on top of the blitted image
-                recordingEffect.drawRecordingIndicator(originalCtx, this.canvas.width, this.canvas.height);
-            }
-        }
-
-        // Performance marker: Frame end
-        const frameEndTime = performance.now();
-        const frameTime = frameEndTime - frameStartTime;
-        if (this.performanceMonitor) {
-            this.performanceMonitor.markFrameEnd();
-            this.performanceMonitor.recordFrameTime(frameTime);
-        }
+        // Finalize render: sleep indicator, canvas blit, recording indicator, performance (delegated to RenderFinalizationManager)
+        this.renderFinalizationManager.finalizeRender({
+            centerX, centerY, glowRadius, deltaTime, originalCtx, logicalWidth, logicalHeight, frameStartTime
+        });
     }
     
     // renderGlow method removed - now handled by GlowRenderer module
