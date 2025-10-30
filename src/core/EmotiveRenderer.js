@@ -118,6 +118,7 @@ import { RadiusCalculator } from './renderer/RadiusCalculator.js';
 import { PositionJitterManager } from './renderer/PositionJitterManager.js';
 import { RotationRenderManager } from './renderer/RotationRenderManager.js';
 import { EffectsRenderManager } from './renderer/EffectsRenderManager.js';
+import { CoreShapeRenderManager } from './renderer/CoreShapeRenderManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -163,6 +164,7 @@ class EmotiveRenderer {
         this.positionJitterManager = new PositionJitterManager(this);
         this.rotationRenderManager = new RotationRenderManager(this);
         this.effectsRenderManager = new EffectsRenderManager(this);
+        this.coreShapeRenderManager = new CoreShapeRenderManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -700,140 +702,11 @@ class EmotiveRenderer {
             coreX, coreY, glowRadius, effectiveGlowIntensity, glowOpacityMod,
             gestureTransforms, coreRadius, deltaTime
         });
-        
-        // Recording indicator will be drawn after all transforms are restored
-        
-        // Apply sleep opacity to core
-        if (this.state.sleeping || this.state.emotion === 'resting') {
-            this.ctx.globalAlpha = sleepOpacityMod;
-        }
-        
-        // Render core (will cover REC if they overlap)
-        // Delegate core rendering to CoreRenderer
-        // First update the shape morpher if available
-        let shapePoints = null;
-        let currentShadow = null;
-        if (this.shapeMorpher) {
-            this.shapeMorpher.update();
-            // Get the canvas points relative to center (0,0) since CoreRenderer will translate
-            shapePoints = this.shapeMorpher.getCanvasPoints(0, 0, coreRadius);
-            currentShadow = this.shapeMorpher.getCurrentShadow();
-        }
-        
-        // Render sun effects BEFORE core (so they appear behind)
-        let renderingSunEffects = false;
-        if (currentShadow && (currentShadow.type === 'sun' || currentShadow.type === 'solar-hybrid')) {
-            this.renderSunEffects(coreX, coreY, coreRadius, currentShadow);
-            renderingSunEffects = true;
-        }
-        
-        // Drop shadow removed - was causing dimming
-        
-        // Update core rotation based on BPM (like a record player)
-        // Only rotate if BPM is greater than 0 (rhythm is active)
-        // Shapes that should NOT rotate: moon, heart
-        
-        // Render the core shape with rotation
-        // Note: We already applied rotation to the canvas, but CoreRenderer does its own transform
-        // So we need to pass the rotation value to it
-        this.coreRenderer.renderCore(coreX, coreY, coreRadius, {
-            scaleX: 1,
-            scaleY: 1,
-            rotation: totalRotation,
-            shapePoints
-        });
-        
-        // Update and render sparkles BEFORE moon shadow so they don't cover it
-        if (this.specialEffects) {
-            this.specialEffects.update(deltaTime);
-            this.specialEffects.renderSparkles();
-        }
-        
-        // Check if we're dealing with solar transitions
-        const currentShape = this.shapeMorpher ? this.shapeMorpher.currentShape : null;
-        const targetShape = this.shapeMorpher ? this.shapeMorpher.targetShape : null;
-        const isTransitioningToSolar = this.shapeMorpher && targetShape === 'solar' && this.shapeMorpher.isTransitioning;
-        const isTransitioningFromSolar = this.shapeMorpher && currentShape === 'solar' && this.shapeMorpher.isTransitioning;
-        const isAtSolar = currentShadow && currentShadow.type === 'solar-hybrid';
-        
-        // Check specific transition directions
-        const isSolarToMoon = this.shapeMorpher && this.shapeMorpher.isTransitioning &&
-            currentShape === 'solar' && targetShape === 'moon';
-        const isMoonToSolar = this.shapeMorpher && this.shapeMorpher.isTransitioning &&
-            currentShape === 'moon' && targetShape === 'solar';
-        
-        // Render moon/lunar shadows AFTER core AND sparkles (as top overlay)
-        // Always render moon shadow EXCEPT when transitioning FROM moon TO solar
-        if (currentShadow && (currentShadow.type === 'crescent' || currentShadow.type === 'lunar') && 
-            !isMoonToSolar) {
-            // Shadow is rendered in the already-rotated coordinate space
-            this.renderMoonShadow(coreX, coreY, coreRadius, currentShadow, shapePoints, false, 0);
-        }
-        
-        // For solar-hybrid, render lunar overlay on top of sun
-        // Skip when transitioning FROM solar TO moon (let moon's shadow handle it)
-        if (((isAtSolar && currentShadow.lunarOverlay) || isTransitioningToSolar || isTransitioningFromSolar) && 
-            !isSolarToMoon) {
-            // Use the lunar overlay from solar definition
-            const lunarShadow = (isAtSolar && currentShadow.lunarOverlay) ? currentShadow.lunarOverlay : {
-                type: 'lunar',
-                coverage: 1.0,
-                color: 'rgba(0, 0, 0, 1.0)',
-                progression: 'center'
-            };
-            
-            // Calculate shadow offset for Bailey's Beads
-            let shadowOffsetX = 0;
-            let shadowOffsetY = 0;
-            let morphProgress = 0;
-            
-            if (this.shapeMorpher) {
-                morphProgress = this.shapeMorpher.getProgress();
 
-                const slideDistance = coreRadius * 2.5;
-                
-                if (isTransitioningToSolar && morphProgress < 1) {
-                    // Shadow sliding in from bottom-left
-                    shadowOffsetX = -slideDistance * (1 - morphProgress);
-                    shadowOffsetY = slideDistance * (1 - morphProgress);
-                } else if (isTransitioningFromSolar && morphProgress < 1) {
-                    // Shadow sliding out to top-right
-                    shadowOffsetX = slideDistance * morphProgress;
-                    shadowOffsetY = -slideDistance * morphProgress;
-                }
-            }
-            
-            // Render the shadow
-            this.renderMoonShadow(coreX, coreY, coreRadius, lunarShadow, shapePoints, true);
-            
-            // Render Bailey's Beads during transitions
-            // Show beads when transitioning TO solar (which will have rays) or FROM solar (which had rays)
-            // But only if we're actually rendering or about to render sun effects
-            const willHaveSunEffects = isTransitioningToSolar || renderingSunEffects;
-            
-            if ((isTransitioningToSolar || isTransitioningFromSolar) && willHaveSunEffects) {
-                this.renderBaileysBeads(coreX, coreY, coreRadius, shadowOffsetX, shadowOffsetY, morphProgress, isTransitioningToSolar, true);
-                
-                // Trigger chromatic aberration when shadow is near center
-                const shadowNearCenter = Math.abs(shadowOffsetX) < 30 && Math.abs(shadowOffsetY) < 30;
-                if (shadowNearCenter && this.specialEffects) {
-                    // Stronger aberration as shadow gets closer to center
-                    const distance = Math.sqrt(shadowOffsetX * shadowOffsetX + shadowOffsetY * shadowOffsetY);
-                    const intensity = Math.max(0.1, 0.5 * (1 - distance / 30));
-                    this.specialEffects.triggerChromaticAberration(intensity);
-                }
-            }
-        }
-        
-        // Reset alpha
-        if (this.state.sleeping || this.state.emotion === 'resting') {
-            this.ctx.globalAlpha = 1;
-        }
-        
-        // Restore context if rotated
-        if (totalRotation !== 0) {
-            this.ctx.restore();
-        }
+        // Render core and shapes with all effects (delegated to CoreShapeRenderManager)
+        this.coreShapeRenderManager.renderCoreAndShapes({
+            coreX, coreY, coreRadius, totalRotation, sleepOpacityMod, deltaTime
+        });
         
         // Recording indicator is now handled by the recording-glow effect module
         // which draws a small indicator in the corner
