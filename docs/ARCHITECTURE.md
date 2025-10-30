@@ -1,16 +1,19 @@
-# Architecture Overview
+# Emotive Engine Architecture
 
-This document provides a high-level overview of the Emotive Engine architecture, helping you understand how the system works and where to find things.
+Complete architectural documentation for the Emotive Engine real-time animation system.
 
 ## Table of Contents
 
 - [System Overview](#system-overview)
+- [Directory Structure](#directory-structure)
 - [Core Components](#core-components)
 - [Data Flow](#data-flow)
 - [Initialization Sequence](#initialization-sequence)
-- [Key Files Map](#key-files-map)
-- [Directory Structure](#directory-structure)
+- [GestureAnimator Architecture](#gestureanimator-architecture)
 - [Extension Points](#extension-points)
+- [Performance Considerations](#performance-considerations)
+- [Event System](#event-system)
+- [API Reference](#api-reference)
 
 ---
 
@@ -76,55 +79,233 @@ Emotive Engine is a **real-time animation system** that converts emotional state
 
 ---
 
+## Directory Structure
+
+The codebase is organized into logical subdirectories following domain-driven design principles:
+
+```
+src/
+├── core/                           # Core engine systems
+│   ├── audio/                      # Audio & rhythm (9 files)
+│   │   ├── AudioAnalyzer.js        # Audio input analysis
+│   │   ├── AudioLevelProcessor.js  # Level processing
+│   │   ├── SoundSystem.js          # Sound effects
+│   │   ├── rhythm.js               # Rhythm engine
+│   │   ├── rhythmIntegration.js    # Rhythm sync
+│   │   ├── MusicTheory.js          # Musical concepts
+│   │   ├── MusicalDuration.js      # Duration calculations
+│   │   ├── GrooveTemplates.js      # Rhythm patterns
+│   │   └── HarmonicSystem.js       # Harmonic analysis
+│   │
+│   ├── state/                      # State management (3 files)
+│   │   ├── EmotiveStateMachine.js  # Core state machine
+│   │   ├── StateStore.js           # State persistence
+│   │   └── ContextManager.js       # Execution context
+│   │
+│   ├── events/                     # Event handling (5 files)
+│   │   ├── EventManager.js         # Event coordination
+│   │   ├── ErrorBoundary.js        # Error handling
+│   │   ├── ErrorLogger.js          # Error logging
+│   │   ├── ErrorResponse.js        # Error responses
+│   │   └── ErrorTracker.js         # Error tracking
+│   │
+│   ├── canvas/                     # Canvas management (1 file)
+│   │   └── CanvasManager.js        # Canvas lifecycle
+│   │
+│   ├── system/                     # System management (6 files)
+│   │   ├── PerformanceMonitor.js   # FPS tracking
+│   │   ├── DegradationManager.js   # Auto quality reduction
+│   │   ├── HealthCheck.js          # System health
+│   │   ├── SimpleFPSCounter.js     # FPS counter
+│   │   ├── FeatureFlags.js         # Feature toggles
+│   │   └── SecurityManager.js      # Security policies
+│   │
+│   ├── optimization/               # Performance optimization (3 files)
+│   │   ├── MobileOptimization.js   # Mobile-specific
+│   │   ├── AccessibilityManager.js # Accessibility
+│   │   └── LazyLoader.js           # Lazy loading
+│   │
+│   ├── plugins/                    # Plugin system (3 files)
+│   │   ├── PluginSystem.js         # Plugin manager
+│   │   ├── PerformanceSystem.js    # Performance plugins
+│   │   └── SequenceExecutor.js     # Sequence execution
+│   │
+│   ├── behavior/                   # Behavioral systems (2 files)
+│   │   ├── IdleBehavior.js         # Idle animations
+│   │   └── GazeTracker.js          # Gaze tracking
+│   │
+│   ├── integration/                # External integrations (2 files)
+│   │   ├── LLMResponseHandler.js   # AI integration
+│   │   └── llm-templates.js        # LLM prompts
+│   │
+│   ├── emotions/                   # Emotion system
+│   │   ├── base/                   # Base definitions
+│   │   ├── states/                 # Individual emotions
+│   │   ├── rhythm/                 # Rhythm modulation
+│   │   └── EmotionModifier.js      # Blending & transitions
+│   │
+│   ├── gestures/                   # Gesture system
+│   │   ├── definitions/            # Gesture definitions
+│   │   ├── GestureCompositor.js    # Gesture composition
+│   │   └── GestureScheduler.js     # Scheduling
+│   │
+│   ├── particles/                  # Particle system
+│   │   ├── behaviors/              # Movement patterns
+│   │   ├── ParticleSystem.js       # Particle manager
+│   │   ├── ParticlePool.js         # Object pooling
+│   │   └── ParticleEmitter.js      # Spawning
+│   │
+│   ├── renderer/                   # Rendering system
+│   │   ├── EmotiveRenderer.js      # Main renderer
+│   │   ├── GradientCache.js        # Performance cache
+│   │   ├── CanvasPositioning.js    # Layout
+│   │   └── gesture-animators/      # Specialized animators
+│   │       ├── PhysicalGestureAnimator.js
+│   │       ├── VisualEffectAnimator.js
+│   │       ├── BreathGestureAnimator.js
+│   │       ├── MovementGestureAnimator.js
+│   │       ├── ShapeTransformAnimator.js
+│   │       ├── ExpressionGestureAnimator.js
+│   │       ├── DirectionalGestureAnimator.js
+│   │       └── ComplexAnimationAnimator.js
+│   │
+│   ├── shapes/                     # Shape morphing
+│   │   ├── definitions/            # Shape definitions
+│   │   └── ShapeMorpher.js         # Morphing logic
+│   │
+│   ├── effects/                    # Visual effects
+│   │   ├── EffectsManager.js       # Effect coordination
+│   │   ├── TrailEffect.js          # Particle trails
+│   │   └── GlowEffect.js           # Glow effects
+│   │
+│   ├── performances/               # Semantic performances
+│   │   └── PerformanceChoreographer.js
+│   │
+│   ├── AnimationController.js      # Animation loop
+│   ├── AnimationLoopManager.js     # Loop management
+│   ├── ParticleSystem.js           # Core particle system
+│   ├── EmotiveRenderer.js          # Core renderer
+│   ├── ShapeMorpher.js             # Shape morphing
+│   ├── GestureScheduler.js         # Gesture scheduling
+│   ├── GestureCompositor.js        # Gesture composition
+│   ├── GestureCompatibility.js     # Compatibility layer
+│   └── Particle.js                 # Particle class
+│
+├── mascot/                         # High-level orchestration
+│   ├── rendering/                  # Rendering managers (6 files)
+│   │   ├── RenderStateBuilder.js   # State building
+│   │   ├── RenderLayerOrchestrator.js
+│   │   ├── DebugInfoRenderer.js    # Debug overlays
+│   │   ├── ThreatLevelCalculator.js
+│   │   ├── ParticleConfigCalculator.js
+│   │   └── GestureMotionProvider.js
+│   │
+│   ├── animation/                  # Animation managers (3 files)
+│   │   ├── BreathingAnimationController.js
+│   │   ├── BreathingPatternManager.js
+│   │   └── OrbScaleAnimator.js
+│   │
+│   ├── audio/                      # Audio managers (3 files)
+│   │   ├── AudioHandler.js         # Audio processing
+│   │   ├── SpeechManager.js        # Speech synthesis
+│   │   └── AudioLevelCallbackManager.js
+│   │
+│   ├── state/                      # State managers (3 files)
+│   │   ├── StateCoordinator.js     # State coordination
+│   │   ├── RecordingStateManager.js
+│   │   └── SleepWakeManager.js
+│   │
+│   ├── system/                     # System managers (4 files)
+│   │   ├── InitializationManager.js
+│   │   ├── ConfigurationManager.js
+│   │   ├── DestructionManager.js
+│   │   └── SystemStatusReporter.js
+│   │
+│   └── control/                    # Control managers (2 files)
+│       ├── GestureController.js    # Gesture control
+│       └── VisualizationRunner.js  # Visual effects
+│
+├── config/                         # Configuration
+│   ├── emotionMap.js               # Emotion definitions
+│   ├── gestureLibrary.js           # Gesture library
+│   └── defaultConfig.js            # Default settings
+│
+├── utils/                          # Shared utilities
+│   ├── colorUtils.js               # Color manipulation
+│   ├── mathUtils.js                # Math helpers
+│   ├── easing.js                   # Easing functions
+│   ├── PositionController.js       # Position management
+│   ├── browserCompatibility.js     # Browser detection
+│   ├── debugger.js                 # Debug utilities
+│   └── sentry.js                   # Error reporting
+│
+├── EmotiveMascot.js                # Internal orchestrator
+├── EmotiveMascotPublic.js          # Public API wrapper
+├── index.js                        # Main entry point
+├── minimal.js                      # Minimal bundle
+├── lean.js                         # Lean bundle
+└── audio.js                        # Audio bundle
+```
+
+### Organization Principles
+
+1. **Domain-Driven Design**: Files grouped by domain (audio, state, events, etc.)
+2. **Single Responsibility**: Each directory has one clear purpose
+3. **Discoverability**: Related files are co-located
+4. **Scalability**: Easy to add new files in appropriate subdirectories
+
+### Key Metrics
+
+- **83% reduction** in root-level files (61 → 10)
+- **15 logical subdirectories** with clear responsibilities
+- **34 files moved** to domain-specific locations
+- **100% backward compatible** - all imports updated
+
+---
+
 ## Core Components
 
-### 1. **EmotiveMascot** (Public API)
+### 1. EmotiveMascot (Public API)
 - **File**: [src/EmotiveMascotPublic.js](../src/EmotiveMascotPublic.js)
 - **Purpose**: Main entry point for users
 - **Key Methods**: `init()`, `start()`, `setEmotion()`, `express()`, `morphTo()`
-- **Complexity**: ⭐⭐ Intermediate (wraps internal orchestrator)
+- **Complexity**: ⭐⭐ Intermediate
 
-### 2. **EmotiveMascot** (Internal Orchestrator)
+### 2. EmotiveMascot (Internal Orchestrator)
 - **File**: [src/EmotiveMascot.js](../src/EmotiveMascot.js)
 - **Purpose**: Coordinates all internal systems
-- **Size**: 3,096 lines (largest file in codebase)
-- **Complexity**: ⭐⭐⭐⭐ Advanced (core orchestration logic)
-- **Note**: Most contributors won't need to modify this file
+- **Size**: Previously 3,096 lines, now modularized
+- **Complexity**: ⭐⭐⭐⭐ Advanced
 
-### 3. **StateCoordinator**
-- **File**: [src/mascot/StateCoordinator.js](../src/mascot/StateCoordinator.js)
+### 3. StateCoordinator
+- **File**: [src/mascot/state/StateCoordinator.js](../src/mascot/state/StateCoordinator.js)
 - **Purpose**: Validates and coordinates state changes
 - **Complexity**: ⭐⭐⭐ Intermediate-Advanced
 
-### 4. **GestureController**
-- **File**: [src/mascot/GestureController.js](../src/mascot/GestureController.js)
-- **Purpose**: Selects and executes gestures based on emotional state
+### 4. GestureController
+- **File**: [src/mascot/control/GestureController.js](../src/mascot/control/GestureController.js)
+- **Purpose**: Selects and executes gestures
 - **Complexity**: ⭐⭐⭐ Intermediate-Advanced
 
-### 5. **ParticleSystem**
-- **Directory**: [src/core/particles/](../src/core/particles/)
+### 5. ParticleSystem
+- **File**: [src/core/ParticleSystem.js](../src/core/ParticleSystem.js)
 - **Purpose**: Creates, updates, and manages particles
-- **Key Files**:
-  - [ParticleSystem.js](../src/core/particles/ParticleSystem.js) - Main system
-  - [ParticleBehaviors.js](../src/core/particles/behaviors/ParticleBehaviors.js) - Movement patterns
-  - [ParticlePool.js](../src/core/particles/ParticlePool.js) - Object pooling for performance
 - **Complexity**: ⭐⭐⭐⭐ Advanced
 
-### 6. **EmotiveRenderer**
-- **File**: [src/core/renderer/EmotiveRenderer.js](../src/core/renderer/EmotiveRenderer.js)
+### 6. EmotiveRenderer
+- **File**: [src/core/EmotiveRenderer.js](../src/core/EmotiveRenderer.js)
 - **Purpose**: Handles all canvas drawing operations
-- **Size**: >150KB (very large)
-- **Complexity**: ⭐⭐⭐⭐ Advanced (heavy canvas/WebGL logic)
+- **Complexity**: ⭐⭐⭐⭐ Advanced
 
-### 7. **VisualizationRunner**
-- **File**: [src/mascot/VisualizationRunner.js](../src/mascot/VisualizationRunner.js)
+### 7. VisualizationRunner
+- **File**: [src/mascot/control/VisualizationRunner.js](../src/mascot/control/VisualizationRunner.js)
 - **Purpose**: Runs visual effects and animations
 - **Complexity**: ⭐⭐⭐ Intermediate-Advanced
 
-### 8. **AudioHandler**
-- **File**: [src/mascot/AudioHandler.js](../src/mascot/AudioHandler.js)
+### 8. AudioHandler
+- **File**: [src/mascot/audio/AudioHandler.js](../src/mascot/audio/AudioHandler.js)
 - **Purpose**: Processes audio input and syncs to BPM
-- **Complexity**: ⭐⭐⭐⭐ Advanced (Web Audio API)
+- **Complexity**: ⭐⭐⭐⭐ Advanced
 
 ---
 
@@ -145,19 +326,19 @@ User calls: mascot.setEmotion('joy')
 [EmotiveStateMachine] Updates internal state
        │
        ▼
-[GestureController] Selects appropriate gesture for 'joy'
+[GestureController] Selects appropriate gesture
        │
        ▼
 [GestureCompositor] Builds gesture sequence
        │
        ▼
-[ParticleSystem] Generates particles with emotion-specific parameters
-       │                 (color, speed, patterns, etc.)
+[ParticleSystem] Generates particles with emotion parameters
+       │
        ▼
 [EmotiveRenderer] Draws particles to canvas
        │
        ▼
-[Canvas] User sees joyful animation (bright colors, upward movement)
+[Canvas] User sees joyful animation
 ```
 
 ### Gesture Execution Flow
@@ -166,17 +347,17 @@ User calls: mascot.setEmotion('joy')
 GestureController.executeGesture('wave')
        │
        ▼
-[GestureScheduler] Schedules gesture in queue
+[GestureScheduler] Schedules in queue
        │
        ▼
-[SequenceExecutor] Breaks gesture into phases
-       │                 (intro → main → outro)
+[SequenceExecutor] Breaks into phases
+       │
        ▼
 [ParticleSystem] Spawns particles for each phase
        │
        ▼
 [ParticleBehaviors] Applies movement patterns
-       │                 (wave pattern, gravity, attraction)
+       │
        ▼
 [EmotiveRenderer] Renders animated gesture
        │
@@ -190,18 +371,16 @@ GestureController.executeGesture('wave')
 [AnimationLoopManager] requestAnimationFrame()
        │
        ▼
-[PerformanceMonitor] Checks FPS, adjusts quality if needed
+[PerformanceMonitor] Checks FPS
        │
        ▼
-[ParticleSystem] Updates all active particles
-       │                 - Apply forces
-       │                 - Update positions
-       │                 - Remove dead particles
-       ▼
-[EffectsManager] Apply visual effects (trails, glows, etc.)
+[ParticleSystem] Updates all particles
        │
        ▼
-[EmotiveRenderer] Clear canvas → Draw particles → Apply post-processing
+[EffectsManager] Apply visual effects
+       │
+       ▼
+[EmotiveRenderer] Clear → Draw → Post-process
        │
        ▼
 [Canvas] Frame rendered (60 FPS target)
@@ -216,7 +395,7 @@ GestureController.executeGesture('wave')
 
 ## Initialization Sequence
 
-When you call `mascot.init()`, here's what happens:
+When you call `mascot.init()`:
 
 ```
 1. EmotiveMascotPublic.init()
@@ -236,7 +415,6 @@ When you call `mascot.init()`, here's what happens:
 4. ParticleSystem.init()
    - Creates particle pool
    - Loads particle behaviors
-   - Sets up spatial indexing
        │
        ▼
 5. GestureController.loadGestures()
@@ -245,7 +423,7 @@ When you call `mascot.init()`, here's what happens:
        │
        ▼
 6. StateCoordinator.init()
-   - Sets initial state (usually 'neutral')
+   - Sets initial state
    - Initializes state machine
        │
        ▼
@@ -262,141 +440,184 @@ When you call `mascot.init()`, here's what happens:
 
 ---
 
-## Key Files Map
+## GestureAnimator Architecture
 
-Understanding what each major file does:
+The GestureAnimator system was refactored from a 1,472-line god object into 8 specialized animator classes following the Single Responsibility Principle.
 
-| File | Purpose | When You'd Edit It | Complexity |
-|------|---------|-------------------|------------|
-| [EmotiveMascotPublic.js](../src/EmotiveMascotPublic.js) | Public API wrapper | Adding new public methods | ⭐⭐ |
-| [EmotiveMascot.js](../src/EmotiveMascot.js) | Core orchestrator | Rarely (system-wide changes) | ⭐⭐⭐⭐ |
-| [StateCoordinator.js](../src/mascot/StateCoordinator.js) | State management | Changing state logic | ⭐⭐⭐ |
-| [GestureController.js](../src/mascot/GestureController.js) | Gesture execution | Adding gesture features | ⭐⭐⭐ |
-| [EmotiveRenderer.js](../src/core/renderer/EmotiveRenderer.js) | Canvas rendering | Changing visual output | ⭐⭐⭐⭐ |
-| [ParticleSystem.js](../src/core/particles/ParticleSystem.js) | Particle management | Particle behavior changes | ⭐⭐⭐⭐ |
-| [VisualizationRunner.js](../src/mascot/VisualizationRunner.js) | Effect orchestration | Adding new effects | ⭐⭐⭐ |
-| [AudioHandler.js](../src/mascot/AudioHandler.js) | Audio processing | Audio sync features | ⭐⭐⭐⭐ |
-| [ConfigurationManager.js](../src/mascot/ConfigurationManager.js) | Config handling | Adding config options | ⭐⭐ |
-| [LLMResponseHandler.js](../src/sdk/LLMResponseHandler.js) | AI integration | LLM response parsing | ⭐⭐ |
-
-### Common Tasks & File Locations
-
-| Task | Files to Look At |
-|------|------------------|
-| **Add a new emotion** | [src/core/emotions/states/](../src/core/emotions/states/), [src/config/emotionMap.js](../src/config/emotionMap.js) |
-| **Create a custom gesture** | [src/core/gestures/definitions/](../src/core/gestures/definitions/) |
-| **Change particle behavior** | [src/core/particles/behaviors/](../src/core/particles/behaviors/) |
-| **Add a new shape** | [src/core/shapes/definitions/](../src/core/shapes/definitions/) |
-| **Modify rendering** | [src/core/renderer/EmotiveRenderer.js](../src/core/renderer/EmotiveRenderer.js) |
-| **Add performance optimization** | [src/core/utils/PerformanceMonitor.js](../src/core/utils/PerformanceMonitor.js), [src/core/utils/DegradationManager.js](../src/core/utils/DegradationManager.js) |
-| **Extend LLM integration** | [src/sdk/LLMResponseHandler.js](../src/sdk/LLMResponseHandler.js) |
-| **Add a plugin** | [src/plugins/](../src/plugins/) |
-
----
-
-## Directory Structure
+### Architecture Diagram
 
 ```
-src/
-├── core/                           # Core engine systems (223 files)
-│   ├── animation/                  # Animation timing & interpolation
-│   │   ├── AnimationLoopManager.js # Main animation loop
-│   │   ├── BeatSynchronizer.js     # Musical time sync
-│   │   └── easing/                 # Easing functions
-│   │
-│   ├── emotions/                   # Emotion system
-│   │   ├── base/                   # Base emotion definitions
-│   │   ├── states/                 # Individual emotion states (joy, calm, etc.)
-│   │   ├── rhythm/                 # Rhythm modulation
-│   │   └── EmotionModifier.js      # Emotion blending & transitions
-│   │
-│   ├── gestures/                   # Gesture system
-│   │   ├── definitions/            # Individual gesture definitions
-│   │   ├── GestureCompositor.js    # Combines gestures
-│   │   ├── GestureScheduler.js     # Schedules gesture execution
-│   │   └── SequenceExecutor.js     # Executes gesture sequences
-│   │
-│   ├── particles/                  # Particle system
-│   │   ├── behaviors/              # Particle movement patterns
-│   │   ├── ParticleSystem.js       # Main particle manager
-│   │   ├── ParticlePool.js         # Object pooling
-│   │   └── ParticleEmitter.js      # Particle spawning
-│   │
-│   ├── renderer/                   # Rendering system
-│   │   ├── EmotiveRenderer.js      # Main renderer (large file!)
-│   │   ├── GradientCache.js        # Performance optimization
-│   │   └── CanvasPositioning.js    # Layout management
-│   │
-│   ├── shapes/                     # Shape morphing system
-│   │   ├── definitions/            # Shape definitions (circle, heart, etc.)
-│   │   └── ShapeMorpher.js         # Smooth shape transitions
-│   │
-│   ├── effects/                    # Visual effects
-│   │   ├── EffectsManager.js       # Effect orchestration
-│   │   ├── TrailEffect.js          # Particle trails
-│   │   └── GlowEffect.js           # Glow effects
-│   │
-│   ├── performances/               # Semantic performance system (NEW in v2.5)
-│   │   └── PerformanceChoreographer.js
-│   │
-│   └── utils/                      # Core utilities
-│       ├── PerformanceMonitor.js   # FPS tracking
-│       ├── DegradationManager.js   # Auto quality reduction
-│       ├── ErrorBoundary.js        # Error handling
-│       └── MobileOptimization.js   # Mobile-specific optimizations
-│
-├── mascot/                         # High-level orchestration
-│   ├── StateCoordinator.js         # State management
-│   ├── GestureController.js        # Gesture control
-│   ├── VisualizationRunner.js      # Visual effect runner
-│   ├── AudioHandler.js             # Audio processing
-│   └── ConfigurationManager.js     # Configuration
-│
-├── sdk/                            # SDK helpers
-│   └── LLMResponseHandler.js       # AI integration
-│
-├── plugins/                        # Plugin system
-│   └── PluginManager.js            # Plugin orchestration
-│
-├── config/                         # Configuration files
-│   ├── emotionMap.js               # Emotion definitions
-│   ├── gestureLibrary.js           # Gesture library
-│   └── defaultConfig.js            # Default settings
-│
-├── utils/                          # General utilities
-│   ├── colorUtils.js               # Color manipulation
-│   ├── mathUtils.js                # Math helpers
-│   └── easing.js                   # Easing functions
-│
-├── EmotiveMascot.js                # Internal orchestrator (3,096 lines)
-├── EmotiveMascotPublic.js          # Public API wrapper
-└── index.js                        # Entry point
+┌─────────────────────────────────────────────────────────────────┐
+│                       EmotiveRenderer                           │
+│  - Manages rendering pipeline                                  │
+│  - Coordinates particle system                                 │
+│  - Applies transforms from GestureAnimator                     │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             │ creates and uses
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       GestureAnimator                           │
+│                         (832 lines)                             │
+│                                                                 │
+│  Core Responsibilities:                                        │
+│  • Animation lifecycle management                              │
+│  • Gesture state tracking                                      │
+│  • Easing function application                                 │
+│  • Coordination between specialized animators                  │
+│  • Transform aggregation                                       │
+└─┬───────┬───────┬───────┬───────┬───────┬───────┬───────┬──────┘
+  │       │       │       │       │       │       │       │
+  │ delegates to specialized animators
+  │       │       │       │       │       │       │       │
+  ▼       ▼       ▼       ▼       ▼       ▼       ▼       ▼
+┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐
+│Phy│   │Vis│   │Bre│   │Mov│   │Sha│   │Exp│   │Dir│   │Com│
+│sic│   │ual│   │ath│   │eme│   │peT│   │ress│   │ect│   │plex│
+│al │   │Eff│   │   │   │nt │   │rans│   │ion│   │iona│   │   │
+└───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘   └───┘
 ```
+
+### Specialized Animators
+
+#### 1. PhysicalGestureAnimator (179 lines)
+Handles physical motion with mass and momentum:
+- `applyBounce()` - Bouncing motion with gravity
+- `applyShake()` - Oscillating shake with decay
+- `applyJump()` - Jump with squash/stretch
+- `applyVibrate()` - High-frequency vibration
+- `applyWiggle()` - Hip-hop style wiggle
+
+#### 2. VisualEffectAnimator (145 lines)
+Visual effects and lighting:
+- `applyFlash()` - Quick flash with glow
+- `applyGlow()` - Pulsing glow effect
+- `applyFlicker()` - Flickering light
+- `applySparkle()` - Sparkling particles
+- `applyShimmer()` - Subtle shimmer
+
+#### 3. BreathGestureAnimator (113 lines)
+Breathing and meditation:
+- `applyBreathe()` - Full breath cycle
+- `applyBreathIn()` - Inhale only
+- `applyBreathOut()` - Exhale only
+- `applyBreathHold()` - Hold at full
+- `applyBreathHoldEmpty()` - Hold at empty
+
+#### 4. MovementGestureAnimator (213 lines)
+Complex movement patterns:
+- `applySpin()` - Rotation with pulse
+- `applyDrift()` - Smooth drifting
+- `applyWave()` - Infinity symbol wave
+- `applySway()` - Side-to-side swaying
+- `applyFloat()` - Floating motion
+- `applyHula()` - Figure-8 motion
+- `applyOrbit()` - Circular orbital path
+
+#### 5. ShapeTransformAnimator (94 lines)
+Shape and size transformations:
+- `applyPulse()` - Rhythmic pulsation
+- `applyExpand()` - Smooth expansion
+- `applyContract()` - Smooth contraction
+- `applyStretch()` - Oscillating stretch
+- `applyMorph()` - Fluid morphing
+
+#### 6. ExpressionGestureAnimator (156 lines)
+Expressive gestures:
+- `applyNod()` - Vertical nodding
+- `applyTilt()` - Head tilt with rotation
+- `applySlowBlink()` - Eye blink simulation
+- `applyLook()` - Directional gaze
+- `applySettle()` - Damped settling
+
+#### 7. DirectionalGestureAnimator (137 lines)
+Directional pointing:
+- `applyPoint()` - Directional pointing
+- `applyLean()` - Side lean
+- `applyReach()` - Reaching motion
+
+#### 8. ComplexAnimationAnimator (187 lines)
+Complex multi-component animations:
+- `applyFlashWave()` - Emanating wave
+- `applyRain()` - Falling particles
+- `applyGroove()` - Dance movement
+- `applyHeadBob()` - Rhythmic bobbing
+- `applyRunningMan()` - Running dance
+- `applyCharleston()` - Charleston dance
+
+### Animation Method Pattern
+
+All animation methods follow this signature:
+
+```javascript
+applyMethodName(anim, progress)
+```
+
+**Parameters:**
+- `anim` (Object): Animation state object with `params`
+- `progress` (number): Animation progress from 0 to 1
+
+**Returns:**
+```javascript
+{
+  offsetX?: number,    // Horizontal offset
+  offsetY?: number,    // Vertical offset
+  scale?: number,      // Uniform scale
+  scaleX?: number,     // Horizontal scale
+  scaleY?: number,     // Vertical scale
+  rotation?: number,   // Rotation in degrees
+  glow?: number,       // Glow intensity multiplier
+  // Additional effect properties
+}
+```
+
+### Testing
+
+Each animator has comprehensive test coverage:
+
+```
+test/unit/core/renderer/
+├── PhysicalGestureAnimator.test.js      (23 tests)
+├── VisualEffectAnimator.test.js         (21 tests)
+├── BreathGestureAnimator.test.js        (18 tests)
+├── MovementGestureAnimator.test.js      (21 tests)
+├── ShapeTransformAnimator.test.js       (22 tests)
+├── ExpressionGestureAnimator.test.js    (26 tests)
+├── DirectionalGestureAnimator.test.js   (25 tests)
+└── ComplexAnimationAnimator.test.js     (31 tests)
+```
+
+**Total**: 187 tests, 100% passing
+
+### Benefits
+
+1. **43% size reduction** in GestureAnimator (1,472 → 832 lines)
+2. **100% test coverage** with 187 new unit tests
+3. **Single Responsibility** - each animator has one purpose
+4. **Extensibility** - easy to add new gesture types
+5. **Maintainability** - smaller, focused files
 
 ---
 
 ## Extension Points
 
-The system is designed to be extensible. Here's how to add your own customizations:
-
-### 1. Custom Emotions
+### Custom Emotions
 
 ```javascript
 // Define in src/core/emotions/states/myEmotion.js
-export const myEmotion = {
-    name: 'energized', // Use a custom name (not an existing emotion)
+export const energized = {
+    name: 'energized',
     color: '#FF6B6B',
     particleSpeed: 5,
-    particleCount: 100,
-    // ... more parameters
+    particleCount: 100
 };
 ```
 
-### 2. Custom Gestures
+### Custom Gestures
 
 ```javascript
 // Define in src/core/gestures/definitions/myGesture.js
-export const myGesture = {
+export const spiral = {
     name: 'spiral',
     duration: 2000,
     phases: [
@@ -407,7 +628,7 @@ export const myGesture = {
 };
 ```
 
-### 3. Custom Particle Behaviors
+### Custom Particle Behaviors
 
 ```javascript
 // Define in src/core/particles/behaviors/myBehavior.js
@@ -419,7 +640,7 @@ export function spiralBehavior(particle, deltaTime) {
 }
 ```
 
-### 4. Custom Shapes
+### Custom Shapes
 
 ```javascript
 // Define in src/core/shapes/definitions/myShape.js
@@ -427,12 +648,11 @@ export const starShape = {
     name: 'star',
     points: 5,
     innerRadius: 0.4,
-    outerRadius: 1.0,
-    // ... path generation logic
+    outerRadius: 1.0
 };
 ```
 
-### 5. Plugins
+### Plugins
 
 ```javascript
 // Create plugin in src/plugins/myPlugin.js
@@ -442,12 +662,11 @@ export class MyPlugin {
     }
 
     init() {
-        // Plugin initialization
         this.mascot.on('gesture', this.handleGesture);
     }
 
     handleGesture(data) {
-        console.log('Gesture triggered:', data.name);
+        console.log('Gesture:', data.name);
     }
 }
 ```
@@ -456,14 +675,14 @@ export class MyPlugin {
 
 ## Performance Considerations
 
-The engine includes several performance systems:
+### Performance Systems
 
-1. **Particle Pooling** - Reuses particle objects instead of creating new ones
-2. **Gradient Caching** - Caches expensive gradient calculations
-3. **Performance Monitor** - Tracks FPS and triggers degradation if needed
-4. **Degradation Manager** - Automatically reduces particle count on slow devices
-5. **Spatial Indexing** - Optimizes particle collision detection
-6. **Mobile Optimization** - Reduces effects on mobile devices
+1. **Particle Pooling** - Reuses particle objects
+2. **Gradient Caching** - Caches expensive calculations
+3. **Performance Monitor** - Tracks FPS
+4. **Degradation Manager** - Auto-reduces quality on slow devices
+5. **Spatial Indexing** - Optimizes collision detection
+6. **Mobile Optimization** - Reduces effects on mobile
 
 ### Performance Flow
 
@@ -473,7 +692,7 @@ The engine includes several performance systems:
        ▼
 FPS < 30 for 60 frames?
        │
-       ├─ Yes ──▶ [DegradationManager] Reduce particle count by 20%
+       ├─ Yes ──▶ [DegradationManager] Reduce particle count
        │                                Disable expensive effects
        │
        └─ No ───▶ Continue normal operation
@@ -483,20 +702,19 @@ FPS < 30 for 60 frames?
 
 ## Event System
 
-The mascot emits events you can listen to (from [examples/event-handling.html](../examples/event-handling.html)):
+The mascot emits events you can listen to:
 
 ```javascript
-// Real events from working examples
 mascot.on('gesture', (data) => {
-    console.log('Gesture triggered:', data.name);
+    console.log('Gesture:', data.name);
 });
 
 mascot.on('shapeMorphStarted', (data) => {
-    console.log('Shape morphing:', data.from, '→', data.to);
+    console.log('Morphing:', data.from, '→', data.to);
 });
 
 mascot.on('resize', (data) => {
-    console.log('Canvas resized:', data.width, 'x', data.height);
+    console.log('Resized:', data.width, 'x', data.height);
 });
 
 mascot.on('paused', () => {
@@ -510,13 +728,44 @@ mascot.on('resumed', () => {
 
 ---
 
+## API Reference
+
+### Common Tasks & File Locations
+
+| Task | Files to Look At |
+|------|------------------|
+| **Add a new emotion** | [src/core/emotions/states/](../src/core/emotions/states/) |
+| **Create a custom gesture** | [src/core/gestures/definitions/](../src/core/gestures/definitions/) |
+| **Change particle behavior** | [src/core/particles/behaviors/](../src/core/particles/behaviors/) |
+| **Add a new shape** | [src/core/shapes/definitions/](../src/core/shapes/definitions/) |
+| **Modify rendering** | [src/core/EmotiveRenderer.js](../src/core/EmotiveRenderer.js) |
+| **Add performance optimization** | [src/core/system/PerformanceMonitor.js](../src/core/system/PerformanceMonitor.js) |
+| **Extend LLM integration** | [src/core/integration/LLMResponseHandler.js](../src/core/integration/LLMResponseHandler.js) |
+| **Add a plugin** | [src/plugins/](../src/plugins/) |
+| **Add new gesture animation** | [src/core/renderer/gesture-animators/](../src/core/renderer/gesture-animators/) |
+
+### Key Files & Complexity
+
+| File | Purpose | When to Edit | Complexity |
+|------|---------|--------------|------------|
+| [EmotiveMascotPublic.js](../src/EmotiveMascotPublic.js) | Public API | Adding public methods | ⭐⭐ |
+| [EmotiveMascot.js](../src/EmotiveMascot.js) | Core orchestrator | System-wide changes | ⭐⭐⭐⭐ |
+| [StateCoordinator.js](../src/mascot/state/StateCoordinator.js) | State management | State logic changes | ⭐⭐⭐ |
+| [GestureController.js](../src/mascot/control/GestureController.js) | Gesture execution | Gesture features | ⭐⭐⭐ |
+| [EmotiveRenderer.js](../src/core/EmotiveRenderer.js) | Canvas rendering | Visual output | ⭐⭐⭐⭐ |
+| [ParticleSystem.js](../src/core/ParticleSystem.js) | Particle management | Particle behavior | ⭐⭐⭐⭐ |
+| [VisualizationRunner.js](../src/mascot/control/VisualizationRunner.js) | Effect orchestration | New effects | ⭐⭐⭐ |
+| [AudioHandler.js](../src/mascot/audio/AudioHandler.js) | Audio processing | Audio sync | ⭐⭐⭐⭐ |
+
+---
+
 ## Further Reading
 
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - How to contribute code
 - [INNOVATIONS.md](INNOVATIONS.md) - Technical innovations and patents
-- [CHANGELOG.md](../CHANGELOG.md) - Version history and API changes
-- [examples/llm-integration/README.md](../examples/llm-integration/README.md) - LLM integration guide
-- [README.md](../README.md) - Main project README
+- [BUSINESS_POTENTIAL.md](BUSINESS_POTENTIAL.md) - Business applications
+- [README.md](README.md) - Main documentation
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guide
+- [CHANGELOG.md](../CHANGELOG.md) - Version history
 
 ---
 
@@ -529,4 +778,5 @@ mascot.on('resumed', () => {
 
 ---
 
-*Last updated: 2025-10-27*
+*Last updated: 2025-10-30*
+*Version: 3.0.0*
