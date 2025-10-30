@@ -102,6 +102,8 @@ import { TTSManager } from './mascot/audio/TTSManager.js';
 import { SpeechReactivityManager } from './mascot/audio/SpeechReactivityManager.js';
 import { CanvasResizeManager } from './mascot/rendering/CanvasResizeManager.js';
 import { OffsetPositionManager } from './mascot/rendering/OffsetPositionManager.js';
+import { FrustrationContextManager } from './mascot/state/FrustrationContextManager.js';
+import { PerformanceBehaviorManager } from './mascot/performance/PerformanceBehaviorManager.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/plugins/PerformanceSystem.js';
@@ -430,25 +432,7 @@ class EmotiveMascot {
      * @returns {Promise<EmotiveMascot>} Promise resolving to this instance for chaining
      */
     perform(semanticAction, options = {}) {
-        return this.errorBoundary.wrap(async () => {
-            if (!this.performanceSystem) {
-                console.warn('[EmotiveMascot] PerformanceSystem not initialized');
-                return this;
-            }
-
-            // Update context if provided
-            if (options.context) {
-                this.updateContext(options.context);
-            }
-
-            // Execute the performance
-            await this.performanceSystem.perform(semanticAction, {
-                ...options,
-                mascot: this
-            });
-
-            return this;
-        }, 'semantic-performance', this)();
+        return this.performanceBehaviorManager.perform(semanticAction, options);
     }
 
     /**
@@ -461,15 +445,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     updateContext(updates) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                console.warn('[EmotiveMascot] ContextManager not initialized');
-                return this;
-            }
-
-            this.contextManager.update(updates);
-            return this;
-        }, 'context-update', this)();
+        return this.frustrationContextManager.updateContext(updates);
     }
 
     /**
@@ -486,15 +462,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     incrementFrustration(amount = 10) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                console.warn('[EmotiveMascot] ContextManager not initialized');
-                return this;
-            }
-
-            this.contextManager.incrementFrustration(amount);
-            return this;
-        }, 'frustration-increment', this)();
+        return this.frustrationContextManager.incrementFrustration(amount);
     }
 
     /**
@@ -503,15 +471,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     decrementFrustration(amount = 10) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                console.warn('[EmotiveMascot] ContextManager not initialized');
-                return this;
-            }
-
-            this.contextManager.decrementFrustration(amount);
-            return this;
-        }, 'frustration-decrement', this)();
+        return this.frustrationContextManager.decrementFrustration(amount);
     }
 
     /**
@@ -519,15 +479,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     resetFrustration() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                console.warn('[EmotiveMascot] ContextManager not initialized');
-                return this;
-            }
-
-            this.contextManager.resetFrustration();
-            return this;
-        }, 'frustration-reset', this)();
+        return this.frustrationContextManager.resetFrustration();
     }
 
     /**
@@ -535,7 +487,7 @@ class EmotiveMascot {
      * @returns {Array<string>} Array of performance names
      */
     getAvailablePerformances() {
-        return this.emotionalStateQueryManager.getAvailablePerformances();
+        return this.performanceBehaviorManager.getAvailablePerformances();
     }
 
     /**
@@ -545,15 +497,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     registerPerformance(name, definition) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.performanceSystem) {
-                console.warn('[EmotiveMascot] PerformanceSystem not initialized');
-                return this;
-            }
-
-            this.performanceSystem.registerPerformance(name, definition);
-            return this;
-        }, 'performance-register', this)();
+        return this.performanceBehaviorManager.registerPerformance(name, definition);
     }
 
     /**
@@ -561,7 +505,7 @@ class EmotiveMascot {
      * @returns {Object|null} Performance analytics data
      */
     getPerformanceAnalytics() {
-        return this.diagnosticsManager.getPerformanceAnalytics();
+        return this.performanceBehaviorManager.getPerformanceAnalytics();
     }
 
     /**
@@ -569,7 +513,7 @@ class EmotiveMascot {
      * @returns {Object|null} Context analytics data
      */
     getContextAnalytics() {
-        return this.emotionalStateQueryManager.getContextAnalytics();
+        return this.performanceBehaviorManager.getContextAnalytics();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

@@ -71,7 +71,7 @@ export class LLMIntegrationBridge {
      * };
      * await mascot.handleLLMResponse(llmResponse);
      */
-    async handleLLMResponse(response, options = {}) {
+    handleLLMResponse(response, options = {}) {
         return this.mascot.errorBoundary.wrap(async () => {
             // Lazy-initialize LLM handler
             if (!this.mascot.llmHandler) {
