@@ -10,6 +10,7 @@
 import EmotiveMascot from './EmotiveMascot.js';
 import { AudioManager } from './public/AudioManager.js';
 import { GestureController } from './public/GestureController.js';
+import { TimelineRecorder } from './public/TimelineRecorder.js';
 
 class EmotiveMascotPublic {
     constructor(config = {}) {
@@ -31,6 +32,24 @@ class EmotiveMascotPublic {
                 isRecording: () => this._isRecording,
                 startTime: () => this._recordingStartTime,
                 timeline: () => this._timeline
+            }
+        );
+        // Create state object with proper context binding
+        const self = this;
+        this._timelineRecorder = new TimelineRecorder(
+            () => this._getReal(),
+            this._audioManager,
+            {
+                get timeline() { return self._timeline; },
+                set timeline(value) { self._timeline = value; },
+                get isRecording() { return self._isRecording; },
+                set isRecording(value) { self._isRecording = value; },
+                get recordingStartTime() { return self._recordingStartTime; },
+                set recordingStartTime(value) { self._recordingStartTime = value; },
+                get isPlaying() { return self._isPlaying; },
+                set isPlaying(value) { self._isPlaying = value; },
+                get playbackStartTime() { return self._playbackStartTime; },
+                set playbackStartTime(value) { self._playbackStartTime = value; }
             }
         );
 
@@ -1216,9 +1235,7 @@ class EmotiveMascotPublic {
      * Start recording animation sequence
      */
     startRecording() {
-        this._timeline = [];
-        this._isRecording = true;
-        this._recordingStartTime = Date.now();
+        return this._timelineRecorder.startRecording();
     }
 
     /**
@@ -1226,8 +1243,7 @@ class EmotiveMascotPublic {
      * @returns {Array} Recorded timeline
      */
     stopRecording() {
-        this._isRecording = false;
-        return this._timeline;
+        return this._timelineRecorder.stopRecording();
     }
 
     /**
@@ -1235,48 +1251,14 @@ class EmotiveMascotPublic {
      * @param {Array} timeline - Timeline to play
      */
     playTimeline(timeline) {
-        if (!timeline || !timeline.length) {
-            this._isPlaying = false;
-            return;
-        }
-
-        this._isPlaying = true;
-        this._playbackStartTime = Date.now();
-        
-        // Schedule all events
-        timeline.forEach(event => {
-            setTimeout(() => {
-                if (!this._isPlaying) return;
-                
-                const engine = this._getReal();
-                if (!engine) return;
-                
-                switch (event.type) {
-                case 'gesture':
-                    engine.express(event.name);
-                    break;
-                case 'emotion':
-                    engine.setEmotion(event.name);
-                    break;
-                case 'shape':
-                    engine.morphTo(event.name);
-                    break;
-                }
-            }, event.time);
-        });
-        
-        // Stop playback after last event
-        const lastEventTime = Math.max(...timeline.map(e => e.time));
-        setTimeout(() => {
-            this._isPlaying = false;
-        }, lastEventTime);
+        return this._timelineRecorder.playTimeline(timeline);
     }
 
     /**
      * Stop timeline playback
      */
     stopPlayback() {
-        this._isPlaying = false;
+        return this._timelineRecorder.stopPlayback();
     }
 
     /**
@@ -1284,7 +1266,7 @@ class EmotiveMascotPublic {
      * @returns {Array} Current timeline
      */
     getTimeline() {
-        return [...this._timeline];
+        return this._timelineRecorder.getTimeline();
     }
 
     /**
@@ -1292,7 +1274,7 @@ class EmotiveMascotPublic {
      * @param {Array} timeline - Timeline to load
      */
     loadTimeline(timeline) {
-        this._timeline = [...timeline];
+        return this._timelineRecorder.loadTimeline(timeline);
     }
 
     /**
@@ -1300,11 +1282,7 @@ class EmotiveMascotPublic {
      * @returns {string} JSON string
      */
     exportTimeline() {
-        return JSON.stringify({
-            version: '1.0',
-            duration: this._audioManager.getAudioDuration() || 0,
-            events: this._timeline
-        });
+        return this._timelineRecorder.exportTimeline();
     }
 
     /**
@@ -1312,9 +1290,7 @@ class EmotiveMascotPublic {
      * @param {string} json - JSON string
      */
     importTimeline(json) {
-        const data = JSON.parse(json);
-        this._timeline = data.events || [];
-        this._audioManager.setAudioDuration(data.duration || 0);
+        return this._timelineRecorder.importTimeline(json);
     }
 
     // === Playback Control ===
@@ -1324,10 +1300,7 @@ class EmotiveMascotPublic {
      * @returns {number} Current time in milliseconds
      */
     getCurrentTime() {
-        if (this._isPlaying) {
-            return Date.now() - this._playbackStartTime;
-        }
-        return 0;
+        return this._timelineRecorder.getCurrentTime();
     }
 
     /**
@@ -1335,25 +1308,7 @@ class EmotiveMascotPublic {
      * @param {number} time - Time in milliseconds
      */
     seek(time) {
-        // Find all events up to this time and apply them
-        const eventsToApply = this._timeline.filter(e => e.time <= time);
-        
-        // Apply the last event of each type
-        const lastEvents = {};
-        eventsToApply.forEach(event => {
-            lastEvents[event.type] = event;
-        });
-        
-        // Apply states
-        const engine = this._getReal();
-        if (engine) {
-            if (lastEvents.emotion) {
-                engine.setEmotion(lastEvents.emotion.name);
-            }
-            if (lastEvents.shape) {
-                engine.morphTo(lastEvents.shape.name);
-            }
-        }
+        return this._timelineRecorder.seek(time);
     }
 
     // === Export Capabilities ===
@@ -1389,13 +1344,7 @@ class EmotiveMascotPublic {
      * @returns {Object} Animation state
      */
     getAnimationData() {
-        return {
-            timeline: this._timeline,
-            duration: this._audioManager.getAudioDuration() || 0,
-            currentTime: this.getCurrentTime(),
-            emotion: this._engine.state?.emotion || 'neutral',
-            shape: this._engine.state?.currentShape || 'circle'
-        };
+        return this._timelineRecorder.getAnimationData();
     }
 
     // === Query Methods ===
