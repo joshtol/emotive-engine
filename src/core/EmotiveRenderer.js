@@ -109,6 +109,7 @@ import { RotationBrake } from './animation/RotationBrake.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
+import { EmotionalStateManager } from './renderer/EmotionalStateManager.js';
 import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 import { gradientCache } from './renderer/GradientCache.js';
 
@@ -141,6 +142,7 @@ class EmotiveRenderer {
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
+        this.emotionalStateManager = new EmotionalStateManager(this);
 
         // Configuration - matching original Emotive proportions
         this.config = {
@@ -1472,70 +1474,13 @@ class EmotiveRenderer {
      * Apply all undertone modifiers to current state
      * @param {string|null|Object} undertone - Undertone name or weighted modifier object
      */
+    /**
+     * Apply undertone modifiers to renderer state
+     * Delegates to EmotionalStateManager
+     * @param {string|Object|null} undertone - Undertone name or weighted modifier object
+     */
     applyUndertoneModifiers(undertone) {
-        // Handle weighted modifier from state machine
-        if (undertone && typeof undertone === 'object' && undertone.weight !== undefined) {
-            const {weight} = undertone;
-            
-            // Apply weighted modifiers for smooth transitions
-            // Use default value of 1.0 if property is undefined
-            this.state.sizeMultiplier = 1.0 + ((undertone.sizeMultiplier || 1.0) - 1.0) * weight;
-            this.state.jitterAmount = (undertone.jitterAmount || 0) * weight;
-            this.state.episodicFlutter = weight > 0.5 ? (undertone.episodicFlutter || false) : false;
-            this.state.glowRadiusMult = 1.0 + ((undertone.glowRadiusMult || 1.0) - 1.0) * weight;
-            this.state.breathRateMult = 1.0 + ((undertone.breathRateMult || 1.0) - 1.0) * weight;
-            this.state.breathDepthMult = 1.0 + ((undertone.breathDepthMult || 1.0) - 1.0) * weight;
-            this.state.breathIrregular = weight > 0.5 ? (undertone.breathIrregular || false) : false;
-            this.state.particleRateMult = 1.0;
-            
-            // Apply weighted glow and color effects
-            this.state.glowPulse = (undertone.glowPulse || 0) * weight;
-            this.state.brightnessFlicker = (undertone.brightnessFlicker || 0) * weight;
-            this.state.brightnessMult = 1.0 + ((undertone.brightnessMult || 1.0) - 1.0) * weight;
-            this.state.saturationMult = 1.0 + ((undertone.saturationMult || 1.0) - 1.0) * weight;
-            this.state.hueShift = (undertone.hueShift || 0) * weight;
-            return;
-        }
-        
-        // String-based undertone handling
-        if (!undertone || !this.undertoneModifiers[undertone]) {
-            // Reset to defaults if no undertone - CLEAR ALL GLOW EFFECTS
-            this.state.sizeMultiplier = 1.0;
-            this.state.jitterAmount = 0;
-            this.state.episodicFlutter = false;
-            this.state.glowRadiusMult = 1.0;
-            this.state.breathRateMult = 1.0;
-            this.state.breathDepthMult = 1.0;
-            this.state.breathIrregular = false;
-            this.state.particleRateMult = 1.0;
-            
-            // Reset all glow and color effects to prevent accumulation
-            this.state.glowPulse = 0;
-            this.state.brightnessFlicker = 0;
-            this.state.brightnessMult = 1.0;
-            this.state.saturationMult = 1.0;
-            this.state.hueShift = 0;
-            return;
-        }
-        
-        const modifier = this.undertoneModifiers[undertone];
-        
-        // Apply all modifiers directly
-        this.state.sizeMultiplier = modifier.sizeMultiplier;
-        this.state.jitterAmount = modifier.jitterAmount || 0;
-        this.state.episodicFlutter = modifier.episodicFlutter || false;
-        this.state.glowRadiusMult = modifier.glowRadiusMult;
-        this.state.breathRateMult = modifier.breathRateMult;
-        this.state.breathDepthMult = modifier.breathDepthMult;
-        this.state.breathIrregular = modifier.breathIrregular || false;
-        this.state.particleRateMult = 1.0;
-        
-        // Apply all glow and color effects
-        this.state.glowPulse = modifier.glowPulse || 0;
-        this.state.brightnessFlicker = modifier.brightnessFlicker || 0;
-        this.state.brightnessMult = modifier.brightnessMult || 1.0;
-        this.state.saturationMult = modifier.saturationMult || 1.0;
-        this.state.hueShift = modifier.hueShift || 0;
+        this.emotionalStateManager.applyUndertoneModifiers(undertone);
     }
     
     /**
@@ -1592,149 +1537,22 @@ class EmotiveRenderer {
     
     /**
      * Update just the undertone without resetting emotion
+     * Delegates to EmotionalStateManager
+     * @param {string|Object|null} undertone - Undertone name or weighted modifier object
      */
     updateUndertone(undertone) {
-        // Clear glow cache when undertone changes (colors will change)
-        if (this.state.undertone !== undertone) {
-            this.glowCache.clear();
-        }
-        
-        // Store undertone for color processing
-        this.state.undertone = undertone;
-        this.currentUndertone = undertone;
-        
-        // Get weighted undertone modifier from state machine if available
-        const weightedModifier = this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers ? 
-            this.stateMachine.getWeightedUndertoneModifiers() : null;
-        
-        // Apply all undertone modifiers (visual, breathing only - no particles)
-        this.applyUndertoneModifiers(weightedModifier || undertone);
-        
-        // Update colors with the new undertone
-        if (this.state.emotion) {
-            const emotionConfig = emotionCache && emotionCache.isInitialized ? 
-                emotionCache.getEmotion(this.state.emotion) : getEmotion(this.state.emotion);
-            if (emotionConfig) {
-                const baseColor = emotionConfig.glowColor || this.config.defaultGlowColor;
-                const targetColor = this.applyUndertoneToColor(baseColor, weightedModifier || undertone);
-                
-                // Start color transition to new undertone color (faster for responsiveness)
-                this.startColorTransition(targetColor, 200); // 200ms transition
-            }
-        }
+        this.emotionalStateManager.updateUndertone(undertone);
     }
     
     /**
      * Set emotional state
+     * Delegates to EmotionalStateManager
+     * @param {string} emotion - Emotion name
+     * @param {Object} properties - Emotion properties
+     * @param {string|Object|null} undertone - Optional undertone modifier
      */
     setEmotionalState(emotion, properties, undertone = null) {
-        
-        // Clear glow cache when emotion or undertone changes (colors will change)
-        if (this.state.emotion !== emotion || this.state.undertone !== undertone) {
-            this.glowCache.clear();
-        }
-        
-        // Store undertone for color processing
-        this.state.undertone = undertone;
-        this.currentUndertone = undertone;
-        
-        // Get weighted undertone modifier from state machine if available
-        const weightedModifier = this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers ? 
-            this.stateMachine.getWeightedUndertoneModifiers() : null;
-        
-        // Apply all undertone modifiers (visual, breathing, particles)
-        this.applyUndertoneModifiers(weightedModifier || undertone);
-        
-        // Get base color and apply undertone shifts
-        const baseColor = properties.glowColor || this.config.defaultGlowColor;
-        
-        // Get target color - for suspicion, use the dynamic color directly
-        let targetColor;
-        if (emotion === 'suspicion') {
-            // Use the dynamic color from properties (includes threat level)
-            targetColor = properties.glowColor || baseColor;
-        } else {
-            targetColor = this.applyUndertoneToColor(baseColor, weightedModifier || undertone);
-        }
-        
-        // Apply intensity modifier from undertone
-        const modifier = weightedModifier || (undertone ? this.undertoneModifiers[undertone] : null);
-        const baseIntensity = properties.glowIntensity || 1.0;
-        
-        // Get the glow multiplier - check for glowRadiusMult or use default of 1.0
-        let glowMult = 1.0;
-        if (modifier) {
-            if (weightedModifier) {
-                // For weighted modifiers, check if glowRadiusMult exists
-                // Check for NaN in weight calculation
-                const weight = modifier.weight || 0;
-                if (modifier.glowRadiusMult !== undefined && isFinite(modifier.glowRadiusMult) && isFinite(weight)) {
-                    glowMult = 1.0 + (modifier.glowRadiusMult - 1.0) * weight;
-                } else {
-                    glowMult = 1.0;
-                }
-            } else {
-                // For non-weighted modifiers, use glowRadiusMult if it exists
-                glowMult = modifier.glowRadiusMult !== undefined ? modifier.glowRadiusMult : 1.0;
-            }
-        }
-        
-        const targetIntensity = baseIntensity * glowMult;
-        
-        // Determine transition duration based on emotion
-        let duration = 1500; // Default 1.5s
-        if (emotion === 'anger' || emotion === 'fear') {
-            duration = 800; // Quick transitions for urgent emotions
-        } else if (emotion === 'sadness' || emotion === 'resting') {
-            duration = 2000; // Slower for calming emotions
-        } else if (emotion === 'zen') {
-            duration = 2000; // Zen gets special timing during lotus bloom
-        }
-        
-        // Update emotion state BEFORE handling transitions to avoid timing issues
-        const previousEmotion = this.state.emotion;
-        this.state.emotion = emotion;
-        
-        // Handle suspicion state
-        if (emotion === 'suspicion') {
-            this.state.isSuspicious = true;
-            // Store target squint amount, we'll animate to it
-            this.state.targetSquintAmount = properties && properties.coreSquint ? properties.coreSquint : 0.4;
-            if (this.state.squintAmount === undefined) {
-                this.state.squintAmount = 0; // Start from no squint
-            }
-            this.state.lastScanTime = Date.now();
-            this.state.scanPhase = 0;
-        } else {
-            this.state.isSuspicious = false;
-            this.state.targetSquintAmount = 0;
-            if (this.state.squintAmount === undefined) {
-                this.state.squintAmount = 0;
-            }
-        }
-        
-        // Handle zen state transitions specially
-        if (emotion === 'zen' && previousEmotion !== 'zen') {
-            // Entering zen - will handle its own color transition during lotus bloom
-            this.enterZenMode(targetColor, targetIntensity);
-        } else if (previousEmotion === 'zen' && emotion !== 'zen') {
-            // Exiting zen - will handle its own color transition during lotus close
-            this.exitZenMode(emotion, targetColor, targetIntensity);
-        } else {
-            // Standard color transition for all other state changes
-            this.startColorTransition(targetColor, targetIntensity, duration);
-        }
-        
-        // Apply breathing with undertone modifiers
-        const baseBreathRate = properties.breathRate || 1.0;
-        const baseBreathDepth = properties.breathDepth || this.config.breathingDepth;
-        this.state.breathRate = modifier ? baseBreathRate * modifier.breathRateMult : baseBreathRate;
-        this.state.breathDepth = modifier ? baseBreathDepth * modifier.breathDepthMult : baseBreathDepth;
-        
-        // Jitter combines emotion jitter with undertone jitter
-        this.state.coreJitter = properties.coreJitter || (modifier && modifier.jitterAmount > 0);
-        this.state.emotionEyeOpenness = properties.eyeOpenness;
-        this.state.emotionEyeArc = properties.eyeArc;
+        this.emotionalStateManager.setEmotionalState(emotion, properties, undertone);
     }
     
     /**
