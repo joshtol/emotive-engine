@@ -115,6 +115,7 @@ import { TransformMerger } from './renderer/TransformMerger.js';
 import { StateUpdateManager } from './renderer/StateUpdateManager.js';
 import { DimensionCalculator } from './renderer/DimensionCalculator.js';
 import { RadiusCalculator } from './renderer/RadiusCalculator.js';
+import { PositionJitterManager } from './renderer/PositionJitterManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -157,6 +158,7 @@ class EmotiveRenderer {
         this.stateUpdateManager = new StateUpdateManager(this);
         this.dimensionCalculator = new DimensionCalculator(this);
         this.radiusCalculator = new RadiusCalculator(this);
+        this.positionJitterManager = new PositionJitterManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -673,55 +675,18 @@ class EmotiveRenderer {
 
         // Calculate dimensions, positions, and base transforms (delegated to DimensionCalculator)
         const dims = this.dimensionCalculator.calculateRenderDimensions(logicalWidth, logicalHeight, state, gestureTransform);
-        const { scaleMultiplier, glowMultiplier, gestureTransforms } = dims;
-        let { centerX, centerY, rotationAngle } = dims;
-        
-        // Apply zen levitation - lazy floating when in zen state
-        if (this.state.emotion === 'zen' && this.zenTransition.phase === 'in') {
-            const time = Date.now() / 1000;
-            // Lazy vertical float - slow sine wave
-            const floatY = Math.sin(time * 0.3) * 15 * this.scaleFactor; // Very slow, 15px amplitude
-            // Gentle horizontal sway - even slower
-            const swayX = Math.sin(time * 0.2) * 8 * this.scaleFactor; // Subtle 8px sway
-            // Small rotation for ethereal effect
-            const floatRotation = Math.sin(time * 0.25) * 0.05; // ±3 degrees
-            
-            centerY += floatY;
-            centerX += swayX;
-            rotationAngle += floatRotation;
-        }
-        
+        const { scaleMultiplier, glowMultiplier, gestureTransforms, centerX, centerY } = dims;
+        let { rotationAngle } = dims;
+
         // Calculate core/glow radii with all modifiers (delegated to RadiusCalculator)
         const radiusData = this.radiusCalculator.calculateRadii(state, scaleMultiplier, glowMultiplier);
         let { coreRadius, glowRadius } = radiusData;
         const { effectiveGlowIntensity, sleepOpacityMod, glowOpacityMod } = radiusData;
-        
-        
-        // Apply blinking (only when not sleeping or zen)
-        if (!this.state.sleeping && this.state.emotion !== 'zen') {
-            const blinkScale = this.eyeRenderer.getBlinkScale();
-            coreRadius *= blinkScale; // Apply blink squish
-        }
-        
-        // Apply jitter if needed (anger, fear, or undertone jitter)
-        let jitterX = 0, jitterY = 0;
-        const jitterAmount = this.state.jitterAmount || 0;
-        
-        // Handle episodic effects for undertones
-        if (this.currentUndertone) {
-            ({ jitterX, jitterY, coreRadius, glowRadius } = this.episodicEffectController.updateEpisodicEffects(
-                this.currentUndertone, jitterX, jitterY, coreRadius, glowRadius
-            ));
-        } else if (this.state.coreJitter || jitterAmount > 0) {
-            // Regular jitter for other emotions
-            const jitterStrength = Math.max(jitterAmount, this.state.coreJitter ? this.scaleValue(2) : 0);
-            jitterX = (Math.random() - 0.5) * jitterStrength;
-            jitterY = (Math.random() - 0.5) * jitterStrength;
-        }
-        
-        // Calculate positions with gaze offset
-        const coreX = centerX + this.state.gazeOffset.x + jitterX;
-        const coreY = centerY + this.state.gazeOffset.y + jitterY;
+
+        // Apply position modifications: zen levitation, blink squish, jitter, final position (delegated to PositionJitterManager)
+        const posData = this.positionJitterManager.applyAllModifications(centerX, centerY, rotationAngle, coreRadius, glowRadius);
+        const { coreX, coreY } = posData;
+        ({ rotationAngle, coreRadius, glowRadius } = posData);
         
         // Check if brake is active and update rotation accordingly
         const now = performance.now();
