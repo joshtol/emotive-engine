@@ -108,6 +108,7 @@ import { ZenModeRenderer } from './renderer/ZenModeRenderer.js';
 import { ZenModeController } from './renderer/ZenModeController.js';
 import { EpisodicEffectController } from './renderer/EpisodicEffectController.js';
 import { RotationManager } from './renderer/RotationManager.js';
+import { GazeTracker } from './renderer/GazeTracker.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -143,6 +144,7 @@ class EmotiveRenderer {
         this.zenModeController = new ZenModeController(this);
         this.episodicEffectController = new EpisodicEffectController(this);
         this.rotationManager = new RotationManager(this);
+        this.gazeTracker = new GazeTracker(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -1574,78 +1576,23 @@ class EmotiveRenderer {
      * @param {boolean} enabled - Whether gaze tracking should be enabled
      */
     setGazeTracking(enabled) {
-        this.state.gazeTrackingEnabled = enabled;
-        if (enabled) {
-            // Start tracking mouse/touch position
-            if (!this.gazeTrackingInitialized) {
-                this.initGazeTracking();
-            }
-        } else {
-            // Reset gaze to center when disabled
-            this.state.gazeTarget = { x: 0, y: 0 };
-        }
+        this.gazeTracker.setEnabled(enabled);
     }
 
     /**
-     * Initialize gaze tracking event listeners
+     * Initialize gaze tracking event listeners (delegated to GazeTracker)
+     * @deprecated Use gazeTracker.initialize() directly
      */
     initGazeTracking() {
-        // Always set up listeners once
-        if (this.gazeTrackingInitialized) return;
-
-        this.handleMouseMove = e => {
-            if (!this.state.gazeTrackingEnabled) return;
-
-            const rect = this.canvas.getBoundingClientRect();
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            const x = e.clientX - rect.left - centerX;
-            const y = e.clientY - rect.top - centerY;
-
-            // Normalize to -1 to 1 range
-            this.state.gazeTarget = {
-                x: x / centerX,
-                y: y / centerY
-            };
-        };
-
-        this.handleTouchMove = e => {
-            if (!this.state.gazeTrackingEnabled) return;
-
-            if (e.touches.length > 0) {
-                const touch = e.touches[0];
-                const rect = this.canvas.getBoundingClientRect();
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const x = touch.clientX - rect.left - centerX;
-                const y = touch.clientY - rect.top - centerY;
-
-                // Normalize to -1 to 1 range
-                this.state.gazeTarget = {
-                    x: x / centerX,
-                    y: y / centerY
-                };
-            }
-        };
-
-        document.addEventListener('mousemove', this.handleMouseMove);
-        document.addEventListener('touchmove', this.handleTouchMove);
-        this.gazeTrackingInitialized = true;
+        this.gazeTracker.initialize();
     }
 
     /**
-     * Clean up gaze tracking event listeners
+     * Clean up gaze tracking event listeners (delegated to GazeTracker)
+     * @deprecated Use gazeTracker.cleanup() directly
      */
     cleanupGazeTracking() {
-        if (!this.gazeTrackingInitialized) return;
-
-        if (this.handleMouseMove) {
-            document.removeEventListener('mousemove', this.handleMouseMove);
-        }
-        if (this.handleTouchMove) {
-            document.removeEventListener('touchmove', this.handleTouchMove);
-        }
-        this.gazeTrackingInitialized = false;
+        this.gazeTracker.cleanup();
     }
 
     /**
@@ -1839,6 +1786,11 @@ class EmotiveRenderer {
         // Clean up sleep manager (handles eyeClose/eyeOpen callbacks and wakeJitterTimeout)
         if (this.sleepManager) {
             this.sleepManager.cleanup();
+        }
+
+        // Clean up gaze tracking
+        if (this.gazeTracker) {
+            this.gazeTracker.cleanup();
         }
 
         // Clear any pending timeouts
