@@ -112,6 +112,7 @@ import { GazeTracker } from './renderer/GazeTracker.js';
 import { CanvasSetupManager } from './renderer/CanvasSetupManager.js';
 import { RenderPerformanceManager } from './renderer/RenderPerformanceManager.js';
 import { TransformMerger } from './renderer/TransformMerger.js';
+import { StateUpdateManager } from './renderer/StateUpdateManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -151,6 +152,7 @@ class EmotiveRenderer {
         this.canvasSetupManager = new CanvasSetupManager(this);
         this.renderPerformanceManager = new RenderPerformanceManager(this);
         this.transformMerger = new TransformMerger(this);
+        this.stateUpdateManager = new StateUpdateManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -661,39 +663,9 @@ class EmotiveRenderer {
 
         // Render backdrop, apply decay, clear offscreen (delegated to CanvasSetupManager)
         this.canvasSetupManager.performCanvasSetup(logicalWidth, logicalHeight, originalCtx, deltaTime);
-        
-        // Update undertone modifiers every frame during transitions
-        if (this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers) {
-            const weightedModifier = this.stateMachine.getWeightedUndertoneModifiers();
-            if (weightedModifier) {
-                this.applyUndertoneModifiers(weightedModifier);
-            } else {
-                // Reset to defaults when no undertone
-                this.applyUndertoneModifiers(null);
-            }
-        }
-        
-        // Update color transition (if active)
-        if (this.colorTransition && this.colorTransition.active) {
-            this.updateColorTransition(deltaTime);
-        }
-        
-        // Update animation timers
-        this.updateTimers(deltaTime);
-        
-        // Update gaze offset
-        if (this.state.gazeTrackingEnabled) {
-            // When gaze tracking is enabled, follow mouse/touch
-            const smoothing = 0.15;
-            const maxOffset = 50; // Maximum pixels the orb can move
-            this.state.gazeOffset.x += (this.state.gazeTarget.x * maxOffset - this.state.gazeOffset.x) * smoothing;
-            this.state.gazeOffset.y += (this.state.gazeTarget.y * maxOffset - this.state.gazeOffset.y) * smoothing;
-        } else {
-            // When gaze tracking is disabled, return to center
-            const smoothing = 0.1;
-            this.state.gazeOffset.x += (0 - this.state.gazeOffset.x) * smoothing;
-            this.state.gazeOffset.y += (0 - this.state.gazeOffset.y) * smoothing;
-        }
+
+        // Update frame state: undertone modifiers, color transitions, timers, gaze offset (delegated to StateUpdateManager)
+        this.stateUpdateManager.performFrameStateUpdates(deltaTime);
         
         // Calculate dimensions - using logical size for proper scaling
         const canvasSize = Math.min(logicalWidth, logicalHeight);
