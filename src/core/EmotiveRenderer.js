@@ -105,7 +105,7 @@ import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
 import { CelestialRenderer } from './renderer/CelestialRenderer.js';
 import { ZenModeRenderer } from './renderer/ZenModeRenderer.js';
-import { RotationBrake } from './animation/RotationBrake.js';
+import { RotationManager } from './renderer/RotationManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -138,7 +138,7 @@ class EmotiveRenderer {
         this.coreRenderer = new CoreRenderer(this);
         this.celestialRenderer = new CelestialRenderer();
         this.zenModeRenderer = new ZenModeRenderer();
-        this.rotationBrake = new RotationBrake(this);
+        this.rotationManager = new RotationManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -209,9 +209,9 @@ class EmotiveRenderer {
             brightnessMult: 1.0,
             saturationMult: 1.0,
             hueShift: 0,
-            // Manual rotation control (not BPM-locked)
+            // Rotation state (managed by RotationManager)
             manualRotation: 0,        // Current rotation angle in DEGREES
-            rotationSpeed: 0,         // Rotation speed in DEGREES per frame (like velocity in demo)
+            rotationSpeed: 0,         // Rotation speed in DEGREES per frame
             lastRotationUpdate: performance.now()
         };
         
@@ -1027,27 +1027,17 @@ class EmotiveRenderer {
         // Check if brake is active and update rotation accordingly
         const now = performance.now();
 
-        if (this.rotationBrake && this.rotationBrake.isBraking()) {
-            // Brake is active - let it control rotation
-            const brakeUpdate = this.rotationBrake.updateBrake(now);
-            if (brakeUpdate) {
-                this.state.manualRotation = brakeUpdate.rotation;
-                this.state.rotationSpeed = brakeUpdate.complete ? 0 : brakeUpdate.speed;
-            }
-        } else if (this.state.rotationSpeed !== 0) {
-            // Normal rotation update - just add velocity each frame (DEGREES)
-            this.state.manualRotation += this.state.rotationSpeed;
-        }
+        // Update rotation state (handles brake and normal rotation)
+        this.rotationManager.updateRotation(now);
 
         // Calculate total rotation (gestures + manual rotation)
-        // Convert manual rotation from degrees to radians for rendering
-        const totalRotation = rotationAngle + (this.state.manualRotation * Math.PI / 180);
+        const totalRotation = this.rotationManager.calculateTotalRotation(rotationAngle);
 
         // Apply rotation if present
         if (totalRotation !== 0) {
             this.ctx.save();
             this.ctx.translate(coreX, coreY);
-            this.ctx.rotate(totalRotation);
+            this.rotationManager.applyRotation(this.ctx, totalRotation);
             this.ctx.translate(-coreX, -coreY);
         }
 
@@ -1569,8 +1559,7 @@ class EmotiveRenderer {
      * @param {number} speed - Rotation speed in degrees per frame (like velocity)
      */
     setRotationSpeed(speed) {
-        // Direct degrees per frame, no conversion needed
-        this.state.rotationSpeed = speed;
+        this.rotationManager.setRotationSpeed(speed);
     }
 
     /**
@@ -1578,7 +1567,7 @@ class EmotiveRenderer {
      * @param {number} angle - Rotation angle in DEGREES
      */
     setRotationAngle(angle) {
-        this.state.manualRotation = angle;
+        this.rotationManager.setRotationAngle(angle);
     }
     
     /**

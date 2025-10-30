@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mascot Init Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: monospace;
+        }
+        #emotive-canvas {
+            border: 2px solid #14B8A6;
+            display: block;
+            margin: 20px auto;
+        }
+        #console {
+            background: #000;
+            padding: 10px;
+            margin-top: 20px;
+            border: 1px solid #333;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+        .info { color: #4444ff; }
+    </style>
+</head>
+<body>
+    <h1>Mascot Initialization Test</h1>
+    <canvas id="emotive-canvas" width="400" height="400"></canvas>
+    <div id="console"></div>
+
+    <script src="site/public/emotive-engine.js"></script>
+    <script>
+        const consoleDiv = document.getElementById('console');
+
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleDiv.appendChild(line);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        // Override console methods
+        const originalError = console.error;
+        console.error = function(...args) {
+            log(args.join(' '), 'error');
+            originalError.apply(console, args);
+        };
+
+        const originalLog = console.log;
+        console.log = function(...args) {
+            log(args.join(' '), 'info');
+            originalLog.apply(console, args);
+        };
+
+        try {
+            log('Starting mascot initialization test...', 'info');
+
+            // Check if EmotiveMascot is available
+            const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+
+            if (!EmotiveMascot) {
+                log('ERROR: EmotiveMascot not found on window object', 'error');
+                log('Available on window: ' + Object.keys(window).filter(k => k.includes('Emot')).join(', '), 'info');
+                throw new Error('EmotiveMascot not found');
+            }
+
+            log('✓ EmotiveMascot constructor found', 'success');
+
+            // Create mascot instance
+            const mascot = new EmotiveMascot({
+                canvasId: 'emotive-canvas',
+                targetFPS: 60,
+                enableAudio: false,
+                soundEnabled: false,
+                maxParticles: 50,
+                defaultEmotion: 'neutral',
+                enableAutoOptimization: true,
+                enableGracefulDegradation: true,
+                renderingStyle: 'classic',
+                enableGazeTracking: false,
+                enableIdleBehaviors: true,
+                classicConfig: {
+                    coreColor: '#FFFFFF',
+                    coreSizeDivisor: 12,
+                    glowMultiplier: 2.5,
+                    defaultGlowColor: '#14B8A6'
+                }
+            });
+
+            log('✓ Mascot instance created', 'success');
+
+            // Initialize
+            const canvas = document.getElementById('emotive-canvas');
+            mascot.init(canvas).then(() => {
+                log('✓ Mascot initialized successfully', 'success');
+
+                // Start rendering
+                mascot.start();
+                log('✓ Mascot started rendering', 'success');
+
+                // Test emotion change
+                setTimeout(() => {
+                    mascot.setEmotion('joy');
+                    log('✓ Set emotion to joy', 'success');
+                }, 1000);
+
+            }).catch(error => {
+                log('ERROR during init: ' + error.message, 'error');
+                log('Stack: ' + error.stack, 'error');
+            });
+
+        } catch (error) {
+            log('FATAL ERROR: ' + error.message, 'error');
+            log('Stack: ' + error.stack, 'error');
+        }
+    </script>
+</body>
+</html>
