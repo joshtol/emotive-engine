@@ -100,6 +100,8 @@ import { EventListenerManager } from './mascot/events/EventListenerManager.js';
 import { EmotionalStateQueryManager } from './mascot/state/EmotionalStateQueryManager.js';
 import { TTSManager } from './mascot/audio/TTSManager.js';
 import { SpeechReactivityManager } from './mascot/audio/SpeechReactivityManager.js';
+import { CanvasResizeManager } from './mascot/rendering/CanvasResizeManager.js';
+import { OffsetPositionManager } from './mascot/rendering/OffsetPositionManager.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/plugins/PerformanceSystem.js';
@@ -1188,10 +1190,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     clearParticles() {
-        if (this.particleSystem) {
-            this.particleSystem.clear();
-        }
-        return this;
+        return this.canvasResizeManager.clearParticles();
     }
 
     /**
@@ -1202,11 +1201,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setParticleSystemCanvasDimensions(width, height) {
-        if (this.particleSystem) {
-            this.particleSystem.canvasWidth = width;
-            this.particleSystem.canvasHeight = height;
-        }
-        return this;
+        return this.canvasResizeManager.setParticleSystemCanvasDimensions(width, height);
     }
 
     /**
@@ -1393,31 +1388,7 @@ class EmotiveMascot {
      * @param {number} dpr - Device pixel ratio
      */
     handleResize(width, height, dpr) {
-        // EmotiveMascot handleResize
-        
-        // Force a re-initialization of the offscreen canvas in renderer
-        if (this.renderer && this.renderer.initOffscreenCanvas) {
-            this.renderer.initOffscreenCanvas();
-        }
-        
-        // Trigger a state update to recalculate all visual parameters
-        if (this.stateMachine) {
-            const {currentEmotion} = this.stateMachine;
-            const {currentUndertone} = this.stateMachine;
-            
-            // Re-apply current emotion to trigger fresh calculations
-            if (currentEmotion) {
-                this.stateMachine.setEmotion(currentEmotion);
-            }
-            
-            // Re-apply current undertone if any
-            if (currentUndertone && currentUndertone !== 'none') {
-                this.stateMachine.setUndertone(currentUndertone);
-            }
-        }
-        
-        // Emit resize event for any listeners
-        this.emit('resize', { width, height, dpr });
+        this.canvasResizeManager.handleResize(width, height, dpr);
     }
     
     /**
@@ -1454,25 +1425,20 @@ class EmotiveMascot {
     /**
      * Set offset values for eccentric positioning
      * @param {number} x - X offset
-     * @param {number} y - Y offset  
+     * @param {number} y - Y offset
      * @param {number} z - Z offset (for pseudo-3D scaling)
      * @returns {EmotiveMascot} This instance for chaining
      */
     setOffset(x, y, z = 0) {
-        return this.errorBoundary.wrap(() => {
-            this.positionController.setOffset(x, y, z);
-            return this;
-        }, 'offset-setting', this)();
+        return this.offsetPositionManager.setOffset(x, y, z);
     }
-    
+
     /**
      * Get current offset values
      * @returns {Object} Current offset {x, y, z}
      */
     getOffset() {
-        return this.errorBoundary.wrap(() => {
-            return this.positionController.getOffset();
-        }, 'offset-getting', this)();
+        return this.offsetPositionManager.getOffset();
     }
 
     /**
@@ -1510,10 +1476,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     animateOffset(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
-        return this.errorBoundary.wrap(() => {
-            this.positionController.animateOffset(x, y, z, duration, easing);
-            return this;
-        }, 'offset-animation', this)();
+        return this.offsetPositionManager.animateOffset(x, y, z, duration, easing);
     }
     
     /**

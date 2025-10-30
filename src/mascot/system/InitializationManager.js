@@ -78,6 +78,8 @@ import { EventListenerManager } from '../events/EventListenerManager.js';
 import { EmotionalStateQueryManager } from '../state/EmotionalStateQueryManager.js';
 import { TTSManager } from '../audio/TTSManager.js';
 import { SpeechReactivityManager } from '../audio/SpeechReactivityManager.js';
+import { CanvasResizeManager } from '../rendering/CanvasResizeManager.js';
+import { OffsetPositionManager } from '../rendering/OffsetPositionManager.js';
 
 /**
  * InitializationManager - Orchestrates EmotiveMascot initialization
@@ -495,6 +497,8 @@ export class InitializationManager {
         this.mascot.emotionalStateQueryManager = new EmotionalStateQueryManager(this.mascot);
         this.mascot.ttsManager = new TTSManager(this.mascot);
         this.mascot.speechReactivityManager = new SpeechReactivityManager(this.mascot);
+        this.mascot.canvasResizeManager = new CanvasResizeManager(this.mascot);
+        this.mascot.offsetPositionManager = new OffsetPositionManager(this.mascot);
         this.mascot.configurationManager = new ConfigurationManager(this.mascot, config);
 
         // Initialize the handlers
