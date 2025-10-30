@@ -73,13 +73,13 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import Particle from './Particle.js';
 import { applyUndertoneSaturationToArray } from '../utils/colorUtils.js';
 import rhythmIntegration from './rhythmIntegration.js';
 import { getEmotion } from './emotions/index.js';
 import { emotionCache } from './cache/EmotionCache.js';
 import ParticlePool from './particle/ParticlePool.js';
 import ParticleSpawner from './particle/ParticleSpawner.js';
+import ParticleRenderer from './particle/ParticleRenderer.js';
 
 class ParticleSystem {
     constructor(maxParticles = 50, errorBoundary = null) {
@@ -95,6 +95,9 @@ class ParticleSystem {
 
         // Spawner - now managed by ParticleSpawner class
         this.particleSpawner = new ParticleSpawner();
+
+        // Renderer - now managed by ParticleRenderer class
+        this.particleRenderer = new ParticleRenderer();
 
         // Containment bounds (null = no containment)
         this.containmentBounds = null;
@@ -487,229 +490,16 @@ class ParticleSystem {
      * @param {boolean} isForeground - true for foreground (z >= 0), false for background (z < 0)
      */
     _renderLayer(ctx, emotionColor, isForeground, gestureTransform = null) {
-        // Sort particles by rendering properties to minimize state changes
-        const visibleParticles = [];
-        
-        // First pass: cull off-screen, dead, and wrong-layer particles
-        const margin = 50;
-        const canvasWidth = ctx.canvas.width;
-        const canvasHeight = ctx.canvas.height;
-        
-        for (const particle of this.particles) {
-            // Filter by z-layer
-            const particleInForeground = particle.z >= 0;
-            if (particleInForeground !== isForeground) {
-                continue; // Skip particles in wrong layer
-            }
-            
-            // Skip off-screen particles (culling)
-            if (particle.x < -margin || particle.x > canvasWidth + margin ||
-                particle.y < -margin || particle.y > canvasHeight + margin) {
-                continue;
-            }
-            
-            // Skip dead particles
-            if (particle.life <= 0) continue;
-            
-            visibleParticles.push(particle);
-        }
-        
-        // Sort by render type to minimize state changes
-        visibleParticles.sort((a, b) => {
-            if (a.isCellShaded !== b.isCellShaded) {
-                return a.isCellShaded ? -1 : 1;
-            }
-            if (a.hasGlow !== b.hasGlow) {
-                return a.hasGlow ? -1 : 1;
-            }
-            return 0;
-        });
-        
-        // Actually render the particles
-        this._renderParticles(ctx, visibleParticles, emotionColor, gestureTransform);
+        // Delegate to ParticleRenderer
+        this.particleRenderer.renderLayer(ctx, this.particles, emotionColor, isForeground, gestureTransform);
     }
     
     /**
      * Internal render implementation - batch optimized rendering (legacy, renders all)
      */
     _render(ctx, emotionColor, gestureTransform = null) {
-        // Sort particles by rendering properties to minimize state changes
-        const visibleParticles = [];
-        
-        // PERFORMANCE OPTIMIZATION: Skip off-screen culling for small particle counts
-        // Canvas2D handles off-screen rendering efficiently
-        // Culling overhead is unnecessary for 50 particles
-        
-        for (const particle of this.particles) {
-            // Skip dead particles only
-            if (particle.life <= 0) continue;
-            
-            visibleParticles.push(particle);
-        }
-        
-        // PERFORMANCE OPTIMIZATION: Skip sorting for 50 particles
-        // Sorting is expensive and unnecessary for small particle counts
-        // Canvas2D handles rendering efficiently without sorting
-        
-        // Actually render the particles
-        this._renderParticles(ctx, visibleParticles, emotionColor, gestureTransform);
-    }
-    
-    /**
-     * Render a list of particles with batch optimization
-     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
-     * @param {Array} visibleParticles - Array of particles to render
-     * @param {string} emotionColor - Color to use for particle rendering
-     * @param {Object} gestureTransform - Optional gesture transform data
-     */
-    _renderParticles(ctx, visibleParticles, emotionColor, gestureTransform = null) {
-        // Batch render with minimized state changes
-        ctx.save();
-        let lastFillStyle = null;
-
-
-
-        for (const particle of visibleParticles) {
-            // For cell-shaded, use original render (they need complex stroke/fill combos)
-            if (particle.isCellShaded) {
-                particle.render(ctx, emotionColor);
-                // Reset cached values since particle.render may have changed them
-                lastFillStyle = null;
-
-
-            } else {
-                // Batch-optimized rendering for regular particles
-                const particleColor = particle.color || emotionColor;
-                
-                // Only set fillStyle if it changed
-                if (particleColor !== lastFillStyle) {
-                    ctx.fillStyle = particleColor;
-                    lastFillStyle = particleColor;
-                }
-                
-                // Validate position once
-                if (!isFinite(particle.x) || !isFinite(particle.y)) continue;
-                
-                // Use depth-adjusted size if particle has the method
-                const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
-                let safeSize = Math.max(0.1, depthSize);
-                
-                // Apply firefly effect if sparkle gesture is active
-                let fireflyGlow = 1.0;
-                if (gestureTransform && gestureTransform.fireflyEffect) {
-                    // Each particle gets unique phase for async firefly blinking
-                    const particlePhase = (particle.x * 0.01 + particle.y * 0.01 + particle.size * 0.1) % (Math.PI * 2);
-                    const time = gestureTransform.fireflyTime || (Date.now() * 0.001);
-                    const intensity = gestureTransform.particleGlow || 2.0;
-                    
-                    // Create firefly pulse pattern
-                    fireflyGlow = 0.3 + Math.max(0, Math.sin(time * 3 + particlePhase)) * intensity;
-                }
-                
-                // Apply flicker effect if flicker gesture is active (now does particle shimmer)
-                if (gestureTransform && gestureTransform.flickerEffect) {
-                    // Each particle shimmers with a wave pattern
-                    const particlePhase = (particle.x * 0.02 + particle.y * 0.02) % (Math.PI * 2);
-                    const time = gestureTransform.flickerTime || (Date.now() * 0.001);
-                    const intensity = gestureTransform.particleGlow || 2.0;
-                    
-                    // Create shimmer wave pattern - faster oscillation
-                    fireflyGlow = 0.5 + Math.sin(time * 12 + particlePhase) * intensity * 0.5;
-                }
-                
-                // Apply shimmer effect if shimmer gesture is active (subtle glow)
-                if (gestureTransform && gestureTransform.shimmerEffect) {
-                    // Each particle gets a subtle brightness variation based on distance from center
-                    const dx = particle.x - (ctx.canvas.width / 2);
-                    const dy = particle.y - (ctx.canvas.height / 2);
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    const normalizedDistance = distance / 200; // Normalize to reasonable range
-                    
-                    const time = gestureTransform.shimmerTime || (Date.now() * 0.001);
-                    const wave = gestureTransform.shimmerWave || 0;
-                    const intensity = gestureTransform.particleGlow || 1.2;
-                    
-                    // Subtle traveling wave from center outward
-                    const travelingWave = Math.sin(time * 3 - normalizedDistance + wave);
-                    
-                    // Very subtle glow modulation
-                    fireflyGlow = 1 + travelingWave * 0.15 * intensity;
-                }
-                
-                // Apply glow effect if glow gesture is active (radiant burst)
-                if (gestureTransform && gestureTransform.glowEffect) {
-                    const progress = gestureTransform.glowProgress || 0;
-                    const intensity = gestureTransform.particleGlow || 2.0;
-
-                    // Particles brighten based on distance - closer particles glow first
-                    const dx = particle.x - (ctx.canvas.width / 2);
-                    const dy = particle.y - (ctx.canvas.height / 2);
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    const normalizedDistance = distance / 300;
-
-                    // Glow radiates outward
-                    const radiateDelay = Math.min(normalizedDistance * 0.3, 0.5);
-                    const localProgress = Math.max(0, (progress - radiateDelay) / (1 - radiateDelay));
-                    const localEnvelope = Math.sin(localProgress * Math.PI);
-
-                    // ACTUALLY MAKE PARTICLES GLOW by temporarily setting glow properties
-                    // Store original values if not already stored
-                    if (!particle._originalGlow) {
-                        particle._originalGlow = {
-                            hasGlow: particle.hasGlow,
-                            glowSizeMultiplier: particle.glowSizeMultiplier || 0
-                        };
-                    }
-
-                    // Enable glow and set a large multiplier for visibility
-                    particle.hasGlow = true;
-                    particle.glowSizeMultiplier = Math.max(3.0, particle._originalGlow.glowSizeMultiplier) + localEnvelope * intensity * 3;
-
-                    // Also boost particle size slightly
-                    const glowSizeBoost = 1 + localEnvelope * 0.3;
-                    safeSize = safeSize * glowSizeBoost;
-
-                    // Cleanup flag - restore original values when effect ends
-                    if (progress >= 0.99 && particle._originalGlow) {
-                        particle.hasGlow = particle._originalGlow.hasGlow;
-                        particle.glowSizeMultiplier = particle._originalGlow.glowSizeMultiplier;
-                        delete particle._originalGlow;
-                    }
-                }
-                
-                // Draw glow layers if needed
-                if (particle.hasGlow || fireflyGlow > 1.0) {
-                    const glowRadius = Math.max(0.1, safeSize * (particle.glowSizeMultiplier || 1.5) * fireflyGlow);
-
-                    // Use 'screen' composite mode to prevent glow accumulation
-                    const originalCompositeOp = ctx.globalCompositeOperation;
-                    ctx.globalCompositeOperation = 'screen';
-
-                    // Outer glow (enhanced by firefly effect)
-                    ctx.globalAlpha = particle.opacity * 0.15 * fireflyGlow;
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, glowRadius, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Inner glow (enhanced by firefly effect)
-                    ctx.globalAlpha = particle.opacity * 0.25 * fireflyGlow;
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, glowRadius * 0.6, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Restore original composite mode
-                    ctx.globalCompositeOperation = originalCompositeOp;
-                }
-                
-                // Draw core (also brightened by firefly effect)
-                ctx.globalAlpha = particle.opacity * (particle.baseOpacity || 0.5) * 0.6 * Math.min(2.0, fireflyGlow);
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, safeSize, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        ctx.restore();
+        // Delegate to ParticleRenderer
+        this.particleRenderer.render(ctx, this.particles, emotionColor, gestureTransform);
     }
 
     /**
