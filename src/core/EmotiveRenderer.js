@@ -117,6 +117,7 @@ import { DimensionCalculator } from './renderer/DimensionCalculator.js';
 import { RadiusCalculator } from './renderer/RadiusCalculator.js';
 import { PositionJitterManager } from './renderer/PositionJitterManager.js';
 import { RotationRenderManager } from './renderer/RotationRenderManager.js';
+import { EffectsRenderManager } from './renderer/EffectsRenderManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -161,6 +162,7 @@ class EmotiveRenderer {
         this.radiusCalculator = new RadiusCalculator(this);
         this.positionJitterManager = new PositionJitterManager(this);
         this.rotationRenderManager = new RotationRenderManager(this);
+        this.effectsRenderManager = new EffectsRenderManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -693,75 +695,11 @@ class EmotiveRenderer {
         // Apply rotation transform to canvas (delegated to RotationRenderManager)
         const totalRotation = this.rotationRenderManager.applyRotationTransform(coreX, coreY, rotationAngle);
 
-        // Render glow with visual effects
-        if (isEffectActive('recording-glow', this.state)) {
-            // Recording takes precedence over normal glow
-            applyEffect('recording-glow', this.ctx, {
-                x: coreX,
-                y: coreY,
-                radius: glowRadius,
-                deltaTime
-            });
-        } else if (isEffectActive('zen-vortex', this.state)) {
-            // Zen vortex handles its own visuals
-            // Skip normal glow to prevent flash
-        } else {
-            // Normal glow with sleep dimming
-            if (this.state.sleeping || this.state.emotion === 'resting' || isEffectActive('sleeping', this.state)) {
-                this.ctx.save();
-                this.ctx.globalAlpha = glowOpacityMod;
-                this.glowRenderer.renderGlow(coreX, coreY, glowRadius, { intensity: effectiveGlowIntensity });
-                this.ctx.restore();
-            } else {
-                this.glowRenderer.renderGlow(coreX, coreY, glowRadius, { intensity: effectiveGlowIntensity });
-            }
-        }
-        
-        // Render flash wave if present
-        if (gestureTransforms && gestureTransforms.flashWave) {
-            const wave = gestureTransforms.flashWave;
-            const {ctx} = this;
-            
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            
-            // Create a ring gradient for the wave
-            const innerR = coreRadius * wave.innerRadius;
-            const outerR = coreRadius * wave.outerRadius;
-            
-            if (outerR > innerR) {
-                // Use cached gradient for flash wave
-                const gradient = gradientCache.getRadialGradient(
-                    ctx, coreX, coreY, innerR, coreX, coreY, outerR,
-                    [
-                        { offset: 0, color: 'rgba(255, 255, 255, 0)' },
-                        { offset: 0.2, color: `rgba(255, 255, 255, ${wave.intensity * 0.15})` },
-                        { offset: 0.5, color: `rgba(255, 255, 255, ${wave.intensity * 0.25})` }, // Peak in center
-                        { offset: 0.8, color: `rgba(255, 255, 255, ${wave.intensity * 0.15})` },
-                        { offset: 1, color: 'rgba(255, 255, 255, 0)' }
-                    ]
-                );
-
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(coreX, coreY, outerR, 0, Math.PI * 2);
-                ctx.arc(coreX, coreY, Math.max(0, innerR), 0, Math.PI * 2, true);
-                ctx.fill();
-            }
-            
-            ctx.restore();
-        }
-        
-        // Apply speaking pulse effect
-        if (isEffectActive('speaking-pulse', this.state)) {
-            applyEffect('speaking-pulse', this.ctx, {
-                x: coreX,
-                y: coreY,
-                radius: coreRadius,
-                audioLevel: this.state.audioLevel || 0,
-                deltaTime
-            });
-        }
+        // Render all effects: glow, flash wave, speaking pulse (delegated to EffectsRenderManager)
+        this.effectsRenderManager.renderAllEffects({
+            coreX, coreY, glowRadius, effectiveGlowIntensity, glowOpacityMod,
+            gestureTransforms, coreRadius, deltaTime
+        });
         
         // Recording indicator will be drawn after all transforms are restored
         
