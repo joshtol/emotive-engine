@@ -96,6 +96,8 @@ import { AudioLevelCallbackManager } from './mascot/audio/AudioLevelCallbackMana
 import { OrbScaleAnimator } from './mascot/animation/OrbScaleAnimator.js';
 import { RecordingStateManager } from './mascot/state/RecordingStateManager.js';
 import { BreathingPatternManager } from './mascot/animation/BreathingPatternManager.js';
+import { EventListenerManager } from './mascot/events/EventListenerManager.js';
+import { EmotionalStateQueryManager } from './mascot/state/EmotionalStateQueryManager.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/plugins/PerformanceSystem.js';
@@ -471,12 +473,7 @@ class EmotiveMascot {
      * @returns {Object} Current context state
      */
     getContext() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                return null;
-            }
-            return this.contextManager.getContext();
-        }, 'context-get', this)();
+        return this.emotionalStateQueryManager.getContext();
     }
 
     /**
@@ -534,12 +531,7 @@ class EmotiveMascot {
      * @returns {Array<string>} Array of performance names
      */
     getAvailablePerformances() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.performanceSystem) {
-                return [];
-            }
-            return this.performanceSystem.getAllPerformanceNames();
-        }, 'performances-list', this)();
+        return this.emotionalStateQueryManager.getAvailablePerformances();
     }
 
     /**
@@ -573,12 +565,7 @@ class EmotiveMascot {
      * @returns {Object|null} Context analytics data
      */
     getContextAnalytics() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                return null;
-            }
-            return this.contextManager.getAnalytics();
-        }, 'context-analytics', this)();
+        return this.emotionalStateQueryManager.getContextAnalytics();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -727,13 +714,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     on(event, callback) {
-        return this.errorBoundary.wrap(() => {
-            const success = this.eventManager.on(event, callback);
-            if (!success) {
-                // Failed to add event listener
-            }
-            return this;
-        }, 'event-listener-add', this)();
+        return this.eventListenerManager.on(event, callback);
     }
 
     /**
@@ -743,10 +724,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     off(event, callback) {
-        return this.errorBoundary.wrap(() => {
-            this.eventManager.off(event, callback);
-            return this;
-        }, 'event-listener-remove', this)();
+        return this.eventListenerManager.off(event, callback);
     }
 
     /**
@@ -756,13 +734,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     once(event, callback) {
-        return this.errorBoundary.wrap(() => {
-            const success = this.eventManager.once(event, callback);
-            if (!success) {
-                // Failed to add once event listener
-            }
-            return this;
-        }, 'event-listener-once', this)();
+        return this.eventListenerManager.once(event, callback);
     }
 
     /**
@@ -771,13 +743,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     removeAllListeners(event = null) {
-        return this.errorBoundary.wrap(() => {
-            const removedCount = this.eventManager.removeAllListeners(event);
-            if (removedCount > 0) {
-                // Cleared event listeners
-            }
-            return this;
-        }, 'event-listeners-clear', this)();
+        return this.eventListenerManager.removeAllListeners(event);
     }
 
     /**
@@ -786,7 +752,7 @@ class EmotiveMascot {
      * @returns {number} Number of listeners
      */
     listenerCount(event) {
-        return this.eventManager.listenerCount(event);
+        return this.eventListenerManager.listenerCount(event);
     }
 
     /**
@@ -794,7 +760,7 @@ class EmotiveMascot {
      * @returns {Array<string>} Array of event names
      */
     getEventNames() {
-        return this.eventManager.getEventNames();
+        return this.eventListenerManager.getEventNames();
     }
 
     /**
@@ -802,7 +768,7 @@ class EmotiveMascot {
      * @returns {Object} Event system statistics and monitoring data
      */
     getEventStats() {
-        return this.eventManager.getEventStats();
+        return this.eventListenerManager.getEventStats();
     }
 
     /**
@@ -810,7 +776,7 @@ class EmotiveMascot {
      * @returns {Object} Debug information about the event system
      */
     getEventDebugInfo() {
-        return this.eventManager.getDebugInfo();
+        return this.eventListenerManager.getEventDebugInfo();
     }
 
     /**
@@ -952,7 +918,7 @@ class EmotiveMascot {
      * @param {*} data - Event data
      */
     emit(event, data = null) {
-        this.eventManager.emit(event, data);
+        this.eventListenerManager.emit(event, data);
     }
 
     /**
@@ -1055,9 +1021,7 @@ class EmotiveMascot {
      * @returns {string} Hex color for current emotion
      */
     getEmotionalColor() {
-        const properties = this.stateMachine.getCurrentEmotionalProperties();
-        // Fallback to neutral gray if properties are undefined
-        return properties?.primaryColor || '#B0B0B0';
+        return this.emotionalStateQueryManager.getEmotionalColor();
     }
 
     /**
@@ -1065,7 +1029,7 @@ class EmotiveMascot {
      * @returns {Object} Current state with properties
      */
     getCurrentState() {
-        return this.stateMachine.getCurrentState();
+        return this.emotionalStateQueryManager.getCurrentState();
     }
 
     /**
@@ -1073,7 +1037,7 @@ class EmotiveMascot {
      * @returns {Array<string>} Array of emotion names
      */
     getAvailableEmotions() {
-        return this.stateMachine.getAvailableEmotions();
+        return this.emotionalStateQueryManager.getAvailableEmotions();
     }
 
     /**
@@ -1081,7 +1045,7 @@ class EmotiveMascot {
      * @returns {Array<string>} Array of undertone names
      */
     getAvailableUndertones() {
-        return this.stateMachine.getAvailableUndertones();
+        return this.emotionalStateQueryManager.getAvailableUndertones();
     }
 
 
@@ -1106,13 +1070,7 @@ class EmotiveMascot {
      * @returns {Array<string>} Array of gesture names
      */
     getAvailableGestures() {
-        return [
-            'bounce', 'pulse', 'shake', 'spin', 'drift', 
-            'nod', 'tilt', 'expand', 'contract', 'flash',
-            'stretch', 'glow', 'flicker', 'vibrate', 'wave',
-            'morph', 'slowBlink', 'look', 'settle',
-            'breathIn', 'breathOut', 'breathHold', 'breathHoldEmpty', 'jump'
-        ];
+        return this.emotionalStateQueryManager.getAvailableGestures();
     }
 
     /**
@@ -1612,7 +1570,7 @@ class EmotiveMascot {
      * @returns {Array} List of available shape names
      */
     getAvailableShapes() {
-        return ShapeMorpher.getAvailableShapes();
+        return this.emotionalStateQueryManager.getAvailableShapes();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════════

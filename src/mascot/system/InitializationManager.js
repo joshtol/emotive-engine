@@ -74,6 +74,8 @@ import { ConfigurationManager } from './ConfigurationManager.js';
 import { DiagnosticsManager } from './DiagnosticsManager.js';
 import { ShapeTransformManager } from '../rendering/ShapeTransformManager.js';
 import { LLMIntegrationBridge } from '../integration/LLMIntegrationBridge.js';
+import { EventListenerManager } from '../events/EventListenerManager.js';
+import { EmotionalStateQueryManager } from '../state/EmotionalStateQueryManager.js';
 
 /**
  * InitializationManager - Orchestrates EmotiveMascot initialization
@@ -487,6 +489,8 @@ export class InitializationManager {
         this.mascot.diagnosticsManager = new DiagnosticsManager(this.mascot);
         this.mascot.shapeTransformManager = new ShapeTransformManager(this.mascot);
         this.mascot.llmIntegrationBridge = new LLMIntegrationBridge(this.mascot);
+        this.mascot.eventListenerManager = new EventListenerManager(this.mascot);
+        this.mascot.emotionalStateQueryManager = new EmotionalStateQueryManager(this.mascot);
         this.mascot.configurationManager = new ConfigurationManager(this.mascot, config);
 
         // Initialize the handlers
