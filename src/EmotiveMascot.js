@@ -86,6 +86,9 @@ import { DestructionManager } from './mascot/DestructionManager.js';
 import { BreathingAnimationController } from './mascot/BreathingAnimationController.js';
 import { SystemStatusReporter } from './mascot/SystemStatusReporter.js';
 import { SleepWakeManager } from './mascot/SleepWakeManager.js';
+import { SpeechManager } from './mascot/SpeechManager.js';
+import { AudioLevelCallbackManager } from './mascot/AudioLevelCallbackManager.js';
+import { OrbScaleAnimator } from './mascot/OrbScaleAnimator.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/PerformanceSystem.js';
@@ -153,6 +156,13 @@ class EmotiveMascot {
         this.Emotions = Emotions;
         this.Gestures = Gestures;
         this.ParticleBehaviors = ParticleBehaviors;
+
+        // Initialize managers BEFORE calling initManager.initialize()
+        // This is critical because InitializationManager calls setupAudioLevelProcessorCallbacks()
+        // which needs audioLevelCallbackManager to be instantiated
+        this.speechManager = new SpeechManager(this);
+        this.audioLevelCallbackManager = new AudioLevelCallbackManager(this);
+        this.orbScaleAnimator = new OrbScaleAnimator(this);
 
         // Delegate initialization to InitializationManager
         const initManager = new InitializationManager(this, config);
@@ -233,52 +243,7 @@ class EmotiveMascot {
      * Set up callbacks for the audio level processor
      */
     setupAudioLevelProcessorCallbacks() {
-        // Handle audio level updates
-        this.audioLevelProcessor.onLevelUpdate(data => {
-            // Update renderer with current audio level
-            this.renderer.updateAudioLevel(data.level);
-            
-            // Emit audio level update event
-            this.emit('audioLevelUpdate', {
-                level: data.level,
-                rawData: Array.from(data.rawData),
-                timestamp: data.timestamp
-            });
-        });
-        
-        // Handle volume spikes for gesture triggering
-        this.audioLevelProcessor.onVolumeSpike(spikeData => {
-            // Trigger pulse gesture if not already active
-            // Check if any particle has an active gesture
-            const hasActiveGesture = this.particleSystem.particles.some(p => p.gestureProgress < 1);
-            if (!hasActiveGesture) {
-                // Execute pulse gesture through express method
-                this.express('pulse');
-                const success = true;
-                
-                if (success) {
-                    // Emit volume spike event with gesture trigger info
-                    this.emit('volumeSpike', {
-                        ...spikeData,
-                        gestureTriggered: true
-                    });
-                    
-                    // Volume spike detected - triggered pulse gesture
-                } else {
-                    // Emit volume spike event without gesture trigger
-                    this.emit('volumeSpike', {
-                        ...spikeData,
-                        gestureTriggered: false
-                    });
-                }
-            }
-        });
-        
-        // Handle audio processing errors
-        this.audioLevelProcessor.onError(errorData => {
-            // AudioLevelProcessor error
-            this.emit('audioProcessingError', errorData);
-        });
+        this.audioLevelCallbackManager.setupAudioLevelProcessorCallbacks();
     }
 
     /**
@@ -630,45 +595,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     startSpeaking(audioContext) {
-        return this.errorBoundary.wrap(() => {
-            if (!audioContext) {
-                throw new Error('AudioContext is required for speech reactivity');
-            }
-            
-            if (!this.config.enableAudio) {
-                // Audio is disabled, cannot start speech reactivity
-                return this;
-            }
-            
-            if (this.speaking) {
-                // Speech reactivity is already active
-                return this;
-            }
-            
-            // Initialize audio level processor
-            const success = this.audioLevelProcessor.initialize(audioContext);
-            
-            if (!success) {
-                // Failed to initialize audio level processor
-                return this;
-            }
-            
-            // Update speech state
-            this.speaking = true;
-            
-            // Notify renderer about speech start
-            this.renderer.onSpeechStart(audioContext);
-            
-            // Emit speech start event with analyser for external connection
-            this.emit('speechStarted', { 
-                audioContext, 
-                analyser: this.audioLevelProcessor.getAnalyser(),
-                mascot: this
-            });
-            
-            // Speech reactivity started - connect audio source to analyser
-            return this;
-        }, 'speech-start', this)();
+        return this.speechManager ? this.speechManager.startSpeaking(audioContext) : this;
     }
 
     /**
@@ -676,9 +603,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     stopSpeaking() {
-        return this.errorBoundary.wrap(() => {
-            return this.audioHandler.stopSpeaking();
-        }, 'speech-stop', this)();
+        return this.speechManager ? this.speechManager.stopSpeaking() : this;
     }
 
     
@@ -833,47 +758,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setOrbScale(scale, duration = 1000, easing = 'easeInOut') {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer) {
-                // Create scale animation
-                const startScale = this.currentOrbScale || 1.0;
-                const startTime = Date.now();
-                
-                const animate = () => {
-                    const elapsed = Date.now() - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    
-                    // Apply easing
-                    let easedProgress = progress;
-                    if (easing === 'easeIn') {
-                        easedProgress = progress * progress;
-                    } else if (easing === 'easeOut') {
-                        easedProgress = progress * (2 - progress);
-                    } else if (easing === 'easeInOut') {
-                        easedProgress = progress < 0.5
-                            ? 2 * progress * progress
-                            : -1 + (4 - 2 * progress) * progress;
-                    }
-                    
-                    // Calculate current scale
-                    this.currentOrbScale = startScale + (scale - startScale) * easedProgress;
-                    
-                    // Apply to renderer
-                    if (this.renderer.setCustomScale) {
-                        this.renderer.setCustomScale(this.currentOrbScale);
-                    }
-                    
-                    // Continue animation
-                    if (progress < 1 && this.isRunning) {
-                        requestAnimationFrame(animate);
-                    }
-                };
-                
-                animate();
-            }
-            
-            return this;
-        }, 'setOrbScale', this)();
+        return this.orbScaleAnimator ? this.orbScaleAnimator.setOrbScale(scale, duration, easing) : this;
     }
     
     /**
@@ -1795,54 +1680,7 @@ class EmotiveMascot {
      * @returns {SpeechSynthesisUtterance} The utterance object for additional control
      */
     speak(text, options = {}) {
-        // Check if speech synthesis is available
-        if (!window.speechSynthesis) {
-            // Speech synthesis not available in this browser
-            return null;
-        }
-        
-        // Create utterance
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        // Apply options
-        if (options.voice) utterance.voice = options.voice;
-        if (options.rate) utterance.rate = options.rate;
-        if (options.pitch) utterance.pitch = options.pitch;
-        if (options.volume) utterance.volume = options.volume;
-        if (options.lang) utterance.lang = options.lang;
-        
-        // Set up event handlers for animation sync
-        utterance.onstart = () => {
-            // TTS: Starting speech
-            this.setTTSSpeaking(true);
-            this.emit('tts:start', { text });
-        };
-        
-        utterance.onend = () => {
-            // TTS: Speech ended
-            this.setTTSSpeaking(false);
-            this.emit('tts:end');
-        };
-        
-        utterance.onerror = event => {
-            // TTS: Speech error
-            this.setTTSSpeaking(false);
-            this.emit('tts:error', { error: event });
-        };
-        
-        utterance.onboundary = event => {
-            // Word/sentence boundaries for potential lip-sync
-            this.emit('tts:boundary', { 
-                name: event.name,
-                charIndex: event.charIndex,
-                charLength: event.charLength
-            });
-        };
-        
-        // Speak the text
-        window.speechSynthesis.speak(utterance);
-        
-        return utterance;
+        return this.speechManager ? this.speechManager.speak(text, options) : this;
     }
     
     /**
