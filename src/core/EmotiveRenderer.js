@@ -105,6 +105,7 @@ import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
 import { CelestialRenderer } from './renderer/CelestialRenderer.js';
 import { ZenModeRenderer } from './renderer/ZenModeRenderer.js';
+import { ZenModeController } from './renderer/ZenModeController.js';
 import { RotationManager } from './renderer/RotationManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
@@ -138,6 +139,7 @@ class EmotiveRenderer {
         this.coreRenderer = new CoreRenderer(this);
         this.celestialRenderer = new CelestialRenderer();
         this.zenModeRenderer = new ZenModeRenderer();
+        this.zenModeController = new ZenModeController(this);
         this.rotationManager = new RotationManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
@@ -472,21 +474,13 @@ class EmotiveRenderer {
         
         // Sleep state - consolidated here for visualization
         this.sleepZ = [];
-        
-        // Zen state animation
-        this.zenTransition = {
-            active: false,
-            phase: null, // 'entering', 'in', 'exiting'
-            startTime: 0,
-            previousEmotion: null,
-            targetEmotion: null,
-            scaleX: 1.0,
-            scaleY: 1.0,
-            arcHeight: 0,
-            lotusMorph: 0, // 0 = circle, 1 = full lotus
-            petalSpread: 0, // 0 = closed, 1 = fully open
-            smileCurve: 0  // 0 = straight, 1 = full smile
-        };
+
+        // Zen state animation (now managed by ZenModeController)
+        // Reference to zenTransition for backward compatibility
+        Object.defineProperty(this, 'zenTransition', {
+            get: () => this.zenModeController.getZenTransition(),
+            enumerable: true
+        });
         
         // Standardized color transition system
         this.colorTransition = {
@@ -1655,244 +1649,14 @@ class EmotiveRenderer {
      * Enter zen meditation mode with animation
      */
     enterZenMode(targetColor, targetIntensity) {
-        // Cancel any existing zen animations
-        if (this.animationFrameIds.zenEnter) {
-            cancelAnimationFrame(this.animationFrameIds.zenEnter);
-            this.animationFrameIds.zenEnter = null;
-        }
-        if (this.animationFrameIds.zenExit) {
-            cancelAnimationFrame(this.animationFrameIds.zenExit);
-            this.animationFrameIds.zenExit = null;
-        }
-        
-        // Set to zen color with target intensity
-        this.state.glowColor = targetColor;
-        this.state.glowIntensity = targetIntensity; // Keep the glow
-        
-        // Cancel any active color transition
-        this.colorTransition.active = false;
-        
-        this.zenTransition = {
-            active: true,
-            phase: 'entering',
-            startTime: performance.now(),
-            previousEmotion: this.state.emotion,
-            targetEmotion: null,
-            scaleX: 1.0,
-            scaleY: 1.0,
-            arcHeight: 0,
-            lotusMorph: 0,     // 0 = no lotus, 1 = full lotus
-            petalSpread: 0,    // 0 = closed petals, 1 = full spread
-            smileCurve: 0      // 0 = no smile, 1 = full smile
-        };
-        
-        const animate = () => {
-            if (!this.zenTransition.active || this.zenTransition.phase !== 'entering') {
-                // Clean up loop callback ID
-                this.loopCallbackIds.zenEnter = null;
-                return;
-            }
-            
-            const elapsed = performance.now() - this.zenTransition.startTime;
-            const lotusMorphDuration = 400; // 0.4s for lotus to bloom - smooth transition
-            
-            if (elapsed < lotusMorphDuration) {
-                // Direct lotus blooming - no intro animation
-                const lotusProgress = elapsed / lotusMorphDuration;
-                const lotusEased = 1 - Math.pow(1 - lotusProgress, 2); // Ease out quad
-                
-                // Direct lotus bloom without arc or narrowing
-                this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 1.0;  // Full size
-                this.zenTransition.arcHeight = 0;  // No arc
-                
-                // Morph the lotus shape directly
-                this.zenTransition.lotusMorph = lotusEased; // 0 to 100%
-                this.zenTransition.petalSpread = lotusEased;
-                
-                // Smile appears gradually
-                this.zenTransition.smileCurve = Math.sin(lotusProgress * Math.PI / 2); // Smooth ease
-                
-                // Register with AnimationLoopManager
-                this.loopCallbackIds.zenEnter = animationLoopManager.register(
-                    animate,
-                    AnimationPriority.MEDIUM, // Zen animations are medium priority
-                    this
-                );
-            } else {
-                // Final state - in meditation with full lotus, then start floating
-                this.zenTransition.phase = 'in';
-                this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 1.0;  // Full size
-                this.zenTransition.arcHeight = 0;  // No arc
-                this.zenTransition.lotusMorph = 1.0;
-                this.zenTransition.petalSpread = 1.0;
-                this.zenTransition.smileCurve = 1.0;
-                
-                // Set gentle vortex for zen state
-                this.state.zenVortexIntensity = 1.0;  // Can be adjusted: 0.5 = very gentle, 2.0 = strong
-                // Clean up loop callback ID
-                this.loopCallbackIds.zenEnter = null;
-            }
-        };
-        
-        // Register with AnimationLoopManager
-        this.loopCallbackIds.zenEnter = animationLoopManager.register(
-            animate,
-            AnimationPriority.MEDIUM, // Zen animations are medium priority
-            this
-        );
+        this.zenModeController.enterZenMode(targetColor, targetIntensity);
     }
     
     /**
      * Exit zen meditation mode with awakening animation
      */
     exitZenMode(targetEmotion, targetColor, targetIntensity) {
-        if (!this.zenTransition.active || this.zenTransition.phase !== 'in') return;
-        
-        // Cancel any existing zen animations
-        if (this.animationFrameIds.zenEnter) {
-            cancelAnimationFrame(this.animationFrameIds.zenEnter);
-            this.animationFrameIds.zenEnter = null;
-        }
-        if (this.animationFrameIds.zenExit) {
-            cancelAnimationFrame(this.animationFrameIds.zenExit);
-            this.animationFrameIds.zenExit = null;
-        }
-        
-        this.zenTransition.phase = 'exiting';
-        this.zenTransition.startTime = performance.now();
-        this.zenTransition.targetEmotion = targetEmotion;
-        
-        const animate = () => {
-            if (!this.zenTransition.active || this.zenTransition.phase !== 'exiting') {
-                // Clean up loop callback ID
-                this.loopCallbackIds.zenExit = null;
-                return;
-            }
-            
-            const elapsed = performance.now() - this.zenTransition.startTime;
-            const straightenDuration = 150; // 0.15s to straighten arc - FAST
-            const awakeDuration = 200; // 0.2s for awakening gestures - FAST
-            const expandDuration = 200; // 0.2s to expand back - FAST
-            const settleDuration = 100; // 0.1s for final settle - FAST
-            
-            if (elapsed < straightenDuration) {
-                // Phase 1: Lotus closing and arc straightening - start color transition
-                const progress = elapsed / straightenDuration;
-                const eased = 1 - Math.pow(1 - progress, 2);
-                
-                // Start color transition at beginning of exit
-                if (progress === 0 || !this.colorTransition.active) {
-                    this.startColorTransition(targetColor, targetIntensity, straightenDuration);
-                }
-                
-                this.zenTransition.arcHeight = 1.5 * (1 - eased); // Flatten arc from full height
-                
-                // Close lotus petals quickly
-                this.zenTransition.smileCurve = 1.0 * (1 - eased); // Smile fades first
-                if (progress > 0.3) {
-                    const petalProgress = (progress - 0.3) / 0.7;
-                    this.zenTransition.petalSpread = 1.0 * (1 - petalProgress); // Petals close
-                }
-                if (progress > 0.5) {
-                    const morphProgress = (progress - 0.5) / 0.5;
-                    this.zenTransition.lotusMorph = 1.0 * (1 - morphProgress); // Lotus disappears
-                }
-                
-                // Register with AnimationLoopManager
-                this.loopCallbackIds.zenExit = animationLoopManager.register(
-                    animate,
-                    AnimationPriority.MEDIUM, // Zen animations are medium priority
-                    this
-                );
-            } else if (elapsed < straightenDuration + awakeDuration) {
-                // Phase 2: Awakening gestures
-                const awakeProgress = (elapsed - straightenDuration) / awakeDuration;
-                
-                // Lotus is fully closed by now
-                this.zenTransition.lotusMorph = 0;
-                this.zenTransition.petalSpread = 0;
-                this.zenTransition.smileCurve = 0;
-                
-                // Slow blink (0-0.3)
-                if (awakeProgress < 0.2) {
-                    const blinkProg = awakeProgress / 0.2;
-                    this.zenTransition.scaleY = 1.0 - (Math.sin(blinkProg * Math.PI) * 0.8);
-                }
-                // Gentle shake (0.3-0.6)
-                else if (awakeProgress < 0.6) {
-                    const shakeProg = (awakeProgress - 0.2) / 0.4;
-                    this.zenTransition.scaleY = 1.0;
-                    // Add small X offset for shake (will be applied in render)
-                    this.state.shakeOffset = Math.sin(shakeProg * Math.PI * 4) * 3;
-                }
-                // Upward drift with brighten (0.6-1.0)
-                else {
-                    const driftProg = (awakeProgress - 0.6) / 0.4;
-                    this.state.driftY = -10 * driftProg;
-                    this.state.glowIntensity = 1.0 + (0.5 * driftProg); // Brighten
-                }
-                
-                // Register with AnimationLoopManager
-                this.loopCallbackIds.zenExit = animationLoopManager.register(
-                    animate,
-                    AnimationPriority.MEDIUM, // Zen animations are medium priority
-                    this
-                );
-            } else if (elapsed < straightenDuration + awakeDuration + expandDuration) {
-                // Phase 3: Horizontal expansion (sunrise)
-                const expandProgress = (elapsed - straightenDuration - awakeDuration) / expandDuration;
-                const expandEased = Math.sin(expandProgress * Math.PI / 2);
-                
-                this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 0.2 + (expandEased * 0.8); // Expand vertically back to 1.0 (sunrise)
-                this.state.driftY = -10 * (1 - expandProgress); // Return to center
-                this.state.glowIntensity = 1.5 - (0.5 * expandProgress); // Normal glow
-                
-                // Register with AnimationLoopManager
-                this.loopCallbackIds.zenExit = animationLoopManager.register(
-                    animate,
-                    AnimationPriority.MEDIUM, // Zen animations are medium priority
-                    this
-                );
-            } else if (elapsed < straightenDuration + awakeDuration + expandDuration + settleDuration) {
-                // Phase 4: Final settle pulse
-                const settleProgress = (elapsed - straightenDuration - awakeDuration - expandDuration) / settleDuration;
-                const pulse = Math.sin(settleProgress * Math.PI);
-                
-                this.zenTransition.scaleX = 1.0 + (pulse * 0.05);
-                this.zenTransition.scaleY = 1.0 + (pulse * 0.05);
-                
-                // Register with AnimationLoopManager
-                this.loopCallbackIds.zenExit = animationLoopManager.register(
-                    animate,
-                    AnimationPriority.MEDIUM, // Zen animations are medium priority
-                    this
-                );
-            } else {
-                // Complete - reset to normal
-                this.zenTransition.active = false;
-                this.zenTransition.phase = null;
-                this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 1.0;
-                this.zenTransition.arcHeight = 0;
-                this.zenTransition.lotusMorph = 0;
-                this.zenTransition.petalSpread = 0;
-                this.zenTransition.smileCurve = 0;
-                this.state.shakeOffset = 0;
-                this.state.driftY = 0;
-                // Clean up loop callback ID
-                this.loopCallbackIds.zenExit = null;
-            }
-        };
-        
-        // Register with AnimationLoopManager
-        this.loopCallbackIds.zenExit = animationLoopManager.register(
-            animate,
-            AnimationPriority.MEDIUM, // Zen animations are medium priority
-            this
-        );
+        this.zenModeController.exitZenMode(targetEmotion, targetColor, targetIntensity);
     }
     
     /**
