@@ -579,7 +579,9 @@ class EmotiveRenderer {
         
         // Performance
         this.lastFrameTime = 0;
-        
+
+        // Create gesture delegation methods dynamically
+        this._createGestureDelegates();
     }
     
     /**
@@ -2493,55 +2495,32 @@ class EmotiveRenderer {
         return this.gestureAnimator.getCurrentGesture();
     }
     
-    // Individual start methods for each gesture - delegate to GestureAnimator
-    startBounce() { this.gestureAnimator.startBounce(); }
-    startPulse() { this.gestureAnimator.startPulse(); }
-    startShake() { this.gestureAnimator.startShake(); }
-    startSpin() { this.gestureAnimator.startSpin(); }
-    startNod() { this.gestureAnimator.startNod(); }
-    startTilt() { this.gestureAnimator.startTilt(); }
-    startExpand() { this.gestureAnimator.startExpand(); }
-    startContract() { this.gestureAnimator.startContract(); }
-    startFlash() { this.gestureAnimator.startFlash(); }
-    startDrift() { this.gestureAnimator.startDrift(); }
-    startStretch() { this.gestureAnimator.startStretch(); }
-    startGlow() { this.gestureAnimator.startGlow(); }
-    startFlicker() { this.gestureAnimator.startFlicker(); }
-    startVibrate() { this.gestureAnimator.startVibrate(); }
-    startOrbital() { this.gestureAnimator.startOrbital(); }
-    startHula() { this.gestureAnimator.startHula(); }
-    startWave() { this.gestureAnimator.startWave(); }
-    startBreathe() { this.gestureAnimator.startBreathe(); }
-    startMorph() { this.gestureAnimator.startMorph(); }
-    startSlowBlink() { this.gestureAnimator.startSlowBlink(); }
-    startLook() { this.gestureAnimator.startLook(); }
-    startSettle() { this.gestureAnimator.startSettle(); }
-    startBreathIn() { this.gestureAnimator.startBreathIn(); }
-    startBreathOut() { this.gestureAnimator.startBreathOut(); }
-    startBreathHold() { this.gestureAnimator.startBreathHold(); }
-    startBreathHoldEmpty() { this.gestureAnimator.startBreathHoldEmpty(); }
-    startJump() { this.gestureAnimator.startJump(); }
-    startSway() { this.gestureAnimator.startSway(); }
-    startFloat() { this.gestureAnimator.startFloat(); }
-    startRain() { this.gestureAnimator.startRain(); }
-    startRunningMan() { this.gestureAnimator.startRunningMan(); }
-    startCharleston() { this.gestureAnimator.startCharleston(); }
+    /**
+     * Programmatically create gesture delegation methods
+     * This avoids 42 lines of boilerplate by dynamically forwarding start* methods to gestureAnimator
+     * @private
+     */
+    _createGestureDelegates() {
+        const gestures = [
+            'Bounce', 'Pulse', 'Shake', 'Spin', 'Nod', 'Tilt', 'Expand', 'Contract',
+            'Flash', 'Drift', 'Stretch', 'Glow', 'Flicker', 'Vibrate', 'Orbital', 'Hula',
+            'Wave', 'Breathe', 'Morph', 'SlowBlink', 'Look', 'Settle', 'BreathIn', 'BreathOut',
+            'BreathHold', 'BreathHoldEmpty', 'Jump', 'Sway', 'Float', 'Rain', 'RunningMan', 'Charleston',
+            'Sparkle', 'Shimmer', 'Wiggle', 'Groove', 'Point', 'Lean', 'Reach', 'HeadBob', 'Orbit'
+        ];
 
-    // Ambient dance animations
+        gestures.forEach(gesture => {
+            const methodName = `start${gesture}`;
+            this[methodName] = () => this.gestureAnimator[methodName]();
+        });
+    }
+
+    // Ambient dance animations - manually defined due to parameter requirements
     startGrooveSway(options) { this.ambientDanceAnimator.startAmbientAnimation('grooveSway', options); }
     startGrooveBob(options) { this.ambientDanceAnimator.startAmbientAnimation('grooveBob', options); }
     startGrooveFlow(options) { this.ambientDanceAnimator.startAmbientAnimation('grooveFlow', options); }
     startGroovePulse(options) { this.ambientDanceAnimator.startAmbientAnimation('groovePulse', options); }
     startGrooveStep(options) { this.ambientDanceAnimator.startAmbientAnimation('grooveStep', options); }
-    startSparkle() { this.gestureAnimator.startSparkle(); }
-    startShimmer() { this.gestureAnimator.startShimmer(); }
-    startWiggle() { this.gestureAnimator.startWiggle(); }
-    startGroove() { this.gestureAnimator.startGroove(); }
-    startPoint() { this.gestureAnimator.startPoint(); }
-    startLean() { this.gestureAnimator.startLean(); }
-    startReach() { this.gestureAnimator.startReach(); }
-    startHeadBob() { this.gestureAnimator.startHeadBob(); }
-    startOrbit() { this.gestureAnimator.startOrbit(); }
     
     /**
      * Stop all active gestures - delegates to GestureAnimator
