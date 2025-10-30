@@ -120,23 +120,23 @@ vi.mock('../../../src/core/gestures/gestureCacheWrapper.js', () => ({
     })
 }));
 
-vi.mock('../../../src/core/rhythm.js', () => {
+vi.mock('../../../src/core/audio/rhythm.js', () => {
     const mockRhythmEngine = {
         bpm: 120,
         timeSignature: [4, 4],
         isPlaying: true,
-        listeners: {},
+        listeners: new Map(),
 
         on(event, callback) {
-            if (!this.listeners[event]) {
-                this.listeners[event] = [];
+            if (!this.listeners.has(event)) {
+                this.listeners.set(event, new Set());
             }
-            this.listeners[event].push(callback);
+            this.listeners.get(event).add(callback);
         },
 
         emit(event, data) {
-            if (this.listeners[event]) {
-                this.listeners[event].forEach(cb => cb(data));
+            if (this.listeners.has(event)) {
+                this.listeners.get(event).forEach(cb => cb(data));
             }
         },
 
@@ -164,7 +164,7 @@ vi.mock('../../../src/core/rhythm.js', () => {
     return { default: mockRhythmEngine };
 });
 
-vi.mock('../../../src/core/rhythmIntegration.js', () => ({
+vi.mock('../../../src/core/audio/rhythmIntegration.js', () => ({
     default: {
         isEnabled: vi.fn(() => true)
     }
@@ -218,14 +218,14 @@ describe('GestureScheduler - Integration Tests', () => {
         };
 
         // Get mocked modules
-        rhythmEngine = (await import('../../../src/core/rhythm.js')).default;
-        rhythmIntegration = (await import('../../../src/core/rhythmIntegration.js')).default;
+        rhythmEngine = (await import('../../../src/core/audio/rhythm.js')).default;
+        rhythmIntegration = (await import('../../../src/core/audio/rhythmIntegration.js')).default;
 
         // Reset rhythm engine state
         rhythmEngine.bpm = 120;
         rhythmEngine.timeSignature = [4, 4];
         rhythmEngine.isPlaying = true;
-        rhythmEngine.listeners = {};
+        rhythmEngine.listeners = new Map();
 
         // Create scheduler
         scheduler = new GestureScheduler(mockMascot);
@@ -262,9 +262,9 @@ describe('GestureScheduler - Integration Tests', () => {
         });
 
         it('should setup rhythm event listeners', () => {
-            expect(rhythmEngine.listeners.beat).toBeDefined();
-            expect(rhythmEngine.listeners.subdivision).toBeDefined();
-            expect(rhythmEngine.listeners.beat.length).toBeGreaterThan(0);
+            expect(rhythmEngine.listeners.has('beat')).toBe(true);
+            expect(rhythmEngine.listeners.has('subdivision')).toBe(true);
+            expect(rhythmEngine.listeners.get('beat').size).toBeGreaterThan(0);
         });
 
         it('should initialize callback handlers as null', () => {

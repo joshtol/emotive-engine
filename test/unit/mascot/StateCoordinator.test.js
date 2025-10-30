@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { StateCoordinator } from '../../../src/mascot/StateCoordinator.js';
+import { StateCoordinator } from '../../../src/mascot/state/StateCoordinator.js';
 
 describe('StateCoordinator', () => {
     let stateCoordinator;

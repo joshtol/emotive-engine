@@ -73,10 +73,10 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import { interpolateHsl } from '../utils/colorUtils.js';
-import { applyEasing, easeInOutCubic } from '../utils/easing.js';
-import { hasEmotion, listEmotions } from './emotions/index.js';
-import { emotionCache } from './cache/EmotionCache.js';
+import { interpolateHsl } from '../../utils/colorUtils.js';
+import { applyEasing, easeInOutCubic } from '../../utils/easing.js';
+import { hasEmotion, listEmotions } from '../emotions/index.js';
+import { emotionCache } from '../cache/EmotionCache.js';
 
 class EmotiveStateMachine {
     constructor(errorBoundary) {

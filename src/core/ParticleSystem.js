@@ -74,7 +74,7 @@
  */
 
 import { applyUndertoneSaturationToArray } from '../utils/colorUtils.js';
-import rhythmIntegration from './rhythmIntegration.js';
+import rhythmIntegration from './audio/rhythmIntegration.js';
 import { getEmotion } from './emotions/index.js';
 import { emotionCache } from './cache/EmotionCache.js';
 import ParticlePool from './particle/ParticlePool.js';

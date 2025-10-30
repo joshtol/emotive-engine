@@ -38,36 +38,36 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import CanvasManager from '../core/CanvasManager.js';
-import EmotiveStateMachine from '../core/EmotiveStateMachine.js';
-import ParticleSystem from '../core/ParticleSystem.js';
-import EmotiveRenderer from '../core/EmotiveRenderer.js';
-import GazeTracker from '../core/GazeTracker.js';
-import IdleBehavior from '../core/IdleBehavior.js';
-import PositionController from '../utils/PositionController.js';
-import { initSentry, addBreadcrumb } from '../utils/sentry.js';
-import { SoundSystem } from '../core/SoundSystem.js';
-import AnimationController from '../core/AnimationController.js';
-import AudioLevelProcessor from '../core/AudioLevelProcessor.js';
-import AccessibilityManager from '../core/AccessibilityManager.js';
-import MobileOptimization from '../core/MobileOptimization.js';
-import PluginSystem from '../core/PluginSystem.js';
-import { browserCompatibility, CanvasContextRecovery } from '../utils/browserCompatibility.js';
-import { emotiveDebugger, runtimeCapabilities } from '../utils/debugger.js';
-import rhythmIntegration from '../core/rhythmIntegration.js';
-import ShapeMorpher from '../core/ShapeMorpher.js';
-import { AudioAnalyzer } from '../core/AudioAnalyzer.js';
-import gestureCompatibility from '../core/GestureCompatibility.js';
-import GrooveTemplates from '../core/GrooveTemplates.js';
-import { PerformanceSystem } from '../core/PerformanceSystem.js';
-import { ContextManager } from '../core/ContextManager.js';
-import { SequenceExecutor } from '../core/SequenceExecutor.js';
+import CanvasManager from '../../core/canvas/CanvasManager.js';
+import EmotiveStateMachine from '../../core/state/EmotiveStateMachine.js';
+import ParticleSystem from '../../core/ParticleSystem.js';
+import EmotiveRenderer from '../../core/EmotiveRenderer.js';
+import GazeTracker from '../../core/behavior/GazeTracker.js';
+import IdleBehavior from '../../core/behavior/IdleBehavior.js';
+import PositionController from '../../utils/PositionController.js';
+import { initSentry, addBreadcrumb } from '../../utils/sentry.js';
+import { SoundSystem } from '../../core/audio/SoundSystem.js';
+import AnimationController from '../../core/AnimationController.js';
+import AudioLevelProcessor from '../../core/audio/AudioLevelProcessor.js';
+import AccessibilityManager from '../../core/optimization/AccessibilityManager.js';
+import MobileOptimization from '../../core/optimization/MobileOptimization.js';
+import PluginSystem from '../../core/plugins/PluginSystem.js';
+import { browserCompatibility, CanvasContextRecovery } from '../../utils/browserCompatibility.js';
+import { emotiveDebugger, runtimeCapabilities } from '../../utils/debugger.js';
+import rhythmIntegration from '../../core/audio/rhythmIntegration.js';
+import ShapeMorpher from '../../core/ShapeMorpher.js';
+import { AudioAnalyzer } from '../../core/audio/AudioAnalyzer.js';
+import gestureCompatibility from '../../core/GestureCompatibility.js';
+import GrooveTemplates from '../../core/audio/GrooveTemplates.js';
+import { PerformanceSystem } from '../../core/plugins/PerformanceSystem.js';
+import { ContextManager } from '../../core/state/ContextManager.js';
+import { SequenceExecutor } from '../../core/plugins/SequenceExecutor.js';
 
 // Import modular handlers
-import { AudioHandler } from './AudioHandler.js';
-import { GestureController } from './GestureController.js';
-import { StateCoordinator } from './StateCoordinator.js';
-import { VisualizationRunner } from './VisualizationRunner.js';
+import { AudioHandler } from '../audio/AudioHandler.js';
+import { GestureController } from '../control/GestureController.js';
+import { StateCoordinator } from '../state/StateCoordinator.js';
+import { VisualizationRunner } from '../control/VisualizationRunner.js';
 import { ConfigurationManager } from './ConfigurationManager.js';
 
 /**

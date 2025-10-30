@@ -21,16 +21,16 @@ export { default as EmotiveMascotPublic } from './EmotiveMascotPublic.js';
 
 // Rendering
 export { default as EmotiveRenderer } from './core/EmotiveRenderer.js';
-export { default as CanvasManager } from './core/CanvasManager.js';
+export { default as CanvasManager } from './core/canvas/CanvasManager.js';
 export { default as AnimationController } from './core/AnimationController.js';
 
 // Particle System
 export { default as ParticleSystem } from './core/ParticleSystem.js';
 
 // State Management
-export { default as EmotiveStateMachine } from './core/EmotiveStateMachine.js';
-export { EventManager, eventManager } from './core/EventManager.js';
-export { StateStore, engineState } from './core/StateStore.js';
+export { default as EmotiveStateMachine } from './core/state/EmotiveStateMachine.js';
+export { EventManager, eventManager } from './core/events/EventManager.js';
+export { StateStore, engineState } from './core/state/StateStore.js';
 
 // Performance
 export { AnimationLoopManager, animationLoopManager, AnimationPriority } from './core/AnimationLoopManager.js';
@@ -39,10 +39,10 @@ export { AnimationLoopManager, animationLoopManager, AnimationPriority } from '.
 // AUDIO SYSTEMS (Primary Focus)
 // ============================================================================
 
-export { SoundSystem } from './core/SoundSystem.js';
-export { default as AudioLevelProcessor } from './core/AudioLevelProcessor.js';
-export { AudioAnalyzer } from './core/AudioAnalyzer.js';
-export { default as GrooveTemplates } from './core/GrooveTemplates.js';
+export { SoundSystem } from './core/audio/SoundSystem.js';
+export { default as AudioLevelProcessor } from './core/audio/AudioLevelProcessor.js';
+export { AudioAnalyzer } from './core/audio/AudioAnalyzer.js';
+export { default as GrooveTemplates } from './core/audio/GrooveTemplates.js';
 
 // ============================================================================
 // EMOTIONS & GESTURES
@@ -70,19 +70,19 @@ export {
 // BEHAVIORS
 // ============================================================================
 
-export { default as IdleBehavior } from './core/IdleBehavior.js';
-export { default as GazeTracker } from './core/GazeTracker.js';
+export { default as IdleBehavior } from './core/behavior/IdleBehavior.js';
+export { default as GazeTracker } from './core/behavior/GazeTracker.js';
 
 // ============================================================================
 // UTILITIES
 // ============================================================================
 
 // Error Handling
-export { default as ErrorBoundary } from './core/ErrorBoundary.js';
-export { ErrorLogger, getErrorLogger, resetErrorLogger } from './core/ErrorLogger.js';
+export { default as ErrorBoundary } from './core/events/ErrorBoundary.js';
+export { ErrorLogger, getErrorLogger, resetErrorLogger } from './core/events/ErrorLogger.js';
 
 // Performance
-export { default as DegradationManager } from './core/DegradationManager.js';
+export { default as DegradationManager } from './core/system/DegradationManager.js';
 
 // Color utilities
 export { interpolateHsl, applyUndertoneSaturation } from './utils/colorUtils.js';

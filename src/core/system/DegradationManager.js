@@ -42,7 +42,7 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import { browserCompatibility } from '../utils/browserCompatibility.js';
+import { browserCompatibility } from '../..utils/browserCompatibility.js';
 import { ErrorResponse, ErrorTypes } from './ErrorResponse.js';
 import { getErrorLogger } from './ErrorLogger.js';
 

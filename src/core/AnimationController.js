@@ -74,8 +74,8 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-// import PerformanceMonitor from './PerformanceMonitor.js'; // Unused - available for future performance monitoring
-import SimpleFPSCounter from './SimpleFPSCounter.js';
+// import PerformanceMonitor from './system/PerformanceMonitor.js'; // Unused - available for future performance monitoring
+import SimpleFPSCounter from './system/SimpleFPSCounter.js';
 import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 
 class AnimationController {

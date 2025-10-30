@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { GestureController } from '../../../src/mascot/GestureController.js';
+import { GestureController } from '../../../src/mascot/control/GestureController.js';
 
 describe('GestureController', () => {
     let gestureController;

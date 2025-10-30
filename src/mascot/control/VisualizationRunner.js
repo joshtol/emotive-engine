@@ -3,7 +3,7 @@
  * @module mascot/VisualizationRunner
  */
 
-import { getEmotionVisualParams, getEmotion } from '../core/emotions/index.js';
+import { getEmotionVisualParams, getEmotion } from '../../core/emotions/index.js';
 
 export class VisualizationRunner {
     constructor(mascot) {

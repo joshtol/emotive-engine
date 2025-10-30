@@ -7,7 +7,7 @@
  * - Threat level computation (closer = higher threat)
  * - Suspicion emotion visual property updates
  */
-import { getEmotion } from '../core/emotions/index.js';
+import { getEmotion } from '../../core/emotions/index.js';
 
 export class ThreatLevelCalculator {
     constructor(mascot) {

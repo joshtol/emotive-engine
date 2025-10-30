@@ -10,7 +10,7 @@
  * - Debug info rendering
  * - Performance logging
  */
-import { emotiveDebugger } from '../utils/debugger.js';
+import { emotiveDebugger } from '../../utils/debugger.js';
 
 export class RenderLayerOrchestrator {
     constructor(mascot) {

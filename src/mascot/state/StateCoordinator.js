@@ -5,8 +5,8 @@
  * @audience Modify this when changing state validation or transition logic
  */
 
-import { getEmotion, getEmotionVisualParams } from '../core/emotions/index.js';
-import rhythmIntegration from '../core/rhythmIntegration.js';
+import { getEmotion, getEmotionVisualParams } from '../../core/emotions/index.js';
+import rhythmIntegration from '../../core/audio/rhythmIntegration.js';
 
 export class StateCoordinator {
     constructor(mascot) {

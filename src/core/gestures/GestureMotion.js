@@ -19,7 +19,7 @@
  */
 
 import { getGesture, isBlendingGesture, isOverrideGesture } from './index.js';
-import rhythmIntegration from '../rhythmIntegration.js';
+import rhythmIntegration from '../audio/rhythmIntegration.js';
 
 /**
  * Apply gesture motion to a particle using the modular system

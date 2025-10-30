@@ -41,65 +41,65 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import CanvasManager from './core/CanvasManager.js';
-import ErrorBoundary from './core/ErrorBoundary.js';
-import EmotiveStateMachine from './core/EmotiveStateMachine.js';
+import CanvasManager from './core/canvas/CanvasManager.js';
+import ErrorBoundary from './core/events/ErrorBoundary.js';
+import EmotiveStateMachine from './core/state/EmotiveStateMachine.js';
 import ParticleSystem from './core/ParticleSystem.js';
 import EmotiveRenderer from './core/EmotiveRenderer.js';
-import GazeTracker from './core/GazeTracker.js';
-import IdleBehavior from './core/IdleBehavior.js';
+import GazeTracker from './core/behavior/GazeTracker.js';
+import IdleBehavior from './core/behavior/IdleBehavior.js';
 import { getEmotionVisualParams, getEmotion } from './core/emotions/index.js';
 import * as Emotions from './core/emotions/index.js';
 import * as Gestures from './core/gestures/index.js';
 import * as ParticleBehaviors from './core/particles/behaviors/index.js';
 import PositionController from './utils/PositionController.js';
 import { initSentry, addBreadcrumb } from './utils/sentry.js';
-import { SoundSystem } from './core/SoundSystem.js';
+import { SoundSystem } from './core/audio/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
-import AudioLevelProcessor from './core/AudioLevelProcessor.js';
-import { EventManager } from './core/EventManager.js';
-import AccessibilityManager from './core/AccessibilityManager.js';
-import MobileOptimization from './core/MobileOptimization.js';
-import PluginSystem from './core/PluginSystem.js';
+import AudioLevelProcessor from './core/audio/AudioLevelProcessor.js';
+import { EventManager } from './core/events/EventManager.js';
+import AccessibilityManager from './core/optimization/AccessibilityManager.js';
+import MobileOptimization from './core/optimization/MobileOptimization.js';
+import PluginSystem from './core/plugins/PluginSystem.js';
 import { browserCompatibility, CanvasContextRecovery } from './utils/browserCompatibility.js';
 import { emotiveDebugger, runtimeCapabilities } from './utils/debugger.js';
-import rhythmIntegration from './core/rhythmIntegration.js';
+import rhythmIntegration from './core/audio/rhythmIntegration.js';
 import ShapeMorpher from './core/ShapeMorpher.js';
-import { AudioAnalyzer } from './core/AudioAnalyzer.js';
+import { AudioAnalyzer } from './core/audio/AudioAnalyzer.js';
 import gestureCompatibility from './core/GestureCompatibility.js';
-import GrooveTemplates from './core/GrooveTemplates.js';
+import GrooveTemplates from './core/audio/GrooveTemplates.js';
 
 // Import modular handlers
-import { AudioHandler } from './mascot/AudioHandler.js';
-import { GestureController } from './mascot/GestureController.js';
-import { StateCoordinator } from './mascot/StateCoordinator.js';
-import { VisualizationRunner } from './mascot/VisualizationRunner.js';
-import { ConfigurationManager } from './mascot/ConfigurationManager.js';
-import { InitializationManager } from './mascot/InitializationManager.js';
-import { RenderStateBuilder } from './mascot/RenderStateBuilder.js';
-import { ThreatLevelCalculator } from './mascot/ThreatLevelCalculator.js';
-import { ParticleConfigCalculator } from './mascot/ParticleConfigCalculator.js';
-import { GestureMotionProvider } from './mascot/GestureMotionProvider.js';
-import { RenderLayerOrchestrator } from './mascot/RenderLayerOrchestrator.js';
-import { DebugInfoRenderer } from './mascot/DebugInfoRenderer.js';
-import { DestructionManager } from './mascot/DestructionManager.js';
-import { BreathingAnimationController } from './mascot/BreathingAnimationController.js';
-import { SystemStatusReporter } from './mascot/SystemStatusReporter.js';
-import { SleepWakeManager } from './mascot/SleepWakeManager.js';
-import { SpeechManager } from './mascot/SpeechManager.js';
-import { AudioLevelCallbackManager } from './mascot/AudioLevelCallbackManager.js';
-import { OrbScaleAnimator } from './mascot/OrbScaleAnimator.js';
-import { RecordingStateManager } from './mascot/RecordingStateManager.js';
-import { BreathingPatternManager } from './mascot/BreathingPatternManager.js';
+import { AudioHandler } from './mascot/audio/AudioHandler.js';
+import { GestureController } from './mascot/control/GestureController.js';
+import { StateCoordinator } from './mascot/state/StateCoordinator.js';
+import { VisualizationRunner } from './mascot/control/VisualizationRunner.js';
+import { ConfigurationManager } from './mascot/system/ConfigurationManager.js';
+import { InitializationManager } from './mascot/system/InitializationManager.js';
+import { RenderStateBuilder } from './mascot/rendering/RenderStateBuilder.js';
+import { ThreatLevelCalculator } from './mascot/rendering/ThreatLevelCalculator.js';
+import { ParticleConfigCalculator } from './mascot/rendering/ParticleConfigCalculator.js';
+import { GestureMotionProvider } from './mascot/rendering/GestureMotionProvider.js';
+import { RenderLayerOrchestrator } from './mascot/rendering/RenderLayerOrchestrator.js';
+import { DebugInfoRenderer } from './mascot/rendering/DebugInfoRenderer.js';
+import { DestructionManager } from './mascot/system/DestructionManager.js';
+import { BreathingAnimationController } from './mascot/animation/BreathingAnimationController.js';
+import { SystemStatusReporter } from './mascot/system/SystemStatusReporter.js';
+import { SleepWakeManager } from './mascot/state/SleepWakeManager.js';
+import { SpeechManager } from './mascot/audio/SpeechManager.js';
+import { AudioLevelCallbackManager } from './mascot/audio/AudioLevelCallbackManager.js';
+import { OrbScaleAnimator } from './mascot/animation/OrbScaleAnimator.js';
+import { RecordingStateManager } from './mascot/state/RecordingStateManager.js';
+import { BreathingPatternManager } from './mascot/animation/BreathingPatternManager.js';
 
 // Import Semantic Performance System
-import { PerformanceSystem } from './core/PerformanceSystem.js';
-import { ContextManager } from './core/ContextManager.js';
-import { SequenceExecutor } from './core/SequenceExecutor.js';
+import { PerformanceSystem } from './core/plugins/PerformanceSystem.js';
+import { ContextManager } from './core/state/ContextManager.js';
+import { SequenceExecutor } from './core/plugins/SequenceExecutor.js';
 
 // Import LLM Integration
-import LLMResponseHandler from './core/LLMResponseHandler.js';
-import { generateSystemPrompt } from './core/llm-templates.js';
+import LLMResponseHandler from './core/integration/LLMResponseHandler.js';
+import { generateSystemPrompt } from './core/integration/llm-templates.js';
 
 class EmotiveMascot {
     constructor(config = {}) {

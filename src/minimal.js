@@ -21,14 +21,14 @@ export { default as EmotiveMascotPublic } from './EmotiveMascotPublic.js';
 
 // Rendering
 export { default as EmotiveRenderer } from './core/EmotiveRenderer.js';
-export { default as CanvasManager } from './core/CanvasManager.js';
+export { default as CanvasManager } from './core/canvas/CanvasManager.js';
 
 // Particle System
 export { default as ParticleSystem } from './core/ParticleSystem.js';
 
 // State Management
-export { EventManager, eventManager } from './core/EventManager.js';
-export { StateStore, engineState } from './core/StateStore.js';
+export { EventManager, eventManager } from './core/events/EventManager.js';
+export { StateStore, engineState } from './core/state/StateStore.js';
 
 // ============================================================================
 // EMOTIONS & GESTURES
@@ -53,7 +53,7 @@ export {
 // ============================================================================
 
 // Error Handling
-export { default as ErrorBoundary } from './core/ErrorBoundary.js';
+export { default as ErrorBoundary } from './core/events/ErrorBoundary.js';
 
 // Color utilities
 export { interpolateHsl, applyUndertoneSaturation } from './utils/colorUtils.js';

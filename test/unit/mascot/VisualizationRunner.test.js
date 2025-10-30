@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { VisualizationRunner } from '../../../src/mascot/VisualizationRunner.js';
+import { VisualizationRunner } from '../../../src/mascot/control/VisualizationRunner.js';
 
 describe('VisualizationRunner', () => {
     let visualizationRunner;

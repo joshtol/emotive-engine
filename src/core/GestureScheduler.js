@@ -20,9 +20,9 @@
 
 import { getGesture } from './gestures/gestureCacheWrapper.js';
 // import { getGestureProperties } from './gestures/gestureCacheWrapper.js'; // Unused - available for future use
-import rhythmEngine from './rhythm.js';
-import rhythmIntegration from './rhythmIntegration.js';
-import musicalDuration from './MusicalDuration.js';
+import rhythmEngine from './audio/rhythm.js';
+import rhythmIntegration from './audio/rhythmIntegration.js';
+import musicalDuration from './audio/MusicalDuration.js';
 
 class GestureScheduler {
     constructor(mascot) {

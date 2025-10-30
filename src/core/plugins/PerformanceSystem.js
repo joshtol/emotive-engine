@@ -19,7 +19,7 @@
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
-import { PERFORMANCES } from './performances/index.js';
+import { PERFORMANCES } from '../performances/index.js';
 
 export class PerformanceSystem {
     constructor(options = {}) {

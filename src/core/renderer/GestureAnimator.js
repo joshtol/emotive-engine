@@ -5,7 +5,7 @@
 
 import { getGesture } from '../gestures/gestureCacheWrapper.js';
 // import { getGestureProperties } from '../gestures/gestureCacheWrapper.js'; // Unused
-import musicalDuration from '../MusicalDuration.js';
+import musicalDuration from '../audio/MusicalDuration.js';
 import { PhysicalGestureAnimator } from './PhysicalGestureAnimator.js';
 import { VisualEffectAnimator } from './VisualEffectAnimator.js';
 import { BreathGestureAnimator } from './BreathGestureAnimator.js';

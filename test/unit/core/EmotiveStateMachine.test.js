@@ -22,8 +22,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import EmotiveStateMachine from '../../../src/core/EmotiveStateMachine.js';
-import ErrorBoundary from '../../../src/core/ErrorBoundary.js';
+import EmotiveStateMachine from '../../../src/core/state/EmotiveStateMachine.js';
+import ErrorBoundary from '../../../src/core/events/ErrorBoundary.js';
 
 describe('EmotiveStateMachine - Integration Tests', () => {
     let stateMachine;

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ConfigurationManager } from '../../../src/mascot/ConfigurationManager.js';
+import { ConfigurationManager } from '../../../src/mascot/system/ConfigurationManager.js';
 
 describe('ConfigurationManager', () => {
     let configManager;

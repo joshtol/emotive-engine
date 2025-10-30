@@ -4,8 +4,8 @@
  */
 
 import EmotiveMascotPublic from './EmotiveMascotPublic.js';
-import rhythmIntegration from './core/rhythmIntegration.js';
-import { rhythmEngine } from './core/rhythm.js';
+import rhythmIntegration from './core/audio/rhythmIntegration.js';
+import { rhythmEngine } from './core/audio/rhythm.js';
 import GestureScheduler from './core/GestureScheduler.js';
 import FPSCounter from './utils/FPSCounter.js';
 

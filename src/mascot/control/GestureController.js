@@ -5,8 +5,8 @@
  * @audience Modify this when adding gesture features or changing execution logic
  */
 
-import { getGesture } from '../core/gestures/index.js';
-import rhythmIntegration from '../core/rhythmIntegration.js';
+import { getGesture } from '../../core/gestures/index.js';
+import rhythmIntegration from '../../core/audio/rhythmIntegration.js';
 
 export class GestureController {
     constructor(mascot) {
@@ -74,7 +74,7 @@ export class GestureController {
     init() {
         // Try to load GestureCompatibility if not already loaded
         if (!this.gestureCompatibility) {
-            import('../core/GestureCompatibility.js').then(module => {
+            import('../../core/GestureCompatibility.js').then(module => {
                 this.gestureCompatibility = module.default;
             }).catch(err => {
                 console.warn('GestureCompatibility not available:', err);
@@ -202,7 +202,7 @@ export class GestureController {
             // Import gesture compatibility if not loaded
             if (!this.gestureCompatibility) {
                 // Try to load it dynamically
-                import('../core/GestureCompatibility.js').then(module => {
+                import('../../core/GestureCompatibility.js').then(module => {
                     this.gestureCompatibility = module.default;
                 }).catch(err => {
                     console.warn('GestureCompatibility not available:', err);

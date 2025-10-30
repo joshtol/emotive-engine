@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AudioHandler } from '../../../src/mascot/AudioHandler.js';
+import { AudioHandler } from '../../../src/mascot/audio/AudioHandler.js';
 
 describe('AudioHandler', () => {
     let audioHandler;

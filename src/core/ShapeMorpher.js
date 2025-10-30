@@ -10,7 +10,7 @@
  * @module core/ShapeMorpher
  */
 
-import { rhythmEngine } from './rhythm.js';
+import { rhythmEngine } from './audio/rhythm.js';
 import { SHAPE_DEFINITIONS } from './shapes/shapeDefinitions.js';
 import { shapeCache } from './cache/ShapeCache.js';
 import arrayPool from '../utils/ArrayPool.js';

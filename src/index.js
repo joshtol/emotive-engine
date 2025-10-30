@@ -22,33 +22,33 @@ export { default as EmotiveMascotPublic } from './EmotiveMascotPublic.js';
 // ============================================================================
 
 // State Management
-export { default as EmotiveStateMachine } from './core/EmotiveStateMachine.js';
-export { EventManager, eventManager } from './core/EventManager.js';
-export { StateStore, engineState } from './core/StateStore.js';
+export { default as EmotiveStateMachine } from './core/state/EmotiveStateMachine.js';
+export { EventManager, eventManager } from './core/events/EventManager.js';
+export { StateStore, engineState } from './core/state/StateStore.js';
 
 // Rendering
 export { default as EmotiveRenderer } from './core/EmotiveRenderer.js';
-export { default as CanvasManager } from './core/CanvasManager.js';
+export { default as CanvasManager } from './core/canvas/CanvasManager.js';
 export { default as AnimationController } from './core/AnimationController.js';
 
 // Performance Optimization
 export { AnimationLoopManager, animationLoopManager, AnimationPriority } from './core/AnimationLoopManager.js';
 export { GradientCache, gradientCache } from './core/renderer/GradientCache.js';
 export { default as ContextStateManager } from './core/renderer/ContextStateManager.js';
-export { PerformanceMonitor, performanceMonitor } from './core/PerformanceMonitor.js';
-export { ErrorTracker, errorTracker } from './core/ErrorTracker.js';
-export { LazyLoader, lazyLoader, lazyLoad, preloadModules, prefetchModules } from './core/LazyLoader.js';
-export { SecurityManager, securityManager } from './core/SecurityManager.js';
-export { HealthCheck, healthCheck } from './core/HealthCheck.js';
-export { FeatureFlags, featureFlags, isFeatureEnabled, getFeatureVariant } from './core/FeatureFlags.js';
+export { PerformanceMonitor, performanceMonitor } from './core/system/PerformanceMonitor.js';
+export { ErrorTracker, errorTracker } from './core/events/ErrorTracker.js';
+export { LazyLoader, lazyLoader, lazyLoad, preloadModules, prefetchModules } from './core/optimization/LazyLoader.js';
+export { SecurityManager, securityManager } from './core/system/SecurityManager.js';
+export { HealthCheck, healthCheck } from './core/system/HealthCheck.js';
+export { FeatureFlags, featureFlags, isFeatureEnabled, getFeatureVariant } from './core/system/FeatureFlags.js';
 
 // Particle System
 export { default as ParticleSystem } from './core/ParticleSystem.js';
 
 // Audio
-export { SoundSystem } from './core/SoundSystem.js';
-export { default as AudioLevelProcessor } from './core/AudioLevelProcessor.js';
-export { AudioAnalyzer } from './core/AudioAnalyzer.js';
+export { SoundSystem } from './core/audio/SoundSystem.js';
+export { default as AudioLevelProcessor } from './core/audio/AudioLevelProcessor.js';
+export { AudioAnalyzer } from './core/audio/AudioAnalyzer.js';
 
 // ============================================================================
 // FEATURES
@@ -82,28 +82,28 @@ export {
 } from './core/particles/behaviors/index.js';
 
 // Groove Templates
-export { default as GrooveTemplates } from './core/GrooveTemplates.js';
+export { default as GrooveTemplates } from './core/audio/GrooveTemplates.js';
 
 // Behaviors
-export { default as IdleBehavior } from './core/IdleBehavior.js';
-export { default as GazeTracker } from './core/GazeTracker.js';
+export { default as IdleBehavior } from './core/behavior/IdleBehavior.js';
+export { default as GazeTracker } from './core/behavior/GazeTracker.js';
 
 // ============================================================================
 // UTILITIES
 // ============================================================================
 
 // Error Handling
-export { default as ErrorBoundary } from './core/ErrorBoundary.js';
-export { ErrorLogger, getErrorLogger, resetErrorLogger } from './core/ErrorLogger.js';
+export { default as ErrorBoundary } from './core/events/ErrorBoundary.js';
+export { ErrorLogger, getErrorLogger, resetErrorLogger } from './core/events/ErrorLogger.js';
 
 // Performance (already exported above)
-export { default as DegradationManager } from './core/DegradationManager.js';
+export { default as DegradationManager } from './core/system/DegradationManager.js';
 
 // Accessibility
-export { default as AccessibilityManager } from './core/AccessibilityManager.js';
+export { default as AccessibilityManager } from './core/optimization/AccessibilityManager.js';
 
 // Optimization
-export { default as MobileOptimization } from './core/MobileOptimization.js';
+export { default as MobileOptimization } from './core/optimization/MobileOptimization.js';
 
 // Browser Support
 export {

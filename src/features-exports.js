@@ -7,9 +7,9 @@
 export { default as ParticleSystem } from './core/ParticleSystem.js';
 
 // Audio Features
-export { SoundSystem } from './core/SoundSystem.js';
-export { default as AudioLevelProcessor } from './core/AudioLevelProcessor.js';
-export { AudioAnalyzer } from './core/AudioAnalyzer.js';
+export { SoundSystem } from './core/audio/SoundSystem.js';
+export { default as AudioLevelProcessor } from './core/audio/AudioLevelProcessor.js';
+export { AudioAnalyzer } from './core/audio/AudioAnalyzer.js';
 
 // Behaviors
-export { default as IdleBehavior } from './core/IdleBehavior.js';
+export { default as IdleBehavior } from './core/behavior/IdleBehavior.js';
