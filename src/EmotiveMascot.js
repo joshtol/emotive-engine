@@ -105,6 +105,7 @@ import { OffsetPositionManager } from './mascot/rendering/OffsetPositionManager.
 import { RotationController } from './mascot/rendering/RotationController.js';
 import { FrustrationContextManager } from './mascot/state/FrustrationContextManager.js';
 import { PerformanceBehaviorManager } from './mascot/performance/PerformanceBehaviorManager.js';
+import { PerformanceMonitoringManager } from './mascot/performance/PerformanceMonitoringManager.js';
 import { DebugProfilingManager } from './mascot/debug/DebugProfilingManager.js';
 import { HealthCheckManager } from './mascot/system/HealthCheckManager.js';
 
@@ -724,7 +725,7 @@ class EmotiveMascot {
      * @returns {Object|null} Degradation manager information or null if disabled
      */
     getDegradationStatus() {
-        return this.diagnosticsManager.getDegradationStatus();
+        return this.performanceMonitoringManager.getDegradationStatus();
     }
 
     /**
@@ -733,7 +734,7 @@ class EmotiveMascot {
      * @returns {boolean} True if level was set successfully
      */
     setDegradationLevel(level) {
-        return this.diagnosticsManager.setDegradationLevel(level);
+        return this.performanceMonitoringManager.setDegradationLevel(level);
     }
 
     /**
@@ -742,13 +743,7 @@ class EmotiveMascot {
      * @returns {boolean} True if feature is available
      */
     isFeatureAvailable(feature) {
-        if (!this.degradationManager) {
-            // Fallback to basic feature detection
-            const features = browserCompatibility.featureDetection.getFeatures();
-            return features[feature] || false;
-        }
-        
-        return this.degradationManager.isFeatureAvailable(feature);
+        return this.performanceMonitoringManager.isFeatureAvailable(feature);
     }
 
     /**
@@ -1070,7 +1065,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setTargetFPS(targetFPS) {
-        return this.animationFrameController.setTargetFPS(targetFPS);
+        return this.performanceMonitoringManager.setTargetFPS(targetFPS);
     }
 
     /**
@@ -1078,7 +1073,7 @@ class EmotiveMascot {
      * @returns {number} Target frames per second
      */
     getTargetFPS() {
-        return this.animationFrameController.getTargetFPS();
+        return this.performanceMonitoringManager.getTargetFPS();
     }
 
     /**
@@ -1131,21 +1126,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setPerformanceDegradation(enabled) {
-        const metrics = this.animationController.getPerformanceMetrics();
-        
-        if (enabled && !metrics.performanceDegradation) {
-            const currentMax = this.particleSystem.maxParticles;
-            const newMax = Math.max(5, Math.floor(currentMax * 0.5));
-            this.particleSystem.setMaxParticles(newMax);
-            
-            // Forced performance degradation
-        } else if (!enabled && metrics.performanceDegradation) {
-            this.particleSystem.setMaxParticles(this.config.maxParticles);
-            
-            // Disabled performance degradation
-        }
-        
-        return this;
+        return this.performanceMonitoringManager.setPerformanceDegradation(enabled);
     }
 
     /**

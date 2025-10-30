@@ -83,6 +83,7 @@ import { OffsetPositionManager } from '../rendering/OffsetPositionManager.js';
 import { RotationController } from '../rendering/RotationController.js';
 import { FrustrationContextManager } from '../state/FrustrationContextManager.js';
 import { PerformanceBehaviorManager } from '../performance/PerformanceBehaviorManager.js';
+import { PerformanceMonitoringManager } from '../performance/PerformanceMonitoringManager.js';
 import { DebugProfilingManager } from '../debug/DebugProfilingManager.js';
 import { HealthCheckManager } from './HealthCheckManager.js';
 
@@ -507,6 +508,7 @@ export class InitializationManager {
         this.mascot.rotationController = new RotationController(this.mascot);
         this.mascot.frustrationContextManager = new FrustrationContextManager(this.mascot);
         this.mascot.performanceBehaviorManager = new PerformanceBehaviorManager(this.mascot);
+        this.mascot.performanceMonitoringManager = new PerformanceMonitoringManager(this.mascot);
         this.mascot.debugProfilingManager = new DebugProfilingManager(this.mascot);
         this.mascot.healthCheckManager = new HealthCheckManager(this.mascot);
         this.mascot.configurationManager = new ConfigurationManager(this.mascot, config);
