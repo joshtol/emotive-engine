@@ -9,6 +9,7 @@
 
 import EmotiveMascot from './EmotiveMascot.js';
 import { AudioManager } from './public/AudioManager.js';
+import { GestureController } from './public/GestureController.js';
 
 class EmotiveMascotPublic {
     constructor(config = {}) {
@@ -24,7 +25,15 @@ class EmotiveMascotPublic {
 
         // Initialize managers
         this._audioManager = new AudioManager(() => this._getReal());
-        
+        this._gestureController = new GestureController(
+            () => this._getReal(),
+            {
+                isRecording: () => this._isRecording,
+                startTime: () => this._recordingStartTime,
+                timeline: () => this._timeline
+            }
+        );
+
         // Bind public methods
         this.init = this.init.bind(this);
         this.start = this.start.bind(this);
@@ -309,21 +318,7 @@ class EmotiveMascotPublic {
      * @param {number} [timestamp] - Optional timestamp for recording
      */
     triggerGesture(gestureName, timestamp) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-
-        // Record if in recording mode
-        if (this._isRecording) {
-            const time = timestamp || (Date.now() - this._recordingStartTime);
-            this._timeline.push({
-                type: 'gesture',
-                name: gestureName,
-                time
-            });
-        }
-
-        // Trigger in engine
-        engine.express(gestureName);
+        return this._gestureController.triggerGesture(gestureName, timestamp);
     }
 
     /**
@@ -332,7 +327,7 @@ class EmotiveMascotPublic {
      * @param {number} [timestamp] - Optional timestamp for recording
      */
     express(gestureName, timestamp) {
-        return this.triggerGesture(gestureName, timestamp);
+        return this._gestureController.express(gestureName, timestamp);
     }
 
     /**
@@ -340,52 +335,7 @@ class EmotiveMascotPublic {
      * @param {string} chainName - Name of the chain combo to execute
      */
     chain(chainName) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-
-        // Chain combo definitions
-        const chainDefinitions = {
-            'rise': 'breathe > sway+lean+tilt',
-            'flow': 'sway > lean+tilt > spin > bounce',
-            'burst': 'jump > nod > shake > flash',
-            'drift': 'sway+breathe+float+drift',
-            'chaos': 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
-            'morph': 'expand > contract > morph+glow > expand+flash',
-            'rhythm': 'pulse > pulse+sparkle > pulse+flicker',
-            'spiral': 'spin > orbital > twist > orbital+sparkle',
-            'routine': 'nod > bounce > spin+sparkle > sway+pulse > nod+flash',
-            'radiance': 'sparkle > pulse+flicker > shimmer',
-            'twinkle': 'sparkle > flash > pulse+sparkle > shimmer+flicker',
-            'stream': 'wave > nod+pulse > sparkle > flash'
-        };
-
-        const chainDefinition = chainDefinitions[chainName.toLowerCase()];
-        if (!chainDefinition) {
-            console.warn(`Chain combo '${chainName}' not found`);
-            return;
-        }
-
-        // Parse and execute chain
-        if (!chainDefinition.includes('>')) {
-            // Simultaneous gestures (e.g., 'sway+breathe+float+drift')
-            const gestures = chainDefinition.split('+').map(g => g.trim()).filter(g => g.length > 0);
-            gestures.forEach(gesture => {
-                engine.express(gesture);
-            });
-        } else {
-            // Sequential groups (e.g., 'jump > nod > shake > flash')
-            const gestureGroups = chainDefinition.split('>').map(g => g.trim()).filter(g => g.length > 0);
-
-            gestureGroups.forEach((group, groupIndex) => {
-                setTimeout(() => {
-                    // Each group can have simultaneous gestures (e.g., 'sway+pulse')
-                    const simultaneousGestures = group.split('+').map(g => g.trim()).filter(g => g.length > 0);
-                    simultaneousGestures.forEach(gesture => {
-                        engine.express(gesture);
-                    });
-                }, groupIndex * 500); // 500ms delay between groups
-            });
-        }
+        return this._gestureController.chain(chainName);
     }
 
     /**
@@ -402,15 +352,7 @@ class EmotiveMascotPublic {
      * @param {string|null} undertone - Undertone name or null to clear
      */
     updateUndertone(undertone) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-
-        // Apply undertone to current emotion
-        if (engine.updateUndertone && typeof engine.updateUndertone === 'function') {
-            engine.updateUndertone(undertone);
-        } else if (engine.addUndertone && typeof engine.addUndertone === 'function') {
-            engine.addUndertone(undertone);
-        }
+        return this._gestureController.updateUndertone(undertone);
     }
 
     /**
