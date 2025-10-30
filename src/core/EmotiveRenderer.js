@@ -110,6 +110,7 @@ import { EpisodicEffectController } from './renderer/EpisodicEffectController.js
 import { RotationManager } from './renderer/RotationManager.js';
 import { GazeTracker } from './renderer/GazeTracker.js';
 import { CanvasSetupManager } from './renderer/CanvasSetupManager.js';
+import { RenderPerformanceManager } from './renderer/RenderPerformanceManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -147,6 +148,7 @@ class EmotiveRenderer {
         this.rotationManager = new RotationManager(this);
         this.gazeTracker = new GazeTracker(this);
         this.canvasSetupManager = new CanvasSetupManager(this);
+        this.renderPerformanceManager = new RenderPerformanceManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -646,20 +648,8 @@ class EmotiveRenderer {
      * Main render method
      */
     render(state, deltaTime, gestureTransform = null) {
-        // Performance marker: Frame start
-        if (this.performanceMonitor) {
-            this.performanceMonitor.markFrameStart();
-        }
-        const frameStartTime = performance.now();
-
-        // Handle forced clean render after tab switch
-        if (this.forceCleanRender) {
-            this.forceCleanRender = false;
-            // Clear any rendering artifacts
-            if (this.canvas && this.ctx) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-        }
+        // Frame initialization: performance markers and cleanup (delegated to RenderPerformanceManager)
+        const frameStartTime = this.renderPerformanceManager.initializeFrame();
 
         // Get ambient dance transform and merge with gesture transform
         const ambientTransform = this.ambientDanceAnimator.getTransform(deltaTime);
