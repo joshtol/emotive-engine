@@ -76,6 +76,11 @@ import { StateCoordinator } from './mascot/StateCoordinator.js';
 import { VisualizationRunner } from './mascot/VisualizationRunner.js';
 import { ConfigurationManager } from './mascot/ConfigurationManager.js';
 import { InitializationManager } from './mascot/InitializationManager.js';
+import { RenderStateBuilder } from './mascot/RenderStateBuilder.js';
+import { ThreatLevelCalculator } from './mascot/ThreatLevelCalculator.js';
+import { ParticleConfigCalculator } from './mascot/ParticleConfigCalculator.js';
+import { GestureMotionProvider } from './mascot/GestureMotionProvider.js';
+import { RenderLayerOrchestrator } from './mascot/RenderLayerOrchestrator.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/PerformanceSystem.js';
@@ -147,6 +152,13 @@ class EmotiveMascot {
         // Delegate initialization to InitializationManager
         const initManager = new InitializationManager(this, config);
         initManager.initialize();
+
+        // Initialize render managers (after all components are initialized)
+        this.renderStateBuilder = new RenderStateBuilder(this);
+        this.threatLevelCalculator = new ThreatLevelCalculator(this);
+        this.particleConfigCalculator = new ParticleConfigCalculator(this);
+        this.gestureMotionProvider = new GestureMotionProvider(this);
+        this.renderLayerOrchestrator = new RenderLayerOrchestrator(this);
     }
 
     /**
@@ -1398,111 +1410,37 @@ class EmotiveMascot {
      * Renders the current frame (called by AnimationController)
      */
     render() {
-        let deltaTime = 16.67; // Default fallback value
-        let renderStart = 0;
-        
         try {
-            renderStart = this.debugMode ? performance.now() : 0;
-            
-            // Get deltaTime from animation controller
-            deltaTime = this.animationController ? this.animationController.deltaTime : 16.67;
-            
-            // Prepare render state
-            const renderState = {
-                properties: this.stateMachine.getCurrentEmotionalProperties(),
-                emotion: this.stateMachine.getCurrentState().emotion,
-                undertone: this.stateMachine.getCurrentState().undertone,
-                particleSystem: this.particleSystem,
-                speaking: this.speaking,
-                audioLevel: this.audioLevelProcessor.getCurrentLevel(),
-                gazeOffset: this.gazeTracker ? this.gazeTracker.currentGaze : { x: 0, y: 0 }
-            };
-            
-            
+            // Build render state and timing (delegated to RenderStateBuilder)
+            const { renderStart, deltaTime, renderState } = this.renderStateBuilder.buildRenderState();
+
             // Track frame timing for debugging
             if (this.debugMode) {
                 emotiveDebugger.trackFrameTiming(deltaTime);
             }
-            
-            // Always use EmotiveRenderer
+
             // Clear canvas ONCE at the beginning
             this.canvasManager.clear();
-            
+
             // Update gaze tracker
             if (this.gazeTracker) {
                 this.gazeTracker.update(deltaTime);
             }
-            
-            // Update threat level for suspicion state based on gaze distance
-            if (renderState.emotion === 'suspicion' && this.gazeTracker) {
-                const suspicionEmotion = getEmotion('suspicion');
-                if (suspicionEmotion && suspicionEmotion.visual) {
-                    // Use gazeState to adjust suspicion rendering
-                    this.gazeTracker.getState();
-                    const {mousePos} = this.gazeTracker;
-                    const centerX = this.canvasManager.width / 2;
-                    const centerY = this.canvasManager.height / 2 - this.config.topOffset;
-                    
-                    // Calculate distance from mouse to center
-                    const distance = Math.sqrt(
-                        Math.pow(mousePos.x - centerX, 2) + 
-                        Math.pow(mousePos.y - centerY, 2)
-                    );
-                    
-                    // Maximum distance for threat calculation (canvas diagonal / 3)
-                    const maxDist = Math.min(this.canvasManager.width, this.canvasManager.height) / 2;
-                    
-                    // Closer = higher threat (inverted distance)
-                    const threatLevel = Math.max(0, Math.min(1, 1 - (distance / maxDist)));
-                    
-                    // Update the threat level
-                    suspicionEmotion.visual.threatLevel = threatLevel;
-                }
-            }
-            
-            // For Emotive style, convert emotion to visual params (AFTER updating threat level)
+
+            // Update threat level for suspicion emotion (delegated to ThreatLevelCalculator)
+            this.threatLevelCalculator.updateThreatLevel(renderState);
+
+            // Convert emotion to visual params (AFTER updating threat level)
             const emotionParams = getEmotionVisualParams(renderState.emotion);
-            
+
+            // Set emotional state on renderer
             this.renderer.setEmotionalState(renderState.emotion, emotionParams, renderState.undertone);
-            
-            // Always use effective center for particle spawning (with position offsets applied)
-            const effectiveCenter = this.renderer.getEffectiveCenter();
-            const orbX = effectiveCenter.x;
-            let orbY = effectiveCenter.y - this.config.topOffset;
 
-            // Spawn new particles based on emotion at ORB position
-            // Get min/max from state machine
-            const stateProps = this.stateMachine.getCurrentEmotionalProperties();
+            // Calculate particle configuration (delegated to ParticleConfigCalculator)
+            const particleConfig = this.particleConfigCalculator.calculateParticleConfig(renderState, emotionParams);
+            const { orbX, orbY, particleBehavior, particleRate, minParticles, maxParticles } = particleConfig;
 
-            // Apply vertical offset for certain emotions (like excited for exclamation mark)
-            if (stateProps.verticalOffset) {
-                orbY = effectiveCenter.y - this.config.topOffset + (this.canvasManager.height * stateProps.verticalOffset);
-            }
-            
-            // Apply undertone modifiers to particle behavior
-            let particleBehavior = emotionParams.particleBehavior || 'ambient';
-            let particleRate = emotionParams.particleRate || 15;
-
-            // Use emotionParams min/max if available, otherwise fall back to stateProps
-            const minParticles = emotionParams.minParticles !== undefined ? emotionParams.minParticles : (stateProps.minParticles || 0);
-            let maxParticles = emotionParams.maxParticles !== undefined ? emotionParams.maxParticles : (stateProps.maxParticles || 10);
-            
-            
-            // Special case for zen: mix falling and orbiting behaviors
-            if (renderState.emotion === 'zen') {
-                // Randomly choose between falling (sad) and orbiting (love) for each spawn
-                particleBehavior = Math.random() < 0.6 ? 'falling' : 'orbiting';
-            }
-            
-            // Check if renderer has undertone overrides
-            if (this.renderer.state && this.renderer.state.particleBehaviorOverride) {
-                particleBehavior = this.renderer.state.particleBehaviorOverride;
-            }
-            if (this.renderer.state && this.renderer.state.particleRateMult) {
-                particleRate = Math.floor(particleRate * this.renderer.state.particleRateMult);
-                maxParticles = Math.floor(maxParticles * this.renderer.state.particleRateMult);
-            }
-            
+            // Spawn particles at orb position
             this.particleSystem.spawn(
                 particleBehavior,
                 renderState.emotion,
@@ -1513,122 +1451,28 @@ class EmotiveMascot {
                 null,  // no forced count
                 minParticles,
                 maxParticles,
-                this.renderer.particleScaleFactor || this.renderer.scaleFactor || 1,  // Use particle-specific scale factor
-                this.config.classicConfig?.particleSizeMultiplier || 1,  // Pass particle size multiplier
-                emotionParams.particleColors || null,  // Pass emotion colors
-                renderState.undertone  // Pass undertone for saturation adjustments
+                this.renderer.particleScaleFactor || this.renderer.scaleFactor || 1,
+                this.config.classicConfig?.particleSizeMultiplier || 1,
+                emotionParams.particleColors || null,
+                renderState.undertone
             );
-            
-            // Debug logging disabled to prevent console spam
-            // Uncomment only for debugging particle issues
-            // if (!this._particleDebugCounter) this._particleDebugCounter = 0;
-            // this._particleDebugCounter++;
-            // if (this._particleDebugCounter % 120 === 0) {  // Log every 2 seconds at 60fps
-            //     Particle status:
-            //         behavior: particleBehavior,
-            //         rate: particleRate,
-            //         emotion: renderState.emotion,
-            //         minParticles,
-            //         maxParticles,
-            //         currentCount: this.particleSystem.particles.length,
-            //         stats: this.particleSystem.getStats(),
-            //         position: { x: orbX, y: orbY }
-            //     });
-            // }
-            
-            // Get undertone modifier from renderer if present
-            const undertoneModifier = this.renderer.getUndertoneModifier ? 
-                this.renderer.getUndertoneModifier() : null;
-            
-            // Add zen vortex intensity to undertone modifier if in zen state
-            let particleModifier = undertoneModifier;
-            if (renderState.emotion === 'zen' && this.renderer.state.zenVortexIntensity) {
-                particleModifier = { ...(undertoneModifier || {}), zenVortexIntensity: this.renderer.state.zenVortexIntensity };
-            }
-            
-            // Get current gesture info from renderer or modular gesture
-            let gestureMotion = null;
-            let gestureProgress = 0;
-            
-            // First check for modular gesture
-            if (this.currentModularGesture) {
-                const elapsed = performance.now() - this.currentModularGesture.startTime;
-                gestureProgress = Math.min(elapsed / this.currentModularGesture.duration, 1);
-                
-                if (gestureProgress >= 1) {
-                    // Ensure cleanup happens before clearing gesture
-                    gestureMotion = {
-                        type: this.currentModularGesture.type,
-                        amplitude: 1.0,
-                        frequency: 1.0,
-                        intensity: 1.0
-                    };
-                    // Pass progress = 1 to trigger cleanup
-                    gestureProgress = 1.0;
-                    // Clear gesture on next frame after cleanup
-                    if (!this.currentModularGesture.cleanupPending) {
-                        this.currentModularGesture.cleanupPending = true;
-                    } else {
-                        // Cleanup was called last frame, now clear the gesture
-                        this.currentModularGesture = null;
-                    }
-                } else {
-                    // Set gesture motion for particles
-                    gestureMotion = {
-                        type: this.currentModularGesture.type,
-                        amplitude: 1.0,
-                        frequency: 1.0,
-                        intensity: 1.0
-                    };
-                }
-            }
-            // Fallback to renderer gesture
-            else if (this.renderer && this.renderer.getCurrentGesture) {
-                const currentGesture = this.renderer.getCurrentGesture();
-                if (currentGesture && currentGesture.particleMotion) {
-                    gestureMotion = currentGesture.particleMotion;
-                    gestureProgress = currentGesture.progress || 0;
-                }
-            }
-            
+
+            // Get particle modifier (delegated to ParticleConfigCalculator)
+            const particleModifier = this.particleConfigCalculator.getParticleModifier(renderState);
+
+            // Get gesture motion and progress (delegated to GestureMotionProvider)
+            const { gestureMotion, gestureProgress } = this.gestureMotionProvider.getGestureMotion();
+
             // Update particles with orb position, gesture motion, and modifier
             this.particleSystem.update(deltaTime, orbX, orbY, gestureMotion, gestureProgress, particleModifier);
 
-            // Get gesture transform from renderer
-            const gestureTransform = this.renderer.gestureAnimator ?
-                this.renderer.gestureAnimator.applyGestureAnimations() : null;
+            // Get gesture transform from renderer (delegated to GestureMotionProvider)
+            const gestureTransform = this.gestureMotionProvider.getGestureTransform();
 
-            // Render BACKGROUND particles (behind orb)
-            this.particleSystem.renderBackground(this.canvasManager.getContext(), emotionParams.glowColor, gestureTransform);
-
-            // Render the Emotive orb in the MIDDLE layer
-            this.renderer.render(renderState, deltaTime, gestureTransform);
-
-            // Render FOREGROUND particles (in front of orb)
-            this.particleSystem.renderForeground(this.canvasManager.getContext(), emotionParams.glowColor, gestureTransform);
-
-            // Render plugins
-            if (this.pluginSystem) {
-                const state = this.stateMachine.getCurrentState();
-                this.pluginSystem.render(this.canvasManager.getContext(), state);
-            }
-
-            // Draw debug information if enabled
-            if (this.config.showFPS || this.config.showDebug) {
-                this.renderDebugInfo(deltaTime);
-            }
-            
-            // Log render performance if debugging
-            if (this.debugMode) {
-                const renderTime = performance.now() - renderStart;
-                if (renderTime > 16.67) { // Longer than 60fps frame
-                    emotiveDebugger.log('WARN', 'Slow render frame detected', {
-                        renderTime,
-                        deltaTime,
-                        particleCount: this.particleSystem.getStats().activeParticles
-                    });
-                }
-            }
+            // Render all layers in order (delegated to RenderLayerOrchestrator)
+            this.renderLayerOrchestrator.renderAllLayers({
+                renderState, deltaTime, emotionParams, gestureTransform, renderStart
+            });
         } catch (error) {
             this.errorBoundary.logError(error, 'main-render');
         }
