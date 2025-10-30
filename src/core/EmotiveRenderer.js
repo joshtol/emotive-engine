@@ -108,6 +108,7 @@ import { ZenModeRenderer } from './renderer/ZenModeRenderer.js';
 import { RotationBrake } from './animation/RotationBrake.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
+import { SleepManager } from './renderer/SleepManager.js';
 import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 import { gradientCache } from './renderer/GradientCache.js';
 
@@ -139,6 +140,7 @@ class EmotiveRenderer {
         this.rotationBrake = new RotationBrake(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
+        this.sleepManager = new SleepManager(this);
 
         // Configuration - matching original Emotive proportions
         this.config = {
@@ -1427,9 +1429,10 @@ class EmotiveRenderer {
     
     /**
      * Render sleep indicator (Z's) with cell-shaded style and gradient fade
+     * Delegates to SleepManager
      */
     renderSleepIndicator(x, y, deltaTime) {
-        return this.specialEffects.renderSleepIndicator(x, y, deltaTime);
+        return this.sleepManager.renderSleepIndicator(x, y, deltaTime);
     }
     
     
@@ -1827,190 +1830,18 @@ class EmotiveRenderer {
     
     /**
      * Enter sleep mode with animation
+     * Delegates to SleepManager
      */
     enterSleepMode() {
-        this.state.sleeping = true;
-        this.sleepZ = []; // Reset Z's
-        this.state.eyeOpenness = 1.0; // Start with eyes open
-        
-        // Initialize dimming values (start at full brightness)
-        this.state.sleepDimness = 1.0;
-        this.state.sleepScale = 1.0;
-        
-        // Force end any active blink
-        this.state.blinking = false;
-        
-        // Animate eye closing, then dimming
-        this.animateEyeClose();
-        
+        this.sleepManager.enterSleepMode();
     }
-    
-    /**
-     * Animate eye closing for sleep, then dim
-     */
-    animateEyeClose() {
-        // Cancel any existing eye animations
-        if (this.loopCallbackIds.eyeClose) {
-            animationLoopManager.unregister(this.loopCallbackIds.eyeClose);
-            this.loopCallbackIds.eyeClose = null;
-        }
-        if (this.loopCallbackIds.eyeOpen) {
-            animationLoopManager.unregister(this.loopCallbackIds.eyeOpen);
-            this.loopCallbackIds.eyeOpen = null;
-        }
-        
-        const startTime = performance.now();
-        const eyeCloseDuration = 2000; // 2 seconds to close eyes
-        const dimDuration = 1000; // 1 second to dim after eyes close
-        
-        const animate = () => {
-            if (!this.state.sleeping) {
-                // Clean up loop callback ID
-                this.loopCallbackIds.eyeClose = null;
-                return; // Stop if woken up
-            }
-            
-            const elapsed = performance.now() - startTime;
-            
-            if (elapsed < eyeCloseDuration) {
-                // Phase 1: Close eyes
-                const progress = elapsed / eyeCloseDuration;
-                const eased = 1 - Math.pow(progress, 2);
-                this.state.eyeOpenness = 0.1 + eased * 0.9; // Close to 0.1 (nearly closed)
-                
-                // Keep full brightness during eye closing
-                this.state.sleepDimness = 1.0;
-                this.state.sleepScale = 1.0;
-                
-                // Continue animation on next frame
-            } else if (elapsed < eyeCloseDuration + dimDuration) {
-                // Phase 2: Dim the orb
-                const dimProgress = (elapsed - eyeCloseDuration) / dimDuration;
-                const dimEased = 1 - Math.pow(1 - dimProgress, 3); // Ease out cubic
-                
-                // Keep eyes closed
-                this.state.eyeOpenness = 0.1;
-                
-                // Animate dimming and scaling
-                this.state.sleepDimness = 1.0 - (dimEased * 0.4); // Dim to 0.6
-                this.state.sleepScale = 1.0 - (dimEased * 0.1); // Scale to 0.9
-                
-                // Continue animation on next frame
-            } else {
-                // Final state
-                this.state.eyeOpenness = 0.1;
-                this.state.sleepDimness = 0.6;
-                this.state.sleepScale = 0.9;
-                // Clean up loop callback ID
-                this.loopCallbackIds.eyeClose = null;
-            }
-        };
 
-        // Register with AnimationLoopManager
-        this.loopCallbackIds.eyeClose = animationLoopManager.register(
-            animate,
-            AnimationPriority.HIGH, // Eye animations are high priority
-            this
-        );
-    }
-    
     /**
      * Wake up from sleep with animation
+     * Delegates to SleepManager
      */
     wakeUp() {
-        if (!this.state.sleeping) return;
-        
-        this.state.sleeping = false;
-        this.state.breathRate = 1.0;
-        this.state.breathDepth = this.config.breathingDepth;
-        this.sleepZ = []; // Clear Z's
-        
-        // Reset blinking state
-        this.state.blinking = false;
-        // Blinking now handled by EyeRenderer
-        this.eyeRenderer.blinking = false;
-        this.eyeRenderer.blinkTimer = 0;
-        
-        // Animate eye opening
-        this.animateEyeOpen();
-
-        // Clear any existing jitter timeout
-        if (this.wakeJitterTimeout) {
-            clearTimeout(this.wakeJitterTimeout);
-        }
-
-        // Quick shake animation
-        this.state.coreJitter = true;
-        this.wakeJitterTimeout = setTimeout(() => {
-            this.state.coreJitter = false;
-            this.wakeJitterTimeout = null;
-        }, 200);
-        
-    }
-    
-    /**
-     * Animate eye opening after wake - brighten first, then open eyes
-     */
-    animateEyeOpen() {
-        // Cancel any existing eye animations
-        if (this.loopCallbackIds.eyeOpen) {
-            animationLoopManager.unregister(this.loopCallbackIds.eyeOpen);
-            this.loopCallbackIds.eyeOpen = null;
-        }
-        if (this.loopCallbackIds.eyeClose) {
-            animationLoopManager.unregister(this.loopCallbackIds.eyeClose);
-            this.loopCallbackIds.eyeClose = null;
-        }
-        
-        const startTime = performance.now();
-        const brightenDuration = 500; // 0.5 seconds to brighten
-        const eyeOpenDuration = 1000; // 1 second to open eyes
-        
-        const animate = () => {
-            const elapsed = performance.now() - startTime;
-            
-            if (elapsed < brightenDuration) {
-                // Phase 1: Brighten the orb
-                const progress = elapsed / brightenDuration;
-                const eased = Math.sin(progress * Math.PI / 2); // Smooth acceleration
-                
-                // Animate brightening and scaling back
-                this.state.sleepDimness = 0.6 + (eased * 0.4); // Brighten from 0.6 to 1.0
-                this.state.sleepScale = 0.9 + (eased * 0.1); // Scale from 0.9 to 1.0
-                
-                // Keep eyes closed during brightening
-                this.state.eyeOpenness = 0.1;
-                
-                // Continue animation on next frame
-            } else if (elapsed < brightenDuration + eyeOpenDuration) {
-                // Phase 2: Open eyes
-                const eyeProgress = (elapsed - brightenDuration) / eyeOpenDuration;
-                const eyeEased = Math.sin(eyeProgress * Math.PI / 2); // Smooth acceleration
-                
-                // Keep full brightness
-                this.state.sleepDimness = 1.0;
-                this.state.sleepScale = 1.0;
-                
-                // Animate eye opening
-                this.state.eyeOpenness = 0.1 + eyeEased * 0.9; // Open from 0.1 to 1.0
-                
-                // Continue animation on next frame
-            } else {
-                // Final state
-                this.state.eyeOpenness = 1.0;
-                this.state.sleepDimness = 1.0;
-                this.state.sleepScale = 1.0;
-                // Clean up loop callback ID
-                this.loopCallbackIds.eyeOpen = null;
-            }
-        };
-
-        // Register with AnimationLoopManager
-        this.loopCallbackIds.eyeOpen = animationLoopManager.register(
-            animate,
-            AnimationPriority.HIGH, // Eye animations are high priority
-            this
-        );
+        this.sleepManager.wakeUp();
     }
     
     /**
@@ -2555,6 +2386,11 @@ class EmotiveRenderer {
                 animationLoopManager.unregister(this.loopCallbackIds[key]);
                 this.loopCallbackIds[key] = null;
             }
+        }
+
+        // Clean up sleep manager (handles eyeClose/eyeOpen callbacks and wakeJitterTimeout)
+        if (this.sleepManager) {
+            this.sleepManager.cleanup();
         }
 
         // Clear any pending timeouts
