@@ -104,6 +104,7 @@ import { BreathingAnimator } from './renderer/BreathingAnimator.js';
 import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
 import { CelestialRenderer } from './renderer/CelestialRenderer.js';
+import { ZenModeRenderer } from './renderer/ZenModeRenderer.js';
 import { RotationBrake } from './animation/RotationBrake.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
@@ -134,6 +135,7 @@ class EmotiveRenderer {
         this.glowRenderer = new GlowRenderer(this);
         this.coreRenderer = new CoreRenderer(this);
         this.celestialRenderer = new CelestialRenderer();
+        this.zenModeRenderer = new ZenModeRenderer();
         this.rotationBrake = new RotationBrake(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
@@ -1399,218 +1401,13 @@ class EmotiveRenderer {
     }
 
     renderZenCore(x, y, radius) {
-        this.ctx.save();
-        
-        // Apply shake offset if in awakening phase
-        if (this.state.shakeOffset) {
-            x += this.state.shakeOffset;
-        }
-        
-        // Apply drift Y if in awakening phase
-        if (this.state.driftY) {
-            y += this.state.driftY;
-        }
-        
-        this.ctx.translate(x, y);
-        
-        // Apply gesture rotation if present (for spin gesture)
-        if (this.gestureTransform && this.gestureTransform.rotation !== undefined) {
-            this.ctx.rotate(this.gestureTransform.rotation * Math.PI / 180);
-        }
-        
-        // Calculate zen energy pulsation (slow breathing effect)
-        const time = Date.now() / 1000; // Time in seconds
-        const basePulse = Math.sin(time * 0.5) * 0.5 + 1.5; // Base pulsation
-        
-        // Scale glow intensity based on transition phase
-        // Very dim during bloom/retract, bright when fully in zen
-        let glowIntensity = 0.1; // Start very dim
-        if (this.zenTransition.phase === 'in') {
-            // Full brightness when fully in zen
-            glowIntensity = 1.0;
-        } else if (this.zenTransition.phase === 'entering') {
-            // Gradually brighten only after lotus is mostly formed
-            glowIntensity = Math.max(0.1, (this.zenTransition.lotusMorph - 0.7) * 3.3); // Stay dim until 70% bloomed
-        } else if (this.zenTransition.phase === 'exiting') {
-            // Quickly dim when exiting
-            glowIntensity = Math.max(0.1, this.zenTransition.lotusMorph * 0.5);
-        }
-        const zenPulse = basePulse * glowIntensity; // Apply intensity scaling
-        
-        // Apply glow when lotus is morphing or fully formed
-        if (this.zenTransition.lotusMorph > 0) {
-            // Single smooth shadow glow 
-            this.ctx.shadowBlur = this.scaleValue(100) * zenPulse;
-            this.ctx.shadowColor = `rgba(255, 223, 0, ${0.5 * zenPulse})`;
-            
-            // INNER RADIANCE GRADIENT - Much darker during transitions
-            const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 4);
-            
-            // During transitions, use much darker colors to see lotus
-            if (this.zenTransition.phase !== 'in') {
-                // Dark golden during transition - lotus will show as even darker cutout
-                gradient.addColorStop(0, `rgba(184, 134, 11, ${0.8})`); // Dark goldenrod core
-                gradient.addColorStop(0.3, `rgba(153, 101, 21, ${0.6})`); // Darker gold
-                gradient.addColorStop(0.6, `rgba(139, 69, 19, ${0.4})`); // Saddle brown
-                gradient.addColorStop(1, 'rgba(101, 67, 33, 0)'); // Dark brown edge
-            } else {
-                // Full brightness only when fully in zen
-                gradient.addColorStop(0, `rgba(255, 255, 255, ${1.0 * zenPulse})`); // Pure white core
-                gradient.addColorStop(0.1, `rgba(255, 255, 240, ${1.0 * zenPulse})`); // Bright cream
-                gradient.addColorStop(0.2, `rgba(255, 250, 205, ${0.95 * zenPulse})`); // Warm light
-                gradient.addColorStop(0.35, `rgba(255, 240, 150, ${0.85 * zenPulse})`); // Bright gold
-                gradient.addColorStop(0.5, `rgba(255, 223, 0, ${0.7 * zenPulse})`); // Vibrant gold
-                gradient.addColorStop(0.65, `rgba(255, 215, 0, ${0.5 * zenPulse})`); // Fading gold
-                gradient.addColorStop(0.8, `rgba(255, 215, 0, ${0.3 * zenPulse})`); // Softer edge
-                gradient.addColorStop(0.9, `rgba(255, 215, 0, ${0.15 * zenPulse})`); // Very soft
-                gradient.addColorStop(0.95, `rgba(255, 215, 0, ${0.05 * zenPulse})`); // Almost gone
-                gradient.addColorStop(1, 'rgba(255, 215, 0, 0)'); // Fully transparent edge
-            }
-            
-            this.ctx.fillStyle = gradient;
-            this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.3})`; // Dimmer edge during transition
-            this.ctx.lineWidth = this.scaleValue(2);
-            
-            // STEP 1: Draw a circle with lotus cutout using evenodd fill rule
-            this.ctx.beginPath();
-            
-            // Draw outer circle (clockwise)
-            this.ctx.arc(0, 0, radius, 0, Math.PI * 2, false);
-            
-            // CLEAN LOTUS SILHOUETTE - matching reference image
-
-            
-            // MORPHING LOTUS PETALS - animated based on lotusMorph value
-            const morph = this.zenTransition.lotusMorph;
-            const spread = this.zenTransition.petalSpread;
-            const smile = this.zenTransition.smileCurve;
-            
-            // Center/Top petal - morphs from small circle to full petal
-            // Only draw lotus if morph is significant (avoid tiny artifacts)
-            if (morph > 0.1) {
-                const centerPetalBase = radius * (0.05 + 0.15 * morph);
-                this.ctx.moveTo(0, centerPetalBase); // Start at base center
-                this.ctx.bezierCurveTo(
-                    -radius * (0.05 + 0.25 * morph * spread), radius * 0.1,    // Left control
-                    -radius * (0.05 + 0.3 * morph * spread), -radius * (0.1 + 0.4 * morph),  // Left control up
-                    0, -radius * (0.2 + 0.65 * morph)                // Top point
-                );
-                this.ctx.bezierCurveTo(
-                    radius * (0.05 + 0.3 * morph * spread), -radius * (0.1 + 0.4 * morph),   // Right control up
-                    radius * (0.05 + 0.25 * morph * spread), radius * 0.1,     // Right control
-                    0, centerPetalBase                 // Back to base
-                );
-                
-                if (morph > 0.3) { // Only show side petals after some morphing
-                    const sidePetalAlpha = (morph - 0.3) / 0.7; // Fade in from 30% to 100%
-                
-                    // Left petal - fades in and spreads
-                    this.ctx.moveTo(-radius * 0.1 * sidePetalAlpha, radius * 0.2); 
-                    this.ctx.bezierCurveTo(
-                        -radius * (0.1 + 0.4 * sidePetalAlpha * spread), radius * 0.1,    
-                        -radius * (0.2 + 0.5 * sidePetalAlpha * spread), -radius * (0.1 + 0.2 * sidePetalAlpha),   
-                        -radius * (0.1 + 0.4 * sidePetalAlpha * spread), -radius * (0.2 + 0.45 * sidePetalAlpha)   
-                    );
-                    this.ctx.bezierCurveTo(
-                        -radius * (0.05 + 0.15 * sidePetalAlpha), -radius * (0.1 + 0.4 * sidePetalAlpha),   
-                        -radius * 0.05 * sidePetalAlpha, radius * 0.1,   
-                        -radius * 0.1 * sidePetalAlpha, radius * 0.2     
-                    );
-                
-                    // Right petal - fades in and spreads
-                    this.ctx.moveTo(radius * 0.1 * sidePetalAlpha, radius * 0.2); 
-                    this.ctx.bezierCurveTo(
-                        radius * (0.1 + 0.4 * sidePetalAlpha * spread), radius * 0.1,     
-                        radius * (0.2 + 0.5 * sidePetalAlpha * spread), -radius * (0.1 + 0.2 * sidePetalAlpha),    
-                        radius * (0.1 + 0.4 * sidePetalAlpha * spread), -radius * (0.2 + 0.45 * sidePetalAlpha)    
-                    );
-                    this.ctx.bezierCurveTo(
-                        radius * (0.05 + 0.15 * sidePetalAlpha), -radius * (0.1 + 0.4 * sidePetalAlpha),    
-                        radius * 0.05 * sidePetalAlpha, radius * 0.1,    
-                        radius * 0.1 * sidePetalAlpha, radius * 0.2      
-                    );
-                }
-            
-                // Bottom smile - morphs from straight to curved smile
-                if (smile > 0) {
-
-                    this.ctx.moveTo(-radius * 0.6, radius * (0.5 - 0.1 * smile));   // Corners rise with smile
-                    this.ctx.quadraticCurveTo(
-                        0, radius * (0.5 + 0.1 * smile),     // Center dips for smile
-                        radius * 0.6, radius * (0.5 - 0.1 * smile)  // Right corner rises
-                    );
-                }
-            }
-            
-            this.ctx.closePath();
-            
-            // Fill with gradient using evenodd rule to create the lotus cutout
-            this.ctx.fill('evenodd');
-            // Don't stroke the lotus cutout, only the outer circle
-            this.ctx.beginPath();
-            this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            this.ctx.stroke();
-            
-            // Only add additional glow layers when fully in zen, not during transitions
-            if (this.zenTransition.phase === 'in') {
-                // Additional EXPANSIVE glow layers for inner radiance
-                // Layer 1: BRILLIANT lotus core intensifier - from lower quarter
-                const lotusRadius = radius * 2.0; // Larger radius for more expansion
-                const arcHeight = this.zenTransition.arcHeight * radius; // Get arc height from transition state
-                const glowOriginY = radius * 0.5; // Lower quarter origin
-                const lotusGlow = this.ctx.createRadialGradient(0, glowOriginY, 0, 0, glowOriginY, lotusRadius * 1.2);
-                lotusGlow.addColorStop(0, `rgba(255, 255, 255, ${1.0 * zenPulse})`);
-                lotusGlow.addColorStop(0.25, `rgba(255, 252, 240, ${0.8 * zenPulse})`);
-                lotusGlow.addColorStop(0.5, `rgba(255, 245, 200, ${0.6 * zenPulse})`);
-                lotusGlow.addColorStop(0.75, `rgba(255, 235, 150, ${0.4 * zenPulse})`);
-                lotusGlow.addColorStop(1, 'rgba(255, 223, 0, 0)');
-                this.ctx.fillStyle = lotusGlow;
-                this.ctx.fill();
-                
-                // Layer 2: GAUSSIAN outer halo for smooth falloff
-                const outerHalo = this.ctx.createRadialGradient(0, -arcHeight/2, radius * 0.5, 0, -arcHeight/2, radius * 5);
-                outerHalo.addColorStop(0, 'rgba(255, 223, 0, 0)');
-                outerHalo.addColorStop(0.1, `rgba(255, 223, 0, ${0.25 * zenPulse})`);
-                outerHalo.addColorStop(0.2, `rgba(255, 220, 0, ${0.2 * zenPulse})`);
-                outerHalo.addColorStop(0.35, `rgba(255, 215, 0, ${0.15 * zenPulse})`);
-                outerHalo.addColorStop(0.5, `rgba(255, 215, 0, ${0.1 * zenPulse})`);
-                outerHalo.addColorStop(0.65, `rgba(255, 215, 0, ${0.06 * zenPulse})`);
-                outerHalo.addColorStop(0.8, `rgba(255, 215, 0, ${0.03 * zenPulse})`);
-                outerHalo.addColorStop(0.9, `rgba(255, 215, 0, ${0.01 * zenPulse})`);
-                outerHalo.addColorStop(1, 'rgba(255, 215, 0, 0)');
-                this.ctx.fillStyle = outerHalo;
-                this.ctx.fill();
-            }
-        } else {
-            // Draw horizontal line or circle during transition
-            // Start with very dim golden color that brightens with lotus
-            
-            // No glow during transition to prevent flash
-            this.ctx.shadowBlur = 0;
-            this.ctx.shadowColor = 'transparent';
-            
-            // Use very dim golden color during transition
-            const dimIntensity = 0.3; // Keep consistently dim during transition
-            this.ctx.fillStyle = `rgba(255, 215, 0, ${dimIntensity})`;
-            this.ctx.beginPath();
-            this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Very subtle gradient during transition to see lotus clearly
-            const coreGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            coreGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-            coreGradient.addColorStop(0.5, 'rgba(255, 250, 230, 0.1)');
-            coreGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
-            this.ctx.fillStyle = coreGradient;
-            this.ctx.fill();
-        }
-        
-        this.ctx.restore();
+        // Delegate to ZenModeRenderer
+        return this.zenModeRenderer.renderZenCore(
+            this.ctx, x, y, radius, this.state, this.zenTransition,
+            this.gestureTransform, this.scaleValue.bind(this)
+        );
     }
-    
-    /**
-     * Render speaking animation rings
-     */
+
     renderSpeakingRings(centerX, centerY, coreRadius, deltaTime) {
         return this.specialEffects.renderSpeakingRings(centerX, centerY, coreRadius, deltaTime);
     }
