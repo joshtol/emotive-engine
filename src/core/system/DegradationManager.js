@@ -42,9 +42,9 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
-import { browserCompatibility } from '../..utils/browserCompatibility.js';
-import { ErrorResponse, ErrorTypes } from './ErrorResponse.js';
-import { getErrorLogger } from './ErrorLogger.js';
+import { browserCompatibility } from '../../utils/browserCompatibility.js';
+import { ErrorResponse, ErrorTypes } from '../events/ErrorResponse.js';
+import { getErrorLogger } from '../events/ErrorLogger.js';
 
 export class DegradationManager {
     constructor(config = {}) {

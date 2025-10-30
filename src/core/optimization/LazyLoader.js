@@ -10,16 +10,16 @@ export class LazyLoader {
         this.loading = new Map();
         this.moduleMap = new Map([
             // Core modules
-            ['core', () => import('../core-exports.js')],
-            ['features', () => import('../features-exports.js')],
-            ['plugins', () => import('../plugins-exports.js')],
+            ['core', () => import('../../core-exports.js')],
+            ['features', () => import('../../features-exports.js')],
+            ['plugins', () => import('../../plugins-exports.js')],
 
             // Individual features
-            ['particles', () => import('./ParticleSystem.js')],
-            ['audio', () => import('./AudioAnalyzer.js')],
+            ['particles', () => import('../ParticleSystem.js')],
+            ['audio', () => import('../audio/AudioAnalyzer.js')],
 
             // Behaviors
-            ['idle-behavior', () => import('./IdleBehavior.js')]
+            ['idle-behavior', () => import('../behavior/IdleBehavior.js')]
         ]);
 
         this.preloadQueue = [];
