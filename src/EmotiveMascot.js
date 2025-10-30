@@ -104,6 +104,8 @@ import { CanvasResizeManager } from './mascot/rendering/CanvasResizeManager.js';
 import { OffsetPositionManager } from './mascot/rendering/OffsetPositionManager.js';
 import { FrustrationContextManager } from './mascot/state/FrustrationContextManager.js';
 import { PerformanceBehaviorManager } from './mascot/performance/PerformanceBehaviorManager.js';
+import { DebugProfilingManager } from './mascot/debug/DebugProfilingManager.js';
+import { HealthCheckManager } from './mascot/system/HealthCheckManager.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/plugins/PerformanceSystem.js';
@@ -793,7 +795,7 @@ class EmotiveMascot {
      * @returns {Object} Debug report including all system states
      */
     getDebugReport() {
-        return this.diagnosticsManager.getDebugReport();
+        return this.debugProfilingManager.getDebugReport();
     }
 
     /**
@@ -801,7 +803,7 @@ class EmotiveMascot {
      * @returns {Object} Exportable debug data
      */
     exportDebugData() {
-        return this.diagnosticsManager.exportDebugData();
+        return this.debugProfilingManager.exportDebugData();
     }
 
     /**
@@ -810,9 +812,7 @@ class EmotiveMascot {
      * @param {Object} metadata - Additional metadata
      */
     startProfiling(name, metadata = {}) {
-        if (this.debugMode) {
-            emotiveDebugger.startProfile(name, metadata);
-        }
+        this.debugProfilingManager.startProfiling(name, metadata);
     }
 
     /**
@@ -821,10 +821,7 @@ class EmotiveMascot {
      * @returns {Object|null} Profile results
      */
     endProfiling(name) {
-        if (this.debugMode) {
-            return emotiveDebugger.endProfile(name);
-        }
-        return null;
+        return this.debugProfilingManager.endProfiling(name);
     }
 
     /**
@@ -832,20 +829,14 @@ class EmotiveMascot {
      * @param {string} label - Snapshot label
      */
     takeMemorySnapshot(label) {
-        if (this.debugMode) {
-            emotiveDebugger.takeMemorySnapshot(label);
-        }
+        this.debugProfilingManager.takeMemorySnapshot(label);
     }
 
     /**
      * Clear all debug data
      */
     clearDebugData() {
-        emotiveDebugger.clear();
-        
-        if (this.debugMode) {
-            emotiveDebugger.log('INFO', 'Debug data cleared');
-        }
+        this.debugProfilingManager.clearDebugData();
     }
 
     /**
@@ -853,7 +844,7 @@ class EmotiveMascot {
      * @returns {Object} Runtime capabilities report
      */
     getRuntimeCapabilities() {
-        return runtimeCapabilities.generateReport();
+        return this.debugProfilingManager.getRuntimeCapabilities();
     }
 
     /**
@@ -1201,7 +1192,7 @@ class EmotiveMascot {
      * @returns {Object} Complete system status
      */
     getSystemStatus() {
-        return this.systemStatusReporter ? this.systemStatusReporter.getSystemStatus() : {};
+        return this.healthCheckManager.getSystemStatus();
     }
 
     /**
@@ -1210,16 +1201,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setDebugMode(enabled) {
-        this.config.showDebug = !!enabled;
-        this.config.showFPS = !!enabled;
-        
-        if (enabled) {
-            // Debug mode enabled - performance and state info will be displayed
-        } else {
-            // Debug mode disabled
-        }
-        
-        return this;
+        return this.healthCheckManager.setDebugMode(enabled);
     }
 
     /**
@@ -1228,9 +1210,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     triggerTestError(context = 'manual-test') {
-        return this.errorBoundary.wrap(() => {
-            throw new Error(`Test error triggered in context: ${context}`);
-        }, context, this)();
+        return this.healthCheckManager.triggerTestError(context);
     }
 
     /**
@@ -1238,7 +1218,7 @@ class EmotiveMascot {
      * @returns {Object} Performance data
      */
     getPerformanceMetrics() {
-        return this.diagnosticsManager.getPerformanceMetrics();
+        return this.healthCheckManager.getPerformanceMetrics();
     }
 
     /**
@@ -1271,15 +1251,15 @@ class EmotiveMascot {
      * @returns {Object} Mobile optimization status
      */
     getMobileStatus() {
-        return this.mobileOptimization.getStatus();
+        return this.healthCheckManager.getMobileStatus();
     }
-    
+
     /**
      * Get accessibility status
      * @returns {Object} Accessibility status
      */
     getAccessibilityStatus() {
-        return this.accessibilityManager.getStatus();
+        return this.healthCheckManager.getAccessibilityStatus();
     }
     
     /**
