@@ -89,6 +89,8 @@ import { SleepWakeManager } from './mascot/SleepWakeManager.js';
 import { SpeechManager } from './mascot/SpeechManager.js';
 import { AudioLevelCallbackManager } from './mascot/AudioLevelCallbackManager.js';
 import { OrbScaleAnimator } from './mascot/OrbScaleAnimator.js';
+import { RecordingStateManager } from './mascot/RecordingStateManager.js';
+import { BreathingPatternManager } from './mascot/BreathingPatternManager.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/PerformanceSystem.js';
@@ -163,6 +165,8 @@ class EmotiveMascot {
         this.speechManager = new SpeechManager(this);
         this.audioLevelCallbackManager = new AudioLevelCallbackManager(this);
         this.orbScaleAnimator = new OrbScaleAnimator(this);
+        this.recordingStateManager = new RecordingStateManager(this);
+        this.breathingPatternManager = new BreathingPatternManager(this);
 
         // Delegate initialization to InitializationManager
         const initManager = new InitializationManager(this, config);
@@ -613,51 +617,15 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     startRecording() {
-        return this.errorBoundary.wrap(() => {
-            if (this.recording) {
-                // Already recording
-                return this;
-            }
-            
-            this.recording = true;
-            
-            // Update renderer if using Emotive style
-            if (this.renderer && this.renderer.startRecording) {
-                this.renderer.startRecording();
-            }
-            
-            // Emit recording started event
-            this.emit('recordingStarted');
-            
-            // Recording started
-            return this;
-        }, 'recording-start', this)();
+        return this.recordingStateManager ? this.recordingStateManager.startRecording() : this;
     }
-    
+
     /**
      * Stop recording state
      * @returns {EmotiveMascot} This instance for chaining
      */
     stopRecording() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.recording) {
-                // Not currently recording
-                return this;
-            }
-            
-            this.recording = false;
-            
-            // Update renderer if using Emotive style
-            if (this.renderer && this.renderer.stopRecording) {
-                this.renderer.stopRecording();
-            }
-            
-            // Emit recording stopped event
-            this.emit('recordingStopped');
-            
-            // Recording stopped
-            return this;
-        }, 'recording-stop', this)();
+        return this.recordingStateManager ? this.recordingStateManager.stopRecording() : this;
     }
     
     /**
@@ -727,27 +695,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setBreathePattern(inhale, hold1, exhale, hold2) {
-        return this.errorBoundary.wrap(() => {
-            // Calculate total cycle time
-            const totalCycle = inhale + hold1 + exhale + hold2;
-            
-            // Store pattern for custom animation
-            this.breathePattern = {
-                inhale,
-                hold1,
-                exhale,
-                hold2,
-                totalCycle,
-                currentPhase: 'inhale',
-                phaseStartTime: Date.now(),
-                phaseProgress: 0
-            };
-            
-            // Start custom breathing animation
-            this.startBreathingAnimation();
-            
-            return this;
-        }, 'setBreathePattern', this)();
+        return this.breathingPatternManager ? this.breathingPatternManager.setBreathePattern(inhale, hold1, exhale, hold2) : this;
     }
     
     /**
@@ -763,22 +711,11 @@ class EmotiveMascot {
     
     /**
      * Applies a preset breathing pattern
-     * @param {string} type - Preset type: 'calm', 'anxious', 'meditative', 'deep'
+     * @param {string} type - Preset type: 'calm', 'anxious', 'meditative', 'deep', 'sleep'
      * @returns {EmotiveMascot} This instance for chaining
      */
     breathe(type = 'calm') {
-        return this.errorBoundary.wrap(() => {
-            const presets = {
-                calm: { inhale: 4, hold1: 0, exhale: 4, hold2: 0 },        // 4-4 breathing
-                anxious: { inhale: 2, hold1: 0, exhale: 2, hold2: 0 },    // Quick shallow
-                meditative: { inhale: 4, hold1: 7, exhale: 8, hold2: 0 }, // 4-7-8 breathing
-                deep: { inhale: 5, hold1: 5, exhale: 5, hold2: 5 },       // Box breathing
-                sleep: { inhale: 6, hold1: 0, exhale: 8, hold2: 2 }       // Sleep breathing
-            };
-            
-            const pattern = presets[type] || presets.calm;
-            return this.setBreathePattern(pattern.inhale, pattern.hold1, pattern.exhale, pattern.hold2);
-        }, 'breathe', this)();
+        return this.breathingPatternManager ? this.breathingPatternManager.breathe(type) : this;
     }
     
     /**
@@ -794,21 +731,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     stopBreathing() {
-        return this.errorBoundary.wrap(() => {
-            if (this.breathingAnimationId) {
-                cancelAnimationFrame(this.breathingAnimationId);
-                this.breathingAnimationId = null;
-            }
-            
-            this.breathePattern = null;
-            
-            // Reset scale
-            if (this.renderer && this.renderer.setCustomScale) {
-                this.renderer.setCustomScale(1.0);
-            }
-            
-            return this;
-        }, 'stopBreathing', this)();
+        return this.breathingPatternManager ? this.breathingPatternManager.stopBreathing() : this;
     }
     
     /**
