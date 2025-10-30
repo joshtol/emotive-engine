@@ -587,7 +587,7 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
 
                 await mascot.loadAudio('http://example.com/audio.mp3');
 
-                expect(mascot._audioDuration).toBe(10000);
+                expect(mascot._audioManager.getAudioDuration()).toBe(10000);
                 expect(mascot._getReal().soundSystem.loadAudioFromURL).toHaveBeenCalledWith('http://example.com/audio.mp3');
             });
 
@@ -606,7 +606,7 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
                 const blob = new Blob(['audio data'], { type: 'audio/mp3' });
                 await mascot.loadAudio(blob);
 
-                expect(mascot._audioBlob).toBe(blob);
+                expect(mascot._audioManager.getAudioBlob()).toBe(blob);
                 expect(URL.createObjectURL).toHaveBeenCalledWith(blob);
                 expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock');
             });
@@ -1547,7 +1547,7 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
                 mascot._timeline = [
                     { type: 'gesture', name: 'bounce', time: 0 }
                 ];
-                mascot._audioDuration = 5000;
+                mascot._audioManager.setAudioDuration(5000);
 
                 const json = mascot.exportTimeline();
                 const data = JSON.parse(json);
@@ -1569,7 +1569,7 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
                 mascot.importTimeline(json);
 
                 expect(mascot._timeline.length).toBe(1);
-                expect(mascot._audioDuration).toBe(5000);
+                expect(mascot._audioManager.getAudioDuration()).toBe(5000);
             });
         });
     });
@@ -1626,7 +1626,7 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
         describe('getAnimationData()', () => {
             it('should return animation state', () => {
                 mascot._timeline = [{ type: 'gesture', name: 'bounce', time: 0 }];
-                mascot._audioDuration = 5000;
+                mascot._audioManager.setAudioDuration(5000);
 
                 const data = mascot.getAnimationData();
 

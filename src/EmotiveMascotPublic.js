@@ -8,6 +8,7 @@
  */
 
 import EmotiveMascot from './EmotiveMascot.js';
+import { AudioManager } from './public/AudioManager.js';
 
 class EmotiveMascotPublic {
     constructor(config = {}) {
@@ -19,9 +20,10 @@ class EmotiveMascotPublic {
         this._recordingStartTime = 0;
         this._playbackStartTime = 0;
         this._isPlaying = false;
-        this._audioBlob = null;
-        this._audioDuration = 0;
         this._initialized = false;
+
+        // Initialize managers
+        this._audioManager = new AudioManager(() => this._getReal());
         
         // Bind public methods
         this.init = this.init.bind(this);
@@ -219,37 +221,8 @@ class EmotiveMascotPublic {
      * @param {string|Blob} source - Audio URL or Blob
      * @returns {Promise<void>}
      */
-    async loadAudio(source) {
-        if (source instanceof Blob) {
-            this._audioBlob = source;
-            const audioUrl = URL.createObjectURL(source);
-            await this._loadAudioFromUrl(audioUrl);
-            URL.revokeObjectURL(audioUrl);
-        } else {
-            await this._loadAudioFromUrl(source);
-        }
-    }
-
-    /**
-     * Load audio from URL
-     * @private
-     */
-    async _loadAudioFromUrl(url) {
-        // Load audio and get duration
-        const audio = new Audio(url);
-        await new Promise((resolve, reject) => {
-            audio.addEventListener('loadedmetadata', () => {
-                this._audioDuration = audio.duration * 1000; // Convert to ms
-                resolve();
-            });
-            audio.addEventListener('error', reject);
-            audio.load();
-        });
-        
-        // Connect to engine's audio system using real engine reference
-        if (this._realEngine && this._realEngine.soundSystem) {
-            await this._realEngine.soundSystem.loadAudioFromURL(url);
-        }
+    loadAudio(source) {
+        return this._audioManager.loadAudio(source);
     }
 
     /**
@@ -257,93 +230,46 @@ class EmotiveMascotPublic {
      * @returns {Object} Audio analysis (beats, tempo, energy)
      */
     getAudioAnalysis() {
-        const engine = this._getReal();
-        if (!engine) return null;
-        if (!engine.audioAnalyzer) return null;
-
-        return {
-            bpm: engine.rhythmIntegration?.getBPM() || 0,
-            beats: engine.rhythmIntegration?.getBeatMarkers() || [],
-            energy: engine.audioAnalyzer?.getEnergyLevel() || 0,
-            frequencies: engine.audioAnalyzer?.getFrequencyData() || []
-        };
+        return this._audioManager.getAudioAnalysis();
     }
-    
+
     /**
      * Connect audio element for visualization
      * @param {HTMLAudioElement} audioElement - Audio element to connect
      */
     connectAudio(audioElement) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
-        if (engine.connectAudio) {
-            engine.connectAudio(audioElement);
-        }
+        return this._audioManager.connectAudio(audioElement);
     }
-    
+
     /**
      * Disconnect audio element
      * @param {HTMLAudioElement} [audioElement] - Audio element to disconnect
      */
     disconnectAudio(audioElement) {
-        const engine = this._getReal();
-        if (!engine) return;
-        
-        if (engine.disconnectAudio) {
-            engine.disconnectAudio(audioElement);
-        }
+        return this._audioManager.disconnectAudio(audioElement);
     }
-    
+
     /**
      * Get spectrum data for visualization
      * @returns {Array} Frequency spectrum data
      */
     getSpectrumData() {
-        const engine = this._getReal();
-        if (!engine) return [];
-        if (!engine.audioAnalyzer) return [];
-
-        // Get raw frequency data from the analyzer
-        if (engine.audioAnalyzer.dataArray) {
-            // Convert Uint8Array to regular array and normalize to 0-1
-            return Array.from(engine.audioAnalyzer.dataArray).map(v => v / 255);
-        }
-
-        // Try alternative sources
-        if (engine.shapeMorpher && engine.shapeMorpher.frequencyData) {
-            return Array.from(engine.shapeMorpher.frequencyData);
-        }
-
-        return [];
+        return this._audioManager.getSpectrumData();
     }
-    
+
     /**
      * Start rhythm sync
      * @param {number} [bpm] - Optional BPM to sync to
      */
     startRhythmSync(bpm) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
-        if (engine.rhythmIntegration) {
-            if (bpm) {
-                engine.rhythmIntegration.setBPM(bpm);
-            }
-            engine.rhythmIntegration.start();
-        }
+        return this._audioManager.startRhythmSync(bpm);
     }
-    
+
     /**
      * Stop rhythm sync
      */
     stopRhythmSync() {
-        const engine = this._getReal();
-        if (!engine) return;
-        
-        if (engine.rhythmIntegration) {
-            engine.rhythmIntegration.stop();
-        }
+        return this._audioManager.stopRhythmSync();
     }
     
     /**
@@ -1434,7 +1360,7 @@ class EmotiveMascotPublic {
     exportTimeline() {
         return JSON.stringify({
             version: '1.0',
-            duration: this._audioDuration || 0,
+            duration: this._audioManager.getAudioDuration() || 0,
             events: this._timeline
         });
     }
@@ -1446,7 +1372,7 @@ class EmotiveMascotPublic {
     importTimeline(json) {
         const data = JSON.parse(json);
         this._timeline = data.events || [];
-        this._audioDuration = data.duration || 0;
+        this._audioManager.setAudioDuration(data.duration || 0);
     }
 
     // === Playback Control ===
@@ -1523,7 +1449,7 @@ class EmotiveMascotPublic {
     getAnimationData() {
         return {
             timeline: this._timeline,
-            duration: this._audioDuration,
+            duration: this._audioManager.getAudioDuration() || 0,
             currentTime: this.getCurrentTime(),
             emotion: this._engine.state?.emotion || 'neutral',
             shape: this._engine.state?.currentShape || 'circle'
