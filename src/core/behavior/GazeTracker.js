@@ -84,12 +84,14 @@ class GazeTracker {
         // Initialize
         this.updateCanvasCenter();
         this.attachEventListeners();
-        
-        // Handle canvas resize
-        this.resizeObserver = new ResizeObserver(() => {
-            this.updateCanvasCenter();
-        });
-        this.resizeObserver.observe(this.canvas);
+
+        // Handle canvas resize (only if ResizeObserver is available)
+        if (typeof ResizeObserver !== 'undefined') {
+            this.resizeObserver = new ResizeObserver(() => {
+                this.updateCanvasCenter();
+            });
+            this.resizeObserver.observe(this.canvas);
+        }
     }
     
     /**

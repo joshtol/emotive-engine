@@ -58,6 +58,14 @@ function createMockCanvas() {
             right: 800,
             bottom: 600
         })),
+        hasAttribute: vi.fn((attr) => {
+            return attr === 'width' || attr === 'height';
+        }),
+        getAttribute: vi.fn((attr) => {
+            if (attr === 'width') return '800';
+            if (attr === 'height') return '600';
+            return null;
+        }),
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
         toDataURL: vi.fn(() => 'data:image/png;base64,mockdata'),

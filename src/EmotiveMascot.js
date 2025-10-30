@@ -74,7 +74,10 @@ import { AudioHandler } from './mascot/audio/AudioHandler.js';
 import { GestureController } from './mascot/control/GestureController.js';
 import { StateCoordinator } from './mascot/state/StateCoordinator.js';
 import { VisualizationRunner } from './mascot/control/VisualizationRunner.js';
+import { ExecutionLifecycleManager } from './mascot/control/ExecutionLifecycleManager.js';
+import { AnimationFrameController } from './mascot/control/AnimationFrameController.js';
 import { ConfigurationManager } from './mascot/system/ConfigurationManager.js';
+import { DiagnosticsManager } from './mascot/system/DiagnosticsManager.js';
 import { InitializationManager } from './mascot/system/InitializationManager.js';
 import { RenderStateBuilder } from './mascot/rendering/RenderStateBuilder.js';
 import { ThreatLevelCalculator } from './mascot/rendering/ThreatLevelCalculator.js';
@@ -82,6 +85,8 @@ import { ParticleConfigCalculator } from './mascot/rendering/ParticleConfigCalcu
 import { GestureMotionProvider } from './mascot/rendering/GestureMotionProvider.js';
 import { RenderLayerOrchestrator } from './mascot/rendering/RenderLayerOrchestrator.js';
 import { DebugInfoRenderer } from './mascot/rendering/DebugInfoRenderer.js';
+import { ShapeTransformManager } from './mascot/rendering/ShapeTransformManager.js';
+import { LLMIntegrationBridge } from './mascot/integration/LLMIntegrationBridge.js';
 import { DestructionManager } from './mascot/system/DestructionManager.js';
 import { BreathingAnimationController } from './mascot/animation/BreathingAnimationController.js';
 import { SystemStatusReporter } from './mascot/system/SystemStatusReporter.js';
@@ -328,17 +333,7 @@ class EmotiveMascot {
      * @returns {Object|null} Current position metadata or null if not available
      */
     getPosition() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.positionController || typeof this.positionController.getPosition !== 'function') {
-                return null;
-            }
-
-            const hasWindow = typeof window !== 'undefined';
-            const centerX = hasWindow ? window.innerWidth / 2 : 0;
-            const centerY = hasWindow ? window.innerHeight / 2 : 0;
-
-            return this.positionController.getPosition(centerX, centerY);
-        }, 'get-position', this)();
+        return this.animationFrameController.getPosition();
     }
 
     /**
@@ -570,12 +565,7 @@ class EmotiveMascot {
      * @returns {Object|null} Performance analytics data
      */
     getPerformanceAnalytics() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.performanceSystem) {
-                return null;
-            }
-            return this.performanceSystem.getAnalytics();
-        }, 'performance-analytics', this)();
+        return this.diagnosticsManager.getPerformanceAnalytics();
     }
 
     /**
@@ -669,9 +659,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     start() {
-        return this.errorBoundary.wrap(() => {
-            return this.visualizationRunner.start();
-        }, 'start', this)();
+        return this.executionLifecycleManager.start();
     }
 
     /**
@@ -679,9 +667,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     stop() {
-        return this.errorBoundary.wrap(() => {
-            return this.visualizationRunner.stop();
-        }, 'stop', this)();
+        return this.executionLifecycleManager.stop();
     }
 
 
@@ -832,13 +818,7 @@ class EmotiveMascot {
      * @returns {Object} Browser compatibility details
      */
     getBrowserCompatibility() {
-        return {
-            browser: browserCompatibility.browser,
-            features: browserCompatibility.featureDetection.getFeatures(),
-            capabilities: browserCompatibility.capabilities,
-            appliedPolyfills: browserCompatibility.appliedPolyfills,
-            optimizations: browserCompatibility.browserOptimizations.getOptimizations()
-        };
+        return this.diagnosticsManager.getBrowserCompatibility();
     }
 
     /**
@@ -846,17 +826,7 @@ class EmotiveMascot {
      * @returns {Object|null} Degradation manager information or null if disabled
      */
     getDegradationStatus() {
-        if (!this.degradationManager) {
-            return null;
-        }
-        
-        return {
-            currentLevel: this.degradationManager.getCurrentLevel(),
-            availableFeatures: this.degradationManager.getAvailableFeatures(),
-            recommendedSettings: this.degradationManager.getRecommendedSettings(),
-            performanceStats: this.degradationManager.getPerformanceStats(),
-            allLevels: this.degradationManager.getAllLevels()
-        };
+        return this.diagnosticsManager.getDegradationStatus();
     }
 
     /**
@@ -865,12 +835,7 @@ class EmotiveMascot {
      * @returns {boolean} True if level was set successfully
      */
     setDegradationLevel(level) {
-        if (!this.degradationManager) {
-            // Degradation manager is not enabled
-            return false;
-        }
-        
-        return this.degradationManager.setLevel(level);
+        return this.diagnosticsManager.setDegradationLevel(level);
     }
 
     /**
@@ -918,40 +883,7 @@ class EmotiveMascot {
      * @returns {Object} Debug report including all system states
      */
     getDebugReport() {
-        const report = {
-            timestamp: Date.now(),
-            mascot: {
-                isRunning: this.isRunning,
-                speaking: this.speaking,
-                debugMode: this.debugMode,
-                config: this.config
-            },
-            
-            // System states
-            currentState: this.getCurrentState(),
-            performanceMetrics: this.getPerformanceMetrics(),
-            audioStats: this.getAudioStats(),
-            eventStats: this.getEventStats(),
-            
-            // Browser compatibility
-            browserCompatibility: this.getBrowserCompatibility(),
-            degradationStatus: this.getDegradationStatus(),
-            
-            // Runtime capabilities
-            runtimeCapabilities: runtimeCapabilities.generateReport(),
-            
-            // Debugger data
-            debuggerReport: emotiveDebugger.getDebugReport()
-        };
-
-        if (this.debugMode) {
-            emotiveDebugger.log('DEBUG', 'Generated debug report', {
-                reportSize: JSON.stringify(report).length,
-                sections: Object.keys(report)
-            });
-        }
-
-        return report;
+        return this.diagnosticsManager.getDebugReport();
     }
 
     /**
@@ -959,42 +891,7 @@ class EmotiveMascot {
      * @returns {Object} Exportable debug data
      */
     exportDebugData() {
-        const data = {
-            metadata: {
-                exportTime: Date.now(),
-                version: '1.0.0', // Should be dynamically set
-                userAgent: navigator.userAgent,
-                url: window.location?.href
-            },
-            
-            mascotState: {
-                config: this.config,
-                currentState: this.getCurrentState(),
-                isRunning: this.isRunning,
-                speaking: this.speaking
-            },
-            
-            performance: {
-                metrics: this.getPerformanceMetrics(),
-                degradationStatus: this.getDegradationStatus(),
-                frameTimings: emotiveDebugger.frameTimings
-            },
-            
-            compatibility: {
-                browser: this.getBrowserCompatibility(),
-                runtimeCapabilities: runtimeCapabilities.generateReport()
-            },
-            
-            debuggerData: emotiveDebugger.exportDebugData()
-        };
-
-        if (this.debugMode) {
-            emotiveDebugger.log('INFO', 'Exported debug data', {
-                dataSize: JSON.stringify(data).length
-            });
-        }
-
-        return data;
+        return this.diagnosticsManager.exportDebugData();
     }
 
     /**
@@ -1287,25 +1184,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     pause() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.animationController.isAnimating()) {
-                // EmotiveMascot is not running
-                return this;
-            }
-            
-            // Stop animation controller
-            this.animationController.stop();
-            this.isRunning = false;
-            
-            // Pause ambient audio
-            if (this.soundSystem.isAvailable()) {
-                this.soundSystem.stopAmbientTone(200); // Quick fade out
-            }
-            
-            this.emit('paused');
-            // EmotiveMascot paused
-            return this;
-        }, 'pause', this)();
+        return this.executionLifecycleManager.pause();
     }
 
     /**
@@ -1313,27 +1192,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     resume() {
-        return this.errorBoundary.wrap(() => {
-            if (this.animationController.isAnimating()) {
-                // EmotiveMascot is already running
-                return this;
-            }
-            
-            // Start animation controller
-            this.animationController.start();
-            this.isRunning = true;
-            
-            // Resume ambient audio
-            // Update ambient tone based on emotional state - DISABLED (annoying)
-            // if (this.soundSystem.isAvailable()) {
-            //     const currentEmotion = this.stateMachine.getCurrentState().emotion;
-            //     this.soundSystem.setAmbientTone(currentEmotion, 200);
-            // }
-            
-            this.emit('resumed');
-            // EmotiveMascot resumed
-            return this;
-        }, 'resume', this)();
+        return this.executionLifecycleManager.resume();
     }
 
     /**
@@ -1341,7 +1200,7 @@ class EmotiveMascot {
      * @returns {boolean} True if animation loop is active
      */
     isActive() {
-        return this.animationController.isAnimating();
+        return this.executionLifecycleManager.isActive();
     }
 
     /**
@@ -1350,14 +1209,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setTargetFPS(targetFPS) {
-        const clampedFPS = Math.max(15, Math.min(120, targetFPS)); // Clamp between 15-120 FPS
-        this.config.targetFPS = clampedFPS;
-        this.animationController.setTargetFPS(clampedFPS);
-        
-        // Target FPS set
-        this.emit('targetFPSChanged', { targetFPS: clampedFPS });
-        
-        return this;
+        return this.animationFrameController.setTargetFPS(targetFPS);
     }
 
     /**
@@ -1365,7 +1217,7 @@ class EmotiveMascot {
      * @returns {number} Target frames per second
      */
     getTargetFPS() {
-        return this.animationController.targetFPS;
+        return this.animationFrameController.getTargetFPS();
     }
 
     /**
@@ -1376,14 +1228,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setPosition(x, y, z = 0) {
-        if (this.positionController) {
-            // Ensure onUpdate callback exists
-            if (!this.positionController.onUpdate) {
-                this.positionController.onUpdate = () => {};
-            }
-            this.positionController.setOffset(x, y, z);
-        }
-        return this;
+        return this.animationFrameController.setPosition(x, y, z);
     }
 
     /**
@@ -1396,14 +1241,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
-        if (this.positionController) {
-            // Ensure onUpdate callback exists
-            if (!this.positionController.onUpdate) {
-                this.positionController.onUpdate = () => {};
-            }
-            this.positionController.animateOffset(x, y, z, duration, easing);
-        }
-        return this;
+        return this.animationFrameController.animateToPosition(x, y, z, duration, easing);
     }
 
     /**
@@ -1534,16 +1372,7 @@ class EmotiveMascot {
      * @returns {Object} Performance data
      */
     getPerformanceMetrics() {
-        const animationMetrics = this.animationController.getPerformanceMetrics();
-        const state = this.stateMachine.getCurrentState();
-        
-        return {
-            ...animationMetrics,
-            currentEmotion: state.emotion,
-            currentUndertone: state.undertone,
-            isTransitioning: state.isTransitioning,
-            errorStats: this.errorBoundary.getErrorStats()
-        };
+        return this.diagnosticsManager.getPerformanceMetrics();
     }
 
     /**
@@ -1689,26 +1518,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     morphTo(shape, config = {}) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.shapeMorpher) {
-                // ShapeMorpher not initialized
-                return this;
-            }
-            
-            // Start the morph
-            this.shapeMorpher.morphTo(shape, config);
-            
-            // Pass shape morpher to renderer
-            if (this.renderer) {
-                this.renderer.shapeMorpher = this.shapeMorpher;
-            }
-            
-            // Emit event
-            this.emit('shapeMorphStarted', { from: this.shapeMorpher.currentShape, to: shape });
-            
-            // Morphing to new shape
-            return this;
-        }, 'morphTo', this)();
+        return this.shapeTransformManager.morphTo(shape, config);
     }
     
     /**
@@ -1770,12 +1580,7 @@ class EmotiveMascot {
      * mascot.setBackdrop({ enabled: true, intensity: 0.8, radius: 2 });
      */
     setBackdrop(options = {}) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer && this.renderer.backdropRenderer) {
-                this.renderer.backdropRenderer.setConfig(options);
-            }
-            return this;
-        }, 'setBackdrop', this)();
+        return this.shapeTransformManager.setBackdrop(options);
     }
 
     /**
@@ -1783,12 +1588,7 @@ class EmotiveMascot {
      * @returns {Object} Current backdrop config
      */
     getBackdrop() {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer && this.renderer.backdropRenderer) {
-                return this.renderer.backdropRenderer.getConfig();
-            }
-            return null;
-        }, 'getBackdrop', this)();
+        return this.shapeTransformManager.getBackdrop();
     }
 
     /**
@@ -1847,17 +1647,7 @@ class EmotiveMascot {
      */
     // eslint-disable-next-line require-await
     async handleLLMResponse(response, options = {}) {
-        return this.errorBoundary.wrap(async () => {
-            // Lazy-initialize LLM handler
-            if (!this.llmHandler) {
-                this.llmHandler = new LLMResponseHandler(this, options);
-            }
-
-            // Process the response
-            await this.llmHandler.handle(response, options);
-
-            return this;
-        }, 'handleLLMResponse', this)();
+        return this.llmIntegrationBridge.handleLLMResponse(response, options);
     }
 
     /**
@@ -1883,14 +1673,7 @@ class EmotiveMascot {
      * });
      */
     configureLLMHandler(config) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.llmHandler) {
-                this.llmHandler = new LLMResponseHandler(this, config);
-            } else {
-                this.llmHandler.configure(config);
-            }
-            return this;
-        }, 'configureLLMHandler', this)();
+        return this.llmIntegrationBridge.configureLLMHandler(config);
     }
 
     /**
@@ -1898,10 +1681,7 @@ class EmotiveMascot {
      * @returns {Object} Response schema
      */
     getLLMResponseSchema() {
-        if (!this.llmHandler) {
-            this.llmHandler = new LLMResponseHandler(this);
-        }
-        return this.llmHandler.getSchema();
+        return this.llmIntegrationBridge.getLLMResponseSchema();
     }
 
     /**
@@ -1927,7 +1707,7 @@ class EmotiveMascot {
      * });
      */
     static getLLMPromptTemplate(options = {}) {
-        return generateSystemPrompt(options);
+        return LLMIntegrationBridge.getLLMPromptTemplate(options);
     }
 
     /**
@@ -1935,7 +1715,7 @@ class EmotiveMascot {
      * @returns {Array<string>} List of valid emotion names
      */
     static getLLMEmotions() {
-        return LLMResponseHandler.getAvailableEmotions();
+        return LLMIntegrationBridge.getLLMEmotions();
     }
 
     /**
@@ -1943,7 +1723,7 @@ class EmotiveMascot {
      * @returns {Array<string>} List of valid action names
      */
     static getLLMActions() {
-        return LLMResponseHandler.getAvailableActions();
+        return LLMIntegrationBridge.getLLMActions();
     }
 
     /**
@@ -1951,7 +1731,7 @@ class EmotiveMascot {
      * @returns {Array<string>} List of valid shape names
      */
     static getLLMShapes() {
-        return LLMResponseHandler.getAvailableShapes();
+        return LLMIntegrationBridge.getLLMShapes();
     }
 
     /**
@@ -1959,7 +1739,7 @@ class EmotiveMascot {
      * @returns {Array<string>} List of valid gesture names
      */
     static getLLMGestures() {
-        return LLMResponseHandler.getAvailableGestures();
+        return LLMIntegrationBridge.getLLMGestures();
     }
 
     /**

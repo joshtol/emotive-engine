@@ -68,7 +68,12 @@ import { AudioHandler } from '../audio/AudioHandler.js';
 import { GestureController } from '../control/GestureController.js';
 import { StateCoordinator } from '../state/StateCoordinator.js';
 import { VisualizationRunner } from '../control/VisualizationRunner.js';
+import { ExecutionLifecycleManager } from '../control/ExecutionLifecycleManager.js';
+import { AnimationFrameController } from '../control/AnimationFrameController.js';
 import { ConfigurationManager } from './ConfigurationManager.js';
+import { DiagnosticsManager } from './DiagnosticsManager.js';
+import { ShapeTransformManager } from '../rendering/ShapeTransformManager.js';
+import { LLMIntegrationBridge } from '../integration/LLMIntegrationBridge.js';
 
 /**
  * InitializationManager - Orchestrates EmotiveMascot initialization
@@ -477,6 +482,11 @@ export class InitializationManager {
         this.mascot.audioHandler = new AudioHandler(this.mascot);
         this.mascot.stateCoordinator = new StateCoordinator(this.mascot);
         this.mascot.visualizationRunner = new VisualizationRunner(this.mascot);
+        this.mascot.executionLifecycleManager = new ExecutionLifecycleManager(this.mascot);
+        this.mascot.animationFrameController = new AnimationFrameController(this.mascot);
+        this.mascot.diagnosticsManager = new DiagnosticsManager(this.mascot);
+        this.mascot.shapeTransformManager = new ShapeTransformManager(this.mascot);
+        this.mascot.llmIntegrationBridge = new LLMIntegrationBridge(this.mascot);
         this.mascot.configurationManager = new ConfigurationManager(this.mascot, config);
 
         // Initialize the handlers
