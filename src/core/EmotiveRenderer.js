@@ -106,6 +106,7 @@ import { CoreRenderer } from './renderer/CoreRenderer.js';
 import { CelestialRenderer } from './renderer/CelestialRenderer.js';
 import { ZenModeRenderer } from './renderer/ZenModeRenderer.js';
 import { ZenModeController } from './renderer/ZenModeController.js';
+import { EpisodicEffectController } from './renderer/EpisodicEffectController.js';
 import { RotationManager } from './renderer/RotationManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
@@ -140,6 +141,7 @@ class EmotiveRenderer {
         this.celestialRenderer = new CelestialRenderer();
         this.zenModeRenderer = new ZenModeRenderer();
         this.zenModeController = new ZenModeController(this);
+        this.episodicEffectController = new EpisodicEffectController(this);
         this.rotationManager = new RotationManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
@@ -422,45 +424,13 @@ class EmotiveRenderer {
                 params: null
             }
         };
-        
-        // Episodic effects for undertones
-        this.episodicEffects = {
-            nervous: {
-                active: false,
-                startTime: 0,
-                duration: 0,
-                intensity: 0,
-                nextTrigger: 3000 + Math.random() * 2000 // 3-5 seconds
-            },
-            confident: {
-                active: false,
-                startTime: 0,
-                duration: 0,
-                intensity: 0,
-                nextTrigger: 4000 + Math.random() * 2000 // 4-6 seconds
-            },
-            tired: {
-                active: false,
-                startTime: 0,
-                duration: 0,
-                intensity: 0,
-                nextTrigger: 5000 + Math.random() * 2000 // 5-7 seconds
-            },
-            intense: {
-                active: false,
-                startTime: 0,
-                duration: 0,
-                intensity: 0,
-                nextTrigger: 3000 + Math.random() * 3000 // 3-6 seconds
-            },
-            subdued: {
-                active: false,
-                startTime: 0,
-                duration: 0,
-                intensity: 0,
-                nextTrigger: 4000 + Math.random() * 3000 // 4-7 seconds
-            }
-        };
+
+        // Episodic effects for undertones (now managed by EpisodicEffectController)
+        // Reference to episodicEffects for backward compatibility
+        Object.defineProperty(this, 'episodicEffects', {
+            get: () => this.episodicEffectController.getEpisodicEffects(),
+            enumerable: true
+        });
         
         // Speaking animation
         this.speakingRings = [];
@@ -910,103 +880,10 @@ class EmotiveRenderer {
         const jitterAmount = this.state.jitterAmount || 0;
         
         // Handle episodic effects for undertones
-        if (this.currentUndertone && this.episodicEffects[this.currentUndertone]) {
-            const episode = this.episodicEffects[this.currentUndertone];
-
-            const now = performance.now();
-            
-            // Check if it's time to trigger a new episode
-            if (!episode.active && now >= episode.nextTrigger) {
-                episode.active = true;
-                episode.startTime = now;
-                
-                // Set episode parameters based on undertone type
-                switch(this.currentUndertone) {
-                case 'nervous':
-                    episode.duration = 500 + Math.random() * 500; // 0.5-1 second
-                    episode.intensity = 2 + Math.random(); // 2-3px flutter
-                    episode.nextTrigger = now + 3000 + Math.random() * 2000; // 3-5 seconds
-                    break;
-                case 'confident':
-                    episode.duration = 1000 + Math.random() * 1000; // 1-2 seconds
-                    episode.intensity = 0.15; // 15% size expansion
-                    episode.nextTrigger = now + 4000 + Math.random() * 2000; // 4-6 seconds
-                    break;
-                case 'tired':
-                    episode.duration = 1000 + Math.random() * 2000; // 1-3 seconds
-                    episode.intensity = 0.2; // 20% size reduction
-                    episode.nextTrigger = now + 5000 + Math.random() * 2000; // 5-7 seconds
-                    break;
-                case 'intense':
-                    episode.duration = 500 + Math.random() * 500; // 0.5-1 second
-                    episode.intensity = 0.5; // 50% glow boost, 5% size shrink
-                    episode.nextTrigger = now + 3000 + Math.random() * 3000; // 3-6 seconds
-                    break;
-                case 'subdued':
-                    episode.duration = 2000 + Math.random() * 1000; // 2-3 seconds
-                    episode.intensity = 0.3; // 30% glow dim, 10% size shrink
-                    episode.nextTrigger = now + 4000 + Math.random() * 3000; // 4-7 seconds
-                    break;
-                }
-            }
-            
-            // Apply episode effects if active
-            if (episode.active) {
-                const elapsed = now - episode.startTime;
-                
-                if (elapsed < episode.duration) {
-                    const progress = elapsed / episode.duration;
-                    
-                    // Apply different effects based on undertone
-                    switch(this.currentUndertone) {
-                    case 'nervous': {
-                        // Quick shiver that settles
-                        const damping = 1 - progress;
-                        const frequency = 15;
-                        const flutter = Math.sin(progress * Math.PI * frequency) * damping;
-                        jitterX = flutter * episode.intensity;
-                        jitterY = flutter * episode.intensity * 0.7;
-                        break;
-                    }
-                            
-                    case 'confident': {
-                        // Smooth chest puff that settles
-                        const puffCurve = Math.sin(progress * Math.PI); // Smooth rise and fall
-                        coreRadius *= (1 + episode.intensity * puffCurve);
-                        glowRadius *= (1 + episode.intensity * 0.5 * puffCurve);
-                        break;
-                    }
-                            
-                    case 'tired': {
-                        // Drowsy sag with slow recovery
-                        const sagCurve = Math.sin(progress * Math.PI * 0.5); // Slow droop
-                        coreRadius *= (1 - episode.intensity * sagCurve);
-                        // Also affect vertical position slightly
-                        jitterY += sagCurve * 5; // Slight downward sag
-                        break;
-                    }
-                            
-                    case 'intense': {
-                        // Sharp contraction with glow surge
-                        const focusCurve = 1 - Math.cos(progress * Math.PI); // Quick in-out
-                        coreRadius *= (1 - 0.05 * focusCurve); // 5% shrink
-                        glowRadius *= (1 + episode.intensity * focusCurve); // 50% glow boost
-                        break;
-                    }
-                            
-                    case 'subdued': {
-                        // Gentle inward pull
-                        const withdrawCurve = Math.sin(progress * Math.PI * 0.5); // Slow pull
-                        coreRadius *= (1 - 0.1 * withdrawCurve); // 10% shrink
-                        glowRadius *= (1 - episode.intensity * withdrawCurve); // 30% glow dim
-                        break;
-                    }
-                    }
-                } else {
-                    // Episode finished
-                    episode.active = false;
-                }
-            }
+        if (this.currentUndertone) {
+            ({ jitterX, jitterY, coreRadius, glowRadius } = this.episodicEffectController.updateEpisodicEffects(
+                this.currentUndertone, jitterX, jitterY, coreRadius, glowRadius
+            ));
         } else if (this.state.coreJitter || jitterAmount > 0) {
             // Regular jitter for other emotions
             const jitterStrength = Math.max(jitterAmount, this.state.coreJitter ? this.scaleValue(2) : 0);
