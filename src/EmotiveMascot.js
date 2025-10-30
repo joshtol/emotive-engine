@@ -84,6 +84,8 @@ import { RenderLayerOrchestrator } from './mascot/RenderLayerOrchestrator.js';
 import { DebugInfoRenderer } from './mascot/DebugInfoRenderer.js';
 import { DestructionManager } from './mascot/DestructionManager.js';
 import { BreathingAnimationController } from './mascot/BreathingAnimationController.js';
+import { SystemStatusReporter } from './mascot/SystemStatusReporter.js';
+import { SleepWakeManager } from './mascot/SleepWakeManager.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/PerformanceSystem.js';
@@ -165,6 +167,8 @@ class EmotiveMascot {
         this.debugInfoRenderer = new DebugInfoRenderer(this);
         this.destructionManager = new DestructionManager(this);
         this.breathingAnimationController = new BreathingAnimationController(this);
+        this.systemStatusReporter = new SystemStatusReporter(this);
+        this.sleepWakeManager = new SleepWakeManager(this);
     }
 
     /**
@@ -736,42 +740,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     sleep() {
-        return this.errorBoundary.wrap(async () => {
-            if (this.sleeping) {
-                // Already sleeping
-                return this;
-            }
-            
-            // Sleep entry animation sequence
-            // Starting sleep sequence...
-            
-            // First: Yawn
-            this.express('yawn');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Second: Drowsy sway
-            this.express('sway');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Now enter sleep state
-            this.sleeping = true;
-            
-            // Update renderer if using Emotive style (handles eye closing)
-            if (this.renderer && this.renderer.enterSleepMode) {
-                this.renderer.enterSleepMode();
-            }
-            
-            // Update idle behavior if available
-            if (this.idleBehavior && this.idleBehavior.enterSleep) {
-                this.idleBehavior.enterSleep();
-            }
-            
-            // Emit sleep event
-            this.emit('sleep');
-            
-            // Mascot entered sleep state
-            return this;
-        }, 'sleep', this)();
+        return this.sleepWakeManager.sleep();
     }
     
     /**
@@ -779,46 +748,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     wake() {
-        return this.errorBoundary.wrap(async () => {
-            if (!this.sleeping) {
-                // Not currently sleeping
-                return this;
-            }
-            
-            // Exit sleep state first
-            this.sleeping = false;
-            
-            // Update renderer if using Emotive style (handles eye opening)
-            if (this.renderer && this.renderer.wakeUp) {
-                this.renderer.wakeUp();
-            }
-            
-            // Update idle behavior if available
-            if (this.idleBehavior && this.idleBehavior.wakeUp) {
-                this.idleBehavior.wakeUp();
-            }
-            
-            // Wake animation sequence
-            // Starting wake sequence...
-            
-            // First: Stretch
-            this.express('stretch');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Second: Slow blink
-            this.express('slowBlink');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Third: Small shake to fully wake
-            this.express('shake');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Emit wake event
-            this.emit('wake');
-            
-            // Mascot fully awake
-            return this;
-        }, 'wake', this)();
+        return this.sleepWakeManager.wake();
     }
     
     /**
@@ -1759,58 +1689,7 @@ class EmotiveMascot {
      * @returns {Object} Complete system status
      */
     getSystemStatus() {
-        return this.errorBoundary.wrap(() => {
-            const state = this.stateMachine.getCurrentState();
-            const particleStats = this.particleSystem.getStats();
-            const rendererStats = this.renderer.getStats();
-            
-            const animationMetrics = this.animationController.getPerformanceMetrics();
-            
-            return {
-                // Core status
-                isRunning: animationMetrics.isRunning,
-                fps: animationMetrics.fps,
-                targetFPS: animationMetrics.targetFPS,
-                performanceDegradation: animationMetrics.performanceDegradation,
-                
-                // Emotional state
-                emotion: state.emotion,
-                undertone: state.undertone,
-                isTransitioning: state.isTransitioning,
-                transitionProgress: state.transitionProgress,
-                
-                // Gesture system
-                currentGesture: this.renderer?.currentGesture || null,
-                gestureActive: this.renderer?.isGestureActive() || false,
-                
-                // Particle system
-                particles: {
-                    active: particleStats.activeParticles,
-                    max: particleStats.maxParticles,
-                    poolEfficiency: particleStats.poolEfficiency
-                },
-                
-                // Audio system
-                audioEnabled: this.config.enableAudio,
-                soundSystemAvailable: this.soundSystem.isAvailable(),
-                speaking: this.speaking,
-                audioLevel: this.audioLevel,
-                masterVolume: this.config.masterVolume,
-                
-                // Renderer
-                renderer: {
-                    gradientCacheSize: rendererStats.gradientCacheSize,
-                    breathingPhase: rendererStats.breathingPhase,
-                    layers: rendererStats.layers
-                },
-                
-                // Event system
-                eventListeners: this.getEventNames().length,
-                
-                // Error boundary
-                errorStats: this.errorBoundary.getErrorStats()
-            };
-        }, 'system-status', {})();
+        return this.systemStatusReporter ? this.systemStatusReporter.getSystemStatus() : {};
     }
 
     /**
