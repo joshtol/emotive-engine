@@ -126,6 +126,8 @@ import { SleepManager } from './renderer/SleepManager.js';
 import { EmotionalStateManager } from './renderer/EmotionalStateManager.js';
 import { CanvasContextManager } from './renderer/CanvasContextManager.js';
 import { ResourceCleanupManager } from './renderer/ResourceCleanupManager.js';
+import { TimerCoordinator } from './renderer/TimerCoordinator.js';
+import { GazeInputHandler } from './renderer/GazeInputHandler.js';
 import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 import { gradientCache } from './renderer/GradientCache.js';
 
@@ -175,6 +177,8 @@ class EmotiveRenderer {
         this.emotionalStateManager = new EmotionalStateManager(this);
         this.canvasContextManager = new CanvasContextManager(this);
         this.resourceCleanupManager = new ResourceCleanupManager(this);
+        this.timerCoordinator = new TimerCoordinator(this);
+        this.gazeInputHandler = new GazeInputHandler(this);
 
         // Configuration - matching original Emotive proportions
         this.config = {
@@ -873,32 +877,7 @@ class EmotiveRenderer {
      * Update animation timers
      */
     updateTimers(deltaTime) {
-        // Update breathing animation via BreathingAnimator
-        this.breathingAnimator.update(deltaTime, this.state.emotion, this.currentUndertone);
-        
-        // Update special breathing modifiers
-        if (this.state.emotion === 'zen') {
-            this.breathingAnimator.setBreathRateMultiplier(0.15);
-            this.breathingAnimator.setBreathDepthMultiplier(2.5);
-        } else if (this.state.sleeping) {
-            this.breathingAnimator.setBreathRateMultiplier(0.5);
-            this.breathingAnimator.setBreathDepthMultiplier(1.2);
-        } else {
-            this.breathingAnimator.setBreathRateMultiplier(1.0);
-            this.breathingAnimator.setBreathDepthMultiplier(1.0);
-        }
-        
-        // Apply irregular breathing for nervous/tired
-        this.breathingAnimator.setIrregularBreathing(this.state.breathIrregular);
-        
-        // Update blinking via EyeRenderer
-        this.eyeRenderer.setBlinkingEnabled(this.state.blinkingEnabled && !this.state.sleeping && this.state.emotion !== 'zen');
-        this.eyeRenderer.update(deltaTime);
-        
-        // Sync blinking state back to our state for compatibility
-        this.state.blinking = this.eyeRenderer.blinking;
-        
-        // Note: Idle detection is handled by IdleBehavior.js, not here
+        this.timerCoordinator.updateTimers(deltaTime);
     }
     
     /**
@@ -1013,42 +992,19 @@ class EmotiveRenderer {
     
     /**
      * Set gaze data from GazeTracker
+     * Delegates to GazeInputHandler
      * @param {Object} gazeData - Contains offset, proximity, and lock status
      */
     setGazeOffset(gazeData) {
-        // Handle both old format (just offset) and new format (full data)
-        if (typeof gazeData === 'object' && gazeData !== null) {
-            if (Object.prototype.hasOwnProperty.call(gazeData, 'x') && Object.prototype.hasOwnProperty.call(gazeData, 'y')) {
-                // Old format - just offset
-                this.state.gazeOffset = gazeData;
-            } else {
-                // New format - full gaze data
-                this.state.gazeOffset = gazeData.offset || { x: 0, y: 0 };
-                this.state.gazeIntensity = gazeData.proximity || 0;
-                this.state.gazeLocked = gazeData.isLocked || false;
-            }
-        }
-        
-        // Reset idle timer on interaction
-        this.idleTimer = 0;
-        if (this.isAsleep) {
-            this.wakeUp();
-        }
+        this.gazeInputHandler.setGazeOffset(gazeData);
     }
     
     /**
      * Get current orb position (center + gaze offset)
+     * Delegates to GazeInputHandler
      */
     getCurrentOrbPosition() {
-        const logicalWidth = this.canvasManager.width;
-        const logicalHeight = this.canvasManager.height;
-        const centerX = logicalWidth / 2;
-        const centerY = logicalHeight / 2 - this.config.topOffset;
-        
-        return {
-            x: centerX + this.state.gazeOffset.x,
-            y: centerY + this.state.gazeOffset.y
-        };
+        return this.gazeInputHandler.getCurrentOrbPosition();
     }
     
     /**
