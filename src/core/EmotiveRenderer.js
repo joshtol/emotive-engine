@@ -116,6 +116,7 @@ import { StateUpdateManager } from './renderer/StateUpdateManager.js';
 import { DimensionCalculator } from './renderer/DimensionCalculator.js';
 import { RadiusCalculator } from './renderer/RadiusCalculator.js';
 import { PositionJitterManager } from './renderer/PositionJitterManager.js';
+import { RotationRenderManager } from './renderer/RotationRenderManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -159,6 +160,7 @@ class EmotiveRenderer {
         this.dimensionCalculator = new DimensionCalculator(this);
         this.radiusCalculator = new RadiusCalculator(this);
         this.positionJitterManager = new PositionJitterManager(this);
+        this.rotationRenderManager = new RotationRenderManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -687,23 +689,9 @@ class EmotiveRenderer {
         const posData = this.positionJitterManager.applyAllModifications(centerX, centerY, rotationAngle, coreRadius, glowRadius);
         const { coreX, coreY } = posData;
         ({ rotationAngle, coreRadius, glowRadius } = posData);
-        
-        // Check if brake is active and update rotation accordingly
-        const now = performance.now();
 
-        // Update rotation state (handles brake and normal rotation)
-        this.rotationManager.updateRotation(now);
-
-        // Calculate total rotation (gestures + manual rotation)
-        const totalRotation = this.rotationManager.calculateTotalRotation(rotationAngle);
-
-        // Apply rotation if present
-        if (totalRotation !== 0) {
-            this.ctx.save();
-            this.ctx.translate(coreX, coreY);
-            this.rotationManager.applyRotation(this.ctx, totalRotation);
-            this.ctx.translate(-coreX, -coreY);
-        }
+        // Apply rotation transform to canvas (delegated to RotationRenderManager)
+        const totalRotation = this.rotationRenderManager.applyRotationTransform(coreX, coreY, rotationAngle);
 
         // Render glow with visual effects
         if (isEffectActive('recording-glow', this.state)) {
