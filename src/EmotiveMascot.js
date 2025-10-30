@@ -98,6 +98,8 @@ import { RecordingStateManager } from './mascot/state/RecordingStateManager.js';
 import { BreathingPatternManager } from './mascot/animation/BreathingPatternManager.js';
 import { EventListenerManager } from './mascot/events/EventListenerManager.js';
 import { EmotionalStateQueryManager } from './mascot/state/EmotionalStateQueryManager.js';
+import { TTSManager } from './mascot/audio/TTSManager.js';
+import { SpeechReactivityManager } from './mascot/audio/SpeechReactivityManager.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/plugins/PerformanceSystem.js';
@@ -626,19 +628,15 @@ class EmotiveMascot {
      * @returns {Array} Array of available voice objects
      */
     getTTSVoices() {
-        if (!this.tts.available) {
-            return [];
-        }
-        
-        return window.speechSynthesis.getVoices();
+        return this.ttsManager.getTTSVoices();
     }
-    
+
     /**
      * Checks if TTS is currently speaking
      * @returns {boolean} True if currently speaking
      */
     isTTSSpeaking() {
-        return this.tts.speaking;
+        return this.ttsManager.isTTSSpeaking();
     }
 
     /**
@@ -1054,7 +1052,7 @@ class EmotiveMascot {
      * @returns {Object} Audio processing statistics
      */
     getAudioStats() {
-        return this.audioLevelProcessor.getStats();
+        return this.speechReactivityManager.getAudioStats();
     }
 
     /**
@@ -1062,7 +1060,7 @@ class EmotiveMascot {
      * @param {Object} config - New configuration options
      */
     updateAudioConfig(config) {
-        this.audioLevelProcessor.updateConfig(config);
+        this.speechReactivityManager.updateAudioConfig(config);
     }
 
     /**
@@ -1079,25 +1077,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     connectAudioSource(audioSource) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.audioAnalyser) {
-                // Speech reactivity not started. Call startSpeaking() first.
-                return this;
-            }
-            
-            if (!audioSource || typeof audioSource.connect !== 'function') {
-                // Invalid audio source provided to connectAudioSource()
-                return this;
-            }
-            
-            // Connect the audio source to our analyser
-            audioSource.connect(this.audioAnalyser);
-            
-            // Audio source connected to speech analyser
-            this.emit('audioSourceConnected', { audioSource });
-            
-            return this;
-        }, 'audio-source-connection', this)();
+        return this.speechReactivityManager.connectAudioSource(audioSource);
     }
 
     /**
@@ -1257,7 +1237,7 @@ class EmotiveMascot {
      * @returns {number} Current audio level or 0 if not speaking
      */
     getAudioLevel() {
-        return this.speaking ? this.audioLevel : 0;
+        return this.speechReactivityManager.getAudioLevel();
     }
 
     /**
@@ -1265,7 +1245,7 @@ class EmotiveMascot {
      * @returns {boolean} True if speech monitoring is active
      */
     isSpeaking() {
-        return this.speaking;
+        return this.speechReactivityManager.isSpeaking();
     }
 
     /**
@@ -1274,18 +1254,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setAudioSmoothing(smoothing) {
-        return this.errorBoundary.wrap(() => {
-            const clampedSmoothing = Math.max(0, Math.min(1, smoothing));
-            
-            if (this.audioAnalyser) {
-                this.audioAnalyser.smoothingTimeConstant = clampedSmoothing;
-                // Audio smoothing set
-            } else {
-                // No audio analyser available. Start speech reactivity first.
-            }
-            
-            return this;
-        }, 'audio-smoothing', this)();
+        return this.speechReactivityManager.setAudioSmoothing(smoothing);
     }
 
     /**
@@ -1390,48 +1359,30 @@ class EmotiveMascot {
      * @returns {SpeechSynthesisUtterance} The utterance object for additional control
      */
     speak(text, options = {}) {
-        return this.speechManager ? this.speechManager.speak(text, options) : this;
+        return this.ttsManager.speak(text, options);
     }
-    
+
     /**
      * Set TTS speaking state (triggers visual animation)
      * @param {boolean} speaking - Whether TTS is speaking
      */
     setTTSSpeaking(speaking) {
-        this.ttsSpeaking = speaking;
-        
-        // Update renderer if using Emotive style
-        if (this.renderer && this.renderer.startSpeaking) {
-            if (speaking) {
-                this.renderer.startSpeaking();
-            } else {
-                this.renderer.stopSpeaking();
-            }
-        }
-        
-        // Also update the speaking flag for compatibility
-        this.speaking = speaking;
+        this.ttsManager.setTTSSpeaking(speaking);
     }
-    
+
     /**
      * Get available TTS voices
      * @returns {Array} Array of available voices
      */
     getVoices() {
-        if (!window.speechSynthesis) {
-            return [];
-        }
-        return window.speechSynthesis.getVoices();
+        return this.ttsManager.getVoices();
     }
-    
+
     /**
      * Stop any ongoing TTS speech
      */
     stopTTS() {
-        if (window.speechSynthesis) {
-            window.speechSynthesis.cancel();
-            this.setTTSSpeaking(false);
-        }
+        this.ttsManager.stopTTS();
     }
     
     /**
