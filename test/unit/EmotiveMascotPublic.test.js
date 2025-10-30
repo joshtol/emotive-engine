@@ -954,18 +954,18 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
             it('should attach to element by selector', () => {
                 const result = mascot.attachToElement('#target-element');
                 expect(result).toBe(mascot);
-                expect(mascot._attachedElement).toBe(targetElement);
+                expect(mascot._elementAttachmentManager._attachedElement).toBe(targetElement);
             });
 
             it('should attach to element by reference', () => {
                 const result = mascot.attachToElement(targetElement);
                 expect(result).toBe(mascot);
-                expect(mascot._attachedElement).toBe(targetElement);
+                expect(mascot._elementAttachmentManager._attachedElement).toBe(targetElement);
             });
 
             it('should set default options', () => {
                 mascot.attachToElement(targetElement);
-                expect(mascot._attachOptions).toEqual({
+                expect(mascot._elementAttachmentManager._attachOptions).toEqual({
                     offsetX: 0,
                     offsetY: 0,
                     animate: true,
@@ -985,24 +985,24 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
                     containParticles: false
                 });
 
-                expect(mascot._attachOptions.offsetX).toBe(50);
-                expect(mascot._attachOptions.offsetY).toBe(100);
-                expect(mascot._attachOptions.animate).toBe(false);
-                expect(mascot._attachOptions.duration).toBe(500);
-                expect(mascot._attachOptions.scale).toBe(0.5);
-                expect(mascot._attachOptions.containParticles).toBe(false);
+                expect(mascot._elementAttachmentManager._attachOptions.offsetX).toBe(50);
+                expect(mascot._elementAttachmentManager._attachOptions.offsetY).toBe(100);
+                expect(mascot._elementAttachmentManager._attachOptions.animate).toBe(false);
+                expect(mascot._elementAttachmentManager._attachOptions.duration).toBe(500);
+                expect(mascot._elementAttachmentManager._attachOptions.scale).toBe(0.5);
+                expect(mascot._elementAttachmentManager._attachOptions.containParticles).toBe(false);
             });
 
             it('should set up scroll event listener', () => {
                 mascot.attachToElement(targetElement);
-                expect(mascot._elementTrackingHandlers).toBeDefined();
-                expect(mascot._elementTrackingHandlers.scroll).toBeDefined();
+                expect(mascot._elementAttachmentManager._elementTrackingHandlers).toBeDefined();
+                expect(mascot._elementAttachmentManager._elementTrackingHandlers.scroll).toBeDefined();
             });
 
             it('should set up resize event listener', () => {
                 mascot.attachToElement(targetElement);
-                expect(mascot._elementTrackingHandlers).toBeDefined();
-                expect(mascot._elementTrackingHandlers.resize).toBeDefined();
+                expect(mascot._elementAttachmentManager._elementTrackingHandlers).toBeDefined();
+                expect(mascot._elementAttachmentManager._elementTrackingHandlers.resize).toBeDefined();
             });
 
             it('should return this for chaining when element not found', () => {
@@ -1033,7 +1033,7 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
                 mascot.attachToElement(targetElement);
                 const result = mascot.detachFromElement();
 
-                expect(mascot._attachedElement).toBeNull();
+                expect(mascot._elementAttachmentManager._attachedElement).toBeNull();
                 expect(result).toBe(mascot);
             });
 
@@ -1041,7 +1041,7 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
                 mascot.attachToElement(targetElement);
                 mascot.detachFromElement();
 
-                expect(mascot._elementTrackingHandlers).toBeNull();
+                expect(mascot._elementAttachmentManager._elementTrackingHandlers).toBeNull();
             });
 
             it('should reset state', () => {
@@ -1796,7 +1796,7 @@ describe('EmotiveMascotPublic - Public API Integration Tests', () => {
                 mascot.attachToElement(element);
                 mascot.destroy();
 
-                expect(mascot._attachedElement).toBeNull();
+                expect(mascot._elementAttachmentManager._attachedElement).toBeNull();
 
                 element.parentNode.removeChild(element);
             });

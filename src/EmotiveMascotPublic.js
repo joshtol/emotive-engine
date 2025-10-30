@@ -11,6 +11,7 @@ import EmotiveMascot from './EmotiveMascot.js';
 import { AudioManager } from './public/AudioManager.js';
 import { GestureController } from './public/GestureController.js';
 import { TimelineRecorder } from './public/TimelineRecorder.js';
+import { ElementAttachmentManager } from './public/ElementAttachmentManager.js';
 
 class EmotiveMascotPublic {
     constructor(config = {}) {
@@ -51,6 +52,11 @@ class EmotiveMascotPublic {
                 get playbackStartTime() { return self._playbackStartTime; },
                 set playbackStartTime(value) { self._playbackStartTime = value; }
             }
+        );
+        this._elementAttachmentManager = new ElementAttachmentManager(
+            () => this._getReal(),
+            () => this._canvas,
+            this
         );
 
         // Bind public methods
@@ -639,106 +645,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     attachToElement(elementOrSelector, options = {}) {
-        const engine = this._getReal();
-        if (!engine) {
-            console.error('[EmotiveMascot] Engine not initialized');
-            throw new Error('Engine not initialized. Call init() first.');
-        }
-
-        // Get the target element
-        const element = typeof elementOrSelector === 'string'
-            ? document.querySelector(elementOrSelector)
-            : elementOrSelector;
-
-        if (!element) {
-            console.error(`[EmotiveMascot] Element not found: ${elementOrSelector}`);
-            return this;
-        }
-
-        // Store element tracking info
-        this._attachedElement = element;
-        this._attachOptions = {
-            offsetX: options.offsetX || 0,
-            offsetY: options.offsetY || 0,
-            animate: options.animate !== false,
-            duration: options.duration || 1000,
-            scale: options.scale || 1,
-            containParticles: options.containParticles !== false
-        };
-
-        // Set containment bounds and scale if requested
-        const rect = element.getBoundingClientRect();
-        if (this._attachOptions.containParticles) {
-            this.setContainment({ width: rect.width, height: rect.height }, this._attachOptions.scale);
-        } else if (this._attachOptions.scale !== 1) {
-            this.setContainment(null, this._attachOptions.scale);
-        }
-
-        // Position mascot at element - INLINE to prevent tree-shaking
-        const canvas = this._canvas;
-
-        if (canvas) {
-            // Get viewport center
-            const viewportCenterX = window.innerWidth / 2;
-            const viewportCenterY = window.innerHeight / 2;
-
-            // Get element center in viewport coordinates
-            const elementCenterX = rect.left + rect.width / 2;
-            const elementCenterY = rect.top + rect.height / 2;
-
-            // Calculate offset from viewport center (what setPosition expects)
-            const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
-            const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
-
-
-            // Use animation on first attach, instant updates on scroll/resize
-            const isFirstAttach = !this._hasAttachedBefore;
-            this._hasAttachedBefore = true;
-
-            if (isFirstAttach && this._attachOptions.animate) {
-                this.animateToPosition(offsetX, offsetY, 0, this._attachOptions.duration);
-            } else {
-                this.setPosition(offsetX, offsetY, 0);
-            }
-        }
-
-        // Set up automatic tracking on scroll and resize - INLINE to prevent tree-shaking
-        if (!this._elementTrackingHandlers) {
-            this._elementTrackingHandlers = {
-                scroll: () => {
-                    if (!this._attachedElement || !this._canvas) return;
-
-                    const elementRect = this._attachedElement.getBoundingClientRect();
-                    const viewportCenterX = window.innerWidth / 2;
-                    const viewportCenterY = window.innerHeight / 2;
-                    const elementCenterX = elementRect.left + elementRect.width / 2;
-                    const elementCenterY = elementRect.top + elementRect.height / 2;
-                    const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
-                    const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
-
-
-                    this.setPosition(offsetX, offsetY, 0);
-                },
-                resize: () => {
-                    if (!this._attachedElement || !this._canvas) return;
-
-                    const elementRect = this._attachedElement.getBoundingClientRect();
-                    const viewportCenterX = window.innerWidth / 2;
-                    const viewportCenterY = window.innerHeight / 2;
-                    const elementCenterX = elementRect.left + elementRect.width / 2;
-                    const elementCenterY = elementRect.top + elementRect.height / 2;
-                    const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
-                    const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
-
-
-                    this.setPosition(offsetX, offsetY, 0);
-                }
-            };
-            window.addEventListener('scroll', this._elementTrackingHandlers.scroll, { passive: true });
-            window.addEventListener('resize', this._elementTrackingHandlers.resize);
-        }
-
-        return this;
+        return this._elementAttachmentManager.attachToElement(elementOrSelector, options);
     }
 
     /**
@@ -746,30 +653,14 @@ class EmotiveMascotPublic {
      * @returns {boolean} True if attached to an element
      */
     isAttachedToElement() {
-        return !!this._attachedElement;
+        return this._elementAttachmentManager.isAttachedToElement();
     }
 
     /**
      * Detach mascot from tracked element
      */
     detachFromElement() {
-        this._attachedElement = null;
-
-        // Remove event listeners
-        if (this._elementTrackingHandlers) {
-            window.removeEventListener('scroll', this._elementTrackingHandlers.scroll);
-            window.removeEventListener('resize', this._elementTrackingHandlers.resize);
-            this._elementTrackingHandlers = null;
-        }
-
-        // Clear containment and reset scale
-        this.setContainment(null, 1);
-
-        // Reset to neutral state
-        this.setEmotion('neutral');
-        this.morphTo('sphere', { duration: 800 });
-
-        return this;
+        return this._elementAttachmentManager.detachFromElement();
     }
 
     /**
