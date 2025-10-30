@@ -124,6 +124,8 @@ import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
 import { EmotionalStateManager } from './renderer/EmotionalStateManager.js';
+import { CanvasContextManager } from './renderer/CanvasContextManager.js';
+import { ResourceCleanupManager } from './renderer/ResourceCleanupManager.js';
 import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 import { gradientCache } from './renderer/GradientCache.js';
 
@@ -171,6 +173,8 @@ class EmotiveRenderer {
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
         this.emotionalStateManager = new EmotionalStateManager(this);
+        this.canvasContextManager = new CanvasContextManager(this);
+        this.resourceCleanupManager = new ResourceCleanupManager(this);
 
         // Configuration - matching original Emotive proportions
         this.config = {
@@ -1161,85 +1165,38 @@ class EmotiveRenderer {
 
     /**
      * Reset canvas context to fix rendering artifacts after tab switch
+     * Delegates to CanvasContextManager
      */
     resetCanvasContext() {
-        if (!this.canvas || !this.ctx) return;
-
-        // Save current dimensions
-        const {width} = this.canvas;
-        const {height} = this.canvas;
-
-        // Reset all canvas state
-        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-        this.ctx.globalAlpha = 1;
-        this.ctx.globalCompositeOperation = 'source-over';
-        this.ctx.imageSmoothingEnabled = true;
-        this.ctx.imageSmoothingQuality = 'high';
-
-        // Clear the entire canvas
-        this.ctx.clearRect(0, 0, width, height);
-
-        // Also reset offscreen canvas if it exists
-        if (this.offscreenCanvas && this.offscreenCtx) {
-            this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
-            this.offscreenCtx.globalAlpha = 1;
-            this.offscreenCtx.globalCompositeOperation = 'source-over';
-            this.offscreenCtx.imageSmoothingEnabled = true;
-            this.offscreenCtx.imageSmoothingQuality = 'high';
-            this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
-        }
-
-        // Reset context state manager if it exists
-        if (this.contextStateManager) {
-            this.contextStateManager.reset();
-        }
-
-        // Force a clean render on next frame
-        this.forceCleanRender = true;
+        this.canvasContextManager.resetCanvasContext();
     }
 
-    
+
     /**
      * Set quality level for degradation manager compatibility
+     * Delegates to CanvasContextManager
      * @param {number} quality - Quality level (0-1)
      */
     setQualityLevel(quality) {
-        this.qualityLevel = Math.max(0, Math.min(1, quality));
-        
-        // Adjust rendering parameters based on quality
-        if (this.qualityLevel < 0.5) {
-            // Low quality mode
-            this.ctx.imageSmoothingEnabled = false;
-            this.state.breathDepth *= 0.5; // Reduce animation complexity
-        } else if (this.qualityLevel < 0.8) {
-            // Medium quality
-            this.ctx.imageSmoothingEnabled = true;
-            this.ctx.imageSmoothingQuality = 'medium';
-        } else {
-            // High quality
-            this.ctx.imageSmoothingEnabled = true;
-            this.ctx.imageSmoothingQuality = 'high';
-        }
+        this.canvasContextManager.setQualityLevel(quality);
     }
     
     /**
      * Set quality reduction (for degradation manager)
+     * Delegates to CanvasContextManager
      * @param {boolean} enabled - Whether quality reduction is enabled
      */
     setQualityReduction(enabled) {
-        if (enabled) {
-            this.setQualityLevel(0.5);
-        } else {
-            this.setQualityLevel(1.0);
-        }
+        this.canvasContextManager.setQualityReduction(enabled);
     }
     
     /**
      * Handle canvas context recovery
+     * Delegates to CanvasContextManager
      * @param {CanvasRenderingContext2D} newContext - New context after recovery
      */
     handleContextRecovery(newContext) {
-        this.ctx = newContext;
+        this.canvasContextManager.handleContextRecovery(newContext);
     }
     
     /**
@@ -1329,61 +1286,10 @@ class EmotiveRenderer {
     
     /**
      * Clean up resources
+     * Delegates to ResourceCleanupManager
      */
     destroy() {
-        // Cancel all animation frames to prevent memory leaks
-        for (const key in this.animationFrameIds) {
-            if (this.animationFrameIds[key]) {
-                cancelAnimationFrame(this.animationFrameIds[key]);
-                this.animationFrameIds[key] = null;
-            }
-        }
-
-        // Unregister all animation loop callbacks to prevent accumulation
-        for (const key in this.loopCallbackIds) {
-            if (this.loopCallbackIds[key]) {
-                animationLoopManager.unregister(this.loopCallbackIds[key]);
-                this.loopCallbackIds[key] = null;
-            }
-        }
-
-        // Clean up sleep manager (handles eyeClose/eyeOpen callbacks and wakeJitterTimeout)
-        if (this.sleepManager) {
-            this.sleepManager.cleanup();
-        }
-
-        // Clean up gaze tracking
-        if (this.gazeTracker) {
-            this.gazeTracker.cleanup();
-        }
-
-        // Clear any pending timeouts
-        if (this.wakeJitterTimeout) {
-            clearTimeout(this.wakeJitterTimeout);
-            this.wakeJitterTimeout = null;
-        }
-
-        // Clear animation states
-        this.colorTransition.active = false;
-        if (this.zenTransition) {
-            this.zenTransition.active = false;
-        }
-
-        // Clean up gaze tracking listeners
-        this.cleanupGazeTracking();
-
-        // Clear other resources
-        this.speakingRings = [];
-
-        // Clear gesture compositor cache
-        if (this.gestureCompositor) {
-            this.gestureCompositor.clearCache();
-        }
-
-        // Destroy modular components
-        if (this.specialEffects) {
-            this.specialEffects.destroy();
-        }
+        this.resourceCleanupManager.destroy();
     }
 }
 
