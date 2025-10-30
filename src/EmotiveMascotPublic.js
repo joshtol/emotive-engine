@@ -12,6 +12,7 @@ import { AudioManager } from './public/AudioManager.js';
 import { GestureController } from './public/GestureController.js';
 import { TimelineRecorder } from './public/TimelineRecorder.js';
 import { ElementAttachmentManager } from './public/ElementAttachmentManager.js';
+import { VisualEffectsManager } from './public/VisualEffectsManager.js';
 
 class EmotiveMascotPublic {
     constructor(config = {}) {
@@ -57,6 +58,10 @@ class EmotiveMascotPublic {
             () => this._getReal(),
             () => this._canvas,
             this
+        );
+        this._visualEffectsManager = new VisualEffectsManager(
+            () => this._getReal(),
+            () => this._canvas
         );
 
         // Bind public methods
@@ -526,29 +531,7 @@ class EmotiveMascotPublic {
      * @param {number} scale - Scale factor for mascot (1 = normal, 0.5 = half size, etc.)
      */
     setContainment(bounds, scale = 1) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-
-        // Set bounds on particle system
-        if (engine.particleSystem) {
-            engine.particleSystem.setContainmentBounds(bounds);
-        }
-
-        // CRITICAL: Set scale on PositionController (affects both core and particles)
-        // The renderer recalculates scaleFactor every frame from effectiveCenter.coreScale
-        // so we must set it on the PositionController which provides effectiveCenter
-        if (engine.positionController) {
-            engine.positionController.coreScaleOverride = scale;
-            engine.positionController.particleScaleOverride = scale;
-        }
-
-        // Also update existing particles immediately (new particles will use PositionController scale)
-        if (engine.particleSystem && engine.particleSystem.particles) {
-            engine.particleSystem.particles.forEach(p => {
-                p.scaleFactor = scale;
-                p.size = p.baseSize * scale;
-            });
-        }
+        return this._visualEffectsManager.setContainment(bounds, scale);
     }
 
     /**
@@ -608,11 +591,7 @@ class EmotiveMascotPublic {
      * Useful when repositioning mascot to remove particles from old position
      */
     clearParticles() {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        if (engine.particleSystem) {
-            engine.particleSystem.clear();
-        }
+        return this._visualEffectsManager.clearParticles();
     }
 
     /**
@@ -623,11 +602,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setParticleSystemCanvasDimensions(width, height) {
-        const engine = this._getReal();
-        if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        if (engine.setParticleSystemCanvasDimensions) {
-            engine.setParticleSystemCanvasDimensions(width, height);
-        }
+        this._visualEffectsManager.setParticleSystemCanvasDimensions(width, height);
         return this;
     }
 
@@ -1210,10 +1185,7 @@ class EmotiveMascotPublic {
      * @returns {string} Data URL
      */
     getFrameData(format = 'png') {
-        const canvas = this._canvas || this.canvas || (this._getReal() && this._getReal().canvas);
-        if (!canvas) return null;
-
-        return canvas.toDataURL(`image/${format}`);
+        return this._visualEffectsManager.getFrameData(format);
     }
 
     /**
@@ -1222,12 +1194,7 @@ class EmotiveMascotPublic {
      * @returns {Promise<Blob>} Image blob
      */
     getFrameBlob(format = 'png') {
-        const canvas = this._canvas || this.canvas || (this._getReal() && this._getReal().canvas);
-        if (!canvas) return Promise.resolve(null);
-
-        return new Promise(resolve => {
-            canvas.toBlob(blob => resolve(blob), `image/${format}`);
-        });
+        return this._visualEffectsManager.getFrameBlob(format);
     }
 
     /**
