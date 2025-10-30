@@ -81,6 +81,7 @@ import { SpeechReactivityManager } from '../audio/SpeechReactivityManager.js';
 import { CanvasResizeManager } from '../rendering/CanvasResizeManager.js';
 import { OffsetPositionManager } from '../rendering/OffsetPositionManager.js';
 import { RotationController } from '../rendering/RotationController.js';
+import { VisualTransformationManager } from '../rendering/VisualTransformationManager.js';
 import { FrustrationContextManager } from '../state/FrustrationContextManager.js';
 import { PerformanceBehaviorManager } from '../performance/PerformanceBehaviorManager.js';
 import { PerformanceMonitoringManager } from '../performance/PerformanceMonitoringManager.js';
@@ -506,6 +507,7 @@ export class InitializationManager {
         this.mascot.canvasResizeManager = new CanvasResizeManager(this.mascot);
         this.mascot.offsetPositionManager = new OffsetPositionManager(this.mascot);
         this.mascot.rotationController = new RotationController(this.mascot);
+        this.mascot.visualTransformationManager = new VisualTransformationManager(this.mascot);
         this.mascot.frustrationContextManager = new FrustrationContextManager(this.mascot);
         this.mascot.performanceBehaviorManager = new PerformanceBehaviorManager(this.mascot);
         this.mascot.performanceMonitoringManager = new PerformanceMonitoringManager(this.mascot);

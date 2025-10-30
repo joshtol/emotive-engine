@@ -103,6 +103,7 @@ import { SpeechReactivityManager } from './mascot/audio/SpeechReactivityManager.
 import { CanvasResizeManager } from './mascot/rendering/CanvasResizeManager.js';
 import { OffsetPositionManager } from './mascot/rendering/OffsetPositionManager.js';
 import { RotationController } from './mascot/rendering/RotationController.js';
+import { VisualTransformationManager } from './mascot/rendering/VisualTransformationManager.js';
 import { FrustrationContextManager } from './mascot/state/FrustrationContextManager.js';
 import { PerformanceBehaviorManager } from './mascot/performance/PerformanceBehaviorManager.js';
 import { PerformanceMonitoringManager } from './mascot/performance/PerformanceMonitoringManager.js';
@@ -1106,7 +1107,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     clearParticles() {
-        return this.canvasResizeManager.clearParticles();
+        return this.visualTransformationManager.clearParticles();
     }
 
     /**
@@ -1117,7 +1118,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setParticleSystemCanvasDimensions(width, height) {
-        return this.canvasResizeManager.setParticleSystemCanvasDimensions(width, height);
+        return this.visualTransformationManager.setParticleSystemCanvasDimensions(width, height);
     }
 
     /**
@@ -1279,9 +1280,9 @@ class EmotiveMascot {
      * @param {number} dpr - Device pixel ratio
      */
     handleResize(width, height, dpr) {
-        this.canvasResizeManager.handleResize(width, height, dpr);
+        this.visualTransformationManager.handleResize(width, height, dpr);
     }
-    
+
     /**
      * Morph the core to a different shape
      * @param {string} shape - Target shape name (circle, heart, star, sun, moon, eclipse, square, triangle)
@@ -1289,7 +1290,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     morphTo(shape, config = {}) {
-        return this.shapeTransformManager.morphTo(shape, config);
+        return this.visualTransformationManager.morphTo(shape, config);
     }
     
     /**
@@ -1321,7 +1322,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setOffset(x, y, z = 0) {
-        return this.offsetPositionManager.setOffset(x, y, z);
+        return this.visualTransformationManager.setOffset(x, y, z);
     }
 
     /**
@@ -1329,7 +1330,7 @@ class EmotiveMascot {
      * @returns {Object} Current offset {x, y, z}
      */
     getOffset() {
-        return this.offsetPositionManager.getOffset();
+        return this.visualTransformationManager.getOffset();
     }
 
     /**
@@ -1346,7 +1347,7 @@ class EmotiveMascot {
      * mascot.setBackdrop({ enabled: true, intensity: 0.8, radius: 2 });
      */
     setBackdrop(options = {}) {
-        return this.shapeTransformManager.setBackdrop(options);
+        return this.visualTransformationManager.setBackdrop(options);
     }
 
     /**
@@ -1354,7 +1355,7 @@ class EmotiveMascot {
      * @returns {Object} Current backdrop config
      */
     getBackdrop() {
-        return this.shapeTransformManager.getBackdrop();
+        return this.visualTransformationManager.getBackdrop();
     }
 
     /**
@@ -1367,7 +1368,7 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     animateOffset(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
-        return this.offsetPositionManager.animateOffset(x, y, z, duration, easing);
+        return this.visualTransformationManager.animateOffset(x, y, z, duration, easing);
     }
     
     /**
