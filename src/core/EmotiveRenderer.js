@@ -113,6 +113,7 @@ import { CanvasSetupManager } from './renderer/CanvasSetupManager.js';
 import { RenderPerformanceManager } from './renderer/RenderPerformanceManager.js';
 import { TransformMerger } from './renderer/TransformMerger.js';
 import { StateUpdateManager } from './renderer/StateUpdateManager.js';
+import { DimensionCalculator } from './renderer/DimensionCalculator.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -153,6 +154,7 @@ class EmotiveRenderer {
         this.renderPerformanceManager = new RenderPerformanceManager(this);
         this.transformMerger = new TransformMerger(this);
         this.stateUpdateManager = new StateUpdateManager(this);
+        this.dimensionCalculator = new DimensionCalculator(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -666,49 +668,11 @@ class EmotiveRenderer {
 
         // Update frame state: undertone modifiers, color transitions, timers, gaze offset (delegated to StateUpdateManager)
         this.stateUpdateManager.performFrameStateUpdates(deltaTime);
-        
-        // Calculate dimensions - using logical size for proper scaling
-        const canvasSize = Math.min(logicalWidth, logicalHeight);
-        
-        // Get effective center coordinates (with position offsets applied)
-        const effectiveCenter = this.getEffectiveCenter();
-        let centerX = effectiveCenter.x;
-        let centerY = effectiveCenter.y - this.config.topOffset;
-        
-        // Apply vertical offset for certain emotions (like excited for exclamation mark)
-        if (state.properties && state.properties.verticalOffset) {
-            centerY = effectiveCenter.y - this.config.topOffset + (logicalHeight * state.properties.verticalOffset);
-        }
-        
-        // Calculate global scale factor for core rendering (uses coreScale for independent control)
-        this.scaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale * (effectiveCenter.coreScale || effectiveCenter.scale);
 
-        // Store particle scale factor separately for particle system
-        this.particleScaleFactor = (canvasSize / this.config.referenceSize) * this.config.baseScale * (effectiveCenter.particleScale || effectiveCenter.scale);
-        
-        // Apply gesture transform if present
-        let scaleMultiplier = 1;
-        let rotationAngle = 0;
-        let glowMultiplier = 1;
-        
-        if (gestureTransform) {
-            centerX += gestureTransform.x || 0;
-            centerY += gestureTransform.y || 0;
-            scaleMultiplier = gestureTransform.scale || 1;
-            rotationAngle = (gestureTransform.rotation || 0) * Math.PI / 180;
-            glowMultiplier = gestureTransform.glowIntensity || 1;
-        }
-
-        // Apply gesture animations (delegate to GestureAnimator)
-        const gestureTransforms = this.gestureAnimator.applyGestureAnimations();
-        if (gestureTransforms) {
-            centerX += gestureTransforms.offsetX || 0;
-            centerY += gestureTransforms.offsetY || 0;
-            scaleMultiplier *= gestureTransforms.scale || 1;
-            rotationAngle += (gestureTransforms.rotation || 0) * Math.PI / 180;
-            // DON'T MULTIPLY - just use the glow value directly to prevent accumulation
-            glowMultiplier = gestureTransforms.glow || 1;
-        }
+        // Calculate dimensions, positions, and base transforms (delegated to DimensionCalculator)
+        const dims = this.dimensionCalculator.calculateRenderDimensions(logicalWidth, logicalHeight, state, gestureTransform);
+        const { scaleMultiplier, glowMultiplier, gestureTransforms } = dims;
+        let { centerX, centerY, rotationAngle } = dims;
         
         // Apply zen levitation - lazy floating when in zen state
         if (this.state.emotion === 'zen' && this.zenTransition.phase === 'in') {
