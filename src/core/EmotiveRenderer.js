@@ -114,6 +114,7 @@ import { RenderPerformanceManager } from './renderer/RenderPerformanceManager.js
 import { TransformMerger } from './renderer/TransformMerger.js';
 import { StateUpdateManager } from './renderer/StateUpdateManager.js';
 import { DimensionCalculator } from './renderer/DimensionCalculator.js';
+import { RadiusCalculator } from './renderer/RadiusCalculator.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -155,6 +156,7 @@ class EmotiveRenderer {
         this.transformMerger = new TransformMerger(this);
         this.stateUpdateManager = new StateUpdateManager(this);
         this.dimensionCalculator = new DimensionCalculator(this);
+        this.radiusCalculator = new RadiusCalculator(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -689,66 +691,10 @@ class EmotiveRenderer {
             rotationAngle += floatRotation;
         }
         
-        // Apply sleep state modifications (with animated dimming)
-        let sleepOpacityMod = 1;
-        let sleepScaleMod = 1;
-        let glowOpacityMod = 1;
-        if (this.state.sleeping || this.state.emotion === 'resting' || isEffectActive('sleeping', this.state)) {
-            const sleepEffect = getEffect('sleeping');
-            if (sleepEffect) {
-                const dimming = sleepEffect.getDimmingValues();
-                // Use effect's dimming values
-                sleepOpacityMod = this.state.sleepDimness !== undefined ? this.state.sleepDimness : dimming.orbDimming;
-                glowOpacityMod = dimming.glowDimming; // Dim glow even more
-                sleepScaleMod = this.state.sleepScale !== undefined ? this.state.sleepScale : 0.9;
-            } else {
-                // Fallback values
-                sleepOpacityMod = this.state.sleepDimness !== undefined ? this.state.sleepDimness : 0.3;
-                glowOpacityMod = 0.2;
-                sleepScaleMod = this.state.sleepScale !== undefined ? this.state.sleepScale : 0.9;
-            }
-            this.state.breathRate = 0.5;  // Slower breathing
-            this.state.breathDepth = 0.15; // Deeper breaths
-        }
-        
-        // Calculate breathing factors - INVERSE for core and glow
-        // Use custom scale if set (for breathing exercises), otherwise use normal breathing
-        let coreBreathFactor, glowBreathFactor;
-        
-        if (this.state.customScale !== null) {
-            // Use custom scale directly for breathing exercises
-            coreBreathFactor = this.state.customScale;
-            glowBreathFactor = 1 + (this.state.customScale - 1) * 0.5; // Glow follows at half intensity
-        } else {
-            // Normal breathing behavior
-            // Zen uses full breath depth regardless of breathRate
-            // (effectiveBreathDepth calculation removed - unused)
-            // Get breathing scale from BreathingAnimator
-            const breathingScale = this.breathingAnimator.getBreathingScale();
-            coreBreathFactor = breathingScale;
-            glowBreathFactor = 1 - (breathingScale - 1) * 0.5; // Glow breathes opposite, less pronounced
-        }
-        
-        // Add nervous glow pulse if needed
-        if (this.state.undertone === 'nervous' && this.undertoneModifiers.nervous.glowPulse) {
-            const nervousPulse = Math.sin(Date.now() / 200) * this.undertoneModifiers.nervous.glowPulse; // Fast subtle pulse
-            glowBreathFactor *= (1 + nervousPulse);
-        }
-        
-        // Calculate core dimensions - using unified scale factor
-        const baseRadius = (this.config.referenceSize / this.config.coreSizeDivisor) * this.scaleFactor;
-        
-        // Apply emotion core size from state properties
-        const emotionSizeMult = (state.properties && state.properties.coreSize) ? state.properties.coreSize : 1.0;
-        
-        // Apply undertone size multiplier
-        const undertoneSizeMult = this.state.sizeMultiplier || 1.0;
-        
-        let coreRadius = baseRadius * emotionSizeMult * coreBreathFactor * scaleMultiplier * sleepScaleMod * undertoneSizeMult;
-        let glowRadius = baseRadius * this.config.glowMultiplier * glowBreathFactor * this.state.glowIntensity * scaleMultiplier * sleepScaleMod * undertoneSizeMult * glowMultiplier;  // Apply gesture glow multiplier
-
-        // Use state glow intensity directly multiplied by gesture glow
-        const effectiveGlowIntensity = this.state.glowIntensity * glowMultiplier;
+        // Calculate core/glow radii with all modifiers (delegated to RadiusCalculator)
+        const radiusData = this.radiusCalculator.calculateRadii(state, scaleMultiplier, glowMultiplier);
+        let { coreRadius, glowRadius } = radiusData;
+        const { effectiveGlowIntensity, sleepOpacityMod, glowOpacityMod } = radiusData;
         
         
         // Apply blinking (only when not sleeping or zen)
