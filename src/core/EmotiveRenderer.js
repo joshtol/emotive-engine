@@ -109,6 +109,7 @@ import { ZenModeController } from './renderer/ZenModeController.js';
 import { EpisodicEffectController } from './renderer/EpisodicEffectController.js';
 import { RotationManager } from './renderer/RotationManager.js';
 import { GazeTracker } from './renderer/GazeTracker.js';
+import { CanvasSetupManager } from './renderer/CanvasSetupManager.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
 import { SleepManager } from './renderer/SleepManager.js';
@@ -145,6 +146,7 @@ class EmotiveRenderer {
         this.episodicEffectController = new EpisodicEffectController(this);
         this.rotationManager = new RotationManager(this);
         this.gazeTracker = new GazeTracker(this);
+        this.canvasSetupManager = new CanvasSetupManager(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
         this.sleepManager = new SleepManager(this);
@@ -674,49 +676,11 @@ class EmotiveRenderer {
         // Store gestureTransform for use in other methods
         this.gestureTransform = gestureTransform;
 
-        // Update offscreen canvas size if needed
-        this.updateOffscreenSize();
-        
-        // Get logical dimensions from canvasManager (not scaled by DPR)
-        const logicalWidth = this.canvasManager.width || this.canvas.width || 400;
-        const logicalHeight = this.canvasManager.height || this.canvas.height || 400;
-        
-        // Store original context and switch to offscreen for double buffering
-        const originalCtx = this.ctx;
-        this.ctx = this.offscreenCtx;
+        // Setup canvas: offscreen size, dimensions, context switching (delegated to CanvasSetupManager)
+        const { logicalWidth, logicalHeight, originalCtx } = this.canvasSetupManager.setupCanvas();
 
-        // RENDER BACKDROP TO MAIN CANVAS FIRST (persists, not subject to decay/clear)
-        // Calculate backdrop position early - needs centerX, centerY, coreRadius
-        // We'll calculate these now for backdrop, then again later for full render
-        const backdropCanvasSize = Math.min(logicalWidth, logicalHeight);
-        const backdropEffectiveCenter = this.getEffectiveCenter();
-        const backdropCenterX = backdropEffectiveCenter.x;
-        const backdropCenterY = backdropEffectiveCenter.y - this.config.topOffset;
-        const backdropScaleFactor = (backdropCanvasSize / this.config.referenceSize) * this.config.baseScale * (backdropEffectiveCenter.coreScale || backdropEffectiveCenter.scale);
-        const backdropBaseRadius = (this.config.referenceSize / this.config.coreSizeDivisor) * backdropScaleFactor;
-        const backdropCoreRadius = backdropBaseRadius; // Simple estimate, will be refined later
-
-        // Update and render backdrop to MAIN canvas (not offscreen)
-        this.backdropRenderer.update(deltaTime);
-        if (this.audioAnalyzer && this.audioAnalyzer.currentAmplitude) {
-            this.backdropRenderer.setAudioIntensity(this.audioAnalyzer.currentAmplitude);
-        }
-        this.backdropRenderer.render(backdropCenterX, backdropCenterY, backdropCoreRadius, originalCtx);
-
-        // Apply decay to main canvas to prevent glow accumulation
-        // Scale decay with particle count to handle high-particle emotions like euphoria
-        const particleCount = this.particleSystem ? this.particleSystem.particles.length : 0;
-        // Base decay: 12%, increased up to 20% for high particle counts
-        const decayRate = 0.12 + Math.min(0.08, particleCount * 0.003);
-
-        originalCtx.save();
-        originalCtx.globalCompositeOperation = 'destination-out';
-        originalCtx.fillStyle = `rgba(0, 0, 0, ${decayRate})`;
-        originalCtx.fillRect(0, 0, logicalWidth, logicalHeight);
-        originalCtx.restore();
-
-        // Clear offscreen canvas for fresh render
-        this.ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+        // Render backdrop, apply decay, clear offscreen (delegated to CanvasSetupManager)
+        this.canvasSetupManager.performCanvasSetup(logicalWidth, logicalHeight, originalCtx, deltaTime);
         
         // Update undertone modifiers every frame during transitions
         if (this.stateMachine && this.stateMachine.getWeightedUndertoneModifiers) {
