@@ -6,13 +6,31 @@
 import { getGesture } from '../gestures/gestureCacheWrapper.js';
 // import { getGestureProperties } from '../gestures/gestureCacheWrapper.js'; // Unused
 import musicalDuration from '../MusicalDuration.js';
+import { PhysicalGestureAnimator } from './PhysicalGestureAnimator.js';
+import { VisualEffectAnimator } from './VisualEffectAnimator.js';
+import { BreathGestureAnimator } from './BreathGestureAnimator.js';
+import { MovementGestureAnimator } from './MovementGestureAnimator.js';
+import { ShapeTransformAnimator } from './ShapeTransformAnimator.js';
+import { ExpressionGestureAnimator } from './ExpressionGestureAnimator.js';
+import { DirectionalGestureAnimator } from './DirectionalGestureAnimator.js';
+import { ComplexAnimationAnimator } from './ComplexAnimationAnimator.js';
 
 export class GestureAnimator {
     constructor(renderer) {
         this.renderer = renderer;
         this.activeGestures = new Map();
         this.scaleFactor = renderer.scaleFactor || 1;
-        
+
+        // Initialize modular gesture animators
+        this.physicalGestureAnimator = new PhysicalGestureAnimator(renderer);
+        this.visualEffectAnimator = new VisualEffectAnimator(renderer);
+        this.breathGestureAnimator = new BreathGestureAnimator(renderer);
+        this.movementGestureAnimator = new MovementGestureAnimator(renderer);
+        this.shapeTransformAnimator = new ShapeTransformAnimator(renderer);
+        this.expressionGestureAnimator = new ExpressionGestureAnimator(renderer);
+        this.directionalGestureAnimator = new DirectionalGestureAnimator(renderer);
+        this.complexAnimationAnimator = new ComplexAnimationAnimator(renderer);
+
         // Gesture animations state
         this.gestureAnimations = {
             bounce: { active: false, progress: 0, params: {} },
@@ -544,803 +562,163 @@ export class GestureAnimator {
     
     // Individual gesture application methods
     applyBounce(anim, progress) {
-        const bounce = Math.abs(Math.sin(progress * Math.PI * anim.params.frequency)) * anim.params.amplitude * this.scaleFactor;
-        // Apply effects
-        const multiplier = anim.params.effects && anim.params.effects.includes('gravity') ? 0.6 : 1;
-        return { offsetY: -bounce * multiplier };
+        return this.physicalGestureAnimator.applyBounce(anim, progress);
     }
     
     applyPulse(anim, progress) {
-        const pulse = Math.sin(progress * Math.PI * anim.params.frequency);
-        return {
-            scale: 1 + pulse * anim.params.scaleAmount,
-            glow: 1 + pulse * anim.params.glowAmount
-        };
+        return this.shapeTransformAnimator.applyPulse(anim, progress);
     }
     
     applyShake(anim, progress) {
-        // Initialize random direction for this shake if not set
-        if (!anim.randomAngle) {
-            anim.randomAngle = Math.random() * Math.PI * 2; // Random angle in radians
-        }
-        const decay = anim.params.decay ? (1 - progress) : 1;
-        const shake = Math.sin(progress * Math.PI * anim.params.frequency) * anim.params.amplitude * decay * this.scaleFactor;
-        return {
-            offsetX: shake * Math.cos(anim.randomAngle),
-            offsetY: shake * Math.sin(anim.randomAngle)
-        };
+        return this.physicalGestureAnimator.applyShake(anim, progress);
     }
     
     applySpin(anim, progress) {
-        // Ensure full rotation even if progress doesn't quite reach 1.0
-        const actualProgress = Math.min(progress * 1.05, 1.0); // Slight overshoot to ensure completion
-        return {
-            rotation: actualProgress * anim.params.rotations * 360,
-            scale: 1 + Math.sin(progress * Math.PI) * anim.params.scaleAmount
-        };
+        return this.movementGestureAnimator.applySpin(anim, progress);
     }
     
     applyNod(anim, progress) {
-        const nod = Math.sin(progress * Math.PI * anim.params.frequency) * anim.params.amplitude * this.scaleFactor;
-        return { offsetY: nod };
+        return this.expressionGestureAnimator.applyNod(anim, progress);
     }
     
     applyTilt(anim, progress) {
-        if (!anim.tiltDirection) {
-            // Randomly choose left (-1) or right (1) tilt
-            anim.tiltDirection = Math.random() < 0.5 ? -1 : 1;
-        }
-        const frequency = anim.params.frequency || 2;
-        const angle = (anim.params.angle || 15) * Math.PI / 180; // Convert to radians
-        const tiltProgress = Math.sin(progress * Math.PI * frequency) * anim.tiltDirection;
-        
-        // Apply both rotation and skew to make tilt visible on circular orb
-        return { 
-            rotation: tiltProgress * angle,
-            // Skew the orb slightly to show tilt motion
-            scaleX: 1 + Math.abs(tiltProgress) * 0.1,  // Widen when tilted
-            scaleY: 1 - Math.abs(tiltProgress) * 0.05, // Compress slightly
-            // Move slightly with tilt
-            offsetX: tiltProgress * 10,
-            offsetY: Math.abs(tiltProgress) * -5  // Lift slightly when tilted
-        };
+        return this.expressionGestureAnimator.applyTilt(anim, progress);
     }
     
     applyExpand(anim, progress) {
-        // Use scaleAmount or scaleTarget (handle both config formats)
-        // Make sure we're expanding, not contracting
-        const targetScale = Math.max(anim.params.scaleAmount || anim.params.scaleTarget || 1.5, 1.0);
-        const easedProgress = Math.sin(progress * Math.PI / 2); // Smooth ease-out
-        const scale = 1 + (targetScale - 1) * easedProgress;
-        return {
-            scale,
-            glow: 1 + Math.abs(anim.params.glowAmount || 0.2) * easedProgress
-        };
+        return this.shapeTransformAnimator.applyExpand(anim, progress);
     }
     
     applyContract(anim, progress) {
-        // Use scaleAmount or scaleTarget (handle both config formats)
-        const targetScale = anim.params.scaleAmount || anim.params.scaleTarget || 0.7;
-        const easedProgress = Math.sin(progress * Math.PI / 2); // Smooth ease-out
-        const scale = 1 + (targetScale - 1) * easedProgress;
-        return {
-            scale,
-            glow: 1 + (anim.params.glowAmount || -0.2) * easedProgress
-        };
+        return this.shapeTransformAnimator.applyContract(anim, progress);
     }
     
     applyFlash(anim, progress) {
-        const flash = Math.sin(progress * Math.PI); // Quick up and down
-        const glowPeak = anim.params.glowPeak || 2.0;  // Default if not defined
-        const scalePeak = anim.params.scalePeak || 1.1; // Default if not defined
-        return {
-            glow: 1 + (glowPeak - 1) * flash,
-            scale: 1 + (scalePeak - 1) * flash
-        };
+        return this.visualEffectAnimator.applyFlash(anim, progress);
     }
     
     applyDrift(anim, progress) {
-        // Initialize drift angle when starting (progress near 0)
-        if (progress <= 0.01 && !anim.currentDriftAngle) {
-            // Always pick a random angle for drift
-            anim.currentDriftAngle = Math.random() * Math.PI * 2; // Random direction in radians
-        }
-        
-        const distance = anim.params.distance * Math.sin(progress * Math.PI) * this.scaleFactor;
-        const angle = anim.currentDriftAngle || 0;
-        
-        // Clear the angle when animation completes
-        if (progress >= 0.99) {
-            anim.currentDriftAngle = null;
-        }
-        
-        return {
-            offsetX: Math.cos(angle) * distance,
-            offsetY: Math.sin(angle) * distance
-        };
+        return this.movementGestureAnimator.applyDrift(anim, progress);
     }
     
     applyStretch(anim, progress) {
-        const stretch = Math.sin(progress * Math.PI * anim.params.frequency);
-        // Note: We'd need to handle scaleX/scaleY separately for proper stretch
-        // For now, average them
-        const avgScale = (anim.params.scaleX + anim.params.scaleY) / 2;
-        return { scale: 1 + (avgScale - 1) * stretch };
+        return this.shapeTransformAnimator.applyStretch(anim, progress);
     }
     
     applyGlow(anim, progress) {
-        // Glow effect - pure luminosity like pulse but without movement
-        // Copy of pulse logic but focused only on glow
-
-        const glowPulse = Math.sin(progress * Math.PI * anim.params.frequency);
-
-        return {
-            scale: 1 + glowPulse * (anim.params.scaleAmount || 0.1), // Very subtle scale like new glow config
-            glow: 1 + glowPulse * (anim.params.glowAmount || 0.8)    // Strong glow like new glow config
-        };
+        return this.visualEffectAnimator.applyGlow(anim, progress);
     }
     
     applyFlashWave(anim, progress) {
-        // Wave-like flash that emanates outward
-        // Store wave state in the animation object
-        if (!anim.flashWave) {
-            anim.flashWave = {
-                innerRadius: 0,
-                outerRadius: 0,
-                maxRadius: 3.0 // How far the wave travels (relative to core)
-            };
-        }
-        
-        // Update wave radius based on progress
-        anim.flashWave.outerRadius = progress * anim.flashWave.maxRadius;
-        anim.flashWave.innerRadius = Math.max(0, (progress - 0.1) * anim.flashWave.maxRadius);
-        
-        // Fade intensity as wave travels outward
-        const waveIntensity = Math.max(0, 1 - progress * 0.7);
-        
-        // Store wave data for renderer to use
-        anim.flashWaveData = {
-            innerRadius: anim.flashWave.innerRadius,
-            outerRadius: anim.flashWave.outerRadius,
-            intensity: waveIntensity
-        };
-        
-        // Return a very subtle glow increase at the core
-        return {
-            glow: 1 + waveIntensity * 0.3, // Very subtle core glow
-            flashWave: anim.flashWaveData // Pass wave data to renderer
-        };
+        return this.complexAnimationAnimator.applyFlashWave(anim, progress);
     }
     
     applyFlicker(anim, progress) {
-        // Flicker effect - particles shimmer with wave-like pulsing
-        const intensity = anim.params?.intensity || 2.0;
-        const shimmerSpeed = anim.params?.speed || 3;
-        
-        // Smooth sine wave for shimmer
-        const glow = 1 + Math.sin(progress * Math.PI * 2 * shimmerSpeed) * intensity * 0.3;
-        
-        // Slight horizontal wave motion
-        const waveX = Math.sin(progress * Math.PI * 4) * 5 * this.scaleFactor;
-        
-        // Create time-based shimmer for particles
-        const time = Date.now() * 0.001; // Convert to seconds
-        
-        // Main shimmer pulse
-        const mainPulse = Math.sin(progress * Math.PI * shimmerSpeed * 2) * 0.5 + 0.5;
-        
-        return {
-            offsetX: waveX,
-            glow,
-            particleGlow: intensity * mainPulse, // Intensity for particles
-            flickerTime: time, // Pass time for particle calculations
-            flickerEffect: true // Flag to enable flicker effect on particles (shimmer-like)
-        };
+        return this.visualEffectAnimator.applyFlicker(anim, progress);
     }
     
     applyVibrate(anim, progress) {
-        // Initialize random vibration pattern if not set
-        if (!anim.vibrateAngles) {
-            anim.vibrateAngles = {
-                x: Math.random() * 2 - 1, // Random factor between -1 and 1
-                y: Math.random() * 2 - 1
-            };
-            // Normalize to unit vector
-            const mag = Math.sqrt(anim.vibrateAngles.x ** 2 + anim.vibrateAngles.y ** 2);
-            anim.vibrateAngles.x /= mag;
-            anim.vibrateAngles.y /= mag;
-        }
-        const vibration = Math.sin(progress * Math.PI * 2 * anim.params.frequency) * anim.params.amplitude * this.scaleFactor;
-        return {
-            offsetX: vibration * anim.vibrateAngles.x,
-            offsetY: vibration * anim.vibrateAngles.y
-        };
+        return this.physicalGestureAnimator.applyVibrate(anim, progress);
     }
     
     applyWave(anim, progress) {
-        // Completely rewritten wave - a graceful, flowing infinity symbol motion
-        const amp = (anim.params.amplitude || 40) * this.scaleFactor;
-        
-        // Create a smooth infinity symbol (∞) pattern
-        // This feels more like a natural greeting wave
-        const t = progress * Math.PI * 2;
-        
-        // Infinity symbol parametric equations
-        // X: figure-8 horizontal motion
-        const infinityX = Math.sin(t) * amp;
-        
-        // Y: gentle vertical bob that rises during the wave
-        // Creates a "lifting" feeling like a real wave hello
-        const liftAmount = -Math.sin(progress * Math.PI) * amp * 0.3; // Lift up during wave
-        const infinityY = Math.sin(t * 2) * amp * 0.2 + liftAmount;
-        
-        // Add a subtle tilt that follows the wave direction
-        // Makes the orb "lean into" the wave
-        const tilt = Math.sin(t) * 5; // ±5 degrees of tilt
-        
-        // Gentle scale pulse for emphasis
-        const scalePulse = 1 + Math.sin(progress * Math.PI * 2) * 0.05; // 5% scale variation
-        
-        // Glow brightens slightly during wave
-        const glowPulse = 1 + Math.sin(progress * Math.PI) * 0.2; // 20% glow increase
-        
-        return {
-            offsetX: infinityX,
-            offsetY: infinityY,
-            rotation: tilt,
-            scale: scalePulse,
-            glow: glowPulse
-        };
+        return this.movementGestureAnimator.applyWave(anim, progress);
     }
     
     applyBreathe(anim, progress) {
-        // Deliberate, mindful breathing animation
-        const {params} = anim;
-        const holdPercent = params.particleMotion?.holdPercent || 0.1;
-        
-        // Create a breathing curve with holds at peaks
-        let breathPhase;
-        if (progress < 0.4) {
-            // Inhale phase (0-40%)
-            breathPhase = Math.sin((progress / 0.4) * Math.PI / 2);
-        } else if (progress < 0.4 + holdPercent) {
-            // Hold at full inhale
-            breathPhase = 1.0;
-        } else if (progress < 0.9) {
-            // Exhale phase  
-            const exhaleProgress = (progress - 0.4 - holdPercent) / (0.5 - holdPercent);
-            breathPhase = Math.cos(exhaleProgress * Math.PI / 2);
-        } else {
-            // Hold at full exhale
-            breathPhase = 0;
-        }
-        
-        // Apply scale changes - expand on inhale
-        const scaleAmount = params.scaleAmount || 0.25;
-        const scale = 1 + breathPhase * scaleAmount;
-        
-        // Apply glow changes - brighten on inhale
-        const glowAmount = params.glowAmount || 0.4;
-        const glow = 1 + breathPhase * glowAmount;
-        
-        // Store breath phase for particle system
-        anim.breathPhase = breathPhase;
-        
-        return {
-            scale,
-            glow,
-            breathPhase // Pass to particles for synchronized motion
-        };
+        return this.breathGestureAnimator.applyBreathe(anim, progress);
     }
     
     applyMorph(anim, progress) {
-        // Fluid morphing effect
-        const morph = Math.sin(progress * Math.PI * 2);
-        return {
-            scale: 1 + morph * 0.1,
-            rotation: morph * 10
-        };
+        return this.shapeTransformAnimator.applyMorph(anim, progress);
     }
     
     applySlowBlink(anim, progress) {
-        // Simulate blinking by scaling vertically
-        let scaleY = 1;
-        if (progress < 0.3) {
-            // Closing
-            scaleY = 1 - (progress / 0.3);
-        } else if (progress < 0.5) {
-            // Closed
-            scaleY = 0;
-        } else if (progress < 0.8) {
-            // Opening
-            scaleY = (progress - 0.5) / 0.3;
-        } else {
-            // Open
-            scaleY = 1;
-        }
-        
-        // Since we can't do scaleY separately, dim the orb instead
-        return {
-            glow: scaleY
-        };
+        return this.expressionGestureAnimator.applySlowBlink(anim, progress);
     }
     
     applyLook(anim, progress) {
-        // Initialize target position if not set
-        if (!anim.targetX) {
-            const direction = anim.params.lookDirection;
-            const distance = anim.params.lookDistance * 50 * this.scaleFactor; // Convert to pixels and scale
-            
-            switch(direction) {
-            case 'left':
-                anim.targetX = -distance;
-                anim.targetY = 0;
-                break;
-            case 'right':
-                anim.targetX = distance;
-                anim.targetY = 0;
-                break;
-            case 'up':
-                anim.targetX = 0;
-                anim.targetY = -distance;
-                break;
-            case 'down':
-                anim.targetX = 0;
-                anim.targetY = distance;
-                break;
-            default: { // random
-                const angle = Math.random() * Math.PI * 2;
-                anim.targetX = Math.cos(angle) * distance;
-                anim.targetY = Math.sin(angle) * distance;
-                break;
-            }
-            }
-        }
-        
-        // Smooth look with hold
-        let lookProgress = progress;
-        if (progress < 0.3) {
-            // Move to target
-            lookProgress = progress / 0.3;
-        } else if (progress < 0.7) {
-            // Hold
-            lookProgress = 1;
-        } else {
-            // Return
-            lookProgress = 1 - (progress - 0.7) / 0.3;
-        }
-        
-        return {
-            offsetX: anim.targetX * lookProgress,
-            offsetY: anim.targetY * lookProgress
-        };
+        return this.expressionGestureAnimator.applyLook(anim, progress);
     }
     
     applySettle(anim, progress) {
-        // Damped oscillation
-        const wobble = Math.sin(progress * Math.PI * anim.params.wobbleFreq) * 
-                      Math.exp(-progress * 3) * 20 * this.scaleFactor;
-        return {
-            offsetY: wobble,
-            scale: 1 + wobble * 0.01
-        };
+        return this.expressionGestureAnimator.applySettle(anim, progress);
     }
     
     applyBreathIn(anim, progress) {
-        const breathScale = 1 + (anim.params.scaleAmount - 1) * Math.sin(progress * Math.PI / 2);
-        return {
-            scale: breathScale
-        };
+        return this.breathGestureAnimator.applyBreathIn(anim, progress);
     }
-    
+
     applyBreathOut(anim, progress) {
-        const breathScale = 1 - (1 - anim.params.scaleAmount) * Math.sin(progress * Math.PI / 2);
-        return {
-            scale: breathScale
-        };
+        return this.breathGestureAnimator.applyBreathOut(anim, progress);
     }
-    
+
     applyBreathHold(anim, _progress) {
-        // Hold at expanded state
-        return {
-            scale: anim.params.scaleAmount
-        };
+        return this.breathGestureAnimator.applyBreathHold(anim, _progress);
     }
-    
+
     applyBreathHoldEmpty(anim, _progress) {
-        // Hold at contracted state
-        return {
-            scale: anim.params.scaleAmount
-        };
+        return this.breathGestureAnimator.applyBreathHoldEmpty(anim, _progress);
     }
     
     applyJump(anim, progress) {
-        let yOffset = 0;
-        let scale = 1;
-        
-        if (progress < 0.2) {
-            // Squash phase
-            const squashProgress = progress / 0.2;
-            scale = 1 - (1 - anim.params.squashAmount) * squashProgress;
-        } else if (progress < 0.7) {
-            // Jump phase
-            const jumpProgress = (progress - 0.2) / 0.5;
-            const jumpCurve = Math.sin(jumpProgress * Math.PI);
-            yOffset = -anim.params.jumpHeight * jumpCurve * this.scaleFactor;
-            scale = anim.params.squashAmount + 
-                   (anim.params.stretchAmount - anim.params.squashAmount) * jumpCurve;
-        } else {
-            // Landing phase
-            const landProgress = (progress - 0.7) / 0.3;
-            scale = anim.params.stretchAmount - 
-                   (anim.params.stretchAmount - 1) * landProgress;
-        }
-        
-        return {
-            offsetY: yOffset,
-            scale
-        };
+        return this.physicalGestureAnimator.applyJump(anim, progress);
     }
     
     applySway(anim, progress) {
-        // Gentle pendulum-like swaying motion for the core
-        const swayAmplitude = (anim.params?.amplitude || 30) * this.scaleFactor;
-        const swayFrequency = anim.params?.frequency || 1;
-        
-        // Sway side to side with a gentle ease
-        const swayX = Math.sin(progress * Math.PI * 2 * swayFrequency) * swayAmplitude;
-        
-        // Slight vertical bob for realism
-        const bobY = Math.sin(progress * Math.PI * 4 * swayFrequency) * swayAmplitude * 0.1;
-        
-        // Slight rotation to match the sway
-        const rotation = Math.sin(progress * Math.PI * 2 * swayFrequency) * 5; // 5 degrees max
-        
-        return {
-            offsetX: swayX,
-            offsetY: bobY,
-            rotation
-        };
+        return this.movementGestureAnimator.applySway(anim, progress);
     }
     
     applyRain(anim, progress) {
-        // Rain effect - triggers falling particle behavior
-        // The actual particle motion is handled by the particle system
-        // This just adds a subtle downward drift to the core
-        
-        const rainIntensity = anim.params?.intensity || 1.0;
-        
-        // Gentle downward drift
-        const driftY = progress * 10 * this.scaleFactor * rainIntensity;
-        
-        // Slight sway as if affected by wind
-        const swayX = Math.sin(progress * Math.PI * 4) * 5 * this.scaleFactor;
-        
-        // Trigger particle falling effect through the renderer
-        if (this.renderer && this.renderer.particleSystem) {
-            // Enable falling behavior for particles during rain
-            this.renderer.particleSystem.setGestureBehavior('falling', progress > 0 && progress < 1);
-        }
-        
-        return {
-            offsetX: swayX,
-            offsetY: driftY,
-            particleEffect: 'falling'  // Signal to particle system
-        };
+        return this.complexAnimationAnimator.applyRain(anim, progress);
     }
     
     applyFloat(anim, progress) {
-        // Ethereal floating motion with both vertical and horizontal drift
-        const floatAmplitude = (anim.params?.amplitude || 20) * this.scaleFactor;
-        const floatSpeed = anim.params?.speed || 1;
-        
-        // Primary vertical float with sine wave
-        const floatY = Math.sin(progress * Math.PI * 2 * floatSpeed) * floatAmplitude;
-        
-        // Secondary horizontal drift for natural movement
-        const driftX = Math.sin(progress * Math.PI * 3 * floatSpeed) * floatAmplitude * 0.3;
-        
-        // Slight scale pulsation for breathing effect
-        const scalePulse = 1 + Math.sin(progress * Math.PI * 4 * floatSpeed) * 0.02;
-        
-        return {
-            offsetX: driftX,
-            offsetY: floatY,
-            scale: scalePulse
-        };
+        return this.movementGestureAnimator.applyFloat(anim, progress);
     }
     
-    applyOrbital(_anim, _progress) {
-        // Orbital motion - particles orbit around core, core stays still
-        // This gesture is for particle motion only, not core movement
-        return {
-            // No core movement - orbital is a particle-only effect
-            offsetX: 0,
-            offsetY: 0
-        };
+    applyOrbital(anim, progress) {
+        return this.movementGestureAnimator.applyOrbital(anim, progress);
     }
     
     applyHula(anim, progress) {
-        // Hula motion - horizontal figure-8 pattern
-        const amplitude = (anim.params?.amplitude || 40) * this.scaleFactor;
-        const t = progress * Math.PI * 2;
-        
-        // Figure-8 parametric equations
-        const x = Math.sin(t) * amplitude;
-        const y = Math.sin(t * 2) * amplitude * 0.5;
-        
-        return {
-            offsetX: x,
-            offsetY: y
-        };
+        return this.movementGestureAnimator.applyHula(anim, progress);
     }
     
     applySparkle(anim, progress) {
-        // Sparkle effect - make particles glow like fireflies
-        // Each particle gets its own random phase for async blinking
-        const intensity = anim.params?.intensity || 2.0;
-
-        
-        // Create firefly-like glow pattern for particles
-        // Using time-based phase shifting for each particle
-        const time = Date.now() * 0.001; // Convert to seconds
-        
-        // Main glow pulse for the effect
-        const mainPulse = Math.sin(progress * Math.PI * 4) * 0.3 + 0.7;
-        
-        // This will be used by particles to create firefly effect
-        // Each particle will add its own random offset to this
-        return {
-            particleGlow: intensity, // Intensity for individual particles
-            glow: mainPulse, // Gentle overall glow
-            fireflyTime: time, // Pass time for particle calculations
-            fireflyEffect: true // Flag to enable firefly effect on particles
-        };
+        return this.visualEffectAnimator.applySparkle(anim, progress);
     }
     
     applyShimmer(anim, progress) {
-        // Shimmer effect - subtle, ethereal glow that travels across surface
-        // Like moonlight on calm water
-        
-        const time = Date.now() * 0.001; // Current time in seconds
-        const intensity = anim.params?.intensity || 0.3; // Very subtle
-        
-        // Single slow wave for gentle shimmer
-        const wave = Math.sin(time * 2 + progress * Math.PI * 2);
-        
-        // Very subtle glow variation
-        const glowEffect = 1 + wave * intensity;
-        
-        // Tiny breathing effect
-        const scaleEffect = 1 + wave * 0.01; // Just 1% variation
-        
-        return {
-            offsetX: 0, // No movement
-            offsetY: 0, // No movement
-            glow: glowEffect,
-            scale: scaleEffect,
-            // Particle-specific data
-            particleGlow: 1 + wave * 0.2, // Very subtle particle effect
-            shimmerTime: time,
-            shimmerWave: wave,
-            shimmerEffect: true // Flag to enable shimmer effect on particles
-        };
+        return this.visualEffectAnimator.applyShimmer(anim, progress);
     }
     
     applyWiggle(anim, progress) {
-        // Hip-hop wiggle - 4 phase: center -> side -> opposite -> side -> center
-        const amplitude = (anim.params?.amplitude || 15) * this.scaleFactor;
-        
-        // Random starting direction (1 for right, -1 for left)
-        if (anim.wiggleDirection === undefined) {
-            anim.wiggleDirection = Math.random() < 0.5 ? 1 : -1;
-        }
-        const direction = anim.wiggleDirection;
-        
-        // 4-phase movement pattern
-        let wiggleX = 0;
-        let rotation = 0;
-        
-        if (progress < 0.25) {
-            // Phase 1: Center to first side (0-25%)
-            const phase = progress / 0.25;
-            wiggleX = amplitude * direction * phase;
-            rotation = 3 * direction * phase;
-        } else if (progress < 0.5) {
-            // Phase 2: First side to opposite side (25-50%)
-            const phase = (progress - 0.25) / 0.25;
-            wiggleX = amplitude * direction * (1 - 2 * phase);
-            rotation = 3 * direction * (1 - 2 * phase);
-        } else if (progress < 0.75) {
-            // Phase 3: Opposite side back to first side (50-75%)
-            const phase = (progress - 0.5) / 0.25;
-            wiggleX = amplitude * -direction * (1 - 2 * phase);
-            rotation = 3 * -direction * (1 - 2 * phase);
-        } else {
-            // Phase 4: First side back to center (75-100%)
-            const phase = (progress - 0.75) / 0.25;
-            wiggleX = amplitude * direction * (1 - phase);
-            rotation = 3 * direction * (1 - phase);
-        }
-        
-        // Subtle bounce synced with movement
-        const bounceY = Math.abs(Math.sin(progress * Math.PI * 4)) * amplitude * 0.15;
-        
-        return {
-            offsetX: wiggleX,
-            offsetY: -bounceY,
-            rotation
-        };
+        return this.physicalGestureAnimator.applyWiggle(anim, progress);
     }
     
     applyGroove(anim, progress) {
-        // Groove motion - smooth, flowing dance movement
-        const amplitude = (anim.params?.amplitude || 25) * this.scaleFactor;
-        
-        // Smoother wave pattern with organic flow
-        const wave1 = Math.sin(progress * Math.PI * 2) * amplitude;
-        const wave2 = Math.sin(progress * Math.PI * 3 + 0.5) * amplitude * 0.4;
-        const grooveX = wave1 + wave2;
-        
-        // Gentle vertical bob with offset timing
-        const grooveY = Math.sin(progress * Math.PI * 4 + 0.3) * amplitude * 0.25;
-        
-        // Subtle pulse that breathes naturally
-        const scale = 1 + Math.sin(progress * Math.PI * 3 + 0.7) * 0.03;
-        
-        // Slight rotation for more natural movement
-        const rotation = Math.sin(progress * Math.PI * 2 + 0.2) * 8;
-        
-        return {
-            offsetX: grooveX,
-            offsetY: grooveY,
-            scale,
-            rotation
-        };
+        return this.complexAnimationAnimator.applyGroove(anim, progress);
     }
     
     applyPoint(anim, progress) {
-        // Point gesture - directional lean/stretch with return to center
-        
-        // Random direction if not specified - only left or right
-        if (anim.pointDirection === undefined) {
-            // Randomly choose left (1) or right (-1)
-            anim.pointDirection = Math.random() < 0.5 ? -1 : 1;
-        }
-        
-        const direction = anim.params?.direction !== undefined ? anim.params.direction : anim.pointDirection;
-        const distance = (anim.params?.distance || 40) * this.scaleFactor;
-        
-        // Three-phase animation:
-        // 0.0-0.4: Move to point position
-        // 0.4-0.6: Hold at point
-        // 0.6-1.0: Return to center
-        let motionProgress;
-        let scaleProgress;
-        
-        if (progress < 0.4) {
-            // Phase 1: Move to point (ease out)
-            motionProgress = 1 - Math.pow(1 - (progress / 0.4), 3);
-            scaleProgress = motionProgress;
-        } else if (progress < 0.6) {
-            // Phase 2: Hold at point
-            motionProgress = 1.0;
-            scaleProgress = 1.0;
-        } else {
-            // Phase 3: Return to center (ease in)
-            motionProgress = Math.pow(1 - ((progress - 0.6) / 0.4), 3);
-            scaleProgress = motionProgress;
-        }
-        
-        // Move in direction (direction is -1 for left, 1 for right)
-        const offsetX = direction * distance * motionProgress;
-        const offsetY = -Math.abs(distance * 0.15 * motionProgress); // Slight upward movement when pointing
-        
-        // Stretch effect in pointing direction
-        const scale = 1 + 0.15 * scaleProgress; // 15% stretch
-        
-        // Add slight tilt when pointing
-        const rotation = direction * 5 * scaleProgress; // Tilt 5 degrees in pointing direction
-        
-        return {
-            offsetX,
-            offsetY,
-            scale,
-            rotation
-        };
+        return this.directionalGestureAnimator.applyPoint(anim, progress);
     }
     
     applyLean(anim, progress) {
-        // Lean gesture - tilt to one side
-        const angle = anim.params?.angle || 15; // Degrees
-        const side = anim.params?.side || 1; // 1 for right, -1 for left
-        
-        // Smooth ease in-out
-        const easedProgress = Math.sin(progress * Math.PI);
-        
-        // Apply rotation and slight offset
-        const rotation = angle * side * easedProgress;
-        const offsetX = side * 10 * this.scaleFactor * easedProgress;
-        
-        return {
-            offsetX,
-            rotation
-        };
+        return this.directionalGestureAnimator.applyLean(anim, progress);
     }
     
     applyReach(anim, progress) {
-        // Reach gesture - stretch upward or outward
-        const direction = anim.params?.direction || -Math.PI/2; // Default upward
-        const distance = (anim.params?.distance || 40) * this.scaleFactor;
-        
-        // Two-phase motion: reach out, then return
-        let motionProgress;
-        if (progress < 0.4) {
-            // Reaching phase
-            motionProgress = progress / 0.4;
-        } else if (progress < 0.6) {
-            // Hold phase
-            motionProgress = 1;
-        } else {
-            // Return phase
-            motionProgress = 1 - (progress - 0.6) / 0.4;
-        }
-        
-        // Apply easing
-        motionProgress = motionProgress * motionProgress * (3 - 2 * motionProgress);
-        
-        const offsetX = Math.cos(direction) * distance * motionProgress;
-        const offsetY = Math.sin(direction) * distance * motionProgress;
-        
-        // Stretch slightly when reaching
-        const scale = 1 + motionProgress * 0.15;
-        
-        return {
-            offsetX,
-            offsetY,
-            scale
-        };
+        return this.directionalGestureAnimator.applyReach(anim, progress);
     }
     
     applyHeadBob(anim, progress) {
-        // Head bob motion - rhythmic vertical movement
-        const amplitude = (anim.params?.amplitude || 20) * this.scaleFactor;
-        const frequency = anim.params?.frequency || 2;
-        
-        // Vertical bob with sharp down, smooth up
-        const bobPhase = (progress * frequency) % 1;
-        let bobY;
-        if (bobPhase < 0.3) {
-            // Quick down
-            bobY = -amplitude * (bobPhase / 0.3);
-        } else {
-            // Smooth up
-            bobY = -amplitude * (1 - (bobPhase - 0.3) / 0.7);
-        }
-        
-        // Slight forward tilt on the down beat
-        const rotation = bobPhase < 0.3 ? -3 : 0;
-        
-        return {
-            offsetY: bobY,
-            rotation
-        };
+        return this.complexAnimationAnimator.applyHeadBob(anim, progress);
     }
     
     applyOrbit(anim, progress) {
-        // Orbit motion - circular path around center
-        const radius = (anim.params?.radius || 30) * this.scaleFactor;
-        const speed = anim.params?.speed || 1;
-        
-        // Circular motion
-        const angle = progress * Math.PI * 2 * speed;
-        const offsetX = Math.cos(angle) * radius;
-        const offsetY = Math.sin(angle) * radius;
-        
-        return {
-            offsetX,
-            offsetY
-        };
+        return this.movementGestureAnimator.applyOrbit(anim, progress);
     }
 
     // Individual gesture methods - these will be moved from EmotiveRenderer
@@ -1387,29 +765,11 @@ export class GestureAnimator {
     startOrbit() { this.startGesture('orbit'); }
     
     applyRunningMan(anim, progress) {
-        // Simple running shuffle - quick slide and step
-        const slide = Math.sin(progress * Math.PI * 4) * 20 * this.scaleFactor;
-        const step = -Math.abs(Math.sin(progress * Math.PI * 8)) * 10 * this.scaleFactor;
-        
-        return {
-            offsetX: slide,
-            offsetY: step,
-            rotation: slide * 0.3,
-            scaleY: 1 - Math.abs(Math.sin(progress * Math.PI * 8)) * 0.05
-        };
+        return this.complexAnimationAnimator.applyRunningMan(anim, progress);
     }
     
     applyCharleston(anim, progress) {
-        // Charleston - crisscross kicks
-        const kick = Math.sin(progress * Math.PI * 8) * 25 * this.scaleFactor;
-        const hop = -Math.abs(Math.sin(progress * Math.PI * 8)) * 10 * this.scaleFactor;
-        
-        return {
-            offsetX: kick,
-            offsetY: hop,
-            rotation: kick * 0.6,
-            scaleY: 1 - Math.abs(Math.sin(progress * Math.PI * 8)) * 0.06
-        };
+        return this.complexAnimationAnimator.applyCharleston(anim, progress);
     }
     
     startRunningManGesture() { this.startGesture('runningman'); }
