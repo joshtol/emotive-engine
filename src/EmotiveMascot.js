@@ -81,6 +81,9 @@ import { ThreatLevelCalculator } from './mascot/ThreatLevelCalculator.js';
 import { ParticleConfigCalculator } from './mascot/ParticleConfigCalculator.js';
 import { GestureMotionProvider } from './mascot/GestureMotionProvider.js';
 import { RenderLayerOrchestrator } from './mascot/RenderLayerOrchestrator.js';
+import { DebugInfoRenderer } from './mascot/DebugInfoRenderer.js';
+import { DestructionManager } from './mascot/DestructionManager.js';
+import { BreathingAnimationController } from './mascot/BreathingAnimationController.js';
 
 // Import Semantic Performance System
 import { PerformanceSystem } from './core/PerformanceSystem.js';
@@ -159,6 +162,9 @@ class EmotiveMascot {
         this.particleConfigCalculator = new ParticleConfigCalculator(this);
         this.gestureMotionProvider = new GestureMotionProvider(this);
         this.renderLayerOrchestrator = new RenderLayerOrchestrator(this);
+        this.debugInfoRenderer = new DebugInfoRenderer(this);
+        this.destructionManager = new DestructionManager(this);
+        this.breathingAnimationController = new BreathingAnimationController(this);
     }
 
     /**
@@ -965,85 +971,7 @@ class EmotiveMascot {
      * @private
      */
     startBreathingAnimation() {
-        // Cancel any existing breathing animation
-        if (this.breathingAnimationId) {
-            cancelAnimationFrame(this.breathingAnimationId);
-        }
-        
-        const animate = () => {
-            if (!this.breathePattern || !this.isRunning) return;
-            
-            const pattern = this.breathePattern;
-            const now = Date.now();
-            const phaseElapsed = (now - pattern.phaseStartTime) / 1000; // Convert to seconds
-            
-            let scale = 1.0;
-            let nextPhase = pattern.currentPhase;
-            
-            // Determine current phase and scale
-            switch (pattern.currentPhase) {
-            case 'inhale':
-                if (phaseElapsed >= pattern.inhale) {
-                    nextPhase = 'hold1';
-                    pattern.phaseStartTime = now;
-                    this.emit('hold-start', { type: 'post-inhale' });
-                } else {
-                    // Scale up during inhale
-                    const progress = phaseElapsed / pattern.inhale;
-                    scale = 1.0 + (0.3 * progress); // Expand to 1.3x
-                }
-                break;
-                    
-            case 'hold1':
-                if (phaseElapsed >= pattern.hold1) {
-                    nextPhase = 'exhale';
-                    pattern.phaseStartTime = now;
-                    this.emit('exhale-start');
-                }
-                scale = 1.3; // Stay expanded
-                break;
-                    
-            case 'exhale':
-                if (phaseElapsed >= pattern.exhale) {
-                    nextPhase = 'hold2';
-                    pattern.phaseStartTime = now;
-                    this.emit('hold-start', { type: 'post-exhale' });
-                } else {
-                    // Scale down during exhale
-                    const progress = phaseElapsed / pattern.exhale;
-                    scale = 1.3 - (0.4 * progress); // Contract to 0.9x
-                }
-                break;
-                    
-            case 'hold2':
-                if (phaseElapsed >= pattern.hold2) {
-                    nextPhase = 'inhale';
-                    pattern.phaseStartTime = now;
-                    this.emit('inhale-start');
-                }
-                scale = 0.9; // Stay contracted
-                break;
-            }
-            
-            // Update phase
-            if (nextPhase !== pattern.currentPhase) {
-                pattern.currentPhase = nextPhase;
-            }
-            
-            // Apply scale to renderer
-            if (this.renderer && this.renderer.setCustomScale) {
-                this.renderer.setCustomScale(scale);
-            }
-            
-            // Continue animation
-            this.breathingAnimationId = requestAnimationFrame(animate);
-        };
-        
-        // Start with inhale
-        this.breathePattern.currentPhase = 'inhale';
-        this.breathePattern.phaseStartTime = Date.now();
-        this.emit('inhale-start');
-        animate();
+        this.breathingAnimationController.startBreathingAnimation();
     }
     
     /**
@@ -1480,98 +1408,11 @@ class EmotiveMascot {
 
     /**
      * Renders debug information overlay
+     * Delegates to DebugInfoRenderer
      * @param {number} _deltaTime - Time since last frame in milliseconds (unused but kept for API consistency)
      */
     renderDebugInfo(_deltaTime) {
-        const ctx = this.canvasManager.getContext();
-        ctx.save();
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '12px monospace';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 2;
-        
-        let y = 20;
-        const lineHeight = 16;
-        
-        if (this.config.showFPS) {
-            const metrics = this.animationController.getPerformanceMetrics();
-            // Use smoothed FPS for stable display
-            const fps = metrics.instantFps || metrics.fps || 0;
-            const frameTime = metrics.averageFrameTime ? metrics.averageFrameTime.toFixed(1) : '0.0';
-            const particleStats = this.particleSystem.getStats();
-            
-            // Build simple display
-            const lines = [
-                `FPS: ${fps}`,
-                `Frame: ${frameTime}ms`,
-                `Particles: ${particleStats.activeParticles}`
-            ];
-            
-            // Draw each line
-            const padding = 8;
-            let maxWidth = 0;
-            lines.forEach(line => {
-                const {width} = ctx.measureText(line);
-                if (width > maxWidth) maxWidth = width;
-            });
-            
-            const x = this.canvasManager.width - maxWidth - padding - 10;
-            
-            // Background box with semi-transparent dark background
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(x - padding, y - 14, maxWidth + padding * 2, 18 * lines.length + 4);
-            
-            // Border color based on FPS
-            let borderColor;
-            if (fps >= 55) {
-                borderColor = '#00ff00';  // Green for good FPS
-            } else if (fps >= 30) {
-                borderColor = '#ffff00';  // Yellow for okay FPS
-            } else {
-                borderColor = '#ff0000';  // Red for poor FPS
-            }
-            
-            ctx.strokeStyle = borderColor;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x - padding, y - 14, maxWidth + padding * 2, 18 * lines.length + 4);
-            
-            // Draw each line of text
-            lines.forEach((line, i) => {
-                const lineY = y + (i * lineHeight);
-                // No stroke for cleaner look
-                ctx.fillStyle = '#ffffff';
-                ctx.fillText(line, x, lineY);
-            });
-            
-            y += lineHeight * lines.length;
-        }
-        
-        if (this.config.showDebug) {
-            const state = this.stateMachine.getCurrentState();
-            const particleStats = this.particleSystem.getStats();
-            
-            const debugInfo = [
-                `Emotion: ${state.emotion}${state.undertone ? ` (${state.undertone})` : ''}`,
-                `Particles: ${particleStats.activeParticles}/${particleStats.maxParticles}`,
-                `Gesture: ${this.currentModularGesture ? this.currentModularGesture.type : 'none'}`,
-                `Speaking: ${this.speaking ? 'yes' : 'no'}`,
-                `Audio Level: ${(this.audioLevel * 100).toFixed(1)}%`
-            ];
-            
-            // Draw debug info with background for readability
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            const debugWidth = Math.max(...debugInfo.map(line => ctx.measureText(line).width));
-            ctx.fillRect(8, y - 14, debugWidth + 16, debugInfo.length * lineHeight + 4);
-            
-            ctx.fillStyle = '#ffffff';
-            for (const info of debugInfo) {
-                ctx.fillText(info, 10, y);
-                y += lineHeight;
-            }
-        }
-        
-        ctx.restore();
+        this.debugInfoRenderer.renderDebugInfo(_deltaTime);
     }
 
     /**
@@ -2485,88 +2326,7 @@ class EmotiveMascot {
      * Destroys the mascot instance and cleans up resources
      */
     destroy() {
-        this.errorBoundary.wrap(() => {
-            // Stop animation
-            this.stop();
-            
-            // Stop speech reactivity
-            if (this.speaking) {
-                this.stopSpeaking();
-            }
-            
-            // Destroy animation controller
-            if (this.animationController) {
-                this.animationController.destroy();
-            }
-            
-            // Destroy position controller
-            if (this.positionController) {
-                this.positionController.destroy();
-            }
-            
-            // Clean up all subsystems
-            if (this.soundSystem) {
-                this.soundSystem.cleanup();
-            }
-            
-            if (this.audioLevelProcessor) {
-                this.audioLevelProcessor.cleanup();
-            }
-            
-            if (this.particleSystem) {
-                this.particleSystem.destroy();
-            }
-            
-            if (this.renderer) {
-                // Stop all active gestures
-                this.renderer.stopAllGestures();
-                this.renderer.destroy();
-            }
-            
-            if (this.canvasManager) {
-                this.canvasManager.destroy();
-            }
-            
-            // Clear event listeners
-            if (this.eventManager) {
-                this.eventManager.destroy();
-            }
-
-            // Clean up LLM handler
-            if (this.llmHandler) {
-                this.llmHandler = null;
-            }
-
-            // Destroy new systems
-            if (this.accessibilityManager) {
-                this.accessibilityManager.destroy();
-            }
-            
-            if (this.mobileOptimization) {
-                this.mobileOptimization.destroy();
-            }
-            
-            if (this.pluginSystem) {
-                this.pluginSystem.destroy();
-            }
-            
-            // Clean up shape morpher and audio analyzer
-            if (this.audioAnalyzer) {
-                this.disconnectAudio();
-                this.audioAnalyzer.destroy();
-            }
-            
-            if (this.shapeMorpher) {
-                this.shapeMorpher.reset();
-            }
-            
-            // DegradationManager removed
-            
-            // Clear error boundary
-            this.errorBoundary.clearErrors();
-            
-            // EmotiveMascot destroyed
-        }, 'destruction')();
+        this.destructionManager.destroy();
     }
     
     /**
