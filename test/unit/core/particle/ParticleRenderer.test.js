@@ -319,6 +319,14 @@ describe('ParticleRenderer', () => {
             const particle = new Particle(100, 100, 'ambient', 1, 1, ['#ff0000']);
             particle.life = 0.5;
             particle.z = 0.5; // Foreground
+            particle.isCellShaded = false; // Ensure batch rendering path
+            // Ensure particle has valid coordinates (Particle constructor may add randomness)
+            particle.x = 100;
+            particle.y = 100;
+            // Verify coordinates are finite before test
+            expect(isFinite(particle.x)).toBe(true);
+            expect(isFinite(particle.y)).toBe(true);
+
             particle.getDepthAdjustedSize = vi.fn(() => 10);
 
             const particles = [particle];
