@@ -103,6 +103,7 @@ import { EyeRenderer } from './renderer/EyeRenderer.js';
 import { BreathingAnimator } from './renderer/BreathingAnimator.js';
 import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
+import { CelestialRenderer } from './renderer/CelestialRenderer.js';
 import { RotationBrake } from './animation/RotationBrake.js';
 import { AmbientDanceAnimator } from './renderer/AmbientDanceAnimator.js';
 import { BackdropRenderer } from './renderer/BackdropRenderer.js';
@@ -132,6 +133,7 @@ class EmotiveRenderer {
         this.breathingAnimator = new BreathingAnimator(this);
         this.glowRenderer = new GlowRenderer(this);
         this.coreRenderer = new CoreRenderer(this);
+        this.celestialRenderer = new CelestialRenderer();
         this.rotationBrake = new RotationBrake(this);
         this.ambientDanceAnimator = new AmbientDanceAnimator(this);
         this.backdropRenderer = new BackdropRenderer(this);
@@ -1377,9 +1379,15 @@ class EmotiveRenderer {
      * Render sun effects (corona, rays, etc)
      */
     renderSunEffects(x, y, radius, shadow) {
+        // Delegate to CelestialRenderer
+        return this.celestialRenderer.renderSunEffects(this.ctx, x, y, radius, shadow);
+    }
+
+    _renderSunEffects_OLD(x, y, radius, shadow) {
+        // OLD IMPLEMENTATION - kept for reference during migration
         const {ctx} = this;
         const time = Date.now() / 100;
-        
+
         ctx.save();
         ctx.translate(x, y);
         
@@ -1573,8 +1581,17 @@ class EmotiveRenderer {
      * Render Bailey's Beads for solar eclipse
      */
     renderBaileysBeads(x, y, radius, shadowOffsetX, shadowOffsetY, morphProgress, isTransitioningToSolar, hasSunRays) {
+        // Delegate to CelestialRenderer
+        return this.celestialRenderer.renderBaileysBeads(
+            this.ctx, x, y, radius, shadowOffsetX, shadowOffsetY, morphProgress,
+            isTransitioningToSolar, hasSunRays, this.scaleValue.bind(this)
+        );
+    }
+
+    _renderBaileysBeads_OLD(x, y, radius, shadowOffsetX, shadowOffsetY, morphProgress, isTransitioningToSolar, hasSunRays) {
+        // OLD IMPLEMENTATION - kept for reference during migration
         const {ctx} = this;
-        
+
         // NEVER show beads if there are no sun rays visible
         if (!hasSunRays) {
             this._beadStartTime = null;
@@ -1703,6 +1720,14 @@ class EmotiveRenderer {
      * @param {number} _rotation - Rotation angle to apply (unused but kept for API consistency)
      */
     renderMoonShadow(x, y, radius, shadow, shapePoints, isSolarOverlay = false, _rotation = 0) {
+        // Delegate to CelestialRenderer
+        return this.celestialRenderer.renderMoonShadow(
+            this.ctx, x, y, radius, shadow, shapePoints, isSolarOverlay, _rotation, this.shapeMorpher
+        );
+    }
+
+    _renderMoonShadow_OLD(x, y, radius, shadow, shapePoints, isSolarOverlay = false, _rotation = 0) {
+        // OLD IMPLEMENTATION - kept for reference during migration
         const {ctx} = this;
 
         ctx.save();
