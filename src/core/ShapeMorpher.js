@@ -19,6 +19,7 @@ import arrayPool from '../utils/ArrayPool.js';
 import { AudioDeformer } from './morpher/AudioDeformer.js';
 import { MusicDetector } from './morpher/MusicDetector.js';
 import { TransitionManager } from './morpher/TransitionManager.js';
+import { ShadowEffectManager } from './morpher/ShadowEffectManager.js';
 
 /**
  * ShapeMorpher class - manages smooth transitions between shapes
@@ -34,6 +35,13 @@ class ShapeMorpher {
         this.transitionManager = new TransitionManager(this);
         this.audioDeformer = new AudioDeformer(this);
         this.musicDetector = new MusicDetector();
+        this.shadowEffectManager = new ShadowEffectManager(() => ({
+            currentShape: this.currentShape,
+            targetShape: this.targetShape,
+            morphProgress: this.morphProgress,
+            isTransitioning: this.isTransitioning,
+            transitionConfig: this.transitionConfig
+        }));
         
         // State - delegated to TransitionManager
         this.currentShape = 'circle';
@@ -724,295 +732,13 @@ class ShapeMorpher {
      * Get current shadow configuration
      * @returns {Object} Shadow configuration
      */
+    /**
+     * Get current shadow state during transition
+     * Delegates to ShadowEffectManager
+     * @returns {Object} Shadow definition
+     */
     getCurrentShadow() {
-        // Default to circle if currentShape is somehow null/undefined
-        const shapeName = this.currentShape || 'circle';
-        const currentDef = shapeCache && shapeCache.isInitialized ? 
-            shapeCache.getShape(shapeName) : SHAPE_DEFINITIONS[shapeName];
-        const targetDef = this.targetShape ? (shapeCache && shapeCache.isInitialized ? 
-            shapeCache.getShape(this.targetShape) : SHAPE_DEFINITIONS[this.targetShape]) : null;
-        
-        const currentShadow = currentDef?.shadow || { type: 'none' };
-        const targetShadow = targetDef?.shadow || null;
-        
-        
-        // If not transitioning, return current shadow
-        if (!this.isTransitioning || !targetShadow) {
-            return currentShadow;
-        }
-        
-        // Handle eclipse progressions and other special transitions
-        const easedProgress = this.morphProgress;
-        
-        
-        // FROM MOON - ALWAYS slide shadow away first (other shapes)
-        if (this.transitionConfig && this.transitionConfig.type === 'from_moon' && this.transitionConfig.slideOutCrescent) {
-            const slideRatio = this.transitionConfig.shadowSlideRatio || 0.4;
-            
-            // PHASE 1: Shadow slides away
-            if (easedProgress < slideRatio) {
-                const slideProgress = easedProgress / slideRatio; // 0 to 1 during slide
-                const angle = -30 * Math.PI / 180; // Moon shadow angle (bottom-left)
-                
-                // Shadow continues sliding in its direction (away to bottom-left)
-                const startOffset = 0.7;  // Where moon shadow normally sits
-                const endOffset = 2.5;    // Far off screen
-                const currentOffset = startOffset + (endOffset - startOffset) * slideProgress;
-                
-                const offsetX = Math.cos(angle) * currentOffset;
-                const offsetY = Math.sin(angle) * currentOffset;
-                
-                // Keep full opacity while sliding, slight fade at the end
-                const coverage = slideProgress > 0.8 ? 0.85 * (1 - (slideProgress - 0.8) * 5) : 0.85;
-                
-                return {
-                    type: 'crescent',
-                    coverage,
-                    angle: -30,
-                    offset: currentOffset,
-                    shadowX: offsetX,
-                    shadowY: offsetY
-                };
-            }
-            
-            // PHASE 2: No shadow, morph can proceed
-            return { type: 'none' };
-        }
-        
-        // Moon to lunar - smooth crescent to eclipse transition
-        if (this.transitionConfig && this.transitionConfig.type === 'moon_to_lunar') {
-            const angle = this.transitionConfig.startAngle * Math.PI / 180;
-            const offsetProgress = 1 - easedProgress; // Goes from 1 to 0 (crescent position to center)
-            const offsetX = Math.cos(angle) * 0.7 * offsetProgress;
-            const offsetY = Math.sin(angle) * 0.7 * offsetProgress;
-            
-            // Smooth transition from crescent to lunar
-            const lunarBlend = Math.pow(easedProgress, 2); // Quadratic for smooth blend
-            
-            // Gradually change from crescent to lunar shadow
-            if (easedProgress < 0.6) {
-                // Still mostly crescent, moving to center
-                return {
-                    type: 'crescent',
-                    coverage: 0.85 * (1 - lunarBlend * 0.2), // Slight fade
-                    angle: this.transitionConfig.startAngle,
-                    offset: 0.7 * offsetProgress,
-                    shadowX: offsetX,
-                    shadowY: offsetY
-                };
-            } else {
-                // Smooth blend to lunar shadow
-                const blendPhase = (easedProgress - 0.6) / 0.4; // 0 to 1 for last 40%
-                const smoothBlend = Math.sin(blendPhase * Math.PI / 2); // Smooth S-curve
-                
-                return {
-                    type: 'lunar',
-                    coverage: 0.85 + 0.1 * smoothBlend, // Gradually increase to 0.95
-                    color: `rgba(80, 20, 0, ${0.7 + 0.2 * smoothBlend})`, // Fade in red
-                    shadowX: offsetX * (1 - smoothBlend), // Smooth center
-                    shadowY: offsetY * (1 - smoothBlend),
-                    diffusion: smoothBlend,
-                    shadowProgress: easedProgress
-                };
-            }
-        }
-        
-        // Eclipse entering lunar - smooth shadow entry
-        if (this.transitionConfig && this.transitionConfig.type === 'eclipse_enter_lunar') {
-            // First 30%: Just morph shape, no shadow (reduced from 40%)
-            if (easedProgress < 0.3) {
-                return { type: 'none' };
-            }
-            
-            // Last 70%: Shadow smoothly enters and transforms
-            const shadowProgress = (easedProgress - 0.3) / 0.7; // 0 to 1 for shadow animation
-            const smoothProgress = Math.sin(shadowProgress * Math.PI / 2); // Smooth ease-in
-            const angle = this.transitionConfig.startAngle * Math.PI / 180;
-            const offsetProgress = 1 - smoothProgress; // Goes from 1 to 0
-            const offsetX = Math.cos(angle) * 0.7 * offsetProgress;
-            const offsetY = Math.sin(angle) * 0.7 * offsetProgress;
-            
-            // Smooth transition throughout
-            if (shadowProgress < 0.7) {
-                // Crescent shadow sliding in with gradual fade
-                const fadeIn = Math.pow(shadowProgress / 0.7, 0.5); // Smooth fade in
-                return {
-                    type: 'crescent',
-                    coverage: 0.85 * fadeIn,
-                    angle: this.transitionConfig.startAngle,
-                    offset: 0.7 * offsetProgress,
-                    shadowX: offsetX,
-                    shadowY: offsetY
-                };
-            } else {
-                // Smooth blend to lunar
-                const blendProgress = (shadowProgress - 0.7) / 0.3; // Last 30% for blend
-                const smoothBlend = Math.sin(blendProgress * Math.PI / 2); // Smooth curve
-                
-                return {
-                    type: 'lunar',
-                    coverage: 0.85 + 0.1 * smoothBlend,
-                    color: `rgba(80, 20, 0, ${0.6 + 0.3 * smoothBlend})`,
-                    shadowX: offsetX * (1 - smoothBlend),
-                    shadowY: offsetY * (1 - smoothBlend),
-                    diffusion: smoothBlend,
-                    shadowProgress
-                };
-            }
-        }
-        
-        // Lunar to moon - smooth shadow transformation and movement
-        if (this.transitionConfig && this.transitionConfig.type === 'lunar_to_moon') {
-            const angle = this.transitionConfig.exitAngle * Math.PI / 180;
-            
-            // Smooth movement curve
-            const movementCurve = Math.sin(easedProgress * Math.PI / 2); // Smooth ease-out
-            const offsetX = Math.cos(angle) * 0.7 * movementCurve;
-            const offsetY = Math.sin(angle) * 0.7 * movementCurve;
-            
-            // Smooth blend between lunar and crescent
-            if (easedProgress < 0.6) {
-                // Lunar shadow gradually transforming
-                const transformPhase = easedProgress / 0.6;
-                const smoothTransform = Math.pow(transformPhase, 0.7);
-                
-                return {
-                    type: 'lunar',
-                    coverage: 0.95 - (0.1 * smoothTransform),
-                    color: `rgba(80, 20, 0, ${0.9 - 0.3 * smoothTransform})`,
-                    shadowX: offsetX * 0.7, // Start moving earlier
-                    shadowY: offsetY * 0.7,
-                    diffusion: 1 - smoothTransform
-                };
-            } else {
-                // Smooth transition to crescent
-                const crescentPhase = (easedProgress - 0.6) / 0.4;
-                const fadeIn = Math.sin(crescentPhase * Math.PI / 2);
-                
-                return {
-                    type: 'crescent',
-                    coverage: 0.85 * fadeIn + 0.1, // Smooth fade in
-                    angle: this.transitionConfig.exitAngle,
-                    offset: 0.7,
-                    shadowX: offsetX,
-                    shadowY: offsetY
-                };
-            }
-        }
-        
-        // Eclipse exiting lunar - smooth shadow exit
-        if (this.transitionConfig && this.transitionConfig.type === 'eclipse_exit_lunar') {
-            // First 70%: Shadow smoothly exits
-            if (easedProgress < 0.7) {
-                const shadowProgress = easedProgress / 0.7; // 0 to 1 for shadow exit
-
-                const angle = this.transitionConfig.exitAngle * Math.PI / 180;
-                
-                // Gradual transformation and movement
-                if (shadowProgress < 0.4) {
-                    // Lunar shadow gradually transforming
-                    const transformPhase = shadowProgress / 0.4;
-                    const diffusion = 1 - transformPhase;
-                    const moveStart = transformPhase * 0.3; // Start moving early
-                    
-                    return {
-                        type: 'lunar',
-                        coverage: 0.95 - (0.1 * transformPhase),
-                        color: `rgba(80, 20, 0, ${0.9 - 0.2 * transformPhase})`,
-                        shadowX: Math.cos(angle) * 0.7 * moveStart,
-                        shadowY: Math.sin(angle) * 0.7 * moveStart,
-                        diffusion
-                    };
-                } else {
-                    // Smooth exit as crescent
-                    const exitPhase = (shadowProgress - 0.4) / 0.6;
-                    const smoothMove = Math.pow(exitPhase, 0.8);
-                    const offsetX = Math.cos(angle) * 0.7 * smoothMove;
-                    const offsetY = Math.sin(angle) * 0.7 * smoothMove;
-                    const fadeOut = 1 - Math.pow(exitPhase, 2); // Gradual fade
-                    
-                    return {
-                        type: 'crescent',
-                        coverage: 0.85 * fadeOut,
-                        angle: this.transitionConfig.exitAngle,
-                        offset: 0.7 * smoothMove,
-                        shadowX: offsetX,
-                        shadowY: offsetY
-                    };
-                }
-            }
-            
-            // Last 30%: Just morph shape, no shadow
-            return { type: 'none' };
-        }
-        
-        // Solar eclipse transitions
-        if (this.transitionConfig && this.transitionConfig.type === 'eclipse_enter') {
-            const shadowX = 1.5 - (easedProgress * 1.5); // From right
-            
-            return {
-                ...targetShadow,
-                shadowX,
-                shadowProgress: easedProgress
-            };
-        } else if (this.transitionConfig.type === 'eclipse_exit') {
-            const shadowX = -easedProgress * 1.5; // To left
-            
-            return {
-                ...currentShadow,
-                coverage: currentShadow.coverage * (1 - easedProgress),
-                shadowX,
-                shadowProgress: 1 - easedProgress
-            };
-        } else if (this.transitionConfig.type === 'sun_fade') {
-            // Smooth fading of sun effects
-            const fadeMultiplier = 1 - easedProgress;
-            
-            // Gradual fade with different timing for each effect
-            return {
-                ...currentShadow,
-                intensity: (currentShadow.intensity || 1) * Math.pow(fadeMultiplier, 0.7), // Slower fade
-                corona: currentShadow.corona,
-                coronaOpacity: fadeMultiplier, // Fade corona smoothly
-                flares: currentShadow.flares,
-                flaresOpacity: Math.pow(fadeMultiplier, 1.5), // Flares fade faster
-                texture: currentShadow.texture,
-                textureOpacity: Math.pow(fadeMultiplier, 2), // Texture fades fastest
-                turbulence: (currentShadow.turbulence || 0.3) * fadeMultiplier
-            };
-        } else if (this.transitionConfig.type === 'sun_bloom') {
-            // Smooth blooming of sun effects
-            const bloomProgress = easedProgress;
-            
-            // Gradual bloom with different timing for each effect
-            return {
-                ...targetShadow,
-                intensity: (targetShadow.intensity || 1) * Math.pow(bloomProgress, 1.5), // Start slow
-                corona: targetShadow.corona,
-                coronaOpacity: Math.pow(bloomProgress, 0.8), // Corona blooms gradually
-                flares: targetShadow.flares,
-                flaresOpacity: bloomProgress > 0.3 ? Math.pow((bloomProgress - 0.3) / 0.7, 0.7) : 0, // Flares appear later
-                texture: targetShadow.texture,
-                textureOpacity: bloomProgress > 0.5 ? Math.pow((bloomProgress - 0.5) / 0.5, 2) : 0, // Texture appears last
-                turbulence: (targetShadow.turbulence || 0.3) * bloomProgress
-            };
-        }
-        
-        // Standard transition
-        if (currentShadow.type !== 'none' || targetShadow.type !== 'none') {
-            const coverage = (currentShadow.coverage || 0) + 
-                           ((targetShadow.coverage || 0) - (currentShadow.coverage || 0)) * easedProgress;
-            
-            return {
-                type: targetShadow.type !== 'none' ? targetShadow.type : currentShadow.type,
-                coverage,
-                angle: targetShadow.angle || currentShadow.angle || 0,
-                softness: targetShadow.softness || currentShadow.softness || 0.2,
-                progress: easedProgress
-            };
-        }
-        
-        return currentShadow;
+        return this.shadowEffectManager.getCurrentShadow();
     }
     
     /**
