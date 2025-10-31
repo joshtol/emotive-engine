@@ -45,7 +45,6 @@ import EmotiveRenderer from '../../core/EmotiveRenderer.js';
 import GazeTracker from '../../core/behavior/GazeTracker.js';
 import IdleBehavior from '../../core/behavior/IdleBehavior.js';
 import PositionController from '../../utils/PositionController.js';
-import { initSentry, addBreadcrumb } from '../../utils/sentry.js';
 import { SoundSystem } from '../../core/audio/SoundSystem.js';
 import AnimationController from '../../core/AnimationController.js';
 import AudioLevelProcessor from '../../core/audio/AudioLevelProcessor.js';
@@ -182,14 +181,8 @@ export class InitializationManager {
 
         const config = { ...defaults, ...this.userConfig };
 
-        // Initialize Sentry if configured
-        if (config.sentry && config.sentry.enabled) {
-            initSentry(config.sentry);
-            addBreadcrumb('EmotiveMascot initialized', 'lifecycle', {
-                emotion: config.defaultEmotion,
-                renderingStyle: config.renderingStyle
-            });
-        }
+        // Sentry monitoring removed - users can add their own error tracking
+        // by listening to error events via mascot.on('error', ...)
 
         this.mascot.config = config;
         return config;

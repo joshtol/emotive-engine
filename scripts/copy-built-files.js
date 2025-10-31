@@ -16,32 +16,18 @@ const SITE_PUBLIC_DIR = path.join(__dirname, '../site/public');
 
 // Files to copy from dist to site/js
 const FILES_TO_COPY = [
-    // Full builds
+    // Full builds (ES Module + UMD)
     'mascot.js',
     'mascot.js.map',
-    'mascot.dev.js',
-    'mascot.dev.js.map',
     'emotive-mascot.umd.js',
-    'emotive-mascot.umd.js.map',
-    'emotive-mascot.umd.dev.js',
-    'emotive-mascot.umd.dev.js.map',
-    // Minimal builds (v2.5.1+)
-    'emotive-mascot.minimal.js',
-    'emotive-mascot.minimal.js.map',
-    'emotive-mascot.minimal.umd.js',
-    'emotive-mascot.minimal.umd.js.map',
-    // Audio builds (v2.5.1+)
-    'emotive-mascot.audio.js',
-    'emotive-mascot.audio.js.map',
-    'emotive-mascot.audio.umd.js',
-    'emotive-mascot.audio.umd.js.map'
+    'emotive-mascot.umd.js.map'
 ];
 
 // Files to copy from dist to site/public (for Next.js static serving)
 const PUBLIC_FILES_TO_COPY = [
     {
         src: 'emotive-mascot.umd.js',
-        dest: 'emotive-engine.js'
+        dest: 'emotive-engine.js'  // Used by examples
     },
     {
         src: 'emotive-mascot.umd.js.map',
@@ -49,19 +35,11 @@ const PUBLIC_FILES_TO_COPY = [
     },
     {
         src: 'emotive-mascot.lean.umd.js',
-        dest: 'emotive-engine-lean.js'
+        dest: 'emotive-engine-lean.js'  // Used by marketing site
     },
     {
         src: 'emotive-mascot.lean.umd.js.map',
         dest: 'emotive-mascot.lean.umd.js.map'
-    },
-    {
-        src: 'emotive-mascot.minimal.umd.js',
-        dest: 'emotive-engine-minimal.js'
-    },
-    {
-        src: 'emotive-mascot.minimal.umd.js.map',
-        dest: 'emotive-mascot.minimal.umd.js.map'
     }
 ];
 

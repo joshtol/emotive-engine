@@ -117,9 +117,6 @@
     "node": ">=20.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.23.0",
-    "@babel/plugin-transform-runtime": "^7.23.0",
-    "@babel/preset-env": "^7.23.0",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
@@ -142,10 +139,7 @@
     "terser": "^5.44.0",
     "vitest": "^3.2.4"
   },
-  "dependencies": {
-    "@babel/runtime": "^7.28.4",
-    "@sentry/browser": "^10.20.0"
-  },
+  "dependencies": {},
   "lint-staged": {
     "*.js": [
       "eslint --fix",

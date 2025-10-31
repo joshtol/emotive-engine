@@ -53,7 +53,6 @@ import * as Emotions from './core/emotions/index.js';
 import * as Gestures from './core/gestures/index.js';
 import * as ParticleBehaviors from './core/particles/behaviors/index.js';
 import PositionController from './utils/PositionController.js';
-import { initSentry, addBreadcrumb } from './utils/sentry.js';
 import { SoundSystem } from './core/audio/SoundSystem.js';
 import AnimationController from './core/AnimationController.js';
 import AudioLevelProcessor from './core/audio/AudioLevelProcessor.js';

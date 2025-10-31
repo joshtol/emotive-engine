@@ -70,39 +70,25 @@ const analysisPlugins = shouldAnalyze ? [
 // Build configurations
 const builds = [];
 
-// Full-featured builds
+// Full-featured builds (ES Module + UMD)
 builds.push({
     input: 'src/index.js',
     output: [
         {
-            // UMD production bundle
+            // ES Module for NPM consumers (bundlers like Webpack, Vite, etc.)
+            file: 'dist/mascot.js',
+            format: 'es',
+            sourcemap: true,
+            banner: `/*! Emotive Engine v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+        },
+        {
+            // UMD for CDN/browser usage (includes all features)
             file: 'dist/emotive-mascot.umd.js',
             format: 'umd',
             name: 'EmotiveMascot',
             exports: 'named',
             sourcemap: true,
-            banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | MIT License */`
-        },
-        {
-            // UMD development bundle
-            file: 'dist/emotive-mascot.umd.dev.js',
-            format: 'umd',
-            name: 'EmotiveMascot',
-            exports: 'named',
-            sourcemap: true
-        },
-        {
-            // ES Module production bundle
-            file: 'dist/mascot.js',
-            format: 'es',
-            sourcemap: true,
-            banner: `/*! Emotive Engine v${process.env.npm_package_version || '2.1.0'} | MIT License */`
-        },
-        {
-            // ES Module development bundle
-            file: 'dist/mascot.dev.js',
-            format: 'es',
-            sourcemap: true
+            banner: `/*! Emotive Engine v${process.env.npm_package_version || '3.0.0'} | MIT License */`
         }
     ],
     plugins: [
@@ -110,84 +96,33 @@ builds.push({
         ...analysisPlugins
     ],
     treeshake: {
-        moduleSideEffects: true
-    }
-});
-
-// Minimal build (core functionality only - no audio)
-builds.push({
-    input: 'src/minimal.js', // Minimal entry point
-    output: [
-        {
-            file: 'dist/emotive-mascot.minimal.js',
-            format: 'es',
-            sourcemap: true,
-            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.5.1'} | MIT License */`
-        },
-        {
-            file: 'dist/emotive-mascot.minimal.umd.js',
-            format: 'umd',
-            name: 'EmotiveMascotMinimal',
-            exports: 'named',
-            sourcemap: true,
-            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '2.5.1'} | MIT License */`
-        }
-    ],
-    plugins: [
-        ...(isProduction ? productionPlugins : developmentPlugins)
-    ],
-    treeshake: {
-        moduleSideEffects: false  // Aggressive tree-shaking for minimal build
-    }
-});
-
-// Audio-focused build (for music-reactive applications)
-builds.push({
-    input: 'src/audio.js', // Audio entry point
-    output: [
-        {
-            file: 'dist/emotive-mascot.audio.js',
-            format: 'es',
-            sourcemap: true,
-            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.5.1'} | MIT License */`
-        },
-        {
-            file: 'dist/emotive-mascot.audio.umd.js',
-            format: 'umd',
-            name: 'EmotiveMascotAudio',
-            exports: 'named',
-            sourcemap: true,
-            banner: `/*! Emotive Engine Audio v${process.env.npm_package_version || '2.5.1'} | MIT License */`
-        }
-    ],
-    plugins: [
-        ...(isProduction ? productionPlugins : developmentPlugins)
-    ],
-    treeshake: {
-        moduleSideEffects: false  // Aggressive tree-shaking for audio build
+        moduleSideEffects: false  // Enable aggressive tree-shaking
     }
 });
 
 
-// Lean build (ultra-optimized for homepage/marketing)
+// Lean build (ultra-optimized for homepage/marketing sites)
+// Removes: rhythm sync, undertone saturation, accessibility, performance monitoring
+// Smaller bundle with core emotions, gestures, and particle system
 builds.push({
     input: 'src/lean.js',
     output: [
         {
             file: 'dist/emotive-mascot.lean.umd.js',
             format: 'umd',
-            name: 'EmotiveMascotLean',
+            name: 'EmotiveMascot',  // Same name as full build for easy swapping
             exports: 'named',
-            sourcemap: true
+            sourcemap: true,
+            banner: `/*! Emotive Engine Lean v${process.env.npm_package_version || '3.0.0'} | MIT License */`
         }
     ],
     plugins: [
         ...basePlugins,
         terser({
             compress: {
-                drop_console: true,
+                drop_console: true,        // Remove console.* in production
                 drop_debugger: true,
-                passes: 3,
+                passes: 3,                 // More aggressive optimization
                 pure_funcs: ['console.log', 'console.warn', 'console.info'],
                 unsafe_arrows: true,
                 unsafe_methods: true,
@@ -199,7 +134,7 @@ builds.push({
             },
             mangle: {
                 properties: {
-                    regex: /^_/
+                    regex: /^_/  // Mangle private properties starting with _
                 }
             },
             format: {
