@@ -314,8 +314,8 @@ export default {
             }
 
             return {
-                position: [particle.x, particle.y, 0],
-                rotation: [xRotation, 0, zRotation],
+                position: [particle.x * 0.25, particle.y * 0.25, 0],
+                rotation: [xRotation * 0.25, 0, zRotation * 0.25],
                 scale: 1.0
             };
         }

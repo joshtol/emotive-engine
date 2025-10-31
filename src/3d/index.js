@@ -216,6 +216,65 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Build gesture transform object for particle visual effects
+     * Matches 2D VisualEffectAnimator behavior
+     */
+    buildGestureTransform(gestureName, progress, config) {
+        const time = Date.now() * 0.001;
+
+        switch (gestureName) {
+        case 'sparkle':
+            return {
+                particleGlow: config.intensity || 2.0,
+                glow: Math.sin(progress * Math.PI * 4) * 0.3 + 0.7,
+                fireflyTime: time,
+                fireflyEffect: true
+            };
+
+        case 'flicker':
+        {
+            const intensity = config.intensity || 2.0;
+            const shimmerSpeed = config.speed || 3;
+            const glow = 1 + Math.sin(progress * Math.PI * 2 * shimmerSpeed) * intensity * 0.3;
+            const mainPulse = Math.sin(progress * Math.PI * shimmerSpeed * 2) * 0.5 + 0.5;
+            return {
+                offsetX: Math.sin(progress * Math.PI * 4) * 5,
+                glow,
+                particleGlow: mainPulse * intensity,
+                flickerTime: time,
+                flickerEffect: true
+            };
+        }
+
+        case 'shimmer':
+        {
+            const intensity = config.intensity || 0.3;
+            const wave = Math.sin(time * 2 + progress * Math.PI * 2);
+            return {
+                offsetX: 0,
+                offsetY: 0,
+                glow: 1 + wave * intensity,
+                scale: 1 + wave * 0.01,
+                particleGlow: 1 + wave * 0.2,
+                shimmerTime: time,
+                shimmerWave: wave,
+                shimmerEffect: true
+            };
+        }
+
+        case 'glow':
+            return {
+                glowEffect: true,
+                glowProgress: progress,
+                particleGlow: config.glowAmount || 2.0
+            };
+
+        default:
+            return null;
+        }
+    }
+
+    /**
      * Main animation loop
      */
     animate(currentTime) {
@@ -266,6 +325,7 @@ export class EmotiveMascot3D {
             // Apply gesture to particles if active
             let gestureMotion = null;
             let gestureProgress = 0;
+            let gestureTransform = null;
             if (this.currentGesture) {
                 const elapsed = currentTime - this.currentGesture.startTime;
                 gestureProgress = Math.min(elapsed / this.currentGesture.duration, 1);
@@ -273,6 +333,9 @@ export class EmotiveMascot3D {
                     ...this.currentGesture.config,
                     type: this.currentGesture.name  // Use gesture NAME (e.g., "bounce"), not TYPE
                 };
+
+                // Build gesture transform for visual effects
+                gestureTransform = this.buildGestureTransform(this.currentGesture.name, gestureProgress, this.currentGesture.config);
             }
 
             // Update particles - EXACT same as 2D site
@@ -281,8 +344,8 @@ export class EmotiveMascot3D {
             // Clear canvas before rendering
             ctx.clearRect(0, 0, this.canvas2D.width, this.canvas2D.height);
 
-            // Render particles with emotion color
-            this.particleSystem.render(ctx, glowColor, null);
+            // Render particles with emotion color and gesture effects
+            this.particleSystem.render(ctx, glowColor, gestureTransform);
         }
 
         // Continue loop
@@ -438,6 +501,41 @@ export class EmotiveMascot3D {
             this.core3D.morphToShape(shapeName);
         }
         this.eventManager.emit('shape:morph', { shape: shapeName });
+    }
+
+    /**
+     * Set render mode for visualization
+     * @param {number|string} mode - 0/'standard', 1/'normals', 2/'toon', 3/'edge'
+     */
+    setRenderMode(mode) {
+        const modeMap = {
+            'standard': 0,
+            'normals': 1,
+            'toon': 2,
+            'edge': 3
+        };
+
+        const modeValue = typeof mode === 'string' ? modeMap[mode] : mode;
+
+        if (this.core3D && this.core3D.renderer) {
+            this.core3D.renderer.renderMode = modeValue;
+            console.log('Render mode set to:', mode, '(', modeValue, ')');
+        } else {
+            console.warn('Renderer not available yet');
+        }
+    }
+
+    /**
+     * Toggle wireframe overlay
+     * @param {boolean} enabled - Enable/disable wireframe
+     */
+    setWireframe(enabled) {
+        if (this.core3D && this.core3D.renderer) {
+            this.core3D.renderer.wireframeEnabled = enabled;
+            console.log('Wireframe:', enabled ? 'enabled' : 'disabled');
+        } else {
+            console.warn('Renderer not available yet');
+        }
     }
 
     /**

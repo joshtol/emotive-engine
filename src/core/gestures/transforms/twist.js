@@ -243,8 +243,8 @@ export default {
             const scale = currentContraction;
 
             return {
-                position: [particle.x + xOffset, particle.y, zOffset],
-                rotation: [xRotation, yRotation, zRotation],
+                position: [(particle.x + xOffset) * 0.25, particle.y * 0.25, zOffset * 0.25],
+                rotation: [xRotation * 0.25, yRotation * 0.25, zRotation * 0.25],
                 scale
             };
         }

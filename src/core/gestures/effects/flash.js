@@ -118,18 +118,9 @@ export default {
         // Apply brightness and size changes
         particle.opacity = Math.min(1, data.originalOpacity * (1 + flashIntensity * strength));
         particle.size = data.originalSize * (1 + (config.scalePeak - 1) * flashIntensity * strength * 0.1);
-        
-        // Initial burst motion - particles briefly explode outward
-        if (progress < 0.2) {
-            const burstStrength = (1 - progress / 0.2) * strength;
-            const angle = Math.atan2(particle.y - centerY, particle.x - centerX);
-            particle.vx += Math.cos(angle) * burstStrength * 2 * dt;
-            particle.vy += Math.sin(angle) * burstStrength * 2 * dt;
-        }
 
-        // Apply velocity decay for natural deceleration
-        particle.vx *= (1 - config.particleMotion.decay * 0.1);
-        particle.vy *= (1 - config.particleMotion.decay * 0.1);
+        // Flash is purely visual - no motion
+        // The 3D core handles all positioning via the 3D section
     },
     
     cleanup(particle) {

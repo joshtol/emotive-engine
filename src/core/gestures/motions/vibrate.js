@@ -167,14 +167,14 @@ export default {
 
             return {
                 position: [
-                    jitterX * fadeFactor,
-                    jitterY * fadeFactor,
-                    jitterZ * fadeFactor
+                    jitterX * fadeFactor * 0.25,
+                    jitterY * fadeFactor * 0.25,
+                    jitterZ * fadeFactor * 0.25
                 ],
                 rotation: [
-                    rotJitterX * fadeFactor,
-                    rotJitterY * fadeFactor,
-                    rotJitterZ * fadeFactor
+                    rotJitterX * fadeFactor * 0.25,
+                    rotJitterY * fadeFactor * 0.25,
+                    rotJitterZ * fadeFactor * 0.25
                 ],
                 scale: 1.0 + (Math.random() - 0.5) * 0.02 * fadeFactor
             };

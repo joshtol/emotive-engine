@@ -239,8 +239,8 @@ export default {
             const verticalScale = 1.0 + Math.abs(Math.sin(data.angle)) * 0.1;
 
             return {
-                position: [particle.x + xOffset, particle.y, zOffset],
-                rotation: [0, yRotation, 0],
+                position: [(particle.x + xOffset) * 0.25, particle.y * 0.25, zOffset * 0.25],
+                rotation: [0, yRotation * 0.25, 0],
                 scale: verticalScale
             };
         }

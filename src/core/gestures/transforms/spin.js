@@ -314,8 +314,8 @@ export default {
             const z = 0; // Spin happens in XY plane
 
             return {
-                position: [particle.x, particle.y, z],
-                rotation: [0, yRotation, 0], // Y-axis rotation
+                position: [particle.x * 0.25, particle.y * 0.25, z * 0.25],
+                rotation: [0, yRotation * 0.25, 0], // Y-axis rotation
                 scale
             };
         }

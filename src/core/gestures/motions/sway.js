@@ -123,8 +123,8 @@ export default {
             const posZ = Math.sin(progress * Math.PI * frequency) * swayAmount * 0.5;
 
             return {
-                position: [posX, posY, posZ],
-                rotation: [0, yawRotation, rollRotation],
+                position: [posX * 0.25, posY * 0.25, posZ * 0.25],
+                rotation: [0, yawRotation * 0.25, rollRotation * 0.25],
                 scale: 1.0
             };
         }

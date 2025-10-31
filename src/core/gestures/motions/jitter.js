@@ -142,8 +142,8 @@ export default {
             const scale = 1.0 + (Math.random() - 0.5) * 0.05 * fadeOut;
 
             return {
-                position: [jitterX, jitterY, jitterZ],
-                rotation: [rotJitterX, rotJitterY, rotJitterZ],
+                position: [jitterX * 0.25, jitterY * 0.25, jitterZ * 0.25],
+                rotation: [rotJitterX * 0.25, rotJitterY * 0.25, rotJitterZ * 0.25],
                 scale
             };
         }

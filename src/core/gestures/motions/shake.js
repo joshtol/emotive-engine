@@ -224,11 +224,11 @@ export default {
 
             return {
                 position: [
-                    shake * (randomX - 0.5) * 2,
+                    shake * (randomX - 0.5) * 2 * 0.25,
                     0,
-                    shake * (randomZ - 0.5) * 2
+                    shake * (randomZ - 0.5) * 2 * 0.25
                 ],
-                rotation: [0, 0, shake * (randomRoll - 0.5) * 0.5],
+                rotation: [0, 0, shake * (randomRoll - 0.5) * 0.5 * 0.25],
                 scale: 1.0
             };
         }

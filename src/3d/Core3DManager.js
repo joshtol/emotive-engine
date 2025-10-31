@@ -103,7 +103,7 @@ export class Core3DManager {
             baseSize: 1,
             opacity: 1,
             scaleFactor: 1,
-            gestureData: null
+            gestureData: {}  // Initialize as object for gestures to use
         };
 
         // Get gesture config for duration
@@ -136,17 +136,70 @@ export class Core3DManager {
                 virtualParticle.vy = 0;
                 virtualParticle.size = 1;
                 virtualParticle.opacity = 1;
+                virtualParticle.z = 0;
 
-                // Check if gesture has 3D translation section
-                if (gesture2D['3d'] && gesture2D['3d'].evaluate) {
-                    // Use gesture's built-in 3D translation
-                    // First apply gesture to virtual particle if needed
-                    if (gesture2D.apply) {
-                        const motion = { ...config };
-                        gesture2D.apply(virtualParticle, t, motion, 1, 0, 0);
+                // If gesture has 3D section, check if we should use it exclusively
+                const has3DSection = gesture2D['3d'] && gesture2D['3d'].evaluate;
+
+                // Apply 2D gesture to get particle position (unless it's a placeholder)
+                let hasParticleMotion = false;
+                if (gesture2D.apply) {
+                    const motion = { ...config };
+
+                    // Special case: orbit gesture has non-standard signature
+                    if (gestureName === 'orbit') {
+                        // orbit expects: applyOrbit(particle, gestureData, config, progress, strength, centerX, centerY)
+                        gesture2D.apply(virtualParticle, virtualParticle.gestureData, motion, t, motion.strength || 1.0, 0, 0);
+                        hasParticleMotion = true;
+                    } else {
+                        // Standard signature: apply(particle, progress, motion, dt, centerX, centerY)
+                        const result = gesture2D.apply(virtualParticle, t, motion, 1, 0, 0);
+                        // Check if apply actually did something (not a placeholder no-op)
+                        hasParticleMotion = result !== false;
+
+                        // Accumulate velocity into position for blending gestures
+                        if (hasParticleMotion) {
+                            virtualParticle.x += virtualParticle.vx * 2.0;  // Increase accumulation
+                            virtualParticle.y += virtualParticle.vy * 2.0;
+                        }
                     }
+                }
 
-                    // Call gesture's 3D evaluate function with particle data
+                // If gesture has meaningful 2D particle motion, use it for position
+                if (hasParticleMotion || !has3DSection) {
+                    // Translate particle position to 3D core position
+                    const baseTransform = this.translate2DTo3D(virtualParticle, t, gesture2D, gestureState);
+
+                    if (has3DSection) {
+                        // Combine: particle position + 3D rotation/scale
+                        const motion = {
+                            ...config,
+                            particle: virtualParticle,
+                            config,
+                            strength: config.strength || 1.0
+                        };
+                        const additionalTransform = gesture2D['3d'].evaluate(t, motion);
+
+                        return {
+                            position: baseTransform.position,  // XY from particle, Z from particle
+                            rotation: additionalTransform.rotation || baseTransform.rotation,
+                            scale: additionalTransform.scale || baseTransform.scale,
+                            glowIntensity: additionalTransform.glowIntensity || baseTransform.glowIntensity
+                        };
+                    } else {
+                        // No 3D section, use particle-based translation only
+                        return baseTransform;
+                    }
+                } else {
+                    // Placeholder gesture - use ONLY 3D section
+                    if (!has3DSection) {
+                        console.warn(`Gesture ${gestureName} has no particle motion and no 3D section`);
+                        return {
+                            position: [0, 0, 0],
+                            rotation: [0, 0, 0],
+                            scale: 1.0
+                        };
+                    }
                     const motion = {
                         ...config,
                         particle: virtualParticle,
@@ -154,13 +207,6 @@ export class Core3DManager {
                         strength: config.strength || 1.0
                     };
                     return gesture2D['3d'].evaluate(t, motion);
-                } else {
-                    // Fallback: apply gesture to virtual particle and use legacy translation
-                    if (gesture2D.apply) {
-                        const motion = { ...config };
-                        gesture2D.apply(virtualParticle, t, motion, 1, 0, 0);
-                    }
-                    return this.translate2DTo3D(virtualParticle, t, gesture2D, gestureState);
                 }
             },
             callbacks: {
@@ -187,65 +233,177 @@ export class Core3DManager {
     /**
      * Translate 2D particle behavior to 3D transforms
      * Maps particle x/y/vx/vy/size changes to 3D position/rotation/scale
+     *
+     * COORDINATE SYSTEM:
+     * position[0] = horizontal (left-right)
+     * position[1] = vertical (up-down)
+     * position[2] = depth (forward-back toward/away from camera)
      */
     translate2DTo3D(particle, progress, gesture, gestureState) {
         const props = {
-            position: [...gestureState.startPosition],
-            rotation: [...gestureState.startRotation],
+            position: [0, 0, 0],  // Always reset to center
+            rotation: [0, 0, 0],  // Always reset rotation
             scale: 1.0
         };
 
-        // Map 2D movements to 3D based on gesture type
-        // const gestureType = gesture.type;
         const gestureName = gesture.name;
 
+        // ===== MOTION GESTURES (Blending) =====
+
         if (gestureName === 'bounce') {
-            // Vertical bounce → 3D Y position
-            props.position[1] = particle.vy * 0.02; // Scale velocity to position
-            props.scale = 1.0 + Math.abs(particle.vy) * 0.005; // Slight scale on bounce
+            // Vertical bouncing motion
+            props.position[0] = 0;
+            props.position[1] = particle.vy * 0.02;  // Vertical bounce
+            props.position[2] = 0;
+            props.scale = 1.0 + Math.abs(particle.vy) * 0.005;  // Squash/stretch
 
         } else if (gestureName === 'pulse') {
-            // Radial expansion → 3D scale
+            // Radial expansion/contraction
             const distanceFromCenter = Math.sqrt(particle.x * particle.x + particle.y * particle.y);
+            props.position[0] = 0;
+            props.position[1] = 0;
+            props.position[2] = 0;
             props.scale = 1.0 + distanceFromCenter * 0.01;
 
-        } else if (gestureName === 'spin') {
-            // Orbital rotation → 3D Y rotation
-            const angle = Math.atan2(particle.y, particle.x);
-            props.rotation[1] = angle;
-
-        } else if (gestureName === 'float') {
-            // Upward float → 3D Y position + Z depth via size
-            props.position[1] = -particle.vy * 0.02; // Negative because 2D vy is upward
-            props.position[2] = (particle.size - 1) * 0.3; // Size change → depth
-            props.scale = 1.0 + (particle.size - 1) * 0.2;
-
         } else if (gestureName === 'shake') {
-            // Jittery shake → 3D X/Z position + rotation
-            props.position[0] = particle.vx * 0.015;
-            props.position[2] = particle.vy * 0.01;
-            props.rotation[2] = particle.vx * 0.008; // Roll on Z axis
-
-        } else if (gestureName === 'wobble') {
-            // Wobble → 3D rotation on X and Z
-            props.rotation[0] = particle.vy * 0.01;
-            props.rotation[2] = particle.vx * 0.01;
+            // Chaotic shaking in all directions
+            props.position[0] = particle.x * 0.05;  // Horizontal shake
+            props.position[1] = particle.y * 0.05;  // Vertical shake
+            props.position[2] = 0;
+            props.rotation[2] = particle.vx * 0.01;  // Roll with horizontal movement
 
         } else if (gestureName === 'nod') {
-            // Nod → 3D X rotation (pitch)
-            props.rotation[0] = particle.vy * 0.015;
+            // Vertical nodding motion (up-down head bob)
+            props.position[0] = 0;
+            props.position[1] = particle.y * 0.05;  // Vertical nod position
+            props.position[2] = 0;
+            props.rotation[0] = particle.vy * 0.02;  // Pitch rotation
+
+        } else if (gestureName === 'vibrate') {
+            // High-frequency micro-movements
+            props.position[0] = particle.x * 0.03;
+            props.position[1] = particle.y * 0.03;
+            props.position[2] = 0;
+            props.rotation[2] = particle.vx * 0.005;  // Slight roll
+
+        } else if (gestureName === 'orbit') {
+            // Circular orbiting motion
+            props.position[0] = particle.x * 0.003;  // Horizontal orbit
+            props.position[1] = -particle.y * 0.003;  // Vertical orbit (negated)
+            props.position[2] = particle.z || 0;
+
+        } else if (gestureName === 'twitch') {
+            // Sudden jerky movements
+            props.position[0] = particle.x * 0.04;
+            props.position[1] = particle.y * 0.04;
+            props.position[2] = 0;
+            props.rotation[0] = particle.vy * 0.01;
+            props.rotation[1] = particle.vx * 0.01;
+
+        } else if (gestureName === 'sway') {
+            // Gentle side-to-side swaying
+            props.position[0] = particle.x * 0.05;  // Horizontal sway
+            props.position[1] = particle.y * 0.02;  // Slight vertical drift
+            props.position[2] = 0;
+            props.rotation[2] = particle.x * 0.008;  // Roll with sway
+
+        } else if (gestureName === 'float') {
+            // Upward floating motion
+            props.position[0] = 0;
+            props.position[1] = -particle.vy * 0.02;  // Upward float
+            props.position[2] = (particle.size - 1) * 0.3;  // Depth based on size
+            props.scale = 1.0 + (particle.size - 1) * 0.2;
+
+        } else if (gestureName === 'jitter') {
+            // Nervous jittery movement
+            props.position[0] = particle.x * 0.04;
+            props.position[1] = particle.y * 0.04;
+            props.position[2] = 0;
+
+        } else if (gestureName === 'wiggle') {
+            // Horizontal side-to-side wiggle
+            props.position[0] = particle.x * 0.05;  // Horizontal wiggle
+            props.position[1] = 0;
+            props.position[2] = 0;
+
+            // ===== TRANSFORM GESTURES (Override) =====
+
+        } else if (gestureName === 'spin') {
+            // Spinning rotation around Y-axis
+            const angle = Math.atan2(particle.y, particle.x);
+            props.position[0] = 0;
+            props.position[1] = 0;
+            props.position[2] = 0;
+            props.rotation[1] = angle;  // Yaw rotation for spin
+
+        } else if (gestureName === 'jump') {
+            // Vertical jumping with arc
+            props.position[0] = particle.x * 0.01;  // Slight horizontal drift
+            props.position[1] = particle.y * 0.01;  // Vertical jump height
+            props.position[2] = 0;
+            props.scale = 1.0 + (particle.size - 1) * 0.3;  // Squash/stretch
+
+        } else if (gestureName === 'morph') {
+            // Size/shape morphing
+            props.position[0] = 0;
+            props.position[1] = 0;
+            props.position[2] = 0;
+            props.scale = particle.size || 1.0;
+
+        } else if (gestureName === 'stretch') {
+            // Stretching in direction of movement
+            props.position[0] = particle.x * 0.01;
+            props.position[1] = particle.y * 0.01;
+            props.position[2] = 0;
+            props.scale = 1.0 + Math.abs(particle.vy) * 0.01;
+
+        } else if (gestureName === 'tilt') {
+            // Tilting/leaning to the side
+            props.position[0] = particle.x * 0.03;
+            props.position[1] = 0;
+            props.position[2] = 0;
+            props.rotation[2] = particle.x * 0.015;  // Roll for tilt
+
+        } else if (gestureName === 'orbital') {
+            // Large orbital motion
+            const angle = Math.atan2(particle.y, particle.x);
+            const radius = Math.sqrt(particle.x * particle.x + particle.y * particle.y);
+            props.position[0] = Math.cos(angle) * radius * 0.005;
+            props.position[1] = Math.sin(angle) * radius * 0.005;
+            props.position[2] = 0;
+            props.rotation[1] = angle;  // Face direction of movement
+
+        } else if (gestureName === 'hula') {
+            // Circular hip motion
+            props.position[0] = particle.x * 0.004;
+            props.position[1] = particle.y * 0.004;
+            props.position[2] = 0;
+            props.rotation[1] = Math.atan2(particle.y, particle.x) * 0.5;  // Partial rotation
+
+        } else if (gestureName === 'scan') {
+            // Scanning left-right motion
+            props.position[0] = particle.x * 0.03;  // Horizontal scan
+            props.position[1] = 0;
+            props.position[2] = 0;
+            props.rotation[1] = particle.x * 0.01;  // Turn head while scanning
+
+        } else if (gestureName === 'twist') {
+            // Twisting rotation
+            props.position[0] = 0;
+            props.position[1] = 0;
+            props.position[2] = 0;
+            props.rotation[1] = progress * Math.PI * 2;  // Full rotation
 
         } else {
-            // Generic translation for unknown gestures
-            // X/Y velocity → position
-            props.position[0] = particle.vx * 0.01;
-            props.position[1] = -particle.vy * 0.01;
+            // ===== GENERIC FALLBACK =====
+            // For unknown gestures, map accumulated position to 3D
+            props.position[0] = particle.x * 0.01;  // Horizontal from accumulated x
+            props.position[1] = particle.y * 0.01;  // Vertical from accumulated y
+            props.position[2] = 0;
 
-            // Size change → scale or Z depth
+            // Size change affects scale
             if (particle.size !== 1) {
-                const sizeChange = particle.size - 1;
-                props.position[2] = sizeChange * 0.2;
-                props.scale = 1.0 + sizeChange * 0.1;
+                props.scale = particle.size;
             }
         }
 

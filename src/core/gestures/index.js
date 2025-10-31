@@ -39,6 +39,12 @@ import twitch from './motions/twitch.js';
 import sway from './motions/sway.js';
 import float from './motions/float.js';
 import jitter from './motions/jitter.js';
+import wiggle from './motions/wiggle.js';
+import groove from './motions/groove.js';
+import point from './motions/point.js';
+import lean from './motions/lean.js';
+import reach from './motions/reach.js';
+import headBob from './motions/headBob.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
@@ -72,107 +78,25 @@ import glow from './effects/glow.js';
 import peek from './effects/peek.js';
 import runningman from './effects/runningman.js';
 import charleston from './effects/charleston.js';
+import sparkle from './effects/sparkle.js';
+import shimmer from './effects/shimmer.js';
+import rain from './effects/rain.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ PLACEHOLDER GESTURES FOR NEW ANIMATIONS
+// │ IMPORT DIRECTIONAL TEST GESTURES (For coordinate system verification)
 // └─────────────────────────────────────────────────────────────────────────────────────
-// These are handled by GestureAnimator but need registry entries for rhythm system
-const createPlaceholderGesture = (name, emoji = '✨') => ({
-    name,
-    emoji,
-    type: 'blending', // Use blending type so they don't interfere
-    description: `${name} animation`,
-    config: {
-        duration: 1000, // Legacy fallback only
-        musicalDuration: { musical: true, beats: 2 } // Default: 2 beats
-    },
-    rhythm: {
-        enabled: true,
-        syncMode: 'beat',
-        timingSync: 'nextBeat',
-        durationSync: { mode: 'beats', beats: 2 }, // Musical duration
-        interruptible: true,
-        priority: 3,
-        blendable: true,
-        crossfadePoint: 'anyBeat',
-        maxQueue: 3
-    },
-    apply: (_particle, _progress, _params) => {
-        // No-op - handled by GestureAnimator
-        return false;
-    },
-    blend: (_particle, _progress, _params) => {
-        // No-op - handled by GestureAnimator
-        return false;
-    }
-});
-
-const sparkle = createPlaceholderGesture('sparkle', '✨');
-
-// Shimmer gesture - makes particles shimmer with wave effect
-const shimmer = {
-    name: 'shimmer',
-    emoji: '🌟',
-    type: 'particle',  // Particle type to affect particle behavior
-    description: 'Shimmer effect with sparkling particles',
-    config: {
-        duration: 2000,  // Legacy fallback
-        musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
-        particleMotion: 'radiant'  // Use radiant behavior for shimmering effect
-    },
-    rhythm: {
-        enabled: true,
-        syncType: 'beat',
-        durationSync: { mode: 'bars', bars: 1 }, // Musical: 1 bar
-        intensity: 0.8
-    },
-    override: (particle, progress, _params) => {
-        // Shimmer makes particles sparkle with wave effect
-        particle.shimmerEffect = true;
-        particle.shimmerProgress = progress;
-        return true;
-    },
-    blend: (_particle, _progress, _params) => {
-        // Blend with other gestures
-        return false;
-    }
-};
-const wiggle = createPlaceholderGesture('wiggle', '〰️');
-const groove = createPlaceholderGesture('groove', '🎵');
-const point = createPlaceholderGesture('point', '👉');
-const lean = createPlaceholderGesture('lean', '↗️');
-const reach = createPlaceholderGesture('reach', '🤚');
-const headBob = createPlaceholderGesture('headBob', '🎧');
-
-// Rain gesture - applies doppler effect to particles
-const rain = {
-    name: 'rain',
-    emoji: '🌧️',
-    type: 'particle',  // Particle type to affect particle behavior
-    description: 'Rain effect with falling particles',
-    config: {
-        duration: 3000,  // Legacy fallback
-        musicalDuration: { musical: true, bars: 2 }, // 2 bars (8 beats)
-        particleMotion: 'falling'  // Use the falling particle behavior
-    },
-    rhythm: {
-        enabled: true,
-        syncType: 'off-beat',
-        durationSync: { mode: 'bars', bars: 2 }, // Musical: 2 bars
-        intensity: 0.8
-    },
-    apply: (particle, progress, _params) => {
-        // The doppler behavior is handled by the particle system
-        // This just marks particles as being affected by rain
-        particle.rainEffect = true;
-        particle.rainProgress = progress;
-        return true;
-    },
-    blend: (_particle, _progress, _params) => {
-        // Blend with other gestures
-        return false;
-    }
-};
+import testUp from './directions/up.js';
+import testDown from './directions/down.js';
+import testLeft from './directions/left.js';
+import testRight from './directions/right.js';
+import testForward from './directions/forward.js';
+import testBackward from './directions/backward.js';
+import testGrow from './directions/grow.js';
+import testShrink from './directions/shrink.js';
+import testSpinLeft from './directions/spinLeft.js';
+import testSpinRight from './directions/spinRight.js';
+import testTiltLeft from './directions/tiltLeft.js';
+import testTiltRight from './directions/tiltRight.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ GESTURE COLLECTIONS
@@ -188,16 +112,12 @@ const MOTION_GESTURES = [
     sway,
     float,
     jitter,
-    // New gestures
-    sparkle,
-    shimmer,
     wiggle,
     groove,
     point,
     lean,
     reach,
-    headBob,
-    rain
+    headBob
 ];
 
 const TRANSFORM_GESTURES = [
@@ -210,6 +130,21 @@ const TRANSFORM_GESTURES = [
     hula,
     scan,
     twist
+];
+
+const DIRECTIONAL_TEST_GESTURES = [
+    testUp,
+    testDown,
+    testLeft,
+    testRight,
+    testForward,
+    testBackward,
+    testGrow,
+    testShrink,
+    testSpinLeft,
+    testSpinRight,
+    testTiltLeft,
+    testTiltRight
 ];
 
 const EFFECT_GESTURES = [
@@ -228,7 +163,10 @@ const EFFECT_GESTURES = [
     glow,
     peek,
     runningman,
-    charleston
+    charleston,
+    sparkle,
+    shimmer,
+    rain
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -237,7 +175,7 @@ const EFFECT_GESTURES = [
 export const GESTURE_REGISTRY = {};
 
 // Build the registry from all gesture arrays - SYNCHRONOUSLY
-[...MOTION_GESTURES, ...TRANSFORM_GESTURES, ...EFFECT_GESTURES].forEach(gesture => {
+[...MOTION_GESTURES, ...TRANSFORM_GESTURES, ...EFFECT_GESTURES, ...DIRECTIONAL_TEST_GESTURES].forEach(gesture => {
     GESTURE_REGISTRY[gesture.name] = gesture;
 });
 

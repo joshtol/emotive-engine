@@ -161,16 +161,13 @@ export default {
 
             // Map to X-axis rotation (pitch) in radians
             // Nodding is rotation around X-axis: positive = looking down, negative = looking up
-            const pitchRotation = oscillation * (amplitude * 0.02); // Convert to radians
-
-            // Slight forward/back movement on Z-axis for natural head motion
-            const depthMovement = oscillation * (amplitude * 0.1);
+            const pitchRotation = oscillation * (amplitude * 0.02) * 0.25; // Convert to radians and reduce
 
             // Dampen at the end
             const dampening = progress > 0.9 ? 0.95 : 1.0;
 
             return {
-                position: [0, 0, depthMovement * dampening],
+                position: [0, 0, 0],
                 rotation: [pitchRotation * dampening, 0, 0],
                 scale: 1.0
             };

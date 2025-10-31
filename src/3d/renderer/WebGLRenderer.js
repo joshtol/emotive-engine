@@ -46,8 +46,15 @@ export class WebGLRenderer {
             projectionMatrix: this.gl.getUniformLocation(this.program, 'u_projectionMatrix'),
             glowColor: this.gl.getUniformLocation(this.program, 'u_glowColor'),
             glowIntensity: this.gl.getUniformLocation(this.program, 'u_glowIntensity'),
-            cameraPosition: this.gl.getUniformLocation(this.program, 'u_cameraPosition')
+            cameraPosition: this.gl.getUniformLocation(this.program, 'u_cameraPosition'),
+            renderMode: this.gl.getUniformLocation(this.program, 'u_renderMode')
         };
+
+        // Rendering mode (0=standard, 1=normals, 2=toon, 3=edge)
+        this.renderMode = 0;
+
+        // Wireframe overlay flag
+        this.wireframeEnabled = false;
 
         // Camera setup (closer and looking straight at origin)
         this.cameraPosition = [0, 0, 3];
@@ -179,6 +186,7 @@ export class WebGLRenderer {
         gl.uniform3fv(this.locations.glowColor, glowColor);
         gl.uniform1f(this.locations.glowIntensity, glowIntensity);
         gl.uniform3fv(this.locations.cameraPosition, this.cameraPosition);
+        gl.uniform1i(this.locations.renderMode, this.renderMode);
 
         // Bind vertex data
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.position);
@@ -189,9 +197,56 @@ export class WebGLRenderer {
         gl.enableVertexAttribArray(this.locations.normal);
         gl.vertexAttribPointer(this.locations.normal, 3, gl.FLOAT, false, 0, 0);
 
-        // Draw
+        // Draw solid geometry with polygon offset if wireframe is enabled
+        if (this.wireframeEnabled) {
+            gl.enable(gl.POLYGON_OFFSET_FILL);
+            gl.polygonOffset(1.0, 1.0);
+        }
+
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
         gl.drawElements(gl.TRIANGLES, this.currentGeometry.indices.length, gl.UNSIGNED_SHORT, 0);
+
+        if (this.wireframeEnabled) {
+            gl.disable(gl.POLYGON_OFFSET_FILL);
+        }
+
+        // Draw wireframe overlay if enabled
+        if (this.wireframeEnabled) {
+            // Set wireframe color to pure white with no glow for contrast
+            gl.uniform3fv(this.locations.glowColor, [1.0, 1.0, 1.0]);
+            gl.uniform1f(this.locations.glowIntensity, 0.5);
+
+            // Save original depth function and set to always pass
+            const originalDepthFunc = gl.getParameter(gl.DEPTH_FUNC);
+            gl.depthFunc(gl.LEQUAL);
+            gl.depthMask(false);
+
+            // Increase line width for visibility
+            gl.lineWidth(2.0);
+
+            // Create edge indices for wireframe (convert triangles to lines)
+            // For now, we'll use a simple trick: draw with LINE_STRIP mode
+            // This isn't perfect but works reasonably well
+            const wireframeIndices = this.currentGeometry.wireframeIndices || this.createWireframeIndices(this.currentGeometry.indices);
+
+            if (wireframeIndices) {
+                if (!this.buffers.wireframe) {
+                    this.buffers.wireframe = gl.createBuffer();
+                }
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.wireframe);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, wireframeIndices, gl.STATIC_DRAW);
+                gl.drawElements(gl.LINES, wireframeIndices.length, gl.UNSIGNED_SHORT, 0);
+            }
+
+            // Restore state
+            gl.depthFunc(originalDepthFunc);
+            gl.depthMask(true);
+            gl.lineWidth(1.0);
+
+            // Restore original uniforms
+            gl.uniform3fv(this.locations.glowColor, glowColor);
+            gl.uniform1f(this.locations.glowIntensity, glowIntensity);
+        }
     }
 
     /**
@@ -352,6 +407,42 @@ export class WebGLRenderer {
     }
 
     /**
+     * Create wireframe indices from triangle indices
+     * Converts triangle list to line list (each triangle edge becomes a line)
+     */
+    createWireframeIndices(triangleIndices) {
+        const edges = new Set();
+        const wireframeIndices = [];
+
+        // Extract unique edges from triangles
+        for (let i = 0; i < triangleIndices.length; i += 3) {
+            const v0 = triangleIndices[i];
+            const v1 = triangleIndices[i + 1];
+            const v2 = triangleIndices[i + 2];
+
+            // Add three edges of the triangle (sorted to avoid duplicates)
+            const edge1 = v0 < v1 ? `${v0},${v1}` : `${v1},${v0}`;
+            const edge2 = v1 < v2 ? `${v1},${v2}` : `${v2},${v1}`;
+            const edge3 = v2 < v0 ? `${v2},${v0}` : `${v0},${v2}`;
+
+            if (!edges.has(edge1)) {
+                edges.add(edge1);
+                wireframeIndices.push(v0, v1);
+            }
+            if (!edges.has(edge2)) {
+                edges.add(edge2);
+                wireframeIndices.push(v1, v2);
+            }
+            if (!edges.has(edge3)) {
+                edges.add(edge3);
+                wireframeIndices.push(v2, v0);
+            }
+        }
+
+        return new Uint16Array(wireframeIndices);
+    }
+
+    /**
      * Cleanup
      */
     destroy() {
@@ -359,6 +450,7 @@ export class WebGLRenderer {
         if (this.buffers.position) gl.deleteBuffer(this.buffers.position);
         if (this.buffers.normal) gl.deleteBuffer(this.buffers.normal);
         if (this.buffers.indices) gl.deleteBuffer(this.buffers.indices);
+        if (this.buffers.wireframe) gl.deleteBuffer(this.buffers.wireframe);
         if (this.program) gl.deleteProgram(this.program);
     }
 }

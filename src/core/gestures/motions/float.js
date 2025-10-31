@@ -166,8 +166,8 @@ export default {
             const scale = 1.0 + progress * 0.1;
 
             return {
-                position: [wobble, floatDistance, 0],
-                rotation: [tiltX, spinRotation, tiltZ],
+                position: [wobble * 0.25, floatDistance * 0.25, 0],
+                rotation: [tiltX * 0.25, spinRotation * 0.25, tiltZ * 0.25],
                 scale
             };
         }

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<!--
+  DIRECTIONAL TEST SUITE - Emotive Engine 3D
+
+  A comprehensive testing tool for verifying 3D coordinate system behavior.
+
+  What you'll learn:
+  - How to use the 3D rendering engine
+  - Testing all 12 directional movements (position, rotation, scale)
+  - Using different render modes for visualization
+  - Enabling wireframe overlay for debugging
+
+  Purpose: This test suite was created to systematically verify the actual
+  3D coordinate system behavior after discovering inconsistencies between
+  documentation and observed behavior.
+
+  Complexity: ⭐⭐⭐ Advanced - Testing & Debugging Tool
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Directional Test Suite - Emotive Engine</title>
+
+    <!-- Shared example styles -->
+    <link rel="stylesheet" href="example-styles.css">
+
+    <style>
+        /* Two-column layout */
+        body {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Canvas container */
+        .canvas-container {
+            width: 100%;
+            aspect-ratio: 4/3;
+            border: 2px solid rgba(221, 74, 154, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
+            overflow: hidden;
+            background: radial-gradient(circle at center, rgba(30, 30, 60, 0.2), transparent);
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #mascot {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            padding: 16px;
+            text-align: center;
+            font-weight: 500;
+            border-radius: 8px;
+            background: rgba(64, 144, 206, 0.2);
+            border: 1px solid rgba(64, 144, 206, 0.3);
+            color: #4090CE;
+        }
+
+        .status-indicator.active {
+            background: rgba(132, 207, 197, 0.2);
+            border-color: rgba(132, 207, 197, 0.3);
+            color: #84CFC5;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Control panels */
+        .control-panel {
+            background: rgba(42, 42, 42, 0.6);
+            border: 1px solid rgba(242, 241, 241, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .control-panel h3 {
+            color: #DD4A9A;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        /* Test category sections */
+        .test-category {
+            margin-bottom: 24px;
+        }
+
+        .category-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #B8B8B8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(242, 241, 241, 0.1);
+        }
+
+        .category-icon {
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+
+        /* Button grids */
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .button-grid-single {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        /* Test buttons */
+        .test-button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            color: #F2F1F1;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .test-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(221, 74, 154, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .test-button:active {
+            transform: translateY(0);
+        }
+
+        .test-button.active {
+            background: rgba(132, 207, 197, 0.2);
+            border-color: rgba(132, 207, 197, 0.5);
+            box-shadow: 0 0 20px rgba(132, 207, 197, 0.3);
+        }
+
+        .button-emoji {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .button-label {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .button-expected {
+            font-size: 10px;
+            opacity: 0.6;
+            line-height: 1.3;
+        }
+
+        /* Visualization controls */
+        .viz-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .viz-controls button {
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        /* Info boxes */
+        .info-box {
+            background: rgba(64, 144, 206, 0.1);
+            border: 1px solid rgba(64, 144, 206, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #B8B8B8;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #4090CE;
+            margin-bottom: 8px;
+        }
+
+        .coordinate-reference {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        /* Warning box */
+        .warning-box {
+            background: rgba(221, 74, 154, 0.1);
+            border: 1px solid rgba(221, 74, 154, 0.3);
+        }
+
+        .warning-box .info-box-title {
+            color: #DD4A9A;
+        }
+
+        /* Stop button */
+        .stop-button {
+            background: rgba(221, 74, 154, 0.2) !important;
+            border: 1px solid rgba(221, 74, 154, 0.3) !important;
+            width: 100%;
+        }
+
+        .stop-button:hover {
+            background: rgba(221, 74, 154, 0.3) !important;
+        }
+
+        /* Wireframe toggle active state */
+        #wireframeBtn.active {
+            background: rgba(132, 207, 197, 0.2) !important;
+            border-color: rgba(132, 207, 197, 0.5) !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+
+            .right-column {
+                max-width: 600px;
+                margin: 0 auto;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="left-column">
+        <div class="example-header" style="justify-content: flex-start;">
+            <img src="../assets/emotive-engine-icon.svg" alt="Emotive Engine" class="example-logo">
+            <h1 class="example-title">3D Directional Test Suite</h1>
+        </div>
+
+        <p class="example-subtitle" style="text-align: left; margin-bottom: 30px;">
+            Systematically verify 3D coordinate system behavior
+        </p>
+
+        <div class="canvas-container">
+            <canvas id="mascot" width="800" height="600"></canvas>
+        </div>
+
+        <div class="status-indicator" id="status">
+            Ready to test
+        </div>
+
+        <div class="info-box" style="margin-top: 20px;">
+            <div class="info-box-title">📝 How to Use</div>
+            <div>
+                Click each direction button to test that movement. Watch the mascot carefully and note whether
+                the actual behavior matches the expected behavior shown on each button.
+            </div>
+            <div style="margin-top: 12px;">
+                <strong>Tips:</strong><br>
+                • Try different geometries (sphere shows spin best, diamond shows facets)<br>
+                • Enable wireframe to see edges clearly<br>
+                • Use "Normals (RGB=XYZ)" mode to see which direction faces point
+            </div>
+        </div>
+
+        <div class="info-box warning-box" style="margin-top: 16px;">
+            <div class="info-box-title">⚠️ Purpose</div>
+            <div>
+                This test suite was created to systematically determine the actual 3D coordinate system behavior,
+                as documented behavior was not matching observed results during gesture development.
+            </div>
+            <div class="coordinate-reference">
+                EXPECTED COORDINATE SYSTEM:<br>
+                X-axis: LEFT (-) ← → RIGHT (+)<br>
+                Y-axis: DOWN (-) ↓ ↑ UP (+)<br>
+                Z-axis: AWAY (-) ← → TOWARD (+)
+            </div>
+        </div>
+    </div>
+
+    <div class="right-column">
+        <!-- Global Controls -->
+        <div class="control-panel">
+            <h3>Global Controls</h3>
+            <button class="stop-button" onclick="stopGesture()">⏹️ Stop All Gestures</button>
+        </div>
+
+        <!-- Visualization Options -->
+        <div class="control-panel">
+            <h3>Visualization</h3>
+
+            <div class="test-category">
+                <div class="category-title">Geometry</div>
+                <div class="viz-controls">
+                    <button onclick="changeGeometry('sphere')">Sphere</button>
+                    <button onclick="changeGeometry('diamond')">Diamond</button>
+                    <button onclick="changeGeometry('crystal')">Crystal</button>
+                </div>
+            </div>
+
+            <div class="test-category">
+                <div class="category-title">Render Mode</div>
+                <div class="button-grid">
+                    <button class="test-button" onclick="changeRenderMode('standard')">
+                        <span class="button-label">Standard</span>
+                    </button>
+                    <button class="test-button" onclick="changeRenderMode('normals')">
+                        <span class="button-label">Normals</span>
+                        <span class="button-expected">RGB=XYZ</span>
+                    </button>
+                    <button class="test-button" onclick="changeRenderMode('toon')">
+                        <span class="button-label">Toon/Cel</span>
+                    </button>
+                    <button class="test-button" onclick="changeRenderMode('edge')">
+                        <span class="button-label">Edge Detect</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="test-category" style="margin-bottom: 0;">
+                <div class="category-title">Wireframe</div>
+                <button id="wireframeBtn" style="width: 100%;" onclick="toggleWireframe()">
+                    Enable Wireframe
+                </button>
+            </div>
+        </div>
+
+        <!-- Position Tests -->
+        <div class="control-panel">
+            <h3>Position Tests</h3>
+
+            <div class="test-category">
+                <div class="category-title">
+                    <span class="category-icon">↕️</span>Vertical (Y-Axis)
+                </div>
+                <div class="button-grid">
+                    <button class="test-button" onclick="testGesture('testUp', this)">
+                        <span class="button-emoji">⬆️</span>
+                        <span class="button-label">UP</span>
+                        <span class="button-expected">Y = +0.5</span>
+                    </button>
+                    <button class="test-button" onclick="testGesture('testDown', this)">
+                        <span class="button-emoji">⬇️</span>
+                        <span class="button-label">DOWN</span>
+                        <span class="button-expected">Y = -0.5</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="test-category">
+                <div class="category-title">
+                    <span class="category-icon">↔️</span>Horizontal (X-Axis)
+                </div>
+                <div class="button-grid">
+                    <button class="test-button" onclick="testGesture('testLeft', this)">
+                        <span class="button-emoji">⬅️</span>
+                        <span class="button-label">LEFT</span>
+                        <span class="button-expected">X = -0.5</span>
+                    </button>
+                    <button class="test-button" onclick="testGesture('testRight', this)">
+                        <span class="button-emoji">➡️</span>
+                        <span class="button-label">RIGHT</span>
+                        <span class="button-expected">X = +0.5</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="test-category" style="margin-bottom: 0;">
+                <div class="category-title">
+                    <span class="category-icon">🔄</span>Depth (Z-Axis)
+                </div>
+                <div class="button-grid">
+                    <button class="test-button" onclick="testGesture('testForward', this)">
+                        <span class="button-emoji">↗️</span>
+                        <span class="button-label">FORWARD</span>
+                        <span class="button-expected">Z = +0.5 (bigger)</span>
+                    </button>
+                    <button class="test-button" onclick="testGesture('testBackward', this)">
+                        <span class="button-emoji">↙️</span>
+                        <span class="button-label">BACKWARD</span>
+                        <span class="button-expected">Z = -0.5 (smaller)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scale Tests -->
+        <div class="control-panel">
+            <h3>Scale Tests</h3>
+            <div class="button-grid">
+                <button class="test-button" onclick="testGesture('testGrow', this)">
+                    <span class="button-emoji">🔍</span>
+                    <span class="button-label">GROW</span>
+                    <span class="button-expected">Scale 1.0 → 1.5</span>
+                </button>
+                <button class="test-button" onclick="testGesture('testShrink', this)">
+                    <span class="button-emoji">🔎</span>
+                    <span class="button-label">SHRINK</span>
+                    <span class="button-expected">Scale 1.0 → 0.5</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Rotation Tests -->
+        <div class="control-panel">
+            <h3>Rotation Tests</h3>
+
+            <div class="test-category">
+                <div class="category-title">
+                    <span class="category-icon">🔄</span>Spin (Y-Axis)
+                </div>
+                <div class="button-grid">
+                    <button class="test-button" onclick="testGesture('testSpinLeft', this)">
+                        <span class="button-emoji">↶</span>
+                        <span class="button-label">SPIN LEFT</span>
+                        <span class="button-expected">Yaw = -0.5</span>
+                    </button>
+                    <button class="test-button" onclick="testGesture('testSpinRight', this)">
+                        <span class="button-emoji">↷</span>
+                        <span class="button-label">SPIN RIGHT</span>
+                        <span class="button-expected">Yaw = +0.5</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="test-category" style="margin-bottom: 0;">
+                <div class="category-title">
+                    <span class="category-icon">🔃</span>Tilt (Z-Axis)
+                </div>
+                <div class="button-grid">
+                    <button class="test-button" onclick="testGesture('testTiltLeft', this)">
+                        <span class="button-emoji">⤺</span>
+                        <span class="button-label">TILT LEFT</span>
+                        <span class="button-expected">Roll = +0.5 (inverted)</span>
+                    </button>
+                    <button class="test-button" onclick="testGesture('testTiltRight', this)">
+                        <span class="button-emoji">⤻</span>
+                        <span class="button-label">TILT RIGHT</span>
+                        <span class="button-expected">Roll = -0.5 (inverted)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Emotive Engine 3D -->
+    <script type="module">
+        import { EmotiveMascot3D } from '../dist/emotive-mascot-3d.js';
+
+        let mascot = null;
+        let currentButton = null;
+        let gestureTimeout = null;
+        let wireframeEnabled = false;
+
+        // Initialize mascot
+        async function init() {
+            try {
+                const canvas = document.getElementById('mascot');
+                if (!canvas) {
+                    throw new Error('Canvas element not found');
+                }
+
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'diamond',
+                    enableParticles: false,
+                    coreScale: 1.5
+                });
+
+                await mascot.init(canvas);
+                mascot.start();
+                mascot.setEmotion('joy');
+
+                updateStatus('✅ Ready to test', false);
+                console.log('✅ EmotiveMascot3D initialized');
+            } catch (error) {
+                console.error('Failed to initialize mascot:', error);
+                updateStatus('❌ Failed to initialize - check console', false);
+            }
+        }
+
+        // Test a gesture
+        window.testGesture = function(gestureName, button) {
+            if (!mascot) {
+                updateStatus('Mascot not initialized', false);
+                return;
+            }
+
+            if (currentButton) {
+                currentButton.classList.remove('active');
+            }
+
+            if (gestureTimeout) {
+                clearTimeout(gestureTimeout);
+            }
+
+            currentButton = button;
+            button.classList.add('active');
+
+            const label = button.querySelector('.button-label').textContent;
+            mascot.express(gestureName);
+            updateStatus(`Testing: ${label}`, true);
+
+            gestureTimeout = setTimeout(() => {
+                if (currentButton === button) {
+                    button.classList.remove('active');
+                    currentButton = null;
+                    updateStatus('Test complete - Ready for next test', false);
+                }
+            }, 1500);
+        };
+
+        // Stop all gestures
+        window.stopGesture = function() {
+            if (!mascot) return;
+
+            if (currentButton) {
+                currentButton.classList.remove('active');
+                currentButton = null;
+            }
+
+            if (gestureTimeout) {
+                clearTimeout(gestureTimeout);
+                gestureTimeout = null;
+            }
+
+            updateStatus('Stopped - Ready to test', false);
+        };
+
+        // Change geometry
+        window.changeGeometry = function(geometry) {
+            if (!mascot) return;
+            mascot.morphTo(geometry);
+            updateStatus(`Changed to ${geometry} geometry`, false);
+        };
+
+        // Change render mode
+        window.changeRenderMode = function(mode) {
+            if (!mascot) return;
+            mascot.setRenderMode(mode);
+            updateStatus(`Render mode: ${mode}`, false);
+        };
+
+        // Toggle wireframe
+        window.toggleWireframe = function() {
+            if (!mascot) return;
+
+            wireframeEnabled = !wireframeEnabled;
+            mascot.setWireframe(wireframeEnabled);
+
+            const btn = document.getElementById('wireframeBtn');
+            btn.textContent = wireframeEnabled ? 'Disable Wireframe' : 'Enable Wireframe';
+
+            if (wireframeEnabled) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+
+            updateStatus(wireframeEnabled ? 'Wireframe enabled' : 'Wireframe disabled', false);
+        };
+
+        // Update status indicator
+        function updateStatus(text, active) {
+            const status = document.getElementById('status');
+            status.textContent = text;
+
+            if (active) {
+                status.classList.add('active');
+            } else {
+                status.classList.remove('active');
+            }
+        }
+
+        // Initialize on load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

@@ -205,14 +205,14 @@ export default {
                 const angle = random(1) * Math.PI * 2;
                 const distance = maxOffset * intensity / 8;
 
-                const posX = Math.cos(angle) * distance * random(2);
-                const posY = Math.sin(angle) * distance * random(3);
-                const posZ = (random(4) - 0.5) * distance;
+                const posX = Math.cos(angle) * distance * random(2) * 0.25;
+                const posY = Math.sin(angle) * distance * random(3) * 0.25;
+                const posZ = (random(4) - 0.5) * distance * 0.25;
 
                 // Random rotation twitch
-                const rotX = (random(5) - 0.5) * 0.2;
-                const rotY = (random(6) - 0.5) * 0.2;
-                const rotZ = (random(7) - 0.5) * 0.2;
+                const rotX = (random(5) - 0.5) * 0.2 * 0.25;
+                const rotY = (random(6) - 0.5) * 0.2 * 0.25;
+                const rotZ = (random(7) - 0.5) * 0.2 * 0.25;
 
                 // Sharp scale variation
                 const scale = 1.0 + (random(8) - 0.5) * 0.1;
@@ -227,14 +227,14 @@ export default {
                 const microJitter = 0.5;
                 return {
                     position: [
-                        (random(10) - 0.5) * microJitter,
-                        (random(11) - 0.5) * microJitter,
-                        (random(12) - 0.5) * microJitter
+                        (random(10) - 0.5) * microJitter * 0.25,
+                        (random(11) - 0.5) * microJitter * 0.25,
+                        (random(12) - 0.5) * microJitter * 0.25
                     ],
                     rotation: [
-                        (random(13) - 0.5) * 0.01,
-                        (random(14) - 0.5) * 0.01,
-                        (random(15) - 0.5) * 0.01
+                        (random(13) - 0.5) * 0.01 * 0.25,
+                        (random(14) - 0.5) * 0.01 * 0.25,
+                        (random(15) - 0.5) * 0.01 * 0.25
                     ],
                     scale: 1.0
                 };

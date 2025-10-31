@@ -266,7 +266,7 @@ export default {
             }
 
             return {
-                position: [0, oscillation * dampedAmplitude, 0],
+                position: [0, oscillation * dampedAmplitude * 0.25, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0 + Math.abs(oscillation) * 0.05
             };

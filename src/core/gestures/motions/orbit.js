@@ -305,8 +305,8 @@ export default {
             const scalePulse = 1 + Math.sin(angle * 2) * 0.03 * transitionFactor;
 
             return {
-                position: [0, 0, zPosition],
-                rotation: [xRotation, yRotation, zRotation],
+                position: [0, 0, zPosition * 0.25],
+                rotation: [xRotation * 0.25, yRotation * 0.25, zRotation * 0.25],
                 scale: scalePulse
             };
         }
