@@ -115,6 +115,18 @@ describe('FramebufferManager', () => {
 
             expect(manager.fbos.has('shadow-map')).toBe(true);
         });
+
+        it('should not reuse FBO from pool if size/format mismatch', () => {
+            // Acquire 256x256 RGBA FBO
+            const fbo1 = manager.acquire('test', 256, 256, 'RGBA');
+            manager.release('test');
+
+            // Try to acquire 512x512 - should create new, not reuse
+            const fbo2 = manager.acquire('test2', 512, 512, 'RGBA');
+
+            expect(fbo2).not.toBe(fbo1);
+            expect(mockGL.createFramebuffer).toHaveBeenCalledTimes(2); // Two separate FBOs created
+        });
     });
 
     describe('release()', () => {

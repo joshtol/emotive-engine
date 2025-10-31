@@ -99,8 +99,21 @@ export class FramebufferManager {
      * @returns {Object} FBO object
      */
     acquire(name, width, height, format = 'RGBA') {
-        // Try to reuse from pool first
-        const fbo = this.pool.pop() || this.create(width, height, format);
+        // Try to find matching FBO from pool
+        let fbo = null;
+        const poolIndex = this.pool.findIndex(f =>
+            f.width === width &&
+            f.height === height &&
+            f.format === format
+        );
+
+        if (poolIndex !== -1) {
+            // Remove matching FBO from pool
+            fbo = this.pool.splice(poolIndex, 1)[0];
+        } else {
+            // Create new if no match
+            fbo = this.create(width, height, format);
+        }
 
         this.fbos.set(name, fbo);
         return fbo;
