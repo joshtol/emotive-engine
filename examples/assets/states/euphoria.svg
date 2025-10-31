@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="euphoria" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: url(#linear-gradient2);
+      }
+
+      .st1 {
+        fill: url(#linear-gradient);
+        stroke: #000;
+        stroke-miterlimit: 10;
+        stroke-width: 42px;
+      }
+
+      .st2 {
+        fill: #782d79;
+      }
+
+      .st3 {
+        fill: url(#linear-gradient1);
+      }
+
+      .st4 {
+        fill: url(#linear-gradient3);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="497.42" y1="134.36" x2="1355.15" y2="134.36" gradientTransform="translate(-392.99 613.3) rotate(-12.38)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff414f"/>
+      <stop offset=".48" stop-color="#ffe500"/>
+      <stop offset="1" stop-color="#db083d"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient1" x1="1269.58" y1="134.58" x2="855.14" y2="134.58" gradientTransform="translate(-392.99 613.3) rotate(-12.38)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffe60b"/>
+      <stop offset=".37" stop-color="#fee40b" stop-opacity=".99"/>
+      <stop offset=".51" stop-color="#fdde0f" stop-opacity=".97"/>
+      <stop offset=".6" stop-color="#fcd415" stop-opacity=".92"/>
+      <stop offset=".68" stop-color="#f9c51d" stop-opacity=".85"/>
+      <stop offset=".75" stop-color="#f6b229" stop-opacity=".77"/>
+      <stop offset=".8" stop-color="#f29a36" stop-opacity=".66"/>
+      <stop offset=".86" stop-color="#ee7e47" stop-opacity=".53"/>
+      <stop offset=".91" stop-color="#e85d5a" stop-opacity=".39"/>
+      <stop offset=".95" stop-color="#e23770" stop-opacity=".22"/>
+      <stop offset=".99" stop-color="#dc1087" stop-opacity=".04"/>
+      <stop offset="1" stop-color="#db088c" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient2" x1="230.08" y1="220.91" x2="388.41" y2="-53.34" gradientTransform="translate(499.9 171.84) rotate(98.68) scale(1 1.19)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity=".5"/>
+      <stop offset=".13" stop-color="#fff" stop-opacity=".56"/>
+      <stop offset=".72" stop-color="#fff" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".9"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient3" x1="858.98" y1="64.88" x2="1017.32" y2="-209.36" gradientTransform="translate(-392.99 613.3) rotate(-12.38)" xlink:href="#linear-gradient2"/>
+  </defs>
+  <g id="eyes">
+    <path class="st1" d="M228.87,920.59c-35.19-39.42,68.26-239.84,38.33-318.9-29.92-79.06-212.5-180.03-198.51-214.11,13.99-34.09,278.77-28.98,319.16-56.93,40.39-27.95,104.34-213.9,149.96-223.91,45.62-10.01,106.71,193.25,149.06,236.14,42.35,42.88,267.21,4.77,263.99,77.03-3.23,72.26-171.88,153.96-169.12,232.3,2.76,78.34,69.08,237.9,32.22,271.05-36.87,33.15-186.34-103.6-286.72-93.5-168.68,20.33-263.17,130.27-298.36,90.85Z"/>
+    <g>
+      <path class="st3" d="M515.34,762.85s39.66-13.89,92.03,8.02c52.37,21.91,154.42,88.5,164.49,86.29,10.07-2.21-68.57-193.55-41.58-266.29,17.58-47.39,141.24-138.45,138.07-152.88-3.17-14.43-194.86-12.97-215.39-30.15-20.53-17.18-115.13-222.87-115.13-222.87l-22.48,577.87Z"/>
+      <polygon class="st0" points="517.53 552.04 155.3 412.99 369.2 386.73 517.53 552.04"/>
+      <polygon class="st2" points="515.34 762.85 294.49 851 522.8 571.04 515.34 762.85"/>
+      <polygon class="st4" points="537.81 184.98 525.37 513.28 431.32 355.72 537.81 184.98"/>
+    </g>
+  </g>
+</svg>

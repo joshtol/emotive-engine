@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine 3D - Complete Demo</title>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            /* Brand Color Palette */
+            --brand-primary: #DD4A9A;
+            --brand-secondary: #4090CE;
+            --brand-tertiary: #32ACE2;
+            --brand-accent: #84CFC5;
+            --brand-black: #0E0E0E;
+            --brand-white: #F2F1F1;
+
+            /* Dark Theme */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-tertiary: #333333;
+            --text-primary: #F2F1F1;
+            --text-secondary: #B8B8B8;
+            --text-tertiary: #888888;
+
+            /* Interactive Colors */
+            --accent-primary: var(--brand-primary);
+            --accent-secondary: var(--brand-secondary);
+
+            /* Borders */
+            --border-primary: rgba(221, 74, 154, 0.3);
+            --border-secondary: rgba(64, 144, 206, 0.2);
+            --border-muted: rgba(242, 241, 241, 0.1);
+
+            /* Buttons */
+            --button-primary: var(--brand-primary);
+            --button-bg: rgba(0, 0, 0, 0.4);
+            --button-bg-hover: rgba(221, 74, 154, 0.1);
+            --button-bg-active: rgba(221, 74, 154, 0.2);
+
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, rgba(221, 74, 154, 0.1) 0%, rgba(64, 144, 206, 0.05) 100%);
+            --gradient-secondary: linear-gradient(45deg, rgba(50, 172, 226, 0.08) 0%, rgba(132, 207, 197, 0.06) 100%);
+            --gradient-accent: linear-gradient(180deg, rgba(221, 74, 154, 0.12) 0%, transparent 50%, rgba(64, 144, 206, 0.08) 100%);
+            --gradient-overlay: linear-gradient(135deg, rgba(14, 14, 14, 0.4) 0%, rgba(26, 26, 26, 0.2) 100%);
+
+            /* Glow */
+            --glow-primary: rgba(221, 74, 154, 0.4);
+            --glow-secondary: rgba(64, 144, 206, 0.3);
+            --glow-subtle: rgba(221, 74, 154, 0.15);
+            --glow-intense: rgba(221, 74, 154, 0.6);
+
+            /* Canvas */
+            --canvas-bg: rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* ===== LAYOUT GRID ===== */
+        .emotive-container {
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-rows: 1fr;
+            grid-template-areas: 'main';
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .emotive-main {
+            grid-area: main;
+            display: grid;
+            grid-template-columns: 25vw 1fr 25vw;
+            grid-template-areas: 'sidebar canvas controls';
+            min-width: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .emotive-sidebar {
+            grid-area: sidebar;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 2.0vh 1.8vw;
+            min-width: 0;
+            background: linear-gradient(to bottom, rgba(64, 144, 206, 0.25), rgba(132, 207, 197, 0.15), transparent);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.5vh;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-primary) var(--button-bg);
+        }
+
+        .emotive-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .emotive-sidebar::-webkit-scrollbar-track {
+            background: var(--button-bg);
+        }
+
+        .emotive-sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-primary);
+            border-radius: 3px;
+        }
+
+        /* ===== CONTROLS ===== */
+        .emotive-controls {
+            grid-area: controls;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 2.0vh 1.8vw;
+            min-width: 0;
+            background: linear-gradient(to bottom, rgba(64, 144, 206, 0.25), rgba(132, 207, 197, 0.15), transparent);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.5vh;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-primary) var(--button-bg);
+        }
+
+        .emotive-controls::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .emotive-controls::-webkit-scrollbar-track {
+            background: var(--button-bg);
+        }
+
+        .emotive-controls::-webkit-scrollbar-thumb {
+            background: var(--border-primary);
+            border-radius: 3px;
+        }
+
+        /* ===== CANVAS CONTAINER ===== */
+        .canvas-container {
+            grid-area: canvas;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            position: relative;
+            min-width: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .game-canvas-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 calc(100vw * 0.5 / 9 / 2);
+            position: relative;
+            background: var(--canvas-bg);
+            background-image: var(--gradient-accent);
+            overflow: hidden;
+            isolation: isolate;
+            aspect-ratio: 1;
+            /* Large fixed size like the working 3d-demo-old.html */
+            width: 800px;
+            height: 800px;
+            max-width: 60vw;
+            max-height: 80vh;
+            flex-shrink: 0;
+        }
+
+        #emotive-canvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            display: block;
+        }
+
+        /* ===== STATE COLUMNS ===== */
+        .state-column {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .state-column-left {
+            left: 2%;
+        }
+
+        .state-column-right {
+            right: 2%;
+        }
+
+        .state-icon {
+            width: min(calc(100vw * 0.45 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.45 / 9)) / 5);
+            height: min(calc(100vw * 0.45 / 9), calc(100vh - 8vh - 8vh - calc(100vw * 0.45 / 9)) / 5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .state-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .state-icon:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(0.95);
+        }
+
+        .state-icon-svg {
+            width: 90%;
+            height: 90%;
+        }
+
+        /* ===== SHAPE SELECTOR BARS ===== */
+        .shape-selector-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2vw;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+        }
+
+        .shape-selector-bar-top {
+            top: 5%;
+        }
+
+        .shape-selector-bar-bottom {
+            bottom: 5%;
+        }
+
+        .shape-selector-button {
+            width: 4vw;
+            height: 4vw;
+            min-width: 3vw;
+            max-width: 5vw;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.8vh;
+            background: var(--button-bg);
+            background-image: var(--gradient-primary);
+            border: 1px solid var(--border-muted);
+            box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.06), 0 0 10px rgba(0, 0, 0, 0.35);
+            transition: all 0.18s ease;
+            cursor: pointer;
+        }
+
+        .shape-selector-button:hover {
+            background: var(--button-bg-hover);
+            background-image: var(--gradient-secondary);
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.08), 0 0 15px var(--glow-subtle);
+            transform: translateY(1px);
+            border-color: var(--border-primary);
+        }
+
+        .shape-selector-button.active {
+            background: var(--button-bg-active);
+            background-image: var(--gradient-primary);
+            box-shadow: 0 0 25px var(--glow-intense), inset 0 0 12px var(--button-bg-active);
+            border-color: var(--button-primary);
+        }
+
+        .shape-selector-icon {
+            width: 60%;
+            height: 60%;
+            display: block;
+            filter: brightness(0) invert(1) opacity(0.7);
+            transition: opacity 0.18s ease;
+        }
+
+        .shape-selector-button:hover .shape-selector-icon,
+        .shape-selector-button.active .shape-selector-icon {
+            opacity: 1;
+        }
+
+        /* ===== STATUS TEXT ===== */
+        .status-text {
+            position: absolute;
+            font-size: clamp(0.8rem, 1.2vw, 1.2rem);
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-text.emotion {
+            top: calc(3% + 1.5vw);
+            left: 10%;
+            width: 3vw;
+            height: 3vw;
+            min-width: 2.5vw;
+            max-width: 4vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 2vh;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 12px 40px rgba(0, 0, 0, 0.5);
+            font-size: clamp(0.6rem, 0.8vw, 0.9rem);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-text.stability {
+            top: calc(3% + 1.5vw);
+            right: 10%;
+            width: 3vw;
+            height: 3vw;
+            min-width: 2.5vw;
+            max-width: 4vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 2vh;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 12px 40px rgba(0, 0, 0, 0.5);
+            font-size: clamp(0.6rem, 0.8vw, 0.9rem);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-text.fade-in {
+            opacity: 1;
+        }
+
+        .status-text.fade-out {
+            opacity: 0;
+        }
+
+        /* ===== UNDERTONE DIAL ===== */
+        .undertone-dial-container {
+            margin-bottom: 1rem;
+        }
+
+        .undertone-dial-wrapper {
+            position: relative;
+            width: clamp(80px, 12vw, 140px);
+            height: clamp(80px, 12vw, 140px);
+            margin: 0 auto;
+        }
+
+        .undertone-dial {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                rgba(221, 74, 154, 0.3) 0deg,
+                rgba(221, 74, 154, 0.6) 60deg,
+                rgba(64, 144, 206, 0.6) 120deg,
+                rgba(132, 207, 197, 0.3) 180deg,
+                rgba(221, 74, 154, 0.8) 240deg,
+                rgba(64, 144, 206, 0.2) 300deg,
+                rgba(221, 74, 154, 0.3) 360deg
+            );
+            border: 2px solid rgba(221, 74, 154, 0.4);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            box-shadow:
+                0 4px 20px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(221, 74, 154, 0.2),
+                0 0 40px rgba(64, 144, 206, 0.1);
+        }
+
+        .dial-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: clamp(16px, 2.5vw, 24px);
+            height: clamp(16px, 2.5vw, 24px);
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        .dial-pointer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: clamp(2px, 0.3vw, 3px);
+            height: clamp(24px, 4vw, 36px);
+            background: rgba(0, 0, 0, 0.8);
+            transform: translate(-50%, -100%);
+            transform-origin: 50% 100%;
+            border-radius: 1px;
+        }
+
+        .current-undertone {
+            text-align: center;
+            margin-top: clamp(8px, 1.5vw, 12px);
+            font-size: clamp(10px, 1.8vw, 14px);
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ===== SECTION HEADERS ===== */
+        .section-header {
+            font-size: clamp(0.6rem, calc(0.8vw + 0.6vh), 1.2rem);
+            font-weight: 600;
+            letter-spacing: clamp(0.3px, 0.5px, 0.8px);
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: clamp(1rem, 2vh, 2rem);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.03);
+            padding: clamp(0.6rem, 1.2vh, 1.2rem) clamp(1.5rem, 3vw, 3rem);
+            border-radius: clamp(0.8vh, 1.5vh, 2vh);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 clamp(2px, 0.5vh, 6px) clamp(8px, 2vh, 20px) rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== FADE RULES ===== */
+        .double-fade-rule {
+            height: 2px;
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                rgba(255, 255, 255, 0.1) 20%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0.1) 80%,
+                transparent 100%
+            );
+            margin: 3rem 0 1rem 0;
+            position: relative;
+        }
+
+        .double-fade-rule::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                rgba(255, 255, 255, 0.05) 20%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.05) 80%,
+                transparent 100%
+            );
+        }
+
+        .single-fade-rule {
+            height: 2px;
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                rgba(255, 255, 255, 0.1) 20%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.1) 80%,
+                transparent 100%
+            );
+            margin: 2rem 0 1rem 0;
+        }
+
+        /* ===== BUTTON GRIDS ===== */
+        .button-grid {
+            display: grid;
+            gap: 1.0vh;
+            grid-auto-rows: minmax(0, auto);
+            grid-template-columns: repeat(3, 1fr);
+            width: 100%;
+            min-width: 0;
+        }
+
+        .button-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .button-grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        /* ===== BUTTONS ===== */
+        .sci-fi-btn {
+            background: linear-gradient(to bottom, #2c2c2c, #1a1a1a);
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #444;
+            border-radius: 0.5vh;
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+            padding: calc(6px + 0.3vh);
+            font-family: inherit;
+            font-size: clamp(min(1vw, 1.3vh), 1vh, max(0.8vw, 1.1vh));
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            aspect-ratio: 3 / 1;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sci-fi-btn:hover {
+            background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+            border-color: #555;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .sci-fi-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+
+        .sci-fi-btn.active,
+        .sci-fi-btn.active-gesture,
+        .sci-fi-btn.active-gesture-combo {
+            background: rgba(0, 0, 0, 0.95);
+            background-image: linear-gradient(180deg, rgba(60, 60, 60, 0.98) 0%, rgba(20, 20, 20, 1) 100%);
+            border: 1px solid rgba(200, 100, 200, 0.8);
+            box-shadow: 0 0 15px rgba(200, 100, 200, 0.4), 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .chain-btn {
+            background: var(--button-bg);
+            border: 1px solid var(--border-muted);
+            border-radius: 0.5vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chain-btn:hover {
+            background: var(--button-bg-hover);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--glow-subtle);
+        }
+
+        .gesture-btn {
+            background: var(--button-bg);
+            border: 1px solid var(--border-muted);
+            border-radius: 0.5vh;
+            transition: all 0.2s ease-out;
+        }
+
+        .gesture-btn:hover {
+            background: var(--button-bg-hover);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--glow-subtle);
+        }
+
+        .gesture-btn.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            border-color: var(--glow-subtle);
+            box-shadow: 0 0 10px var(--glow-subtle);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .button-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="emotive-container">
+        <div class="emotive-main">
+            <!-- LEFT SIDEBAR: Undertone Dial + Combos -->
+            <div class="emotive-sidebar">
+                <!-- Undertone Dial -->
+                <div class="undertone-dial-container">
+                    <div class="undertone-dial-wrapper">
+                        <div class="undertone-dial" id="undertone-dial">
+                            <div class="dial-pointer" id="dial-pointer"></div>
+                            <div class="dial-center"></div>
+                        </div>
+                    </div>
+                    <div class="current-undertone" id="current-undertone">CLEAR</div>
+                </div>
+
+                <div class="double-fade-rule"></div>
+
+                <!-- Combos Section -->
+                <h2 class="section-header">COMBOS</h2>
+                <div class="button-grid button-grid-3">
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="rise">RISE</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="flow">FLOW</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="burst">BURST</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="drift">DRIFT</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="chaos">CHAOS</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="morph">MORPH</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="rhythm">RHYTHM</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="spiral">SPIRAL</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="routine">ROUTINE</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="radiance">RADIANCE</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="twinkle">TWINKLE</button>
+                    <button class="sci-fi-btn chain-btn" data-action="chain" data-value="stream">STREAM</button>
+                </div>
+            </div>
+
+            <!-- CENTER CANVAS: Mascot + State Icons + Shape Selector -->
+            <div class="canvas-container">
+                <div class="game-canvas-area">
+                    <canvas id="emotive-canvas"></canvas>
+
+                    <!-- Shape Selector Bars -->
+                    <div class="shape-selector-bar shape-selector-bar-top">
+                        <button class="shape-selector-button" data-action="shape" data-value="sun">
+                            <img src="assets/shape-bar/sun.svg" alt="sun" class="shape-selector-icon">
+                        </button>
+                        <button class="shape-selector-button" data-action="shape" data-value="solar">
+                            <img src="assets/shape-bar/solar.svg" alt="solar" class="shape-selector-icon">
+                        </button>
+                        <button class="shape-selector-button" data-action="shape" data-value="moon">
+                            <img src="assets/shape-bar/moon.svg" alt="moon" class="shape-selector-icon">
+                        </button>
+                        <button class="shape-selector-button" data-action="shape" data-value="lunar">
+                            <img src="assets/shape-bar/lunar.svg" alt="lunar" class="shape-selector-icon">
+                        </button>
+                    </div>
+
+                    <div class="shape-selector-bar shape-selector-bar-bottom">
+                        <button class="shape-selector-button active" data-action="shape" data-value="circle">
+                            <img src="assets/shape-bar/circle.svg" alt="circle" class="shape-selector-icon">
+                        </button>
+                        <button class="shape-selector-button" data-action="shape" data-value="triangle">
+                            <img src="assets/shape-bar/triangle.svg" alt="triangle" class="shape-selector-icon">
+                        </button>
+                        <button class="shape-selector-button" data-action="shape" data-value="square">
+                            <img src="assets/shape-bar/square.svg" alt="square" class="shape-selector-icon">
+                        </button>
+                        <button class="shape-selector-button" data-action="shape" data-value="star">
+                            <img src="assets/shape-bar/star.svg" alt="star" class="shape-selector-icon">
+                        </button>
+                        <button class="shape-selector-button" data-action="shape" data-value="heart">
+                            <img src="assets/shape-bar/heart.svg" alt="heart" class="shape-selector-icon">
+                        </button>
+                    </div>
+
+                    <!-- State Icons - Left Column -->
+                    <div class="state-column state-column-left">
+                        <div class="state-icon" data-action="emotion" data-value="neutral">
+                            <img src="assets/states/neutral.svg" alt="neutral" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="joy">
+                            <img src="assets/states/joy.svg" alt="joy" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="love">
+                            <img src="assets/states/love.svg" alt="love" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="excited">
+                            <img src="assets/states/excited.svg" alt="excited" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="calm">
+                            <img src="assets/states/calm.svg" alt="calm" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="euphoria">
+                            <img src="assets/states/euphoria.svg" alt="euphoria" class="state-icon-svg">
+                        </div>
+                    </div>
+
+                    <!-- State Icons - Right Column -->
+                    <div class="state-column state-column-right">
+                        <div class="state-icon" data-action="emotion" data-value="surprise">
+                            <img src="assets/states/surprise.svg" alt="surprise" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="fear">
+                            <img src="assets/states/fear.svg" alt="fear" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="sadness">
+                            <img src="assets/states/sadness.svg" alt="sadness" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="disgust">
+                            <img src="assets/states/disgust.svg" alt="disgust" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="anger">
+                            <img src="assets/states/anger.svg" alt="anger" class="state-icon-svg">
+                        </div>
+                        <div class="state-icon" data-action="emotion" data-value="glitch">
+                            <img src="assets/states/glitch.svg" alt="glitch" class="state-icon-svg">
+                        </div>
+                    </div>
+
+                    <!-- Status Indicators -->
+                    <div class="status-text emotion fade-in" id="emotion-status">JOY</div>
+                    <div class="status-text stability fade-in" id="undertone-status">CLEAR</div>
+                </div>
+            </div>
+
+            <!-- RIGHT CONTROLS: Gestures -->
+            <div class="emotive-controls">
+                <!-- Dance Section -->
+                <h2 class="section-header">DANCE</h2>
+                <div class="button-grid button-grid-3">
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="headBob">HEADBOB</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="wiggle">WIGGLE</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="orbit">ORBIT</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="groove">GROOVE</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="point">POINT</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="lean">LEAN</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="reach">REACH</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="runningman">RUNNINGMAN</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="charleston">CHARLESTON</button>
+                </div>
+
+                <div class="single-fade-rule"></div>
+
+                <!-- Overlay Section -->
+                <h2 class="section-header">OVERLAY</h2>
+                <div class="button-grid button-grid-3">
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="bounce">BOUNCE</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="sway">SWAY</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="spin">SPIN</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="hula">HULA</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="jump">JUMP</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="twist">TWIST</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="wave">WAVE</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="nod">NOD</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="shake">SHAKE</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="tilt">TILT</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="breathe">BREATHE</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="float">FLOAT</button>
+                </div>
+
+                <div class="single-fade-rule"></div>
+
+                <!-- Glow Section -->
+                <h2 class="section-header">GLOW</h2>
+                <div class="button-grid button-grid-3">
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="sparkle">SPARKLE</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="pulse">PULSE</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="glow">GLOW</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="flash">FLASH</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="shimmer">SHIMMER</button>
+                    <button class="sci-fi-btn gesture-btn" data-action="gesture" data-value="flicker">FLICKER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { EmotiveMascot3D } from '../dist/emotive-mascot-3d.js';
+
+        let mascot = null;
+        let currentEmotion = 'joy';
+        let currentUndertone = null;
+        let currentShape = 'sphere'; // Maps to circle
+
+        // Shape mapping: 2D shapes → 3D geometries
+        const shapeMap = {
+            'circle': 'sphere',
+            'triangle': 'crystal',
+            'square': 'crystal',
+            'star': 'diamond',
+            'heart': 'diamond',
+            'sun': 'diamond',
+            'solar': 'sphere',
+            'moon': 'crystal',
+            'lunar': 'sphere'
+        };
+
+        // Undertone positions (degrees)
+        const undertonePositions = {
+            0: null,        // CLEAR
+            60: 'nervous',  // NERVOUS
+            120: 'confident', // CONFIDENT
+            180: 'tired',   // TIRED
+            240: 'intense', // INTENSE
+            300: 'subdued'  // SUBDUED
+        };
+
+        const undertoneLabels = {
+            null: 'CLEAR',
+            'nervous': 'NERVOUS',
+            'confident': 'CONFIDENT',
+            'tired': 'TIRED',
+            'intense': 'INTENSE',
+            'subdued': 'SUBDUED'
+        };
+
+        // Initialize 3D mascot
+        (async () => {
+            try {
+                const canvas = document.getElementById('emotive-canvas');
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'sphere',
+                    enableParticles: true,
+                    maxParticles: 100  // More particles for larger canvas
+                });
+
+                await mascot.init(canvas);
+                mascot.start();
+
+                // Set initial emotion
+                mascot.setEmotion('joy');
+
+                // Debug: Log actual canvas size
+                const particleCanvas = document.querySelector('[id$="-particles"]');
+                console.log('✅ EmotiveMascot3D initialized');
+                console.log('Canvas size:', particleCanvas?.width, 'x', particleCanvas?.height);
+                console.log('ParticleSystem canvasWidth:', mascot.particleSystem?.canvasWidth);
+                console.log('ParticleSystem canvasHeight:', mascot.particleSystem?.canvasHeight);
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+            }
+        })();
+
+        // Update status indicators
+        function updateStatusIndicators() {
+            const emotionEl = document.getElementById('emotion-status');
+            const undertoneEl = document.getElementById('undertone-status');
+
+            if (emotionEl) {
+                emotionEl.textContent = currentEmotion.toUpperCase();
+            }
+
+            if (undertoneEl) {
+                undertoneEl.textContent = undertoneLabels[currentUndertone];
+            }
+        }
+
+        // Undertone dial interaction
+        const dial = document.getElementById('undertone-dial');
+        const pointer = document.getElementById('dial-pointer');
+        const undertoneLabel = document.getElementById('current-undertone');
+        let isDragging = false;
+        let currentAngle = 0;
+
+        function angleToUndertone(angle) {
+            // Normalize angle to 0-360
+            angle = ((angle % 360) + 360) % 360;
+
+            // Find closest undertone position
+            const positions = [0, 60, 120, 180, 240, 300];
+            let closest = positions[0];
+            let minDiff = Math.abs(angle - closest);
+
+            for (let pos of positions) {
+                const diff = Math.abs(angle - pos);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closest = pos;
+                }
+            }
+
+            return undertonePositions[closest];
+        }
+
+        function updateDialPointer(angle) {
+            currentAngle = angle;
+            pointer.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
+
+            const undertone = angleToUndertone(angle);
+            currentUndertone = undertone;
+            undertoneLabel.textContent = undertoneLabels[undertone];
+
+            if (mascot) {
+                mascot.updateUndertone(undertone);
+            }
+
+            updateStatusIndicators();
+        }
+
+        function handleDialDrag(e) {
+            if (!isDragging) return;
+
+            const rect = dial.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const dx = clientX - centerX;
+            const dy = clientY - centerY;
+
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+            updateDialPointer(angle);
+        }
+
+        dial.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            handleDialDrag(e);
+        });
+
+        dial.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            handleDialDrag(e);
+        });
+
+        window.addEventListener('mousemove', handleDialDrag);
+        window.addEventListener('touchmove', handleDialDrag);
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        window.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        dial.addEventListener('click', (e) => {
+            handleDialDrag(e);
+        });
+
+        // Button click handler
+        document.addEventListener('click', (e) => {
+            const button = e.target.closest('[data-action]');
+            if (!button || !mascot) return;
+
+            const action = button.dataset.action;
+            const value = button.dataset.value;
+
+            try {
+                switch (action) {
+                    case 'emotion':
+                        console.log('Setting emotion:', value);
+                        currentEmotion = value;
+                        mascot.setEmotion(value);
+                        updateStatusIndicators();
+                        break;
+
+                    case 'gesture':
+                        console.log('Playing gesture:', value);
+                        mascot.express(value);
+
+                        // Visual feedback
+                        button.classList.add('active-gesture');
+                        setTimeout(() => {
+                            button.classList.remove('active-gesture');
+                        }, 800);
+                        break;
+
+                    case 'chain':
+                        console.log('Playing chain combo:', value);
+                        mascot.chain(value);
+
+                        // Visual feedback
+                        button.classList.add('active-gesture-combo');
+                        setTimeout(() => {
+                            button.classList.remove('active-gesture-combo');
+                        }, 3000);
+                        break;
+
+                    case 'shape':
+                        console.log('Morphing to shape:', value);
+                        const geometry = shapeMap[value];
+                        if (geometry) {
+                            mascot.morphTo(geometry);
+                            currentShape = geometry;
+
+                            // Update active button
+                            document.querySelectorAll('[data-action="shape"]').forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                            button.classList.add('active');
+                        }
+                        break;
+                }
+            } catch (error) {
+                console.error('Action failed:', error);
+            }
+        });
+
+        // Initialize status indicators
+        updateStatusIndicators();
+    </script>
+</body>
+</html>

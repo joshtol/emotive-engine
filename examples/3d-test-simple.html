@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Test - Simple</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #222;
+            color: white;
+            font-family: monospace;
+        }
+        canvas {
+            border: 2px solid #0f0;
+            display: block;
+            margin: 20px auto;
+        }
+        #log {
+            background: #111;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>3D Mascot Debug Test</h1>
+    <canvas id="test-canvas" width="400" height="400"></canvas>
+    <div id="log"></div>
+
+    <script type="module">
+        const log = document.getElementById('log');
+        function addLog(msg) {
+            console.log(msg);
+            log.textContent += msg + '\n';
+            log.scrollTop = log.scrollHeight;
+        }
+
+        import { EmotiveMascot3D } from '../dist/emotive-mascot-3d.js';
+
+        addLog('Starting initialization...');
+
+        try {
+            const canvas = document.getElementById('test-canvas');
+            addLog(`Canvas: ${canvas.width}x${canvas.height}`);
+
+            const mascot = new EmotiveMascot3D({
+                coreGeometry: 'sphere',
+                enableParticles: false
+            });
+            addLog('Mascot instance created');
+
+            await mascot.init(canvas);
+            addLog('Init complete');
+
+            // Check WebGL context
+            const gl = canvas.getContext('webgl2');
+            if (gl) {
+                addLog(`WebGL2 supported: ${gl.getParameter(gl.VERSION)}`);
+                addLog(`Renderer: ${gl.getParameter(gl.RENDERER)}`);
+            } else {
+                addLog('ERROR: No WebGL2 context!');
+            }
+
+            mascot.start();
+            addLog('Animation started');
+
+            mascot.setEmotion('joy');
+            addLog('Emotion set to joy');
+
+            // Debug render state
+            setTimeout(() => {
+                addLog(`\n--- After 1 second ---`);
+                addLog(`isRunning: ${mascot.isRunning}`);
+                addLog(`core3D: ${mascot.core3D ? 'exists' : 'null'}`);
+                addLog(`canvas2D: ${mascot.canvas2D ? 'exists' : 'null'}`);
+                addLog(`webglCanvas: ${mascot.webglCanvas ? 'exists' : 'null'}`);
+
+                if (mascot.core3D) {
+                    addLog(`geometry type: ${mascot.core3D.geometryType}`);
+                    addLog(`scale: ${mascot.core3D.scale}`);
+                    addLog(`glowColor: [${mascot.core3D.glowColor}]`);
+                    addLog(`glowIntensity: ${mascot.core3D.glowIntensity}`);
+                }
+
+                // Try a gesture
+                addLog('\nTrying bounce gesture...');
+                mascot.express('bounce');
+            }, 1000);
+
+        } catch (error) {
+            addLog(`ERROR: ${error.message}`);
+            addLog(`Stack: ${error.stack}`);
+        }
+    </script>
+</body>
+</html>

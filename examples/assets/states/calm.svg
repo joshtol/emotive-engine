@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: url(#linear-gradient);
+        fill-opacity: .58;
+      }
+
+      .st1 {
+        fill: url(#linear-gradient1);
+      }
+
+      .st2 {
+        fill: #ffe200;
+        stroke: #000;
+        stroke-miterlimit: 10;
+        stroke-width: 42px;
+      }
+
+      .st3 {
+        fill: #231f20;
+      }
+
+      .st4 {
+        display: none;
+        fill: #adafb2;
+      }
+
+      .st5 {
+        fill: url(#linear-gradient4);
+      }
+
+      .st6 {
+        fill: url(#linear-gradient5);
+      }
+
+      .st7 {
+        fill: url(#linear-gradient3);
+      }
+
+      .st8 {
+        fill: url(#linear-gradient6);
+      }
+
+      .st9 {
+        fill: url(#linear-gradient2);
+        isolation: isolate;
+        opacity: .23;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="511.9" y1="869.64" x2="511.9" y2="157.46" gradientTransform="translate(0 1026) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#adafb2" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient1" x1="-154.52" y1="576.26" x2="-107.33" y2="494.53" gradientTransform="translate(-3461.97 -1079.84) rotate(-83.79) scale(8.83 7.7)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0" stop-color="#cf6b4f"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient2" x1="90.9" y1="587.31" x2="847.4" y2="587.31" gradientTransform="translate(0 1026) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".2" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient3" x1="13.29" y1="799.35" x2="63.11" y2="713.06" gradientTransform="translate(522.44 1921.71) rotate(-180) scale(4.4 2.16)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient4" x1="513.68" y1="377.81" x2="513.68" y2="294.11" gradientTransform="translate(0 1026) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20"/>
+      <stop offset="1" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient5" x1="251.71" y1="809.05" x2="398.34" y2="809.05" gradientTransform="translate(-230.33 1024.86) rotate(18.53) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20" stop-opacity="0"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".07"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".29"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".68"/>
+      <stop offset="0" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient6" x1="-972.79" y1="398.62" x2="-826.15" y2="398.62" gradientTransform="translate(-37.41 1024.86) rotate(161.47)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20" stop-opacity="0"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".07"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".29"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".68"/>
+      <stop offset="0" stop-color="#231f20"/>
+    </linearGradient>
+  </defs>
+  <g id="base-orb">
+    <circle id="theme-color-bg" class="st4" cx="541.9" cy="552.45" r="423.07"/>
+    <circle id="outer-circle" class="st2" cx="511.9" cy="512.45" r="408.5"/>
+    <circle id="bg-gradient" class="st0" cx="511.9" cy="512.45" r="356.09"/>
+    <circle id="tangerine-shadow" class="st1" cx="510.17" cy="514.43" r="374.7"/>
+    <path id="top-inner-shadow" class="st9" d="M189.4,775.95c-38.36-62.24-60.5-135.55-60.5-214.03,0-225.61,182.89-408.5,408.5-408.5,123.99,0,235.08,55.25,310,142.47-71.92-116.68-200.87-194.47-348-194.47-225.61,0-408.5,182.89-408.5,408.5,0,101.61,37.11,194.56,98.5,266.03h0Z"/>
+    <ellipse id="top-left-highlight" class="st7" cx="354.45" cy="288.21" rx="197.37" ry="110.78" transform="translate(-101.78 264.74) rotate(-36.17)"/>
+  </g>
+  <g id="calm">
+    <path id="left-eye2" class="st3" d="M274.45,469.4c-3.27.56-13.03,10.14-7.15,22.47,10.65,22.33,47.49,53.04,89.1,51.06,78.41-3.72,102.22-61.25,87.58-73.93-18.78-16.27-29.63,30.47-84.43,31.72-59.91,1.36-62.81-35.12-85.11-31.32h0Z"/>
+    <path id="right-eye2" class="st3" d="M753.83,469.4c3.27.56,13.03,10.14,7.15,22.47-10.65,22.33-47.49,53.04-89.1,51.06-78.41-3.72-102.22-61.25-87.58-73.93,18.78-16.27,29.63,30.47,84.43,31.72,59.91,1.36,62.81-35.12,85.11-31.32h-.01Z"/>
+    <path id="mouth2" class="st5" d="M415.78,653.23s41.48,34.72,105.05,32.43,93.81-33.81,96.26-34.98c5.23-2.49,13.33-1.93,16.6-.26,3.84,1.97,7.55,16.31-3.32,29.36-20.2,24.25-69.79,52.92-114.72,52.09-69.11-1.28-113.02-47.49-113.02-47.49,0,0-18.64-17.11-10.98-30.13s24.14-1.02,24.14-1.02h-.01Z"/>
+    <path id="left-brow2" class="st6" d="M251.19,380.55c26.32-38.28,71.17-53.61,105.06-56.6,14.5-1.28,45.93-2.25,55.42,5.71,4.45,3.73,7.62,31.31-3.31,27.91-65.76-20.43-130.38,26.81-147.97,35.23-6.57,3.15-11.42-9.01-9.19-12.26h0Z"/>
+    <path id="right-brow2" class="st8" d="M772.52,380.55c-26.32-38.28-71.17-53.61-105.06-56.6-14.5-1.28-45.93-2.25-55.42,5.71-4.45,3.73-7.62,31.31,3.31,27.91,65.76-20.43,130.38,26.81,147.97,35.23,6.57,3.15,11.42-9.01,9.19-12.26h0Z"/>
+  </g>
+</svg>

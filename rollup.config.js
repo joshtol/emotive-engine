@@ -4,6 +4,7 @@ import terser from '@rollup/plugin-terser';
 import analyzer from 'rollup-plugin-analyzer';
 import bundleSize from 'rollup-plugin-bundle-size';
 import { visualizer } from 'rollup-plugin-visualizer';
+import glsl from 'rollup-plugin-glsl';
 
 // Environment detection
 const isProduction = process.env.NODE_ENV === 'production';
@@ -23,6 +24,15 @@ const basePlugins = [
         preferBuiltins: false
     }),
     commonjs()
+];
+
+// 3D plugins (includes shader support)
+const threeDPlugins = [
+    glsl({
+        include: ['**/*.vert', '**/*.frag', '**/*.glsl'],
+        sourceMap: false
+    }),
+    ...basePlugins
 ];
 
 // Production plugins
@@ -147,6 +157,49 @@ builds.push({
         propertyReadSideEffects: false,
         tryCatchDeoptimization: false,
         unknownGlobalSideEffects: false
+    }
+});
+
+// 3D build (WebGL variant with procedural geometries)
+// Experimental: Custom 3D rendering without Three.js dependency
+builds.push({
+    input: 'src/3d/index.js',
+    output: [
+        {
+            // ES Module
+            file: 'dist/emotive-mascot-3d.js',
+            format: 'es',
+            sourcemap: true,
+            banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+        },
+        {
+            // UMD for CDN/browser usage
+            file: 'dist/emotive-mascot-3d.umd.js',
+            format: 'umd',
+            name: 'EmotiveMascot3D',
+            exports: 'named',
+            sourcemap: true,
+            banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+        }
+    ],
+    plugins: [
+        ...threeDPlugins,
+        ...(isProduction ? [terser({
+            compress: {
+                drop_console: false,
+                drop_debugger: true,
+                passes: 2
+            },
+            mangle: {
+                properties: false
+            },
+            format: {
+                comments: false
+            }
+        })] : [])
+    ],
+    treeshake: {
+        moduleSideEffects: false
     }
 });
 

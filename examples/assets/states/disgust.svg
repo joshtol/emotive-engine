@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: url(#linear-gradient);
+        fill-opacity: .58;
+      }
+
+      .st1 {
+        fill: url(#linear-gradient1);
+      }
+
+      .st2 {
+        fill: #ffe200;
+        stroke: #000;
+        stroke-width: 42px;
+      }
+
+      .st2, .st3 {
+        stroke-miterlimit: 10;
+      }
+
+      .st4 {
+        fill: url(#linear-gradient8);
+      }
+
+      .st3 {
+        fill: #fff;
+        stroke: #231f20;
+        stroke-width: 23px;
+      }
+
+      .st5 {
+        fill: #231f20;
+      }
+
+      .st6 {
+        display: none;
+        fill: #adafb2;
+      }
+
+      .st7 {
+        fill: url(#linear-gradient7);
+      }
+
+      .st8 {
+        fill: url(#linear-gradient4);
+      }
+
+      .st9 {
+        fill: url(#linear-gradient5);
+      }
+
+      .st10 {
+        fill: url(#linear-gradient3);
+      }
+
+      .st11 {
+        fill: url(#linear-gradient6);
+      }
+
+      .st12 {
+        fill: url(#linear-gradient2);
+        isolation: isolate;
+        opacity: .23;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="511.9" y1="869.64" x2="511.9" y2="157.46" gradientTransform="translate(0 1026) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#adafb2" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient1" x1="-154.52" y1="576.26" x2="-107.33" y2="494.53" gradientTransform="translate(-3461.97 -1079.84) rotate(-83.79) scale(8.83 7.7)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0" stop-color="#cf6b4f"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient2" x1="90.9" y1="587.31" x2="847.4" y2="587.31" gradientTransform="translate(0 1026) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".2" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient3" x1="13.29" y1="799.35" x2="63.11" y2="713.06" gradientTransform="translate(522.44 1921.71) rotate(-180) scale(4.4 2.16)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient4" x1="42.08" y1="1090.45" x2="186.74" y2="1090.45" gradientTransform="translate(-715.47 -68.85) rotate(-66.08)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20" stop-opacity="0"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".07"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".29"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".68"/>
+      <stop offset="0" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient5" x1="-1045.27" y1="196.03" x2="-900.6" y2="196.03" gradientTransform="translate(480.82 -700.15) rotate(-113.92) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20" stop-opacity="0"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".07"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".29"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".68"/>
+      <stop offset="0" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient6" x1="531.31" y1="287.89" x2="485.49" y2="391.17" gradientTransform="translate(0 1026) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20" stop-opacity="0"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".07"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".29"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".68"/>
+      <stop offset="0" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient7" x1="408.59" y1="229.4" x2="321.81" y2="425" gradientTransform="translate(0 1026) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20" stop-opacity="0"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".07"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".29"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".68"/>
+      <stop offset="0" stop-color="#231f20"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient8" x1="-766.51" y1="229.4" x2="-853.29" y2="425" gradientTransform="translate(-154.76 1026) rotate(-180)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#231f20" stop-opacity="0"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".07"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".29"/>
+      <stop offset="0" stop-color="#231f20" stop-opacity=".68"/>
+      <stop offset="0" stop-color="#231f20"/>
+    </linearGradient>
+  </defs>
+  <g id="base-orb">
+    <circle id="theme-color-bg" class="st6" cx="541.9" cy="552.45" r="423.07"/>
+    <circle id="outer-circle" class="st2" cx="511.9" cy="512.45" r="408.5"/>
+    <circle id="bg-gradient" class="st0" cx="511.9" cy="512.45" r="356.09"/>
+    <circle id="tangerine-shadow" class="st1" cx="510.17" cy="514.43" r="374.7"/>
+    <path id="top-inner-shadow" class="st12" d="M189.4,775.95c-38.36-62.24-60.5-135.55-60.5-214.03,0-225.61,182.89-408.5,408.5-408.5,123.99,0,235.08,55.25,310,142.47-71.92-116.68-200.87-194.47-348-194.47-225.61,0-408.5,182.89-408.5,408.5,0,101.61,37.11,194.56,98.5,266.03h0Z"/>
+    <ellipse id="top-left-highlight" class="st10" cx="354.45" cy="288.21" rx="197.37" ry="110.78" transform="translate(-101.78 264.74) rotate(-36.17)"/>
+  </g>
+  <g id="disgust">
+    <g id="left-eye9">
+      <circle id="eye-outline8" class="st3" cx="364" cy="461" r="106"/>
+      <circle id="pupil8" class="st5" cx="404" cy="481" r="52.8"/>
+    </g>
+    <g id="right-eye5">
+      <circle id="eye-outline9" class="st3" cx="664" cy="461" r="106"/>
+      <circle id="pupil9" class="st5" cx="624" cy="481" r="52.8"/>
+    </g>
+    <path id="left-brow6" class="st8" d="M250.71,313.62c59.64,11.45,102.57-11.22,127.65-34.2,10.73-9.84,32.06-34.49,29.22-46.15-2.84-11.66-11.87-15.8-21.81-12.64-26,8.26,1.3,22.25-57.18,55.12-34.02,19.12-73.67,16.79-77.52,18.34-6.76,2.72-4.24,18.8-.36,19.54h0Z"/>
+    <path id="right-brow8" class="st9" d="M773.12,313.62c-59.64,11.45-102.57-11.22-127.65-34.2-10.73-9.84-32.06-34.49-29.22-46.15,2.84-11.66,11.87-15.8,21.81-12.64,26,8.26-1.3,22.25,57.18,55.12,34.02,19.12,73.67,16.79,77.52,18.34,6.76,2.72,4.24,18.8.36,19.54h0Z"/>
+    <rect class="st11" x="417.25" y="665.11" width="182.3" height="42.72"/>
+    <path class="st7" d="M343.25,597.37c-19.48,0-55.86,15.05-52.51,33.64,166.62-24.97,144.88,185.28,35.38,174.15-4.62,1.61-4.08,8.21.73,9.14,5.32,1.03,10.8,1.57,16.4,1.57,51.42,0,105.45-39.87,104.55-109.25-1.01-78.49-53.14-109.25-104.55-109.25h0Z"/>
+    <path class="st4" d="M677.09,597.37c19.48,0,55.86,15.05,52.51,33.64-166.62-24.97-144.88,185.28-35.38,174.15,4.62,1.61,4.08,8.21-.73,9.14-5.32,1.03-10.8,1.57-16.4,1.57-51.42,0-105.45-39.87-104.55-109.25,1.01-78.49,53.14-109.25,104.55-109.25h0Z"/>
+  </g>
+</svg>
