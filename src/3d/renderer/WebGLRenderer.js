@@ -1,26 +1,30 @@
 /**
- * WebGLRenderer - Minimal WebGL 2.0 rendering engine
+ * WebGLRenderer - Core WebGL state management and operations
  *
  * Handles:
  * - WebGL context initialization
- * - Shader compilation and linking
- * - Geometry buffer creation
- * - Matrix transformations
- * - Frame rendering
+ * - State tracking and optimization (avoid redundant calls)
+ * - Primitive operations (program, framebuffer, viewport, clear)
+ * - Shader compilation
+ *
+ * Does NOT handle:
+ * - Scene rendering logic (moved to passes)
+ * - Geometry management (moved to GeometryManager)
+ * - Matrix calculations (moved to Camera)
  */
-
-import vertexShaderSource from '../shaders/core.vert';
-import fragmentShaderSource from '../shaders/core.frag';
-
 export class WebGLRenderer {
-    constructor(canvas) {
+    /**
+     * @param {HTMLCanvasElement} canvas - Canvas element
+     * @param {Object} config - Configuration options
+     */
+    constructor(canvas, config = {}) {
         this.canvas = canvas;
 
         // Initialize WebGL 2.0 context
         this.gl = canvas.getContext('webgl2', {
-            alpha: true,
-            antialias: true,
-            depth: true,
+            alpha: config.alpha !== undefined ? config.alpha : true,
+            antialias: config.antialias !== undefined ? config.antialias : true,
+            depth: config.depth !== undefined ? config.depth : true,
             premultipliedAlpha: false
         });
 
@@ -28,52 +32,19 @@ export class WebGLRenderer {
             throw new Error('WebGL 2.0 not supported');
         }
 
+        // State tracking
+        this.currentProgram = null;
+        this.currentFramebuffer = null;
+
         // Setup WebGL state
         this.setupGL();
-
-        // Compile shaders
-        this.program = this.createProgram(vertexShaderSource, fragmentShaderSource);
-
-        // Get uniform/attribute locations
-        this.locations = {
-            // Attributes
-            position: this.gl.getAttribLocation(this.program, 'a_position'),
-            normal: this.gl.getAttribLocation(this.program, 'a_normal'),
-
-            // Uniforms
-            modelMatrix: this.gl.getUniformLocation(this.program, 'u_modelMatrix'),
-            viewMatrix: this.gl.getUniformLocation(this.program, 'u_viewMatrix'),
-            projectionMatrix: this.gl.getUniformLocation(this.program, 'u_projectionMatrix'),
-            glowColor: this.gl.getUniformLocation(this.program, 'u_glowColor'),
-            glowIntensity: this.gl.getUniformLocation(this.program, 'u_glowIntensity'),
-            cameraPosition: this.gl.getUniformLocation(this.program, 'u_cameraPosition'),
-            renderMode: this.gl.getUniformLocation(this.program, 'u_renderMode')
-        };
-
-        // Rendering mode (0=standard, 1=normals, 2=toon, 3=edge)
-        this.renderMode = 0;
-
-        // Wireframe overlay flag
-        this.wireframeEnabled = false;
-
-        // Camera setup (closer and looking straight at origin)
-        this.cameraPosition = [0, 0, 3];
-        this.cameraTarget = [0, 0, 0];
-
-        // Matrices
-        this.projectionMatrix = this.createPerspectiveMatrix();
-        this.viewMatrix = this.createViewMatrix();
-
-        // Current geometry buffers
-        this.currentGeometry = null;
-        this.buffers = {};
     }
 
     /**
-     * Setup WebGL state
+     * Setup default WebGL state
      */
     setupGL() {
-        const {gl} = this;
+        const { gl } = this;
 
         // Enable depth testing
         gl.enable(gl.DEPTH_TEST);
@@ -83,7 +54,7 @@ export class WebGLRenderer {
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        // Set clear color (transparent so particles show through)
+        // Set clear color (transparent)
         gl.clearColor(0, 0, 0, 0);
 
         // Set viewport
@@ -91,366 +62,165 @@ export class WebGLRenderer {
     }
 
     /**
-     * Create shader program
+     * Set active shader program (with state tracking)
+     * @param {WebGLProgram} program - Compiled shader program
+     */
+    setProgram(program) {
+        if (this.currentProgram !== program) {
+            this.gl.useProgram(program);
+            this.currentProgram = program;
+        }
+    }
+
+    /**
+     * Set active framebuffer (with state tracking)
+     * @param {Object|null} fbo - FBO object or null for screen
+     */
+    setFramebuffer(fbo) {
+        if (this.currentFramebuffer !== fbo) {
+            const framebuffer = fbo ? fbo.framebuffer : null;
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
+            this.currentFramebuffer = fbo;
+        }
+    }
+
+    /**
+     * Set viewport dimensions
+     * @param {number} x - X offset
+     * @param {number} y - Y offset
+     * @param {number} width - Viewport width
+     * @param {number} height - Viewport height
+     */
+    setViewport(x, y, width, height) {
+        this.gl.viewport(x, y, width, height);
+    }
+
+    /**
+     * Clear buffers
+     * @param {boolean} color - Clear color buffer
+     * @param {boolean} depth - Clear depth buffer
+     */
+    clear(color = true, depth = true) {
+        const { gl } = this;
+        let mask = 0;
+
+        if (color) mask |= gl.COLOR_BUFFER_BIT;
+        if (depth) mask |= gl.DEPTH_BUFFER_BIT;
+
+        if (mask) {
+            gl.clear(mask);
+        }
+    }
+
+    /**
+     * Enable/disable depth testing
+     * @param {boolean} enable - Enable depth test
+     */
+    enableDepthTest(enable) {
+        const { gl } = this;
+
+        if (enable) {
+            gl.enable(gl.DEPTH_TEST);
+        } else {
+            gl.disable(gl.DEPTH_TEST);
+        }
+    }
+
+    /**
+     * Set blending mode
+     * @param {string} mode - Blending mode ('alpha', 'additive', 'multiply', 'none')
+     */
+    setBlending(mode) {
+        const { gl } = this;
+
+        switch (mode) {
+        case 'alpha':
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            break;
+        case 'additive':
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+            break;
+        case 'multiply':
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+            break;
+        case 'none':
+            gl.disable(gl.BLEND);
+            break;
+        default:
+            console.warn(`Unknown blend mode: ${mode}`);
+        }
+    }
+
+    /**
+     * Set face culling
+     * @param {string} mode - Culling mode ('back', 'front', 'none')
+     */
+    setCullFace(mode) {
+        const { gl } = this;
+
+        if (mode === 'none') {
+            gl.disable(gl.CULL_FACE);
+        } else {
+            gl.enable(gl.CULL_FACE);
+            const cullMode = mode === 'front' ? gl.FRONT : gl.BACK;
+            gl.cullFace(cullMode);
+        }
+    }
+
+    /**
+     * Compile shader from source
+     * @param {number} type - gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
+     * @param {string} source - Shader source code
+     * @returns {WebGLShader} Compiled shader
+     */
+    compileShader(type, source) {
+        const { gl } = this;
+
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+        if (!success) {
+            const log = gl.getShaderInfoLog(shader);
+            gl.deleteShader(shader);
+            throw new Error(`Shader compilation failed: ${log}`);
+        }
+
+        return shader;
+    }
+
+    /**
+     * Create shader program from vertex and fragment shaders
+     * @param {string} vertSource - Vertex shader source
+     * @param {string} fragSource - Fragment shader source
+     * @returns {WebGLProgram} Linked shader program
      */
     createProgram(vertSource, fragSource) {
-        const {gl} = this;
+        const { gl } = this;
 
-        // Compile vertex shader
-        const vertShader = gl.createShader(gl.VERTEX_SHADER);
-        gl.shaderSource(vertShader, vertSource);
-        gl.compileShader(vertShader);
+        const vertShader = this.compileShader(gl.VERTEX_SHADER, vertSource);
+        const fragShader = this.compileShader(gl.FRAGMENT_SHADER, fragSource);
 
-        if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-            console.error('Vertex shader error:', gl.getShaderInfoLog(vertShader));
-            throw new Error('Vertex shader compilation failed');
-        }
-
-        // Compile fragment shader
-        const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-        gl.shaderSource(fragShader, fragSource);
-        gl.compileShader(fragShader);
-
-        if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-            console.error('Fragment shader error:', gl.getShaderInfoLog(fragShader));
-            throw new Error('Fragment shader compilation failed');
-        }
-
-        // Link program
         const program = gl.createProgram();
         gl.attachShader(program, vertShader);
         gl.attachShader(program, fragShader);
         gl.linkProgram(program);
 
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            console.error('Program link error:', gl.getProgramInfoLog(program));
-            throw new Error('Shader program linking failed');
+        const success = gl.getProgramParameter(program, gl.LINK_STATUS);
+        if (!success) {
+            const log = gl.getProgramInfoLog(program);
+            gl.deleteProgram(program);
+            throw new Error(`Program linking failed: ${log}`);
         }
+
+        // Clean up shaders (no longer needed after linking)
+        gl.deleteShader(vertShader);
+        gl.deleteShader(fragShader);
 
         return program;
-    }
-
-    /**
-     * Upload geometry to GPU
-     */
-    uploadGeometry(geometry) {
-        const {gl} = this;
-
-        // Create buffers if needed
-        if (!this.buffers.position) {
-            this.buffers.position = gl.createBuffer();
-            this.buffers.normal = gl.createBuffer();
-            this.buffers.indices = gl.createBuffer();
-        }
-
-        // Upload vertices
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.position);
-        gl.bufferData(gl.ARRAY_BUFFER, geometry.vertices, gl.STATIC_DRAW);
-
-        // Upload normals
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.normal);
-        gl.bufferData(gl.ARRAY_BUFFER, geometry.normals, gl.STATIC_DRAW);
-
-        // Upload indices
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, gl.STATIC_DRAW);
-
-        this.currentGeometry = geometry;
-    }
-
-    /**
-     * Render frame
-     */
-    render(params) {
-        const {gl} = this;
-        const { geometry, position = [0,0,0], rotation = [0,0,0], scale = 1.0, glowColor = [1,1,1], glowIntensity = 1.0 } = params;
-
-        // Upload geometry if changed
-        if (geometry !== this.currentGeometry) {
-            this.uploadGeometry(geometry);
-        }
-
-        // Clear frame
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        // Use program
-        gl.useProgram(this.program);
-
-        // Create model matrix
-        const modelMatrix = this.createModelMatrix(position, rotation, scale);
-
-        // Set uniforms
-        gl.uniformMatrix4fv(this.locations.modelMatrix, false, modelMatrix);
-        gl.uniformMatrix4fv(this.locations.viewMatrix, false, this.viewMatrix);
-        gl.uniformMatrix4fv(this.locations.projectionMatrix, false, this.projectionMatrix);
-        gl.uniform3fv(this.locations.glowColor, glowColor);
-        gl.uniform1f(this.locations.glowIntensity, glowIntensity);
-        gl.uniform3fv(this.locations.cameraPosition, this.cameraPosition);
-        gl.uniform1i(this.locations.renderMode, this.renderMode);
-
-        // Bind vertex data
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.position);
-        gl.enableVertexAttribArray(this.locations.position);
-        gl.vertexAttribPointer(this.locations.position, 3, gl.FLOAT, false, 0, 0);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.normal);
-        gl.enableVertexAttribArray(this.locations.normal);
-        gl.vertexAttribPointer(this.locations.normal, 3, gl.FLOAT, false, 0, 0);
-
-        // Draw solid geometry with polygon offset if wireframe is enabled
-        if (this.wireframeEnabled) {
-            gl.enable(gl.POLYGON_OFFSET_FILL);
-            gl.polygonOffset(1.0, 1.0);
-        }
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
-        gl.drawElements(gl.TRIANGLES, this.currentGeometry.indices.length, gl.UNSIGNED_SHORT, 0);
-
-        if (this.wireframeEnabled) {
-            gl.disable(gl.POLYGON_OFFSET_FILL);
-        }
-
-        // Draw wireframe overlay if enabled
-        if (this.wireframeEnabled) {
-            // Set wireframe color to pure white with no glow for contrast
-            gl.uniform3fv(this.locations.glowColor, [1.0, 1.0, 1.0]);
-            gl.uniform1f(this.locations.glowIntensity, 0.5);
-
-            // Save original depth function and set to always pass
-            const originalDepthFunc = gl.getParameter(gl.DEPTH_FUNC);
-            gl.depthFunc(gl.LEQUAL);
-            gl.depthMask(false);
-
-            // Increase line width for visibility
-            gl.lineWidth(2.0);
-
-            // Create edge indices for wireframe (convert triangles to lines)
-            // For now, we'll use a simple trick: draw with LINE_STRIP mode
-            // This isn't perfect but works reasonably well
-            const wireframeIndices = this.currentGeometry.wireframeIndices || this.createWireframeIndices(this.currentGeometry.indices);
-
-            if (wireframeIndices) {
-                if (!this.buffers.wireframe) {
-                    this.buffers.wireframe = gl.createBuffer();
-                }
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.wireframe);
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, wireframeIndices, gl.STATIC_DRAW);
-                gl.drawElements(gl.LINES, wireframeIndices.length, gl.UNSIGNED_SHORT, 0);
-            }
-
-            // Restore state
-            gl.depthFunc(originalDepthFunc);
-            gl.depthMask(true);
-            gl.lineWidth(1.0);
-
-            // Restore original uniforms
-            gl.uniform3fv(this.locations.glowColor, glowColor);
-            gl.uniform1f(this.locations.glowIntensity, glowIntensity);
-        }
-    }
-
-    /**
-     * Create model matrix (TRS: Translate, Rotate, Scale)
-     */
-    createModelMatrix(position, rotation, scale) {
-        const mat = this.identity();
-
-        // Translate
-        this.translate(mat, position);
-
-        // Rotate (X, Y, Z order)
-        this.rotateX(mat, rotation[0]);
-        this.rotateY(mat, rotation[1]);
-        this.rotateZ(mat, rotation[2]);
-
-        // Scale
-        this.scale(mat, [scale, scale, scale]);
-
-        return mat;
-    }
-
-    /**
-     * Create perspective projection matrix
-     */
-    createPerspectiveMatrix() {
-        const fov = 45 * Math.PI / 180;
-        const aspect = this.canvas.width / this.canvas.height;
-        const near = 0.1;
-        const far = 100.0;
-
-        const f = 1.0 / Math.tan(fov / 2);
-        const rangeInv = 1 / (near - far);
-
-        return new Float32Array([
-            f / aspect, 0, 0, 0,
-            0, f, 0, 0,
-            0, 0, (near + far) * rangeInv, -1,
-            0, 0, near * far * rangeInv * 2, 0
-        ]);
-    }
-
-    /**
-     * Create view matrix (lookAt)
-     */
-    createViewMatrix() {
-        // Simple lookAt implementation
-        const eye = this.cameraPosition;
-        const center = this.cameraTarget;
-        const up = [0, 1, 0];
-
-        // Forward
-        const fx = center[0] - eye[0];
-        const fy = center[1] - eye[1];
-        const fz = center[2] - eye[2];
-        const fLen = Math.sqrt(fx*fx + fy*fy + fz*fz);
-        const f = [fx/fLen, fy/fLen, fz/fLen];
-
-        // Right = forward × up
-        const rx = f[1]*up[2] - f[2]*up[1];
-        const ry = f[2]*up[0] - f[0]*up[2];
-        const rz = f[0]*up[1] - f[1]*up[0];
-        const rLen = Math.sqrt(rx*rx + ry*ry + rz*rz);
-        const r = [rx/rLen, ry/rLen, rz/rLen];
-
-        // Up = right × forward
-        const u = [
-            r[1]*f[2] - r[2]*f[1],
-            r[2]*f[0] - r[0]*f[2],
-            r[0]*f[1] - r[1]*f[0]
-        ];
-
-        return new Float32Array([
-            r[0], u[0], -f[0], 0,
-            r[1], u[1], -f[1], 0,
-            r[2], u[2], -f[2], 0,
-            -(r[0]*eye[0] + r[1]*eye[1] + r[2]*eye[2]),
-            -(u[0]*eye[0] + u[1]*eye[1] + u[2]*eye[2]),
-            f[0]*eye[0] + f[1]*eye[1] + f[2]*eye[2],
-            1
-        ]);
-    }
-
-    // Matrix helpers
-    identity() {
-        return new Float32Array([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        ]);
-    }
-
-    translate(mat, [x, y, z]) {
-        mat[12] += x;
-        mat[13] += y;
-        mat[14] += z;
-    }
-
-    rotateX(mat, angle) {
-        const c = Math.cos(angle);
-        const s = Math.sin(angle);
-        const m1 = mat[4], m2 = mat[5], m3 = mat[6], m4 = mat[7];
-        const m5 = mat[8], m6 = mat[9], m7 = mat[10], m8 = mat[11];
-        mat[4] = m1 * c + m5 * s;
-        mat[5] = m2 * c + m6 * s;
-        mat[6] = m3 * c + m7 * s;
-        mat[7] = m4 * c + m8 * s;
-        mat[8] = m5 * c - m1 * s;
-        mat[9] = m6 * c - m2 * s;
-        mat[10] = m7 * c - m3 * s;
-        mat[11] = m8 * c - m4 * s;
-    }
-
-    rotateY(mat, angle) {
-        const c = Math.cos(angle);
-        const s = Math.sin(angle);
-        const m0 = mat[0], m1 = mat[1], m2 = mat[2], m3 = mat[3];
-        const m8 = mat[8], m9 = mat[9], m10 = mat[10], m11 = mat[11];
-        mat[0] = m0 * c - m8 * s;
-        mat[1] = m1 * c - m9 * s;
-        mat[2] = m2 * c - m10 * s;
-        mat[3] = m3 * c - m11 * s;
-        mat[8] = m0 * s + m8 * c;
-        mat[9] = m1 * s + m9 * c;
-        mat[10] = m2 * s + m10 * c;
-        mat[11] = m3 * s + m11 * c;
-    }
-
-    rotateZ(mat, angle) {
-        const c = Math.cos(angle);
-        const s = Math.sin(angle);
-        const m0 = mat[0], m1 = mat[1], m2 = mat[2], m3 = mat[3];
-        const m4 = mat[4], m5 = mat[5], m6 = mat[6], m7 = mat[7];
-        mat[0] = m0 * c + m4 * s;
-        mat[1] = m1 * c + m5 * s;
-        mat[2] = m2 * c + m6 * s;
-        mat[3] = m3 * c + m7 * s;
-        mat[4] = m4 * c - m0 * s;
-        mat[5] = m5 * c - m1 * s;
-        mat[6] = m6 * c - m2 * s;
-        mat[7] = m7 * c - m3 * s;
-    }
-
-    scale(mat, [x, y, z]) {
-        mat[0] *= x;
-        mat[1] *= x;
-        mat[2] *= x;
-        mat[3] *= x;
-        mat[4] *= y;
-        mat[5] *= y;
-        mat[6] *= y;
-        mat[7] *= y;
-        mat[8] *= z;
-        mat[9] *= z;
-        mat[10] *= z;
-        mat[11] *= z;
-    }
-
-    /**
-     * Create wireframe indices from triangle indices
-     * Converts triangle list to line list (each triangle edge becomes a line)
-     */
-    createWireframeIndices(triangleIndices) {
-        const edges = new Set();
-        const wireframeIndices = [];
-
-        // Extract unique edges from triangles
-        for (let i = 0; i < triangleIndices.length; i += 3) {
-            const v0 = triangleIndices[i];
-            const v1 = triangleIndices[i + 1];
-            const v2 = triangleIndices[i + 2];
-
-            // Add three edges of the triangle (sorted to avoid duplicates)
-            const edge1 = v0 < v1 ? `${v0},${v1}` : `${v1},${v0}`;
-            const edge2 = v1 < v2 ? `${v1},${v2}` : `${v2},${v1}`;
-            const edge3 = v2 < v0 ? `${v2},${v0}` : `${v0},${v2}`;
-
-            if (!edges.has(edge1)) {
-                edges.add(edge1);
-                wireframeIndices.push(v0, v1);
-            }
-            if (!edges.has(edge2)) {
-                edges.add(edge2);
-                wireframeIndices.push(v1, v2);
-            }
-            if (!edges.has(edge3)) {
-                edges.add(edge3);
-                wireframeIndices.push(v2, v0);
-            }
-        }
-
-        return new Uint16Array(wireframeIndices);
-    }
-
-    /**
-     * Cleanup
-     */
-    destroy() {
-        const {gl} = this;
-        if (this.buffers.position) gl.deleteBuffer(this.buffers.position);
-        if (this.buffers.normal) gl.deleteBuffer(this.buffers.normal);
-        if (this.buffers.indices) gl.deleteBuffer(this.buffers.indices);
-        if (this.buffers.wireframe) gl.deleteBuffer(this.buffers.wireframe);
-        if (this.program) gl.deleteProgram(this.program);
     }
 }
