@@ -86,10 +86,11 @@ The codebase is organized into logical subdirectories following domain-driven de
 ```
 src/
 ├── core/                           # Core engine systems
-│   ├── audio/                      # Audio & rhythm (9 files)
+│   ├── audio/                      # Audio & rhythm (10 files)
 │   │   ├── AudioAnalyzer.js        # Audio input analysis
 │   │   ├── AudioLevelProcessor.js  # Level processing
 │   │   ├── SoundSystem.js          # Sound effects
+│   │   ├── GestureSoundLibrary.js  # Gesture sound configurations
 │   │   ├── rhythm.js               # Rhythm engine
 │   │   ├── rhythmIntegration.js    # Rhythm sync
 │   │   ├── MusicTheory.js          # Musical concepts
@@ -119,6 +120,9 @@ src/
 │   │   ├── SimpleFPSCounter.js     # FPS counter
 │   │   ├── FeatureFlags.js         # Feature toggles
 │   │   └── SecurityManager.js      # Security policies
+│   │
+│   ├── morpher/                    # Shape morphing (1 file)
+│   │   └── ShadowEffectManager.js  # Shadow transition effects
 │   │
 │   ├── optimization/               # Performance optimization (3 files)
 │   │   ├── MobileOptimization.js   # Mobile-specific
@@ -220,6 +224,9 @@ src/
 │   │   ├── ConfigurationManager.js
 │   │   ├── DestructionManager.js
 │   │   └── SystemStatusReporter.js
+│   │
+│   ├── performance/                # Performance managers (1 file)
+│   │   └── DegradationEventHandler.js  # Performance degradation events
 │   │
 │   └── control/                    # Control managers (2 files)
 │       ├── GestureController.js    # Gesture control

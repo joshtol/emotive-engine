@@ -9,6 +9,54 @@ and this project uses
 
 ## [Unreleased]
 
+### 🔧 Code Quality Improvements - 2025-10-30
+
+#### Refactoring: God Object Reduction Phase 4
+
+**What was improved:**
+
+Continued architectural improvements by extracting two more managers from god
+objects:
+
+**1. DegradationEventHandler Extraction**
+
+- Created
+  [src/mascot/performance/DegradationEventHandler.js](src/mascot/performance/DegradationEventHandler.js)
+  (127 lines)
+- Extracted from [src/EmotiveMascot.js](src/EmotiveMascot.js)
+- **Impact**: Reduced EmotiveMascot from 1,531 → 1,501 lines (30 lines, 2.0%)
+- **Purpose**: Consolidated performance degradation event handling
+- **Fixed**: Architecture split where degradation concerns were scattered
+  between EmotiveMascot and PerformanceMonitoringManager
+- **Methods extracted**: `handleDegradationEvent()`,
+  `applyDegradationSettings()`
+
+**2. GestureSoundLibrary Extraction**
+
+- Created
+  [src/core/audio/GestureSoundLibrary.js](src/core/audio/GestureSoundLibrary.js)
+  (513 lines)
+- Extracted from [src/core/audio/SoundSystem.js](src/core/audio/SoundSystem.js)
+- **Impact**: Reduced SoundSystem from 928 → 581 lines (347 lines, **37.4%
+  reduction**)
+- **Purpose**: Centralized gesture sound configuration database
+- **Coverage**: 30 gesture types with complete frequency/volume envelopes
+- **Methods extracted**: 359-line `getGestureSoundConfig()` method
+
+**Architecture improvements:**
+
+- **Total reduction**: 377 lines across two files
+- **Pattern**: Dependency injection with lazy evaluation via getter functions
+- **Testing**: All 2,827 tests passing ✓
+- **Documentation**: Updated ARCHITECTURE.md with new manager locations
+
+**Cumulative refactoring progress:**
+
+- Phase 1: ShadowEffectManager (274 lines)
+- Phase 2: 5 managers from EmotiveMascotPublic (325 lines)
+- Phase 3: Render managers from EmotiveMascot (multiple extractions)
+- Phase 4: DegradationEventHandler + GestureSoundLibrary (377 lines)
+
 ## [3.0.0] - 2025-10-28 - Open Source Launch
 
 ### 🎉 MAJOR RELEASE: Open Source Community Edition
