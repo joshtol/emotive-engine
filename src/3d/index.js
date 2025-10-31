@@ -40,6 +40,7 @@ import ParticleSystem from '../core/ParticleSystem.js'; // Reuse 2D particles!
 import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion } from '../core/emotions/index.js';
+import { getGesture } from '../core/gestures/index.js';
 
 /**
  * EmotiveMascot3D - 3D rendering variant
@@ -262,8 +263,20 @@ export class EmotiveMascot3D {
                 this.undertone      // undertone modifier
             );
 
+            // Apply gesture to particles if active
+            let gestureMotion = null;
+            let gestureProgress = 0;
+            if (this.currentGesture) {
+                const elapsed = currentTime - this.currentGesture.startTime;
+                gestureProgress = Math.min(elapsed / this.currentGesture.duration, 1);
+                gestureMotion = {
+                    ...this.currentGesture.config,
+                    type: this.currentGesture.name  // Use gesture NAME (e.g., "bounce"), not TYPE
+                };
+            }
+
             // Update particles - EXACT same as 2D site
-            this.particleSystem.update(deltaTime, centerX, centerY, null, 0, this.undertone);
+            this.particleSystem.update(deltaTime, centerX, centerY, gestureMotion, gestureProgress, this.undertone);
 
             // Clear canvas before rendering
             ctx.clearRect(0, 0, this.canvas2D.width, this.canvas2D.height);
@@ -317,9 +330,39 @@ export class EmotiveMascot3D {
      * @param {string} gestureName - Gesture name
      */
     express(gestureName) {
+        // Apply gesture to 3D core
         if (this.core3D) {
             this.core3D.playGesture(gestureName);
         }
+
+        // Apply gesture to particles (same as 2D)
+        const gesture = getGesture(gestureName);
+        if (gesture) {
+            const config = gesture.config || {};
+            const duration = config.musicalDuration?.musical
+                ? (config.musicalDuration.beats || 2) * 500
+                : (config.duration || 800);
+
+            // console.log(`[3D] Gesture ${gestureName} duration: ${duration}ms`);
+
+            // Track current gesture for particle system
+            this.currentGesture = {
+                name: gestureName,
+                gesture,
+                config,
+                startTime: performance.now(),
+                duration
+            };
+
+            // Clear gesture when complete
+            setTimeout(() => {
+                if (this.currentGesture && this.currentGesture.name === gestureName) {
+                    // console.log(`[3D] Gesture ${gestureName} completed`);
+                    this.currentGesture = null;
+                }
+            }, duration);
+        }
+
         this.eventManager.emit('gesture:trigger', { gesture: gestureName });
     }
 

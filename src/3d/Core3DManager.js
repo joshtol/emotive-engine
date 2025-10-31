@@ -137,20 +137,38 @@ export class Core3DManager {
                 virtualParticle.size = 1;
                 virtualParticle.opacity = 1;
 
-                // Apply gesture to virtual particle
-                if (gesture2D.apply) {
-                    const motion = { ...config };
-                    gesture2D.apply(virtualParticle, t, motion, 1, 0, 0);
-                }
+                // Check if gesture has 3D translation section
+                if (gesture2D['3d'] && gesture2D['3d'].evaluate) {
+                    // Use gesture's built-in 3D translation
+                    // First apply gesture to virtual particle if needed
+                    if (gesture2D.apply) {
+                        const motion = { ...config };
+                        gesture2D.apply(virtualParticle, t, motion, 1, 0, 0);
+                    }
 
-                // Translate 2D particle changes to 3D transforms
-                return this.translate2DTo3D(virtualParticle, t, gesture2D, gestureState);
+                    // Call gesture's 3D evaluate function with particle data
+                    const motion = {
+                        ...config,
+                        particle: virtualParticle,
+                        config,
+                        strength: config.strength || 1.0
+                    };
+                    return gesture2D['3d'].evaluate(t, motion);
+                } else {
+                    // Fallback: apply gesture to virtual particle and use legacy translation
+                    if (gesture2D.apply) {
+                        const motion = { ...config };
+                        gesture2D.apply(virtualParticle, t, motion, 1, 0, 0);
+                    }
+                    return this.translate2DTo3D(virtualParticle, t, gesture2D, gestureState);
+                }
             },
             callbacks: {
                 onUpdate: props => {
                     if (props.position) this.position = props.position;
                     if (props.rotation) this.rotation = props.rotation;
                     if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
+                    if (props.glowIntensity !== undefined) this.glowIntensity = props.glowIntensity;
                 },
                 onComplete: () => {
                     // Clean up gesture

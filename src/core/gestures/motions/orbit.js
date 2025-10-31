@@ -256,5 +256,59 @@ export default {
         smooth: true,           // Smooth continuous motion
         looping: true,          // Natural looping animation
         dramatic: true          // Visually impressive effect
+    },
+
+    /**
+     * 3D translation for orbit gesture
+     * Note: Orbit is a motion BLENDING gesture, not to be confused with orbital
+     * This creates subtle 3D rotation to enhance the blended motion feel
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            let {rotations} = config;
+            const {zRotations} = config;
+
+            // Apply rhythm modulation if present
+            if (motion.rhythmModulation) {
+                if (motion.rhythmModulation.rotationMultiplier) {
+                    rotations *= motion.rhythmModulation.rotationMultiplier;
+                }
+            }
+
+            // Smooth entry/exit transitions
+            let transitionFactor = 1.0;
+            if (progress < 0.15) {
+                transitionFactor = progress / 0.15;
+                transitionFactor = transitionFactor * transitionFactor * (3 - 2 * transitionFactor);
+            } else if (progress > 0.85) {
+                transitionFactor = (1 - progress) / 0.15;
+                transitionFactor = transitionFactor * transitionFactor * (3 - 2 * transitionFactor);
+            }
+
+            // Circular motion creates gentle rotation effect
+            const angle = progress * Math.PI * 2 * rotations * transitionFactor;
+            const zAngle = angle * zRotations;
+
+            // Subtle rotation around all axes for blended orbital feel
+            const yRotation = Math.sin(angle) * 0.1 * transitionFactor;
+            const xRotation = Math.cos(angle) * 0.05 * transitionFactor;
+            const zRotation = Math.sin(zAngle) * 0.05 * transitionFactor;
+
+            // Minimal z-depth variation
+            const zPosition = Math.sin(zAngle) * 0.2 * transitionFactor;
+
+            // Slight scale pulsing
+            const scalePulse = 1 + Math.sin(angle * 2) * 0.03 * transitionFactor;
+
+            return {
+                position: [0, 0, zPosition],
+                rotation: [xRotation, yRotation, zRotation],
+                scale: scalePulse
+            };
+        }
     }
 };

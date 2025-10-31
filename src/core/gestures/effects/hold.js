@@ -147,5 +147,24 @@ export default {
             particle.vy = data.originalVy;
             delete particle.gestureData.hold;
         }
+    },
+
+    /**
+     * 3D core transformation for hold gesture
+     * Static neutral state - no movement
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(_progress, _motion) {
+            // Completely static - neutral position
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0,
+                glowIntensity: 1.0
+            };
+        }
     }
 };

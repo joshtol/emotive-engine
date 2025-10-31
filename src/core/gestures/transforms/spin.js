@@ -262,5 +262,62 @@ export default {
      */
     easeOutQuad(t) {
         return t * (2 - t);
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * Maps the 2D spin motion to 3D space with Y-axis rotation
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.spin) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            const data = particle.gestureData.spin;
+            const config = motion.config || {};
+            const strength = motion.strength || 1.0;
+
+            // Apply acceleration curve if enabled
+            let speedProgress = progress;
+            if (config.accelerate) {
+                if (progress < 0.5) {
+                    speedProgress = (progress * progress * 4) * 0.5; // easeInQuad
+                } else {
+                    speedProgress = 0.5 + ((progress - 0.5) * (2 - (progress - 0.5))) * 0.5; // easeOutQuad
+                }
+            }
+
+            // Calculate Y-axis rotation (spinning around vertical axis)
+            const rotations = config.rotations || 1;
+            const rotationAmount = rotations * Math.PI * 2 * strength;
+            const direction = data.direction === 'counter-clockwise' ? -1 : 1;
+            const yRotation = rotationAmount * speedProgress * direction;
+
+            // Scale changes during spin
+            const scaleAmount = config.scaleAmount || 0.1;
+            const scaleCurve = Math.sin(progress * Math.PI); // Peak at middle
+            const scale = 1.0 + (scaleAmount * scaleCurve * strength);
+
+            // Position in 3D space (XY matches 2D, Z for depth)
+            const z = 0; // Spin happens in XY plane
+
+            return {
+                position: [particle.x, particle.y, z],
+                rotation: [0, yRotation, 0], // Y-axis rotation
+                scale
+            };
+        }
     }
 };

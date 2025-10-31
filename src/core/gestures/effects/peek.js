@@ -230,5 +230,46 @@ export default {
             }
             delete particle.gestureData.peek;
         }
+    },
+
+    /**
+     * 3D core transformation for peek gesture
+     * Quick XY position shift then return
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const peekDistance = (config.peekDistance || 40) * 0.01; // Scale to unit space
+
+            let posX = 0;
+            const posY = 0;
+            let glowIntensity = 1.0;
+
+            if (progress < 0.3) {
+                // Peeking out
+                const peekProgress = progress / 0.3;
+                const eased = 1 - Math.pow(1 - peekProgress, 3); // easeOutCubic
+                posX = eased * peekDistance;
+            } else if (progress < 0.6) {
+                // Holding peek
+                posX = peekDistance;
+                glowIntensity = 0.7 + Math.random() * 0.3; // Flickering
+            } else {
+                // Hiding back
+                const hideProgress = (progress - 0.6) / 0.4;
+                const eased = Math.pow(hideProgress, 3); // easeInCubic
+                posX = (1 - eased) * peekDistance;
+            }
+
+            return {
+                position: [posX, posY, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0,
+                glowIntensity
+            };
+        }
     }
 };

@@ -324,12 +324,50 @@ export default {
      * Easing functions
      */
     easeInOutCubic(t) {
-        return t < 0.5 
-            ? 4 * t * t * t 
+        return t < 0.5
+            ? 4 * t * t * t
             : 1 - Math.pow(-2 * t + 2, 3) / 2;
     },
-    
+
     easeOutQuad(t) {
         return t * (2 - t);
+    },
+
+    /**
+     * 3D core transformation for drift gesture
+     * Slow positional drift in XYZ with subtle rotation
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const strength = motion.strength || 1.0;
+
+            // Slow drift in XY plane
+            const angle = (config.angle || 45) * Math.PI / 180;
+            const driftProgress = config.returnToOrigin
+                ? (progress < 0.5 ? progress * 2 : (1 - progress) * 2)
+                : progress;
+
+            const driftX = Math.cos(angle) * driftProgress * 0.3 * strength;
+            const driftY = Math.sin(angle) * driftProgress * 0.3 * strength;
+            const driftZ = Math.sin(progress * Math.PI) * 0.15 * strength; // Subtle Z drift
+
+            // Gentle rotation during drift
+            const rotationY = driftProgress * 10 * strength; // Slight Y rotation
+
+            // Minimal scale/glow change
+            const scale = 1.0 + Math.sin(progress * Math.PI) * 0.03;
+            const glowIntensity = 1.0 - driftProgress * 0.1; // Dim slightly during drift
+
+            return {
+                position: [driftX, driftY, driftZ],
+                rotation: [0, rotationY, 0],
+                scale,
+                glowIntensity
+            };
+        }
     }
 };

@@ -123,5 +123,41 @@ export default {
             }
             delete particle.gestureData.fade;
         }
+    },
+
+    /**
+     * 3D core transformation for fade gesture
+     * Opacity fade translates to glowIntensity fade
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+
+            let glowIntensity;
+            if (config.fadeIn && !config.fadeOut) {
+                // Fade in - glow increases
+                glowIntensity = config.minOpacity + (config.maxOpacity - config.minOpacity) * progress;
+            } else if (config.fadeOut && !config.fadeIn) {
+                // Fade out - glow decreases
+                glowIntensity = config.maxOpacity - (config.maxOpacity - config.minOpacity) * progress;
+            } else {
+                // Fade in then out
+                if (progress < 0.5) {
+                    glowIntensity = config.minOpacity + (config.maxOpacity - config.minOpacity) * (progress * 2);
+                } else {
+                    glowIntensity = config.maxOpacity - (config.maxOpacity - config.minOpacity) * ((progress - 0.5) * 2);
+                }
+            }
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0,
+                glowIntensity
+            };
+        }
     }
 };

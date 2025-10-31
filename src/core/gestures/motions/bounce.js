@@ -228,8 +228,48 @@ export default {
      * @returns {number} Eased value
      */
     easeInOutCubic(t) {
-        return t < 0.5 
-            ? 4 * t * t * t 
+        return t < 0.5
+            ? 4 * t * t * t
             : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    },
+
+    /**
+     * 3D core translation
+     * Maps bounce motion to 3D transforms
+     */
+    '3d': {
+        /**
+         * Evaluate 3D properties at given progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration
+         * @returns {Object} 3D transform properties {position, rotation, scale}
+         */
+        evaluate(progress, motion) {
+            const config = motion || {};
+            const amplitude = (config.amplitude || 30) * 0.02;
+            const frequency = config.frequency || 2;
+            const strength = config.strength || 0.6;
+
+            // Apply easing
+            const easeProgress = progress < 0.5
+                ? 4 * progress * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+            // Calculate oscillation
+            const oscillation = Math.sin(easeProgress * Math.PI * 2 * frequency);
+
+            // Apply damping
+            let dampedAmplitude = amplitude * strength;
+            if (progress > 0.7) {
+                const dampProgress = (progress - 0.7) / 0.3;
+                dampedAmplitude *= (1 - dampProgress * 0.8);
+            }
+
+            return {
+                position: [0, oscillation * dampedAmplitude, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0 + Math.abs(oscillation) * 0.05
+            };
+        }
     }
 };

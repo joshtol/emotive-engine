@@ -322,5 +322,37 @@ export default {
      */
     easeInOutSine(t) {
         return -(Math.cos(Math.PI * t) - 1) / 2;
+    },
+
+    /**
+     * 3D core transformation for wave gesture
+     * Gentle swaying motion with minimal position changes
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const easeProgress = -(Math.cos(Math.PI * progress) - 1) / 2;
+
+            // Gentle swaying in X axis (infinity pattern projection)
+            const t = easeProgress * Math.PI * 2 * config.frequency;
+            const swayX = Math.sin(t) * 0.15 * (motion.strength || 1.0);
+            const swayY = Math.sin(t * 2) * 0.08 * (motion.strength || 1.0);
+
+            // Subtle scale pulsing with wave
+            const scale = 1.0 + Math.abs(Math.sin(easeProgress * Math.PI)) * 0.05;
+
+            // Gentle glow variation
+            const glowIntensity = 1.0 + Math.sin(easeProgress * Math.PI) * 0.2;
+
+            return {
+                position: [swayX, swayY, 0],
+                rotation: [0, 0, 0],
+                scale,
+                glowIntensity
+            };
+        }
     }
 };

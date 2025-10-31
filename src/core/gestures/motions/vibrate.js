@@ -131,5 +131,53 @@ export default {
         if (particle.gestureData?.vibrate) {
             delete particle.gestureData.vibrate;
         }
+    },
+
+    /**
+     * 3D translation for vibrate gesture
+     * High-frequency XYZ position jitter creating chaotic vibration
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            let {amplitude} = config;
+            const strength = config.strength || this.config.strength || 1.0;
+
+            // Apply rhythm modulation if present
+            if (motion.rhythmModulation) {
+                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            }
+
+            // High-frequency random jitter in all three axes
+            const jitterX = (Math.random() - 0.5) * amplitude * strength * 0.5;
+            const jitterY = (Math.random() - 0.5) * amplitude * strength * 0.5;
+            const jitterZ = (Math.random() - 0.5) * amplitude * strength * 0.5;
+
+            // Slight rotation jitter for added chaos
+            const rotJitterX = (Math.random() - 0.5) * 0.05;
+            const rotJitterY = (Math.random() - 0.5) * 0.05;
+            const rotJitterZ = (Math.random() - 0.5) * 0.05;
+
+            // Fade out at the end
+            const fadeFactor = progress > 0.8 ? 1 - ((progress - 0.8) * 5) : 1.0;
+
+            return {
+                position: [
+                    jitterX * fadeFactor,
+                    jitterY * fadeFactor,
+                    jitterZ * fadeFactor
+                ],
+                rotation: [
+                    rotJitterX * fadeFactor,
+                    rotJitterY * fadeFactor,
+                    rotJitterZ * fadeFactor
+                ],
+                scale: 1.0 + (Math.random() - 0.5) * 0.02 * fadeFactor
+            };
+        }
     }
 };

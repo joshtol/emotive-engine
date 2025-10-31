@@ -193,5 +193,44 @@ export default {
             particle.y = particle.gestureData.shake.originalY;
             delete particle.gestureData.shake;
         }
+    },
+
+    /**
+     * 3D core translation
+     * Maps shake motion to 3D transforms
+     */
+    '3d': {
+        /**
+         * Evaluate 3D properties at given progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration
+         * @returns {Object} 3D transform properties {position, rotation, scale}
+         */
+        evaluate(progress, motion) {
+            const config = motion || {};
+            const amplitude = (config.amplitude || 15) * 0.015;
+            const frequency = config.frequency || 15;
+            const strength = config.strength || 1.0;
+            const decay = config.decay ? (1 - progress) : 1;
+
+            // High-frequency shake
+            const shake = Math.sin(progress * Math.PI * frequency) * amplitude * decay * strength;
+
+            // Random seed for consistent randomness per frame
+            const seed = Math.floor(progress * frequency);
+            const randomX = (Math.sin(seed) * 10000) % 1;
+            const randomZ = (Math.sin(seed * 1.3) * 10000) % 1;
+            const randomRoll = (Math.sin(seed * 1.7) * 10000) % 1;
+
+            return {
+                position: [
+                    shake * (randomX - 0.5) * 2,
+                    0,
+                    shake * (randomZ - 0.5) * 2
+                ],
+                rotation: [0, 0, shake * (randomRoll - 0.5) * 0.5],
+                scale: 1.0
+            };
+        }
     }
 };

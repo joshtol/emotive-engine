@@ -82,5 +82,51 @@ export default {
      */
     cleanup(_particle) {
         // No cleanup needed for sway
+    },
+
+    /**
+     * 3D translation for sway gesture
+     * Gentle side-to-side rocking motion with subtle rotation
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            let amplitude = config.amplitude || this.config.amplitude;
+            const frequency = config.frequency || this.config.frequency;
+            const strength = config.strength || this.config.strength;
+
+            // Apply rhythm modulation if present
+            if (motion.rhythmModulation) {
+                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            }
+
+            // Smooth sinusoidal sway
+            const sway = Math.sin(progress * Math.PI * 2 * frequency);
+            const verticalDrift = Math.cos(progress * Math.PI * 4) * 0.3;
+
+            // Side-to-side position movement
+            const swayAmount = amplitude * strength * 0.3;
+            const posX = sway * swayAmount;
+            const posY = verticalDrift * swayAmount;
+
+            // Gentle rocking rotation around Z-axis (roll)
+            const rollRotation = sway * 0.15 * strength;
+
+            // Subtle Y-axis rotation (yaw) for natural look
+            const yawRotation = sway * 0.08 * strength;
+
+            // Slight forward/back depth
+            const posZ = Math.sin(progress * Math.PI * frequency) * swayAmount * 0.5;
+
+            return {
+                position: [posX, posY, posZ],
+                rotation: [0, yawRotation, rollRotation],
+                scale: 1.0
+            };
+        }
     }
 };

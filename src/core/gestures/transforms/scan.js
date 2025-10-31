@@ -181,5 +181,57 @@ export default {
             particle.vy = data.originalVy;
             delete particle.gestureData.scan;
         }
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * XY sweep motion with rotation to face scan direction
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.scan) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            const data = particle.gestureData.scan;
+            // const config = motion.config || {};
+
+            // Calculate scan position for rotation
+            // const scanPosition = Math.sin(data.phase);
+
+            // Rotation to face the direction of scan movement
+            // Y-axis rotation follows horizontal scan
+            const yRotation = data.phase; // Faces scan direction
+
+            // Slight X-axis tilt based on layer (searchlight angle)
+            const layerOffset = (data.layer - 1) * 0.2; // -0.2 to 0.4 radians
+            const xRotation = layerOffset;
+
+            // Z-axis for slight roll during pause (focusing effect)
+            const zRotation = data.isPaused ? Math.sin(progress * Math.PI * 4) * 0.05 : 0;
+
+            // Scale pulse during pause (focusing)
+            const scale = data.isPaused ? 1.0 + Math.sin(progress * Math.PI * 8) * 0.05 : 1.0;
+
+            // Z-depth varies by layer
+            const z = data.layer * 0.2 - 0.2; // Layers at different depths
+
+            return {
+                position: [particle.x, particle.y, z],
+                rotation: [xRotation, yRotation, zRotation],
+                scale
+            };
+        }
     }
 };

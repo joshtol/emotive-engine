@@ -437,5 +437,76 @@ export default {
     
     easeInQuad(t) {
         return t * t;
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * Maps morph patterns to 3D space - maintains 2D shape in XY plane
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.morph) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            const data = particle.gestureData.morph;
+            const config = motion.config || {};
+
+            // Calculate eased progress with hold time
+            let morphProgress = progress;
+            if (config.holdTime > 0) {
+                const holdStart = 0.5 - config.holdTime / 2;
+                const holdEnd = 0.5 + config.holdTime / 2;
+
+                if (progress < holdStart) {
+                    morphProgress = progress / holdStart * 0.5;
+                } else if (progress < holdEnd) {
+                    morphProgress = 0.5;
+                } else {
+                    morphProgress = 0.5 + (progress - holdEnd) / (1 - holdEnd) * 0.5;
+                }
+            }
+
+            // Calculate current position based on morph phase
+            let x, y;
+            if (morphProgress <= 0.5) {
+                // Moving to shape
+                const moveProgress = morphProgress * 2;
+                const eased = moveProgress * (2 - moveProgress); // easeOutQuad
+                x = data.startX + (data.targetX - data.startX) * eased;
+                y = data.startY + (data.targetY - data.startY) * eased;
+            } else {
+                // Returning from shape
+                const returnProgress = (morphProgress - 0.5) * 2;
+                const eased = returnProgress * returnProgress; // easeInQuad
+                x = data.targetX + (data.startX - data.targetX) * eased;
+                y = data.targetY + (data.startY - data.targetY) * eased;
+            }
+
+            // Rotation follows the morph pattern direction
+            const rotationDirection = data.rotationDirection || 1;
+            const yRotation = morphProgress * Math.PI * 2 * rotationDirection * 0.5;
+
+            // Slight scale pulse at formation peak
+            const scaleCurve = Math.sin(morphProgress * Math.PI);
+            const scale = 1.0 + scaleCurve * 0.1;
+
+            return {
+                position: [x, y, 0],
+                rotation: [0, yRotation, 0],
+                scale
+            };
+        }
     }
 };

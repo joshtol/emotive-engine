@@ -132,5 +132,48 @@ export default {
         if (particle.gestureData?.nod) {
             delete particle.gestureData.nod;
         }
+    },
+
+    /**
+     * 3D translation for nod gesture
+     * Maps vertical nodding to X-axis rotation (pitch)
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            let {frequency} = config;
+            let {amplitude} = config;
+
+            // Apply rhythm modulation if present
+            if (motion.rhythmModulation) {
+                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+                if (motion.rhythmModulation.frequencyMultiplier) {
+                    frequency *= motion.rhythmModulation.frequencyMultiplier;
+                }
+            }
+
+            // Calculate nodding oscillation
+            const oscillation = Math.sin(progress * Math.PI * 2 * frequency);
+
+            // Map to X-axis rotation (pitch) in radians
+            // Nodding is rotation around X-axis: positive = looking down, negative = looking up
+            const pitchRotation = oscillation * (amplitude * 0.02); // Convert to radians
+
+            // Slight forward/back movement on Z-axis for natural head motion
+            const depthMovement = oscillation * (amplitude * 0.1);
+
+            // Dampen at the end
+            const dampening = progress > 0.9 ? 0.95 : 1.0;
+
+            return {
+                position: [0, 0, depthMovement * dampening],
+                rotation: [pitchRotation * dampening, 0, 0],
+                scale: 1.0
+            };
+        }
     }
 };

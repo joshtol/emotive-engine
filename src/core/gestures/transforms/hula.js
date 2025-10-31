@@ -195,5 +195,54 @@ export default {
             particle.z = data.originalZ;
             delete particle.gestureData.hula;
         }
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * Y-axis rotation with XZ position offset for hula-hoop effect
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.hula) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            const data = particle.gestureData.hula;
+            const config = motion.config || {};
+
+            // READ particle.z for depth
+            const z = particle.z || 0;
+
+            // Y-axis rotation following the hula motion
+            const yRotation = data.angle + (data.direction * progress * Math.PI * 2);
+
+            // XZ position offset creates the hula-hoop tilted ring effect
+            // Wobble affects the XZ plane positioning
+            const wobble = Math.sin(data.angle * 2 + data.wobblePhase) * (config.wobbleAmount || 0.15);
+
+            // Calculate XZ offset based on angle for circular motion in 3D
+            const xOffset = Math.cos(data.angle) * wobble * 10;
+            const zOffset = z; // Use existing Z calculation from apply()
+
+            // Scale based on vertical position (particles at top/bottom of hoop)
+            const verticalScale = 1.0 + Math.abs(Math.sin(data.angle)) * 0.1;
+
+            return {
+                position: [particle.x + xOffset, particle.y, zOffset],
+                rotation: [0, yRotation, 0],
+                scale: verticalScale
+            };
+        }
     }
 };

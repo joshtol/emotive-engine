@@ -298,5 +298,42 @@ export default {
             }
             delete particle.gestureData.flicker;
         }
+    },
+
+    /**
+     * 3D core transformation for flicker gesture
+     * Rapid glowIntensity modulation with minimal movement
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const strength = motion.strength || 0.7;
+
+            // Rapid opacity flickering translates to glow intensity
+            let glowIntensity;
+            if (config.strobe) {
+                const strobePhase = (progress * config.flickerRate) % 1;
+                glowIntensity = strobePhase < 0.5 ? 1.5 : 0.3;
+            } else {
+                // Random flicker pattern
+                const flickerValue = Math.sin(progress * config.frequency * Math.PI * 2) * 0.5 + 0.5;
+                glowIntensity = 0.5 + flickerValue * strength;
+            }
+
+            // Slight jitter in position
+            const jitterAmount = config.jitterAmount * 0.01 * strength;
+            const jitterX = (Math.random() - 0.5) * jitterAmount;
+            const jitterY = (Math.random() - 0.5) * jitterAmount;
+
+            return {
+                position: [jitterX, jitterY, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0,
+                glowIntensity
+            };
+        }
     }
 };

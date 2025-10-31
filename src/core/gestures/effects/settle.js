@@ -113,13 +113,42 @@ export default {
     apply(particle, progress, motion, dt, _centerX, _centerY) {
         const damping = motion.damping || this.config.damping;
         const threshold = motion.threshold || this.config.threshold;
-        
+
         // Apply exponential velocity damping
         particle.vx *= Math.max(0, 1 - damping * dt * 60);
         particle.vy *= Math.max(0, 1 - damping * dt * 60);
-        
+
         // Stop completely when velocity falls below threshold
         if (Math.abs(particle.vx) < threshold) particle.vx = 0;
         if (Math.abs(particle.vy) < threshold) particle.vy = 0;
+    },
+
+    /**
+     * 3D core transformation for settle gesture
+     * Gradual return to neutral position with reduced glow
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, _motion) {
+            // Gradual return to origin
+            const returnFactor = 1 - progress;
+
+            // Assume starting from some offset, returning to neutral
+            const posX = returnFactor * 0.1;
+            const posY = returnFactor * 0.1;
+
+            // Subtle scale/glow reduction as settling
+            const scale = 1.0 - progress * 0.05;
+            const glowIntensity = 1.0 - progress * 0.2;
+
+            return {
+                position: [posX, posY, 0],
+                rotation: [0, 0, 0],
+                scale,
+                glowIntensity
+            };
+        }
     }
 };

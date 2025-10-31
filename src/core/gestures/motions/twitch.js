@@ -166,5 +166,79 @@ export default {
         if (particle.gestureData?.twitch) {
             delete particle.gestureData.twitch;
         }
+    },
+
+    /**
+     * 3D translation for twitch gesture
+     * Quick sudden movements in random directions with rotation
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const {config} = this;
+            let intensity = motion.intensity || config.intensity;
+            const {maxOffset} = config;
+
+            // Apply rhythm modulation if present
+            if (motion.rhythmModulation) {
+                intensity *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                intensity *= (motion.rhythmModulation.accentMultiplier || 1);
+            }
+
+            // Create random twitch seed based on progress to get consistent but chaotic movement
+            const twitchPhase = Math.floor(progress * 10); // Creates discrete twitch moments
+            const seed = twitchPhase * 9999;
+
+            // Pseudo-random but repeatable based on seed
+            const random = offset => {
+                const x = Math.sin(seed + offset) * 10000;
+                return x - Math.floor(x);
+            };
+
+            // Determine if currently twitching (sharp probability spikes)
+            const isTwitching = random(0) < config.frequency * 3;
+
+            if (isTwitching) {
+                // Random direction for position
+                const angle = random(1) * Math.PI * 2;
+                const distance = maxOffset * intensity / 8;
+
+                const posX = Math.cos(angle) * distance * random(2);
+                const posY = Math.sin(angle) * distance * random(3);
+                const posZ = (random(4) - 0.5) * distance;
+
+                // Random rotation twitch
+                const rotX = (random(5) - 0.5) * 0.2;
+                const rotY = (random(6) - 0.5) * 0.2;
+                const rotZ = (random(7) - 0.5) * 0.2;
+
+                // Sharp scale variation
+                const scale = 1.0 + (random(8) - 0.5) * 0.1;
+
+                return {
+                    position: [posX, posY, posZ],
+                    rotation: [rotX, rotY, rotZ],
+                    scale
+                };
+            } else {
+                // Return to neutral with micro-jitter
+                const microJitter = 0.5;
+                return {
+                    position: [
+                        (random(10) - 0.5) * microJitter,
+                        (random(11) - 0.5) * microJitter,
+                        (random(12) - 0.5) * microJitter
+                    ],
+                    rotation: [
+                        (random(13) - 0.5) * 0.01,
+                        (random(14) - 0.5) * 0.01,
+                        (random(15) - 0.5) * 0.01
+                    ],
+                    scale: 1.0
+                };
+            }
+        }
     }
 };

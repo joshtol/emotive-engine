@@ -138,5 +138,40 @@ export default {
             particle.size = particle.gestureData.flash.originalSize;
             delete particle.gestureData.flash;
         }
+    },
+
+    /**
+     * 3D core transformation for flash gesture
+     * Quick glowIntensity spike with brief scale pulse
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const strength = motion.strength || 1.0;
+
+            // Quick flash intensity spike then fade
+            let glowIntensity;
+            if (progress < 0.3) {
+                // Quick rise to peak
+                glowIntensity = 1.0 + (progress / 0.3) * (config.glowPeak || 3.0) * strength;
+            } else {
+                // Gradual fade
+                glowIntensity = 1.0 + (1 - (progress - 0.3) / 0.7) * (config.glowPeak || 3.0) * strength;
+            }
+
+            // Brief scale pulse
+            const scalePeak = config.scalePeak || 1.1;
+            const scale = 1.0 + (progress < 0.3 ? progress / 0.3 : (1 - progress) / 0.7) * (scalePeak - 1.0);
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale,
+                glowIntensity
+            };
+        }
     }
 };

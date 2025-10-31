@@ -255,8 +255,69 @@ export default {
      * @returns {number} Eased value
      */
     easeInOutCubic(t) {
-        return t < 0.5 
-            ? 4 * t * t * t 
+        return t < 0.5
+            ? 4 * t * t * t
             : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * Maps tilt swaying motion to X or Z axis rotation
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.tilt) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            const data = particle.gestureData.tilt;
+            const config = motion.config || {};
+            const strength = motion.strength || 1.0;
+            const gatherPhase = config.gatherPhase || 0.2;
+
+            let xRotation = 0;
+            let zRotation = 0;
+
+            if (progress >= gatherPhase) {
+                // PHASE 2: Tilting motion
+                const tiltPhase = (progress - gatherPhase) / (1 - gatherPhase);
+                const t = tiltPhase * Math.PI * (config.frequency || 3);
+                const tiltProgress = Math.sin(t);
+
+                // Convert tilt angle to radians
+                const maxTiltRad = ((config.tiltAngle || 45) * Math.PI / 180) * strength;
+
+                // Determine tilt direction based on particle angle
+                // Horizontal particles tilt on Z-axis (side-to-side)
+                // Vertical particles tilt on X-axis (forward-back)
+                const angleFromCenter = Math.abs(data.angle % Math.PI);
+                const isHorizontal = angleFromCenter < Math.PI / 4 || angleFromCenter > 3 * Math.PI / 4;
+
+                if (isHorizontal) {
+                    // Tilt on Z-axis (side-to-side like head tilt)
+                    zRotation = tiltProgress * maxTiltRad;
+                } else {
+                    // Tilt on X-axis (forward-backward nod)
+                    xRotation = tiltProgress * maxTiltRad;
+                }
+            }
+
+            return {
+                position: [particle.x, particle.y, 0],
+                rotation: [xRotation, 0, zRotation],
+                scale: 1.0
+            };
+        }
     }
 };

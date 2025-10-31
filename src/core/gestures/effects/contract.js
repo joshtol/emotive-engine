@@ -172,5 +172,34 @@ export default {
         if (particle.gestureData?.contract) {
             delete particle.gestureData.contract;
         }
+    },
+
+    /**
+     * 3D core transformation for contract gesture
+     * Gradual scale decrease with dimming glow
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const strength = config.strength || 2.5;
+
+            // Gradual scale contraction
+            const scaleTarget = config.scaleTarget || 0.2;
+            const scale = 1.0 - progress * (1.0 - scaleTarget) * (strength / 2.5);
+
+            // Dimming glow intensity
+            const glowAmount = config.glowAmount || -0.2;
+            const glowIntensity = 1.0 + progress * glowAmount;
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale: Math.max(scaleTarget, scale),
+                glowIntensity: Math.max(0.5, glowIntensity)
+            };
+        }
     }
 };

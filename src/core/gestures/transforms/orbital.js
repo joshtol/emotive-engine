@@ -176,5 +176,47 @@ export default {
             particle.z = data.originalZ;  // Restore original z-coordinate
             delete particle.gestureData.orbital;
         }
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * Circular XY motion with Z-depth oscillation (MUST read particle.z)
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.orbital) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            const data = particle.gestureData.orbital;
+
+            // READ particle.z for depth (as specified in requirements)
+            const z = particle.z || 0;
+
+            // Rotation to face direction of motion
+            const tangentAngle = data.angle + Math.PI / 2;
+            const yRotation = tangentAngle;
+
+            // Scale based on depth (particles further back appear smaller)
+            // Z ranges from -0.8 to 0.8, scale from 0.85 to 1.15
+            const depthScale = 1.0 + z * 0.15;
+
+            return {
+                position: [particle.x, particle.y, z],
+                rotation: [0, yRotation, 0],
+                scale: depthScale
+            };
+        }
     }
 };

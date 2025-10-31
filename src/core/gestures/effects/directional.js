@@ -138,15 +138,15 @@ export default {
         if (!particle.gestureData?.directional) {
             this.initialize(particle);
         }
-        
+
         // Convert angle to radians for calculation
         const angle = (motion.angle || this.config.angle) * Math.PI / 180;
         const strength = motion.strength || this.config.strength;
-        
+
         // Apply directional force
         particle.vx += Math.cos(angle) * strength * 0.3 * dt;
         particle.vy += Math.sin(angle) * strength * 0.3 * dt;
-        
+
         // Optional return motion in second half of gesture
         if (motion.returnToOrigin && progress > 0.5) {
             const returnProgress = (progress - 0.5) * 2;
@@ -156,6 +156,36 @@ export default {
             const dy = data.initialY - particle.y;
             particle.vx += dx * returnProgress * 0.02 * dt;
             particle.vy += dy * returnProgress * 0.02 * dt;
+        }
+    },
+
+    /**
+     * 3D core transformation for directional gesture
+     * Movement in XY plane based on specified direction
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const angle = (config.angle || 0) * Math.PI / 180;
+            const strength = motion.strength || 1.0;
+
+            // Directional movement in XY
+            const moveProgress = config.returnToOrigin
+                ? (progress < 0.5 ? progress * 2 : (1 - progress) * 2)
+                : progress;
+
+            const posX = Math.cos(angle) * moveProgress * 0.4 * strength;
+            const posY = Math.sin(angle) * moveProgress * 0.4 * strength;
+
+            return {
+                position: [posX, posY, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0,
+                glowIntensity: 1.0
+            };
         }
     }
 };

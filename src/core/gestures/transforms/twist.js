@@ -190,5 +190,63 @@ export default {
         if (particle.gestureData?.twist) {
             delete particle.gestureData.twist;
         }
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * Y-axis rotation with helical XZ motion (twist combines rotation and spiral)
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.twist) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            const data = particle.gestureData.twist;
+            const config = motion.config || {};
+            const strength = config.strength || 1.0;
+
+            // Calculate twist oscillation
+            const twistProgress = progress * (config.twistFrequency || 2) * Math.PI * 2;
+            const twistAmount = Math.sin(twistProgress) * strength;
+
+            // Y-axis rotation (primary twist axis)
+            const rotationAngle = (config.rotationAngle || 45) * Math.PI / 180;
+            const yRotation = twistAmount * rotationAngle;
+
+            // Helical motion: X and Z rotate around center as particle twists
+            const helixAngle = data.startAngle + yRotation;
+            const helixRadius = (config.contractionFactor || 0.8) * data.startDistance;
+
+            // Calculate helical XZ offset
+            const xOffset = Math.cos(helixAngle) * helixRadius * 0.1;
+            const zOffset = Math.sin(helixAngle) * helixRadius * 0.1;
+
+            // X and Z rotation for additional twist dynamics
+            const xRotation = Math.cos(twistProgress) * 0.1 * strength;
+            const zRotation = Math.sin(twistProgress * 0.5) * 0.15 * strength;
+
+            // Scale contracts during twist
+            const contractionFactor = config.contractionFactor || 0.8;
+            const currentContraction = 1 - ((1 - contractionFactor) * Math.abs(twistAmount));
+            const scale = currentContraction;
+
+            return {
+                position: [particle.x + xOffset, particle.y, zOffset],
+                rotation: [xRotation, yRotation, zRotation],
+                scale
+            };
+        }
     }
 };

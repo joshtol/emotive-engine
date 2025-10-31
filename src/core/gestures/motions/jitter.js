@@ -99,9 +99,53 @@ export default {
         } else {
             particle.size = particle.baseSize;
         }
-        
+
         // Dampen velocity to help particle settle
         particle.vx *= 0.7;
         particle.vy *= 0.7;
+    },
+
+    /**
+     * 3D translation for jitter gesture
+     * Random micro-movements in all directions
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            let intensity = config.intensity || this.config.intensity;
+            const strength = config.strength || this.config.strength;
+
+            // Apply rhythm modulation if present
+            if (motion.rhythmModulation) {
+                intensity *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                intensity *= (motion.rhythmModulation.accentMultiplier || 1);
+            }
+
+            // Fade out over time
+            const fadeOut = 1 - progress * 0.5;
+            const jitterScale = intensity * strength * 0.2 * fadeOut;
+
+            // Random micro-movements in all three axes
+            const jitterX = (Math.random() - 0.5) * jitterScale;
+            const jitterY = (Math.random() - 0.5) * jitterScale;
+            const jitterZ = (Math.random() - 0.5) * jitterScale;
+
+            // Micro rotation jitter
+            const rotJitterX = (Math.random() - 0.5) * 0.03 * fadeOut;
+            const rotJitterY = (Math.random() - 0.5) * 0.03 * fadeOut;
+            const rotJitterZ = (Math.random() - 0.5) * 0.03 * fadeOut;
+
+            // Nervous scale variation
+            const scale = 1.0 + (Math.random() - 0.5) * 0.05 * fadeOut;
+
+            return {
+                position: [jitterX, jitterY, jitterZ],
+                rotation: [rotJitterX, rotJitterY, rotJitterZ],
+                scale
+            };
+        }
     }
 };

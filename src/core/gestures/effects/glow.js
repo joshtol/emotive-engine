@@ -205,5 +205,52 @@ export default {
      */
     easeInOutSine(t) {
         return -(Math.cos(Math.PI * t) - 1) / 2;
+    },
+
+    /**
+     * 3D core transformation for glow gesture
+     * GlowIntensity increase without movement
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const easeProgress = -(Math.cos(Math.PI * progress) - 1) / 2;
+
+            // Calculate glow pulse
+            let glowValue;
+            const frequency = config.frequency || 1;
+            let glowAmount = config.glowAmount || 0.8;
+
+            // Apply rhythm modulation if present
+            if (motion.rhythmModulation) {
+                glowAmount *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                glowAmount *= (motion.rhythmModulation.accentMultiplier || 1);
+            }
+
+            const rawPulse = (easeProgress * frequency * 2) % 2;
+            const holdPeak = config.holdPeak || 0.3;
+
+            if (holdPeak > 0 && rawPulse > (1 - holdPeak) && rawPulse < (1 + holdPeak)) {
+                glowValue = 1;
+            } else {
+                glowValue = Math.sin(easeProgress * Math.PI * 2 * frequency);
+            }
+
+            const glowIntensity = 1.0 + glowValue * glowAmount;
+
+            // Very subtle scale
+            const scaleAmount = config.scaleAmount || 0.1;
+            const scale = 1.0 + glowValue * scaleAmount * 0.5;
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale,
+                glowIntensity
+            };
+        }
     }
 };

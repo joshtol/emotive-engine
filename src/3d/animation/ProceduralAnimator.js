@@ -47,11 +47,9 @@ export class ProceduralAnimator {
             const anim = this.animations[i];
             const progress = Math.min((this.time - anim.startTime) / anim.duration, 1.0);
 
-            // Calculate eased progress
-            const easedProgress = this.easeInOutCubic(progress);
-
             // Get current frame values
-            const props = anim.evaluate(easedProgress);
+            // Pass raw progress - gestures apply their own easing
+            const props = anim.evaluate(progress);
 
             // Call update callback
             if (anim.callbacks.onUpdate) {

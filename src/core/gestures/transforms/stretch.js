@@ -281,5 +281,92 @@ export default {
         const p = 0.3;
         const s = p / 4;
         return Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / p) * (1 + overshoot) + 1;
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * Maps axis-based stretching to 3D scale transformations
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.stretch) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            // const data = particle.gestureData.stretch;
+            const config = motion.config || {};
+            const strength = motion.strength || 1.0;
+
+            // Calculate scale factors
+            let scaleX = config.scaleX || 1.3;
+            let scaleY = config.scaleY || 0.9;
+            // const scaleZ = 1.0; // No Z-axis stretching by default
+
+            // Apply area preservation if enabled
+            if (config.preserveArea && scaleX !== 1 && scaleY !== 1) {
+                const targetArea = scaleX * scaleY;
+                const factor = Math.sqrt(1 / targetArea);
+                scaleX *= factor;
+                scaleY *= factor;
+            }
+
+            // Get elastic progress
+            let easeProgress;
+            if (!config.elastic) {
+                // Simple cubic easing
+                easeProgress = progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            } else {
+                // Elastic easing with overshoot
+                const overshoot = config.overshoot || 0.1;
+                if (progress < 0.5) {
+                    const t = progress * 2;
+                    const p = 0.3;
+                    const s = p / 4;
+                    easeProgress = 0.5 * (-(Math.pow(2, 10 * (t - 1)) * Math.sin((t - 1 - s) * (2 * Math.PI) / p)) * (1 + overshoot));
+                } else {
+                    const t = (progress - 0.5) * 2;
+                    const p = 0.3;
+                    const s = p / 4;
+                    easeProgress = 0.5 + 0.5 * (Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / p) * (1 + overshoot) + 1);
+                }
+            }
+
+            // Handle alternating stretch
+            let finalScaleX, finalScaleY;
+            if (config.alternate) {
+                if (progress < 0.5) {
+                    finalScaleX = 1 + (scaleX - 1) * easeProgress * strength;
+                    finalScaleY = 1 + (1 / scaleX - 1) * (config.preserveArea ? 1 : 0);
+                } else {
+                    finalScaleX = scaleX + (1 - scaleX) * (easeProgress - 0.5) * 2 * strength;
+                    finalScaleY = 1 + (scaleY - 1) * (easeProgress - 0.5) * 2 * strength;
+                }
+            } else {
+                finalScaleX = 1 + (scaleX - 1) * easeProgress * strength;
+                finalScaleY = 1 + (scaleY - 1) * easeProgress * strength;
+            }
+
+            // Average scale for uniform scaling (when needed)
+            const uniformScale = Math.sqrt(finalScaleX * finalScaleY);
+
+            return {
+                position: [particle.x, particle.y, 0],
+                rotation: [0, 0, 0],
+                scale: uniformScale // Use averaged scale for 3D
+            };
+        }
     }
 };

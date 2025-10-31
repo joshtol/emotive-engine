@@ -265,7 +265,7 @@ export default {
     easeOutBounce(t) {
         const n1 = 7.5625;
         const d1 = 2.75;
-        
+
         if (t < 1 / d1) {
             return n1 * t * t;
         } else if (t < 2 / d1) {
@@ -274,6 +274,101 @@ export default {
             return n1 * (t -= 2.25 / d1) * t + 0.9375;
         } else {
             return n1 * (t -= 2.625 / d1) * t + 0.984375;
+        }
+    },
+
+    /**
+     * 3D translation for WebGL rendering
+     * Maps the 3-phase jump animation (squash, jump, land) to 3D space
+     */
+    '3d': {
+        /**
+         * Evaluate 3D transform for current progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration with particle data
+         * @returns {Object} Transform with position, rotation, scale
+         */
+        evaluate(progress, motion) {
+            const {particle} = motion;
+            if (!particle || !particle.gestureData?.jump) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
+            }
+
+            // const data = particle.gestureData.jump;
+            const config = motion.config || {};
+            const strength = motion.strength || 1.0;
+
+            const jumpHeight = (config.jumpHeight || 60) * strength * (particle.scaleFactor || 1.0);
+            const squash = config.squashAmount || 0.8;
+            const stretch = config.stretchAmount || 1.2;
+
+            // Define phase breakpoints
+            const anticipationEnd = config.anticipation || 0.2;
+            const jumpEnd = 1 - anticipationEnd * 0.5;
+
+            let yPosition = 0;
+            let scale = 1.0;
+            let xRotation = 0; // Slight tilt during jump
+
+            if (progress < anticipationEnd) {
+                // PHASE 1: Anticipation (squash down)
+                const squashProgress = progress / anticipationEnd;
+                const easedSquash = squashProgress * (2 - squashProgress); // easeOutQuad
+
+                scale = 1.0 - (1 - squash) * easedSquash;
+                yPosition = -easedSquash * 5; // Slightly lower
+
+            } else if (progress < jumpEnd) {
+                // PHASE 2: Jump (arc motion with stretch)
+                const jumpProgress = (progress - anticipationEnd) / (jumpEnd - anticipationEnd);
+                const jumpCurve = Math.sin(jumpProgress * Math.PI);
+
+                yPosition = jumpCurve * jumpHeight;
+
+                // Stretch/squash based on velocity
+                if (jumpProgress < 0.5) {
+                    // Going up - stretch
+                    const stretchProgress = jumpProgress * 2;
+                    scale = squash + (stretch - squash) * stretchProgress;
+                } else {
+                    // Coming down - return to normal
+                    const fallProgress = (jumpProgress - 0.5) * 2;
+                    scale = stretch - (stretch - 1) * fallProgress * 0.8;
+                }
+
+                // Slight forward rotation at peak
+                xRotation = Math.sin(jumpProgress * Math.PI) * 0.1;
+
+            } else {
+                // PHASE 3: Landing (impact squash)
+                const landProgress = (progress - jumpEnd) / (1 - jumpEnd);
+
+                yPosition = 0;
+
+                if (config.landingImpact) {
+                    if (landProgress < 0.3) {
+                        // Landing squash
+                        const impactProgress = landProgress / 0.3;
+                        scale = 1.0 - (1 - squash * 0.8) * (1 - impactProgress);
+                    } else {
+                        // Recover from squash
+                        const recoverProgress = (landProgress - 0.3) / 0.7;
+                        scale = squash * 0.8 + (1 - squash * 0.8) * recoverProgress;
+                    }
+                } else {
+                    scale = squash + (1 - squash) * landProgress;
+                }
+            }
+
+            return {
+                position: [particle.x, particle.y + yPosition, 0],
+                rotation: [xRotation, 0, 0],
+                scale
+            };
         }
     }
 };

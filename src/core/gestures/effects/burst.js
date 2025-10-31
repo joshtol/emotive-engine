@@ -117,17 +117,46 @@ export default {
         // Calculate force decay over gesture duration
         const decay = motion.decay || this.config.decay;
         const strength = (motion.strength || this.config.strength) * (1 - progress * decay);
-        
+
         // Calculate direction from center to particle
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         // Apply outward force if particle isn't at center
         if (distance > 1) {
             // Normalize direction and apply explosive force
             particle.vx += (dx / distance) * strength * 2 * dt;
             particle.vy += (dy / distance) * strength * 2 * dt;
+        }
+    },
+
+    /**
+     * 3D core transformation for burst gesture
+     * Sudden expansion with scale spike and glow flash
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const decay = config.decay || 0.5;
+            const strength = (motion.strength || 2.0) * (1 - progress * decay);
+
+            // Explosive scale spike that decays
+            const scale = 1.0 + (progress < 0.2 ? progress * 5 : (1 - progress) * 1.5) * strength;
+
+            // Bright flash that fades quickly
+            const glowIntensity = 1.0 + (progress < 0.3 ? (0.3 - progress) * 10 : 0) * strength;
+
+            // Minimal position/rotation for burst
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale,
+                glowIntensity
+            };
         }
     }
 };

@@ -230,5 +230,38 @@ export default {
      */
     easeInOutSine(t) {
         return -(Math.cos(Math.PI * t) - 1) / 2;
+    },
+
+    /**
+     * 3D core translation
+     * Maps pulse motion to 3D transforms
+     */
+    '3d': {
+        /**
+         * Evaluate 3D properties at given progress
+         * @param {number} progress - Animation progress (0-1)
+         * @param {Object} motion - Gesture configuration
+         * @returns {Object} 3D transform properties {position, rotation, scale}
+         */
+        evaluate(progress, motion) {
+            const config = motion || {};
+            const frequency = config.frequency || 1;
+            const strength = config.strength || 0.15;
+            const scaleAmount = config.scaleAmount || 0.2;
+            const glowAmount = config.glowAmount || 0.3;
+
+            // Apply easing
+            const easeProgress = -(Math.cos(Math.PI * progress) - 1) / 2;
+
+            // Calculate pulse value
+            const pulseValue = Math.sin(easeProgress * Math.PI * 2 * frequency);
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0 + pulseValue * scaleAmount * strength,
+                glowIntensity: 1.0 + pulseValue * glowAmount * strength
+            };
+        }
     }
 };

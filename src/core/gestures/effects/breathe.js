@@ -237,5 +237,36 @@ export default {
         if (particle.gestureData?.breathe) {
             delete particle.gestureData.breathe;
         }
+    },
+
+    /**
+     * 3D core transformation for breathe gesture
+     * Gentle scale pulsing with subtle glow variation
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+
+            // Breathing phase - oscillates between exhale and inhale
+            const breathPhase = (Math.sin(progress * Math.PI * 2 * config.breathRate) + 1) / 2;
+
+            // Scale oscillation (inhale = larger, exhale = smaller)
+            const scaleAmount = config.scaleAmount || 0.25;
+            const scale = 1.0 + (breathPhase - 0.5) * scaleAmount;
+
+            // Glow oscillation (inhale = brighter, exhale = dimmer)
+            const glowAmount = config.glowAmount || 0.4;
+            const glowIntensity = 1.0 + (breathPhase - 0.5) * glowAmount;
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale,
+                glowIntensity
+            };
+        }
     }
 };

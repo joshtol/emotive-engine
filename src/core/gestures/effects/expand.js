@@ -185,5 +185,34 @@ export default {
         if (particle.gestureData?.expand) {
             delete particle.gestureData.expand;
         }
+    },
+
+    /**
+     * 3D core transformation for expand gesture
+     * Gradual scale increase with growing glow
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            const strength = config.strength || 3.0;
+
+            // Gradual scale expansion
+            const scaleAmount = config.scaleAmount || 3.0;
+            const scale = 1.0 + progress * scaleAmount * (strength / 3.0);
+
+            // Growing glow intensity
+            const glowAmount = config.glowAmount || 0.5;
+            const glowIntensity = 1.0 + progress * glowAmount * strength;
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale,
+                glowIntensity
+            };
+        }
     }
 };

@@ -122,9 +122,54 @@ export default {
             particle.opacity = 1;
             particle.size = particle.baseSize;
         }
-        
+
         // Dampen velocity to help particle settle
         particle.vx *= 0.5;
         particle.vy *= 0.5;
+    },
+
+    /**
+     * 3D translation for float gesture
+     * Upward floating motion with Y position and gentle rotation
+     * @param {number} progress - Gesture progress (0-1)
+     * @param {Object} motion - Gesture configuration
+     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     */
+    '3d': {
+        evaluate(progress, motion) {
+            const config = { ...this.config, ...motion };
+            let amplitude = config.amplitude || this.config.amplitude;
+            let wobbleAmount = config.wobbleAmount || this.config.wobbleAmount;
+            const strength = config.strength || this.config.strength;
+
+            // Apply rhythm modulation if present
+            if (motion.rhythmModulation) {
+                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+                wobbleAmount *= (motion.rhythmModulation.wobbleMultiplier || 1);
+            }
+
+            // Upward Y movement (negative Y is up in most coordinate systems)
+            const floatDistance = -amplitude * progress * strength * (1 - progress * 0.5);
+
+            // Horizontal wobble as it floats
+            const wobble = Math.sin(progress * Math.PI * 4) * wobbleAmount * 0.3;
+
+            // Gentle spinning rotation as it rises
+            const spinRotation = progress * Math.PI * 0.5 * strength;
+
+            // Slight tilt for natural balloon-like motion
+            const tiltX = Math.sin(progress * Math.PI * 2) * 0.1;
+            const tiltZ = Math.cos(progress * Math.PI * 3) * 0.08;
+
+            // Scale increases slightly as it floats (depth perception)
+            const scale = 1.0 + progress * 0.1;
+
+            return {
+                position: [wobble, floatDistance, 0],
+                rotation: [tiltX, spinRotation, tiltZ],
+                scale
+            };
+        }
     }
 };
