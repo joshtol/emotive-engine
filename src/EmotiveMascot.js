@@ -107,6 +107,7 @@ import { VisualTransformationManager } from './mascot/rendering/VisualTransforma
 import { FrustrationContextManager } from './mascot/state/FrustrationContextManager.js';
 import { PerformanceBehaviorManager } from './mascot/performance/PerformanceBehaviorManager.js';
 import { PerformanceMonitoringManager } from './mascot/performance/PerformanceMonitoringManager.js';
+import { DegradationEventHandler } from './mascot/performance/DegradationEventHandler.js';
 import { DebugProfilingManager } from './mascot/debug/DebugProfilingManager.js';
 import { HealthCheckManager } from './mascot/system/HealthCheckManager.js';
 
@@ -201,64 +202,33 @@ class EmotiveMascot {
         this.breathingAnimationController = new BreathingAnimationController(this);
         this.systemStatusReporter = new SystemStatusReporter(this);
         this.sleepWakeManager = new SleepWakeManager(this);
+        this.degradationEventHandler = new DegradationEventHandler(
+            () => ({
+                particleSystem: this.particleSystem,
+                soundSystem: this.soundSystem,
+                renderer: this.renderer
+            }),
+            (event, data) => this.emit(event, data)
+        );
     }
 
     /**
      * Handle degradation manager events
+     * Delegates to DegradationEventHandler
      * @param {string} event - Event type
      * @param {Object} data - Event data
      */
     handleDegradationEvent(event, data) {
-        switch (event) {
-        case 'degradationApplied':
-            // Silently handle performance degradation
-            this.applyDegradationSettings(data.settings);
-            this.emit('performanceDegradation', data);
-            break;
-                
-        case 'recoveryApplied':
-            // Silently handle performance recovery
-            this.applyDegradationSettings(data.settings);
-            this.emit('performanceRecovery', data);
-            break;
-                
-        case 'levelChanged':
-            // Silently handle degradation level change
-            this.applyDegradationSettings(data.settings);
-            this.emit('degradationLevelChanged', data);
-            break;
-        }
+        return this.degradationEventHandler.handleEvent(event, data);
     }
 
     /**
      * Apply degradation settings to all systems
+     * Delegates to DegradationEventHandler
      * @param {Object} settings - Degradation settings
      */
     applyDegradationSettings(settings) {
-        // Update particle system limits
-        if (this.particleSystem && settings.particleLimit !== undefined) {
-            this.particleSystem.setMaxParticles(settings.particleLimit);
-        }
-        
-        // Update audio system
-        if (this.soundSystem && settings.audioEnabled !== undefined) {
-            if (!settings.audioEnabled && this.soundSystem.isAvailable()) {
-                this.soundSystem.stopAmbientTone(200);
-            }
-        }
-        
-        // DISABLED - Don't change FPS based on degradation
-        /*
-        // Update animation controller target FPS
-        if (this.animationController && settings.targetFPS !== undefined) {
-            this.animationController.setTargetFPS(settings.targetFPS);
-        }
-        */
-        
-        // Update renderer quality
-        if (this.renderer && settings.qualityLevel !== undefined) {
-            this.renderer.setQualityLevel(settings.qualityLevel);
-        }
+        return this.degradationEventHandler.applySettings(settings);
     }
 
     /**
