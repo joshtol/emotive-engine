@@ -9,6 +9,9 @@ class MockWebGL2RenderingContext {
         this.BLEND = 0x0BE2;
         this.SRC_ALPHA = 0x0302;
         this.ONE_MINUS_SRC_ALPHA = 0x0303;
+        this.ONE = 0x0001;
+        this.ZERO = 0x0000;
+        this.DST_COLOR = 0x0306;
         this.CULL_FACE = 0x0B44;
         this.BACK = 0x0405;
         this.TRIANGLES = 0x0004;
@@ -33,6 +36,7 @@ class MockWebGL2RenderingContext {
         this.shaderSource = vi.fn();
         this.compileShader = vi.fn();
         this.getShaderParameter = vi.fn(() => true);
+        this.deleteShader = vi.fn();
         this.createProgram = vi.fn(() => ({}));
         this.attachShader = vi.fn();
         this.linkProgram = vi.fn();
@@ -187,6 +191,47 @@ describe('WebGLRenderer', () => {
         });
     });
 
+
+    describe('setBlending()', () => {
+        it('should enable alpha blending', () => {
+            renderer.setBlending('alpha');
+
+            expect(mockGL.enable).toHaveBeenCalledWith(mockGL.BLEND);
+            expect(mockGL.blendFunc).toHaveBeenCalledWith(mockGL.SRC_ALPHA, mockGL.ONE_MINUS_SRC_ALPHA);
+        });
+
+        it('should enable additive blending', () => {
+            renderer.setBlending('additive');
+
+            expect(mockGL.enable).toHaveBeenCalledWith(mockGL.BLEND);
+            expect(mockGL.blendFunc).toHaveBeenCalledWith(mockGL.SRC_ALPHA, mockGL.ONE);
+        });
+
+        it('should enable multiply blending', () => {
+            renderer.setBlending('multiply');
+
+            expect(mockGL.enable).toHaveBeenCalledWith(mockGL.BLEND);
+            expect(mockGL.blendFunc).toHaveBeenCalledWith(mockGL.DST_COLOR, mockGL.ZERO);
+        });
+
+        it('should disable blending for none mode', () => {
+            mockGL.disable = vi.fn();
+
+            renderer.setBlending('none');
+
+            expect(mockGL.disable).toHaveBeenCalledWith(mockGL.BLEND);
+        });
+
+        it('should warn on unknown blend mode', () => {
+            const consoleWarn = vi.spyOn(console, 'warn').mockImplementation();
+
+            renderer.setBlending('invalid');
+
+            expect(consoleWarn).toHaveBeenCalledWith(expect.stringContaining('Unknown blend mode'));
+            consoleWarn.mockRestore();
+        });
+    });
+
     describe('setCullFace()', () => {
         it('should enable face culling with mode', () => {
             renderer.setCullFace('back');
@@ -203,4 +248,71 @@ describe('WebGLRenderer', () => {
             expect(mockGL.disable).toHaveBeenCalledWith(mockGL.CULL_FACE);
         });
     });
+    describe('compileShader()', () => {
+        it('should compile shader successfully', () => {
+            const shader = renderer.compileShader(mockGL.VERTEX_SHADER, 'void main() {}');
+
+            expect(mockGL.createShader).toHaveBeenCalledWith(mockGL.VERTEX_SHADER);
+            expect(mockGL.shaderSource).toHaveBeenCalled();
+            expect(mockGL.compileShader).toHaveBeenCalled();
+            expect(mockGL.getShaderParameter).toHaveBeenCalledWith(shader, mockGL.COMPILE_STATUS);
+        });
+
+        it('should throw error on compilation failure', () => {
+            mockGL.getShaderParameter.mockReturnValueOnce(false);
+            mockGL.getShaderInfoLog = vi.fn(() => 'Syntax error');
+            mockGL.deleteShader = vi.fn();
+
+            expect(() => {
+                renderer.compileShader(mockGL.VERTEX_SHADER, 'invalid shader');
+            }).toThrow('Shader compilation failed: Syntax error');
+        });
+
+        it('should cleanup shader on failure', () => {
+            mockGL.getShaderParameter.mockReturnValueOnce(false);
+            mockGL.getShaderInfoLog = vi.fn(() => 'Error');
+            mockGL.deleteShader = vi.fn();
+            const shader = {};
+            mockGL.createShader.mockReturnValueOnce(shader);
+
+            try {
+                renderer.compileShader(mockGL.VERTEX_SHADER, 'bad');
+            } catch (e) {
+                // Expected
+            }
+
+            expect(mockGL.deleteShader).toHaveBeenCalledWith(shader);
+        });
+    });
+
+    describe('createProgram()', () => {
+        it('should create and link program successfully', () => {
+            const program = renderer.createProgram('vert source', 'frag source');
+
+            expect(mockGL.createProgram).toHaveBeenCalled();
+            expect(mockGL.attachShader).toHaveBeenCalledTimes(2);
+            expect(mockGL.linkProgram).toHaveBeenCalled();
+            expect(mockGL.getProgramParameter).toHaveBeenCalled();
+            expect(program).toBeDefined();
+        });
+
+        it('should throw error on link failure', () => {
+            mockGL.getProgramParameter.mockReturnValueOnce(false);
+            mockGL.getProgramInfoLog = vi.fn(() => 'Link error');
+            mockGL.deleteProgram = vi.fn();
+
+            expect(() => {
+                renderer.createProgram('vert', 'frag');
+            }).toThrow('Program linking failed: Link error');
+        });
+
+        it('should cleanup shaders after linking', () => {
+            mockGL.deleteShader = vi.fn();
+
+            renderer.createProgram('vert', 'frag');
+
+            expect(mockGL.deleteShader).toHaveBeenCalledTimes(2);
+        });
+    });
+
 });
