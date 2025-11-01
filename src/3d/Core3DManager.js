@@ -62,6 +62,8 @@ export class Core3DManager {
         this.baseScale = options.coreScale || 0.16; // Properly sized core relative to particles
         this.scale = this.baseScale; // Current scale (base + animation)
         this.position = [0, 0, 0];
+        this.renderMode = 0; // 0=standard, 1=normals, 2=toon, 3=edge
+        this.wireframeEnabled = false;
 
         // Initialize emotion
         this.setEmotion(this.emotion);
@@ -467,7 +469,8 @@ export class Core3DManager {
             modelMatrix: this.createModelMatrix(this.position, this.rotation, this.scale),
             glowColor: this.glowColor,
             glowIntensity: this.glowIntensity,
-            renderMode: 0
+            renderMode: this.renderMode,
+            wireframeEnabled: this.wireframeEnabled
         };
 
         // Prepare camera data for pipeline

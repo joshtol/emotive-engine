@@ -18,6 +18,8 @@ export class GeometryPass extends BasePass {
         this.program = null;
         this.locations = null;
         this.buffers = {};
+        this.wireframeIndexCount = 0;
+        this.currentGeometry = null; // Track current geometry to detect changes
     }
 
     /**
@@ -89,6 +91,89 @@ export class GeometryPass extends BasePass {
             gl.UNSIGNED_SHORT,
             0
         );
+
+        // Draw wireframe overlay if enabled
+        if (scene.wireframeEnabled) {
+            // Create wireframe indices if not already created or geometry changed
+            if (!this.wireframeIndexCount || this.currentGeometry !== scene.geometry) {
+                this.createWireframeIndices(scene.geometry);
+            }
+
+            // Save original uniforms
+            const originalGlowColor = scene.glowColor;
+            const originalGlowIntensity = scene.glowIntensity;
+
+            // Set wireframe color to pure white with reduced glow for contrast
+            gl.uniform3fv(this.locations.glowColor, [1.0, 1.0, 1.0]);
+            gl.uniform1f(this.locations.glowIntensity, 0.5);
+
+            // Disable depth writes to overlay on top
+            gl.depthMask(false);
+
+            // Set line width (note: many browsers ignore values > 1)
+            gl.lineWidth(2.0);
+
+            // Draw wireframe
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.wireframeIndices);
+            gl.drawElements(
+                gl.LINES,
+                this.wireframeIndexCount,
+                gl.UNSIGNED_SHORT,
+                0
+            );
+
+            // Restore state
+            gl.depthMask(true);
+            gl.lineWidth(1.0);
+            gl.uniform3fv(this.locations.glowColor, originalGlowColor);
+            gl.uniform1f(this.locations.glowIntensity, originalGlowIntensity);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
+        }
+    }
+
+    /**
+     * Create wireframe indices from triangle indices
+     * Deduplicates edges so shared edges are only drawn once
+     * @param {Object} geometry - Geometry data with indices
+     */
+    createWireframeIndices(geometry) {
+        const { gl } = this.renderer;
+        const triangleIndices = geometry.indices;
+        const edges = new Set();
+        const wireframeIndices = [];
+
+        // Extract unique edges from triangles
+        for (let i = 0; i < triangleIndices.length; i += 3) {
+            const v0 = triangleIndices[i];
+            const v1 = triangleIndices[i + 1];
+            const v2 = triangleIndices[i + 2];
+
+            // Add three edges of the triangle (sorted to avoid duplicates)
+            const edge1 = v0 < v1 ? `${v0},${v1}` : `${v1},${v0}`;
+            const edge2 = v1 < v2 ? `${v1},${v2}` : `${v2},${v1}`;
+            const edge3 = v2 < v0 ? `${v2},${v0}` : `${v0},${v2}`;
+
+            if (!edges.has(edge1)) {
+                edges.add(edge1);
+                wireframeIndices.push(v0, v1);
+            }
+            if (!edges.has(edge2)) {
+                edges.add(edge2);
+                wireframeIndices.push(v1, v2);
+            }
+            if (!edges.has(edge3)) {
+                edges.add(edge3);
+                wireframeIndices.push(v2, v0);
+            }
+        }
+
+        // Create buffer
+        this.buffers.wireframeIndices = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.wireframeIndices);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(wireframeIndices), gl.STATIC_DRAW);
+
+        this.wireframeIndexCount = wireframeIndices.length;
+        this.currentGeometry = geometry; // Track which geometry this wireframe belongs to
     }
 
     /**

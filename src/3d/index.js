@@ -518,9 +518,8 @@ export class EmotiveMascot3D {
 
         const modeValue = typeof mode === 'string' ? modeMap[mode] : mode;
 
-        if (this.core3D && this.core3D.renderer) {
-            this.core3D.renderer.renderMode = modeValue;
-            // Render mode changed
+        if (this.core3D) {
+            this.core3D.renderMode = modeValue;
         } else {
             console.warn('Renderer not available yet');
         }
@@ -531,9 +530,8 @@ export class EmotiveMascot3D {
      * @param {boolean} enabled - Enable/disable wireframe
      */
     setWireframe(enabled) {
-        if (this.core3D && this.core3D.renderer) {
-            this.core3D.renderer.wireframeEnabled = enabled;
-            // Wireframe toggled
+        if (this.core3D) {
+            this.core3D.wireframeEnabled = enabled;
         } else {
             console.warn('Renderer not available yet');
         }
