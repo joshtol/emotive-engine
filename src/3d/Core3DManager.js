@@ -9,6 +9,8 @@
  */
 
 import { WebGLRenderer } from './renderer/WebGLRenderer.js';
+import { RenderPipeline } from './renderer/RenderPipeline.js';
+import { GeometryPass } from './passes/GeometryPass.js';
 import { CORE_GEOMETRIES } from './geometries/index.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
 import { getEmotion } from '../core/emotions/index.js';
@@ -19,8 +21,23 @@ export class Core3DManager {
         this.canvas = canvas;
         this.options = options;
 
-        // Initialize WebGL renderer
-        this.renderer = new WebGLRenderer(canvas);
+        // Create WebGL renderer
+        const renderer = new WebGLRenderer(canvas);
+
+        // Create render pipeline with modular architecture
+        this.pipeline = new RenderPipeline(renderer);
+        this.pipeline.addPass(new GeometryPass());
+
+        // Backward compatibility - expose renderer property
+        this.renderer = renderer;
+
+        // Camera setup (closer and looking straight at origin)
+        this.cameraPosition = [0, 0, 3];
+        this.cameraTarget = [0, 0, 0];
+
+        // Matrices
+        this.projectionMatrix = this.createPerspectiveMatrix();
+        this.viewMatrix = this.createViewMatrix();
 
         // Load geometry
         this.geometryType = options.geometry || 'sphere';
@@ -443,15 +460,24 @@ export class Core3DManager {
         // Auto-rotate based on emotion
         this.rotation[1] += deltaTime * 0.0003; // Slow Y rotation
 
-        // Render with WebGL
-        this.renderer.render({
+        // Prepare scene data for pipeline
+        const scene = {
             geometry: this.geometry,
-            position: this.position,
-            rotation: this.rotation,
-            scale: this.scale,
+            modelMatrix: this.createModelMatrix(this.position, this.rotation, this.scale),
             glowColor: this.glowColor,
-            glowIntensity: this.glowIntensity
-        });
+            glowIntensity: this.glowIntensity,
+            renderMode: 0
+        };
+
+        // Prepare camera data for pipeline
+        const camera = {
+            viewMatrix: this.viewMatrix,
+            projectionMatrix: this.projectionMatrix,
+            position: this.cameraPosition
+        };
+
+        // Execute render pipeline
+        this.pipeline.render(scene, camera);
     }
 
     /**
@@ -467,6 +493,183 @@ export class Core3DManager {
         const b = parseInt(hex.substring(4, 6), 16) / 255;
 
         return [r, g, b];
+    }
+
+    /**
+     * Create model matrix (TRS: Translate, Rotate, Scale)
+     */
+    createModelMatrix(position, rotation, scale) {
+        const mat = this.identity();
+
+        // Translate
+        this.translate(mat, position);
+
+        // Rotate (X, Y, Z order)
+        this.rotateX(mat, rotation[0]);
+        this.rotateY(mat, rotation[1]);
+        this.rotateZ(mat, rotation[2]);
+
+        // Scale
+        this.scaleMatrix(mat, [scale, scale, scale]);
+
+        return mat;
+    }
+
+    /**
+     * Create perspective projection matrix
+     */
+    createPerspectiveMatrix() {
+        const fov = 45 * Math.PI / 180;
+        const aspect = this.canvas.width / this.canvas.height;
+        const near = 0.1;
+        const far = 100.0;
+
+        const f = 1.0 / Math.tan(fov / 2);
+        const rangeInv = 1 / (near - far);
+
+        return new Float32Array([
+            f / aspect, 0, 0, 0,
+            0, f, 0, 0,
+            0, 0, (near + far) * rangeInv, -1,
+            0, 0, near * far * rangeInv * 2, 0
+        ]);
+    }
+
+    /**
+     * Create view matrix (lookAt)
+     */
+    createViewMatrix() {
+        // Simple lookAt implementation
+        const eye = this.cameraPosition;
+        const center = this.cameraTarget;
+        const up = [0, 1, 0];
+
+        // Forward
+        const fx = center[0] - eye[0];
+        const fy = center[1] - eye[1];
+        const fz = center[2] - eye[2];
+        const fLen = Math.sqrt(fx*fx + fy*fy + fz*fz);
+        const f = [fx/fLen, fy/fLen, fz/fLen];
+
+        // Right = forward × up
+        const rx = f[1]*up[2] - f[2]*up[1];
+        const ry = f[2]*up[0] - f[0]*up[2];
+        const rz = f[0]*up[1] - f[1]*up[0];
+        const rLen = Math.sqrt(rx*rx + ry*ry + rz*rz);
+        const r = [rx/rLen, ry/rLen, rz/rLen];
+
+        // Up = right × forward
+        const ux = r[1]*f[2] - r[2]*f[1];
+        const uy = r[2]*f[0] - r[0]*f[2];
+        const uz = r[0]*f[1] - r[1]*f[0];
+
+        return new Float32Array([
+            r[0], ux, -f[0], 0,
+            r[1], uy, -f[1], 0,
+            r[2], uz, -f[2], 0,
+            -(r[0]*eye[0] + r[1]*eye[1] + r[2]*eye[2]),
+            -(ux*eye[0] + uy*eye[1] + uz*eye[2]),
+            f[0]*eye[0] + f[1]*eye[1] + f[2]*eye[2],
+            1
+        ]);
+    }
+
+    // Matrix utility functions
+    identity() {
+        return new Float32Array([
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        ]);
+    }
+
+    translate(mat, vec) {
+        mat[12] += mat[0] * vec[0] + mat[4] * vec[1] + mat[8] * vec[2];
+        mat[13] += mat[1] * vec[0] + mat[5] * vec[1] + mat[9] * vec[2];
+        mat[14] += mat[2] * vec[0] + mat[6] * vec[1] + mat[10] * vec[2];
+        mat[15] += mat[3] * vec[0] + mat[7] * vec[1] + mat[11] * vec[2];
+    }
+
+    rotateX(mat, angle) {
+        const s = Math.sin(angle);
+        const c = Math.cos(angle);
+        const a10 = mat[4];
+        const a11 = mat[5];
+        const a12 = mat[6];
+        const a13 = mat[7];
+        const a20 = mat[8];
+        const a21 = mat[9];
+        const a22 = mat[10];
+        const a23 = mat[11];
+
+        mat[4] = a10 * c + a20 * s;
+        mat[5] = a11 * c + a21 * s;
+        mat[6] = a12 * c + a22 * s;
+        mat[7] = a13 * c + a23 * s;
+        mat[8] = a20 * c - a10 * s;
+        mat[9] = a21 * c - a11 * s;
+        mat[10] = a22 * c - a12 * s;
+        mat[11] = a23 * c - a13 * s;
+    }
+
+    rotateY(mat, angle) {
+        const s = Math.sin(angle);
+        const c = Math.cos(angle);
+        const a00 = mat[0];
+        const a01 = mat[1];
+        const a02 = mat[2];
+        const a03 = mat[3];
+        const a20 = mat[8];
+        const a21 = mat[9];
+        const a22 = mat[10];
+        const a23 = mat[11];
+
+        mat[0] = a00 * c - a20 * s;
+        mat[1] = a01 * c - a21 * s;
+        mat[2] = a02 * c - a22 * s;
+        mat[3] = a03 * c - a23 * s;
+        mat[8] = a00 * s + a20 * c;
+        mat[9] = a01 * s + a21 * c;
+        mat[10] = a02 * s + a22 * c;
+        mat[11] = a03 * s + a23 * c;
+    }
+
+    rotateZ(mat, angle) {
+        const s = Math.sin(angle);
+        const c = Math.cos(angle);
+        const a00 = mat[0];
+        const a01 = mat[1];
+        const a02 = mat[2];
+        const a03 = mat[3];
+        const a10 = mat[4];
+        const a11 = mat[5];
+        const a12 = mat[6];
+        const a13 = mat[7];
+
+        mat[0] = a00 * c + a10 * s;
+        mat[1] = a01 * c + a11 * s;
+        mat[2] = a02 * c + a12 * s;
+        mat[3] = a03 * c + a13 * s;
+        mat[4] = a10 * c - a00 * s;
+        mat[5] = a11 * c - a01 * s;
+        mat[6] = a12 * c - a02 * s;
+        mat[7] = a13 * c - a03 * s;
+    }
+
+    scaleMatrix(mat, vec) {
+        mat[0] *= vec[0];
+        mat[1] *= vec[0];
+        mat[2] *= vec[0];
+        mat[3] *= vec[0];
+        mat[4] *= vec[1];
+        mat[5] *= vec[1];
+        mat[6] *= vec[1];
+        mat[7] *= vec[1];
+        mat[8] *= vec[2];
+        mat[9] *= vec[2];
+        mat[10] *= vec[2];
+        mat[11] *= vec[2];
     }
 
     /**
