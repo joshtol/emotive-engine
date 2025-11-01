@@ -124,7 +124,8 @@ export class EmotiveMascot3D {
             // Initialize 3D core renderer
             this.core3D = new Core3DManager(this.webglCanvas, {
                 geometry: this.config.coreGeometry,
-                emotion: this.config.defaultEmotion
+                emotion: this.config.defaultEmotion,
+                coreScale: this.config.coreScale  // Pass through coreScale option
             });
 
             // Initialize particle system (2D overlay)
@@ -519,7 +520,7 @@ export class EmotiveMascot3D {
 
         if (this.core3D && this.core3D.renderer) {
             this.core3D.renderer.renderMode = modeValue;
-            console.log('Render mode set to:', mode, '(', modeValue, ')');
+            // Render mode changed
         } else {
             console.warn('Renderer not available yet');
         }
@@ -532,7 +533,7 @@ export class EmotiveMascot3D {
     setWireframe(enabled) {
         if (this.core3D && this.core3D.renderer) {
             this.core3D.renderer.wireframeEnabled = enabled;
-            console.log('Wireframe:', enabled ? 'enabled' : 'disabled');
+            // Wireframe toggled
         } else {
             console.warn('Renderer not available yet');
         }

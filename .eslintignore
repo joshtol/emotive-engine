@@ -1,3 +1,5 @@
 site/js/**
 site/public/**
 dist/**
+examples/**/*.js
+examples/**/*.umd.js

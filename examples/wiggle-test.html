@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wiggle Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        canvas {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: block;
+            pointer-events: none; /* Let clicks pass through to buttons */
+        }
+        .button-container {
+            margin-top: 20px;
+            z-index: 1000;
+            position: relative;
+        }
+        button {
+            display: inline-block;
+            margin: 20px 10px;
+            padding: 15px 30px;
+            font-size: 18px;
+            background: rgba(100, 200, 255, 0.4);
+            border: 2px solid rgba(100, 200, 255, 0.8);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: rgba(100, 200, 255, 0.6);
+            transform: scale(1.05);
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            border-radius: 6px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wiggle Test</h1>
+    <canvas id="mascot-canvas" width="800" height="600"></canvas>
+    <div class="button-container">
+        <button id="wiggle-btn">WIGGLE</button>
+        <button id="orbit-btn">ORBIT (for comparison)</button>
+    </div>
+    <div id="status">Loading...</div>
+
+    <script type="module">
+        import { EmotiveMascot3D } from '../dist/emotive-mascot-3d.js';
+
+        let mascot;
+
+        (async () => {
+            try {
+                const canvas = document.getElementById('mascot-canvas');
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'crystal',
+                    enableParticles: true
+                });
+
+                await mascot.init(canvas);
+                mascot.start();
+                mascot.setEmotion('joy');
+
+                document.getElementById('status').textContent = '✅ Ready - click buttons!';
+                console.log('✅ Mascot ready - click buttons to test');
+
+                // Make mascot available globally for button handlers
+                window.mascot = mascot;
+
+                // Wire up buttons
+                document.getElementById('wiggle-btn').onclick = () => {
+                    console.log('=== Clicking WIGGLE ===');
+                    mascot.express('wiggle');
+                };
+                document.getElementById('orbit-btn').onclick = () => {
+                    console.log('=== Clicking ORBIT ===');
+                    mascot.express('orbit');
+                };
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                document.getElementById('status').textContent = '❌ Error: ' + error.message;
+            }
+        })();
+    </script>
+</body>
+</html>

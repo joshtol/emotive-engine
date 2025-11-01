@@ -29,6 +29,10 @@ export class GeometryPass extends BasePass {
         // Compile shader program
         this.program = this.renderer.createProgram(vertexShaderSource, fragmentShaderSource);
 
+        if (!this.program) {
+            throw new Error('Failed to create shader program');
+        }
+
         // Get attribute locations
         this.locations = {
             // Attributes
@@ -78,9 +82,10 @@ export class GeometryPass extends BasePass {
         gl.uniform1i(this.locations.renderMode, scene.renderMode || 0);
 
         // Draw geometry
+        const indexCount = scene.geometry.indices.length;
         gl.drawElements(
             gl.TRIANGLES,
-            scene.geometry.indexCount,
+            indexCount,
             gl.UNSIGNED_SHORT,
             0
         );

@@ -58,8 +58,9 @@ export class Core3DManager {
         this.rotation = [0, 0, 0]; // Euler angles (x, y, z)
         // Match 2D sizing: core is 1/12th of canvas size (coreSizeDivisor: 12)
         // In WebGL NDC space (-1 to 1), this translates to a smaller scale value
-        this.baseScale = 0.16; // Properly sized core relative to particles
-        this.scale = 0.16; // Current scale (base + animation)
+        // Default 0.16 matches 2D proportions, but can be overridden via options.coreScale
+        this.baseScale = options.coreScale || 0.16; // Properly sized core relative to particles
+        this.scale = this.baseScale; // Current scale (base + animation)
         this.position = [0, 0, 0];
 
         // Initialize emotion
@@ -256,7 +257,7 @@ export class Core3DManager {
      * position[1] = vertical (up-down)
      * position[2] = depth (forward-back toward/away from camera)
      */
-    translate2DTo3D(particle, progress, gesture, gestureState) {
+    translate2DTo3D(particle, progress, gesture, _gestureState) {
         const props = {
             position: [0, 0, 0],  // Always reset to center
             rotation: [0, 0, 0],  // Always reset rotation
