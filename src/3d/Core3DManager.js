@@ -62,8 +62,23 @@ export class Core3DManager {
         this.baseScale = options.coreScale || 0.16; // Properly sized core relative to particles
         this.scale = this.baseScale; // Current scale (base + animation)
         this.position = [0, 0, 0];
-        this.renderMode = 0; // 0=standard, 1=normals, 2=toon, 3=edge
+
+        // Legacy render mode (kept for backwards compatibility)
+        this.renderMode = 0; // 0=standard, 1=normals, 2=toon, 3=edge, 4=holographic, 5=technical, 6=neon
+
+        // New blended rendering system (all modes mix together with weights 0.0-1.0)
+        this.renderBlend = {
+            pbr: 1.0,        // PBR shading amount
+            toon: 0.0,       // Toon/cel shading amount
+            flat: 0.0,       // Flat color amount
+            normals: 0.0,    // Rainbow normals amount
+            edges: 0.0,      // Edge detection amount
+            rim: 0.0,        // Rim lighting amount
+            wireframe: 0.0   // Wireframe overlay amount
+        };
+
         this.wireframeEnabled = false;
+        this.lightDirection = [0.5, 1.0, 1.0]; // Directional light (x, y, z)
 
         // Initialize emotion
         this.setEmotion(this.emotion);
@@ -469,8 +484,10 @@ export class Core3DManager {
             modelMatrix: this.createModelMatrix(this.position, this.rotation, this.scale),
             glowColor: this.glowColor,
             glowIntensity: this.glowIntensity,
-            renderMode: this.renderMode,
-            wireframeEnabled: this.wireframeEnabled
+            renderMode: this.renderMode,           // Legacy (for backwards compat)
+            renderBlend: this.renderBlend,         // New blended system
+            wireframeEnabled: this.wireframeEnabled,
+            lightDirection: this.lightDirection
         };
 
         // Prepare camera data for pipeline

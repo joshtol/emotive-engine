@@ -1,0 +1,83 @@
+<!-- ADD THIS SECTION AFTER THE WIREFRAME SECTION IN directional-test-suite.html -->
+
+            <!-- NEW: Layered Rendering Controls -->
+            <div class="test-category">
+                <div class="category-title">🎨 Layered Rendering (NEW)</div>
+
+                <!-- Base Shading -->
+                <label style="display: block; margin-top: 10px; font-weight: bold;">
+                    Base Shading:
+                </label>
+                <select id="baseMode" onchange="updateLayerBase(this.value)" style="width: 100%; margin-bottom: 10px; padding: 5px;">
+                    <option value="0">None</option>
+                    <option value="1" selected>PBR</option>
+                    <option value="2">Toon</option>
+                    <option value="3">Flat</option>
+                </select>
+
+                <!-- Overlay -->
+                <label style="display: block; margin-top: 10px; font-weight: bold;">
+                    Overlay:
+                </label>
+                <select id="overlayMode" onchange="updateLayerOverlay(this.value)" style="width: 100%; margin-bottom: 5px; padding: 5px;">
+                    <option value="0" selected>None</option>
+                    <option value="1">Normals (Rainbow)</option>
+                </select>
+
+                <!-- Overlay Blend Slider -->
+                <label style="display: block; margin-top: 5px;">
+                    Overlay Blend: <span id="blendValue">0%</span>
+                </label>
+                <input type="range" id="overlayBlend" min="0" max="100" value="0"
+                       oninput="updateOverlayBlend(this.value)"
+                       style="width: 100%; margin-bottom: 10px;">
+
+                <!-- Effects -->
+                <label style="display: block; margin-top: 10px; font-weight: bold;">
+                    Effects:
+                </label>
+                <div style="margin-left: 10px;">
+                    <label style="display: block;">
+                        <input type="checkbox" id="effectEdges" onchange="updateEffects()"> Edges
+                    </label>
+                    <label style="display: block;">
+                        <input type="checkbox" id="effectRim" onchange="updateEffects()"> Rim Lighting
+                    </label>
+                </div>
+            </div>
+
+<!-- AND ADD THESE JAVASCRIPT FUNCTIONS IN THE <script> SECTION -->
+
+        // Layered Rendering System functions
+        window.updateLayerBase = function(value) {
+            if (!mascot) return;
+            mascot.setRenderLayers({ base: parseInt(value) });
+        };
+
+        window.updateLayerOverlay = function(value) {
+            if (!mascot) return;
+            const overlayValue = parseInt(value);
+            mascot.setRenderLayers({ overlay: overlayValue });
+
+            // Reset blend to 0 if overlay is none
+            if (overlayValue === 0) {
+                document.getElementById('overlayBlend').value = 0;
+                document.getElementById('blendValue').textContent = '0%';
+                mascot.setOverlayBlend(0);
+            }
+        };
+
+        window.updateOverlayBlend = function(value) {
+            if (!mascot) return;
+            const blend = parseInt(value) / 100.0;
+            mascot.setOverlayBlend(blend);
+            document.getElementById('blendValue').textContent = value + '%';
+        };
+
+        window.updateEffects = function() {
+            if (!mascot) return;
+            let flags = 0;
+            if (document.getElementById('effectEdges').checked) flags |= 0x1;
+            if (document.getElementById('effectRim').checked) flags |= 0x2;
+            mascot.setRenderLayers({ effectFlags: flags });
+        };

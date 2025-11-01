@@ -513,7 +513,10 @@ export class EmotiveMascot3D {
             'standard': 0,
             'normals': 1,
             'toon': 2,
-            'edge': 3
+            'edge': 3,
+            'holographic': 4,
+            'technical': 5,
+            'neon': 6
         };
 
         const modeValue = typeof mode === 'string' ? modeMap[mode] : mode;
@@ -535,6 +538,78 @@ export class EmotiveMascot3D {
         } else {
             console.warn('Renderer not available yet');
         }
+    }
+
+    /**
+     * Set light direction for 3D rendering
+     * @param {number} x - X component of light direction
+     * @param {number} y - Y component of light direction
+     * @param {number} z - Z component of light direction
+     */
+    setLightDirection(x, y, z) {
+        if (this.core3D) {
+            this.core3D.lightDirection = [x, y, z];
+        } else {
+            console.warn('Renderer not available yet');
+        }
+    }
+
+    /**
+     * Get current render mode
+     * @returns {number} Current render mode (0=standard, 1=normals, 2=toon, 3=edge)
+     */
+    getCurrentRenderMode() {
+        return this.core3D ? this.core3D.renderMode : 0;
+    }
+
+    /**
+     * Check if wireframe is enabled
+     * @returns {boolean} Wireframe enabled state
+     */
+    isWireframeEnabled() {
+        return this.core3D ? this.core3D.wireframeEnabled : false;
+    }
+
+    /**
+     * Get current render state
+     * @returns {Object} Render state including mode, wireframe, and geometry
+     */
+    getRenderState() {
+        return {
+            mode: this.getCurrentRenderMode(),
+            wireframe: this.isWireframeEnabled(),
+            geometry: this.config.coreGeometry,
+            lightDirection: this.core3D ? this.core3D.lightDirection : [0.5, 1.0, 1.0],
+            layers: this.core3D ? this.core3D.renderLayers : null
+        };
+    }
+
+    /**
+     * Set render blend amounts (NEW blended rendering system)
+     * All modes blend together - you can mix multiple at once!
+     * @param {Object} amounts - Blend amounts (0.0-1.0 for each)
+     *   pbr: PBR shading weight
+     *   toon: Toon/cel shading weight
+     *   flat: Flat color weight
+     *   normals: Rainbow normals weight
+     *   edges: Edge detection weight
+     *   rim: Rim lighting weight
+     *   wireframe: Wireframe overlay weight
+     */
+    setRenderBlend(amounts) {
+        if (!this.core3D) {
+            console.warn('Renderer not available yet');
+            return;
+        }
+
+        // Update blend amounts (clamp to 0-1)
+        if (amounts.pbr !== undefined) this.core3D.renderBlend.pbr = Math.max(0, Math.min(1, amounts.pbr));
+        if (amounts.toon !== undefined) this.core3D.renderBlend.toon = Math.max(0, Math.min(1, amounts.toon));
+        if (amounts.flat !== undefined) this.core3D.renderBlend.flat = Math.max(0, Math.min(1, amounts.flat));
+        if (amounts.normals !== undefined) this.core3D.renderBlend.normals = Math.max(0, Math.min(1, amounts.normals));
+        if (amounts.edges !== undefined) this.core3D.renderBlend.edges = Math.max(0, Math.min(1, amounts.edges));
+        if (amounts.rim !== undefined) this.core3D.renderBlend.rim = Math.max(0, Math.min(1, amounts.rim));
+        if (amounts.wireframe !== undefined) this.core3D.renderBlend.wireframe = Math.max(0, Math.min(1, amounts.wireframe));
     }
 
     /**

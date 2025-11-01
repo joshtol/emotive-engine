@@ -48,7 +48,16 @@ export class GeometryPass extends BasePass {
             glowColor: gl.getUniformLocation(this.program, 'u_glowColor'),
             glowIntensity: gl.getUniformLocation(this.program, 'u_glowIntensity'),
             cameraPosition: gl.getUniformLocation(this.program, 'u_cameraPosition'),
-            renderMode: gl.getUniformLocation(this.program, 'u_renderMode')
+            renderMode: gl.getUniformLocation(this.program, 'u_renderMode'),
+            lightDirection: gl.getUniformLocation(this.program, 'u_lightDirection'),
+            // New blended rendering uniforms
+            pbrAmount: gl.getUniformLocation(this.program, 'u_pbrAmount'),
+            toonAmount: gl.getUniformLocation(this.program, 'u_toonAmount'),
+            flatAmount: gl.getUniformLocation(this.program, 'u_flatAmount'),
+            normalsAmount: gl.getUniformLocation(this.program, 'u_normalsAmount'),
+            edgesAmount: gl.getUniformLocation(this.program, 'u_edgesAmount'),
+            rimAmount: gl.getUniformLocation(this.program, 'u_rimAmount'),
+            wireframeAmount: gl.getUniformLocation(this.program, 'u_wireframeAmount')
         };
     }
 
@@ -82,6 +91,21 @@ export class GeometryPass extends BasePass {
         gl.uniform1f(this.locations.glowIntensity, scene.glowIntensity || 0.0);
         gl.uniform3fv(this.locations.cameraPosition, camera.position);
         gl.uniform1i(this.locations.renderMode, scene.renderMode || 0);
+        gl.uniform3fv(this.locations.lightDirection, scene.lightDirection || [0.5, 1.0, 1.0]);
+
+        // Blended rendering uniforms
+        const blend = scene.renderBlend || {
+            pbr: 1.0, toon: 0.0, flat: 0.0, normals: 0.0,
+            edges: 0.0, rim: 0.0, wireframe: 0.0
+        };
+
+        gl.uniform1f(this.locations.pbrAmount, blend.pbr);
+        gl.uniform1f(this.locations.toonAmount, blend.toon);
+        gl.uniform1f(this.locations.flatAmount, blend.flat);
+        gl.uniform1f(this.locations.normalsAmount, blend.normals);
+        gl.uniform1f(this.locations.edgesAmount, blend.edges);
+        gl.uniform1f(this.locations.rimAmount, blend.rim);
+        gl.uniform1f(this.locations.wireframeAmount, blend.wireframe);
 
         // Draw geometry
         const indexCount = scene.geometry.indices.length;

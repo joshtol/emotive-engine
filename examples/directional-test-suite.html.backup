@@ -370,32 +370,6 @@
             </div>
         </div>
 
-            <!-- Blended Rendering Controls - ALL SLIDERS MIX TOGETHER! -->
-            <div class="test-category">
-                <div class="category-title">🎨 Render Blending (Mix & Match!)</div>
-
-                <label>PBR: <span id="pbrValue">100%</span></label>
-                <input type="range" id="pbrSlider" min="0" max="100" value="100" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
-
-                <label>Toon: <span id="toonValue">0%</span></label>
-                <input type="range" id="toonSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
-
-                <label>Flat: <span id="flatValue">0%</span></label>
-                <input type="range" id="flatSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
-
-                <label>Normals: <span id="normalsValue">0%</span></label>
-                <input type="range" id="normalsSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
-
-                <label>Edges: <span id="edgesValue">0%</span></label>
-                <input type="range" id="edgesSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
-
-                <label>Rim: <span id="rimValue">0%</span></label>
-                <input type="range" id="rimSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
-
-                <label>Wireframe: <span id="wireframeValue">0%</span></label>
-                <input type="range" id="wireframeSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
-            </div>
-
         <!-- Position Tests -->
         <div class="control-panel">
             <h3>Position Tests</h3>
@@ -607,29 +581,7 @@
         // Change render mode
         window.changeRenderMode = function(mode) {
             if (!mascot) return;
-
-            // Set slider configurations for each mode
-            const configs = {
-                'standard': { pbr: 100, toon: 0, flat: 0, normals: 0, edges: 0, rim: 0, wireframe: 0 },
-                'normals': { pbr: 0, toon: 0, flat: 0, normals: 100, edges: 0, rim: 0, wireframe: 0 },
-                'toon': { pbr: 0, toon: 100, flat: 0, normals: 0, edges: 0, rim: 0, wireframe: 0 },
-                'edge': { pbr: 0, toon: 0, flat: 0, normals: 0, edges: 100, rim: 0, wireframe: 0 }
-            };
-
-            const config = configs[mode];
-            if (!config) return;
-
-            // Update all sliders
-            document.getElementById('pbrSlider').value = config.pbr;
-            document.getElementById('toonSlider').value = config.toon;
-            document.getElementById('flatSlider').value = config.flat;
-            document.getElementById('normalsSlider').value = config.normals;
-            document.getElementById('edgesSlider').value = config.edges;
-            document.getElementById('rimSlider').value = config.rim;
-            document.getElementById('wireframeSlider').value = config.wireframe;
-
-            // Trigger the blend update
-            updateBlend();
+            mascot.setRenderMode(mode);
             updateStatus(`Render mode: ${mode}`, false);
         };
 
@@ -650,51 +602,6 @@
             }
 
             updateStatus(wireframeEnabled ? 'Wireframe enabled' : 'Wireframe disabled', false);
-        };
-
-        // Blended Rendering System - ALL SLIDERS MIX TOGETHER!
-        window.updateBlend = function() {
-            if (!mascot) {
-                console.log('updateBlend called but mascot is null');
-                return;
-            }
-
-            // Get all slider values (0-100) and convert to 0.0-1.0
-            const pbr = parseInt(document.getElementById('pbrSlider').value) / 100.0;
-            const toon = parseInt(document.getElementById('toonSlider').value) / 100.0;
-            const flat = parseInt(document.getElementById('flatSlider').value) / 100.0;
-            const normals = parseInt(document.getElementById('normalsSlider').value) / 100.0;
-            const edges = parseInt(document.getElementById('edgesSlider').value) / 100.0;
-            const rim = parseInt(document.getElementById('rimSlider').value) / 100.0;
-            const wireframe = parseInt(document.getElementById('wireframeSlider').value) / 100.0;
-
-            // Update display labels
-            document.getElementById('pbrValue').textContent = Math.round(pbr * 100) + '%';
-            document.getElementById('toonValue').textContent = Math.round(toon * 100) + '%';
-            document.getElementById('flatValue').textContent = Math.round(flat * 100) + '%';
-            document.getElementById('normalsValue').textContent = Math.round(normals * 100) + '%';
-            document.getElementById('edgesValue').textContent = Math.round(edges * 100) + '%';
-            document.getElementById('rimValue').textContent = Math.round(rim * 100) + '%';
-            document.getElementById('wireframeValue').textContent = Math.round(wireframe * 100) + '%';
-
-            // Send all blend amounts to the mascot
-            console.log('Setting blend:', {pbr, toon, flat, normals, edges, rim, wireframe});
-
-            if (typeof mascot.setRenderBlend === 'function') {
-                mascot.setRenderBlend({
-                    pbr, toon, flat, normals, edges, rim, wireframe
-                });
-                console.log('Blend updated successfully');
-
-                // Verify the internal state was actually updated
-                if (mascot.core3D && mascot.core3D.renderBlend) {
-                    console.log('Internal renderBlend state:', mascot.core3D.renderBlend);
-                } else {
-                    console.error('core3D.renderBlend is not accessible!');
-                }
-            } else {
-                console.error('setRenderBlend is not a function!', typeof mascot.setRenderBlend);
-            }
         };
 
         // Update status indicator
