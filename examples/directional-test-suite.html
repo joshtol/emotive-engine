@@ -391,9 +391,6 @@
 
                 <label>Rim: <span id="rimValue">0%</span></label>
                 <input type="range" id="rimSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
-
-                <label>Wireframe: <span id="wireframeValue">0%</span></label>
-                <input type="range" id="wireframeSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
             </div>
 
         <!-- Position Tests -->
@@ -610,10 +607,10 @@
 
             // Set slider configurations for each mode
             const configs = {
-                'standard': { pbr: 100, toon: 0, flat: 0, normals: 0, edges: 0, rim: 0, wireframe: 0 },
-                'normals': { pbr: 0, toon: 0, flat: 0, normals: 100, edges: 0, rim: 0, wireframe: 0 },
-                'toon': { pbr: 0, toon: 100, flat: 0, normals: 0, edges: 0, rim: 0, wireframe: 0 },
-                'edge': { pbr: 0, toon: 0, flat: 0, normals: 0, edges: 100, rim: 0, wireframe: 0 }
+                'standard': { pbr: 100, toon: 0, flat: 0, normals: 0, edges: 0, rim: 0 },
+                'normals': { pbr: 0, toon: 0, flat: 0, normals: 100, edges: 0, rim: 0 },
+                'toon': { pbr: 0, toon: 100, flat: 0, normals: 0, edges: 0, rim: 0 },
+                'edge': { pbr: 0, toon: 0, flat: 0, normals: 0, edges: 100, rim: 0 }
             };
 
             const config = configs[mode];
@@ -626,7 +623,6 @@
             document.getElementById('normalsSlider').value = config.normals;
             document.getElementById('edgesSlider').value = config.edges;
             document.getElementById('rimSlider').value = config.rim;
-            document.getElementById('wireframeSlider').value = config.wireframe;
 
             // Trigger the blend update
             updateBlend();
@@ -666,7 +662,6 @@
             const normals = parseInt(document.getElementById('normalsSlider').value) / 100.0;
             const edges = parseInt(document.getElementById('edgesSlider').value) / 100.0;
             const rim = parseInt(document.getElementById('rimSlider').value) / 100.0;
-            const wireframe = parseInt(document.getElementById('wireframeSlider').value) / 100.0;
 
             // Update display labels
             document.getElementById('pbrValue').textContent = Math.round(pbr * 100) + '%';
@@ -675,14 +670,13 @@
             document.getElementById('normalsValue').textContent = Math.round(normals * 100) + '%';
             document.getElementById('edgesValue').textContent = Math.round(edges * 100) + '%';
             document.getElementById('rimValue').textContent = Math.round(rim * 100) + '%';
-            document.getElementById('wireframeValue').textContent = Math.round(wireframe * 100) + '%';
 
             // Send all blend amounts to the mascot
-            console.log('Setting blend:', {pbr, toon, flat, normals, edges, rim, wireframe});
+            console.log('Setting blend:', {pbr, toon, flat, normals, edges, rim});
 
             if (typeof mascot.setRenderBlend === 'function') {
                 mascot.setRenderBlend({
-                    pbr, toon, flat, normals, edges, rim, wireframe
+                    pbr, toon, flat, normals, edges, rim
                 });
                 console.log('Blend updated successfully');
 

@@ -127,12 +127,11 @@ vec3 calculateToon(vec3 normal, vec3 lightDir) {
     return vec3(toonDiffuse);
 }
 
-// Calculate HSV normal overlay
+// Calculate normals visualization (XYZ -> RGB)
 vec3 calculateNormalsOverlay(vec3 normal) {
-    float angle = atan(normal.z, normal.x) / (2.0 * 3.14159265359) + 0.5;
-    vec3 hsvColor = hueToRGB(angle);
-    float brightness = normal.y * 0.3 + 0.7;
-    return hsvColor * brightness;
+    // Map normal range from [-1, 1] to [0, 1] for RGB display
+    // X -> Red, Y -> Green, Z -> Blue
+    return normal * 0.5 + 0.5;
 }
 
 // Calculate edge effect
