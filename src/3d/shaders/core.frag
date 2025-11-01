@@ -150,13 +150,12 @@ float calculateEdges(vec3 normal, vec3 viewDir, vec3 lightDir) {
     return max(fresnelEdge, geometricEdge);
 }
 
-// Calculate rim lighting effect
+// Calculate rim lighting effect (Fresnel-style edge glow)
 vec3 calculateRim(vec3 normal, vec3 viewDir, vec3 lightDir) {
-    float NdotL = dot(normal, lightDir);
-    float rimDot = 1.0 - dot(viewDir, normal);
-    float rimIntensity = rimDot * pow(max(NdotL, 0.0), 2.0);
-    rimIntensity = smoothstep(0.6, 0.65, rimIntensity);
-    return vec3(rimIntensity) * 0.3;
+    // Fresnel effect - brightest at glancing angles
+    float fresnel = 1.0 - max(dot(normal, viewDir), 0.0);
+    float rimIntensity = pow(fresnel, 3.0);
+    return vec3(rimIntensity);
 }
 
 // ============================================================================
