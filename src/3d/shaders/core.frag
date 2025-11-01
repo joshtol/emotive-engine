@@ -181,20 +181,11 @@ void main() {
     float edgeIntensity = calculateEdges(normal, viewDir, lightDir);
     vec3 rimColor = calculateRim(normal, viewDir, lightDir);
 
-    // Blend base modes with weighted average
-    float totalBase = u_pbrAmount + u_toonAmount + u_flatAmount + u_normalsAmount;
-
-    vec3 coreColor;
-    if (totalBase > 0.0) {
-        // Weighted average of base rendering modes
-        coreColor = (pbrColor * u_pbrAmount +
+    // Blend base modes with direct weighted mix (no normalization)
+    vec3 coreColor = pbrColor * u_pbrAmount +
                      toonColor * u_toonAmount +
                      flatColor * u_flatAmount +
-                     normalsColor * u_normalsAmount) / totalBase;
-    } else {
-        // No base modes active - use default
-        coreColor = u_glowColor * 0.5;
-    }
+                     normalsColor * u_normalsAmount;
 
     // Effects are additive (applied after base blending)
     if (u_edgesAmount > 0.0) {
