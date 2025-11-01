@@ -1,6 +1,13 @@
 import { defineConfig } from 'vitest/config';
+import glsl from 'rollup-plugin-glsl';
 
 export default defineConfig({
+    plugins: [
+        glsl({
+            include: ['**/*.vert', '**/*.frag', '**/*.glsl'],
+            sourceMap: false
+        })
+    ],
     test: {
         environment: 'jsdom',
         globals: true,
