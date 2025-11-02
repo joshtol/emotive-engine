@@ -9,6 +9,7 @@ import { createSphere } from './Sphere.js';
 import { createCrystal } from './Crystal.js';
 import { createDiamond } from './Diamond.js';
 import { createTorus } from './Torus.js';
+import { createIcosphere } from './Icosphere.js';
 
 /**
  * Core geometry registry
@@ -16,7 +17,8 @@ import { createTorus } from './Torus.js';
  */
 export const CORE_GEOMETRIES = {
     // Basic shapes
-    sphere: createSphere(32, 32),     // Smooth sphere
+    sphere: createSphere(32, 32),     // UV sphere (pole distortion)
+    icosphere: createIcosphere(2),    // Subdivided icosahedron (uniform triangles)
     torus: createTorus(1.0, 0.4, 48, 24), // Donut/ring shape
 
     // Crystalline shapes
@@ -42,3 +44,4 @@ export { createSphere } from './Sphere.js';
 export { createCrystal } from './Crystal.js';
 export { createDiamond } from './Diamond.js';
 export { createTorus } from './Torus.js';
+export { createIcosphere } from './Icosphere.js';
