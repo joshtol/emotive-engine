@@ -338,8 +338,10 @@ async function applyTestConfig(page, config) {
     // Navigate to URL with parameters - page will configure itself on load
     await page.goto(testURL, { waitUntil: 'networkidle' });
 
-    // Wait for initialization and model loading
-    await page.waitForTimeout(3000);
+    // Wait for initialization - longer for large models
+    const isLargeModel = config.model === 'stanford-dragon';
+    const baseWait = isLargeModel ? 8000 : 3000; // 8 seconds for dragon
+    await page.waitForTimeout(baseWait);
 
     // Log the result
     const geometryInfo = await page.evaluate(() => {
@@ -348,14 +350,22 @@ async function applyTestConfig(page, config) {
         }
         return {
             geometryType: window.mascot.core3D.geometryType,
-            hasVertices: !!window.mascot.core3D.geometry?.vertices
+            hasVertices: !!window.mascot.core3D.geometry?.vertices,
+            vertexCount: window.mascot.core3D.geometry?.vertices?.length / 3
         };
     });
 
     await log(`    Geometry type: ${geometryInfo.geometryType || geometryInfo.error}`);
+    if (geometryInfo.vertexCount) {
+        await log(`    Vertices: ${geometryInfo.vertexCount.toLocaleString()}`);
+    }
 
-    // Let rendering stabilize
-    await page.waitForTimeout(500);
+    // Extra wait for dragon to finish uploading to GPU and rendering
+    if (isLargeModel) {
+        await page.waitForTimeout(2000);
+    } else {
+        await page.waitForTimeout(500);
+    }
 }
 
 /**
