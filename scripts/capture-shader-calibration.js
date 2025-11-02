@@ -291,18 +291,41 @@ async function applyTestConfig(page, config) {
 
     // Load model (calibration model) - wait for promise to resolve
     if (config.model) {
+        console.log(`    Loading model: ${config.model}`);
+
         const loadResult = await page.evaluate(async (modelName) => {
             try {
+                // Debug: Check if function exists
+                if (typeof window.loadModel !== 'function') {
+                    return { success: false, error: 'loadModel function not found' };
+                }
+
+                // Debug: Check if mascot exists
+                if (!window.mascot) {
+                    return { success: false, error: 'mascot not initialized' };
+                }
+
+                console.log(`[Browser] Loading model: ${modelName}`);
+
                 // Call loadModel and wait for it to complete
                 await window.loadModel(modelName);
+
+                console.log(`[Browser] Model loaded: ${modelName}`);
+
                 return { success: true };
             } catch (error) {
-                return { success: false, error: error.message };
+                console.error('[Browser] Model load error:', error);
+                return { success: false, error: error.message, stack: error.stack };
             }
         }, config.model);
 
+        console.log(`    Load result:`, loadResult);
+
         if (!loadResult.success) {
-            console.warn(`    ⚠ Model load failed: ${loadResult.error}`);
+            console.warn(`    ⚠️ Model load failed: ${loadResult.error}`);
+            if (loadResult.stack) {
+                console.warn(`    Stack: ${loadResult.stack}`);
+            }
         }
 
         // Wait for geometry to be fully applied and rendered
@@ -368,6 +391,17 @@ async function main() {
         viewport: { width: 1920, height: 1080 }
     });
     const page = await context.newPage();
+
+    // Listen to browser console for debugging
+    page.on('console', msg => {
+        const type = msg.type();
+        const text = msg.text();
+        if (type === 'error') {
+            console.error(`  [Browser Error] ${text}`);
+        } else if (text.includes('[Browser]')) {
+            console.log(`  ${text}`);
+        }
+    });
 
     // Navigate to test suite
     console.log(`📄 Loading test suite: ${TEST_SUITE_URL}`);
