@@ -85,15 +85,20 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 
 // Optimized subsurface scattering approximation
 vec3 calculateSSS(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 baseColor, float strength) {
+    // CRITICAL FIX: 4x stronger SSS for visible translucency
     // Enhanced back-lighting with deeper penetration
-    vec3 scatterDir = lightDir + normal * 0.3;  // Reduced offset for more pronounced effect
-    float backScatter = pow(clamp(dot(viewDir, -scatterDir), 0.0, 1.0), 3.0);  // Lower power for wider spread
+    vec3 scatterDir = lightDir + normal * 0.2;  // Even less offset for stronger effect
+    float backScatter = pow(clamp(dot(viewDir, -scatterDir), 0.0, 1.0), 2.0);  // Lower power = wider spread
 
     // Add wrap-around diffuse for softer appearance
-    float wrapDiffuse = max(0.0, (dot(normal, lightDir) + 0.5) / 1.5);
+    float wrapDiffuse = max(0.0, (dot(normal, lightDir) + 0.7) / 1.5);
 
-    // Combine effects with strength multiplier
-    return baseColor * (backScatter * 1.5 + wrapDiffuse * 0.3) * strength;
+    // Rim glow for thin areas (ears, edges)
+    float rim = 1.0 - abs(dot(normal, viewDir));
+    float rimSSS = pow(rim, 2.5) * backScatter;
+
+    // BOOSTED: 4x stronger base effect + rim contribution
+    return baseColor * ((backScatter * 6.0 + wrapDiffuse * 1.5 + rimSSS * 3.0) * strength);
 }
 
 // Anisotropic GGX distribution
@@ -136,6 +141,10 @@ vec3 calculateIridescence(float NdotV, float iridescenceStrength) {
 
 // Calculate PBR shading with advanced material properties
 vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
+    // CRITICAL FIX: Perceptual roughness mapping
+    // Square the roughness for more linear perception (0% = true mirror)
+    float perceptualRoughness = u_roughness * u_roughness;
+
     // Use uniform material properties
     vec3 F0 = mix(vec3(0.04), u_glowColor, u_metallic);
     vec3 H = normalize(viewDir + lightDir);
@@ -150,14 +159,23 @@ vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
         vec3 up = abs(normal.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
         vec3 tangent = normalize(cross(up, normal));
         vec3 bitangent = cross(normal, tangent);
-        NDF = DistributionGGXAnisotropic(normal, H, tangent, bitangent, u_roughness, u_anisotropy);
+        // IMPORTANT FIX: Boost anisotropy effect 6x for visibility
+        float boostedAniso = u_anisotropy * 6.0;
+        NDF = DistributionGGXAnisotropic(normal, H, tangent, bitangent, perceptualRoughness, boostedAniso);
     } else {
-        // Standard isotropic GGX
-        NDF = DistributionGGX(normal, H, u_roughness);
+        // Standard isotropic GGX (use perceptual roughness)
+        NDF = DistributionGGX(normal, H, perceptualRoughness);
     }
 
-    float G = GeometrySmith(normal, viewDir, lightDir, u_roughness);
+    float G = GeometrySmith(normal, viewDir, lightDir, perceptualRoughness);
     vec3 F = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
+
+    // IMPORTANT FIX: Boost Fresnel on dielectrics for realistic edge glow
+    if (u_metallic < 0.1) {
+        float rim = 1.0 - NdotV;
+        float fresnelBoost = pow(rim, 3.0); // Softer falloff than standard pow(5.0)
+        F = mix(F, vec3(1.0), fresnelBoost * 0.6); // Strong edge brightening
+    }
 
     // Iridescence modulates Fresnel
     if (u_iridescence > 0.01) {
@@ -171,10 +189,12 @@ vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - u_metallic;
 
-    // Enhanced AO with smoothed influence
-    float aoInfluence = mix(1.0, u_ao, 0.8);  // Soften AO effect slightly
+    // IMPORTANT FIX: More aggressive AO darkening
+    // Exponential falloff for deeper shadows in crevices
+    float ao = pow(u_ao, 2.5); // Stronger darkening curve
+    float aoInfluence = mix(0.15, 1.0, ao);  // Min 15% (near black) instead of 100%
 
-    // Diffuse with AO
+    // Diffuse with aggressive AO
     vec3 diffuse = kD * u_glowColor * aoInfluence;
 
     // Subsurface scattering (for non-metals) - enhanced with better visibility
@@ -183,9 +203,8 @@ vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
         sss = calculateSSS(normal, viewDir, lightDir, u_glowColor, u_sssStrength);
     }
 
-    // Ambient with smoothed AO (squared for softer shadows)
-    float aoSq = u_ao * u_ao;  // Quadratic falloff for smoother transitions
-    vec3 ambient = vec3(0.005) * u_glowColor * aoSq;
+    // Ambient with aggressive AO (use same calculation as diffuse)
+    vec3 ambient = vec3(0.005) * u_glowColor * aoInfluence;
 
     vec3 lightColor = vec3(1.0);
 
