@@ -296,101 +296,66 @@ const CALIBRATION_TESTS = [
 ];
 
 /**
- * Apply test configuration to the page
+ * Build URL with test configuration parameters
+ */
+function buildTestURL(baseURL, config) {
+    const url = new URL(baseURL);
+
+    if (config.model) {
+        url.searchParams.set('model', config.model);
+    }
+
+    if (config.camera) {
+        url.searchParams.set('camera', config.camera);
+    }
+
+    if (config.material) {
+        url.searchParams.set('roughness', config.material.roughness);
+        url.searchParams.set('metallic', config.material.metallic);
+        url.searchParams.set('ao', config.material.ao);
+        url.searchParams.set('sss', config.material.sss);
+        url.searchParams.set('anisotropy', config.material.anisotropy);
+        url.searchParams.set('iridescence', config.material.iridescence);
+    }
+
+    if (config.renderMode) {
+        url.searchParams.set('renderMode', config.renderMode);
+    }
+
+    return url.toString();
+}
+
+/**
+ * Apply test configuration by loading URL with parameters
  */
 async function applyTestConfig(page, config) {
     await log(`  Applying config: ${config.description}`);
 
-    // Load model (calibration model) - wait for promise to resolve
-    if (config.model) {
-        await log(`    Target model: ${config.model}`);
+    // Build URL with all test parameters
+    const testURL = buildTestURL(TEST_SUITE_URL, config);
+    await log(`    Loading: ${testURL}`);
 
-        const loadResult = await page.evaluate(async (modelName) => {
-            const logs = [];
+    // Navigate to URL with parameters - page will configure itself on load
+    await page.goto(testURL, { waitUntil: 'networkidle' });
 
-            try {
-                // Debug: Check if function exists
-                if (typeof window.loadModel !== 'function') {
-                    return { success: false, error: 'loadModel function not found', logs };
-                }
+    // Wait for initialization and model loading
+    await page.waitForTimeout(3000);
 
-                // Debug: Check if mascot exists
-                if (!window.mascot) {
-                    return { success: false, error: 'mascot not initialized', logs };
-                }
-
-                logs.push(`loadModel exists: true`);
-                logs.push(`mascot exists: true`);
-                logs.push(`mascot.core3D exists: ${!!window.mascot.core3D}`);
-                logs.push(`BEFORE - core3D.geometryType: ${window.mascot.core3D?.geometryType || 'undefined'}`);
-                logs.push(`BEFORE - core3D.geometry type: ${window.mascot.core3D?.geometry?.constructor?.name || 'undefined'}`);
-
-                // Call loadModel and wait for it to complete
-                await window.loadModel(modelName);
-
-                logs.push(`loadModel call completed`);
-                logs.push(`AFTER - core3D.geometryType: ${window.mascot.core3D?.geometryType || 'undefined'}`);
-                logs.push(`AFTER - core3D.geometry type: ${window.mascot.core3D?.geometry?.constructor?.name || 'undefined'}`);
-                logs.push(`AFTER - geometry has vertices: ${!!window.mascot.core3D?.geometry?.vertices}`);
-
-                return { success: true, logs };
-            } catch (error) {
-                logs.push(`ERROR: ${error.message}`);
-                logs.push(`Stack: ${error.stack}`);
-                return { success: false, error: error.message, stack: error.stack, logs };
-            }
-        }, config.model);
-
-        // Log all browser logs
-        for (const logLine of loadResult.logs || []) {
-            await log(`      [Browser] ${logLine}`);
+    // Log the result
+    const geometryInfo = await page.evaluate(() => {
+        if (!window.mascot || !window.mascot.core3D) {
+            return { error: 'Mascot not initialized' };
         }
+        return {
+            geometryType: window.mascot.core3D.geometryType,
+            hasVertices: !!window.mascot.core3D.geometry?.vertices
+        };
+    });
 
-        if (!loadResult.success) {
-            await logError(`    Model load FAILED: ${loadResult.error}`);
-            if (loadResult.stack) {
-                await logError(`    Stack: ${loadResult.stack}`);
-            }
-        } else {
-            await log(`    Model loaded successfully`);
-        }
+    await log(`    Geometry type: ${geometryInfo.geometryType || geometryInfo.error}`);
 
-        // Wait for geometry to be fully applied and rendered
-        await page.waitForTimeout(2000);
-    }
-
-    // Set camera angle
-    if (config.camera) {
-        await page.evaluate((angle) => {
-            window.setCameraAngle(angle);
-        }, config.camera);
-        await page.waitForTimeout(300);
-    }
-
-    // Set material properties
-    if (config.material) {
-        await page.evaluate((material) => {
-            document.getElementById('roughnessSlider').value = material.roughness;
-            document.getElementById('metallicSlider').value = material.metallic;
-            document.getElementById('aoSlider').value = material.ao;
-            document.getElementById('sssSlider').value = material.sss;
-            document.getElementById('anisotropySlider').value = material.anisotropy;
-            document.getElementById('iridescenceSlider').value = material.iridescence;
-            window.updateMaterial();
-        }, config.material);
-        await page.waitForTimeout(300);
-    }
-
-    // Set render mode
-    if (config.renderMode) {
-        await page.evaluate((mode) => {
-            window.changeRenderMode(mode);
-        }, config.renderMode);
-        await page.waitForTimeout(300);
-    }
-
-    // Let everything settle and render
-    await page.waitForTimeout(800);
+    // Let rendering stabilize
+    await page.waitForTimeout(500);
 }
 
 /**
@@ -445,12 +410,7 @@ async function main() {
         console.error(`  [Page Error] ${error.message}`);
     });
 
-    // Navigate to test suite
-    console.log(`📄 Loading test suite: ${TEST_SUITE_URL}`);
-    await page.goto(TEST_SUITE_URL, { waitUntil: 'networkidle' });
-
-    // Wait for initialization
-    await page.waitForTimeout(2000);
+    await log('🌐 Browser launched\n');
 
     // Generate manifest
     const manifest = {

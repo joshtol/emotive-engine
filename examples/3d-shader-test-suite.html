@@ -577,6 +577,22 @@
         let mascot = null;
         let wireframeEnabled = false;
 
+        // Parse URL parameters
+        function getURLParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                model: params.get('model'),
+                camera: params.get('camera'),
+                roughness: params.get('roughness'),
+                metallic: params.get('metallic'),
+                ao: params.get('ao'),
+                sss: params.get('sss'),
+                anisotropy: params.get('anisotropy'),
+                iridescence: params.get('iridescence'),
+                renderMode: params.get('renderMode')
+            };
+        }
+
         // Initialize mascot
         async function init() {
             try {
@@ -597,7 +613,38 @@
                 // Expose globally for automation scripts
                 window.mascot = mascot;
 
-                console.log('Mascot initialized successfully');
+                // Apply URL parameters if provided
+                const params = getURLParams();
+
+                // Load model if specified
+                if (params.model) {
+                    await loadModel(params.model);
+                }
+
+                // Set camera angle if specified
+                if (params.camera) {
+                    setCameraAngle(params.camera);
+                }
+
+                // Set material properties if specified
+                if (params.roughness !== null) document.getElementById('roughnessSlider').value = params.roughness;
+                if (params.metallic !== null) document.getElementById('metallicSlider').value = params.metallic;
+                if (params.ao !== null) document.getElementById('aoSlider').value = params.ao;
+                if (params.sss !== null) document.getElementById('sssSlider').value = params.sss;
+                if (params.anisotropy !== null) document.getElementById('anisotropySlider').value = params.anisotropy;
+                if (params.iridescence !== null) document.getElementById('iridescenceSlider').value = params.iridescence;
+
+                if (params.roughness !== null || params.metallic !== null || params.ao !== null ||
+                    params.sss !== null || params.anisotropy !== null || params.iridescence !== null) {
+                    updateMaterial();
+                }
+
+                // Set render mode if specified
+                if (params.renderMode) {
+                    changeRenderMode(params.renderMode);
+                }
+
+                console.log('Mascot initialized successfully', params);
             } catch (error) {
                 console.error('Failed to initialize mascot:', error);
             }
