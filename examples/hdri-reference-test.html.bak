@@ -267,102 +267,129 @@
     </div>
 
     <div id="controls">
-        <!-- Scene Controls -->
+        <!-- Status Section -->
         <div class="control-section">
-            <div class="section-header">Scene</div>
+            <h2>HDRI Reference</h2>
+            <div id="status">
+                <div>HDRI: <span id="hdri-status">Loading...</span></div>
+                <div>Camera: <span id="camera-status">Ready</span></div>
+            </div>
+        </div>
+
+        <!-- Environment Section -->
+        <div class="control-section">
+            <h3>Environment</h3>
             <div class="control-group">
-                <label>HDRI <span id="env-intensity-val">1.0</span></label>
+                <label>
+                    HDRI Intensity
+                    <span class="value-display" id="env-intensity-val">1.0</span>
+                </label>
                 <input type="range" id="env-intensity" min="0" max="2" step="0.01" value="1.0">
             </div>
             <div class="control-group">
-                <label>Checkers <span id="checker-scale-val">0.50</span></label>
-                <input type="range" id="checker-scale" min="0.1" max="2.0" step="0.01" value="0.5">
-            </div>
-            <div id="status"><div>HDRI: <span id="hdri-status">Loading...</span></div></div>
-        </div>
-
-        <!-- Camera Controls -->
-        <div class="control-section">
-            <div class="section-header">Camera</div>
-            <div class="control-group">
-                <label>Distance <span id="camera-distance-val">9.0</span></label>
-                <input type="range" id="camera-distance" min="3" max="20" step="0.1" value="9.0">
+                <label>
+                    Camera Distance
+                    <span class="value-display" id="camera-distance-val">12</span>
+                </label>
+                <input type="range" id="camera-distance" min="5" max="30" step="0.5" value="12">
             </div>
             <div class="control-group">
-                <label>Height <span id="camera-height-val">0.5</span></label>
-                <input type="range" id="camera-height" min="-2" max="5" step="0.1" value="0.5">
+                <label>
+                    Camera Height
+                    <span class="value-display" id="camera-height-val">2</span>
+                </label>
+                <input type="range" id="camera-height" min="-5" max="10" step="0.5" value="2">
             </div>
         </div>
 
-        <!-- Sphere Scale -->
+        <!-- Spheres Section -->
         <div class="control-section">
-            <div class="section-header">Sphere Scale</div>
-            <div class="control-group">
-                <label>All Spheres <span id="sphere-scale-val">0.50</span></label>
-                <input type="range" id="sphere-scale" min="0.1" max="2.0" step="0.05" value="0.5">
-            </div>
-            <div class="control-group">
-                <label>Spacing <span id="sphere-spacing-val">1.50</span></label>
-                <input type="range" id="sphere-spacing" min="0.5" max="5.0" step="0.1" value="1.5">
+            <h3>Spheres</h3>
+
+        <!-- Sphere 1: Glossy Blue -->
+        <div class="sphere-controls">
+            <h4 class="collapse-toggle" data-target="sphere1">Sphere 1 - Glossy Blue</h4>
+            <div class="collapsible-content" id="sphere1">
+                <div class="control-group">
+                    <label>
+                        Roughness
+                        <span class="value-display" id="s1-roughness-val">0.3</span>
+                    </label>
+                    <input type="range" id="s1-roughness" min="0" max="1" step="0.01" value="0.3">
+                </div>
+                <div class="control-group">
+                    <label>
+                        Metallic
+                        <span class="value-display" id="s1-metallic-val">0.0</span>
+                    </label>
+                    <input type="range" id="s1-metallic" min="0" max="1" step="0.01" value="0.0">
+                </div>
             </div>
         </div>
 
-        <!-- Sphere 1 -->
-        <div class="control-section">
-            <div class="section-header">Glossy Blue</div>
-            <div class="control-group">
-                <label>Roughness <span id="s1-roughness-val">0.30</span></label>
-                <input type="range" id="s1-roughness" min="0" max="1" step="0.01" value="0.3">
-            </div>
-            <div class="control-group">
-                <label>Metallic <span id="s1-metallic-val">0.00</span></label>
-                <input type="range" id="s1-metallic" min="0" max="1" step="0.01" value="0.0">
-            </div>
-        </div>
-
-        <!-- Sphere 2 -->
-        <div class="control-section">
-            <div class="section-header">Matte White</div>
-            <div class="control-group">
-                <label>Roughness <span id="s2-roughness-val">0.90</span></label>
-                <input type="range" id="s2-roughness" min="0" max="1" step="0.01" value="0.9">
-            </div>
-            <div class="control-group">
-                <label>Metallic <span id="s2-metallic-val">0.00</span></label>
-                <input type="range" id="s2-metallic" min="0" max="1" step="0.01" value="0.0">
+        <!-- Sphere 2: Matte White -->
+        <div class="sphere-controls">
+            <h4 class="collapse-toggle" data-target="sphere2">Sphere 2 - Matte White</h4>
+            <div class="collapsible-content" id="sphere2">
+                <div class="control-group">
+                    <label>
+                        Roughness
+                        <span class="value-display" id="s2-roughness-val">0.9</span>
+                    </label>
+                    <input type="range" id="s2-roughness" min="0" max="1" step="0.01" value="0.9">
+                </div>
+                <div class="control-group">
+                    <label>
+                        Metallic
+                        <span class="value-display" id="s2-metallic-val">0.0</span>
+                    </label>
+                    <input type="range" id="s2-metallic" min="0" max="1" step="0.01" value="0.0">
+                </div>
             </div>
         </div>
 
-        <!-- Sphere 3 -->
-        <div class="control-section">
-            <div class="section-header">Chrome</div>
-            <div class="control-group">
-                <label>Roughness <span id="s3-roughness-val">0.05</span></label>
-                <input type="range" id="s3-roughness" min="0" max="1" step="0.01" value="0.05">
-            </div>
-            <div class="control-group">
-                <label>Metallic <span id="s3-metallic-val">1.00</span></label>
-                <input type="range" id="s3-metallic" min="0" max="1" step="0.01" value="1.0">
-            </div>
-        </div>
-
-        <!-- Sphere 4 -->
-        <div class="control-section">
-            <div class="section-header">Plastic Cyan</div>
-            <div class="control-group">
-                <label>Roughness <span id="s4-roughness-val">0.60</span></label>
-                <input type="range" id="s4-roughness" min="0" max="1" step="0.01" value="0.6">
-            </div>
-            <div class="control-group">
-                <label>Metallic <span id="s4-metallic-val">0.00</span></label>
-                <input type="range" id="s4-metallic" min="0" max="1" step="0.01" value="0.0">
+        <!-- Sphere 3: Chrome Mirror -->
+        <div class="sphere-controls">
+            <h4 class="collapse-toggle" data-target="sphere3">Sphere 3 - Chrome</h4>
+            <div class="collapsible-content" id="sphere3">
+                <div class="control-group">
+                    <label>
+                        Roughness
+                        <span class="value-display" id="s3-roughness-val">0.05</span>
+                    </label>
+                    <input type="range" id="s3-roughness" min="0" max="1" step="0.01" value="0.05">
+                </div>
+                <div class="control-group">
+                    <label>
+                        Metallic
+                        <span class="value-display" id="s3-metallic-val">1.0</span>
+                    </label>
+                    <input type="range" id="s3-metallic" min="0" max="1" step="0.01" value="1.0">
+                </div>
             </div>
         </div>
 
-        <!-- Reset Button -->
-        <div class="control-section">
-            <div class="section-header">&nbsp;</div>
-            <button class="btn" id="reset-btn">Reset</button>
+        <!-- Sphere 4: Plastic Cyan -->
+        <div class="sphere-controls">
+            <h4 class="collapse-toggle" data-target="sphere4">Sphere 4 - Plastic Cyan</h4>
+            <div class="collapsible-content" id="sphere4">
+                <div class="control-group">
+                    <label>
+                        Roughness
+                        <span class="value-display" id="s4-roughness-val">0.6</span>
+                    </label>
+                    <input type="range" id="s4-roughness" min="0" max="1" step="0.01" value="0.6">
+                </div>
+                <div class="control-group">
+                    <label>
+                        Metallic
+                        <span class="value-display" id="s4-metallic-val">0.0</span>
+                    </label>
+                    <input type="range" id="s4-metallic" min="0" max="1" step="0.01" value="0.0">
+                </div>
+            </div>
+            </div>
+            <button id="reset-btn">Reset to Reference</button>
         </div>
     </div>
 
@@ -400,22 +427,13 @@
 
         const fbManager = new FramebufferManager(gl);
         const camera = new Camera();
-        camera.setPosition(0, 0.5, 9);  // At sphere center height
-        camera.setTarget(0, 0.5, 0);    // Look at sphere centers
+        camera.setPosition(0, 2, 12);
+        camera.setTarget(0, 1, 0);
         camera.updateProjectionMatrix(canvas.width / canvas.height);
 
         // Create rendering passes
         const multiObjectPass = new MultiObjectPass();
         multiObjectPass.init(renderer, fbManager);
-
-        // Create a second MultiObjectPass WITHOUT fbManager for Pass 1 rendering
-        // This prevents it from binding HDR FBO
-        const multiObjectPassNoFB = new MultiObjectPass();
-        multiObjectPassNoFB.init(renderer, null);  // No framebuffer manager
-
-        // Create two skybox passes - one for Pass 1 (no fbManager), one for Pass 2
-        const skyboxPassNoFB = new SkyboxPass();
-        skyboxPassNoFB.init(renderer, null);  // No framebuffer manager for Pass 1
 
         const skyboxPass = new SkyboxPass();
         skyboxPass.init(renderer, fbManager);
@@ -423,61 +441,11 @@
         const toneMappingPass = new ToneMappingPass({ exposure: 1.0 });
         toneMappingPass.init(renderer, fbManager);
 
-        // Create scene texture framebuffer for refraction (opaque objects render here)
-        // Use ping-pong buffers to avoid feedback loops
-        let sceneTextureFBO = null;
-        let sceneTexture = null;
-
-        function createSceneTexture() {
-            const width = gl.canvas.width;
-            const height = gl.canvas.height;
-
-            // Delete old resources if they exist
-            if (sceneTexture) {
-                gl.deleteTexture(sceneTexture);
-            }
-            if (sceneTextureFBO) {
-                gl.deleteFramebuffer(sceneTextureFBO);
-            }
-
-            // Create texture for color (use RGBA8 for LDR since HDR not supported)
-            sceneTexture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-            // Create depth renderbuffer
-            const depthBuffer = gl.createRenderbuffer();
-            gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
-            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, width, height);
-
-            // Create and setup framebuffer
-            sceneTextureFBO = gl.createFramebuffer();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, sceneTextureFBO);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, sceneTexture, 0);
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
-
-            // Check framebuffer status
-            const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-            if (status !== gl.FRAMEBUFFER_COMPLETE) {
-                console.error('Scene texture framebuffer incomplete:', status);
-            }
-
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-        }
-
-        createSceneTexture();
-
         // Handle canvas resize
         window.addEventListener('resize', () => {
             resizeCanvas();
             camera.updateProjectionMatrix(canvas.width / canvas.height);
             fbManager.resize(canvas.width, canvas.height);
-            createSceneTexture();  // Recreate scene texture on resize
         });
 
         // ============================================================
@@ -512,59 +480,53 @@
         }
         const groundGeometry = createPlane(50, 50);
 
-        // Create 4 spheres with different materials (matching reference image)
-        // Sphere 1: Glass (clear transparent glass with subtle blue tint)
+        // Create 4 spheres with different materials
         const sphere1 = new SceneObject({
             geometry: sphereGeometry,
             material: {
-                glowColor: [0.95, 0.97, 1.0],  // Very subtle blue tint (almost white)
-                roughness: 0.0,   // Perfectly smooth glass
-                metallic: 0.0,    // Dielectric (non-metal)
-                transmission: 1.0,  // Full transmission for clear glass
-                ior: 1.5,  // Glass index of refraction
+                glowColor: [0.6, 0.85, 1.0],  // Blue tint
+                roughness: 0.3,
+                metallic: 0.0,
                 ao: 1.0
             },
-            position: [-2.25, 0.5, 0],  // Y = radius for ground contact
-            scale: [0.5, 0.5, 0.5]     // Smaller spheres
+            position: [-4.5, 1.0, 0],
+            scale: [1, 1, 1]
         });
 
-        // Sphere 2: Matte White (completely diffuse)
         const sphere2 = new SceneObject({
             geometry: sphereGeometry,
             material: {
-                glowColor: [1.0, 1.0, 1.0],  // Pure white
-                roughness: 1.0,   // Completely matte
-                metallic: 0.0,    // Dielectric
+                glowColor: [0.98, 0.98, 0.98],  // White
+                roughness: 0.9,
+                metallic: 0.0,
                 ao: 1.0
             },
-            position: [-0.75, 0.5, 0],
-            scale: [0.5, 0.5, 0.5]
+            position: [-1.5, 1.0, 0],
+            scale: [1, 1, 1]
         });
 
-        // Sphere 3: Chrome (perfect mirror metal)
         const sphere3 = new SceneObject({
             geometry: sphereGeometry,
             material: {
-                glowColor: [1.0, 1.0, 1.0],  // White for chrome
-                roughness: 0.0,   // Perfect mirror
-                metallic: 1.0,    // Full metal
+                glowColor: [0.7, 0.7, 0.7],  // Chrome gray
+                roughness: 0.05,
+                metallic: 1.0,
                 ao: 1.0
             },
-            position: [0.75, 0.5, 0],
-            scale: [0.5, 0.5, 0.5]
+            position: [1.5, 1.0, 0],
+            scale: [1, 1, 1]
         });
 
-        // Sphere 4: Glossy Plastic (smooth cyan dielectric)
         const sphere4 = new SceneObject({
             geometry: sphereGeometry,
             material: {
-                glowColor: [0.4, 0.9, 1.0],  // Bright cyan
-                roughness: 0.15,  // Smooth plastic finish
-                metallic: 0.0,    // Dielectric (plastic)
+                glowColor: [0.5, 0.95, 0.95],  // Cyan
+                roughness: 0.6,
+                metallic: 0.0,
                 ao: 1.0
             },
-            position: [2.25, 0.5, 0],
-            scale: [0.5, 0.5, 0.5]
+            position: [4.5, 1.0, 0],
+            scale: [1, 1, 1]
         });
 
         // Create ground plane with checkerboard pattern
@@ -582,29 +544,22 @@
             scale: [1, 1, 1]
         });
 
-        // Scene data - separate transparent and opaque objects for two-pass rendering
-        const opaqueObjects = [sphere2, sphere3, sphere4, ground];  // Non-transparent
-        const transparentObjects = [sphere1];  // Glass sphere with transmission
-
+        // Scene data
         const scene = {
             objects: [sphere1, sphere2, sphere3, sphere4, ground],
-            opaqueObjects: opaqueObjects,
-            transparentObjects: transparentObjects,
             envMap: null,
             envIntensity: 1.0,
             lightDirection: [1, 1, 1],
-            checkerScale: 0.5,
             time: 0,
-            hdrEnabled: true,  // HDR rendering with tonemapping
-            sceneTexture: null  // Will hold rendered opaque scene for refraction
+            hdrEnabled: true  // HDR rendering with tonemapping
         };
 
         // ============================================================
         // CAMERA SETUP
         // ============================================================
 
-        let cameraDistance = 9.0;
-        let cameraHeight = 0.5;    // At sphere center
+        let cameraDistance = 12;
+        let cameraHeight = 2;
         let cameraAngle = 0;
         let isDragging = false;
         let lastMouseX = 0;
@@ -615,7 +570,7 @@
             const y = cameraHeight;
 
             camera.setPosition(x, y, z);
-            camera.setTarget(0, 0.5, 0);  // Look at sphere centers
+            camera.setTarget(0, 1, 0);  // Look at sphere center height
             camera.updateProjectionMatrix(canvas.width / canvas.height);
         }
 
@@ -698,15 +653,10 @@
         });
 
         document.getElementById('camera-height').addEventListener('input', (e) => {
-document.getElementById('checker-scale').addEventListener('input', (e) => {            const value = parseFloat(e.target.value);            scene.checkerScale = value;            document.getElementById('checker-scale-val').textContent = value.toFixed(2);        });
             cameraHeight = parseFloat(e.target.value);
-document.getElementById('checker-scale').addEventListener('input', (e) => {            const value = parseFloat(e.target.value);            scene.checkerScale = value;            document.getElementById('checker-scale-val').textContent = value.toFixed(2);        });
             document.getElementById('camera-height-val').textContent = cameraHeight.toFixed(1);
-document.getElementById('checker-scale').addEventListener('input', (e) => {            const value = parseFloat(e.target.value);            scene.checkerScale = value;            document.getElementById('checker-scale-val').textContent = value.toFixed(2);        });
             updateCamera();
-document.getElementById('checker-scale').addEventListener('input', (e) => {            const value = parseFloat(e.target.value);            scene.checkerScale = value;            document.getElementById('checker-scale-val').textContent = value.toFixed(2);        });
         });
-document.getElementById('checker-scale').addEventListener('input', (e) => {            const value = parseFloat(e.target.value);            scene.checkerScale = value;            document.getElementById('checker-scale-val').textContent = value.toFixed(2);        });
 
         // Sphere controls helper
         function setupSphereControl(sphereNum, sphere) {
@@ -724,45 +674,6 @@ document.getElementById('checker-scale').addEventListener('input', (e) => {     
                 document.getElementById(`${prefix}-metallic-val`).textContent = value.toFixed(2);
             });
         }
-
-        // Sphere scale and spacing control - maintains ground contact and proportional spacing
-        let currentSpacing = 1.5;  // Current spacing multiplier
-        let currentScale = 0.5;    // Current sphere scale
-        const baseScale = 0.5;
-
-        // Function to update all sphere positions based on scale and spacing
-        function updateSpherePositions() {
-            const radius = currentScale;  // Unit sphere has radius 1, scaled sphere has radius = scale
-            const diameter = currentScale * 2.0;
-            const gap = currentSpacing;
-            const centerToCenterSpacing = diameter + gap;
-
-            // Calculate positions: centered around origin
-            const totalWidth = centerToCenterSpacing * 3;  // 3 gaps for 4 spheres
-            const startX = -totalWidth / 2;
-
-            const spheres = [sphere1, sphere2, sphere3, sphere4];
-            spheres.forEach((sphere, i) => {
-                sphere.scale = [currentScale, currentScale, currentScale];
-                sphere.position[0] = startX + (i * centerToCenterSpacing);
-                sphere.position[1] = radius;  // Keep on ground
-                sphere._dirty = true;  // Mark for matrix recalculation
-            });
-        }
-
-        // Sphere scale control
-        document.getElementById('sphere-scale').addEventListener('input', (e) => {
-            currentScale = parseFloat(e.target.value);
-            updateSpherePositions();
-            document.getElementById('sphere-scale-val').textContent = currentScale.toFixed(2);
-        });
-
-        // Sphere spacing control
-        document.getElementById('sphere-spacing').addEventListener('input', (e) => {
-            currentSpacing = parseFloat(e.target.value);
-            updateSpherePositions();
-            document.getElementById('sphere-spacing-val').textContent = currentSpacing.toFixed(2);
-        });
 
         setupSphereControl(1, sphere1);
         setupSphereControl(2, sphere2);
@@ -810,87 +721,42 @@ document.getElementById('checker-scale').addEventListener('input', (e) => {     
             document.getElementById('env-intensity-val').textContent = '1.00';
 
             // Reset camera
-            cameraDistance = 9.0;
-            cameraHeight = 0.5;
+            cameraDistance = 12;
+            cameraHeight = 2;
             cameraAngle = 0;
-            document.getElementById('camera-distance').value = 8.0;
-            document.getElementById('camera-distance-val').textContent = '8.0';
-            document.getElementById('camera-height').value = 0.6;
-            document.getElementById('camera-height-val').textContent = '0.6';
+            document.getElementById('camera-distance').value = 12;
+            document.getElementById('camera-distance-val').textContent = '12.0';
+            document.getElementById('camera-height').value = 2;
+            document.getElementById('camera-height-val').textContent = '2.0';
             updateCamera();
         });
 
+        // Collapse toggles
+        document.querySelectorAll('.collapse-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const targetId = toggle.dataset.target;
+                const content = document.getElementById(targetId);
+                toggle.classList.toggle('collapsed');
+                content.classList.toggle('collapsed');
+            });
+        });
 
         // ============================================================
-        // RENDER LOOP - TWO-PASS FOR REFRACTION
+        // RENDER LOOP
         // ============================================================
 
         function render() {
             scene.time = performance.now() / 1000;
 
-            // ============================================================
-            // PASS 1: Render opaque objects to scene texture (for refraction sampling)
-            // ============================================================
-
-            // Manually bind and clear scene texture framebuffer
-            gl.bindFramebuffer(gl.FRAMEBUFFER, sceneTextureFBO);
-            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-            // Clear to black - depth will handle skybox background
-            gl.clearColor(0, 0, 0, 0);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-            // Create scene for Pass 1 - render opaque objects ONLY
-            // (Skip skybox - it causes framebuffer issues and glass mainly refracts checkerboard)
-            const scenePass1 = {
-                objects: scene.opaqueObjects,
-                envMap: scene.envMap,
-                envIntensity: scene.envIntensity,
-                lightDirection: scene.lightDirection,
-                checkerScale: scene.checkerScale,
-                time: scene.time,
-                hdrEnabled: false,  // CRITICAL: Prevents passes from changing framebuffer
-                sceneTexture: null  // No refraction in Pass 1
-            };
-
-            // Render opaque objects to Pass 1 (skybox skipped - would unbind our FBO)
-            multiObjectPassNoFB.execute(scenePass1, camera);
-
-            // Completely unbind the scene texture framebuffer
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-            // ============================================================
-            // PASS 2: Render full scene to screen/HDR with refraction
-            // ============================================================
-
-            // Provide scene texture for transparent objects to sample
-            scene.sceneTexture = sceneTexture;
-
-            // Render skybox (will bind HDR FBO and clear)
+            // Render skybox first (background) - renders to HDR FBO (or screen if no HDR)
             if (scene.envMap) {
                 skyboxPass.execute(scene, camera);
             }
 
-            // Render opaque objects to HDR FBO (normal rendering)
-            const scenePass2Opaque = {
-                ...scene,
-                objects: scene.opaqueObjects,
-                sceneTexture: null  // Opaque objects don't need refraction
-            };
-            multiObjectPass.execute(scenePass2Opaque, camera);
+            // Render scene objects - renders to HDR FBO (or screen if no HDR)
+            multiObjectPass.execute(scene, camera);
 
-            // Render transparent objects with refraction enabled
-            const scenePass2Transparent = {
-                ...scene,
-                objects: scene.transparentObjects,
-                sceneTexture: sceneTexture  // Enable refraction for transparent objects
-            };
-            multiObjectPass.execute(scenePass2Transparent, camera);
-
-            // ============================================================
-            // TONEMAP HDR TO SCREEN
-            // ============================================================
-
+            // Tonemap HDR to screen (only if HDR is supported)
             if (scene.hdrEnabled && fbManager.hdrSupported) {
                 toneMappingPass.execute(scene, camera);
             }

@@ -24,7 +24,10 @@ export class SceneObject {
             ao: options.material?.ao ?? 1.0,
             sssStrength: options.material?.sssStrength ?? 0.0,
             anisotropy: options.material?.anisotropy ?? 0.0,
-            iridescence: options.material?.iridescence ?? 0.0
+            iridescence: options.material?.iridescence ?? 0.0,
+            transmission: options.material?.transmission ?? 0.0,  // 0.0 = opaque, 1.0 = glass
+            ior: options.material?.ior ?? 1.5,  // Index of refraction (glass = 1.5)
+            useTexture: options.material?.useTexture ?? 0.0
         };
 
         // Transform
@@ -88,7 +91,7 @@ export class SceneObject {
      * @param {*} value - New value
      */
     setMaterialProperty(property, value) {
-        if (this.material.hasOwnProperty(property)) {
+        if (Object.prototype.hasOwnProperty.call(this.material, property)) {
             this.material[property] = value;
         }
     }

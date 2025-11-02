@@ -82,13 +82,13 @@ export class SkyboxPass extends BasePass {
         const vertices = new Float32Array([
             // Front face
             -size, -size, -size,
-             size, -size, -size,
-             size,  size, -size,
+            size, -size, -size,
+            size,  size, -size,
             -size,  size, -size,
             // Back face
             -size, -size,  size,
-             size, -size,  size,
-             size,  size,  size,
+            size, -size,  size,
+            size,  size,  size,
             -size,  size,  size
         ]);
 
@@ -147,16 +147,16 @@ export class SkyboxPass extends BasePass {
         // Bind to same framebuffer as geometry (HDR or screen)
         const hdrEnabled = scene.hdrEnabled !== undefined ? scene.hdrEnabled : true;
         if (hdrEnabled && this.fbManager) {
-            const width = gl.canvas.width;
-            const height = gl.canvas.height;
+            const {width} = gl.canvas;
+            const {height} = gl.canvas;
             const hdrFBO = this.fbManager.get('hdr', width, height, { hdr: true, depth: true });
             this.renderer.setFramebuffer(hdrFBO.fbo);
         } else {
             this.renderer.setFramebuffer(null);
         }
 
-        // Don't clear - we're rendering after geometry (or before, depending on use case)
-        // For background, render first with depth test = LEQUAL
+        // Clear framebuffer (we render first as background)
+        this.renderer.clear(true, true);
 
         // Compute view-projection matrix without translation (removes camera position)
         const viewProj = this.computeViewProjNoTranslation(camera);

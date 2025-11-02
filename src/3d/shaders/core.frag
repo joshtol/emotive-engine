@@ -4,6 +4,7 @@ precision highp float;
 
 in vec3 v_normal;
 in vec3 v_position;
+in vec2 v_uv;  // UV coordinates
 
 uniform vec3 u_glowColor;
 uniform float u_glowIntensity;
@@ -27,8 +28,19 @@ uniform float u_ao;             // 0.0 = full occlusion, 1.0 = no occlusion
 uniform float u_sssStrength;    // Subsurface scattering strength
 uniform float u_anisotropy;     // Anisotropic reflection (-1.0 to 1.0)
 uniform float u_iridescence;    // Iridescence intensity (0.0 to 1.0)
+uniform float u_transmission;   // Transmission/transparency (0.0 = opaque, 1.0 = glass)
+uniform float u_ior;            // Index of refraction (1.0 = air, 1.5 = glass, 1.33 = water)
 uniform samplerCube u_envMap;   // HDRI environment map for reflections
 uniform float u_envIntensity;   // Environment map intensity (0.0 to 1.0)
+
+// Texture support
+uniform sampler2D u_baseColorTexture;  // Base color/albedo texture
+uniform float u_useTexture;            // 0.0 = no texture, 1.0 = use texture
+uniform float u_checkerScale;          // Checkerboard pattern scale
+
+// Screen-space refraction support
+uniform sampler2D u_sceneTexture;      // Rendered scene for refraction sampling
+uniform vec2 u_resolution;             // Screen resolution for UV calculation
 
 out vec4 fragColor;
 
@@ -142,13 +154,13 @@ vec3 calculateIridescence(float NdotV, float iridescenceStrength) {
 // ============================================================================
 
 // Calculate PBR shading with advanced material properties
-vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
+vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 baseColor) {
     // CRITICAL FIX: Perceptual roughness mapping
     // Square the roughness for more linear perception (0% = true mirror)
     float perceptualRoughness = u_roughness * u_roughness;
 
     // Use uniform material properties
-    vec3 F0 = mix(vec3(0.04), u_glowColor, u_metallic);
+    vec3 F0 = mix(vec3(0.04), baseColor, u_metallic);
     vec3 H = normalize(viewDir + lightDir);
 
     float NdotV = max(dot(normal, viewDir), 0.0);
@@ -213,21 +225,51 @@ vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
     float aoInfluence = mix(0.15, 1.0, ao);  // Min 15% (near black) instead of 100%
 
     // Diffuse with aggressive AO
-    vec3 diffuse = kD * u_glowColor * aoInfluence;
+    vec3 diffuse = kD * baseColor * aoInfluence;
 
     // Subsurface scattering (for non-metals) - enhanced with better visibility
     vec3 sss = vec3(0.0);
     if (u_sssStrength > 0.01 && u_metallic < 0.5) {
-        sss = calculateSSS(normal, viewDir, lightDir, u_glowColor, u_sssStrength);
+        sss = calculateSSS(normal, viewDir, lightDir, baseColor, u_sssStrength);
     }
 
     // Ambient with aggressive AO (use same calculation as diffuse)
-    vec3 ambient = vec3(0.005) * u_glowColor * aoInfluence;
+    vec3 ambient = vec3(0.005) * baseColor * aoInfluence;
 
     vec3 lightColor = vec3(1.0);
 
     // Combine: ambient + lit diffuse + SSS + specular + environment + subtle fresnel
     return ambient + (diffuse + sss + specular) * lightColor * NdotL + envReflection + F * 0.1;
+}
+
+// Calculate screen-space refraction for transmission
+vec3 calculateRefraction(vec3 normal, vec3 viewDir, vec3 baseColor) {
+    // Calculate refraction direction using Snell's law
+    float eta = 1.0 / u_ior;  // Ratio of indices (air to material)
+    vec3 refractDir = refract(-viewDir, normal, eta);
+
+    // If total internal reflection, use reflection instead
+    if (length(refractDir) < 0.01) {
+        refractDir = reflect(-viewDir, normal);
+    }
+
+    // Convert refraction direction to screen-space offset
+    // Project the refracted ray a small distance and compute screen offset
+    float refractStrength = 0.3 * (1.0 - u_roughness);  // Stronger distortion for visible refraction
+    vec2 screenUV = gl_FragCoord.xy / u_resolution;
+    vec2 refractOffset = refractDir.xy * refractStrength;
+    vec2 refractUV = screenUV + refractOffset;
+
+    // Clamp to screen bounds
+    refractUV = clamp(refractUV, vec2(0.0), vec2(1.0));
+
+    // Sample the scene texture for refraction
+    vec3 refractedColor = texture(u_sceneTexture, refractUV).rgb;
+
+    // Tint the refracted light by base color (absorption)
+    refractedColor *= baseColor;
+
+    return refractedColor;
 }
 
 // Calculate Toon shading
@@ -299,18 +341,46 @@ void main() {
     vec3 viewDir = normalize(u_cameraPosition - v_position);
     vec3 lightDir = normalize(u_lightDirection);
 
+    // Sample base color from texture or use uniform color
+    vec3 baseColor = u_glowColor;
+    if (u_useTexture > 0.5) {
+        vec4 texColor = texture(u_baseColorTexture, v_uv);
+        baseColor = texColor.rgb * u_glowColor;  // Modulate texture with tint color
+    } else if (u_useTexture < -0.5) {
+        // Procedural checkerboard pattern using world position
+        vec2 pos = v_position.xz * u_checkerScale;
+        vec2 grid = floor(pos);
+        float checker = mod(grid.x + grid.y, 2.0);
+        baseColor = mix(vec3(0.35), vec3(0.75), checker) * u_glowColor;  // Match reference contrast
+    }
+
     // Fresnel effect for glow (HDR-ready, can exceed 1.0)
     // Reduced base glow to prevent washing out shading detail
     float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0);
-    vec3 glow = u_glowColor * u_glowIntensity * (0.0 + fresnel * 0.4) * 0.8; // Subtle edge glow only
+    vec3 glow = baseColor * u_glowIntensity * (0.0 + fresnel * 0.4) * 0.8; // Subtle edge glow only
 
     // Calculate each rendering mode independently
-    vec3 pbrColor = calculatePBR(normal, viewDir, lightDir);
+    vec3 pbrColor = calculatePBR(normal, viewDir, lightDir, baseColor);
     vec3 toonColor = calculateToon(normal, lightDir);
-    vec3 flatColor = u_glowColor * 0.5;
+    vec3 flatColor = baseColor * 0.5;
     vec3 normalsColor = calculateNormalsOverlay(normal);
     float edgeIntensity = calculateEdges(normal, viewDir, lightDir);
     vec3 rimColor = calculateRim(normal, viewDir, lightDir);
+
+    // Apply transmission/refraction if enabled
+    if (u_transmission > 0.01) {
+        vec3 refractedColor = calculateRefraction(normal, viewDir, baseColor);
+
+        // Calculate Fresnel to blend reflection and refraction
+        vec3 F0 = vec3(0.04);  // Base reflectance for dielectrics
+        F0 = mix(F0, baseColor, u_metallic);
+        float cosTheta = max(dot(normal, viewDir), 0.0);
+        vec3 fresnel = fresnelSchlick(cosTheta, F0);
+
+        // Blend PBR reflections with refracted background based on Fresnel
+        // More transmission = more refraction visible
+        pbrColor = mix(refractedColor, pbrColor, fresnel.r * (1.0 - u_transmission * 0.9));
+    }
 
     // Blend base modes with direct weighted mix (no normalization)
     vec3 coreColor = pbrColor * u_pbrAmount +

@@ -38,6 +38,7 @@ export class MultiObjectPass extends BasePass {
             // Attributes
             position: gl.getAttribLocation(this.program, 'a_position'),
             normal: gl.getAttribLocation(this.program, 'a_normal'),
+            uv: gl.getAttribLocation(this.program, 'a_uv'),
 
             // Uniforms
             modelMatrix: gl.getUniformLocation(this.program, 'u_modelMatrix'),
@@ -65,8 +66,19 @@ export class MultiObjectPass extends BasePass {
             sssStrength: gl.getUniformLocation(this.program, 'u_sssStrength'),
             anisotropy: gl.getUniformLocation(this.program, 'u_anisotropy'),
             iridescence: gl.getUniformLocation(this.program, 'u_iridescence'),
+            transmission: gl.getUniformLocation(this.program, 'u_transmission'),
+            ior: gl.getUniformLocation(this.program, 'u_ior'),
             envMap: gl.getUniformLocation(this.program, 'u_envMap'),
-            envIntensity: gl.getUniformLocation(this.program, 'u_envIntensity')
+            envIntensity: gl.getUniformLocation(this.program, 'u_envIntensity'),
+
+            // Texture support
+            baseColorTexture: gl.getUniformLocation(this.program, 'u_baseColorTexture'),
+            useTexture: gl.getUniformLocation(this.program, 'u_useTexture'),
+            checkerScale: gl.getUniformLocation(this.program, 'u_checkerScale'),
+
+            // Screen-space refraction support
+            sceneTexture: gl.getUniformLocation(this.program, 'u_sceneTexture'),
+            resolution: gl.getUniformLocation(this.program, 'u_resolution')
         };
     }
 
@@ -88,19 +100,21 @@ export class MultiObjectPass extends BasePass {
         // Set shader program
         this.renderer.setProgram(this.program);
 
-        // Enable HDR framebuffer
-        const hdrEnabled = scene.hdrEnabled !== undefined ? scene.hdrEnabled : true;
-        if (hdrEnabled && this.fbManager) {
-            const width = gl.canvas.width;
-            const height = gl.canvas.height;
-            const hdrFBO = this.fbManager.get('hdr', width, height, { hdr: true, depth: true });
-            this.renderer.setFramebuffer(hdrFBO.fbo);
-        } else {
-            this.renderer.setFramebuffer(null);
+        // Enable HDR framebuffer (ONLY if we have fbManager)
+        if (this.fbManager) {
+            const hdrEnabled = scene.hdrEnabled !== undefined ? scene.hdrEnabled : true;
+            if (hdrEnabled) {
+                const {width} = gl.canvas;
+                const {height} = gl.canvas;
+                const hdrFBO = this.fbManager.get('hdr', width, height, { hdr: true, depth: true });
+                this.renderer.setFramebuffer(hdrFBO.fbo);
+            } else {
+                this.renderer.setFramebuffer(null);
+            }
         }
+        // If no fbManager, don't touch framebuffer state (use whatever is currently bound)
 
-        // Clear framebuffer
-        this.renderer.clear(true, true);
+        // DON'T clear - skybox renders first and handles clearing
 
         // Set camera matrices (shared across all objects)
         gl.uniformMatrix4fv(this.locations.viewMatrix, false, camera.viewMatrix);
@@ -110,6 +124,7 @@ export class MultiObjectPass extends BasePass {
         // Set environment map (shared across all objects)
         const envIntensity = scene.envIntensity !== undefined ? scene.envIntensity : 0.0;
         gl.uniform1f(this.locations.envIntensity, envIntensity);
+        const checkerScale = scene.checkerScale !== undefined ? scene.checkerScale : 0.25;        gl.uniform1f(this.locations.checkerScale, checkerScale);
 
         gl.activeTexture(gl.TEXTURE5);
         if (scene.envMap) {
@@ -126,6 +141,16 @@ export class MultiObjectPass extends BasePass {
         const lightDir = scene.lightDirection || [1, 1, 1];
         gl.uniform3fv(this.locations.lightDirection, lightDir);
         gl.uniform1f(this.locations.time, scene.time || 0);
+
+        // Set resolution for screen-space effects
+        gl.uniform2f(this.locations.resolution, gl.canvas.width, gl.canvas.height);
+
+        // Set screen texture for refraction (if available)
+        if (scene.sceneTexture) {
+            gl.activeTexture(gl.TEXTURE6);
+            gl.bindTexture(gl.TEXTURE_2D, scene.sceneTexture);
+            gl.uniform1i(this.locations.sceneTexture, 6);
+        }
 
         // Set default rendering amounts (can be overridden per object if needed)
         gl.uniform1f(this.locations.pbrAmount, 1.0);
@@ -167,6 +192,12 @@ export class MultiObjectPass extends BasePass {
         gl.uniform1f(this.locations.sssStrength, obj.material.sssStrength);
         gl.uniform1f(this.locations.anisotropy, obj.material.anisotropy);
         gl.uniform1f(this.locations.iridescence, obj.material.iridescence);
+        gl.uniform1f(this.locations.transmission, obj.material.transmission);
+        gl.uniform1f(this.locations.ior, obj.material.ior);
+
+        // Set texture usage (per-object)
+        const useTexture = obj.material.useTexture !== undefined ? obj.material.useTexture : 0.0;
+        gl.uniform1f(this.locations.useTexture, useTexture);
 
         // Draw
         const indexCount = obj.geometry.indices.length;
@@ -204,6 +235,19 @@ export class MultiObjectPass extends BasePass {
         gl.bufferData(gl.ARRAY_BUFFER, geometry.normals, gl.STATIC_DRAW);
         gl.enableVertexAttribArray(this.locations.normal);
         gl.vertexAttribPointer(this.locations.normal, 3, gl.FLOAT, false, 0, 0);
+
+        // UV buffer (optional)
+        if (geometry.uvs && this.locations.uv >= 0) {
+            const uvBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, geometry.uvs, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(this.locations.uv);
+            gl.vertexAttribPointer(this.locations.uv, 2, gl.FLOAT, false, 0, 0);
+        } else if (this.locations.uv >= 0) {
+            // Disable UV attribute if not present (provide default)
+            gl.disableVertexAttribArray(this.locations.uv);
+            gl.vertexAttrib2f(this.locations.uv, 0.0, 0.0);
+        }
 
         // Index buffer
         const indexBuffer = gl.createBuffer();
