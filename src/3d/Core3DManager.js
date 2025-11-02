@@ -10,9 +10,10 @@
 
 import { WebGLRenderer } from './renderer/WebGLRenderer.js';
 import { RenderPipeline } from './renderer/RenderPipeline.js';
-import { GeometryPass } from './passes/GeometryPass.js';
+import { GeometryPass, BloomPass, ToneMappingPass } from './passes/index.js';
 import { CORE_GEOMETRIES } from './geometries/index.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
+import { CameraController } from './controls/CameraController.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 
@@ -24,9 +25,40 @@ export class Core3DManager {
         // Create WebGL renderer
         const renderer = new WebGLRenderer(canvas);
 
-        // Create render pipeline with modular architecture
+        // HDR configuration
+        this.hdrEnabled = options.hdrEnabled !== undefined ? options.hdrEnabled : true;
+        this.bloomEnabled = options.bloomEnabled !== undefined ? options.bloomEnabled : true;
+        this.exposure = options.exposure || 1.0;
+        this.toneMappingMode = options.toneMappingMode || 1;  // 0=Reinhard, 1=ACES, 2=Uncharted2
+        this.bloomStrength = options.bloomStrength || 0.5;
+        this.bloomThreshold = options.bloomThreshold || 1.0;
+
+        // Create render pipeline with HDR support
         this.pipeline = new RenderPipeline(renderer);
+
+        // Add geometry pass (renders to HDR buffer if enabled)
         this.pipeline.addPass(new GeometryPass());
+
+        // Add HDR post-processing passes
+        if (this.hdrEnabled) {
+            // Optional bloom pass
+            if (this.bloomEnabled) {
+                const bloomPass = new BloomPass({
+                    threshold: this.bloomThreshold,
+                    bloomStrength: this.bloomStrength
+                });
+                this.pipeline.addPass(bloomPass);
+                this.bloomPass = bloomPass;  // Store reference for API access
+            }
+
+            // Tone mapping pass (always required for HDR)
+            const toneMappingPass = new ToneMappingPass({
+                exposure: this.exposure,
+                toneMappingMode: this.toneMappingMode
+            });
+            this.pipeline.addPass(toneMappingPass);
+            this.toneMappingPass = toneMappingPass;  // Store reference for API access
+        }
 
         // Backward compatibility - expose renderer property
         this.renderer = renderer;
@@ -34,6 +66,22 @@ export class Core3DManager {
         // Camera setup (closer and looking straight at origin)
         this.cameraPosition = [0, 0, 3];
         this.cameraTarget = [0, 0, 0];
+
+        // Interactive camera controls (mouse/touch)
+        this.cameraControlsEnabled = options.cameraControls !== undefined ? options.cameraControls : true;
+        if (this.cameraControlsEnabled) {
+            // Use eventTarget if provided (for cases where canvas has pointerEvents: none)
+            // Otherwise fall back to canvas
+            const eventTarget = options.eventTarget || canvas;
+            this.cameraController = new CameraController(eventTarget, {
+                distance: 3.0,
+                target: this.cameraTarget,
+                rotateSpeed: 0.005,
+                zoomSpeed: 0.1,
+                minDistance: 1.5,
+                maxDistance: 8.0
+            });
+        }
 
         // Matrices
         this.projectionMatrix = this.createPerspectiveMatrix();
@@ -455,17 +503,29 @@ export class Core3DManager {
             return;
         }
 
-        // Start morph animation
-        this.animator.playMorph(this.geometry, targetGeometry, {
-            duration: 1000,
-            onUpdate: blendedGeometry => {
-                this.geometry = blendedGeometry;
-            },
-            onComplete: () => {
-                this.geometry = targetGeometry;
-                this.geometryType = shapeName;
-            }
-        });
+        // Check if morphing between incompatible topologies (sphere <-> torus)
+        const currentIsClosedSurface = (this.geometryType === 'sphere' || this.geometryType === 'crystal' || this.geometryType === 'diamond');
+        const targetIsClosedSurface = (shapeName === 'sphere' || shapeName === 'crystal' || shapeName === 'diamond');
+        const topologyChange = currentIsClosedSurface !== targetIsClosedSurface;
+
+        if (topologyChange) {
+            // Instant switch for topology changes (sphere <-> torus)
+            this.geometry = targetGeometry;
+            this.geometryType = shapeName;
+            console.log(`Instant geometry switch to ${shapeName} (topology change)`);
+        } else {
+            // Smooth morph animation for compatible shapes
+            this.animator.playMorph(this.geometry, targetGeometry, {
+                duration: 1000,
+                onUpdate: blendedGeometry => {
+                    this.geometry = blendedGeometry;
+                },
+                onComplete: () => {
+                    this.geometry = targetGeometry;
+                    this.geometryType = shapeName;
+                }
+            });
+        }
     }
 
     /**
@@ -475,8 +535,16 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
-        // Auto-rotate based on emotion
-        this.rotation[1] += deltaTime * 0.0003; // Slow Y rotation
+        // Update camera controller
+        if (this.cameraController) {
+            this.cameraController.update(deltaTime);
+            // Get updated camera position from controller
+            this.cameraPosition = this.cameraController.getCameraPosition();
+            this.viewMatrix = this.createViewMatrix();
+        } else {
+            // Auto-rotate based on emotion (only when camera controls disabled)
+            this.rotation[1] += deltaTime * 0.0003; // Slow Y rotation
+        }
 
         // Prepare scene data for pipeline
         const scene = {
@@ -487,7 +555,8 @@ export class Core3DManager {
             renderMode: this.renderMode,           // Legacy (for backwards compat)
             renderBlend: this.renderBlend,         // New blended system
             wireframeEnabled: this.wireframeEnabled,
-            lightDirection: this.lightDirection
+            lightDirection: this.lightDirection,
+            hdrEnabled: this.hdrEnabled            // HDR rendering flag
         };
 
         // Prepare camera data for pipeline
@@ -693,10 +762,103 @@ export class Core3DManager {
         mat[11] *= vec[2];
     }
 
+    // ========================================================================
+    // HDR CONTROL API
+    // ========================================================================
+
+    /**
+     * Set exposure value
+     * @param {number} exposure - Exposure multiplier (default 1.0)
+     */
+    setExposure(exposure) {
+        this.exposure = exposure;
+        if (this.toneMappingPass) {
+            this.toneMappingPass.setExposure(exposure);
+        }
+    }
+
+    /**
+     * Set tone mapping mode
+     * @param {number} mode - 0=Reinhard, 1=ACES, 2=Uncharted2
+     */
+    setToneMappingMode(mode) {
+        this.toneMappingMode = mode;
+        if (this.toneMappingPass) {
+            this.toneMappingPass.setToneMappingMode(mode);
+        }
+    }
+
+    /**
+     * Set bloom strength
+     * @param {number} strength - Bloom intensity (default 0.5)
+     */
+    setBloomStrength(strength) {
+        this.bloomStrength = strength;
+        if (this.bloomPass) {
+            this.bloomPass.setBloomStrength(strength);
+        }
+    }
+
+    /**
+     * Set bloom threshold
+     * @param {number} threshold - Brightness threshold (default 1.0)
+     */
+    setBloomThreshold(threshold) {
+        this.bloomThreshold = threshold;
+        if (this.bloomPass) {
+            this.bloomPass.setThreshold(threshold);
+        }
+    }
+
+    /**
+     * Enable/disable HDR rendering
+     * @param {boolean} enabled - HDR on/off
+     */
+    setHDREnabled(enabled) {
+        this.hdrEnabled = enabled;
+        // Note: Changing HDR at runtime requires rebuilding the pipeline
+        // This is a simplified version - full implementation would need to rebuild
+        console.warn('HDR enable/disable requires reinitialization. Set hdrEnabled in constructor options.');
+    }
+
+    /**
+     * Enable/disable bloom effect
+     * @param {boolean} enabled - Bloom on/off
+     */
+    setBloomEnabled(enabled) {
+        if (this.bloomPass) {
+            this.bloomPass.enabled = enabled;
+        }
+        this.bloomEnabled = enabled;
+    }
+
+    /**
+     * Enable/disable camera controls
+     * @param {boolean} enabled - Camera controls on/off
+     */
+    setCameraControlsEnabled(enabled) {
+        if (this.cameraController) {
+            this.cameraController.setEnabled(enabled);
+        }
+        this.cameraControlsEnabled = enabled;
+    }
+
+    /**
+     * Reset camera to default position
+     */
+    resetCamera() {
+        if (this.cameraController) {
+            this.cameraController.reset();
+        }
+    }
+
     /**
      * Cleanup
      */
     destroy() {
+        if (this.cameraController) {
+            this.cameraController.destroy();
+        }
         this.renderer.destroy();
         this.animator.stopAll();
     }

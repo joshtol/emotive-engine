@@ -8,6 +8,7 @@
 import { createSphere } from './Sphere.js';
 import { createCrystal } from './Crystal.js';
 import { createDiamond } from './Diamond.js';
+import { createTorus } from './Torus.js';
 
 /**
  * Core geometry registry
@@ -16,6 +17,7 @@ import { createDiamond } from './Diamond.js';
 export const CORE_GEOMETRIES = {
     // Basic shapes
     sphere: createSphere(32, 32),     // Smooth sphere
+    torus: createTorus(1.0, 0.4, 48, 24), // Donut/ring shape
 
     // Crystalline shapes
     crystal: createCrystal(6),         // Hexagonal crystal
@@ -39,3 +41,4 @@ export const CORE_GEOMETRIES = {
 export { createSphere } from './Sphere.js';
 export { createCrystal } from './Crystal.js';
 export { createDiamond } from './Diamond.js';
+export { createTorus } from './Torus.js';

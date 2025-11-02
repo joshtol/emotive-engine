@@ -338,6 +338,7 @@
                 <div class="category-title">Geometry</div>
                 <div class="viz-controls">
                     <button onclick="changeGeometry('sphere')">Sphere</button>
+                    <button onclick="changeGeometry('torus')">🍩 Torus</button>
                     <button onclick="changeGeometry('diamond')">Diamond</button>
                     <button onclick="changeGeometry('crystal')">Crystal</button>
                 </div>
@@ -367,6 +368,40 @@
                 <button id="wireframeBtn" style="width: 100%;" onclick="toggleWireframe()">
                     Enable Wireframe
                 </button>
+            </div>
+        </div>
+
+        <!-- Shader Calibration Panel -->
+        <div class="control-panel">
+            <h3>📸 Shader Calibration</h3>
+
+            <div class="test-category">
+                <div class="category-title">Preset Camera Angles</div>
+                <div class="viz-controls">
+                    <button onclick="setCameraAngle('front')">🎯 Front (Specular Test)</button>
+                    <button onclick="setCameraAngle('rim')">💫 Rim Light Angle</button>
+                    <button onclick="setCameraAngle('grazing')">✨ Grazing (Bloom Test)</button>
+                    <button onclick="setCameraAngle('topdown')">⬇️ Top-Down View</button>
+                    <button onclick="setCameraAngle('closeup')">🔍 Close-Up (Material)</button>
+                </div>
+            </div>
+
+            <div class="test-category">
+                <div class="category-title">Test Presets</div>
+                <div class="viz-controls">
+                    <button onclick="applyTestPreset('pbr')">PBR Only (100%)</button>
+                    <button onclick="applyTestPreset('rim')">Rim Only (100%)</button>
+                    <button onclick="applyTestPreset('normals')">Normals Only (100%)</button>
+                    <button onclick="applyTestPreset('joy')">Joy Emotion (Cyan)</button>
+                    <button onclick="applyTestPreset('love')">Love Emotion (Pink)</button>
+                </div>
+            </div>
+
+            <div class="test-category" style="margin-bottom: 0;">
+                <button onclick="captureScreenshot()" style="width: 100%; padding: 16px; font-size: 16px; font-weight: bold; background: linear-gradient(135deg, #DD4A9A 0%, #84CFC5 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    📸 Capture to Clipboard
+                </button>
+                <div id="screenshotStatus" style="text-align: center; margin-top: 8px; font-size: 12px; opacity: 0.7;"></div>
             </div>
         </div>
 
@@ -688,6 +723,135 @@
                 }
             } else {
                 console.error('setRenderBlend is not a function!', typeof mascot.setRenderBlend);
+            }
+        };
+
+        // Shader Calibration Functions
+
+        // Set camera to preset angle
+        window.setCameraAngle = function(angle) {
+            if (!mascot || !mascot.core3D || !mascot.core3D.cameraController) {
+                updateStatus('Camera controller not available', false);
+                return;
+            }
+
+            const controller = mascot.core3D.cameraController;
+            const PI = Math.PI;
+
+            // Preset camera angles (theta, phi, distance)
+            const angles = {
+                'front': { theta: 0, phi: PI / 2, distance: 3.0 },           // Front view
+                'rim': { theta: PI * 0.75, phi: PI * 0.6, distance: 3.5 },   // 135° for rim lighting
+                'grazing': { theta: PI * 0.5, phi: PI * 0.85, distance: 2.5 }, // Steep angle for bloom
+                'topdown': { theta: 0, phi: PI * 0.1, distance: 3.5 },       // Looking down through hole
+                'closeup': { theta: PI * 0.25, phi: PI * 0.55, distance: 2.0 } // Close for material detail
+            };
+
+            const preset = angles[angle];
+            if (!preset) return;
+
+            // Animate to the angle smoothly
+            controller.theta = preset.theta;
+            controller.phi = preset.phi;
+            controller.distance = preset.distance;
+
+            // Stop any velocity for instant positioning
+            controller.thetaVelocity = 0;
+            controller.phiVelocity = 0;
+            controller.distanceVelocity = 0;
+
+            updateStatus(`Camera: ${angle} angle`, false);
+        };
+
+        // Apply test preset (shader modes and emotions)
+        window.applyTestPreset = function(preset) {
+            if (!mascot) return;
+
+            switch(preset) {
+                case 'pbr':
+                    document.getElementById('pbrSlider').value = 100;
+                    document.getElementById('toonSlider').value = 0;
+                    document.getElementById('flatSlider').value = 0;
+                    document.getElementById('normalsSlider').value = 0;
+                    document.getElementById('edgesSlider').value = 0;
+                    document.getElementById('rimSlider').value = 0;
+                    updateBlend();
+                    updateStatus('PBR Only (100%)', false);
+                    break;
+
+                case 'rim':
+                    document.getElementById('pbrSlider').value = 0;
+                    document.getElementById('toonSlider').value = 0;
+                    document.getElementById('flatSlider').value = 0;
+                    document.getElementById('normalsSlider').value = 0;
+                    document.getElementById('edgesSlider').value = 0;
+                    document.getElementById('rimSlider').value = 100;
+                    updateBlend();
+                    updateStatus('Rim Lighting (100%)', false);
+                    break;
+
+                case 'normals':
+                    document.getElementById('pbrSlider').value = 0;
+                    document.getElementById('toonSlider').value = 0;
+                    document.getElementById('flatSlider').value = 0;
+                    document.getElementById('normalsSlider').value = 100;
+                    document.getElementById('edgesSlider').value = 0;
+                    document.getElementById('rimSlider').value = 0;
+                    updateBlend();
+                    updateStatus('Normals Visualization (100%)', false);
+                    break;
+
+                case 'joy':
+                    mascot.setEmotion('joy');
+                    updateStatus('Emotion: Joy (Cyan glow)', false);
+                    break;
+
+                case 'love':
+                    mascot.setEmotion('love');
+                    updateStatus('Emotion: Love (Pink glow)', false);
+                    break;
+            }
+        };
+
+        // Capture canvas screenshot to clipboard
+        window.captureScreenshot = async function() {
+            const statusEl = document.getElementById('screenshotStatus');
+
+            try {
+                // Get the WebGL canvas (EmotiveMascot3D creates mascot-canvas-3d)
+                const canvas = document.getElementById('mascot-canvas-3d') ||
+                               mascot.webglCanvas ||
+                               document.querySelector('canvas');
+
+                if (!canvas) {
+                    throw new Error('Canvas not found');
+                }
+
+                // Convert canvas to blob
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+                // Copy to clipboard using Clipboard API
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'image/png': blob
+                    })
+                ]);
+
+                statusEl.textContent = '✅ Copied to clipboard!';
+                statusEl.style.color = '#84CFC5';
+
+                setTimeout(() => {
+                    statusEl.textContent = '';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Screenshot failed:', error);
+                statusEl.textContent = '❌ Failed to copy';
+                statusEl.style.color = '#DD4A9A';
+
+                setTimeout(() => {
+                    statusEl.textContent = '';
+                }, 3000);
             }
         };
 

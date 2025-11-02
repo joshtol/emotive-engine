@@ -125,7 +125,8 @@ export class EmotiveMascot3D {
             this.core3D = new Core3DManager(this.webglCanvas, {
                 geometry: this.config.coreGeometry,
                 emotion: this.config.defaultEmotion,
-                coreScale: this.config.coreScale  // Pass through coreScale option
+                coreScale: this.config.coreScale,  // Pass through coreScale option
+                eventTarget: this.container  // Use container for events (webglCanvas has pointerEvents: none)
             });
 
             // Initialize particle system (2D overlay)

@@ -25,7 +25,8 @@ export class WebGLRenderer {
             alpha: config.alpha !== undefined ? config.alpha : true,
             antialias: config.antialias !== undefined ? config.antialias : true,
             depth: config.depth !== undefined ? config.depth : true,
-            premultipliedAlpha: false
+            premultipliedAlpha: false,
+            preserveDrawingBuffer: true  // Required for canvas.toBlob() screenshots
         });
 
         if (!this.gl) {

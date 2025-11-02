@@ -72,7 +72,25 @@ export class GeometryPass extends BasePass {
         // Set shader program
         this.renderer.setProgram(this.program);
 
-        // Clear framebuffer (render to screen)
+        // Check if HDR is enabled
+        const hdrEnabled = scene.hdrEnabled !== undefined ? scene.hdrEnabled : true;
+
+        if (hdrEnabled) {
+            // Render to HDR framebuffer
+            const hdrFBO = this.fbManager.get('hdr');
+            if (!hdrFBO) {
+                // Create HDR framebuffer on first use
+                const width = gl.canvas.width;
+                const height = gl.canvas.height;
+                this.fbManager.acquire('hdr', width, height, 'RGBA16F');
+            }
+            this.renderer.setFramebuffer(this.fbManager.get('hdr'));
+        } else {
+            // Render directly to screen (LDR fallback)
+            this.renderer.setFramebuffer(null);
+        }
+
+        // Clear framebuffer
         this.renderer.clear(true, true);
 
         // Skip if no geometry

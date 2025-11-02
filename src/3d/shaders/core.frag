@@ -92,11 +92,17 @@ vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
     kD *= 1.0 - metallic;
 
     float NdotL = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = kD * u_glowColor * 0.5;
-    vec3 ambient = vec3(0.03) * u_glowColor;
+
+    // Diffuse respects light direction (multiplied by NdotL)
+    vec3 diffuse = kD * u_glowColor;
+
+    // Very low ambient to allow proper shadows
+    vec3 ambient = vec3(0.005) * u_glowColor;
+
     vec3 lightColor = vec3(1.0);
 
-    return ambient + (diffuse + specular) * lightColor * NdotL + F * 0.2;
+    // Ambient + lit diffuse + lit specular + subtle fresnel
+    return ambient + (diffuse + specular) * lightColor * NdotL + F * 0.1;
 }
 
 // Calculate Toon shading
@@ -168,9 +174,10 @@ void main() {
     vec3 viewDir = normalize(u_cameraPosition - v_position);
     vec3 lightDir = normalize(u_lightDirection);
 
-    // Fresnel effect for glow
+    // Fresnel effect for glow (HDR-ready, can exceed 1.0)
+    // Reduced base glow to prevent washing out shading detail
     float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0);
-    vec3 glow = u_glowColor * u_glowIntensity * (0.3 + fresnel * 0.7);
+    vec3 glow = u_glowColor * u_glowIntensity * (0.0 + fresnel * 0.4) * 0.8; // Subtle edge glow only
 
     // Calculate each rendering mode independently
     vec3 pbrColor = calculatePBR(normal, viewDir, lightDir);

@@ -3,6 +3,7 @@
  *
  * Handles creation, pooling, and lifecycle of WebGL framebuffers.
  * Reduces allocation overhead by recycling FBOs.
+ * Supports HDR (float) textures for high dynamic range rendering.
  */
 export class FramebufferManager {
     /**
@@ -12,17 +13,49 @@ export class FramebufferManager {
         this.renderer = renderer;
         this.fbos = new Map();  // name -> FBO
         this.pool = [];  // Recycled FBOs
+
+        // Check for float texture support (needed for HDR)
+        const { gl } = this.renderer;
+        const ext = gl.getExtension('EXT_color_buffer_float');
+        this.supportsFloatTextures = !!ext;
+
+        if (!this.supportsFloatTextures) {
+            console.warn('HDR not supported: EXT_color_buffer_float extension unavailable');
+        }
     }
 
     /**
      * Create a new framebuffer with color and depth attachments
      * @param {number} width - Framebuffer width
      * @param {number} height - Framebuffer height
-     * @param {string} format - Color format ('RGBA', 'RGB', 'R8', etc.)
+     * @param {string} format - Color format ('RGBA', 'RGBA16F', 'RGBA32F', etc.)
      * @returns {Object} FBO object with framebuffer, texture, and depth buffer
      */
     create(width, height, format = 'RGBA') {
         const { gl } = this.renderer;
+
+        // Determine internal format and data type
+        let internalFormat, dataFormat, dataType;
+
+        if (format === 'RGBA16F' && this.supportsFloatTextures) {
+            // HDR half-float (16-bit per channel)
+            internalFormat = gl.RGBA16F;
+            dataFormat = gl.RGBA;
+            dataType = gl.HALF_FLOAT;
+        } else if (format === 'RGBA32F' && this.supportsFloatTextures) {
+            // HDR full-float (32-bit per channel)
+            internalFormat = gl.RGBA32F;
+            dataFormat = gl.RGBA;
+            dataType = gl.FLOAT;
+        } else {
+            // LDR fallback (8-bit per channel)
+            internalFormat = gl[format] || gl.RGBA;
+            dataFormat = gl.RGBA;
+            dataType = gl.UNSIGNED_BYTE;
+            if (format.includes('F') && !this.supportsFloatTextures) {
+                console.warn(`${format} not supported, falling back to RGBA`);
+            }
+        }
 
         // Create framebuffer
         const framebuffer = gl.createFramebuffer();
@@ -34,12 +67,12 @@ export class FramebufferManager {
         gl.texImage2D(
             gl.TEXTURE_2D,
             0,
-            gl[format],
+            internalFormat,
             width,
             height,
             0,
-            gl.RGBA,
-            gl.UNSIGNED_BYTE,
+            dataFormat,
+            dataType,
             null
         );
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -149,17 +182,34 @@ export class FramebufferManager {
         const { gl } = this.renderer;
 
         for (const [name, fbo] of this.fbos.entries()) {
+            // Determine format and type for resize
+            let internalFormat, dataFormat, dataType;
+
+            if (fbo.format === 'RGBA16F' && this.supportsFloatTextures) {
+                internalFormat = gl.RGBA16F;
+                dataFormat = gl.RGBA;
+                dataType = gl.HALF_FLOAT;
+            } else if (fbo.format === 'RGBA32F' && this.supportsFloatTextures) {
+                internalFormat = gl.RGBA32F;
+                dataFormat = gl.RGBA;
+                dataType = gl.FLOAT;
+            } else {
+                internalFormat = gl[fbo.format] || gl.RGBA;
+                dataFormat = gl.RGBA;
+                dataType = gl.UNSIGNED_BYTE;
+            }
+
             // Resize color texture
             gl.bindTexture(gl.TEXTURE_2D, fbo.colorTexture);
             gl.texImage2D(
                 gl.TEXTURE_2D,
                 0,
-                gl[fbo.format],
+                internalFormat,
                 width,
                 height,
                 0,
-                gl.RGBA,
-                gl.UNSIGNED_BYTE,
+                dataFormat,
+                dataType,
                 null
             );
 
