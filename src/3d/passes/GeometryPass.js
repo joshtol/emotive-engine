@@ -151,10 +151,20 @@ export class GeometryPass extends BasePass {
 
         // Draw geometry
         const indexCount = scene.geometry.indices.length;
+        const indexType = scene.geometry.indices instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+
+        // Enable OES_element_index_uint extension if using Uint32Array
+        if (indexType === gl.UNSIGNED_INT && !this.uint32Extension) {
+            this.uint32Extension = gl.getExtension('OES_element_index_uint');
+            if (!this.uint32Extension) {
+                console.warn('OES_element_index_uint extension not supported - 32-bit indices may not work');
+            }
+        }
+
         gl.drawElements(
             gl.TRIANGLES,
             indexCount,
-            gl.UNSIGNED_SHORT,
+            indexType,
             0
         );
 

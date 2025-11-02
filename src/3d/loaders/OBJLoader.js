@@ -156,10 +156,14 @@ export class OBJLoader {
         // Normalize and center the geometry
         const normalized = this.normalizeGeometry(vertices);
 
+        // Use Uint32Array if we have more than 65535 vertices
+        const vertexCount = vertices.length / 3;
+        const IndexArrayType = vertexCount > 65535 ? Uint32Array : Uint16Array;
+
         return {
             vertices: new Float32Array(normalized.vertices),
             normals: new Float32Array(normalsOut),
-            indices: new Uint16Array(indices)
+            indices: new IndexArrayType(indices)
         };
     }
 
