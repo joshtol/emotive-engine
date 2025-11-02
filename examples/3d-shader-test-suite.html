@@ -594,6 +594,9 @@
                 await mascot.init(canvas);
                 mascot.start();
 
+                // Expose globally for automation scripts
+                window.mascot = mascot;
+
                 console.log('Mascot initialized successfully');
             } catch (error) {
                 console.error('Failed to initialize mascot:', error);
