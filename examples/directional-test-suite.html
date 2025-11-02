@@ -429,6 +429,29 @@
                 <input type="range" id="rimSlider" min="0" max="100" value="0" oninput="updateBlend()" style="width: 100%; margin-bottom: 8px;">
             </div>
 
+            <!-- Material Properties -->
+            <div class="test-category">
+                <div class="category-title">🎯 Material Properties</div>
+
+                <label>Roughness: <span id="roughnessValue">20%</span></label>
+                <input type="range" id="roughnessSlider" min="0" max="100" value="20" oninput="updateMaterial()" style="width: 100%; margin-bottom: 8px;">
+                <div style="font-size: 11px; opacity: 0.6; margin-top: -4px; margin-bottom: 8px;">0% = mirror smooth, 100% = completely matte</div>
+
+                <label>Metallic: <span id="metallicValue">30%</span></label>
+                <input type="range" id="metallicSlider" min="0" max="100" value="30" oninput="updateMaterial()" style="width: 100%; margin-bottom: 8px;">
+                <div style="font-size: 11px; opacity: 0.6; margin-top: -4px; margin-bottom: 8px;">0% = dielectric (plastic/glass), 100% = metal</div>
+
+                <div style="margin-top: 12px; font-size: 11px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                    <strong>Quick Presets:</strong><br>
+                    <button onclick="setMaterialPreset('mirror')" style="font-size: 10px; padding: 4px 8px; margin: 2px;">🪞 Mirror</button>
+                    <button onclick="setMaterialPreset('glossy')" style="font-size: 10px; padding: 4px 8px; margin: 2px;">✨ Glossy</button>
+                    <button onclick="setMaterialPreset('plastic')" style="font-size: 10px; padding: 4px 8px; margin: 2px;">🎨 Plastic</button>
+                    <button onclick="setMaterialPreset('matte')" style="font-size: 10px; padding: 4px 8px; margin: 2px;">🧱 Matte</button>
+                    <button onclick="setMaterialPreset('chrome')" style="font-size: 10px; padding: 4px 8px; margin: 2px;">⚙️ Chrome</button>
+                    <button onclick="setMaterialPreset('gold')" style="font-size: 10px; padding: 4px 8px; margin: 2px;">🥇 Gold</button>
+                </div>
+            </div>
+
         <!-- Position Tests -->
         <div class="control-panel">
             <h3>Position Tests</h3>
@@ -853,6 +876,40 @@
                 setTimeout(() => {
                     statusEl.textContent = '';
                 }, 3000);
+            }
+        };
+
+        // Update material properties
+        window.updateMaterial = function() {
+            const roughness = parseInt(document.getElementById('roughnessSlider').value) / 100;
+            const metallic = parseInt(document.getElementById('metallicSlider').value) / 100;
+
+            // Update display values
+            document.getElementById('roughnessValue').textContent = Math.round(roughness * 100) + '%';
+            document.getElementById('metallicValue').textContent = Math.round(metallic * 100) + '%';
+
+            // Apply to mascot
+            if (mascot && mascot.setMaterial) {
+                mascot.setMaterial({ roughness, metallic });
+            }
+        };
+
+        // Material presets
+        window.setMaterialPreset = function(preset) {
+            const presets = {
+                'mirror': { roughness: 0, metallic: 100 },      // Perfect mirror
+                'glossy': { roughness: 10, metallic: 30 },      // Glossy plastic/paint
+                'plastic': { roughness: 40, metallic: 0 },      // Matte plastic
+                'matte': { roughness: 90, metallic: 0 },        // Very matte surface
+                'chrome': { roughness: 5, metallic: 100 },      // Polished metal
+                'gold': { roughness: 15, metallic: 100 }        // Brushed metal
+            };
+
+            const values = presets[preset];
+            if (values) {
+                document.getElementById('roughnessSlider').value = values.roughness;
+                document.getElementById('metallicSlider').value = values.metallic;
+                updateMaterial();
             }
         };
 

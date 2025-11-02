@@ -614,6 +614,39 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Set material properties (roughness and metallic)
+     * @param {Object} properties - Material properties
+     *   roughness: Surface roughness (0.0 = mirror, 1.0 = matte)
+     *   metallic: Material metalness (0.0 = dielectric, 1.0 = metal)
+     */
+    setMaterial(properties) {
+        if (!this.core3D) {
+            console.warn('Renderer not available yet');
+            return;
+        }
+
+        // Update material properties (clamp to appropriate ranges)
+        if (properties.roughness !== undefined) {
+            this.core3D.roughness = Math.max(0, Math.min(1, properties.roughness));
+        }
+        if (properties.metallic !== undefined) {
+            this.core3D.metallic = Math.max(0, Math.min(1, properties.metallic));
+        }
+        if (properties.ao !== undefined) {
+            this.core3D.ao = Math.max(0, Math.min(1, properties.ao));
+        }
+        if (properties.sssStrength !== undefined) {
+            this.core3D.sssStrength = Math.max(0, Math.min(1, properties.sssStrength));
+        }
+        if (properties.anisotropy !== undefined) {
+            this.core3D.anisotropy = Math.max(-1, Math.min(1, properties.anisotropy));
+        }
+        if (properties.iridescence !== undefined) {
+            this.core3D.iridescence = Math.max(0, Math.min(1, properties.iridescence));
+        }
+    }
+
+    /**
      * Enable particles
      */
     enableParticles() {

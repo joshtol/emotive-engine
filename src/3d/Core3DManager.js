@@ -128,6 +128,14 @@ export class Core3DManager {
         this.wireframeEnabled = false;
         this.lightDirection = [0.5, 1.0, 1.0]; // Directional light (x, y, z)
 
+        // Material properties
+        this.roughness = options.roughness !== undefined ? options.roughness : 0.2;  // 0.0 = mirror, 1.0 = matte
+        this.metallic = options.metallic !== undefined ? options.metallic : 0.3;     // 0.0 = dielectric, 1.0 = metal
+        this.ao = options.ao !== undefined ? options.ao : 1.0;                       // 0.0 = full occlusion, 1.0 = none
+        this.sssStrength = options.sssStrength !== undefined ? options.sssStrength : 0.0;  // Subsurface scattering
+        this.anisotropy = options.anisotropy !== undefined ? options.anisotropy : 0.0;    // -1.0 to 1.0
+        this.iridescence = options.iridescence !== undefined ? options.iridescence : 0.0;  // 0.0 to 1.0
+
         // Initialize emotion
         this.setEmotion(this.emotion);
     }
@@ -556,7 +564,14 @@ export class Core3DManager {
             renderBlend: this.renderBlend,         // New blended system
             wireframeEnabled: this.wireframeEnabled,
             lightDirection: this.lightDirection,
-            hdrEnabled: this.hdrEnabled            // HDR rendering flag
+            hdrEnabled: this.hdrEnabled,           // HDR rendering flag
+            roughness: this.roughness,             // Material roughness (0.0-1.0)
+            metallic: this.metallic,               // Material metallic (0.0-1.0)
+            ao: this.ao,                           // Ambient occlusion (0.0-1.0)
+            sssStrength: this.sssStrength,         // Subsurface scattering strength
+            anisotropy: this.anisotropy,           // Anisotropic reflection (-1.0 to 1.0)
+            iridescence: this.iridescence,         // Iridescence intensity (0.0-1.0)
+            time: this.animator.time * 0.001       // Time in seconds for shader animations
         };
 
         // Prepare camera data for pipeline

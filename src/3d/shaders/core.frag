@@ -9,6 +9,7 @@ uniform vec3 u_glowColor;
 uniform float u_glowIntensity;
 uniform vec3 u_cameraPosition;
 uniform vec3 u_lightDirection;
+uniform float u_time;  // Time for animations
 
 // Blended rendering system (all modes mix together)
 uniform float u_pbrAmount;      // 0.0-1.0
@@ -18,6 +19,14 @@ uniform float u_normalsAmount;  // 0.0-1.0
 uniform float u_edgesAmount;    // 0.0-1.0
 uniform float u_rimAmount;      // 0.0-1.0
 uniform float u_wireframeAmount; // 0.0-1.0
+
+// Material properties
+uniform float u_roughness;      // 0.0 = mirror, 1.0 = matte
+uniform float u_metallic;       // 0.0 = dielectric, 1.0 = metal
+uniform float u_ao;             // 0.0 = full occlusion, 1.0 = no occlusion
+uniform float u_sssStrength;    // Subsurface scattering strength
+uniform float u_anisotropy;     // Anisotropic reflection (-1.0 to 1.0)
+uniform float u_iridescence;    // Iridescence intensity (0.0 to 1.0)
 
 out vec4 fragColor;
 
@@ -71,38 +80,117 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 }
 
 // ============================================================================
+// ADVANCED MATERIAL EFFECTS
+// ============================================================================
+
+// Optimized subsurface scattering approximation
+vec3 calculateSSS(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 baseColor, float strength) {
+    // Enhanced back-lighting with deeper penetration
+    vec3 scatterDir = lightDir + normal * 0.3;  // Reduced offset for more pronounced effect
+    float backScatter = pow(clamp(dot(viewDir, -scatterDir), 0.0, 1.0), 3.0);  // Lower power for wider spread
+
+    // Add wrap-around diffuse for softer appearance
+    float wrapDiffuse = max(0.0, (dot(normal, lightDir) + 0.5) / 1.5);
+
+    // Combine effects with strength multiplier
+    return baseColor * (backScatter * 1.5 + wrapDiffuse * 0.3) * strength;
+}
+
+// Anisotropic GGX distribution
+float DistributionGGXAnisotropic(vec3 N, vec3 H, vec3 T, vec3 B, float roughness, float anisotropy) {
+    float at = max(roughness * (1.0 + anisotropy), 0.001);
+    float ab = max(roughness * (1.0 - anisotropy), 0.001);
+
+    float NdotH = max(dot(N, H), 0.0);
+    float TdotH = dot(T, H);
+    float BdotH = dot(B, H);
+
+    float a2t = at * at;
+    float a2b = ab * ab;
+
+    float denom = (TdotH * TdotH / a2t) + (BdotH * BdotH / a2b) + NdotH * NdotH;
+    return 1.0 / (3.14159265359 * at * ab * denom * denom);
+}
+
+// Enhanced thin-film iridescence with richer colors
+vec3 calculateIridescence(float NdotV, float iridescenceStrength) {
+    // Multi-layer interference for richer color variation
+    float hue1 = fract(NdotV * 2.5 + u_time * 0.05);  // Slower, smoother animation
+    float hue2 = fract(NdotV * 4.0 + u_time * 0.08);  // Secondary layer
+
+    // Combine layers for more complex color shifts
+    vec3 iridColor1 = hueToRGB(hue1);
+    vec3 iridColor2 = hueToRGB(hue2);
+    vec3 iridColor = mix(iridColor1, iridColor2, 0.3);  // Blend layers
+
+    // Enhance saturation for more vibrant colors
+    float luminance = dot(iridColor, vec3(0.299, 0.587, 0.114));
+    iridColor = mix(vec3(luminance), iridColor, 1.3);  // Boost saturation
+
+    return mix(vec3(1.0), iridColor, iridescenceStrength);
+}
+
+// ============================================================================
 // RENDERING COMPONENT FUNCTIONS
 // ============================================================================
 
-// Calculate PBR shading
+// Calculate PBR shading with advanced material properties
 vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
-    float roughness = 0.2;
-    float metallic = 0.3;
-    vec3 F0 = mix(vec3(0.04), u_glowColor, metallic);
+    // Use uniform material properties
+    vec3 F0 = mix(vec3(0.04), u_glowColor, u_metallic);
     vec3 H = normalize(viewDir + lightDir);
 
-    float NDF = DistributionGGX(normal, H, roughness);
-    float G = GeometrySmith(normal, viewDir, lightDir, roughness);
+    float NdotV = max(dot(normal, viewDir), 0.0);
+    float NdotL = max(dot(normal, lightDir), 0.0);
+
+    // Anisotropic reflection (if enabled)
+    float NDF;
+    if (abs(u_anisotropy) > 0.01) {
+        // Create tangent and bitangent from normal
+        vec3 up = abs(normal.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+        vec3 tangent = normalize(cross(up, normal));
+        vec3 bitangent = cross(normal, tangent);
+        NDF = DistributionGGXAnisotropic(normal, H, tangent, bitangent, u_roughness, u_anisotropy);
+    } else {
+        // Standard isotropic GGX
+        NDF = DistributionGGX(normal, H, u_roughness);
+    }
+
+    float G = GeometrySmith(normal, viewDir, lightDir, u_roughness);
     vec3 F = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
 
-    vec3 specular = (NDF * G * F) / (4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001);
+    // Iridescence modulates Fresnel
+    if (u_iridescence > 0.01) {
+        vec3 iridColor = calculateIridescence(NdotV, u_iridescence);
+        F *= iridColor;
+    }
+
+    vec3 specular = (NDF * G * F) / (4.0 * max(NdotV, 0.0) * max(NdotL, 0.0) + 0.0001);
 
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
+    kD *= 1.0 - u_metallic;
 
-    float NdotL = max(dot(normal, lightDir), 0.0);
+    // Enhanced AO with smoothed influence
+    float aoInfluence = mix(1.0, u_ao, 0.8);  // Soften AO effect slightly
 
-    // Diffuse respects light direction (multiplied by NdotL)
-    vec3 diffuse = kD * u_glowColor;
+    // Diffuse with AO
+    vec3 diffuse = kD * u_glowColor * aoInfluence;
 
-    // Very low ambient to allow proper shadows
-    vec3 ambient = vec3(0.005) * u_glowColor;
+    // Subsurface scattering (for non-metals) - enhanced with better visibility
+    vec3 sss = vec3(0.0);
+    if (u_sssStrength > 0.01 && u_metallic < 0.5) {
+        sss = calculateSSS(normal, viewDir, lightDir, u_glowColor, u_sssStrength);
+    }
+
+    // Ambient with smoothed AO (squared for softer shadows)
+    float aoSq = u_ao * u_ao;  // Quadratic falloff for smoother transitions
+    vec3 ambient = vec3(0.005) * u_glowColor * aoSq;
 
     vec3 lightColor = vec3(1.0);
 
-    // Ambient + lit diffuse + lit specular + subtle fresnel
-    return ambient + (diffuse + specular) * lightColor * NdotL + F * 0.1;
+    // Combine: ambient + lit diffuse + SSS + specular + subtle fresnel
+    return ambient + (diffuse + sss + specular) * lightColor * NdotL + F * 0.1;
 }
 
 // Calculate Toon shading

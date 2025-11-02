@@ -50,6 +50,7 @@ export class GeometryPass extends BasePass {
             cameraPosition: gl.getUniformLocation(this.program, 'u_cameraPosition'),
             renderMode: gl.getUniformLocation(this.program, 'u_renderMode'),
             lightDirection: gl.getUniformLocation(this.program, 'u_lightDirection'),
+            time: gl.getUniformLocation(this.program, 'u_time'),
             // New blended rendering uniforms
             pbrAmount: gl.getUniformLocation(this.program, 'u_pbrAmount'),
             toonAmount: gl.getUniformLocation(this.program, 'u_toonAmount'),
@@ -57,7 +58,14 @@ export class GeometryPass extends BasePass {
             normalsAmount: gl.getUniformLocation(this.program, 'u_normalsAmount'),
             edgesAmount: gl.getUniformLocation(this.program, 'u_edgesAmount'),
             rimAmount: gl.getUniformLocation(this.program, 'u_rimAmount'),
-            wireframeAmount: gl.getUniformLocation(this.program, 'u_wireframeAmount')
+            wireframeAmount: gl.getUniformLocation(this.program, 'u_wireframeAmount'),
+            // Material properties
+            roughness: gl.getUniformLocation(this.program, 'u_roughness'),
+            metallic: gl.getUniformLocation(this.program, 'u_metallic'),
+            ao: gl.getUniformLocation(this.program, 'u_ao'),
+            sssStrength: gl.getUniformLocation(this.program, 'u_sssStrength'),
+            anisotropy: gl.getUniformLocation(this.program, 'u_anisotropy'),
+            iridescence: gl.getUniformLocation(this.program, 'u_iridescence')
         };
     }
 
@@ -110,6 +118,7 @@ export class GeometryPass extends BasePass {
         gl.uniform3fv(this.locations.cameraPosition, camera.position);
         gl.uniform1i(this.locations.renderMode, scene.renderMode || 0);
         gl.uniform3fv(this.locations.lightDirection, scene.lightDirection || [0.5, 1.0, 1.0]);
+        gl.uniform1f(this.locations.time, scene.time || 0.0);
 
         // Blended rendering uniforms
         const blend = scene.renderBlend || {
@@ -124,6 +133,21 @@ export class GeometryPass extends BasePass {
         gl.uniform1f(this.locations.edgesAmount, blend.edges);
         gl.uniform1f(this.locations.rimAmount, blend.rim);
         gl.uniform1f(this.locations.wireframeAmount, blend.wireframe);
+
+        // Set material properties (with sensible defaults)
+        const roughness = scene.roughness !== undefined ? scene.roughness : 0.2;
+        const metallic = scene.metallic !== undefined ? scene.metallic : 0.3;
+        const ao = scene.ao !== undefined ? scene.ao : 1.0;  // Default: no occlusion
+        const sssStrength = scene.sssStrength !== undefined ? scene.sssStrength : 0.0;  // Default: disabled
+        const anisotropy = scene.anisotropy !== undefined ? scene.anisotropy : 0.0;  // Default: isotropic
+        const iridescence = scene.iridescence !== undefined ? scene.iridescence : 0.0;  // Default: disabled
+
+        gl.uniform1f(this.locations.roughness, roughness);
+        gl.uniform1f(this.locations.metallic, metallic);
+        gl.uniform1f(this.locations.ao, ao);
+        gl.uniform1f(this.locations.sssStrength, sssStrength);
+        gl.uniform1f(this.locations.anisotropy, anisotropy);
+        gl.uniform1f(this.locations.iridescence, iridescence);
 
         // Draw geometry
         const indexCount = scene.geometry.indices.length;

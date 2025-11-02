@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotive Engine 3D - Shader Test Suite</title>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            /* Brand Color Palette */
+            --brand-primary: #DD4A9A;
+            --brand-secondary: #4090CE;
+            --brand-tertiary: #32ACE2;
+            --brand-accent: #84CFC5;
+            --brand-black: #0E0E0E;
+            --brand-white: #F2F1F1;
+
+            /* Dark Theme */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-tertiary: #333333;
+            --text-primary: #F2F1F1;
+            --text-secondary: #B8B8B8;
+            --text-tertiary: #888888;
+
+            /* Interactive Colors */
+            --accent-primary: var(--brand-primary);
+            --accent-secondary: var(--brand-secondary);
+
+            /* Borders */
+            --border-primary: rgba(221, 74, 154, 0.3);
+            --border-secondary: rgba(64, 144, 206, 0.2);
+            --border-muted: rgba(242, 241, 241, 0.1);
+
+            /* Buttons */
+            --button-primary: var(--brand-primary);
+            --button-bg: rgba(0, 0, 0, 0.4);
+            --button-bg-hover: rgba(221, 74, 154, 0.1);
+            --button-bg-active: rgba(221, 74, 154, 0.2);
+
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, rgba(221, 74, 154, 0.1) 0%, rgba(64, 144, 206, 0.05) 100%);
+            --gradient-secondary: linear-gradient(45deg, rgba(50, 172, 226, 0.08) 0%, rgba(132, 207, 197, 0.06) 100%);
+            --gradient-accent: linear-gradient(180deg, rgba(221, 74, 154, 0.12) 0%, transparent 50%, rgba(64, 144, 206, 0.08) 100%);
+            --gradient-overlay: linear-gradient(135deg, rgba(14, 14, 14, 0.4) 0%, rgba(26, 26, 26, 0.2) 100%);
+
+            /* Glow */
+            --glow-primary: rgba(221, 74, 154, 0.4);
+            --glow-secondary: rgba(64, 144, 206, 0.3);
+            --glow-subtle: rgba(221, 74, 154, 0.15);
+            --glow-intense: rgba(221, 74, 154, 0.6);
+
+            /* Canvas */
+            --canvas-bg: rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* ===== LAYOUT GRID ===== */
+        .shader-container {
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-rows: 1fr;
+            grid-template-areas: 'main';
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .shader-main {
+            grid-area: main;
+            display: grid;
+            grid-template-columns: 300px 1fr 320px;
+            grid-template-areas: 'sidebar canvas controls';
+            min-width: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== SIDEBAR (LEFT) ===== */
+        .shader-sidebar {
+            grid-area: sidebar;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 2.0vh 1.8vw;
+            min-width: 0;
+            background: linear-gradient(to bottom, rgba(64, 144, 206, 0.25), rgba(132, 207, 197, 0.15), transparent);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.5vh;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-primary) var(--button-bg);
+        }
+
+        .shader-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .shader-sidebar::-webkit-scrollbar-track {
+            background: var(--button-bg);
+        }
+
+        .shader-sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-primary);
+            border-radius: 3px;
+        }
+
+        /* ===== CONTROLS (RIGHT) ===== */
+        .shader-controls {
+            grid-area: controls;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 2.0vh 1.8vw;
+            min-width: 0;
+            background: linear-gradient(to bottom, rgba(221, 74, 154, 0.25), rgba(132, 207, 197, 0.15), transparent);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.5vh;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-primary) var(--button-bg);
+        }
+
+        .shader-controls::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .shader-controls::-webkit-scrollbar-track {
+            background: var(--button-bg);
+        }
+
+        .shader-controls::-webkit-scrollbar-thumb {
+            background: var(--border-primary);
+            border-radius: 3px;
+        }
+
+        /* ===== CANVAS CONTAINER ===== */
+        .canvas-container {
+            grid-area: canvas;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-width: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .canvas-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: var(--canvas-bg);
+            background-image: var(--gradient-accent);
+            overflow: hidden;
+            isolation: isolate;
+            aspect-ratio: 1;
+            width: 600px;
+            height: 600px;
+            max-width: 80%;
+            max-height: 80vh;
+            flex-shrink: 0;
+            border-radius: 8px;
+        }
+
+        #mascot {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            display: block;
+        }
+
+        /* ===== SECTION HEADERS ===== */
+        .section-header {
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 20px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-muted);
+        }
+
+        .section-header:first-child {
+            margin-top: 0;
+        }
+
+        /* ===== CONTROL GROUPS ===== */
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .control-group label span {
+            float: right;
+            color: var(--brand-primary);
+            font-weight: 600;
+        }
+
+        .control-hint {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            color: var(--text-tertiary);
+        }
+
+        /* ===== SLIDERS ===== */
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--bg-tertiary);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--brand-primary);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--glow-subtle);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--brand-primary);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px var(--glow-subtle);
+        }
+
+        input[type="range"]:hover::-webkit-slider-thumb {
+            background: var(--brand-secondary);
+            box-shadow: 0 0 12px var(--glow-primary);
+        }
+
+        input[type="range"]:hover::-moz-range-thumb {
+            background: var(--brand-secondary);
+            box-shadow: 0 0 12px var(--glow-primary);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            width: 100%;
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 6px;
+            background: var(--button-bg);
+            background-image: var(--gradient-primary);
+            border: 1px solid var(--border-muted);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.18s ease;
+            box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.06), 0 0 10px rgba(0, 0, 0, 0.35);
+        }
+
+        .btn:hover {
+            background: var(--button-bg-hover);
+            background-image: var(--gradient-secondary);
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.08), 0 0 15px var(--glow-subtle);
+            border-color: var(--border-primary);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.active {
+            background: var(--button-bg-active);
+            background-image: var(--gradient-primary);
+            box-shadow: 0 0 25px var(--glow-intense), inset 0 0 12px var(--button-bg-active);
+            border-color: var(--button-primary);
+        }
+
+        /* ===== BUTTON GRIDS ===== */
+        .button-grid {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(2, 1fr);
+            margin-bottom: 16px;
+        }
+
+        .button-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .button-grid .btn {
+            padding: 8px 12px;
+            font-size: 0.7rem;
+        }
+
+        /* ===== PRESET BUTTONS ===== */
+        .preset-grid {
+            display: grid;
+            gap: 6px;
+            grid-template-columns: repeat(2, 1fr);
+            margin-top: 8px;
+            margin-bottom: 12px;
+        }
+
+        .preset-btn {
+            padding: 6px 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-radius: 4px;
+            background: var(--button-bg);
+            border: 1px solid var(--border-muted);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .preset-btn:hover {
+            background: var(--button-bg-hover);
+            border-color: var(--border-primary);
+            color: var(--text-primary);
+        }
+
+        /* ===== CAPTURE BUTTON ===== */
+        .capture-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #DD4A9A 0%, #84CFC5 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .capture-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px var(--glow-primary);
+        }
+
+        .capture-btn:active {
+            transform: translateY(0);
+        }
+
+        .capture-status {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .shader-main {
+                grid-template-columns: 260px 1fr 280px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .shader-main {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+                grid-template-areas:
+                    'sidebar'
+                    'canvas'
+                    'controls';
+            }
+
+            .shader-sidebar,
+            .shader-controls {
+                max-height: 30vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shader-container">
+        <div class="shader-main">
+            <!-- LEFT SIDEBAR: Geometry & Visualization -->
+            <div class="shader-sidebar">
+                <h2 class="section-header">Geometry</h2>
+                <div class="button-grid">
+                    <button class="btn" onclick="changeGeometry('sphere')">UV Sphere</button>
+                    <button class="btn active" onclick="changeGeometry('icosphere')">Icosphere</button>
+                    <button class="btn" onclick="changeGeometry('torus')">Torus</button>
+                    <button class="btn" onclick="changeGeometry('diamond')">Diamond</button>
+                    <button class="btn" onclick="changeGeometry('crystal')">Crystal</button>
+                </div>
+
+                <h2 class="section-header">Render Mode</h2>
+                <div class="button-grid">
+                    <button class="btn" onclick="changeRenderMode('standard')">Standard</button>
+                    <button class="btn" onclick="changeRenderMode('normals')">Normals</button>
+                    <button class="btn" onclick="changeRenderMode('toon')">Toon</button>
+                    <button class="btn" onclick="changeRenderMode('edge')">Edge</button>
+                </div>
+
+                <div class="control-group">
+                    <button class="btn" id="wireframeBtn" onclick="toggleWireframe()">Enable Wireframe</button>
+                </div>
+
+                <h2 class="section-header">Render Blending</h2>
+
+                <div class="control-group">
+                    <label>PBR: <span id="pbrValue">100%</span></label>
+                    <input type="range" id="pbrSlider" min="0" max="100" value="100" oninput="updateBlend()">
+                </div>
+
+                <div class="control-group">
+                    <label>Toon: <span id="toonValue">0%</span></label>
+                    <input type="range" id="toonSlider" min="0" max="100" value="0" oninput="updateBlend()">
+                </div>
+
+                <div class="control-group">
+                    <label>Flat: <span id="flatValue">0%</span></label>
+                    <input type="range" id="flatSlider" min="0" max="100" value="0" oninput="updateBlend()">
+                </div>
+
+                <div class="control-group">
+                    <label>Normals: <span id="normalsValue">0%</span></label>
+                    <input type="range" id="normalsSlider" min="0" max="100" value="0" oninput="updateBlend()">
+                </div>
+
+                <div class="control-group">
+                    <label>Edges: <span id="edgesValue">0%</span></label>
+                    <input type="range" id="edgesSlider" min="0" max="100" value="0" oninput="updateBlend()">
+                </div>
+
+                <div class="control-group">
+                    <label>Rim: <span id="rimValue">0%</span></label>
+                    <input type="range" id="rimSlider" min="0" max="100" value="0" oninput="updateBlend()">
+                </div>
+            </div>
+
+            <!-- CENTER: Canvas -->
+            <div class="canvas-container">
+                <div class="canvas-area">
+                    <canvas id="mascot"></canvas>
+                </div>
+            </div>
+
+            <!-- RIGHT CONTROLS: Material Properties & Calibration -->
+            <div class="shader-controls">
+                <h2 class="section-header">Material Properties</h2>
+
+                <div class="control-group">
+                    <label>Roughness: <span id="roughnessValue">20%</span></label>
+                    <input type="range" id="roughnessSlider" min="0" max="100" value="20" oninput="updateMaterial()">
+                    <div class="control-hint">0% = mirror smooth, 100% = matte</div>
+                </div>
+
+                <div class="control-group">
+                    <label>Metallic: <span id="metallicValue">30%</span></label>
+                    <input type="range" id="metallicSlider" min="0" max="100" value="30" oninput="updateMaterial()">
+                    <div class="control-hint">0% = dielectric, 100% = metal</div>
+                </div>
+
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="setMaterialPreset('mirror')">🪞 Mirror</button>
+                    <button class="preset-btn" onclick="setMaterialPreset('glossy')">✨ Glossy</button>
+                    <button class="preset-btn" onclick="setMaterialPreset('plastic')">🎨 Plastic</button>
+                    <button class="preset-btn" onclick="setMaterialPreset('matte')">🧱 Matte</button>
+                    <button class="preset-btn" onclick="setMaterialPreset('chrome')">⚙️ Chrome</button>
+                    <button class="preset-btn" onclick="setMaterialPreset('gold')">🥇 Gold</button>
+                </div>
+
+                <h2 class="section-header">Advanced Effects</h2>
+
+                <div class="control-group">
+                    <label>Ambient Occlusion: <span id="aoValue">100%</span></label>
+                    <input type="range" id="aoSlider" min="0" max="100" value="100" oninput="updateMaterial()">
+                    <div class="control-hint">Lower = more shadowed crevices</div>
+                </div>
+
+                <div class="control-group">
+                    <label>SSS Strength: <span id="sssValue">0%</span></label>
+                    <input type="range" id="sssSlider" min="0" max="100" value="0" oninput="updateMaterial()">
+                    <div class="control-hint">Subsurface scattering (skin, wax)</div>
+                </div>
+
+                <div class="control-group">
+                    <label>Anisotropy: <span id="anisotropyValue">0%</span></label>
+                    <input type="range" id="anisotropySlider" min="-100" max="100" value="0" oninput="updateMaterial()">
+                    <div class="control-hint">Directional highlights (brushed metal)</div>
+                </div>
+
+                <div class="control-group">
+                    <label>Iridescence: <span id="iridescenceValue">0%</span></label>
+                    <input type="range" id="iridescenceSlider" min="0" max="100" value="0" oninput="updateMaterial()">
+                    <div class="control-hint">Color shift (soap bubbles, oil slick)</div>
+                </div>
+
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="setMaterialPreset('skin')">👤 Skin (SSS)</button>
+                    <button class="preset-btn" onclick="setMaterialPreset('brushed')">🔧 Brushed</button>
+                    <button class="preset-btn" onclick="setMaterialPreset('soap')">🫧 Soap Bubble</button>
+                    <button class="preset-btn" onclick="setMaterialPreset('pearl')">🦪 Pearl</button>
+                </div>
+
+                <h2 class="section-header">Shader Calibration</h2>
+
+                <div class="button-grid">
+                    <button class="btn" onclick="setCameraAngle('front')">🎯 Front</button>
+                    <button class="btn" onclick="setCameraAngle('rim')">💫 Rim</button>
+                    <button class="btn" onclick="setCameraAngle('grazing')">✨ Grazing</button>
+                    <button class="btn" onclick="setCameraAngle('topdown')">⬇️ Top-Down</button>
+                    <button class="btn" onclick="setCameraAngle('closeup')">🔍 Close-Up</button>
+                </div>
+
+                <h2 class="section-header">Test Presets</h2>
+                <div class="button-grid">
+                    <button class="btn" onclick="applyTestPreset('pbr')">PBR Only</button>
+                    <button class="btn" onclick="applyTestPreset('rim')">Rim Only</button>
+                    <button class="btn" onclick="applyTestPreset('normals')">Normals</button>
+                </div>
+
+                <button class="capture-btn" onclick="captureScreenshot()">📸 Capture to Clipboard</button>
+                <div class="capture-status" id="screenshotStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Emotive Engine 3D -->
+    <script type="module">
+        import { EmotiveMascot3D } from '../dist/emotive-mascot-3d.js';
+
+        let mascot = null;
+        let wireframeEnabled = false;
+
+        // Initialize mascot
+        async function init() {
+            try {
+                const canvas = document.getElementById('mascot');
+                if (!canvas) {
+                    throw new Error('Canvas element not found');
+                }
+
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'icosphere',
+                    enableParticles: false,
+                    coreScale: 0.5
+                });
+
+                await mascot.init(canvas);
+                mascot.start();
+
+                console.log('Mascot initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize mascot:', error);
+            }
+        }
+
+        // Change geometry
+        window.changeGeometry = function(geometry) {
+            if (!mascot || !mascot.core3D) return;
+
+            mascot.core3D.morphToShape(geometry);
+
+            // Update active state
+            document.querySelectorAll('.shader-sidebar .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        };
+
+        // Change render mode
+        window.changeRenderMode = function(mode) {
+            if (!mascot) return;
+
+            // Reset all blending
+            const blends = { pbr: 0, toon: 0, flat: 0, normals: 0, edges: 0, rim: 0 };
+
+            switch (mode) {
+                case 'standard':
+                    blends.pbr = 1.0;
+                    break;
+                case 'normals':
+                    blends.normals = 1.0;
+                    break;
+                case 'toon':
+                    blends.toon = 1.0;
+                    break;
+                case 'edge':
+                    blends.edges = 1.0;
+                    break;
+            }
+
+            mascot.setRenderBlend(blends);
+
+            // Update sliders
+            document.getElementById('pbrSlider').value = blends.pbr * 100;
+            document.getElementById('toonSlider').value = blends.toon * 100;
+            document.getElementById('flatSlider').value = blends.flat * 100;
+            document.getElementById('normalsSlider').value = blends.normals * 100;
+            document.getElementById('edgesSlider').value = blends.edges * 100;
+            document.getElementById('rimSlider').value = blends.rim * 100;
+
+            updateBlendLabels();
+        };
+
+        // Toggle wireframe
+        window.toggleWireframe = function() {
+            if (!mascot) return;
+
+            wireframeEnabled = !wireframeEnabled;
+            mascot.setWireframe(wireframeEnabled);
+
+            const btn = document.getElementById('wireframeBtn');
+            btn.textContent = wireframeEnabled ? 'Disable Wireframe' : 'Enable Wireframe';
+            btn.classList.toggle('active', wireframeEnabled);
+        };
+
+        // Update blend labels
+        function updateBlendLabels() {
+            document.getElementById('pbrValue').textContent = document.getElementById('pbrSlider').value + '%';
+            document.getElementById('toonValue').textContent = document.getElementById('toonSlider').value + '%';
+            document.getElementById('flatValue').textContent = document.getElementById('flatSlider').value + '%';
+            document.getElementById('normalsValue').textContent = document.getElementById('normalsSlider').value + '%';
+            document.getElementById('edgesValue').textContent = document.getElementById('edgesSlider').value + '%';
+            document.getElementById('rimValue').textContent = document.getElementById('rimSlider').value + '%';
+        }
+
+        // Update blending
+        window.updateBlend = function() {
+            if (!mascot) return;
+
+            const blends = {
+                pbr: parseInt(document.getElementById('pbrSlider').value) / 100,
+                toon: parseInt(document.getElementById('toonSlider').value) / 100,
+                flat: parseInt(document.getElementById('flatSlider').value) / 100,
+                normals: parseInt(document.getElementById('normalsSlider').value) / 100,
+                edges: parseInt(document.getElementById('edgesSlider').value) / 100,
+                rim: parseInt(document.getElementById('rimSlider').value) / 100
+            };
+
+            mascot.setRenderBlend(blends);
+            updateBlendLabels();
+        };
+
+        // Update material properties
+        window.updateMaterial = function() {
+            const roughness = parseInt(document.getElementById('roughnessSlider').value) / 100;
+            const metallic = parseInt(document.getElementById('metallicSlider').value) / 100;
+            const ao = parseInt(document.getElementById('aoSlider').value) / 100;
+            const sssStrength = parseInt(document.getElementById('sssSlider').value) / 100;
+            const anisotropy = parseInt(document.getElementById('anisotropySlider').value) / 100;  // -1 to 1
+            const iridescence = parseInt(document.getElementById('iridescenceSlider').value) / 100;
+
+            // Update display values
+            document.getElementById('roughnessValue').textContent = Math.round(roughness * 100) + '%';
+            document.getElementById('metallicValue').textContent = Math.round(metallic * 100) + '%';
+            document.getElementById('aoValue').textContent = Math.round(ao * 100) + '%';
+            document.getElementById('sssValue').textContent = Math.round(sssStrength * 100) + '%';
+            document.getElementById('anisotropyValue').textContent = Math.round(anisotropy * 100) + '%';
+            document.getElementById('iridescenceValue').textContent = Math.round(iridescence * 100) + '%';
+
+            // Apply to mascot
+            if (mascot && mascot.setMaterial) {
+                mascot.setMaterial({
+                    roughness,
+                    metallic,
+                    ao,
+                    sssStrength,
+                    anisotropy,
+                    iridescence
+                });
+            }
+        };
+
+        // Material presets
+        window.setMaterialPreset = function(preset) {
+            const presets = {
+                // Basic presets (original)
+                'mirror': { roughness: 0, metallic: 100, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+                'glossy': { roughness: 10, metallic: 30, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+                'plastic': { roughness: 40, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+                'matte': { roughness: 90, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+                'chrome': { roughness: 5, metallic: 100, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+                'gold': { roughness: 15, metallic: 100, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+
+                // Advanced presets
+                'skin': { roughness: 45, metallic: 0, ao: 85, sss: 60, anisotropy: 0, iridescence: 0 },
+                'brushed': { roughness: 20, metallic: 100, ao: 100, sss: 0, anisotropy: 70, iridescence: 0 },
+                'soap': { roughness: 0, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 90 },
+                'pearl': { roughness: 15, metallic: 10, ao: 100, sss: 20, anisotropy: 0, iridescence: 50 }
+            };
+
+            const values = presets[preset];
+            if (values) {
+                document.getElementById('roughnessSlider').value = values.roughness;
+                document.getElementById('metallicSlider').value = values.metallic;
+                document.getElementById('aoSlider').value = values.ao;
+                document.getElementById('sssSlider').value = values.sss;
+                document.getElementById('anisotropySlider').value = values.anisotropy;
+                document.getElementById('iridescenceSlider').value = values.iridescence;
+                updateMaterial();
+            }
+        };
+
+        // Camera angle presets
+        window.setCameraAngle = function(angle) {
+            if (!mascot || !mascot.core3D) return;
+
+            const controller = mascot.core3D.cameraController;
+            const PI = Math.PI;
+
+            const angles = {
+                'front': { theta: 0, phi: PI / 2, distance: 3.0 },
+                'rim': { theta: PI * 0.75, phi: PI * 0.6, distance: 3.5 },
+                'grazing': { theta: PI * 0.5, phi: PI * 0.85, distance: 2.5 },
+                'topdown': { theta: 0, phi: PI * 0.1, distance: 3.5 },
+                'closeup': { theta: PI * 0.25, phi: PI * 0.55, distance: 2.0 }
+            };
+
+            const preset = angles[angle];
+            if (preset) {
+                controller.theta = preset.theta;
+                controller.phi = preset.phi;
+                controller.distance = preset.distance;
+            }
+        };
+
+        // Test presets
+        window.applyTestPreset = function(preset) {
+            switch (preset) {
+                case 'pbr':
+                    changeRenderMode('standard');
+                    break;
+                case 'rim':
+                    document.getElementById('pbrSlider').value = 0;
+                    document.getElementById('rimSlider').value = 100;
+                    updateBlend();
+                    break;
+                case 'normals':
+                    changeRenderMode('normals');
+                    break;
+            }
+        };
+
+        // Screenshot capture
+        window.captureScreenshot = async function() {
+            const statusEl = document.getElementById('screenshotStatus');
+
+            try {
+                const canvas = document.getElementById('mascot-canvas-3d') ||
+                               mascot.webglCanvas ||
+                               document.querySelector('canvas');
+
+                if (!canvas) {
+                    throw new Error('Canvas not found');
+                }
+
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'image/png': blob
+                    })
+                ]);
+
+                statusEl.textContent = '✅ Copied to clipboard!';
+                statusEl.style.color = '#84CFC5';
+
+                setTimeout(() => {
+                    statusEl.textContent = '';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Screenshot failed:', error);
+                statusEl.textContent = '❌ Failed to copy';
+                statusEl.style.color = '#DD4A9A';
+
+                setTimeout(() => {
+                    statusEl.textContent = '';
+                }, 3000);
+            }
+        };
+
+        // Initialize on load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
