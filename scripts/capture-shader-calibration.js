@@ -321,13 +321,17 @@ async function applyTestConfig(page, config) {
 
                 logs.push(`loadModel exists: true`);
                 logs.push(`mascot exists: true`);
-                logs.push(`Current geometry type: ${window.mascot.core3D?.geometryType || 'unknown'}`);
+                logs.push(`mascot.core3D exists: ${!!window.mascot.core3D}`);
+                logs.push(`BEFORE - core3D.geometryType: ${window.mascot.core3D?.geometryType || 'undefined'}`);
+                logs.push(`BEFORE - core3D.geometry type: ${window.mascot.core3D?.geometry?.constructor?.name || 'undefined'}`);
 
                 // Call loadModel and wait for it to complete
                 await window.loadModel(modelName);
 
                 logs.push(`loadModel call completed`);
-                logs.push(`New geometry type: ${window.mascot.core3D?.geometryType || 'unknown'}`);
+                logs.push(`AFTER - core3D.geometryType: ${window.mascot.core3D?.geometryType || 'undefined'}`);
+                logs.push(`AFTER - core3D.geometry type: ${window.mascot.core3D?.geometry?.constructor?.name || 'undefined'}`);
+                logs.push(`AFTER - geometry has vertices: ${!!window.mascot.core3D?.geometry?.vertices}`);
 
                 return { success: true, logs };
             } catch (error) {
