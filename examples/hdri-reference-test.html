@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDRI Reference Scene Test - Emotive Engine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.7);
+            padding: 12px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 30vh;
+            overflow-y: auto;
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            transition: transform 0.3s ease-out;
+            backdrop-filter: blur(15px);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        #controls:hover {
+            background: rgba(15, 15, 15, 0.8);
+        }
+
+        #controls.minimized {
+            transform: translateY(calc(100% - 40px));
+        }
+
+        #controls.minimized:hover {
+            transform: translateY(0);
+        }
+
+        .control-section {
+            flex: 1;
+            min-width: 180px;
+            max-width: 250px;
+        }
+
+        h2 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #00ff88;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            padding-bottom: 6px;
+            font-weight: 600;
+        }
+
+        h3 {
+            margin: 12px 0 6px 0;
+            font-size: 11px;
+            color: #88aaff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 10px;
+            color: #999;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0, 255, 136, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 1px 4px rgba(0, 255, 136, 0.4);
+        }
+
+        .value-display {
+            display: inline-block;
+            float: right;
+            color: #00ff88;
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 6px;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #00ffaa, #00dd77);
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #status {
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(0, 255, 136, 0.08);
+            border-radius: 4px;
+            font-size: 9px;
+            border: 1px solid rgba(0, 255, 136, 0.15);
+        }
+
+        .sphere-controls {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 6px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sphere-controls h4 {
+            margin: 0 0 6px 0;
+            font-size: 10px;
+            color: #ffaa00;
+            font-weight: 600;
+        }
+
+        .collapse-toggle {
+            cursor: pointer;
+            user-select: none;
+            padding: 4px;
+            margin: -4px -4px 4px -4px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        .collapse-toggle:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .collapse-toggle::before {
+            content: '▼ ';
+            display: inline-block;
+            font-size: 8px;
+            transition: transform 0.2s;
+        }
+
+        .collapse-toggle.collapsed::before {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 20, 0.98);
+            padding: 40px;
+            border-radius: 16px;
+            border: 2px solid #00ff88;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px auto;
+            border: 4px solid rgba(0, 255, 136, 0.2);
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div>Loading HDRI Scene...</div>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="glCanvas"></canvas>
+    </div>
+
+    <div id="controls">
+        <!-- Status Section -->
+        <div class="control-section">
+            <h2>HDRI Reference</h2>
+            <div id="status">
+                <div>HDRI: <span id="hdri-status">Loading...</span></div>
+                <div>Camera: <span id="camera-status">Ready</span></div>
+            </div>
+        </div>
+
+        <!-- Environment Section -->
+        <div class="control-section">
+            <h3>Environment</h3>
+            <div class="control-group">
+                <label>
+                    HDRI Intensity
+                    <span class="value-display" id="env-intensity-val">1.0</span>
+                </label>
+                <input type="range" id="env-intensity" min="0" max="2" step="0.01" value="1.0">
+            </div>
+            <div class="control-group">
+                <label>
+                    Camera Distance
+                    <span class="value-display" id="camera-distance-val">12</span>
+                </label>
+                <input type="range" id="camera-distance" min="5" max="30" step="0.5" value="12">
+            </div>
+            <div class="control-group">
+                <label>
+                    Camera Height
+                    <span class="value-display" id="camera-height-val">2</span>
+                </label>
+                <input type="range" id="camera-height" min="-5" max="10" step="0.5" value="2">
+            </div>
+        </div>
+
+        <!-- Spheres Section -->
+        <div class="control-section">
+            <h3>Spheres</h3>
+
+        <!-- Sphere 1: Glossy Blue -->
+        <div class="sphere-controls">
+            <h4 class="collapse-toggle" data-target="sphere1">Sphere 1 - Glossy Blue</h4>
+            <div class="collapsible-content" id="sphere1">
+                <div class="control-group">
+                    <label>
+                        Roughness
+                        <span class="value-display" id="s1-roughness-val">0.3</span>
+                    </label>
+                    <input type="range" id="s1-roughness" min="0" max="1" step="0.01" value="0.3">
+                </div>
+                <div class="control-group">
+                    <label>
+                        Metallic
+                        <span class="value-display" id="s1-metallic-val">0.0</span>
+                    </label>
+                    <input type="range" id="s1-metallic" min="0" max="1" step="0.01" value="0.0">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sphere 2: Matte White -->
+        <div class="sphere-controls">
+            <h4 class="collapse-toggle" data-target="sphere2">Sphere 2 - Matte White</h4>
+            <div class="collapsible-content" id="sphere2">
+                <div class="control-group">
+                    <label>
+                        Roughness
+                        <span class="value-display" id="s2-roughness-val">0.9</span>
+                    </label>
+                    <input type="range" id="s2-roughness" min="0" max="1" step="0.01" value="0.9">
+                </div>
+                <div class="control-group">
+                    <label>
+                        Metallic
+                        <span class="value-display" id="s2-metallic-val">0.0</span>
+                    </label>
+                    <input type="range" id="s2-metallic" min="0" max="1" step="0.01" value="0.0">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sphere 3: Chrome Mirror -->
+        <div class="sphere-controls">
+            <h4 class="collapse-toggle" data-target="sphere3">Sphere 3 - Chrome</h4>
+            <div class="collapsible-content" id="sphere3">
+                <div class="control-group">
+                    <label>
+                        Roughness
+                        <span class="value-display" id="s3-roughness-val">0.05</span>
+                    </label>
+                    <input type="range" id="s3-roughness" min="0" max="1" step="0.01" value="0.05">
+                </div>
+                <div class="control-group">
+                    <label>
+                        Metallic
+                        <span class="value-display" id="s3-metallic-val">1.0</span>
+                    </label>
+                    <input type="range" id="s3-metallic" min="0" max="1" step="0.01" value="1.0">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sphere 4: Plastic Cyan -->
+        <div class="sphere-controls">
+            <h4 class="collapse-toggle" data-target="sphere4">Sphere 4 - Plastic Cyan</h4>
+            <div class="collapsible-content" id="sphere4">
+                <div class="control-group">
+                    <label>
+                        Roughness
+                        <span class="value-display" id="s4-roughness-val">0.6</span>
+                    </label>
+                    <input type="range" id="s4-roughness" min="0" max="1" step="0.01" value="0.6">
+                </div>
+                <div class="control-group">
+                    <label>
+                        Metallic
+                        <span class="value-display" id="s4-metallic-val">0.0</span>
+                    </label>
+                    <input type="range" id="s4-metallic" min="0" max="1" step="0.01" value="0.0">
+                </div>
+            </div>
+            </div>
+            <button id="reset-btn">Reset to Reference</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { SceneObject, MultiObjectPass, SkyboxPass, ToneMappingPass, HDRILoader, createSphere, Camera, FramebufferManager } from '../dist/emotive-mascot-3d.js';
+        import { WebGLRenderer } from '../src/3d/renderer/WebGLRenderer.js';
+
+        // ============================================================
+        // SETUP
+        // ============================================================
+
+        const canvas = document.getElementById('glCanvas');
+
+        // Resize canvas to window
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // ============================================================
+        // CREATE RENDERER AND INFRASTRUCTURE
+        // ============================================================
+
+        const renderer = new WebGLRenderer(canvas, {
+            alpha: false,
+            antialias: true,
+            depth: true
+        });
+        const gl = renderer.gl;
+
+        const fbManager = new FramebufferManager(gl);
+        const camera = new Camera();
+        camera.setPosition(0, 2, 12);
+        camera.setTarget(0, 1, 0);
+        camera.updateProjectionMatrix(canvas.width / canvas.height);
+
+        // Create rendering passes
+        const multiObjectPass = new MultiObjectPass();
+        multiObjectPass.init(renderer, fbManager);
+
+        const skyboxPass = new SkyboxPass();
+        skyboxPass.init(renderer, fbManager);
+
+        const toneMappingPass = new ToneMappingPass({ exposure: 1.0 });
+        toneMappingPass.init(renderer, fbManager);
+
+        // Handle canvas resize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            camera.updateProjectionMatrix(canvas.width / canvas.height);
+            fbManager.resize(canvas.width, canvas.height);
+        });
+
+        // ============================================================
+        // CREATE SCENE OBJECTS
+        // ============================================================
+
+        // Create sphere geometry (shared by all 4 spheres)
+        const sphereGeometry = createSphere(64, 64);
+
+        // Create ground plane geometry (simple quad)
+        function createPlane(width, height) {
+            const hw = width / 2;
+            const hh = height / 2;
+            return {
+                vertices: new Float32Array([
+                    -hw, 0, -hh,
+                     hw, 0, -hh,
+                     hw, 0,  hh,
+                    -hw, 0,  hh
+                ]),
+                normals: new Float32Array([
+                    0, 1, 0,
+                    0, 1, 0,
+                    0, 1, 0,
+                    0, 1, 0
+                ]),
+                indices: new Uint16Array([
+                    0, 1, 2,
+                    0, 2, 3
+                ])
+            };
+        }
+        const groundGeometry = createPlane(50, 50);
+
+        // Create 4 spheres with different materials
+        const sphere1 = new SceneObject({
+            geometry: sphereGeometry,
+            material: {
+                glowColor: [0.6, 0.85, 1.0],  // Blue tint
+                roughness: 0.3,
+                metallic: 0.0,
+                ao: 1.0
+            },
+            position: [-4.5, 1.0, 0],
+            scale: [1, 1, 1]
+        });
+
+        const sphere2 = new SceneObject({
+            geometry: sphereGeometry,
+            material: {
+                glowColor: [0.98, 0.98, 0.98],  // White
+                roughness: 0.9,
+                metallic: 0.0,
+                ao: 1.0
+            },
+            position: [-1.5, 1.0, 0],
+            scale: [1, 1, 1]
+        });
+
+        const sphere3 = new SceneObject({
+            geometry: sphereGeometry,
+            material: {
+                glowColor: [0.7, 0.7, 0.7],  // Chrome gray
+                roughness: 0.05,
+                metallic: 1.0,
+                ao: 1.0
+            },
+            position: [1.5, 1.0, 0],
+            scale: [1, 1, 1]
+        });
+
+        const sphere4 = new SceneObject({
+            geometry: sphereGeometry,
+            material: {
+                glowColor: [0.5, 0.95, 0.95],  // Cyan
+                roughness: 0.6,
+                metallic: 0.0,
+                ao: 1.0
+            },
+            position: [4.5, 1.0, 0],
+            scale: [1, 1, 1]
+        });
+
+        // Create ground plane
+        const ground = new SceneObject({
+            geometry: groundGeometry,
+            material: {
+                glowColor: [0.8, 0.8, 0.8],
+                roughness: 0.8,
+                metallic: 0.0,
+                ao: 1.0
+            },
+            position: [0, 0, 0],
+            rotation: [0, 0, 0],
+            scale: [1, 1, 1]
+        });
+
+        // Scene data
+        const scene = {
+            objects: [sphere1, sphere2, sphere3, sphere4, ground],
+            envMap: null,
+            envIntensity: 1.0,
+            lightDirection: [1, 1, 1],
+            time: 0,
+            hdrEnabled: true  // HDR rendering with tonemapping
+        };
+
+        // ============================================================
+        // CAMERA SETUP
+        // ============================================================
+
+        let cameraDistance = 12;
+        let cameraHeight = 2;
+        let cameraAngle = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+
+        function updateCamera() {
+            const x = Math.sin(cameraAngle) * cameraDistance;
+            const z = Math.cos(cameraAngle) * cameraDistance;
+            const y = cameraHeight;
+
+            camera.setPosition(x, y, z);
+            camera.setTarget(0, 1, 0);  // Look at sphere center height
+            camera.updateProjectionMatrix(canvas.width / canvas.height);
+        }
+
+        updateCamera();
+
+        // Mouse controls
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - lastMouseX;
+                cameraAngle -= deltaX * 0.01;
+                lastMouseX = e.clientX;
+                updateCamera();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            cameraDistance += e.deltaY * 0.01;
+            cameraDistance = Math.max(5, Math.min(30, cameraDistance));
+            document.getElementById('camera-distance').value = cameraDistance;
+            document.getElementById('camera-distance-val').textContent = cameraDistance.toFixed(1);
+            updateCamera();
+        });
+
+        // ============================================================
+        // LOAD HDRI
+        // ============================================================
+
+        async function loadHDRI() {
+            try {
+                document.getElementById('hdri-status').textContent = 'Loading...';
+
+                const hdrPath = './assets/lonely_road_afternoon_puresky_4k.hdr';
+                const envMap = await HDRILoader.load(gl, hdrPath, {
+                    size: 512,
+                    mipLevels: 8,
+                    generateMipmaps: true
+                });
+
+                scene.envMap = envMap;
+
+                document.getElementById('hdri-status').textContent = 'Loaded ✓';
+                console.log('[HDRI] Environment map loaded successfully');
+
+            } catch (error) {
+                console.error('[HDRI] Load failed:', error);
+                document.getElementById('hdri-status').textContent = 'Failed ✗';
+            }
+        }
+
+        // Auto-load HDRI
+        loadHDRI().then(() => {
+            document.getElementById('loading').classList.add('hidden');
+        });
+
+        // ============================================================
+        // UI CONTROLS
+        // ============================================================
+
+        // Environment controls
+        document.getElementById('env-intensity').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            scene.envIntensity = value;
+            document.getElementById('env-intensity-val').textContent = value.toFixed(2);
+        });
+
+        document.getElementById('camera-distance').addEventListener('input', (e) => {
+            cameraDistance = parseFloat(e.target.value);
+            document.getElementById('camera-distance-val').textContent = cameraDistance.toFixed(1);
+            updateCamera();
+        });
+
+        document.getElementById('camera-height').addEventListener('input', (e) => {
+            cameraHeight = parseFloat(e.target.value);
+            document.getElementById('camera-height-val').textContent = cameraHeight.toFixed(1);
+            updateCamera();
+        });
+
+        // Sphere controls helper
+        function setupSphereControl(sphereNum, sphere) {
+            const prefix = `s${sphereNum}`;
+
+            document.getElementById(`${prefix}-roughness`).addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                sphere.setMaterialProperty('roughness', value);
+                document.getElementById(`${prefix}-roughness-val`).textContent = value.toFixed(2);
+            });
+
+            document.getElementById(`${prefix}-metallic`).addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                sphere.setMaterialProperty('metallic', value);
+                document.getElementById(`${prefix}-metallic-val`).textContent = value.toFixed(2);
+            });
+        }
+
+        setupSphereControl(1, sphere1);
+        setupSphereControl(2, sphere2);
+        setupSphereControl(3, sphere3);
+        setupSphereControl(4, sphere4);
+
+        // Reset button
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            // Reset sphere 1
+            sphere1.setMaterialProperty('roughness', 0.3);
+            sphere1.setMaterialProperty('metallic', 0.0);
+            document.getElementById('s1-roughness').value = 0.3;
+            document.getElementById('s1-roughness-val').textContent = '0.30';
+            document.getElementById('s1-metallic').value = 0.0;
+            document.getElementById('s1-metallic-val').textContent = '0.00';
+
+            // Reset sphere 2
+            sphere2.setMaterialProperty('roughness', 0.9);
+            sphere2.setMaterialProperty('metallic', 0.0);
+            document.getElementById('s2-roughness').value = 0.9;
+            document.getElementById('s2-roughness-val').textContent = '0.90';
+            document.getElementById('s2-metallic').value = 0.0;
+            document.getElementById('s2-metallic-val').textContent = '0.00';
+
+            // Reset sphere 3
+            sphere3.setMaterialProperty('roughness', 0.05);
+            sphere3.setMaterialProperty('metallic', 1.0);
+            document.getElementById('s3-roughness').value = 0.05;
+            document.getElementById('s3-roughness-val').textContent = '0.05';
+            document.getElementById('s3-metallic').value = 1.0;
+            document.getElementById('s3-metallic-val').textContent = '1.00';
+
+            // Reset sphere 4
+            sphere4.setMaterialProperty('roughness', 0.6);
+            sphere4.setMaterialProperty('metallic', 0.0);
+            document.getElementById('s4-roughness').value = 0.6;
+            document.getElementById('s4-roughness-val').textContent = '0.60';
+            document.getElementById('s4-metallic').value = 0.0;
+            document.getElementById('s4-metallic-val').textContent = '0.00';
+
+            // Reset environment
+            scene.envIntensity = 1.0;
+            core3D.envIntensity = 1.0;
+            document.getElementById('env-intensity').value = 1.0;
+            document.getElementById('env-intensity-val').textContent = '1.00';
+
+            // Reset camera
+            cameraDistance = 12;
+            cameraHeight = 2;
+            cameraAngle = 0;
+            document.getElementById('camera-distance').value = 12;
+            document.getElementById('camera-distance-val').textContent = '12.0';
+            document.getElementById('camera-height').value = 2;
+            document.getElementById('camera-height-val').textContent = '2.0';
+            updateCamera();
+        });
+
+        // Collapse toggles
+        document.querySelectorAll('.collapse-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const targetId = toggle.dataset.target;
+                const content = document.getElementById(targetId);
+                toggle.classList.toggle('collapsed');
+                content.classList.toggle('collapsed');
+            });
+        });
+
+        // ============================================================
+        // RENDER LOOP
+        // ============================================================
+
+        function render() {
+            scene.time = performance.now() / 1000;
+
+            // Render skybox first (background) - renders to HDR FBO (or screen if no HDR)
+            if (scene.envMap) {
+                skyboxPass.execute(scene, camera);
+            }
+
+            // Render scene objects - renders to HDR FBO (or screen if no HDR)
+            multiObjectPass.execute(scene, camera);
+
+            // Tonemap HDR to screen (only if HDR is supported)
+            if (scene.hdrEnabled && fbManager.hdrSupported) {
+                toneMappingPass.execute(scene, camera);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        render();
+
+        console.log('[HDRI Reference Test] Scene initialized');
+        console.log('- 4 spheres with varying materials');
+        console.log('- Ground plane');
+        console.log('- HDRI skybox background');
+        console.log('- Using calibrated PBR shader (core.frag)');
+    </script>
+</body>
+</html>

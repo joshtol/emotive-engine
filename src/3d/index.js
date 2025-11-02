@@ -740,5 +740,11 @@ export default EmotiveMascot3D;
 
 // Named exports for tree-shaking
 export { Core3DManager } from './Core3DManager.js';
+export { SceneObject } from './SceneObject.js';
+export { MultiObjectPass } from './passes/MultiObjectPass.js';
+export { SkyboxPass } from './passes/SkyboxPass.js';
+export { ToneMappingPass } from './passes/ToneMappingPass.js';
+export { Camera } from './Camera.js';
+export { FramebufferManager } from './FramebufferManager.js';
 export * from './geometries/index.js';
 export * from './loaders/index.js';

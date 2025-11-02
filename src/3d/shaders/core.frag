@@ -27,6 +27,8 @@ uniform float u_ao;             // 0.0 = full occlusion, 1.0 = no occlusion
 uniform float u_sssStrength;    // Subsurface scattering strength
 uniform float u_anisotropy;     // Anisotropic reflection (-1.0 to 1.0)
 uniform float u_iridescence;    // Iridescence intensity (0.0 to 1.0)
+uniform samplerCube u_envMap;   // HDRI environment map for reflections
+uniform float u_envIntensity;   // Environment map intensity (0.0 to 1.0)
 
 out vec4 fragColor;
 
@@ -128,9 +130,9 @@ vec3 calculateIridescence(float NdotV, float iridescenceStrength) {
     vec3 iridColor2 = hueToRGB(hue2);
     vec3 iridColor = mix(iridColor1, iridColor2, 0.3);  // Blend layers
 
-    // Enhance saturation for more vibrant colors
+    // CRITICAL FIX: Dramatically enhance saturation for vivid rainbow colors
     float luminance = dot(iridColor, vec3(0.299, 0.587, 0.114));
-    iridColor = mix(vec3(luminance), iridColor, 1.3);  // Boost saturation
+    iridColor = mix(vec3(luminance), iridColor, 2.5);  // 2.5x saturation boost for dramatic effect
 
     return mix(vec3(1.0), iridColor, iridescenceStrength);
 }
@@ -159,8 +161,8 @@ vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
         vec3 up = abs(normal.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
         vec3 tangent = normalize(cross(up, normal));
         vec3 bitangent = cross(normal, tangent);
-        // IMPORTANT FIX: Boost anisotropy effect 6x for visibility
-        float boostedAniso = u_anisotropy * 6.0;
+        // CRITICAL FIX: Boost anisotropy effect 12x for clear brushed metal visibility
+        float boostedAniso = u_anisotropy * 12.0;
         NDF = DistributionGGXAnisotropic(normal, H, tangent, bitangent, perceptualRoughness, boostedAniso);
     } else {
         // Standard isotropic GGX (use perceptual roughness)
@@ -185,6 +187,22 @@ vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
 
     vec3 specular = (NDF * G * F) / (4.0 * max(NdotV, 0.0) * max(NdotL, 0.0) + 0.0001);
 
+    // HDRI environment reflection for metals and glossy surfaces
+    vec3 envReflection = vec3(0.0);
+    if (u_envIntensity > 0.01) {
+        vec3 R = reflect(-viewDir, normal);
+
+        // Sample environment map with roughness-based LOD
+        float lod = perceptualRoughness * 7.0;  // Map roughness to mip levels 0-7
+        vec3 envSample = textureLod(u_envMap, R, lod).rgb;
+
+        // Apply environment intensity
+        envReflection = envSample * u_envIntensity;
+
+        // For metals, full reflection. For dielectrics, Fresnel-based
+        envReflection *= mix(F.r, 1.0, u_metallic);
+    }
+
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - u_metallic;
@@ -208,8 +226,8 @@ vec3 calculatePBR(vec3 normal, vec3 viewDir, vec3 lightDir) {
 
     vec3 lightColor = vec3(1.0);
 
-    // Combine: ambient + lit diffuse + SSS + specular + subtle fresnel
-    return ambient + (diffuse + sss + specular) * lightColor * NdotL + F * 0.1;
+    // Combine: ambient + lit diffuse + SSS + specular + environment + subtle fresnel
+    return ambient + (diffuse + sss + specular) * lightColor * NdotL + envReflection + F * 0.1;
 }
 
 // Calculate Toon shading

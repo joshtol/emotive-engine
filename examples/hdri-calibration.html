@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDRI Calibration - 4 Sphere Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #f0f0f0;
+            overflow: hidden;
+        }
+
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 20, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 320px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group h3 {
+            font-size: 14px;
+            color: #DD4A9A;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .slider-row {
+            margin-bottom: 12px;
+        }
+
+        .slider-row label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: #b8b8b8;
+        }
+
+        .slider-row input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #DD4A9A;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+
+        .slider-row input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #DD4A9A;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+
+        .value {
+            font-weight: 600;
+            color: #fff;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        .sphere-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sphere-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sphere-card h4 {
+            font-size: 12px;
+            color: #4090CE;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .sphere-card .slider-row {
+            margin-bottom: 8px;
+        }
+
+        .sphere-card .slider-row label {
+            font-size: 11px;
+        }
+
+        .info {
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(20, 20, 20, 0.95);
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status.success {
+            border-color: #84CFC5;
+            color: #84CFC5;
+        }
+
+        .status.error {
+            border-color: #DD4A9A;
+            color: #DD4A9A;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: rgba(221, 74, 154, 0.2);
+            border: 1px solid #DD4A9A;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: rgba(221, 74, 154, 0.3);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="controls">
+        <h2 style="margin-bottom: 20px; font-size: 18px; color: #fff;">HDRI Calibration</h2>
+
+        <!-- Global HDRI Controls -->
+        <div class="control-group">
+            <h3>Environment</h3>
+            <div class="slider-row">
+                <label>
+                    <span>HDRI Intensity</span>
+                    <span class="value" id="hdriIntensityValue">100%</span>
+                </label>
+                <input type="range" id="hdriIntensity" min="0" max="200" value="100" oninput="updateHDRI()">
+            </div>
+            <div class="slider-row">
+                <label>
+                    <span>Exposure</span>
+                    <span class="value" id="exposureValue">1.0</span>
+                </label>
+                <input type="range" id="exposure" min="0" max="300" value="100" oninput="updateHDRI()">
+            </div>
+            <button onclick="loadHDRI()">Reload HDRI</button>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="control-group">
+            <h3>Camera</h3>
+            <div class="slider-row">
+                <label>
+                    <span>Distance</span>
+                    <span class="value" id="cameraDistanceValue">5.0</span>
+                </label>
+                <input type="range" id="cameraDistance" min="3" max="10" step="0.1" value="5" oninput="updateCamera()">
+            </div>
+            <div class="slider-row">
+                <label>
+                    <span>Height</span>
+                    <span class="value" id="cameraHeightValue">0.5</span>
+                </label>
+                <input type="range" id="cameraHeight" min="-2" max="3" step="0.1" value="0.5" oninput="updateCamera()">
+            </div>
+            <div class="slider-row">
+                <label>
+                    <span>Rotation</span>
+                    <span class="value" id="cameraRotationValue">0°</span>
+                </label>
+                <input type="range" id="cameraRotation" min="0" max="360" value="0" oninput="updateCamera()">
+            </div>
+        </div>
+
+        <!-- Per-Sphere Material Controls -->
+        <div class="control-group">
+            <h3>Sphere Materials</h3>
+            <div class="sphere-grid">
+                <!-- Sphere 1: Glossy Dielectric -->
+                <div class="sphere-card">
+                    <h4>Sphere 1 (Left)</h4>
+                    <div class="slider-row">
+                        <label>
+                            <span>Rough</span>
+                            <span class="value" id="s1RoughValue">30%</span>
+                        </label>
+                        <input type="range" id="s1Rough" min="0" max="100" value="30" oninput="updateSphere(0)">
+                    </div>
+                    <div class="slider-row">
+                        <label>
+                            <span>Metal</span>
+                            <span class="value" id="s1MetalValue">0%</span>
+                        </label>
+                        <input type="range" id="s1Metal" min="0" max="100" value="0" oninput="updateSphere(0)">
+                    </div>
+                </div>
+
+                <!-- Sphere 2: Matte Dielectric -->
+                <div class="sphere-card">
+                    <h4>Sphere 2</h4>
+                    <div class="slider-row">
+                        <label>
+                            <span>Rough</span>
+                            <span class="value" id="s2RoughValue">90%</span>
+                        </label>
+                        <input type="range" id="s2Rough" min="0" max="100" value="90" oninput="updateSphere(1)">
+                    </div>
+                    <div class="slider-row">
+                        <label>
+                            <span>Metal</span>
+                            <span class="value" id="s2MetalValue">0%</span>
+                        </label>
+                        <input type="range" id="s2Metal" min="0" max="100" value="0" oninput="updateSphere(1)">
+                    </div>
+                </div>
+
+                <!-- Sphere 3: Chrome/Mirror -->
+                <div class="sphere-card">
+                    <h4>Sphere 3</h4>
+                    <div class="slider-row">
+                        <label>
+                            <span>Rough</span>
+                            <span class="value" id="s3RoughValue">5%</span>
+                        </label>
+                        <input type="range" id="s3Rough" min="0" max="100" value="5" oninput="updateSphere(2)">
+                    </div>
+                    <div class="slider-row">
+                        <label>
+                            <span>Metal</span>
+                            <span class="value" id="s3MetalValue">100%</span>
+                        </label>
+                        <input type="range" id="s3Metal" min="0" max="100" value="100" oninput="updateSphere(2)">
+                    </div>
+                </div>
+
+                <!-- Sphere 4: Plastic -->
+                <div class="sphere-card">
+                    <h4>Sphere 4 (Right)</h4>
+                    <div class="slider-row">
+                        <label>
+                            <span>Rough</span>
+                            <span class="value" id="s4RoughValue">60%</span>
+                        </label>
+                        <input type="range" id="s4Rough" min="0" max="100" value="60" oninput="updateSphere(3)">
+                    </div>
+                    <div class="slider-row">
+                        <label>
+                            <span>Metal</span>
+                            <span class="value" id="s4MetalValue">0%</span>
+                        </label>
+                        <input type="range" id="s4Metal" min="0" max="100" value="0" oninput="updateSphere(3)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info">
+            <strong>Reference:</strong> lonely_road_afternoon_puresky_4k.hdr<br>
+            <strong>Goal:</strong> Match HDRI calibration reference rendering
+        </div>
+    </div>
+
+    <div class="status" id="status">Initializing...</div>
+
+    <script type="module">
+        import { EmotiveMascot3D, HDRILoader } from '../dist/emotive-mascot-3d.js';
+
+        const canvas = document.getElementById('canvas');
+        const statusEl = document.getElementById('status');
+
+        let mascot = null;
+        let envMapTexture = null;
+
+        // Sphere configurations
+        const sphereConfigs = [
+            { roughness: 0.3, metallic: 0.0, color: [0.5, 0.8, 1.0] },    // Glossy blue
+            { roughness: 0.9, metallic: 0.0, color: [0.95, 0.95, 0.95] }, // Matte white
+            { roughness: 0.05, metallic: 1.0, color: [0.7, 0.7, 0.7] },   // Chrome
+            { roughness: 0.6, metallic: 0.0, color: [0.5, 0.9, 0.9] }     // Plastic cyan
+        ];
+
+        let currentSphere = 0; // Which sphere we're viewing
+
+        // Initialize single mascot (we'll show one sphere at a time)
+        async function init() {
+            try {
+                if (!canvas) {
+                    throw new Error('Canvas element not found');
+                }
+
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'icosphere',
+                    enableParticles: false,
+                    coreScale: 0.5
+                });
+
+                // Initialize and start the mascot
+                await mascot.init(canvas);
+                mascot.start();
+
+                // Expose globally
+                window.mascot = mascot;
+
+                // Set initial material (sphere 0)
+                updateSphere(0);
+
+                // Set camera
+                updateCamera();
+
+                // Load HDRI
+                await loadHDRI();
+
+                statusEl.textContent = '✅ Ready - Viewing Sphere 1';
+                statusEl.className = 'status success';
+
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                statusEl.className = 'status error';
+            }
+        }
+
+        // Load HDRI environment map
+        window.loadHDRI = async function() {
+            try {
+                statusEl.textContent = 'Loading HDRI...';
+                statusEl.className = 'status';
+
+                if (!mascot || !mascot.core3D) {
+                    throw new Error('Mascot not initialized');
+                }
+
+                const gl = mascot.core3D.renderer.gl;
+                const hdriPath = '../assets/3d/lonely_road_afternoon_puresky_4k.hdr';
+
+                envMapTexture = await HDRILoader.load(gl, hdriPath, {
+                    size: 512,
+                    mipLevels: 8,
+                    generateMipmaps: true
+                });
+
+                mascot.core3D.envMap = envMapTexture;
+                updateHDRI();
+
+                statusEl.textContent = '✅ HDRI loaded successfully';
+                statusEl.className = 'status success';
+
+            } catch (error) {
+                console.error('Failed to load HDRI:', error);
+                statusEl.textContent = `❌ HDRI load failed: ${error.message}`;
+                statusEl.className = 'status error';
+            }
+        };
+
+        // Update HDRI settings
+        window.updateHDRI = function() {
+            if (!mascot || !mascot.core3D) return;
+
+            const intensity = parseInt(document.getElementById('hdriIntensity').value) / 100;
+            const exposure = parseInt(document.getElementById('exposure').value) / 100;
+
+            document.getElementById('hdriIntensityValue').textContent = Math.round(intensity * 100) + '%';
+            document.getElementById('exposureValue').textContent = exposure.toFixed(1);
+
+            mascot.core3D.envIntensity = intensity;
+            // TODO: Add exposure control to Core3DManager
+        };
+
+        // Update camera position
+        window.updateCamera = function() {
+            if (!mascot || !mascot.core3D || !mascot.core3D.camera) return;
+
+            const distance = parseFloat(document.getElementById('cameraDistance').value);
+            const height = parseFloat(document.getElementById('cameraHeight').value);
+            const rotation = parseFloat(document.getElementById('cameraRotation').value);
+
+            document.getElementById('cameraDistanceValue').textContent = distance.toFixed(1);
+            document.getElementById('cameraHeightValue').textContent = height.toFixed(1);
+            document.getElementById('cameraRotationValue').textContent = Math.round(rotation) + '°';
+
+            const radians = rotation * Math.PI / 180;
+            const x = Math.sin(radians) * distance;
+            const z = Math.cos(radians) * distance;
+
+            mascot.core3D.camera.position = [x, height, z];
+            mascot.core3D.camera.target = [0, 0, 0];
+        };
+
+        // Update sphere material (reads from slider for given index, applies to current mascot)
+        window.updateSphere = function(index) {
+            if (!mascot || !mascot.core3D) return;
+
+            const roughness = parseInt(document.getElementById(`s${index + 1}Rough`).value) / 100;
+            const metallic = parseInt(document.getElementById(`s${index + 1}Metal`).value) / 100;
+            const config = sphereConfigs[index];
+
+            document.getElementById(`s${index + 1}RoughValue`).textContent = Math.round(roughness * 100) + '%';
+            document.getElementById(`s${index + 1}MetalValue`).textContent = Math.round(metallic * 100) + '%';
+
+            // Update config
+            config.roughness = roughness;
+            config.metallic = metallic;
+
+            // Apply to mascot (current sphere being viewed)
+            mascot.core3D.roughness = roughness;
+            mascot.core3D.metallic = metallic;
+            mascot.setGlowColor(config.color[0], config.color[1], config.color[2]);
+
+            currentSphere = index;
+            statusEl.textContent = `✅ Viewing Sphere ${index + 1}`;
+        };
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

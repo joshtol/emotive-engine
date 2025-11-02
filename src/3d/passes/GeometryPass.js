@@ -65,7 +65,9 @@ export class GeometryPass extends BasePass {
             ao: gl.getUniformLocation(this.program, 'u_ao'),
             sssStrength: gl.getUniformLocation(this.program, 'u_sssStrength'),
             anisotropy: gl.getUniformLocation(this.program, 'u_anisotropy'),
-            iridescence: gl.getUniformLocation(this.program, 'u_iridescence')
+            iridescence: gl.getUniformLocation(this.program, 'u_iridescence'),
+            envMap: gl.getUniformLocation(this.program, 'u_envMap'),
+            envIntensity: gl.getUniformLocation(this.program, 'u_envIntensity')
         };
     }
 
@@ -148,6 +150,61 @@ export class GeometryPass extends BasePass {
         gl.uniform1f(this.locations.sssStrength, sssStrength);
         gl.uniform1f(this.locations.anisotropy, anisotropy);
         gl.uniform1f(this.locations.iridescence, iridescence);
+
+        // Environment map - MUST ALWAYS bind texture (WebGL requirement for samplerCube)
+        const envIntensity = scene.envIntensity !== undefined ? scene.envIntensity : 0.0;
+        gl.uniform1f(this.locations.envIntensity, envIntensity);
+
+        // CRITICAL: Always bind texture to TEXTURE5, even if envMap is null or intensity is 0
+        // WebGL requires samplerCube uniforms to ALWAYS have a texture bound
+        gl.activeTexture(gl.TEXTURE5);
+        if (scene.envMap) {
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, scene.envMap);
+        } else {
+            // No HDRI loaded yet - bind dummy black cubemap (will create on first use)
+            if (!this.dummyCubemap) {
+                this.dummyCubemap = this.createDummyCubemap(gl);
+            }
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.dummyCubemap);
+        }
+        gl.uniform1i(this.locations.envMap, 5);  // Tell shader: sampler is on unit 5
+
+        // Debug: Log once with EXTENSIVE detail
+        if (!this._envMapDebugLogged && scene.envMap) {
+            console.log('[GeometryPass] ========== RENDER-TIME TEXTURE DEBUG ==========');
+            console.log('[GeometryPass] Scene envMap:', scene.envMap);
+            console.log('[GeometryPass] Scene envIntensity:', envIntensity);
+            console.log('[GeometryPass] Uniform location:', this.locations.envMap);
+            console.log('[GeometryPass] Uniform location valid:', this.locations.envMap !== null && this.locations.envMap !== -1);
+
+            // Verify active texture unit
+            const boundTexture = gl.getParameter(gl.TEXTURE_BINDING_CUBE_MAP);
+            console.log('[GeometryPass] Texture bound to TEXTURE5:', boundTexture);
+            console.log('[GeometryPass] Same texture?', boundTexture === scene.envMap);
+
+            // Get current texture parameters
+            if (boundTexture) {
+                gl.activeTexture(gl.TEXTURE5);
+                gl.bindTexture(gl.TEXTURE_CUBE_MAP, scene.envMap);
+
+                const minFilter = gl.getTexParameter(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER);
+                const magFilter = gl.getTexParameter(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER);
+                console.log('[GeometryPass] Min filter:', minFilter, '(expected LINEAR_MIPMAP_LINEAR=', gl.LINEAR_MIPMAP_LINEAR, ')');
+                console.log('[GeometryPass] Mag filter:', magFilter, '(expected LINEAR=', gl.LINEAR, ')');
+            }
+
+            // Check for WebGL errors
+            const error = gl.getError();
+            if (error !== gl.NO_ERROR) {
+                console.error('[GeometryPass] WebGL error:', error);
+            } else {
+                console.log('[GeometryPass] No WebGL errors');
+            }
+
+            console.log('[GeometryPass] ================================================');
+
+            this._envMapDebugLogged = true;
+        }
 
         // Draw geometry
         const indexCount = scene.geometry.indices.length;
@@ -283,5 +340,38 @@ export class GeometryPass extends BasePass {
         }
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, gl.STATIC_DRAW);
+    }
+
+    /**
+     * Create a 1x1 black cubemap for use when no HDRI is loaded
+     * WebGL requires samplerCube uniforms to ALWAYS have a texture bound
+     */
+    createDummyCubemap(gl) {
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+
+        // 1x1 black pixel for all 6 faces
+        const blackPixel = new Uint8Array([0, 0, 0, 255]);
+
+        const faces = [
+            gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+            gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+            gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+        ];
+
+        for (const face of faces) {
+            gl.texImage2D(face, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, blackPixel);
+        }
+
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+
+        return texture;
     }
 }

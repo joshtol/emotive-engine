@@ -5,6 +5,7 @@
  */
 
 export { OBJLoader } from './OBJLoader.js';
+export { HDRILoader } from './HDRILoader.js';
 
 // Future loaders:
 // export { GLTFLoader } from './GLTFLoader.js';

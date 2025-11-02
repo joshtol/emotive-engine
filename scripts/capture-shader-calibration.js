@@ -2,9 +2,8 @@
 /**
  * Automated Shader Calibration Screenshot Capture
  *
- * Generates systematic calibration screenshots for shader analysis.
- * Opens the shader test suite, applies test configurations from the
- * calibration guide, and captures screenshots for validation.
+ * Systematic shader testing - one effect at a time with ideal geometry.
+ * Organized by shader effect with focused validation.
  */
 
 import { chromium } from 'playwright';
@@ -15,11 +14,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Output directory
-const OUTPUT_DIR = join(__dirname, '../examples/calibration-screenshots');
-const LOG_FILE = join(OUTPUT_DIR, 'calibration.log');
+// Output directory structure: calibration-screenshots/<shader-name>/
+const BASE_OUTPUT_DIR = join(__dirname, '../examples/calibration-screenshots');
+const LOG_FILE = join(BASE_OUTPUT_DIR, 'calibration.log');
 
-// Logger that writes to both console and file
+// Test suite URL
+const TEST_SUITE_URL = 'http://localhost:5500/examples/3d-shader-test-suite.html';
+
+// Logger
 async function log(message) {
     console.log(message);
     await appendFile(LOG_FILE, message + '\n').catch(() => {});
@@ -30,599 +32,315 @@ async function logError(message) {
     await appendFile(LOG_FILE, 'ERROR: ' + message + '\n').catch(() => {});
 }
 
-// Test suite URL (adjust port if needed)
-const TEST_SUITE_URL = 'http://localhost:5500/examples/3d-shader-test-suite.html';
+// ============================================================================
+// SHADER-FOCUSED CALIBRATION TESTS
+// Each shader gets its own folder with ideal test cases
+// ============================================================================
 
-// Calibration test configurations
-const CALIBRATION_TESTS = [
-    // PBR Material Validation
-    {
-        name: '01-pbr-roughness-mirror',
-        category: 'PBR',
+const SHADER_TESTS = {
+    // 1. ROUGHNESS - Test mirror reflection with environment
+    roughness: {
+        folder: '01-roughness',
+        description: 'Roughness/Reflectivity with Environment Map',
         model: 'utah-teapot',
         camera: 'front',
-        material: { roughness: 0, metallic: 30, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Roughness 0% - Perfect mirror'
+        baseConfig: { metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+        tests: [
+            { name: 'mirror', roughness: 0, description: '0% - Perfect mirror (should show sky)' },
+            { name: 'glossy', roughness: 15, description: '15% - Glossy reflection' },
+            { name: 'satin', roughness: 35, description: '35% - Satin finish' },
+            { name: 'balanced', roughness: 50, description: '50% - Balanced' },
+            { name: 'matte', roughness: 75, description: '75% - Matte' },
+            { name: 'pure-matte', roughness: 100, description: '100% - Pure diffuse' }
+        ]
     },
-    {
-        name: '02-pbr-roughness-glossy',
-        category: 'PBR',
-        model: 'utah-teapot',
-        camera: 'front',
-        material: { roughness: 25, metallic: 30, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Roughness 25% - Glossy'
-    },
-    {
-        name: '03-pbr-roughness-balanced',
-        category: 'PBR',
-        model: 'utah-teapot',
-        camera: 'front',
-        material: { roughness: 50, metallic: 30, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Roughness 50% - Balanced'
-    },
-    {
-        name: '04-pbr-roughness-matte',
-        category: 'PBR',
-        model: 'utah-teapot',
-        camera: 'front',
-        material: { roughness: 100, metallic: 30, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Roughness 100% - Pure matte'
-    },
-    {
-        name: '05-pbr-metallic-dielectric',
-        category: 'PBR',
+
+    // 2. FRESNEL - Test edge brightening for dielectrics
+    fresnel: {
+        folder: '02-fresnel',
+        description: 'Fresnel Edge Brightening (Dielectrics)',
         model: 'suzanne',
         camera: 'rim',
-        material: { roughness: 20, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Metallic 0% - Dielectric (Fresnel edges)'
+        baseConfig: { roughness: 15, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+        tests: [
+            { name: 'front-angle', camera: 'front', description: 'Front view - minimal Fresnel' },
+            { name: 'rim-angle', camera: 'rim', description: 'Rim view - strong Fresnel edges' },
+            { name: 'grazing-angle', camera: 'grazing', description: 'Grazing angle - maximum Fresnel' }
+        ]
     },
-    {
-        name: '06-pbr-metallic-metal',
-        category: 'PBR',
+
+    // 3. METALLIC - Test colored reflections
+    metallic: {
+        folder: '03-metallic',
+        description: 'Metallic with Colored Fresnel',
         model: 'suzanne',
         camera: 'rim',
-        material: { roughness: 20, metallic: 100, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Metallic 100% - Metal (colored reflections)'
+        baseConfig: { roughness: 20, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
+        tests: [
+            { name: 'dielectric', metallic: 0, description: '0% - Dielectric (white Fresnel)' },
+            { name: 'mixed', metallic: 50, description: '50% - Mixed behavior' },
+            { name: 'metal', metallic: 100, description: '100% - Metal (colored Fresnel)' }
+        ]
     },
 
-    // Ambient Occlusion
-    {
-        name: '07-ao-none',
-        category: 'AO',
+    // 4. AMBIENT OCCLUSION - Test crevice darkening
+    ao: {
+        folder: '04-ambient-occlusion',
+        description: 'Ambient Occlusion - Crevice Darkening',
         model: 'torus-knot',
         camera: 'grazing',
-        material: { roughness: 90, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'AO 100% - No darkening'
+        baseConfig: { roughness: 90, metallic: 0, sss: 0, anisotropy: 0, iridescence: 0 },
+        tests: [
+            { name: 'no-ao', ao: 100, description: '100% - No darkening' },
+            { name: 'light-ao', ao: 75, description: '75% - Light shadows' },
+            { name: 'medium-ao', ao: 50, description: '50% - Medium shadows' },
+            { name: 'heavy-ao', ao: 25, description: '25% - Heavy shadows' },
+            { name: 'maximum-ao', ao: 0, description: '0% - Black crevices' },
+            { name: 'organic-ao', ao: 0, model: 'stanford-bunny', camera: 'closeup', description: 'Maximum AO on organic (bunny ears)' }
+        ]
     },
-    {
-        name: '08-ao-moderate',
-        category: 'AO',
-        model: 'torus-knot',
-        camera: 'grazing',
-        material: { roughness: 90, metallic: 0, ao: 50, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'AO 50% - Moderate crevice darkening'
-    },
-    {
-        name: '09-ao-maximum',
-        category: 'AO',
-        model: 'torus-knot',
-        camera: 'grazing',
-        material: { roughness: 90, metallic: 0, ao: 0, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'AO 0% - Maximum shadow'
-    },
-    {
-        name: '10-ao-organic',
-        category: 'AO',
+
+    // 5. SUBSURFACE SCATTERING - Test light penetration
+    sss: {
+        folder: '05-subsurface-scattering',
+        description: 'SSS - Light Penetration & Color Shifts',
         model: 'stanford-bunny',
         camera: 'closeup',
-        material: { roughness: 90, metallic: 0, ao: 0, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'AO on organic geometry (bunny ears)'
+        baseConfig: { roughness: 45, metallic: 0, ao: 85, anisotropy: 0, iridescence: 0 },
+        tests: [
+            { name: 'no-sss', sss: 0, description: '0% - Opaque surface' },
+            { name: 'light-sss', sss: 30, description: '30% - Light translucency' },
+            { name: 'moderate-sss', sss: 60, description: '60% - Moderate penetration (jade-like)' },
+            { name: 'strong-sss', sss: 100, description: '100% - Strong glow (ears, thin areas)' },
+            { name: 'sss-rim-lighting', sss: 100, camera: 'rim', description: '100% - Rim lighting with SSS' }
+        ]
     },
 
-    // Subsurface Scattering
-    {
-        name: '11-sss-none',
-        category: 'SSS',
-        model: 'stanford-bunny',
-        camera: 'closeup',
-        material: { roughness: 45, metallic: 0, ao: 85, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'SSS 0% - Opaque'
-    },
-    {
-        name: '12-sss-moderate',
-        category: 'SSS',
-        model: 'stanford-bunny',
-        camera: 'closeup',
-        material: { roughness: 45, metallic: 0, ao: 85, sss: 50, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'SSS 50% - Light penetration'
-    },
-    {
-        name: '13-sss-maximum',
-        category: 'SSS',
-        model: 'stanford-bunny',
-        camera: 'closeup',
-        material: { roughness: 45, metallic: 0, ao: 85, sss: 100, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'SSS 100% - Strong translucency'
-    },
-
-    // Anisotropic Reflection
-    {
-        name: '14-anisotropy-isotropic',
-        category: 'Anisotropy',
-        model: 'utah-teapot',
-        camera: 'rim',
-        material: { roughness: 20, metallic: 100, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Anisotropy 0% - Round highlights'
-    },
-    {
-        name: '15-anisotropy-brushed',
-        category: 'Anisotropy',
-        model: 'utah-teapot',
-        camera: 'rim',
-        material: { roughness: 20, metallic: 100, ao: 100, sss: 0, anisotropy: 70, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Anisotropy 70% - Brushed metal'
-    },
-    {
-        name: '16-anisotropy-knot',
-        category: 'Anisotropy',
-        model: 'torus-knot',
-        camera: 'grazing',
-        material: { roughness: 20, metallic: 100, ao: 100, sss: 0, anisotropy: 70, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Anisotropy on complex geometry'
-    },
-
-    // Iridescence
-    {
-        name: '17-iridescence-none',
-        category: 'Iridescence',
-        model: 'torus-knot',
-        camera: 'grazing',
-        material: { roughness: 0, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Iridescence 0% - No color shift'
-    },
-    {
-        name: '18-iridescence-moderate',
-        category: 'Iridescence',
-        model: 'torus-knot',
-        camera: 'grazing',
-        material: { roughness: 0, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 50 },
-        renderMode: 'standard',
-        description: 'Iridescence 50% - Subtle rainbow'
-    },
-    {
-        name: '19-iridescence-soap',
-        category: 'Iridescence',
-        model: 'torus-knot',
-        camera: 'grazing',
-        material: { roughness: 0, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 90 },
-        renderMode: 'standard',
-        description: 'Iridescence 90% - Soap bubble'
-    },
-    {
-        name: '20-iridescence-pearl',
-        category: 'Iridescence',
-        model: 'utah-teapot',
-        camera: 'rim',
-        material: { roughness: 15, metallic: 10, ao: 100, sss: 20, anisotropy: 0, iridescence: 50 },
-        renderMode: 'standard',
-        description: 'Pearl luster (SSS + iridescence)'
-    },
-
-    // Render Modes
-    {
-        name: '21-normals-dragon',
-        category: 'RenderModes',
-        model: 'stanford-dragon',
-        camera: 'front',
-        material: { roughness: 50, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'normals',
-        description: 'Normal visualization (RGB normals)'
-    },
-    {
-        name: '22-edges-suzanne',
-        category: 'RenderModes',
-        model: 'suzanne',
-        camera: 'front',
-        material: { roughness: 50, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'edge',
-        description: 'Edge detection'
-    },
-    {
-        name: '23-toon-cow',
-        category: 'RenderModes',
+    // 6. ANISOTROPY - Test brushed metal directional highlights
+    anisotropy: {
+        folder: '06-anisotropy',
+        description: 'Anisotropic Reflection - Brushed Metal',
         model: 'spot-cow',
         camera: 'front',
-        material: { roughness: 50, metallic: 0, ao: 100, sss: 0, anisotropy: 0, iridescence: 0 },
-        renderMode: 'toon',
-        description: 'Toon/cel shading'
+        baseConfig: { roughness: 30, metallic: 100, ao: 100, sss: 0, iridescence: 0 },
+        tests: [
+            { name: 'isotropic', anisotropy: 0, description: '0 - Isotropic (standard metal)' },
+            { name: 'light-aniso', anisotropy: 30, description: '30% - Light brushing' },
+            { name: 'moderate-aniso', anisotropy: 60, description: '60% - Moderate brushing' },
+            { name: 'strong-aniso', anisotropy: 100, description: '100% - Dramatic brushed metal' },
+            { name: 'negative-aniso', anisotropy: -60, description: '-60% - Reverse direction' }
+        ]
     },
 
-    // Combined Effects
-    {
-        name: '24-combined-skin',
-        category: 'Combined',
-        model: 'stanford-bunny',
-        camera: 'closeup',
-        material: { roughness: 45, metallic: 0, ao: 85, sss: 60, anisotropy: 0, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Skin preset (AO + SSS)'
-    },
-    {
-        name: '25-combined-brushed-metal',
-        category: 'Combined',
-        model: 'utah-teapot',
-        camera: 'rim',
-        material: { roughness: 20, metallic: 100, ao: 100, sss: 0, anisotropy: 70, iridescence: 0 },
-        renderMode: 'standard',
-        description: 'Brushed metal (metallic + anisotropy)'
-    },
-    {
-        name: '26-combined-pearl',
-        category: 'Combined',
-        model: 'utah-teapot',
-        camera: 'rim',
-        material: { roughness: 15, metallic: 10, ao: 100, sss: 20, anisotropy: 0, iridescence: 50 },
-        renderMode: 'standard',
-        description: 'Pearl (SSS + iridescence)'
-    },
-
-    // Performance Test
-    {
-        name: '27-performance-dragon',
-        category: 'Performance',
-        model: 'stanford-dragon',
+    // 7. IRIDESCENCE - Test thin-film interference
+    iridescence: {
+        folder: '07-iridescence',
+        description: 'Iridescence - Thin-Film Interference',
+        model: 'torus-knot',
         camera: 'front',
-        material: { roughness: 20, metallic: 50, ao: 80, sss: 30, anisotropy: 30, iridescence: 20 },
-        renderMode: 'standard',
-        description: 'All effects on high-poly model'
-    }
-];
+        baseConfig: { roughness: 10, metallic: 0, ao: 100, sss: 0, anisotropy: 0 },
+        tests: [
+            { name: 'no-iridescence', iridescence: 0, description: '0% - Standard surface' },
+            { name: 'subtle-iridescence', iridescence: 30, description: '30% - Subtle color shift' },
+            { name: 'moderate-iridescence', iridescence: 60, description: '60% - Visible colors' },
+            { name: 'strong-iridescence', iridescence: 100, description: '100% - Dramatic rainbow' },
+            { name: 'iridescence-angles', iridescence: 100, camera: 'grazing', description: '100% - Grazing angle (strongest)' }
+        ]
+    },
 
-/**
- * Build URL with test configuration parameters
- */
+    // 8. COMBINED EFFECTS - Real-world materials
+    combined: {
+        folder: '08-combined-materials',
+        description: 'Combined Effects - Real Materials',
+        model: 'stanford-bunny',
+        camera: 'front',
+        baseConfig: {},
+        tests: [
+            {
+                name: 'jade',
+                roughness: 20, metallic: 0, ao: 50, sss: 80, anisotropy: 0, iridescence: 0,
+                description: 'Jade - SSS + AO + smooth'
+            },
+            {
+                name: 'brushed-copper',
+                roughness: 40, metallic: 100, ao: 70, sss: 0, anisotropy: 70, iridescence: 0,
+                description: 'Brushed Copper - Anisotropy + Metallic'
+            },
+            {
+                name: 'soap-bubble',
+                roughness: 5, metallic: 0, ao: 100, sss: 30, anisotropy: 0, iridescence: 100,
+                description: 'Soap Bubble - Iridescence + SSS'
+            },
+            {
+                name: 'polished-marble',
+                roughness: 15, metallic: 0, ao: 30, sss: 40, anisotropy: 0, iridescence: 0,
+                description: 'Polished Marble - SSS + AO + Fresnel'
+            }
+        ]
+    }
+};
+
+// ============================================================================
+// BUILD TEST URL
+// ============================================================================
+
 function buildTestURL(baseURL, config) {
-    const url = new URL(baseURL);
-
-    if (config.model) {
-        url.searchParams.set('model', config.model);
-    }
-
-    if (config.camera) {
-        url.searchParams.set('camera', config.camera);
-    }
-
-    if (config.material) {
-        url.searchParams.set('roughness', config.material.roughness);
-        url.searchParams.set('metallic', config.material.metallic);
-        url.searchParams.set('ao', config.material.ao);
-        url.searchParams.set('sss', config.material.sss);
-        url.searchParams.set('anisotropy', config.material.anisotropy);
-        url.searchParams.set('iridescence', config.material.iridescence);
-    }
-
-    if (config.renderMode) {
-        url.searchParams.set('renderMode', config.renderMode);
-    }
-
-    return url.toString();
+    const params = new URLSearchParams({
+        model: config.model,
+        camera: config.camera,
+        roughness: config.roughness ?? 50,
+        metallic: config.metallic ?? 0,
+        ao: config.ao ?? 100,
+        sss: config.sss ?? 0,
+        anisotropy: config.anisotropy ?? 0,
+        iridescence: config.iridescence ?? 0,
+        renderMode: 'standard'
+    });
+    return `${baseURL}?${params.toString()}`;
 }
 
-/**
- * Apply test configuration by loading URL with parameters
- */
-async function applyTestConfig(page, config) {
-    await log(`  Applying config: ${config.description}`);
+// ============================================================================
+// CAPTURE SCREENSHOT
+// ============================================================================
 
-    // Build URL with all test parameters
-    const testURL = buildTestURL(TEST_SUITE_URL, config);
-    await log(`    Loading: ${testURL}`);
+async function captureScreenshot(page, test, outputPath) {
+    const config = { ...test.baseConfig, ...test };
 
-    // Navigate to URL with parameters - page will configure itself on load
-    await page.goto(testURL, { waitUntil: 'networkidle' });
+    await log(`    Loading: ${buildTestURL(TEST_SUITE_URL, config)}`);
 
-    // Wait for initialization - longer for large models
+    try {
+        await page.goto(buildTestURL(TEST_SUITE_URL, config), {
+            waitUntil: 'domcontentloaded', // Changed from networkidle to avoid hanging
+            timeout: 30000
+        });
+    } catch (error) {
+        // If navigation interrupted, that's okay - the page might have already started loading
+        if (!error.message.includes('interrupted')) {
+            throw error;
+        }
+    }
+
+    // Wait for initialization and rendering
     const isLargeModel = config.model === 'stanford-dragon';
-    const baseWait = isLargeModel ? 8000 : 3000; // 8 seconds for dragon
+    const baseWait = isLargeModel ? 10000 : 5000; // Increased wait times
     await page.waitForTimeout(baseWait);
 
-    // Log the result
+    // Verify geometry loaded
     const geometryInfo = await page.evaluate(() => {
-        if (!window.mascot || !window.mascot.core3D) {
-            return { error: 'Mascot not initialized' };
+        if (window.mascot?.state?.geometry) {
+            const geom = window.mascot.state.geometry;
+            const vertexCount = geom.vertices ? geom.vertices.length / 3 : 0;
+            return {
+                type: 'loaded',
+                vertices: vertexCount.toLocaleString()
+            };
         }
-        return {
-            geometryType: window.mascot.core3D.geometryType,
-            hasVertices: !!window.mascot.core3D.geometry?.vertices,
-            vertexCount: window.mascot.core3D.geometry?.vertices?.length / 3
-        };
+        return { type: 'unknown' };
     });
 
-    await log(`    Geometry type: ${geometryInfo.geometryType || geometryInfo.error}`);
-    if (geometryInfo.vertexCount) {
-        await log(`    Vertices: ${geometryInfo.vertexCount.toLocaleString()}`);
+    if (geometryInfo.type === 'loaded') {
+        await log(`    Geometry type: ${geometryInfo.type}`);
+        await log(`    Vertices: ${geometryInfo.vertices}`);
     }
 
-    // Extra wait for dragon to finish uploading to GPU and rendering
-    if (isLargeModel) {
-        await page.waitForTimeout(2000);
-    } else {
-        await page.waitForTimeout(500);
-    }
+    // Extra wait for rendering to stabilize
+    await page.waitForTimeout(1000);
+
+    // Capture screenshot
+    await page.screenshot({
+        path: outputPath,
+        type: 'png'
+    });
+
+    await log(`  ✅ Saved: ${outputPath.split(/[/\\]/).slice(-2).join('/')}`);
 }
 
-/**
- * Capture screenshot of canvas area
- */
-async function captureScreenshot(page, outputPath) {
-    const canvas = await page.locator('canvas').first();
-    await canvas.screenshot({ path: outputPath });
-}
+// ============================================================================
+// MAIN
+// ============================================================================
 
-/**
- * Main execution
- */
 async function main() {
-    // Create output directory
-    await mkdir(OUTPUT_DIR, { recursive: true });
+    console.log('\n🎨 Shader-Focused Calibration System\n');
+    console.log('📁 Base directory:', BASE_OUTPUT_DIR);
+    console.log('📝 Log file:', LOG_FILE);
 
-    // Clear/create log file
-    await writeFile(LOG_FILE, '=== Shader Calibration Run ===\n');
-    await log('🎨 Automated Shader Calibration Screenshot Capture\n');
-    await log(`📁 Output directory: ${OUTPUT_DIR}`);
-    await log(`📝 Log file: ${LOG_FILE}\n`);
+    // Create base output directory and clear log
+    await mkdir(BASE_OUTPUT_DIR, { recursive: true });
+    await writeFile(LOG_FILE, `Calibration started at ${new Date().toISOString()}\n\n`);
 
     // Launch browser
-    console.log('🌐 Launching browser...');
+    console.log('\n🌐 Launching browser...');
     const browser = await chromium.launch({
-        headless: false,  // CHANGED: Run with visible browser for debugging
-        slowMo: 100       // Slow down by 100ms per action to see what's happening
+        headless: true,
+        args: ['--force-device-scale-factor=2'] // 2x resolution for quality
     });
-    const context = await browser.newContext({
+    const page = await browser.newPage({
         viewport: { width: 1920, height: 1080 }
     });
-    const page = await context.newPage();
 
-    // Listen to ALL browser console messages for debugging
-    page.on('console', msg => {
-        const type = msg.type();
-        const text = msg.text();
-        const prefix = `  [Browser ${type}]`;
-
-        if (type === 'error') {
-            console.error(`${prefix} ${text}`);
-        } else if (type === 'warning') {
-            console.warn(`${prefix} ${text}`);
-        } else {
-            console.log(`${prefix} ${text}`);
-        }
-    });
-
-    // Catch page errors
-    page.on('pageerror', error => {
-        console.error(`  [Page Error] ${error.message}`);
-    });
+    // Enable console logging from browser
+    page.on('console', msg => log(`  [Browser log] ${msg.text()}`));
+    page.on('pageerror', err => logError(`  [Browser error] ${err.message}`));
 
     await log('🌐 Browser launched\n');
 
-    // Generate manifest
-    const manifest = {
-        timestamp: new Date().toISOString(),
-        totalTests: CALIBRATION_TESTS.length,
-        categories: {},
-        tests: []
-    };
-
-    // Run each calibration test
-    console.log(`\n🔬 Running ${CALIBRATION_TESTS.length} calibration tests...\n`);
-
-    for (let i = 0; i < CALIBRATION_TESTS.length; i++) {
-        const test = CALIBRATION_TESTS[i];
-        const testNum = i + 1;
-
-        console.log(`[${testNum}/${CALIBRATION_TESTS.length}] ${test.name}`);
-        console.log(`  Category: ${test.category}`);
-        console.log(`  Model: ${test.model || 'default'}`);
-
-        // Apply configuration
-        await applyTestConfig(page, test);
-
-        // Capture screenshot
-        const screenshotPath = join(OUTPUT_DIR, `${test.name}.png`);
-        await captureScreenshot(page, screenshotPath);
-        console.log(`  ✅ Saved: ${test.name}.png\n`);
-
-        // Update manifest
-        if (!manifest.categories[test.category]) {
-            manifest.categories[test.category] = [];
-        }
-        manifest.categories[test.category].push(test.name);
-
-        manifest.tests.push({
-            id: test.name,
-            category: test.category,
-            description: test.description,
-            model: test.model,
-            camera: test.camera,
-            material: test.material,
-            renderMode: test.renderMode,
-            filename: `${test.name}.png`
-        });
+    // Process each shader category
+    const shaderCategories = Object.entries(SHADER_TESTS);
+    let totalTests = 0;
+    for (const [, category] of shaderCategories) {
+        totalTests += category.tests.length;
     }
 
-    // Save manifest
-    const manifestPath = join(OUTPUT_DIR, 'manifest.json');
-    await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
-    console.log(`📋 Saved manifest: manifest.json\n`);
+    console.log(`\n🔬 Running ${totalTests} tests across ${shaderCategories.length} shader categories...\n`);
 
-    // Create index HTML for easy viewing
-    const indexHtml = generateIndexHtml(manifest);
-    const indexPath = join(OUTPUT_DIR, 'index.html');
-    await writeFile(indexPath, indexHtml);
-    console.log(`📄 Saved index: index.html\n`);
+    let testIndex = 0;
+    for (const [shaderName, category] of shaderCategories) {
+        await log(`\n${'='.repeat(80)}`);
+        await log(`${category.description}`);
+        await log(`${'='.repeat(80)}`);
 
-    // Cleanup
+        // Create shader-specific output directory
+        const outputDir = join(BASE_OUTPUT_DIR, category.folder);
+        await mkdir(outputDir, { recursive: true });
+
+        // Run tests for this shader
+        for (const test of category.tests) {
+            testIndex++;
+            console.log(`\n[${testIndex}/${totalTests}] ${category.folder}/${test.name}`);
+            await log(`\n[${testIndex}/${totalTests}] ${test.name}`);
+            await log(`  ${test.description}`);
+
+            const testConfig = {
+                ...category.baseConfig,
+                model: test.model || category.model,
+                camera: test.camera || category.camera,
+                roughness: test.roughness,
+                metallic: test.metallic,
+                ao: test.ao,
+                sss: test.sss,
+                anisotropy: test.anisotropy,
+                iridescence: test.iridescence
+            };
+
+            const outputPath = join(outputDir, `${test.name}.png`);
+
+            try {
+                await captureScreenshot(page, testConfig, outputPath);
+            } catch (error) {
+                await logError(`Failed to capture ${test.name}: ${error.message}`);
+                console.error(`  ❌ Failed: ${error.message}`);
+            }
+        }
+    }
+
     await browser.close();
 
-    console.log('✅ Calibration screenshot capture complete!');
-    console.log(`\n📊 Summary:`);
-    console.log(`   Total screenshots: ${CALIBRATION_TESTS.length}`);
-    console.log(`   Categories: ${Object.keys(manifest.categories).join(', ')}`);
-    console.log(`   Output: ${OUTPUT_DIR}`);
-    console.log(`\n💡 Open ${indexPath} in your browser to view all screenshots`);
+    console.log('\n✅ Calibration complete!');
+    console.log(`📁 Screenshots saved to: ${BASE_OUTPUT_DIR}`);
+    console.log(`📝 Log saved to: ${LOG_FILE}\n`);
 }
 
-/**
- * Generate index HTML for viewing screenshots
- */
-function generateIndexHtml(manifest) {
-    const categorySections = Object.entries(manifest.categories)
-        .map(([category, testNames]) => {
-            const tests = manifest.tests.filter(t => testNames.includes(t.id));
-            const testCards = tests.map(test => `
-                <div class="test-card">
-                    <img src="${test.filename}" alt="${test.description}">
-                    <div class="test-info">
-                        <h3>${test.id}</h3>
-                        <p>${test.description}</p>
-                        <div class="test-details">
-                            <span>Model: ${test.model || 'default'}</span>
-                            <span>Camera: ${test.camera || 'default'}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-
-            return `
-                <section class="category">
-                    <h2>${category}</h2>
-                    <div class="test-grid">
-                        ${testCards}
-                    </div>
-                </section>
-            `;
-        }).join('');
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shader Calibration Screenshots - ${manifest.timestamp}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a1a;
-            color: #f2f1f1;
-            padding: 40px 20px;
-        }
-        header {
-            max-width: 1400px;
-            margin: 0 auto 40px;
-            text-align: center;
-        }
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #DD4A9A, #84CFC5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        header p {
-            color: #b8b8b8;
-            font-size: 0.9rem;
-        }
-        .category {
-            max-width: 1400px;
-            margin: 0 auto 60px;
-        }
-        .category h2 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            color: #DD4A9A;
-            border-bottom: 2px solid rgba(221, 74, 154, 0.3);
-            padding-bottom: 10px;
-        }
-        .test-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 30px;
-        }
-        .test-card {
-            background: #2a2a2a;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(242, 241, 241, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .test-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(221, 74, 154, 0.2);
-        }
-        .test-card img {
-            width: 100%;
-            height: 300px;
-            object-fit: contain;
-            background: #000;
-            border-bottom: 1px solid rgba(242, 241, 241, 0.1);
-        }
-        .test-info {
-            padding: 20px;
-        }
-        .test-info h3 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            color: #4090CE;
-        }
-        .test-info p {
-            color: #b8b8b8;
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-        }
-        .test-details {
-            display: flex;
-            gap: 15px;
-            font-size: 0.75rem;
-            color: #888;
-        }
-        .test-details span {
-            padding: 4px 10px;
-            background: rgba(221, 74, 154, 0.1);
-            border-radius: 4px;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>🎨 Shader Calibration Screenshots</h1>
-        <p>Generated: ${new Date(manifest.timestamp).toLocaleString()}</p>
-        <p>Total Tests: ${manifest.totalTests}</p>
-    </header>
-    ${categorySections}
-</body>
-</html>`;
-}
-
-// Run
 main().catch(error => {
-    console.error('❌ Error:', error);
+    console.error('\n❌ Fatal error:', error);
     process.exit(1);
 });

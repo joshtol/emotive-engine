@@ -48,7 +48,8 @@
     "test:unit": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/unit",
     "test:integration": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/integration",
     "test:core": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/unit/core",
-    "calibrate": "node scripts/capture-shader-calibration.js",
+    "calibrate": "node scripts/render-calibration-direct.js",
+    "calibrate:old": "node scripts/capture-shader-calibration.js",
     "test:utils": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/unit/utils",
     "test:renderer": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/unit/core/renderer",
     "test:all": "npm run test:integration && npm run test:core && npm run test:utils && npm run test:renderer",
@@ -133,6 +134,7 @@
     "jsdom": "^27.0.0",
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
+    "puppeteer": "^24.27.0",
     "rollup": "^4.9.5",
     "rollup-plugin-analyzer": "^4.0.0",
     "rollup-plugin-bundle-size": "^1.0.3",
@@ -149,5 +151,8 @@
     "*.{json,md}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "playwright": "^1.56.1"
   }
 }

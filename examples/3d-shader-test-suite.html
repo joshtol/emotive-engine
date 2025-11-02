@@ -540,6 +540,21 @@
                     <div class="control-hint">Color shift (soap bubbles, oil slick)</div>
                 </div>
 
+                <h2 class="section-header">Environment</h2>
+
+                <div class="control-group">
+                    <label>HDRI Intensity: <span id="envIntensityValue">0%</span></label>
+                    <input type="range" id="envIntensitySlider" min="0" max="100" value="0" oninput="updateEnvironment()">
+                    <div class="control-hint">Environment map reflections</div>
+                </div>
+
+                <div class="button-grid">
+                    <button class="btn" onclick="loadHDRI()">📦 Load HDRI</button>
+                </div>
+                <div class="capture-status" id="hdriStatus"></div>
+
+                <h2 class="section-header">Material Presets</h2>
+
                 <div class="preset-grid">
                     <button class="preset-btn" onclick="setMaterialPreset('skin')">👤 Skin (SSS)</button>
                     <button class="preset-btn" onclick="setMaterialPreset('brushed')">🔧 Brushed</button>
@@ -572,10 +587,11 @@
 
     <!-- Load Emotive Engine 3D -->
     <script type="module">
-        import { EmotiveMascot3D } from '../dist/emotive-mascot-3d.js';
+        import { EmotiveMascot3D, HDRILoader } from '../dist/emotive-mascot-3d.js';
 
         let mascot = null;
         let wireframeEnabled = false;
+        let envMapTexture = null;
 
         // Parse URL parameters
         function getURLParams() {
@@ -616,7 +632,7 @@
                 // Apply URL parameters if provided
                 const params = getURLParams();
 
-                // Load model if specified
+                // Load model if specified (MUST complete before material update)
                 if (params.model) {
                     await loadModel(params.model);
                 }
@@ -626,25 +642,55 @@
                     setCameraAngle(params.camera);
                 }
 
-                // Set material properties if specified
-                if (params.roughness !== null) document.getElementById('roughnessSlider').value = params.roughness;
-                if (params.metallic !== null) document.getElementById('metallicSlider').value = params.metallic;
-                if (params.ao !== null) document.getElementById('aoSlider').value = params.ao;
-                if (params.sss !== null) document.getElementById('sssSlider').value = params.sss;
-                if (params.anisotropy !== null) document.getElementById('anisotropySlider').value = params.anisotropy;
-                if (params.iridescence !== null) document.getElementById('iridescenceSlider').value = params.iridescence;
-
-                if (params.roughness !== null || params.metallic !== null || params.ao !== null ||
-                    params.sss !== null || params.anisotropy !== null || params.iridescence !== null) {
-                    updateMaterial();
-                }
-
-                // Set render mode if specified
+                // Set render mode if specified (before material)
                 if (params.renderMode) {
                     changeRenderMode(params.renderMode);
                 }
 
+                // Set material properties if specified
+                let materialChanged = false;
+                if (params.roughness !== null) {
+                    document.getElementById('roughnessSlider').value = params.roughness;
+                    document.getElementById('roughnessValue').textContent = params.roughness + '%';
+                    materialChanged = true;
+                }
+                if (params.metallic !== null) {
+                    document.getElementById('metallicSlider').value = params.metallic;
+                    document.getElementById('metallicValue').textContent = params.metallic + '%';
+                    materialChanged = true;
+                }
+                if (params.ao !== null) {
+                    document.getElementById('aoSlider').value = params.ao;
+                    document.getElementById('aoValue').textContent = params.ao + '%';
+                    materialChanged = true;
+                }
+                if (params.sss !== null) {
+                    document.getElementById('sssSlider').value = params.sss;
+                    document.getElementById('sssValue').textContent = params.sss + '%';
+                    materialChanged = true;
+                }
+                if (params.anisotropy !== null) {
+                    document.getElementById('anisotropySlider').value = params.anisotropy;
+                    document.getElementById('anisotropyValue').textContent = params.anisotropy + '%';
+                    materialChanged = true;
+                }
+                if (params.iridescence !== null) {
+                    document.getElementById('iridescenceSlider').value = params.iridescence;
+                    document.getElementById('iridescenceValue').textContent = params.iridescence + '%';
+                    materialChanged = true;
+                }
+
+                // Update material with URL param values (after model loaded)
+                if (materialChanged) {
+                    updateMaterial();
+                }
+
                 console.log('Mascot initialized successfully', params);
+
+                // Auto-load HDRI environment map
+                setTimeout(() => {
+                    loadHDRI();
+                }, 500); // Small delay to ensure renderer is fully ready
             } catch (error) {
                 console.error('Failed to initialize mascot:', error);
             }
@@ -819,6 +865,66 @@
                 document.getElementById('anisotropySlider').value = values.anisotropy;
                 document.getElementById('iridescenceSlider').value = values.iridescence;
                 updateMaterial();
+            }
+        };
+
+        // Update environment map
+        window.updateEnvironment = function() {
+            const envIntensity = parseInt(document.getElementById('envIntensitySlider').value) / 100;
+            document.getElementById('envIntensityValue').textContent = Math.round(envIntensity * 100) + '%';
+
+            // Apply to Core3DManager directly
+            if (mascot && mascot.core3D) {
+                mascot.core3D.envIntensity = envIntensity;
+                console.log('[HDRI] Updated envIntensity to:', envIntensity);
+                console.log('[HDRI] envMap exists:', !!mascot.core3D.envMap);
+            } else {
+                console.warn('[HDRI] Cannot update environment - core3D not available');
+            }
+        };
+
+        // Load HDRI environment map
+        window.loadHDRI = async function() {
+            const statusEl = document.getElementById('hdriStatus');
+            statusEl.textContent = 'Loading HDRI...';
+            statusEl.style.color = '#4090CE';
+
+            try {
+                if (!mascot || !mascot.core3D || !mascot.core3D.renderer || !mascot.core3D.renderer.gl) {
+                    throw new Error('Renderer not initialized');
+                }
+
+                const gl = mascot.core3D.renderer.gl;
+
+                // Load the HDRI file
+                const hdriPath = '../assets/3d/lonely_road_afternoon_puresky_4k.hdr';
+                console.log('Loading HDRI from:', hdriPath);
+
+                envMapTexture = await HDRILoader.load(gl, hdriPath, {
+                    size: 512,           // Cubemap face size
+                    mipLevels: 8,        // Number of mip levels
+                    generateMipmaps: true
+                });
+
+                // Apply to Core3DManager
+                console.log('[HDRI] Texture created:', envMapTexture);
+
+                mascot.core3D.envMap = envMapTexture;
+                console.log('[HDRI] Assigned to core3D.envMap');
+
+                // Set initial intensity to 100%
+                document.getElementById('envIntensitySlider').value = 100;
+                updateEnvironment();
+
+                statusEl.textContent = '✅ HDRI loaded successfully! (512px cubemap, 8 mip levels)';
+                statusEl.style.color = '#84CFC5';
+
+                console.log('HDRI loaded and applied to core3D');
+                console.log('[HDRI] Final state - envMap:', !!mascot.core3D.envMap, 'intensity:', mascot.core3D.envIntensity);
+            } catch (error) {
+                console.error('Failed to load HDRI:', error);
+                statusEl.textContent = `❌ Failed: ${error.message}`;
+                statusEl.style.color = '#DD4A9A';
             }
         };
 

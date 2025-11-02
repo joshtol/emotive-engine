@@ -1,0 +1,510 @@
+{
+  "timestamp": "2025-11-02T06:57:34.219Z",
+  "totalTests": 27,
+  "categories": {
+    "PBR": [
+      "01-pbr-roughness-mirror",
+      "02-pbr-roughness-glossy",
+      "03-pbr-roughness-balanced",
+      "04-pbr-roughness-matte",
+      "05-pbr-metallic-dielectric",
+      "06-pbr-metallic-metal"
+    ],
+    "AO": [
+      "07-ao-none",
+      "08-ao-moderate",
+      "09-ao-maximum",
+      "10-ao-organic"
+    ],
+    "SSS": [
+      "11-sss-none",
+      "12-sss-moderate",
+      "13-sss-maximum"
+    ],
+    "Anisotropy": [
+      "14-anisotropy-isotropic",
+      "15-anisotropy-brushed",
+      "16-anisotropy-knot"
+    ],
+    "Iridescence": [
+      "17-iridescence-none",
+      "18-iridescence-moderate",
+      "19-iridescence-soap",
+      "20-iridescence-pearl"
+    ],
+    "RenderModes": [
+      "21-normals-dragon",
+      "22-edges-suzanne",
+      "23-toon-cow"
+    ],
+    "Combined": [
+      "24-combined-skin",
+      "25-combined-brushed-metal",
+      "26-combined-pearl"
+    ],
+    "Performance": [
+      "27-performance-dragon"
+    ]
+  },
+  "tests": [
+    {
+      "id": "01-pbr-roughness-mirror",
+      "category": "PBR",
+      "description": "Roughness 0% - Perfect mirror",
+      "model": "utah-teapot",
+      "camera": "front",
+      "material": {
+        "roughness": 0,
+        "metallic": 30,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "01-pbr-roughness-mirror.png"
+    },
+    {
+      "id": "02-pbr-roughness-glossy",
+      "category": "PBR",
+      "description": "Roughness 25% - Glossy",
+      "model": "utah-teapot",
+      "camera": "front",
+      "material": {
+        "roughness": 25,
+        "metallic": 30,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "02-pbr-roughness-glossy.png"
+    },
+    {
+      "id": "03-pbr-roughness-balanced",
+      "category": "PBR",
+      "description": "Roughness 50% - Balanced",
+      "model": "utah-teapot",
+      "camera": "front",
+      "material": {
+        "roughness": 50,
+        "metallic": 30,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "03-pbr-roughness-balanced.png"
+    },
+    {
+      "id": "04-pbr-roughness-matte",
+      "category": "PBR",
+      "description": "Roughness 100% - Pure matte",
+      "model": "utah-teapot",
+      "camera": "front",
+      "material": {
+        "roughness": 100,
+        "metallic": 30,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "04-pbr-roughness-matte.png"
+    },
+    {
+      "id": "05-pbr-metallic-dielectric",
+      "category": "PBR",
+      "description": "Metallic 0% - Dielectric (Fresnel edges)",
+      "model": "suzanne",
+      "camera": "rim",
+      "material": {
+        "roughness": 20,
+        "metallic": 0,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "05-pbr-metallic-dielectric.png"
+    },
+    {
+      "id": "06-pbr-metallic-metal",
+      "category": "PBR",
+      "description": "Metallic 100% - Metal (colored reflections)",
+      "model": "suzanne",
+      "camera": "rim",
+      "material": {
+        "roughness": 20,
+        "metallic": 100,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "06-pbr-metallic-metal.png"
+    },
+    {
+      "id": "07-ao-none",
+      "category": "AO",
+      "description": "AO 100% - No darkening",
+      "model": "torus-knot",
+      "camera": "grazing",
+      "material": {
+        "roughness": 90,
+        "metallic": 0,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "07-ao-none.png"
+    },
+    {
+      "id": "08-ao-moderate",
+      "category": "AO",
+      "description": "AO 50% - Moderate crevice darkening",
+      "model": "torus-knot",
+      "camera": "grazing",
+      "material": {
+        "roughness": 90,
+        "metallic": 0,
+        "ao": 50,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "08-ao-moderate.png"
+    },
+    {
+      "id": "09-ao-maximum",
+      "category": "AO",
+      "description": "AO 0% - Maximum shadow",
+      "model": "torus-knot",
+      "camera": "grazing",
+      "material": {
+        "roughness": 90,
+        "metallic": 0,
+        "ao": 0,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "09-ao-maximum.png"
+    },
+    {
+      "id": "10-ao-organic",
+      "category": "AO",
+      "description": "AO on organic geometry (bunny ears)",
+      "model": "stanford-bunny",
+      "camera": "closeup",
+      "material": {
+        "roughness": 90,
+        "metallic": 0,
+        "ao": 0,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "10-ao-organic.png"
+    },
+    {
+      "id": "11-sss-none",
+      "category": "SSS",
+      "description": "SSS 0% - Opaque",
+      "model": "stanford-bunny",
+      "camera": "closeup",
+      "material": {
+        "roughness": 45,
+        "metallic": 0,
+        "ao": 85,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "11-sss-none.png"
+    },
+    {
+      "id": "12-sss-moderate",
+      "category": "SSS",
+      "description": "SSS 50% - Light penetration",
+      "model": "stanford-bunny",
+      "camera": "closeup",
+      "material": {
+        "roughness": 45,
+        "metallic": 0,
+        "ao": 85,
+        "sss": 50,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "12-sss-moderate.png"
+    },
+    {
+      "id": "13-sss-maximum",
+      "category": "SSS",
+      "description": "SSS 100% - Strong translucency",
+      "model": "stanford-bunny",
+      "camera": "closeup",
+      "material": {
+        "roughness": 45,
+        "metallic": 0,
+        "ao": 85,
+        "sss": 100,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "13-sss-maximum.png"
+    },
+    {
+      "id": "14-anisotropy-isotropic",
+      "category": "Anisotropy",
+      "description": "Anisotropy 0% - Round highlights",
+      "model": "utah-teapot",
+      "camera": "rim",
+      "material": {
+        "roughness": 20,
+        "metallic": 100,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "14-anisotropy-isotropic.png"
+    },
+    {
+      "id": "15-anisotropy-brushed",
+      "category": "Anisotropy",
+      "description": "Anisotropy 70% - Brushed metal",
+      "model": "utah-teapot",
+      "camera": "rim",
+      "material": {
+        "roughness": 20,
+        "metallic": 100,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 70,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "15-anisotropy-brushed.png"
+    },
+    {
+      "id": "16-anisotropy-knot",
+      "category": "Anisotropy",
+      "description": "Anisotropy on complex geometry",
+      "model": "torus-knot",
+      "camera": "grazing",
+      "material": {
+        "roughness": 20,
+        "metallic": 100,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 70,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "16-anisotropy-knot.png"
+    },
+    {
+      "id": "17-iridescence-none",
+      "category": "Iridescence",
+      "description": "Iridescence 0% - No color shift",
+      "model": "torus-knot",
+      "camera": "grazing",
+      "material": {
+        "roughness": 0,
+        "metallic": 0,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "17-iridescence-none.png"
+    },
+    {
+      "id": "18-iridescence-moderate",
+      "category": "Iridescence",
+      "description": "Iridescence 50% - Subtle rainbow",
+      "model": "torus-knot",
+      "camera": "grazing",
+      "material": {
+        "roughness": 0,
+        "metallic": 0,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 50
+      },
+      "renderMode": "standard",
+      "filename": "18-iridescence-moderate.png"
+    },
+    {
+      "id": "19-iridescence-soap",
+      "category": "Iridescence",
+      "description": "Iridescence 90% - Soap bubble",
+      "model": "torus-knot",
+      "camera": "grazing",
+      "material": {
+        "roughness": 0,
+        "metallic": 0,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 90
+      },
+      "renderMode": "standard",
+      "filename": "19-iridescence-soap.png"
+    },
+    {
+      "id": "20-iridescence-pearl",
+      "category": "Iridescence",
+      "description": "Pearl luster (SSS + iridescence)",
+      "model": "utah-teapot",
+      "camera": "rim",
+      "material": {
+        "roughness": 15,
+        "metallic": 10,
+        "ao": 100,
+        "sss": 20,
+        "anisotropy": 0,
+        "iridescence": 50
+      },
+      "renderMode": "standard",
+      "filename": "20-iridescence-pearl.png"
+    },
+    {
+      "id": "21-normals-dragon",
+      "category": "RenderModes",
+      "description": "Normal visualization (RGB normals)",
+      "model": "stanford-dragon",
+      "camera": "front",
+      "material": {
+        "roughness": 50,
+        "metallic": 0,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "normals",
+      "filename": "21-normals-dragon.png"
+    },
+    {
+      "id": "22-edges-suzanne",
+      "category": "RenderModes",
+      "description": "Edge detection",
+      "model": "suzanne",
+      "camera": "front",
+      "material": {
+        "roughness": 50,
+        "metallic": 0,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "edge",
+      "filename": "22-edges-suzanne.png"
+    },
+    {
+      "id": "23-toon-cow",
+      "category": "RenderModes",
+      "description": "Toon/cel shading",
+      "model": "spot-cow",
+      "camera": "front",
+      "material": {
+        "roughness": 50,
+        "metallic": 0,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "toon",
+      "filename": "23-toon-cow.png"
+    },
+    {
+      "id": "24-combined-skin",
+      "category": "Combined",
+      "description": "Skin preset (AO + SSS)",
+      "model": "stanford-bunny",
+      "camera": "closeup",
+      "material": {
+        "roughness": 45,
+        "metallic": 0,
+        "ao": 85,
+        "sss": 60,
+        "anisotropy": 0,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "24-combined-skin.png"
+    },
+    {
+      "id": "25-combined-brushed-metal",
+      "category": "Combined",
+      "description": "Brushed metal (metallic + anisotropy)",
+      "model": "utah-teapot",
+      "camera": "rim",
+      "material": {
+        "roughness": 20,
+        "metallic": 100,
+        "ao": 100,
+        "sss": 0,
+        "anisotropy": 70,
+        "iridescence": 0
+      },
+      "renderMode": "standard",
+      "filename": "25-combined-brushed-metal.png"
+    },
+    {
+      "id": "26-combined-pearl",
+      "category": "Combined",
+      "description": "Pearl (SSS + iridescence)",
+      "model": "utah-teapot",
+      "camera": "rim",
+      "material": {
+        "roughness": 15,
+        "metallic": 10,
+        "ao": 100,
+        "sss": 20,
+        "anisotropy": 0,
+        "iridescence": 50
+      },
+      "renderMode": "standard",
+      "filename": "26-combined-pearl.png"
+    },
+    {
+      "id": "27-performance-dragon",
+      "category": "Performance",
+      "description": "All effects on high-poly model",
+      "model": "stanford-dragon",
+      "camera": "front",
+      "material": {
+        "roughness": 20,
+        "metallic": 50,
+        "ao": 80,
+        "sss": 30,
+        "anisotropy": 30,
+        "iridescence": 20
+      },
+      "renderMode": "standard",
+      "filename": "27-performance-dragon.png"
+    }
+  ]
+}

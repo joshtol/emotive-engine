@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shader Calibration Screenshots - 2025-11-02T06:57:34.219Z</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #f2f1f1;
+            padding: 40px 20px;
+        }
+        header {
+            max-width: 1400px;
+            margin: 0 auto 40px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #DD4A9A, #84CFC5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        header p {
+            color: #b8b8b8;
+            font-size: 0.9rem;
+        }
+        .category {
+            max-width: 1400px;
+            margin: 0 auto 60px;
+        }
+        .category h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #DD4A9A;
+            border-bottom: 2px solid rgba(221, 74, 154, 0.3);
+            padding-bottom: 10px;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 30px;
+        }
+        .test-card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(242, 241, 241, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .test-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(221, 74, 154, 0.2);
+        }
+        .test-card img {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            background: #000;
+            border-bottom: 1px solid rgba(242, 241, 241, 0.1);
+        }
+        .test-info {
+            padding: 20px;
+        }
+        .test-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #4090CE;
+        }
+        .test-info p {
+            color: #b8b8b8;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        .test-details {
+            display: flex;
+            gap: 15px;
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .test-details span {
+            padding: 4px 10px;
+            background: rgba(221, 74, 154, 0.1);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎨 Shader Calibration Screenshots</h1>
+        <p>Generated: 11/2/2025, 1:57:34 AM</p>
+        <p>Total Tests: 27</p>
+    </header>
+    
+                <section class="category">
+                    <h2>PBR</h2>
+                    <div class="test-grid">
+                        
+                <div class="test-card">
+                    <img src="01-pbr-roughness-mirror.png" alt="Roughness 0% - Perfect mirror">
+                    <div class="test-info">
+                        <h3>01-pbr-roughness-mirror</h3>
+                        <p>Roughness 0% - Perfect mirror</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: front</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="02-pbr-roughness-glossy.png" alt="Roughness 25% - Glossy">
+                    <div class="test-info">
+                        <h3>02-pbr-roughness-glossy</h3>
+                        <p>Roughness 25% - Glossy</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: front</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="03-pbr-roughness-balanced.png" alt="Roughness 50% - Balanced">
+                    <div class="test-info">
+                        <h3>03-pbr-roughness-balanced</h3>
+                        <p>Roughness 50% - Balanced</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: front</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="04-pbr-roughness-matte.png" alt="Roughness 100% - Pure matte">
+                    <div class="test-info">
+                        <h3>04-pbr-roughness-matte</h3>
+                        <p>Roughness 100% - Pure matte</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: front</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="05-pbr-metallic-dielectric.png" alt="Metallic 0% - Dielectric (Fresnel edges)">
+                    <div class="test-info">
+                        <h3>05-pbr-metallic-dielectric</h3>
+                        <p>Metallic 0% - Dielectric (Fresnel edges)</p>
+                        <div class="test-details">
+                            <span>Model: suzanne</span>
+                            <span>Camera: rim</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="06-pbr-metallic-metal.png" alt="Metallic 100% - Metal (colored reflections)">
+                    <div class="test-info">
+                        <h3>06-pbr-metallic-metal</h3>
+                        <p>Metallic 100% - Metal (colored reflections)</p>
+                        <div class="test-details">
+                            <span>Model: suzanne</span>
+                            <span>Camera: rim</span>
+                        </div>
+                    </div>
+                </div>
+            
+                    </div>
+                </section>
+            
+                <section class="category">
+                    <h2>AO</h2>
+                    <div class="test-grid">
+                        
+                <div class="test-card">
+                    <img src="07-ao-none.png" alt="AO 100% - No darkening">
+                    <div class="test-info">
+                        <h3>07-ao-none</h3>
+                        <p>AO 100% - No darkening</p>
+                        <div class="test-details">
+                            <span>Model: torus-knot</span>
+                            <span>Camera: grazing</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="08-ao-moderate.png" alt="AO 50% - Moderate crevice darkening">
+                    <div class="test-info">
+                        <h3>08-ao-moderate</h3>
+                        <p>AO 50% - Moderate crevice darkening</p>
+                        <div class="test-details">
+                            <span>Model: torus-knot</span>
+                            <span>Camera: grazing</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="09-ao-maximum.png" alt="AO 0% - Maximum shadow">
+                    <div class="test-info">
+                        <h3>09-ao-maximum</h3>
+                        <p>AO 0% - Maximum shadow</p>
+                        <div class="test-details">
+                            <span>Model: torus-knot</span>
+                            <span>Camera: grazing</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="10-ao-organic.png" alt="AO on organic geometry (bunny ears)">
+                    <div class="test-info">
+                        <h3>10-ao-organic</h3>
+                        <p>AO on organic geometry (bunny ears)</p>
+                        <div class="test-details">
+                            <span>Model: stanford-bunny</span>
+                            <span>Camera: closeup</span>
+                        </div>
+                    </div>
+                </div>
+            
+                    </div>
+                </section>
+            
+                <section class="category">
+                    <h2>SSS</h2>
+                    <div class="test-grid">
+                        
+                <div class="test-card">
+                    <img src="11-sss-none.png" alt="SSS 0% - Opaque">
+                    <div class="test-info">
+                        <h3>11-sss-none</h3>
+                        <p>SSS 0% - Opaque</p>
+                        <div class="test-details">
+                            <span>Model: stanford-bunny</span>
+                            <span>Camera: closeup</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="12-sss-moderate.png" alt="SSS 50% - Light penetration">
+                    <div class="test-info">
+                        <h3>12-sss-moderate</h3>
+                        <p>SSS 50% - Light penetration</p>
+                        <div class="test-details">
+                            <span>Model: stanford-bunny</span>
+                            <span>Camera: closeup</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="13-sss-maximum.png" alt="SSS 100% - Strong translucency">
+                    <div class="test-info">
+                        <h3>13-sss-maximum</h3>
+                        <p>SSS 100% - Strong translucency</p>
+                        <div class="test-details">
+                            <span>Model: stanford-bunny</span>
+                            <span>Camera: closeup</span>
+                        </div>
+                    </div>
+                </div>
+            
+                    </div>
+                </section>
+            
+                <section class="category">
+                    <h2>Anisotropy</h2>
+                    <div class="test-grid">
+                        
+                <div class="test-card">
+                    <img src="14-anisotropy-isotropic.png" alt="Anisotropy 0% - Round highlights">
+                    <div class="test-info">
+                        <h3>14-anisotropy-isotropic</h3>
+                        <p>Anisotropy 0% - Round highlights</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: rim</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="15-anisotropy-brushed.png" alt="Anisotropy 70% - Brushed metal">
+                    <div class="test-info">
+                        <h3>15-anisotropy-brushed</h3>
+                        <p>Anisotropy 70% - Brushed metal</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: rim</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="16-anisotropy-knot.png" alt="Anisotropy on complex geometry">
+                    <div class="test-info">
+                        <h3>16-anisotropy-knot</h3>
+                        <p>Anisotropy on complex geometry</p>
+                        <div class="test-details">
+                            <span>Model: torus-knot</span>
+                            <span>Camera: grazing</span>
+                        </div>
+                    </div>
+                </div>
+            
+                    </div>
+                </section>
+            
+                <section class="category">
+                    <h2>Iridescence</h2>
+                    <div class="test-grid">
+                        
+                <div class="test-card">
+                    <img src="17-iridescence-none.png" alt="Iridescence 0% - No color shift">
+                    <div class="test-info">
+                        <h3>17-iridescence-none</h3>
+                        <p>Iridescence 0% - No color shift</p>
+                        <div class="test-details">
+                            <span>Model: torus-knot</span>
+                            <span>Camera: grazing</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="18-iridescence-moderate.png" alt="Iridescence 50% - Subtle rainbow">
+                    <div class="test-info">
+                        <h3>18-iridescence-moderate</h3>
+                        <p>Iridescence 50% - Subtle rainbow</p>
+                        <div class="test-details">
+                            <span>Model: torus-knot</span>
+                            <span>Camera: grazing</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="19-iridescence-soap.png" alt="Iridescence 90% - Soap bubble">
+                    <div class="test-info">
+                        <h3>19-iridescence-soap</h3>
+                        <p>Iridescence 90% - Soap bubble</p>
+                        <div class="test-details">
+                            <span>Model: torus-knot</span>
+                            <span>Camera: grazing</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="20-iridescence-pearl.png" alt="Pearl luster (SSS + iridescence)">
+                    <div class="test-info">
+                        <h3>20-iridescence-pearl</h3>
+                        <p>Pearl luster (SSS + iridescence)</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: rim</span>
+                        </div>
+                    </div>
+                </div>
+            
+                    </div>
+                </section>
+            
+                <section class="category">
+                    <h2>RenderModes</h2>
+                    <div class="test-grid">
+                        
+                <div class="test-card">
+                    <img src="21-normals-dragon.png" alt="Normal visualization (RGB normals)">
+                    <div class="test-info">
+                        <h3>21-normals-dragon</h3>
+                        <p>Normal visualization (RGB normals)</p>
+                        <div class="test-details">
+                            <span>Model: stanford-dragon</span>
+                            <span>Camera: front</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="22-edges-suzanne.png" alt="Edge detection">
+                    <div class="test-info">
+                        <h3>22-edges-suzanne</h3>
+                        <p>Edge detection</p>
+                        <div class="test-details">
+                            <span>Model: suzanne</span>
+                            <span>Camera: front</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="23-toon-cow.png" alt="Toon/cel shading">
+                    <div class="test-info">
+                        <h3>23-toon-cow</h3>
+                        <p>Toon/cel shading</p>
+                        <div class="test-details">
+                            <span>Model: spot-cow</span>
+                            <span>Camera: front</span>
+                        </div>
+                    </div>
+                </div>
+            
+                    </div>
+                </section>
+            
+                <section class="category">
+                    <h2>Combined</h2>
+                    <div class="test-grid">
+                        
+                <div class="test-card">
+                    <img src="24-combined-skin.png" alt="Skin preset (AO + SSS)">
+                    <div class="test-info">
+                        <h3>24-combined-skin</h3>
+                        <p>Skin preset (AO + SSS)</p>
+                        <div class="test-details">
+                            <span>Model: stanford-bunny</span>
+                            <span>Camera: closeup</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="25-combined-brushed-metal.png" alt="Brushed metal (metallic + anisotropy)">
+                    <div class="test-info">
+                        <h3>25-combined-brushed-metal</h3>
+                        <p>Brushed metal (metallic + anisotropy)</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: rim</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="test-card">
+                    <img src="26-combined-pearl.png" alt="Pearl (SSS + iridescence)">
+                    <div class="test-info">
+                        <h3>26-combined-pearl</h3>
+                        <p>Pearl (SSS + iridescence)</p>
+                        <div class="test-details">
+                            <span>Model: utah-teapot</span>
+                            <span>Camera: rim</span>
+                        </div>
+                    </div>
+                </div>
+            
+                    </div>
+                </section>
+            
+                <section class="category">
+                    <h2>Performance</h2>
+                    <div class="test-grid">
+                        
+                <div class="test-card">
+                    <img src="27-performance-dragon.png" alt="All effects on high-poly model">
+                    <div class="test-info">
+                        <h3>27-performance-dragon</h3>
+                        <p>All effects on high-poly model</p>
+                        <div class="test-details">
+                            <span>Model: stanford-dragon</span>
+                            <span>Camera: front</span>
+                        </div>
+                    </div>
+                </div>
+            
+                    </div>
+                </section>
+            
+</body>
+</html>

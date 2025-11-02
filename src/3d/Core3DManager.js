@@ -128,6 +128,10 @@ export class Core3DManager {
         this.wireframeEnabled = false;
         this.lightDirection = [0.5, 1.0, 1.0]; // Directional light (x, y, z)
 
+        // Environment mapping
+        this.envMap = null;          // HDRI cubemap texture
+        this.envIntensity = 0.0;     // Environment intensity (0.0-1.0)
+
         // Material properties
         this.roughness = options.roughness !== undefined ? options.roughness : 0.2;  // 0.0 = mirror, 1.0 = matte
         this.metallic = options.metallic !== undefined ? options.metallic : 0.3;     // 0.0 = dielectric, 1.0 = metal
@@ -571,6 +575,8 @@ export class Core3DManager {
             sssStrength: this.sssStrength,         // Subsurface scattering strength
             anisotropy: this.anisotropy,           // Anisotropic reflection (-1.0 to 1.0)
             iridescence: this.iridescence,         // Iridescence intensity (0.0-1.0)
+            envMap: this.envMap,                   // HDRI environment cubemap
+            envIntensity: this.envIntensity,       // Environment map intensity (0.0-1.0)
             time: this.animator.time * 0.001       // Time in seconds for shader animations
         };
 

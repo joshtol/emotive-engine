@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shader Calibration Renderer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            width: 1920px;
+            height: 1080px;
+        }
+        #status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: monospace;
+            font-size: 14px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">Initializing...</div>
+    <canvas id="mascot"></canvas>
+
+    <!-- Use main 2D UMD build which exports EmotiveMascot class -->
+    <script src="./emotive-mascot.umd.js"></script>
+    <script>
+
+        const statusEl = document.getElementById('status');
+
+        function setStatus(msg) {
+            statusEl.textContent = msg;
+            console.log(msg);
+        }
+
+        // Parse URL parameters
+        function getConfig() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                model: params.get('model') || 'icosphere',
+                camera: params.get('camera') || 'front',
+                roughness: parseFloat(params.get('roughness') || '50'),
+                metallic: parseFloat(params.get('metallic') || '0'),
+                ao: parseFloat(params.get('ao') || '100'),
+                sss: parseFloat(params.get('sss') || '0'),
+                anisotropy: parseFloat(params.get('anisotropy') || '0'),
+                iridescence: parseFloat(params.get('iridescence') || '0')
+            };
+        }
+
+        // Camera presets
+        const CAMERA_PRESETS = {
+            front: { position: [0, 0, 2], target: [0, 0, 0] },
+            rim: { position: [1.5, 0.3, 1.5], target: [0, 0, 0] },
+            grazing: { position: [2, 0.1, 0.5], target: [0, 0, 0] },
+            closeup: { position: [0, 0.3, 1.2], target: [0, 0.2, 0] }
+        };
+
+        async function render() {
+            try {
+                const config = getConfig();
+                setStatus('Loading engine...');
+
+                // Initialize mascot (use EmotiveMascot from main build, not EmotiveMascot3D)
+                const canvas = document.getElementById('mascot');
+                const EmotiveMascot = window.EmotiveMascot;
+                if (!EmotiveMascot) {
+                    throw new Error('EmotiveMascot not found - build may be missing');
+                }
+                const mascot = new EmotiveMascot({
+                    coreGeometry: 'icosphere',
+                    enableParticles: false,
+                    coreScale: 0.5
+                });
+
+                await mascot.init(canvas);
+
+                setStatus('Engine initialized');
+
+                // Load model if specified
+                if (config.model && config.model !== 'icosphere') {
+                    setStatus(`Loading model: ${config.model}...`);
+                    try {
+                        await mascot.loadGeometry(`models/${config.model}.obj`);
+                        setStatus(`Model loaded: ${config.model}`);
+                    } catch (error) {
+                        setStatus(`Failed to load model: ${error.message}`);
+                        console.error(error);
+                    }
+                }
+
+                // Set camera position
+                if (config.camera && CAMERA_PRESETS[config.camera]) {
+                    const cam = CAMERA_PRESETS[config.camera];
+                    if (mascot.core3D && mascot.core3D.camera) {
+                        mascot.core3D.camera.position.set(...cam.position);
+                        mascot.core3D.camera.lookAt(...cam.target);
+                    }
+                }
+
+                // Set material properties
+                setStatus('Applying material properties...');
+                mascot.setMaterialProperty('roughness', config.roughness / 100);
+                mascot.setMaterialProperty('metallic', config.metallic / 100);
+                mascot.setMaterialProperty('ao', config.ao / 100);
+                mascot.setMaterialProperty('sssStrength', config.sss / 100);
+                mascot.setMaterialProperty('anisotropy', config.anisotropy / 100);
+                mascot.setMaterialProperty('iridescence', config.iridescence / 100);
+
+                // Start rendering
+                mascot.start();
+
+                setStatus('Ready for capture');
+
+                // Expose for automation
+                window.mascot = mascot;
+                window.renderReady = true;
+
+                console.log('Render ready:', config);
+
+            } catch (error) {
+                setStatus(`ERROR: ${error.message}`);
+                console.error('Render error:', error);
+                console.error('Stack:', error.stack);
+                // Set ready flag even on error so script doesn't hang
+                window.renderReady = false;
+                window.renderError = error.message;
+            }
+        }
+
+        // Execute render with error catching
+        try {
+            render();
+        } catch (error) {
+            console.error('Fatal error calling render():', error);
+            setStatus(`FATAL: ${error.message}`);
+            window.renderReady = false;
+            window.renderError = error.message;
+        }
+    </script>
+</body>
+</html>

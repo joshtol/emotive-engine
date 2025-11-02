@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDRI Scene Test - Match Reference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: #f0f0f0;
+            overflow: hidden;
+        }
+
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 20, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            width: 280px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        .control-group h3 {
+            font-size: 12px;
+            color: #DD4A9A;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .slider-row {
+            margin-bottom: 10px;
+        }
+
+        .slider-row label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #b8b8b8;
+        }
+
+        .slider-row input[type="range"] {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #DD4A9A;
+            cursor: pointer;
+        }
+
+        .value {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(20, 20, 20, 0.95);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 11px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info {
+            font-size: 10px;
+            color: #666;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="controls">
+        <h2 style="margin-bottom: 16px; font-size: 16px;">HDRI Scene Test</h2>
+
+        <div class="control-group">
+            <h3>Environment</h3>
+            <div class="slider-row">
+                <label>
+                    <span>HDRI Intensity</span>
+                    <span class="value" id="intensityVal">100%</span>
+                </label>
+                <input type="range" id="intensity" min="0" max="200" value="100">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Camera</h3>
+            <div class="slider-row">
+                <label>
+                    <span>Orbit Angle</span>
+                    <span class="value" id="angleVal">20°</span>
+                </label>
+                <input type="range" id="angle" min="0" max="360" value="20">
+            </div>
+            <div class="slider-row">
+                <label>
+                    <span>Height</span>
+                    <span class="value" id="heightVal">1.5</span>
+                </label>
+                <input type="range" id="height" min="0.5" max="4" step="0.1" value="1.5">
+            </div>
+            <div class="slider-row">
+                <label>
+                    <span>Distance</span>
+                    <span class="value" id="distVal">6.0</span>
+                </label>
+                <input type="range" id="distance" min="3" max="12" step="0.1" value="6">
+            </div>
+        </div>
+
+        <div class="info">
+            Goal: Match Poly Haven reference<br>
+            4 spheres + ground + HDRI sky
+        </div>
+    </div>
+
+    <div class="status" id="status">Initializing WebGL...</div>
+
+    <script type="module">
+        import { HDRILoader } from '../dist/emotive-mascot-3d.js';
+
+        const canvas = document.getElementById('canvas');
+        const statusEl = document.getElementById('status');
+        let gl, program, envProgram, sphereVAO, planeVAO;
+        let envMapTexture, dummyEnvMap;
+        let hdriIntensity = 1.0;
+        let cameraAngle = 20, cameraHeight = 1.5, cameraDistance = 6.0;
+
+        // Sphere configurations matching reference
+        const spheres = [
+            { pos: [-1.8, 0.5, 0], roughness: 0.3, metallic: 0.0, color: [0.6, 0.85, 1.0] },
+            { pos: [-0.6, 0.5, 0], roughness: 0.9, metallic: 0.0, color: [0.98, 0.98, 0.98] },
+            { pos: [0.6, 0.5, 0], roughness: 0.05, metallic: 1.0, color: [0.7, 0.7, 0.7] },
+            { pos: [1.8, 0.5, 0], roughness: 0.6, metallic: 0.0, color: [0.5, 0.95, 0.95] }
+        ];
+
+        async function init() {
+            try {
+                gl = canvas.getContext('webgl2', {
+                    antialias: true,
+                    alpha: false
+                });
+                if (!gl) throw new Error('WebGL2 not supported');
+
+                // Resize canvas
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+
+                // Create shaders and geometry
+                await createShaders();
+                createGeometry();
+
+                // Load HDRI
+                await loadHDRI();
+
+                // Setup event listeners
+                setupControls();
+
+                // Start render loop
+                render();
+
+                statusEl.textContent = '✅ Scene ready';
+                statusEl.style.color = '#84CFC5';
+
+            } catch (error) {
+                console.error('Init failed:', error);
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                statusEl.style.color = '#DD4A9A';
+            }
+        }
+
+        async function loadHDRI() {
+            statusEl.textContent = 'Loading HDRI...';
+            const hdriPath = '../assets/3d/lonely_road_afternoon_puresky_4k.hdr';
+
+            envMapTexture = await HDRILoader.load(gl, hdriPath, {
+                size: 512,
+                mipLevels: 8,
+                generateMipmaps: true
+            });
+
+            console.log('HDRI loaded successfully');
+        }
+
+        async function createShaders() {
+            // PBR sphere shader (simplified from core.frag)
+            const vertexShader = `#version 300 es
+                in vec3 a_position;
+                in vec3 a_normal;
+
+                uniform mat4 u_model;
+                uniform mat4 u_view;
+                uniform mat4 u_projection;
+
+                out vec3 v_position;
+                out vec3 v_normal;
+
+                void main() {
+                    v_position = (u_model * vec4(a_position, 1.0)).xyz;
+                    v_normal = mat3(u_model) * a_normal;
+                    gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);
+                }
+            `;
+
+            const fragmentShader = `#version 300 es
+                precision highp float;
+
+                in vec3 v_position;
+                in vec3 v_normal;
+
+                uniform vec3 u_cameraPos;
+                uniform vec3 u_color;
+                uniform float u_roughness;
+                uniform float u_metallic;
+                uniform samplerCube u_envMap;
+                uniform float u_envIntensity;
+
+                out vec4 fragColor;
+
+                const float PI = 3.14159265359;
+
+                vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+                    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+                }
+
+                void main() {
+                    vec3 N = normalize(v_normal);
+                    vec3 V = normalize(u_cameraPos - v_position);
+                    vec3 R = reflect(-V, N);
+
+                    // Basic lighting
+                    vec3 L = normalize(vec3(2.0, 3.0, 1.0));
+                    float NdotL = max(dot(N, L), 0.0);
+                    float NdotV = max(dot(N, V), 0.0);
+
+                    // Fresnel
+                    vec3 F0 = mix(vec3(0.04), u_color, u_metallic);
+                    vec3 F = fresnelSchlick(NdotV, F0);
+
+                    // Sample environment
+                    float lod = u_roughness * 7.0;
+                    vec3 envSample = textureLod(u_envMap, R, lod).rgb;
+                    vec3 envReflection = envSample * u_envIntensity * mix(F.r, 1.0, u_metallic);
+
+                    // Diffuse
+                    vec3 kD = (1.0 - F) * (1.0 - u_metallic);
+                    vec3 diffuse = kD * u_color * NdotL;
+
+                    vec3 color = diffuse * 0.3 + envReflection;
+                    fragColor = vec4(color, 1.0);
+                }
+            `;
+
+            // Skybox shader
+            const skyVertexShader = `#version 300 es
+                in vec3 a_position;
+                uniform mat4 u_viewProj;
+                out vec3 v_dir;
+
+                void main() {
+                    v_dir = a_position;
+                    vec4 pos = u_viewProj * vec4(a_position, 1.0);
+                    gl_Position = pos.xyww; // Force depth = 1.0
+                }
+            `;
+
+            const skyFragmentShader = `#version 300 es
+                precision highp float;
+                in vec3 v_dir;
+                uniform samplerCube u_envMap;
+                uniform float u_envIntensity;
+                out vec4 fragColor;
+
+                void main() {
+                    vec3 color = texture(u_envMap, v_dir).rgb * u_envIntensity;
+                    fragColor = vec4(color, 1.0);
+                }
+            `;
+
+            program = createProgram(vertexShader, fragmentShader);
+            envProgram = createProgram(skyVertexShader, skyFragmentShader);
+        }
+
+        function createProgram(vertSrc, fragSrc) {
+            const vertShader = compileShader(gl.VERTEX_SHADER, vertSrc);
+            const fragShader = compileShader(gl.FRAGMENT_SHADER, fragSrc);
+            const prog = gl.createProgram();
+            gl.attachShader(prog, vertShader);
+            gl.attachShader(prog, fragShader);
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                throw new Error('Program link failed: ' + gl.getProgramInfoLog(prog));
+            }
+            return prog;
+        }
+
+        function compileShader(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                throw new Error('Shader compile failed: ' + gl.getShaderInfoLog(shader));
+            }
+            return shader;
+        }
+
+        function createGeometry() {
+            // Create sphere geometry (icosphere subdivision)
+            const sphere = createIcosphere(1.0, 3);
+            sphereVAO = createVAO(sphere.vertices, sphere.normals, sphere.indices);
+
+            // Create ground plane
+            const planeSize = 20;
+            const planeVerts = new Float32Array([
+                -planeSize, 0, -planeSize,
+                planeSize, 0, -planeSize,
+                planeSize, 0, planeSize,
+                -planeSize, 0, planeSize
+            ]);
+            const planeNormals = new Float32Array([
+                0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0
+            ]);
+            const planeIndices = new Uint16Array([0, 1, 2, 0, 2, 3]);
+            planeVAO = createVAO(planeVerts, planeNormals, planeIndices);
+        }
+
+        function createVAO(vertices, normals, indices) {
+            const vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+
+            const vbo = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            const nbo = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, nbo);
+            gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+            const ibo = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+            gl.bindVertexArray(null);
+
+            return { vao, count: indices.length };
+        }
+
+        function createIcosphere(radius, subdivisions) {
+            // Icosahedron vertices
+            const t = (1 + Math.sqrt(5)) / 2;
+            let vertices = [
+                -1, t, 0,  1, t, 0,  -1, -t, 0,  1, -t, 0,
+                0, -1, t,  0, 1, t,  0, -1, -t,  0, 1, -t,
+                t, 0, -1,  t, 0, 1,  -t, 0, -1,  -t, 0, 1
+            ];
+            let indices = [
+                0,11,5, 0,5,1, 0,1,7, 0,7,10, 0,10,11,
+                1,5,9, 5,11,4, 11,10,2, 10,7,6, 7,1,8,
+                3,9,4, 3,4,2, 3,2,6, 3,6,8, 3,8,9,
+                4,9,5, 2,4,11, 6,2,10, 8,6,7, 9,8,1
+            ];
+
+            // Subdivide
+            for (let i = 0; i < subdivisions; i++) {
+                const newIndices = [];
+                const midCache = new Map();
+
+                for (let j = 0; j < indices.length; j += 3) {
+                    const v1 = indices[j] * 3;
+                    const v2 = indices[j+1] * 3;
+                    const v3 = indices[j+2] * 3;
+
+                    const a = getMidpoint(vertices, v1, v2, midCache);
+                    const b = getMidpoint(vertices, v2, v3, midCache);
+                    const c = getMidpoint(vertices, v3, v1, midCache);
+
+                    newIndices.push(indices[j], a, c);
+                    newIndices.push(indices[j+1], b, a);
+                    newIndices.push(indices[j+2], c, b);
+                    newIndices.push(a, b, c);
+                }
+                indices = newIndices;
+            }
+
+            // Normalize and scale
+            const verts = new Float32Array(vertices);
+            for (let i = 0; i < verts.length; i += 3) {
+                const len = Math.sqrt(verts[i]**2 + verts[i+1]**2 + verts[i+2]**2);
+                verts[i] = verts[i] / len * radius;
+                verts[i+1] = verts[i+1] / len * radius;
+                verts[i+2] = verts[i+2] / len * radius;
+            }
+
+            return {
+                vertices: verts,
+                normals: new Float32Array(verts), // Sphere normals = positions
+                indices: new Uint16Array(indices)
+            };
+        }
+
+        function getMidpoint(verts, v1, v2, cache) {
+            const key = `${Math.min(v1,v2)}_${Math.max(v1,v2)}`;
+            if (cache.has(key)) return cache.get(key);
+
+            const mx = (verts[v1] + verts[v2]) / 2;
+            const my = (verts[v1+1] + verts[v2+1]) / 2;
+            const mz = (verts[v1+2] + verts[v2+2]) / 2;
+
+            const idx = verts.length / 3;
+            verts.push(mx, my, mz);
+            cache.set(key, idx);
+            return idx;
+        }
+
+        function render() {
+            if (!envMapTexture) {
+                requestAnimationFrame(render);
+                return;
+            }
+
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.clearColor(0, 0, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.CULL_FACE);
+
+            // Camera setup
+            const angleRad = cameraAngle * Math.PI / 180;
+            const camX = Math.sin(angleRad) * cameraDistance;
+            const camZ = Math.cos(angleRad) * cameraDistance;
+            const camPos = [camX, cameraHeight, camZ];
+
+            const view = lookAt(camPos, [0, 0.5, 0], [0, 1, 0]);
+            const proj = perspective(45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100);
+            const viewProj = multiplyMat4(proj, view);
+
+            // Draw skybox
+            gl.depthFunc(gl.LEQUAL);
+            gl.useProgram(envProgram);
+            const skyVAO = createSkyboxVAO();
+            gl.bindVertexArray(skyVAO.vao);
+            gl.uniformMatrix4fv(gl.getUniformLocation(envProgram, 'u_viewProj'), false, viewProj);
+            gl.uniform1f(gl.getUniformLocation(envProgram, 'u_envIntensity'), hdriIntensity);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, envMapTexture);
+            gl.uniform1i(gl.getUniformLocation(envProgram, 'u_envMap'), 0);
+            gl.drawElements(gl.TRIANGLES, skyVAO.count, gl.UNSIGNED_SHORT, 0);
+            gl.depthFunc(gl.LESS);
+
+            // Draw spheres
+            gl.useProgram(program);
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, 'u_view'), false, view);
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, 'u_projection'), false, proj);
+            gl.uniform3fv(gl.getUniformLocation(program, 'u_cameraPos'), camPos);
+            gl.uniform1f(gl.getUniformLocation(program, 'u_envIntensity'), hdriIntensity);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, envMapTexture);
+            gl.uniform1i(gl.getUniformLocation(program, 'u_envMap'), 0);
+
+            gl.bindVertexArray(sphereVAO.vao);
+            for (const sphere of spheres) {
+                const model = translate(...sphere.pos);
+                gl.uniformMatrix4fv(gl.getUniformLocation(program, 'u_model'), false, model);
+                gl.uniform3fv(gl.getUniformLocation(program, 'u_color'), sphere.color);
+                gl.uniform1f(gl.getUniformLocation(program, 'u_roughness'), sphere.roughness);
+                gl.uniform1f(gl.getUniformLocation(program, 'u_metallic'), sphere.metallic);
+                gl.drawElements(gl.TRIANGLES, sphereVAO.count, gl.UNSIGNED_SHORT, 0);
+            }
+
+            // Draw ground plane
+            const planeModel = identity();
+            gl.bindVertexArray(planeVAO.vao);
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, 'u_model'), false, planeModel);
+            gl.uniform3fv(gl.getUniformLocation(program, 'u_color'), [0.5, 0.5, 0.5]);
+            gl.uniform1f(gl.getUniformLocation(program, 'u_roughness'), 0.8);
+            gl.uniform1f(gl.getUniformLocation(program, 'u_metallic'), 0.0);
+            gl.drawElements(gl.TRIANGLES, planeVAO.count, gl.UNSIGNED_SHORT, 0);
+
+            requestAnimationFrame(render);
+        }
+
+        function createSkyboxVAO() {
+            const size = 50;
+            const vertices = new Float32Array([
+                -size,-size,-size, size,-size,-size, size,size,-size, -size,size,-size,
+                -size,-size,size, size,-size,size, size,size,size, -size,size,size
+            ]);
+            const indices = new Uint16Array([
+                0,1,2, 0,2,3, 4,6,5, 4,7,6, 4,5,1, 4,1,0,
+                3,2,6, 3,6,7, 1,5,6, 1,6,2, 4,0,3, 4,3,7
+            ]);
+            return createVAO(vertices, new Float32Array(24), indices);
+        }
+
+        // Matrix math helpers
+        function identity() { return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); }
+        function translate(x, y, z) {
+            return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,x,y,z,1]);
+        }
+        function lookAt(eye, target, up) {
+            const z = normalize(subtract(eye, target));
+            const x = normalize(cross(up, z));
+            const y = cross(z, x);
+            return new Float32Array([
+                x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
+                -dot(x,eye), -dot(y,eye), -dot(z,eye), 1
+            ]);
+        }
+        function perspective(fov, aspect, near, far) {
+            const f = 1 / Math.tan(fov / 2);
+            return new Float32Array([
+                f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)/(near-far),-1,
+                0,0,(2*far*near)/(near-far),0
+            ]);
+        }
+        function multiplyMat4(a, b) {
+            const out = new Float32Array(16);
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    out[i*4+j] = a[i*4]*b[j] + a[i*4+1]*b[4+j] + a[i*4+2]*b[8+j] + a[i*4+3]*b[12+j];
+                }
+            }
+            return out;
+        }
+        function normalize(v) {
+            const len = Math.sqrt(v[0]**2 + v[1]**2 + v[2]**2);
+            return [v[0]/len, v[1]/len, v[2]/len];
+        }
+        function subtract(a, b) { return [a[0]-b[0], a[1]-b[1], a[2]-b[2]]; }
+        function cross(a, b) {
+            return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+        }
+        function dot(a, b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+
+        function setupControls() {
+            document.getElementById('intensity').addEventListener('input', e => {
+                hdriIntensity = parseInt(e.target.value) / 100;
+                document.getElementById('intensityVal').textContent = Math.round(hdriIntensity * 100) + '%';
+            });
+            document.getElementById('angle').addEventListener('input', e => {
+                cameraAngle = parseInt(e.target.value);
+                document.getElementById('angleVal').textContent = cameraAngle + '°';
+            });
+            document.getElementById('height').addEventListener('input', e => {
+                cameraHeight = parseFloat(e.target.value);
+                document.getElementById('heightVal').textContent = cameraHeight.toFixed(1);
+            });
+            document.getElementById('distance').addEventListener('input', e => {
+                cameraDistance = parseFloat(e.target.value);
+                document.getElementById('distVal').textContent = cameraDistance.toFixed(1);
+            });
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        init();
+    </script>
+</body>
+</html>
