@@ -415,16 +415,23 @@
         <div class="shader-main">
             <!-- LEFT SIDEBAR: Geometry & Visualization -->
             <div class="shader-sidebar">
-                <h2 class="section-header">Geometry</h2>
+                <h2 class="section-header">Procedural Geometry</h2>
                 <div class="button-grid-3">
                     <button class="btn" onclick="changeGeometry('sphere')">UV Sphere</button>
                     <button class="btn active" onclick="changeGeometry('icosphere')">Icosphere</button>
                     <button class="btn" onclick="changeGeometry('torus')">Torus</button>
-                    <button class="btn" onclick="changeGeometry('torusknot')">🥨 Knot</button>
-                    <button class="btn" onclick="changeGeometry('roundedcube')">📦 R-Cube</button>
-                    <button class="btn" onclick="changeGeometry('bunny')">🐰 Bunny</button>
                     <button class="btn" onclick="changeGeometry('diamond')">💎 Diamond</button>
                     <button class="btn" onclick="changeGeometry('crystal')">🔮 Crystal</button>
+                </div>
+
+                <h2 class="section-header">Calibration Models</h2>
+                <div class="button-grid-3">
+                    <button class="btn" onclick="loadModel('utah-teapot')">🫖 Teapot</button>
+                    <button class="btn" onclick="loadModel('stanford-bunny')">🐰 Bunny</button>
+                    <button class="btn" onclick="loadModel('torus-knot')">🥨 Knot</button>
+                    <button class="btn" onclick="loadModel('suzanne')">🐵 Suzanne</button>
+                    <button class="btn" onclick="loadModel('spot-cow')">🐄 Cow</button>
+                    <button class="btn" onclick="loadModel('stanford-dragon')">🐉 Dragon</button>
                 </div>
 
                 <h2 class="section-header">Render Mode</h2>
@@ -482,6 +489,9 @@
             <!-- RIGHT CONTROLS: Material Properties & Calibration -->
             <div class="shader-controls">
                 <h2 class="section-header">Material Properties</h2>
+                <div class="control-hint" style="margin-bottom: 16px; font-size: 0.75rem; opacity: 0.8;">
+                    💡 Test with calibration models for accurate shader validation
+                </div>
 
                 <div class="control-group">
                     <label>Roughness: <span id="roughnessValue">20%</span></label>
@@ -590,7 +600,7 @@
             }
         }
 
-        // Change geometry
+        // Change geometry (procedural)
         window.changeGeometry = function(geometry) {
             if (!mascot || !mascot.core3D) return;
 
@@ -601,6 +611,27 @@
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
+        };
+
+        // Load calibration model (OBJ file)
+        window.loadModel = async function(modelName) {
+            if (!mascot) return;
+
+            try {
+                const modelPath = `models/${modelName}.obj`;
+                await mascot.loadGeometry(modelPath);
+
+                // Update active state
+                document.querySelectorAll('.shader-sidebar .btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+
+                console.log(`Loaded calibration model: ${modelName}`);
+            } catch (error) {
+                console.error(`Failed to load model ${modelName}:`, error);
+                alert(`Failed to load model: ${error.message}`);
+            }
         };
 
         // Change render mode
