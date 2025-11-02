@@ -8,7 +8,7 @@
  */
 
 import { chromium } from 'playwright';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, writeFile, appendFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -17,6 +17,18 @@ const __dirname = dirname(__filename);
 
 // Output directory
 const OUTPUT_DIR = join(__dirname, '../examples/calibration-screenshots');
+const LOG_FILE = join(OUTPUT_DIR, 'calibration.log');
+
+// Logger that writes to both console and file
+async function log(message) {
+    console.log(message);
+    await appendFile(LOG_FILE, message + '\n').catch(() => {});
+}
+
+async function logError(message) {
+    console.error(message);
+    await appendFile(LOG_FILE, 'ERROR: ' + message + '\n').catch(() => {});
+}
 
 // Test suite URL (adjust port if needed)
 const TEST_SUITE_URL = 'http://localhost:5500/examples/3d-shader-test-suite.html';
@@ -287,45 +299,56 @@ const CALIBRATION_TESTS = [
  * Apply test configuration to the page
  */
 async function applyTestConfig(page, config) {
-    console.log(`  Applying config: ${config.description}`);
+    await log(`  Applying config: ${config.description}`);
 
     // Load model (calibration model) - wait for promise to resolve
     if (config.model) {
-        console.log(`    Loading model: ${config.model}`);
+        await log(`    Target model: ${config.model}`);
 
         const loadResult = await page.evaluate(async (modelName) => {
+            const logs = [];
+
             try {
                 // Debug: Check if function exists
                 if (typeof window.loadModel !== 'function') {
-                    return { success: false, error: 'loadModel function not found' };
+                    return { success: false, error: 'loadModel function not found', logs };
                 }
 
                 // Debug: Check if mascot exists
                 if (!window.mascot) {
-                    return { success: false, error: 'mascot not initialized' };
+                    return { success: false, error: 'mascot not initialized', logs };
                 }
 
-                console.log(`[Browser] Loading model: ${modelName}`);
+                logs.push(`loadModel exists: true`);
+                logs.push(`mascot exists: true`);
+                logs.push(`Current geometry type: ${window.mascot.core3D?.geometryType || 'unknown'}`);
 
                 // Call loadModel and wait for it to complete
                 await window.loadModel(modelName);
 
-                console.log(`[Browser] Model loaded: ${modelName}`);
+                logs.push(`loadModel call completed`);
+                logs.push(`New geometry type: ${window.mascot.core3D?.geometryType || 'unknown'}`);
 
-                return { success: true };
+                return { success: true, logs };
             } catch (error) {
-                console.error('[Browser] Model load error:', error);
-                return { success: false, error: error.message, stack: error.stack };
+                logs.push(`ERROR: ${error.message}`);
+                logs.push(`Stack: ${error.stack}`);
+                return { success: false, error: error.message, stack: error.stack, logs };
             }
         }, config.model);
 
-        console.log(`    Load result:`, loadResult);
+        // Log all browser logs
+        for (const logLine of loadResult.logs || []) {
+            await log(`      [Browser] ${logLine}`);
+        }
 
         if (!loadResult.success) {
-            console.warn(`    ⚠️ Model load failed: ${loadResult.error}`);
+            await logError(`    Model load FAILED: ${loadResult.error}`);
             if (loadResult.stack) {
-                console.warn(`    Stack: ${loadResult.stack}`);
+                await logError(`    Stack: ${loadResult.stack}`);
             }
+        } else {
+            await log(`    Model loaded successfully`);
         }
 
         // Wait for geometry to be fully applied and rendered
@@ -378,11 +401,14 @@ async function captureScreenshot(page, outputPath) {
  * Main execution
  */
 async function main() {
-    console.log('🎨 Automated Shader Calibration Screenshot Capture\n');
-
     // Create output directory
     await mkdir(OUTPUT_DIR, { recursive: true });
-    console.log(`📁 Output directory: ${OUTPUT_DIR}\n`);
+
+    // Clear/create log file
+    await writeFile(LOG_FILE, '=== Shader Calibration Run ===\n');
+    await log('🎨 Automated Shader Calibration Screenshot Capture\n');
+    await log(`📁 Output directory: ${OUTPUT_DIR}`);
+    await log(`📝 Log file: ${LOG_FILE}\n`);
 
     // Launch browser
     console.log('🌐 Launching browser...');
