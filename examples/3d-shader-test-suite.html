@@ -417,21 +417,21 @@
             <div class="shader-sidebar">
                 <h2 class="section-header">Procedural Geometry</h2>
                 <div class="button-grid-3">
-                    <button class="btn" onclick="changeGeometry('sphere')">UV Sphere</button>
-                    <button class="btn active" onclick="changeGeometry('icosphere')">Icosphere</button>
-                    <button class="btn" onclick="changeGeometry('torus')">Torus</button>
-                    <button class="btn" onclick="changeGeometry('diamond')">💎 Diamond</button>
-                    <button class="btn" onclick="changeGeometry('crystal')">🔮 Crystal</button>
+                    <button class="btn" onclick="changeGeometry('sphere', event)">UV Sphere</button>
+                    <button class="btn active" onclick="changeGeometry('icosphere', event)">Icosphere</button>
+                    <button class="btn" onclick="changeGeometry('torus', event)">Torus</button>
+                    <button class="btn" onclick="changeGeometry('diamond', event)">💎 Diamond</button>
+                    <button class="btn" onclick="changeGeometry('crystal', event)">🔮 Crystal</button>
                 </div>
 
                 <h2 class="section-header">Calibration Models</h2>
                 <div class="button-grid-3">
-                    <button class="btn" onclick="loadModel('utah-teapot')">🫖 Teapot</button>
-                    <button class="btn" onclick="loadModel('stanford-bunny')">🐰 Bunny</button>
-                    <button class="btn" onclick="loadModel('torus-knot')">🥨 Knot</button>
-                    <button class="btn" onclick="loadModel('suzanne')">🐵 Suzanne</button>
-                    <button class="btn" onclick="loadModel('spot-cow')">🐄 Cow</button>
-                    <button class="btn" onclick="loadModel('stanford-dragon')">🐉 Dragon</button>
+                    <button class="btn" onclick="loadModel('utah-teapot', event)">🫖 Teapot</button>
+                    <button class="btn" onclick="loadModel('stanford-bunny', event)">🐰 Bunny</button>
+                    <button class="btn" onclick="loadModel('torus-knot', event)">🥨 Knot</button>
+                    <button class="btn" onclick="loadModel('suzanne', event)">🐵 Suzanne</button>
+                    <button class="btn" onclick="loadModel('spot-cow', event)">🐄 Cow</button>
+                    <button class="btn" onclick="loadModel('stanford-dragon', event)">🐉 Dragon</button>
                 </div>
 
                 <h2 class="section-header">Render Mode</h2>
@@ -601,7 +601,7 @@
         }
 
         // Change geometry (procedural)
-        window.changeGeometry = function(geometry) {
+        window.changeGeometry = function(geometry, evt) {
             if (!mascot || !mascot.core3D) return;
 
             mascot.core3D.morphToShape(geometry);
@@ -610,11 +610,13 @@
             document.querySelectorAll('.shader-sidebar .btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            }
         };
 
         // Load calibration model (OBJ file)
-        window.loadModel = async function(modelName) {
+        window.loadModel = async function(modelName, evt) {
             if (!mascot) return;
 
             try {
@@ -625,7 +627,9 @@
                 document.querySelectorAll('.shader-sidebar .btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
-                event.target.classList.add('active');
+                if (evt && evt.target) {
+                    evt.target.classList.add('active');
+                }
 
                 console.log(`Loaded calibration model: ${modelName}`);
             } catch (error) {
