@@ -48,6 +48,7 @@
     "test:unit": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/unit",
     "test:integration": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/integration",
     "test:core": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/unit/core",
+    "calibrate": "node scripts/capture-shader-calibration.js",
     "test:utils": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/unit/utils",
     "test:renderer": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run test/unit/core/renderer",
     "test:all": "npm run test:integration && npm run test:core && npm run test:utils && npm run test:renderer",
