@@ -153,10 +153,67 @@ export class OBJLoader {
             }
         }
 
+        // Normalize and center the geometry
+        const normalized = this.normalizeGeometry(vertices);
+
         return {
-            vertices: new Float32Array(vertices),
+            vertices: new Float32Array(normalized.vertices),
             normals: new Float32Array(normalsOut),
             indices: new Uint16Array(indices)
+        };
+    }
+
+    /**
+     * Normalize geometry to fit in a unit sphere and center at origin
+     * @param {Array} vertices - Vertex array [x,y,z, x,y,z, ...]
+     * @returns {Object} Normalized vertices and transform info
+     */
+    static normalizeGeometry(vertices) {
+        if (vertices.length === 0) {
+            return { vertices, center: [0, 0, 0], scale: 1 };
+        }
+
+        // Find bounding box
+        let minX = Infinity, minY = Infinity, minZ = Infinity;
+        let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+
+        for (let i = 0; i < vertices.length; i += 3) {
+            const x = vertices[i];
+            const y = vertices[i + 1];
+            const z = vertices[i + 2];
+
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            minZ = Math.min(minZ, z);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+            maxZ = Math.max(maxZ, z);
+        }
+
+        // Calculate center
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        const centerZ = (minZ + maxZ) / 2;
+
+        // Calculate scale to fit in unit sphere (radius 1.0)
+        const sizeX = maxX - minX;
+        const sizeY = maxY - minY;
+        const sizeZ = maxZ - minZ;
+        const maxSize = Math.max(sizeX, sizeY, sizeZ);
+        const scale = maxSize > 0 ? 2.0 / maxSize : 1.0;  // Fit in diameter of 2.0
+
+        // Center and scale vertices
+        const normalized = new Array(vertices.length);
+        for (let i = 0; i < vertices.length; i += 3) {
+            normalized[i] = (vertices[i] - centerX) * scale;
+            normalized[i + 1] = (vertices[i + 1] - centerY) * scale;
+            normalized[i + 2] = (vertices[i + 2] - centerZ) * scale;
+        }
+
+        return {
+            vertices: normalized,
+            center: [centerX, centerY, centerZ],
+            scale: scale
         };
     }
 
