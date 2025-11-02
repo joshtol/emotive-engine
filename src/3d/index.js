@@ -41,6 +41,7 @@ import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
+import { OBJLoader } from './loaders/index.js';
 
 /**
  * EmotiveMascot3D - 3D rendering variant
@@ -614,6 +615,38 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Load external 3D model file
+     * @param {string} urlOrPath - URL or path to model file (.obj, .gltf, etc.)
+     * @param {string} format - Optional file format ('obj', 'gltf'), auto-detected if not provided
+     * @returns {Promise<void>}
+     */
+    async loadGeometry(urlOrPath, format = null) {
+        if (!this.core3D) {
+            throw new Error('Core3D not initialized. Call init() first.');
+        }
+
+        // Auto-detect format from extension
+        if (!format) {
+            const ext = urlOrPath.split('.').pop().toLowerCase();
+            format = ext;
+        }
+
+        let geometry;
+
+        switch (format) {
+            case 'obj':
+                geometry = await OBJLoader.load(urlOrPath);
+                break;
+            default:
+                throw new Error(`Unsupported file format: ${format}`);
+        }
+
+        // Replace current geometry
+        this.core3D.geometry = geometry;
+        this.core3D.geometryType = 'loaded';
+    }
+
+    /**
      * Set material properties (roughness and metallic)
      * @param {Object} properties - Material properties
      *   roughness: Surface roughness (0.0 = mirror, 1.0 = matte)
@@ -708,3 +741,4 @@ export default EmotiveMascot3D;
 // Named exports for tree-shaking
 export { Core3DManager } from './Core3DManager.js';
 export * from './geometries/index.js';
+export * from './loaders/index.js';

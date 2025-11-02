@@ -10,6 +10,9 @@ import { createCrystal } from './Crystal.js';
 import { createDiamond } from './Diamond.js';
 import { createTorus } from './Torus.js';
 import { createIcosphere } from './Icosphere.js';
+import { createTorusKnot } from './TorusKnot.js';
+import { createRoundedCube } from './RoundedCube.js';
+import { createBunny } from './Bunny.js';
 
 /**
  * Core geometry registry
@@ -21,14 +24,14 @@ export const CORE_GEOMETRIES = {
     icosphere: createIcosphere(2),    // Subdivided icosahedron (uniform triangles)
     torus: createTorus(1.0, 0.4, 48, 24), // Donut/ring shape
 
+    // Advanced shader testing geometries
+    torusknot: createTorusKnot(3, 2, 64, 128, 0.4, 1.0),  // Knotted pretzel (AO + iridescence)
+    roundedcube: createRoundedCube(1.0, 0.1, 8),           // Cube with rounded edges (AO testing)
+    bunny: createBunny(),                                  // Organic bunny (SSS on ears)
+
     // Crystalline shapes
     crystal: createCrystal(6),         // Hexagonal crystal
-    diamond: createDiamond(),          // Brilliant cut diamond
-
-    // Platonic solids (TODO: Phase 2)
-    // cube: createCube(),
-    // octahedron: createOctahedron(),
-    // icosahedron: createIcosahedron()
+    diamond: createDiamond()           // Brilliant cut diamond
 };
 
 /**
@@ -45,3 +48,6 @@ export { createCrystal } from './Crystal.js';
 export { createDiamond } from './Diamond.js';
 export { createTorus } from './Torus.js';
 export { createIcosphere } from './Icosphere.js';
+export { createTorusKnot } from './TorusKnot.js';
+export { createRoundedCube } from './RoundedCube.js';
+export { createBunny } from './Bunny.js';
