@@ -289,14 +289,24 @@ const CALIBRATION_TESTS = [
 async function applyTestConfig(page, config) {
     console.log(`  Applying config: ${config.description}`);
 
-    // Load model (calibration model)
+    // Load model (calibration model) - wait for promise to resolve
     if (config.model) {
-        await page.evaluate((modelName) => {
-            window.loadModel(modelName);
+        const loadResult = await page.evaluate(async (modelName) => {
+            try {
+                // Call loadModel and wait for it to complete
+                await window.loadModel(modelName);
+                return { success: true };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
         }, config.model);
 
-        // Wait for model to load
-        await page.waitForTimeout(1500);
+        if (!loadResult.success) {
+            console.warn(`    ⚠ Model load failed: ${loadResult.error}`);
+        }
+
+        // Wait for geometry to be fully applied and rendered
+        await page.waitForTimeout(2000);
     }
 
     // Set camera angle
@@ -330,7 +340,7 @@ async function applyTestConfig(page, config) {
     }
 
     // Let everything settle and render
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(800);
 }
 
 /**
