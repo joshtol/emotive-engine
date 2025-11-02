@@ -386,21 +386,33 @@ async function main() {
 
     // Launch browser
     console.log('🌐 Launching browser...');
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({
+        headless: false,  // CHANGED: Run with visible browser for debugging
+        slowMo: 100       // Slow down by 100ms per action to see what's happening
+    });
     const context = await browser.newContext({
         viewport: { width: 1920, height: 1080 }
     });
     const page = await context.newPage();
 
-    // Listen to browser console for debugging
+    // Listen to ALL browser console messages for debugging
     page.on('console', msg => {
         const type = msg.type();
         const text = msg.text();
+        const prefix = `  [Browser ${type}]`;
+
         if (type === 'error') {
-            console.error(`  [Browser Error] ${text}`);
-        } else if (text.includes('[Browser]')) {
-            console.log(`  ${text}`);
+            console.error(`${prefix} ${text}`);
+        } else if (type === 'warning') {
+            console.warn(`${prefix} ${text}`);
+        } else {
+            console.log(`${prefix} ${text}`);
         }
+    });
+
+    // Catch page errors
+    page.on('pageerror', error => {
+        console.error(`  [Page Error] ${error.message}`);
     });
 
     // Navigate to test suite
