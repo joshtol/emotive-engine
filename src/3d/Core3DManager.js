@@ -295,8 +295,8 @@ export class Core3DManager {
         const startTime = Date.now();
         const halfDuration = duration / 2;
 
-        // Store original scale
-        const originalScale = this.scale;
+        // Use absolute scale of 1.0 to prevent compounding
+        const targetScale = 1.0;
 
         // Shrink animation (first half)
         const shrinkAnimation = {
@@ -307,8 +307,8 @@ export class Core3DManager {
                 const progress = Math.min(1.0, (Date.now() - startTime) / halfDuration);
                 const easeProgress = this.easeInOutCubic(progress);
 
-                // Scale down to 0.3
-                this.scale = originalScale * (1.0 - easeProgress * 0.7);
+                // Scale down to 0.3 (absolute, not relative)
+                this.scale = targetScale * (1.0 - easeProgress * 0.7);
 
                 // When shrink is complete, swap geometry and start grow
                 if (progress >= 1.0) {
@@ -327,8 +327,8 @@ export class Core3DManager {
                             const growProgress = Math.min(1.0, (Date.now() - growStartTime) / halfDuration);
                             const easeGrowProgress = this.easeInOutCubic(growProgress);
 
-                            // Scale up from 0.3 to original
-                            this.scale = originalScale * (0.3 + easeGrowProgress * 0.7);
+                            // Scale up from 0.3 to 1.0 (absolute, not relative)
+                            this.scale = targetScale * (0.3 + easeGrowProgress * 0.7);
 
                             return growProgress >= 1.0;
                         }
