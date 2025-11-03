@@ -67,6 +67,11 @@ export class ThreeRenderer {
         // Animation mixer for GLTF models
         this.mixer = null;
         this.clock = new THREE.Clock();
+
+        // Reusable objects to avoid per-frame allocations (performance optimization)
+        this._tempColor = new THREE.Color();
+        this._tempColor2 = new THREE.Color();
+        this._white = new THREE.Color(1, 1, 1);
     }
 
     /**
@@ -159,6 +164,23 @@ export class ThreeRenderer {
     }
 
     /**
+     * Swap geometry without recreating mesh (performance optimization)
+     * @param {THREE.BufferGeometry} newGeometry - New geometry to swap to
+     */
+    swapGeometry(newGeometry) {
+        if (!this.coreMesh) return;
+
+        // Dispose old geometry
+        const oldGeometry = this.coreMesh.geometry;
+        if (oldGeometry) {
+            oldGeometry.dispose();
+        }
+
+        // Swap to new geometry
+        this.coreMesh.geometry = newGeometry;
+    }
+
+    /**
      * Create custom glow material with Fresnel shader
      * Matches the look of the custom WebGL renderer's core.vert/core.frag
      */
@@ -220,23 +242,24 @@ export class ThreeRenderer {
     updateLighting(emotion, emotionData, transitionSpeed = 0.15) {
         if (!emotionData || !emotionData.visual) return;
 
-        // Get emotion color
+        // Get emotion color (reuse temp color to avoid allocation)
         const glowColor = emotionData.visual.glowColor || '#FFFFFF';
-        const targetColor = new THREE.Color(glowColor);
+        this._tempColor.set(glowColor);
 
         // Get emotion intensity
         const targetIntensity = emotionData.visual.glowIntensity || 1.0;
 
         // Smooth transition for key light (primary accent light)
         if (this.keyLight) {
-            this.keyLight.color.lerp(targetColor, transitionSpeed);
+            this.keyLight.color.lerp(this._tempColor, transitionSpeed);
             this.keyLight.intensity += (0.8 * targetIntensity - this.keyLight.intensity) * transitionSpeed;
         }
 
         // Subtle tint for fill light (secondary light)
         if (this.fillLight) {
-            const fillTarget = targetColor.clone().lerp(new THREE.Color(1, 1, 1), 0.7);
-            this.fillLight.color.lerp(fillTarget, transitionSpeed * 0.5);
+            // Reuse temp color 2 for fill target (blend emotion color with white)
+            this._tempColor2.copy(this._tempColor).lerp(this._white, 0.7);
+            this.fillLight.color.lerp(this._tempColor2, transitionSpeed * 0.5);
             this.fillLight.intensity += (0.3 * targetIntensity - this.fillLight.intensity) * transitionSpeed;
         }
 
@@ -283,10 +306,10 @@ export class ThreeRenderer {
             this.coreMesh.rotation.set(...rotation);
             this.coreMesh.scale.setScalar(scale);
 
-            // Update material uniforms with smooth transitions
+            // Update material uniforms with smooth transitions (reuse temp color)
             if (this.coreMesh.material.uniforms) {
-                const targetColor = new THREE.Color().setRGB(...glowColor);
-                this.coreMesh.material.uniforms.glowColor.value.lerp(targetColor, 0.15);
+                this._tempColor.setRGB(...glowColor);
+                this.coreMesh.material.uniforms.glowColor.value.lerp(this._tempColor, 0.15);
 
                 const currentIntensity = this.coreMesh.material.uniforms.glowIntensity.value;
                 this.coreMesh.material.uniforms.glowIntensity.value += (glowIntensity - currentIntensity) * 0.15;

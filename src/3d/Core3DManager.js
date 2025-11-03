@@ -280,6 +280,11 @@ export class Core3DManager {
             return;
         }
 
+        // Cancel any existing morph animations to prevent stacking
+        this.animator.animations = this.animator.animations.filter(anim =>
+            !anim.isMorphAnimation
+        );
+
         // Smooth morph animation: scale down → swap geometry → scale up
         const startTime = Date.now();
         const halfDuration = duration / 2;
@@ -291,6 +296,7 @@ export class Core3DManager {
         const shrinkAnimation = {
             startTime,
             duration: halfDuration,
+            isMorphAnimation: true, // Flag for cancellation
             evaluate: t => {
                 const progress = Math.min(1.0, (Date.now() - startTime) / halfDuration);
                 const easeProgress = this.easeInOutCubic(progress);
@@ -300,16 +306,17 @@ export class Core3DManager {
 
                 // When shrink is complete, swap geometry and start grow
                 if (progress >= 1.0) {
-                    // Swap geometry at smallest point
+                    // Swap geometry at smallest point (optimized - don't recreate mesh)
                     this.geometry = targetGeometry;
                     this.geometryType = shapeName;
-                    this.coreMesh = this.renderer.createCoreMesh(this.geometry);
+                    this.renderer.swapGeometry(this.geometry);
 
                     // Start grow animation (second half)
                     const growStartTime = Date.now();
                     const growAnimation = {
                         startTime: growStartTime,
                         duration: halfDuration,
+                        isMorphAnimation: true, // Flag for cancellation
                         evaluate: t => {
                             const growProgress = Math.min(1.0, (Date.now() - growStartTime) / halfDuration);
                             const easeGrowProgress = this.easeInOutCubic(growProgress);
