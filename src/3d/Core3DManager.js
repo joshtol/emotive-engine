@@ -281,9 +281,15 @@ export class Core3DManager {
         }
 
         // Cancel any existing morph animations to prevent stacking
+        const hadMorphAnimation = this.animator.animations.some(anim => anim.isMorphAnimation);
         this.animator.animations = this.animator.animations.filter(anim =>
             !anim.isMorphAnimation
         );
+
+        // If we cancelled a morph mid-transition, reset scale to avoid being stuck small
+        if (hadMorphAnimation) {
+            this.scale = 1.0;
+        }
 
         // Smooth morph animation: scale down → swap geometry → scale up
         const startTime = Date.now();
