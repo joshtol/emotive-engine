@@ -3,241 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emotive Engine 3D Demo</title>
+    <title>Emotive Engine 3D - Three.js Demo</title>
     <style>
-        body {
+        * {
             margin: 0;
-            padding: 20px;
-            font-family: system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin: 0;
+            padding: 0;
             min-height: 100vh;
-        }
-
-        h1 {
-            margin: 20px 0;
-            font-size: 2em;
-            text-align: center;
-        }
-
-        .container {
-            display: flex;
-            flex: 1;
-            gap: 0;
-            width: 100%;
-            min-height: 100vh;
-        }
-
-        .canvas-container {
-            position: relative;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at center, rgba(30, 30, 60, 0.2), transparent);
-        }
-
-        #mascot-canvas {
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Make the container visible for debugging */
-        .canvas-container > div {
-            background: rgba(100, 100, 255, 0.1) !important;
-        }
-
-        .controls {
-            background: rgba(20, 20, 40, 0.8);
-            padding: 20px;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            width: 320px;
+            width: 100vw;
+            overflow-x: hidden;
             overflow-y: auto;
         }
 
+        .app-container {
+            display: grid;
+            grid-template-rows: auto minmax(400px, 1fr) auto;
+            grid-template-columns: 280px 1fr 280px;
+            grid-template-areas:
+                'header header header'
+                'left center right'
+                'bottom bottom bottom';
+            min-height: 100vh;
+            width: 100vw;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            grid-area: header;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .title-emoji {
+            font-size: 28px;
+            margin-right: 10px;
+        }
+
+        #status {
+            padding: 8px 16px;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.4);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Center Canvas Area */
+        .center {
+            grid-area: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-width: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #mascot-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            aspect-ratio: 1;
+            width: min(calc(100% - 40px), calc(100vh - 200px));
+            height: min(calc(100% - 40px), calc(100vh - 200px));
+            border-radius: 20px;
+            background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
+            box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+        }
+
+        #mascot-container canvas {
+            border-radius: 20px;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Center the inner container div created by EmotiveMascot3D */
+        #mascot-container > div {
+            width: 100% !important;
+            height: 100% !important;
+            position: relative !important;
+        }
+
+        /* Side Panels */
+        .left-panel {
+            grid-area: left;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .right-panel {
+            grid-area: right;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            grid-area: bottom;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            min-height: fit-content;
+            overflow: visible;
+        }
+
+        /* Control Groups */
         .control-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .control-group h3 {
-            margin: 0 0 10px 0;
-            font-size: 1em;
-            opacity: 0.7;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            opacity: 0.6;
+            margin-bottom: 12px;
+            font-weight: 600;
         }
 
+        /* Buttons */
         button {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 10px 16px;
-            margin: 4px;
-            border-radius: 6px;
+            padding: 8px 14px;
+            margin: 3px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 14px;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
         }
 
         button:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         button:active {
             transform: translateY(0);
         }
 
-        .info {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            font-size: 14px;
-            line-height: 1.6;
+        button.active {
+            background: rgba(100, 200, 255, 0.3);
+            border-color: rgba(100, 200, 255, 0.6);
         }
 
-        .info code {
+        /* Info Box */
+        .info-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+
+        .info-box strong {
+            color: rgba(100, 200, 255, 0.9);
+        }
+
+        .info-box ul {
+            margin: 10px 0 0 20px;
+            list-style: none;
+        }
+
+        .info-box ul li:before {
+            content: "→ ";
+            color: rgba(100, 200, 255, 0.6);
+            margin-right: 5px;
+        }
+
+        code {
             background: rgba(255, 255, 255, 0.1);
             padding: 2px 6px;
-            border-radius: 3px;
+            border-radius: 4px;
             font-family: 'Courier New', monospace;
+            font-size: 12px;
         }
 
-        #status {
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 255, 0, 0.1);
-            border-radius: 6px;
-            text-align: center;
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            .left-panel, .right-panel {
+                display: none;
+            }
+
+            .center {
+                grid-column: 1;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            #mascot-container {
+                width: 500px;
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #mascot-container {
+                width: 350px;
+                height: 350px;
+            }
+
+            .title {
+                font-size: 20px;
+            }
+
+            button {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="canvas-container">
-            <div id="mascot-container" style="width: 600px; height: 600px;"></div>
+    <div class="app-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+        <div class="title">
+            <span class="title-emoji">⭐</span>
+            <span>Emotive Engine 3D</span>
         </div>
-        <div class="controls">
-            <div class="control-group">
-                <h3>Undertones</h3>
-                <button data-action="undertone" data-value="null">Clear</button>
-                <button data-action="undertone" data-value="subdued">Subdued</button>
-                <button data-action="undertone" data-value="tired">Tired</button>
-                <button data-action="undertone" data-value="nervous">Nervous</button>
-                <button data-action="undertone" data-value="confident">Confident</button>
-                <button data-action="undertone" data-value="intense">Intense</button>
-            </div>
+        <div id="status">Initializing...</div>
+    </div>
 
-            <div class="control-group">
-                <h3>Combo Chains</h3>
-                <button data-action="emotion" data-value="joy">Joy</button>
-                <button data-action="emotion" data-value="love">Love</button>
-                <button data-action="emotion" data-value="excited">Excited</button>
-                <button data-action="emotion" data-value="euphoria">Euphoria</button>
-                <button data-action="emotion" data-value="calm">Calm</button>
-                <button data-action="emotion" data-value="focused">Focused</button>
-                <button data-action="emotion" data-value="resting">Resting</button>
-                <button data-action="emotion" data-value="sadness">Sadness</button>
-                <button data-action="emotion" data-value="anger">Anger</button>
-                <button data-action="emotion" data-value="fear">Fear</button>
-                <button data-action="emotion" data-value="surprise">Surprise</button>
-                <button data-action="emotion" data-value="suspicion">Suspicion</button>
-                <button data-action="emotion" data-value="disgust">Disgust</button>
-                <button data-action="emotion" data-value="neutral">Neutral</button>
-                <button data-action="emotion" data-value="glitch">Glitch</button>
-            </div>
+    <!-- Left Panel: Emotions & Undertones -->
+    <div class="left-panel">
+        <div class="control-group">
+            <h3>Emotions</h3>
+            <button data-action="emotion" data-value="joy">😊 Joy</button>
+            <button data-action="emotion" data-value="love">❤️ Love</button>
+            <button data-action="emotion" data-value="excited">🎉 Excited</button>
+            <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
+            <button data-action="emotion" data-value="calm">😌 Calm</button>
+            <button data-action="emotion" data-value="focused">🎯 Focused</button>
+            <button data-action="emotion" data-value="resting">😴 Resting</button>
+            <button data-action="emotion" data-value="sadness">😢 Sadness</button>
+            <button data-action="emotion" data-value="anger">😠 Anger</button>
+            <button data-action="emotion" data-value="fear">😰 Fear</button>
+            <button data-action="emotion" data-value="surprise">😲 Surprise</button>
+            <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
+            <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
+            <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+        </div>
 
-            <div class="control-group">
-                <h3>Undertones</h3>
-                <button data-action="undertone" data-value="null">None</button>
-                <button data-action="undertone" data-value="subdued">Subdued</button>
-                <button data-action="undertone" data-value="tired">Tired</button>
-                <button data-action="undertone" data-value="nervous">Nervous</button>
-                <button data-action="undertone" data-value="energetic">Energetic</button>
-                <button data-action="undertone" data-value="confident">Confident</button>
-                <button data-action="undertone" data-value="intense">Intense</button>
-            </div>
+        <div class="control-group">
+            <h3>Undertones</h3>
+            <button data-action="undertone" data-value="null">Clear</button>
+            <button data-action="undertone" data-value="subdued">Subdued</button>
+            <button data-action="undertone" data-value="tired">Tired</button>
+            <button data-action="undertone" data-value="nervous">Nervous</button>
+            <button data-action="undertone" data-value="confident">Confident</button>
+            <button data-action="undertone" data-value="intense">Intense</button>
+            <button data-action="undertone" data-value="energetic">Energetic</button>
+        </div>
 
-            <div class="control-group">
-                <h3>Dance Gestures</h3>
-                <button data-action="gesture" data-value="headBob">HeadBob</button>
-                <button data-action="gesture" data-value="wiggle">Wiggle</button>
-                <button data-action="gesture" data-value="orbit">Orbit</button>
-                <button data-action="gesture" data-value="groove">Groove</button>
-                <button data-action="gesture" data-value="point">Point</button>
-                <button data-action="gesture" data-value="lean">Lean</button>
-                <button data-action="gesture" data-value="reach">Reach</button>
-                <button data-action="gesture" data-value="runningman">RunMan</button>
-                <button data-action="gesture" data-value="charleston">Charleston</button>
-            </div>
+        <div class="info-box">
+            <strong>About Three.js Rendering:</strong>
+            <ul>
+                <li>Three-point lighting system</li>
+                <li>Post-processing bloom effects</li>
+                <li>Emotion-based dynamic lighting</li>
+                <li>Real-time shadows (optional)</li>
+                <li>Custom Fresnel glow shader</li>
+            </ul>
+        </div>
+    </div>
 
-            <div class="control-group">
-                <h3>Overlay Gestures</h3>
-                <button data-action="gesture" data-value="bounce">Bounce</button>
-                <button data-action="gesture" data-value="sway">Sway</button>
-                <button data-action="gesture" data-value="spin">Spin</button>
-                <button data-action="gesture" data-value="hula">Hula</button>
-                <button data-action="gesture" data-value="jump">Jump</button>
-                <button data-action="gesture" data-value="twist">Twist</button>
-                <button data-action="gesture" data-value="wave">Wave</button>
-                <button data-action="gesture" data-value="nod">Nod</button>
-                <button data-action="gesture" data-value="shake">Shake</button>
-                <button data-action="gesture" data-value="tilt">Tilt</button>
-                <button data-action="gesture" data-value="breathe">Breathe</button>
-                <button data-action="gesture" data-value="float">Float</button>
-            </div>
+    <!-- Center: 3D Canvas -->
+    <div class="center">
+        <div id="mascot-container"></div>
+    </div>
 
-            <div class="control-group">
-                <h3>Glow Effects</h3>
-                <button data-action="gesture" data-value="sparkle">Sparkle</button>
-                <button data-action="gesture" data-value="pulse">Pulse</button>
-                <button data-action="gesture" data-value="glow">Glow</button>
-                <button data-action="gesture" data-value="flash">Flash</button>
-                <button data-action="gesture" data-value="shimmer">Shimmer</button>
-                <button data-action="gesture" data-value="flicker">Flicker</button>
-            </div>
+    <!-- Right Panel: Gestures & Shapes -->
+    <div class="right-panel">
+        <div class="control-group">
+            <h3>Geometries</h3>
+            <button data-action="geometry" data-value="sphere">🔮 Sphere</button>
+            <button data-action="geometry" data-value="crystal">💎 Crystal</button>
+            <button data-action="geometry" data-value="diamond">💠 Diamond</button>
+            <button data-action="geometry" data-value="torus">🍩 Torus</button>
+            <button data-action="geometry" data-value="icosahedron">⚽ Icosahedron</button>
+            <button data-action="geometry" data-value="octahedron">🔶 Octahedron</button>
+            <button data-action="geometry" data-value="tetrahedron">🔺 Tetrahedron</button>
+            <button data-action="geometry" data-value="dodecahedron">⬡ Dodecahedron</button>
+        </div>
 
-            <div class="control-group">
-                <h3>Combo Chains</h3>
-                <button data-action="chain" data-value="rise">Rise</button>
-                <button data-action="chain" data-value="flow">Flow</button>
-                <button data-action="chain" data-value="burst">Burst</button>
-                <button data-action="chain" data-value="drift">Drift</button>
-                <button data-action="chain" data-value="chaos">Chaos</button>
-                <button data-action="chain" data-value="morph">Morph</button>
-                <button data-action="chain" data-value="rhythm">Rhythm</button>
-                <button data-action="chain" data-value="spiral">Spiral</button>
-                <button data-action="chain" data-value="routine">Routine</button>
-                <button data-action="chain" data-value="radiance">Radiance</button>
-                <button data-action="chain" data-value="twinkle">Twinkle</button>
-                <button data-action="chain" data-value="stream">Stream</button>
-            </div>
+        <div class="control-group">
+            <h3>Dance Gestures</h3>
+            <button data-action="gesture" data-value="bounce">Bounce</button>
+            <button data-action="gesture" data-value="pulse">Pulse</button>
+            <button data-action="gesture" data-value="spin">Spin</button>
+            <button data-action="gesture" data-value="float">Float</button>
+            <button data-action="gesture" data-value="shake">Shake</button>
+            <button data-action="gesture" data-value="sway">Sway</button>
+            <button data-action="gesture" data-value="wobble">Wobble</button>
+            <button data-action="gesture" data-value="nod">Nod</button>
+            <button data-action="gesture" data-value="groove">Groove</button>
+        </div>
 
+        <div class="control-group">
+            <h3>Motion Gestures</h3>
+            <button data-action="gesture" data-value="orbit">Orbit</button>
+            <button data-action="gesture" data-value="lean">Lean</button>
+            <button data-action="gesture" data-value="tilt">Tilt</button>
+            <button data-action="gesture" data-value="point">Point</button>
+            <button data-action="gesture" data-value="reach">Reach</button>
+            <button data-action="gesture" data-value="headBob">Head Bob</button>
+            <button data-action="gesture" data-value="wiggle">Wiggle</button>
+        </div>
 
-            <div id="status">Initializing...</div>
+        <div class="control-group">
+            <h3>Effect Gestures</h3>
+            <button data-action="gesture" data-value="wave">Wave</button>
+            <button data-action="gesture" data-value="sparkle">Sparkle</button>
+            <button data-action="gesture" data-value="shimmer">Shimmer</button>
+            <button data-action="gesture" data-value="flash">Flash</button>
+            <button data-action="gesture" data-value="glow">Glow</button>
+        </div>
 
-            <div class="info">
-                <strong>About:</strong><br>
-                Three.js 3D rendering with:<br>
-                • Three.js WebGL renderer<br>
-                • Procedural 3D geometries<br>
-                • Post-processing (bloom/glow)<br>
-                • Three-point lighting system<br>
-                • Emotion-based lighting<br>
-                • Same API as 2D version<br>
-                • Bundle size: ~669KB (~160KB gzipped)<br><br>
-                <code>new EmotiveMascot3D()</code>
-            </div>
+        <div class="info-box">
+            <strong>Bundle Size:</strong><br>
+            <code>669 KB</code> (~160 KB gzipped)<br>
+            <small style="opacity: 0.6;">Includes Three.js + post-processing</small>
+        </div>
+    </div>
+
+        <!-- Bottom Bar: Combo Chains -->
+        <div class="bottom-bar">
+        <div class="control-group" style="margin: 0;">
+            <h3 style="margin-bottom: 8px;">Combo Chains</h3>
+            <button data-action="chain" data-value="rise">Rise</button>
+            <button data-action="chain" data-value="flow">Flow</button>
+            <button data-action="chain" data-value="burst">Burst</button>
+            <button data-action="chain" data-value="drift">Drift</button>
+            <button data-action="chain" data-value="chaos">Chaos</button>
+            <button data-action="chain" data-value="morph">Morph</button>
+            <button data-action="chain" data-value="rhythm">Rhythm</button>
+            <button data-action="chain" data-value="spiral">Spiral</button>
+            <button data-action="chain" data-value="routine">Routine</button>
+            <button data-action="chain" data-value="radiance">Radiance</button>
+            <button data-action="chain" data-value="twinkle">Twinkle</button>
+            <button data-action="chain" data-value="stream">Stream</button>
+        </div>
         </div>
     </div>
 
     <script type="module">
-        import { EmotiveMascot3D } from '../dist/emotive-mascot-3d.js?v=8';
+        import { EmotiveMascot3D } from '../dist/emotive-mascot-3d.js?v=9';
 
         let mascot = null;
 
@@ -247,9 +427,9 @@
                 const container = document.getElementById('mascot-container');
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'crystal',
-                    enableParticles: true,  // Enable particles!
-                    enablePostProcessing: true,  // Enable bloom/glow effects
-                    enableShadows: false  // Shadows off for performance
+                    enableParticles: true,
+                    enablePostProcessing: true,
+                    enableShadows: false
                 });
 
                 mascot.init(container);
@@ -258,14 +438,13 @@
                 // Set initial emotion
                 mascot.setEmotion('joy');
 
-                document.getElementById('status').textContent = '✅ Ready!';
+                document.getElementById('status').textContent = '✅ Ready';
                 document.getElementById('status').style.background = 'rgba(0, 255, 0, 0.2)';
 
                 console.log('✅ EmotiveMascot3D initialized');
-                console.log('Available geometries:', ['sphere', 'crystal', 'diamond']);
             } catch (error) {
                 console.error('Failed to initialize:', error);
-                document.getElementById('status').textContent = '❌ Error: ' + error.message;
+                document.getElementById('status').textContent = '❌ Error';
                 document.getElementById('status').style.background = 'rgba(255, 0, 0, 0.2)';
             }
         })();
@@ -276,6 +455,14 @@
 
             const action = e.target.dataset.action;
             const value = e.target.dataset.value;
+
+            // Update active state for emotion buttons
+            if (action === 'emotion') {
+                document.querySelectorAll('[data-action="emotion"]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+            }
 
             try {
                 switch (action) {
@@ -313,6 +500,9 @@
                 console.error('Action failed:', error);
             }
         });
+
+        // Set initial active button
+        document.querySelector('[data-value="joy"]').classList.add('active');
     </script>
 </body>
 </html>

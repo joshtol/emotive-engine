@@ -212,47 +212,55 @@ export class ThreeRenderer {
     }
 
     /**
-     * Update lighting based on emotion
+     * Update lighting based on emotion (with smooth transitions)
      * @param {string} emotion - Emotion name
      * @param {Object} emotionData - Emotion visual parameters
+     * @param {number} transitionSpeed - Lerp factor (0.0 - 1.0), default 0.15
      */
-    updateLighting(emotion, emotionData) {
+    updateLighting(emotion, emotionData, transitionSpeed = 0.15) {
         if (!emotionData || !emotionData.visual) return;
 
         // Get emotion color
         const glowColor = emotionData.visual.glowColor || '#FFFFFF';
-        const color = new THREE.Color(glowColor);
+        const targetColor = new THREE.Color(glowColor);
 
         // Get emotion intensity
-        const intensity = emotionData.visual.glowIntensity || 1.0;
+        const targetIntensity = emotionData.visual.glowIntensity || 1.0;
 
-        // Update key light color and intensity based on emotion
+        // Smooth transition for key light (primary accent light)
         if (this.keyLight) {
-            this.keyLight.color.copy(color);
-            this.keyLight.intensity = 0.8 * intensity;
+            this.keyLight.color.lerp(targetColor, transitionSpeed);
+            this.keyLight.intensity += (0.8 * targetIntensity - this.keyLight.intensity) * transitionSpeed;
         }
 
-        // Slightly tint fill light
+        // Subtle tint for fill light (secondary light)
         if (this.fillLight) {
-            this.fillLight.color.lerp(color, 0.3);
-            this.fillLight.intensity = 0.3 * intensity;
+            const fillTarget = targetColor.clone().lerp(new THREE.Color(1, 1, 1), 0.7);
+            this.fillLight.color.lerp(fillTarget, transitionSpeed * 0.5);
+            this.fillLight.intensity += (0.3 * targetIntensity - this.fillLight.intensity) * transitionSpeed;
         }
 
-        // Adjust ambient light based on emotion intensity
+        // Adjust ambient light intensity
         if (this.ambientLight) {
-            this.ambientLight.intensity = 0.4 * intensity;
+            const ambientTarget = 0.4 * targetIntensity;
+            this.ambientLight.intensity += (ambientTarget - this.ambientLight.intensity) * transitionSpeed;
         }
     }
 
     /**
-     * Update bloom pass strength based on emotion intensity
-     * @param {number} intensity - Glow intensity (0.0 - 2.0)
+     * Update bloom pass strength based on emotion intensity (with smooth transitions)
+     * @param {number} targetIntensity - Target glow intensity (0.0 - 2.0)
+     * @param {number} transitionSpeed - Lerp factor (0.0 - 1.0), default 0.1
      */
-    updateBloom(intensity) {
+    updateBloom(targetIntensity, transitionSpeed = 0.1) {
         if (this.bloomPass) {
-            this.bloomPass.strength = Math.max(0.5, intensity * 1.5);
-            this.bloomPass.radius = 0.4;
-            this.bloomPass.threshold = Math.max(0.5, 1.0 - intensity * 0.3);
+            // Smooth transitions for bloom strength and threshold
+            const targetStrength = Math.max(0.5, targetIntensity * 1.5);
+            const targetThreshold = Math.max(0.5, 1.0 - targetIntensity * 0.3);
+
+            this.bloomPass.strength += (targetStrength - this.bloomPass.strength) * transitionSpeed;
+            this.bloomPass.threshold += (targetThreshold - this.bloomPass.threshold) * transitionSpeed;
+            this.bloomPass.radius = 0.4; // Keep radius constant
         }
     }
 
@@ -275,10 +283,13 @@ export class ThreeRenderer {
             this.coreMesh.rotation.set(...rotation);
             this.coreMesh.scale.setScalar(scale);
 
-            // Update material uniforms
+            // Update material uniforms with smooth transitions
             if (this.coreMesh.material.uniforms) {
-                this.coreMesh.material.uniforms.glowColor.value.setRGB(...glowColor);
-                this.coreMesh.material.uniforms.glowIntensity.value = glowIntensity;
+                const targetColor = new THREE.Color().setRGB(...glowColor);
+                this.coreMesh.material.uniforms.glowColor.value.lerp(targetColor, 0.15);
+
+                const currentIntensity = this.coreMesh.material.uniforms.glowIntensity.value;
+                this.coreMesh.material.uniforms.glowIntensity.value += (glowIntensity - currentIntensity) * 0.15;
             }
         }
 

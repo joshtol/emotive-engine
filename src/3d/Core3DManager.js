@@ -264,21 +264,87 @@ export class Core3DManager {
     }
 
     /**
-     * Morph to different shape
+     * Morph to different shape with smooth transition
+     * @param {string} shapeName - Target geometry name
+     * @param {number} duration - Transition duration in ms (default: 800ms)
      */
-    morphToShape(shapeName) {
+    morphToShape(shapeName, duration = 800) {
         const targetGeometry = THREE_GEOMETRIES[shapeName];
         if (!targetGeometry) {
             console.warn(`Unknown shape: ${shapeName}`);
             return;
         }
 
-        // Update geometry directly (Three.js handles geometry changes smoothly)
-        this.geometry = targetGeometry;
-        this.geometryType = shapeName;
+        // If already this shape, skip
+        if (this.geometryType === shapeName) {
+            return;
+        }
 
-        // Recreate mesh with new geometry
-        this.coreMesh = this.renderer.createCoreMesh(this.geometry);
+        // Smooth morph animation: scale down → swap geometry → scale up
+        const startTime = Date.now();
+        const halfDuration = duration / 2;
+
+        // Store original scale
+        const originalScale = this.scale;
+
+        // Shrink animation (first half)
+        const shrinkAnimation = {
+            startTime,
+            duration: halfDuration,
+            evaluate: t => {
+                const progress = Math.min(1.0, (Date.now() - startTime) / halfDuration);
+                const easeProgress = this.easeInOutCubic(progress);
+
+                // Scale down to 0.3
+                this.scale = originalScale * (1.0 - easeProgress * 0.7);
+
+                // When shrink is complete, swap geometry and start grow
+                if (progress >= 1.0) {
+                    // Swap geometry at smallest point
+                    this.geometry = targetGeometry;
+                    this.geometryType = shapeName;
+                    this.coreMesh = this.renderer.createCoreMesh(this.geometry);
+
+                    // Start grow animation (second half)
+                    const growStartTime = Date.now();
+                    const growAnimation = {
+                        startTime: growStartTime,
+                        duration: halfDuration,
+                        evaluate: t => {
+                            const growProgress = Math.min(1.0, (Date.now() - growStartTime) / halfDuration);
+                            const easeGrowProgress = this.easeInOutCubic(growProgress);
+
+                            // Scale up from 0.3 to original
+                            this.scale = originalScale * (0.3 + easeGrowProgress * 0.7);
+
+                            return growProgress >= 1.0;
+                        }
+                    };
+
+                    // Add grow animation
+                    this.animator.animations.push(growAnimation);
+
+                    // Remove shrink animation
+                    return true;
+                }
+
+                return false;
+            }
+        };
+
+        // Add shrink animation
+        this.animator.animations.push(shrinkAnimation);
+    }
+
+    /**
+     * Easing function for smooth transitions
+     * @param {number} t - Progress (0.0 to 1.0)
+     * @returns {number} - Eased progress
+     */
+    easeInOutCubic(t) {
+        return t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     /**

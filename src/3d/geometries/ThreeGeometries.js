@@ -180,11 +180,81 @@ export function createDiamond() {
 }
 
 /**
+ * Create torus (donut) geometry
+ * @param {number} radius - Torus radius (default: 0.4)
+ * @param {number} tube - Tube thickness (default: 0.15)
+ * @param {number} radialSegments - Segments around tube (default: 32)
+ * @param {number} tubularSegments - Segments around torus (default: 64)
+ * @returns {THREE.TorusGeometry}
+ */
+export function createTorus(radius = 0.4, tube = 0.15, radialSegments = 32, tubularSegments = 64) {
+    return new THREE.TorusGeometry(
+        radius,
+        tube,
+        radialSegments,
+        tubularSegments
+    );
+}
+
+/**
+ * Create icosahedron geometry (20-sided polyhedron)
+ * @param {number} radius - Radius (default: 0.5)
+ * @param {number} detail - Subdivision detail (default: 1 for smooth, 0 for faceted)
+ * @returns {THREE.IcosahedronGeometry}
+ */
+export function createIcosahedron(radius = 0.5, detail = 1) {
+    return new THREE.IcosahedronGeometry(radius, detail);
+}
+
+/**
+ * Create octahedron geometry (8-sided polyhedron)
+ * @param {number} radius - Radius (default: 0.5)
+ * @param {number} detail - Subdivision detail (default: 0 for sharp facets)
+ * @returns {THREE.OctahedronGeometry}
+ */
+export function createOctahedron(radius = 0.5, detail = 0) {
+    return new THREE.OctahedronGeometry(radius, detail);
+}
+
+/**
+ * Create tetrahedron geometry (4-sided polyhedron)
+ * @param {number} radius - Radius (default: 0.5)
+ * @param {number} detail - Subdivision detail (default: 0)
+ * @returns {THREE.TetrahedronGeometry}
+ */
+export function createTetrahedron(radius = 0.5, detail = 0) {
+    return new THREE.TetrahedronGeometry(radius, detail);
+}
+
+/**
+ * Create dodecahedron geometry (12-sided polyhedron)
+ * @param {number} radius - Radius (default: 0.5)
+ * @param {number} detail - Subdivision detail (default: 0)
+ * @returns {THREE.DodecahedronGeometry}
+ */
+export function createDodecahedron(radius = 0.5, detail = 0) {
+    return new THREE.DodecahedronGeometry(radius, detail);
+}
+
+/**
  * Core geometry registry using Three.js
  * All geometries are BufferGeometry instances
  */
 export const THREE_GEOMETRIES = {
+    // Original geometries
     sphere: createSphere(64, 64),
     crystal: createCrystal(6),
-    diamond: createDiamond()
+    diamond: createDiamond(),
+
+    // New Three.js primitive geometries
+    torus: createTorus(),
+    icosahedron: createIcosahedron(0.5, 1),
+    octahedron: createOctahedron(0.5, 0),
+    tetrahedron: createTetrahedron(0.5, 0),
+    dodecahedron: createDodecahedron(0.5, 0),
+
+    // Variations for different aesthetics
+    'smooth-icosahedron': createIcosahedron(0.5, 2), // More subdivisions
+    'faceted-icosahedron': createIcosahedron(0.5, 0), // Sharp facets
+    'ring': createTorus(0.4, 0.1, 16, 64) // Thinner ring
 };
