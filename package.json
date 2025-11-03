@@ -148,5 +148,8 @@
     "*.{json,md}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "three": "^0.181.0"
   }
 }

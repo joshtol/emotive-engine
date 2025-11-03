@@ -4,7 +4,6 @@ import terser from '@rollup/plugin-terser';
 import analyzer from 'rollup-plugin-analyzer';
 import bundleSize from 'rollup-plugin-bundle-size';
 import { visualizer } from 'rollup-plugin-visualizer';
-import glsl from 'rollup-plugin-glsl';
 
 // Environment detection
 const isProduction = process.env.NODE_ENV === 'production';
@@ -26,12 +25,8 @@ const basePlugins = [
     commonjs()
 ];
 
-// 3D plugins (includes shader support)
+// 3D plugins (Three.js handles shaders natively, no plugin needed)
 const threeDPlugins = [
-    glsl({
-        include: ['**/*.vert', '**/*.frag', '**/*.glsl'],
-        sourceMap: false
-    }),
     ...basePlugins
 ];
 

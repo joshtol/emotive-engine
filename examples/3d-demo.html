@@ -119,6 +119,9 @@
 </head>
 <body>
     <div class="container">
+        <div class="canvas-container">
+            <div id="mascot-container" style="width: 600px; height: 600px;"></div>
+        </div>
         <div class="controls">
             <div class="control-group">
                 <h3>Undertones</h3>
@@ -220,13 +223,14 @@
 
             <div class="info">
                 <strong>About:</strong><br>
-                Custom 3D rendering with:<br>
-                • WebGL 2.0 renderer (no Three.js)<br>
+                Three.js 3D rendering with:<br>
+                • Three.js WebGL renderer<br>
                 • Procedural 3D geometries<br>
-                • Shader-based glow effects<br>
-                • Procedural animations<br>
+                • Post-processing (bloom/glow)<br>
+                • Three-point lighting system<br>
+                • Emotion-based lighting<br>
                 • Same API as 2D version<br>
-                • Bundle size: ~151KB (~41KB gzipped)<br><br>
+                • Bundle size: ~669KB (~160KB gzipped)<br><br>
                 <code>new EmotiveMascot3D()</code>
             </div>
         </div>
@@ -240,13 +244,15 @@
         // Initialize 3D mascot
         (async () => {
             try {
-                const canvas = document.getElementById('mascot-canvas');
+                const container = document.getElementById('mascot-container');
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'crystal',
-                    enableParticles: true  // Enable particles!
+                    enableParticles: true,  // Enable particles!
+                    enablePostProcessing: true,  // Enable bloom/glow effects
+                    enableShadows: false  // Shadows off for performance
                 });
 
-                await mascot.init(canvas);
+                mascot.init(container);
                 mascot.start();
 
                 // Set initial emotion

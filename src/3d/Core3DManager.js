@@ -1,15 +1,15 @@
 /**
- * Core3DManager - Main orchestrator for 3D rendering
+ * Core3DManager - Main orchestrator for Three.js 3D rendering
  *
  * Manages:
- * - WebGL context
+ * - Three.js renderer
  * - 3D geometry selection
  * - Animation playback
- * - Material/shader updates
+ * - Emotion-based lighting and materials
  */
 
-import { WebGLRenderer } from './renderer/WebGLRenderer.js';
-import { CORE_GEOMETRIES } from './geometries/index.js';
+import { ThreeRenderer } from './ThreeRenderer.js';
+import { THREE_GEOMETRIES } from './geometries/ThreeGeometries.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
@@ -19,17 +19,23 @@ export class Core3DManager {
         this.canvas = canvas;
         this.options = options;
 
-        // Initialize WebGL renderer
-        this.renderer = new WebGLRenderer(canvas);
+        // Initialize Three.js renderer
+        this.renderer = new ThreeRenderer(canvas, {
+            enablePostProcessing: options.enablePostProcessing !== false,
+            enableShadows: options.enableShadows || false
+        });
 
         // Load geometry
         this.geometryType = options.geometry || 'sphere';
-        this.geometry = CORE_GEOMETRIES[this.geometryType];
+        this.geometry = THREE_GEOMETRIES[this.geometryType];
 
         if (!this.geometry) {
             console.warn(`Unknown geometry: ${this.geometryType}, falling back to sphere`);
-            this.geometry = CORE_GEOMETRIES.sphere;
+            this.geometry = THREE_GEOMETRIES.sphere;
         }
+
+        // Create core mesh with geometry
+        this.coreMesh = this.renderer.createCoreMesh(this.geometry);
 
         // Animation controller
         this.animator = new ProceduralAnimator();
@@ -40,7 +46,6 @@ export class Core3DManager {
         this.glowIntensity = 1.0;
         this.rotation = [0, 0, 0]; // Euler angles (x, y, z)
         // Match 2D sizing: core is 1/12th of canvas size (coreSizeDivisor: 12)
-        // In WebGL NDC space (-1 to 1), this translates to a smaller scale value
         this.baseScale = 0.16; // Properly sized core relative to particles
         this.scale = 0.16; // Current scale (base + animation)
         this.position = [0, 0, 0];
@@ -51,7 +56,7 @@ export class Core3DManager {
 
     /**
      * Set emotional state
-     * Updates glow color and triggers emotion animation
+     * Updates glow color, lighting, and triggers emotion animation
      */
     setEmotion(emotion) {
         this.emotion = emotion;
@@ -67,6 +72,12 @@ export class Core3DManager {
             if (emotionData.visual.glowIntensity !== undefined) {
                 this.glowIntensity = emotionData.visual.glowIntensity;
             }
+
+            // Update Three.js lighting based on emotion
+            this.renderer.updateLighting(emotion, emotionData);
+
+            // Update bloom pass intensity
+            this.renderer.updateBloom(this.glowIntensity);
         }
 
         // Trigger emotion animation
@@ -125,6 +136,9 @@ export class Core3DManager {
         };
 
         // Add to animator's active animations
+        // Create persistent gesture data object for this gesture instance
+        const gestureData = { initialized: false };
+
         this.animator.animations.push({
             duration,
             startTime,
@@ -142,8 +156,7 @@ export class Core3DManager {
                     // Use gesture's built-in 3D translation
                     // First apply gesture to virtual particle if needed
                     if (gesture2D.apply) {
-                        const motion = { ...config };
-                        gesture2D.apply(virtualParticle, t, motion, 1, 0, 0);
+                        gesture2D.apply(virtualParticle, gestureData, config, t, 1.0, 0, 0);
                     }
 
                     // Call gesture's 3D evaluate function with particle data
@@ -157,8 +170,7 @@ export class Core3DManager {
                 } else {
                     // Fallback: apply gesture to virtual particle and use legacy translation
                     if (gesture2D.apply) {
-                        const motion = { ...config };
-                        gesture2D.apply(virtualParticle, t, motion, 1, 0, 0);
+                        gesture2D.apply(virtualParticle, gestureData, config, t, 1.0, 0, 0);
                     }
                     return this.translate2DTo3D(virtualParticle, t, gesture2D, gestureState);
                 }
@@ -196,7 +208,6 @@ export class Core3DManager {
         };
 
         // Map 2D movements to 3D based on gesture type
-        // const gestureType = gesture.type;
         const gestureName = gesture.name;
 
         if (gestureName === 'bounce') {
@@ -256,23 +267,18 @@ export class Core3DManager {
      * Morph to different shape
      */
     morphToShape(shapeName) {
-        const targetGeometry = CORE_GEOMETRIES[shapeName];
+        const targetGeometry = THREE_GEOMETRIES[shapeName];
         if (!targetGeometry) {
             console.warn(`Unknown shape: ${shapeName}`);
             return;
         }
 
-        // Start morph animation
-        this.animator.playMorph(this.geometry, targetGeometry, {
-            duration: 1000,
-            onUpdate: blendedGeometry => {
-                this.geometry = blendedGeometry;
-            },
-            onComplete: () => {
-                this.geometry = targetGeometry;
-                this.geometryType = shapeName;
-            }
-        });
+        // Update geometry directly (Three.js handles geometry changes smoothly)
+        this.geometry = targetGeometry;
+        this.geometryType = shapeName;
+
+        // Recreate mesh with new geometry
+        this.coreMesh = this.renderer.createCoreMesh(this.geometry);
     }
 
     /**
@@ -285,9 +291,8 @@ export class Core3DManager {
         // Auto-rotate based on emotion
         this.rotation[1] += deltaTime * 0.0003; // Slow Y rotation
 
-        // Render with WebGL
+        // Render with Three.js
         this.renderer.render({
-            geometry: this.geometry,
             position: this.position,
             rotation: this.rotation,
             scale: this.scale,
