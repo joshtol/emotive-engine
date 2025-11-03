@@ -48,6 +48,7 @@ export class Core3DManager {
         // Match 2D sizing: core is 1/12th of canvas size (coreSizeDivisor: 12)
         this.baseScale = 0.16; // Properly sized core relative to particles
         this.scale = 0.16; // Current scale (base + animation)
+        this.morphScaleMultiplier = 1.0; // Separate multiplier for morph animations
         this.position = [0, 0, 0];
 
         // Initialize emotion
@@ -286,17 +287,14 @@ export class Core3DManager {
             !anim.isMorphAnimation
         );
 
-        // If we cancelled a morph mid-transition, reset scale to avoid being stuck small
+        // If we cancelled a morph mid-transition, reset morph multiplier
         if (hadMorphAnimation) {
-            this.scale = 1.0;
+            this.morphScaleMultiplier = 1.0;
         }
 
         // Smooth morph animation: scale down → swap geometry → scale up
         const startTime = Date.now();
         const halfDuration = duration / 2;
-
-        // Use absolute scale of 1.0 to prevent compounding
-        const targetScale = 1.0;
 
         // Shrink animation (first half)
         const shrinkAnimation = {
@@ -307,8 +305,8 @@ export class Core3DManager {
                 const progress = Math.min(1.0, (Date.now() - startTime) / halfDuration);
                 const easeProgress = this.easeInOutCubic(progress);
 
-                // Scale down to 0.3 (absolute, not relative)
-                this.scale = targetScale * (1.0 - easeProgress * 0.7);
+                // Morph scale multiplier: 1.0 → 0.3
+                this.morphScaleMultiplier = 1.0 - easeProgress * 0.7;
 
                 // When shrink is complete, swap geometry and start grow
                 if (progress >= 1.0) {
@@ -327,8 +325,8 @@ export class Core3DManager {
                             const growProgress = Math.min(1.0, (Date.now() - growStartTime) / halfDuration);
                             const easeGrowProgress = this.easeInOutCubic(growProgress);
 
-                            // Scale up from 0.3 to 1.0 (absolute, not relative)
-                            this.scale = targetScale * (0.3 + easeGrowProgress * 0.7);
+                            // Morph scale multiplier: 0.3 → 1.0
+                            this.morphScaleMultiplier = 0.3 + easeGrowProgress * 0.7;
 
                             return growProgress >= 1.0;
                         }
@@ -370,11 +368,14 @@ export class Core3DManager {
         // Auto-rotate based on emotion
         this.rotation[1] += deltaTime * 0.0003; // Slow Y rotation
 
+        // Calculate final scale: base scale * morph multiplier
+        const finalScale = this.scale * this.morphScaleMultiplier;
+
         // Render with Three.js
         this.renderer.render({
             position: this.position,
             rotation: this.rotation,
-            scale: this.scale,
+            scale: finalScale,
             glowColor: this.glowColor,
             glowIntensity: this.glowIntensity
         });
