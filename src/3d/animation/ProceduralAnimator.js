@@ -49,16 +49,22 @@ export class ProceduralAnimator {
 
             // Get current frame values
             // Pass raw progress - gestures apply their own easing
-            const props = anim.evaluate(progress);
+            const result = anim.evaluate(progress);
 
-            // Call update callback
-            if (anim.callbacks.onUpdate) {
-                anim.callbacks.onUpdate(props);
+            // Handle different return types:
+            // - If result is an object with props, it's a gesture animation
+            // - If result is a boolean true, the animation marked itself complete
+            // - Otherwise check progress >= 1.0
+            const isComplete = result === true || progress >= 1.0;
+
+            // Call update callback (if callbacks exist and result is props object)
+            if (anim.callbacks && anim.callbacks.onUpdate && typeof result === 'object') {
+                anim.callbacks.onUpdate(result);
             }
 
             // Remove if complete
-            if (progress >= 1.0) {
-                if (anim.callbacks.onComplete) {
+            if (isComplete) {
+                if (anim.callbacks && anim.callbacks.onComplete) {
                     anim.callbacks.onComplete();
                 }
                 this.animations.splice(i, 1);
