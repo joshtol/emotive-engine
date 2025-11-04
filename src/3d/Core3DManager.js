@@ -103,8 +103,7 @@ export class Core3DManager {
             // Update Three.js lighting based on emotion
             this.renderer.updateLighting(emotion, emotionData);
 
-            // Update bloom pass intensity
-            this.renderer.updateBloom(this.glowIntensity);
+            // Note: Bloom is updated every frame in render() for smooth transitions
         }
 
         // Initialize or update rotation behavior from 3d config
@@ -512,6 +511,9 @@ export class Core3DManager {
 
         // Calculate final scale: base scale * morph multiplier
         const finalScale = this.scale * this.morphScaleMultiplier;
+
+        // Update bloom pass with current glow intensity (smooth transitions)
+        this.renderer.updateBloom(this.glowIntensity);
 
         // Render with Three.js
         this.renderer.render({
