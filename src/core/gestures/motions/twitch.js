@@ -177,9 +177,10 @@ export default {
      */
     '3d': {
         evaluate(progress, motion) {
-            const {config} = this;
-            let intensity = motion.intensity || config.intensity;
-            const {maxOffset} = config;
+            const config = motion.config || {};
+            let intensity = config.intensity || 8;
+            const maxOffset = config.maxOffset || 15;
+            const frequency = config.frequency || 0.08;
 
             // Apply rhythm modulation if present
             if (motion.rhythmModulation) {
@@ -198,12 +199,13 @@ export default {
             };
 
             // Determine if currently twitching (sharp probability spikes)
-            const isTwitching = random(0) < config.frequency * 3;
+            const isTwitching = random(0) < frequency * 3;
 
             if (isTwitching) {
                 // Random direction for position
                 const angle = random(1) * Math.PI * 2;
-                const distance = maxOffset * intensity / 8;
+                const PIXEL_TO_3D = 0.005; // 15px max = 0.075 units
+                const distance = maxOffset * intensity / 8 * PIXEL_TO_3D;
 
                 const posX = Math.cos(angle) * distance * random(2);
                 const posY = Math.sin(angle) * distance * random(3);
