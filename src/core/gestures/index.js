@@ -41,6 +41,9 @@ import float from './motions/float.js';
 import jitter from './motions/jitter.js';
 import wiggle from './motions/wiggle.js';
 import headBob from './motions/headBob.js';
+import lean from './motions/lean.js';
+import point from './motions/point.js';
+import reach from './motions/reach.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
@@ -140,9 +143,6 @@ const shimmer = {
     }
 };
 const groove = createPlaceholderGesture('groove', '🎵');
-const point = createPlaceholderGesture('point', '👉');
-const lean = createPlaceholderGesture('lean', '↗️');
-const reach = createPlaceholderGesture('reach', '🤚');
 
 // Rain gesture - applies doppler effect to particles
 const rain = {
