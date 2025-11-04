@@ -57,5 +57,35 @@ export default {
         duration: 200,           // Instant shock response
         easing: 'easeOutBack',  // Snappy, elastic reaction
         priority: 6             // High interrupt priority
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'unstable',           // Jerky, startled pattern
+            speed: 1.6,                 // Rapid rotation (matches modifiers.speed)
+            axes: [0, 0.45, 0],         // Fast Y-axis spin
+            shake: {
+                amplitude: 0.04,        // Moderate startled wobble
+                frequency: 3.0          // Medium frequency jerking
+            },
+            musicSync: false            // Surprise is chaotic
+        },
+        glow: {
+            color: '#FFD700',           // Bright gold (matches visual.glowColor)
+            intensity: 1.8,             // Very intense flash
+            pulse: {
+                speed: 0.3,             // Gasping pulsing (matches breathRate)
+                range: [1.0, 2.2]       // Large pulse variation (shock)
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.18,            // Large shocked inhale (matches breathDepth)
+                rate: 0.3               // Gasping breathing (matches breathRate)
+            }
+        }
     }
 };

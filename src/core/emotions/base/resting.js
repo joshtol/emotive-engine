@@ -55,5 +55,31 @@ export default {
         duration: 1000,         // Slow fade to rest
         easing: 'easeInOut',   // Gentle transition
         priority: 2            // Low priority state
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'gentle',             // Minimal drifting - sleeping
+            speed: 0.5,                 // Very slow rotation (matches modifiers.speed)
+            axes: [0, 0.15, 0],         // Minimal Y-axis drift
+            musicSync: false            // Resting doesn't sync to music
+        },
+        glow: {
+            color: '#9370DB',           // Sleepy purple (matches visual.glowColor)
+            intensity: 0.8,             // Dimmed drowsy glow
+            pulse: {
+                speed: 0.8,             // Deep slow pulsing (matches breathRate)
+                range: [0.6, 1.0]       // Subtle pulse (restful)
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.12,            // Pronounced rest breaths (matches breathDepth)
+                rate: 0.8               // Deep slow breathing (matches breathRate)
+            }
+        }
     }
 };

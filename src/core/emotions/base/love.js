@@ -57,5 +57,31 @@ export default {
         duration: 700,         // Gradual emotional shift
         easing: 'easeInOut',  // Smooth, gentle transition
         priority: 5           // Moderate emotional priority
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'orbital',            // Circling, romantic pattern
+            speed: 0.9,                 // Gentle rotation (matches modifiers.speed)
+            axes: [0, 0.28, 0],         // Smooth Y-axis orbit
+            musicSync: true             // Love syncs beautifully with music
+        },
+        glow: {
+            color: '#FF1493',           // Deep passionate pink (matches visual.glowColor)
+            intensity: 1.8,             // Strong radiant warmth
+            pulse: {
+                speed: 0.75,            // Slow content pulsing (matches breathRate)
+                range: [1.3, 2.0]       // Strong pulse variation (heartbeat-like)
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.15,            // Deep satisfied breaths (matches breathDepth)
+                rate: 0.75              // Slow breathing (matches breathRate)
+            }
+        }
     }
 };

@@ -69,5 +69,31 @@ export default {
             pupilOffset: { x: 0, y: 0 }, // Centered attention
             microAdjustments: true    // Small tracking movements
         };
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'still',              // Minimal rotation - locked concentration
+            speed: 0.5,                 // Very slow rotation
+            axes: [0, 0.1, 0],          // Minimal Y-axis drift
+            musicSync: false            // Focus doesn't sync to music
+        },
+        glow: {
+            color: '#00CED1',           // Sharp cyan (matches visual.glowColor)
+            intensity: 1.2,             // Clear defined aura
+            pulse: {
+                speed: 1.2,             // Steady pulsing (matches breathRate)
+                range: [1.0, 1.3]       // Subtle pulse (controlled)
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.08,            // Controlled breaths (matches breathDepth)
+                rate: 1.2               // Steady breathing (matches breathRate)
+            }
+        }
     }
 };

@@ -57,5 +57,35 @@ export default {
         duration: 400,       // Quick fear response
         easing: 'easeOut',  // Sudden onset
         priority: 7         // High alert priority
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'unstable',           // Trembling, jerky pattern - anxious shaking
+            speed: 1.4,                 // Faster rotation (matches modifiers.speed)
+            axes: [0, 0.3, 0],          // Only Y-axis base spin
+            shake: {
+                amplitude: 0.05,        // Noticeable trembling from fear
+                frequency: 3.5          // Rapid shaking (higher than anger)
+            },
+            musicSync: false            // Fear doesn't sync to music - chaotic
+        },
+        glow: {
+            color: '#8A2BE2',           // Dark violet (matches visual.glowColor)
+            intensity: 0.9,             // Pulsing glow
+            pulse: {
+                speed: 2.5,             // Rapid pulsing (matches breathRate)
+                range: [0.6, 1.2]       // Moderate pulse range
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.06,            // Short panicked breaths (matches breathDepth)
+                rate: 2.5               // Rapid breathing (matches breathRate)
+            }
+        }
     }
 };

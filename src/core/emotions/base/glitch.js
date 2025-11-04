@@ -66,5 +66,35 @@ export default {
         duration: 300,          // Moderate transition
         easing: 'easeInOut',    // Smooth transition
         priority: 5             // Medium priority
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'unstable',           // Glitchy, erratic pattern
+            speed: 1.1,                 // Moderate speed (matches modifiers.speed)
+            axes: [0, 0.35, 0],         // Moderate Y-axis spin
+            shake: {
+                amplitude: 0.08,        // Strong glitch wobble
+                frequency: 5.0          // Very high frequency glitching
+            },
+            musicSync: false            // Glitch is chaotic
+        },
+        glow: {
+            color: '#FF6B9D',           // Pink surprise (matches visual.primaryColor)
+            intensity: 1.2,             // Moderate intensity
+            pulse: {
+                speed: 0.4,             // Slow pulsing (matches breathRate)
+                range: [0.8, 1.6]       // Wide pulse variation (glitchy)
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.15,            // Moderate breaths (matches breathDepth)
+                rate: 0.4               // Slow breathing (matches breathRate)
+            }
+        }
     }
 };

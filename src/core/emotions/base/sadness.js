@@ -63,5 +63,31 @@ export default {
         duration: 800,         // Gradual mood shift
         easing: 'easeInOut',  // Smooth emotional transition
         priority: 3           // Lower emotional priority
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'gentle',             // Slow, heavy drifting - melancholic
+            speed: 0.7,                 // Slow rotation (matches modifiers.speed)
+            axes: [0, 0.2, 0],          // Slow Y-axis drift
+            musicSync: false            // Sadness doesn't sync to music
+        },
+        glow: {
+            color: '#4169E1',           // Royal blue (matches visual.glowColor)
+            intensity: 0.65,            // Dimmer subdued glow
+            pulse: {
+                speed: 0.6,             // Slow heavy pulsing (matches breathRate)
+                range: [0.5, 0.8]       // Subtle pulse (muted)
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.12,            // Deep sighing breaths (matches breathDepth)
+                rate: 0.6               // Slow breathing (matches breathRate)
+            }
+        }
     }
 };

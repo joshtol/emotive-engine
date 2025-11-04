@@ -57,5 +57,35 @@ export default {
         duration: 300,              // Quick state entry
         easing: 'easeOutElastic',  // Bouncy, elastic entrance
         priority: 6                // High-energy priority level
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'unstable',           // Vibrating pattern - buzzing with excitement
+            speed: 1.4,                 // Fast rotation (matches modifiers.speed)
+            axes: [0, 0.4, 0],          // Faster Y-axis spin (more energetic than neutral)
+            shake: {
+                amplitude: 0.03,        // Moderate vibration
+                frequency: 4.0          // High-frequency buzzing
+            },
+            musicSync: false            // Could sync to music in future
+        },
+        glow: {
+            color: '#FF6B35',           // Vibrant orange-red (matches visual.glowColor)
+            intensity: 1.5,             // Strong energetic aura
+            pulse: {
+                speed: 2.0,             // Quick pulsing (matches breathRate)
+                range: [1.0, 1.8]       // Strong pulse variation
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.14,            // Deep energized breaths (matches breathDepth)
+                rate: 2.0               // Quick breathing (matches breathRate)
+            }
+        }
     }
 };

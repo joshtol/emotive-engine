@@ -57,5 +57,31 @@ export default {
         duration: 600,       // Moderate transition speed
         easing: 'easeIn',   // Gradual onset of revulsion
         priority: 4         // Mid-level priority state
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'gentle',             // Subtle wobble - uneasy motion
+            speed: 0.9,                 // Slower rotation (matches modifiers.speed)
+            axes: [0, 0.25, 0],         // Slower Y-axis spin
+            musicSync: false            // Disgust doesn't sync to music
+        },
+        glow: {
+            color: '#9ACD32',           // Sickly yellow-green (matches visual.glowColor)
+            intensity: 1.0,             // Toxic glow
+            pulse: {
+                speed: 0.7,             // Slow queasy pulsing (matches breathRate)
+                range: [0.7, 1.2]       // Moderate pulse
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.04,            // Shallow uncomfortable breaths (matches breathDepth)
+                rate: 0.7               // Slow breathing (matches breathRate)
+            }
+        }
     }
 };

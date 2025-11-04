@@ -59,5 +59,31 @@ export default {
         duration: 600,           // Smooth emergence
         easing: 'easeOutExpo',  // Explosive, radiant entrance
         priority: 8             // High priority transcendent state
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'rhythmic',           // Graceful, flowing pattern - transcendent dance
+            speed: 1.4,                 // Energized rotation (matches modifiers.speed)
+            axes: [0, 0.35, 0],         // Slightly faster than neutral
+            musicSync: true             // Euphoria syncs beautifully with music
+        },
+        glow: {
+            color: '#FFB6C1',           // Light pink (matches visual.glowColor)
+            intensity: 1.2,             // Bright radiance
+            pulse: {
+                speed: 1.3,             // Elevated pulsing (matches breathRate)
+                range: [0.9, 1.5]       // Graceful pulse variation
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.25,            // Full satisfied breaths (matches breathDepth)
+                rate: 1.3               // Elevated breathing (matches breathRate)
+            }
+        }
     }
 };
