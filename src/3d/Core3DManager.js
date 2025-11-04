@@ -132,12 +132,21 @@ export class Core3DManager {
         // Stop all previous emotion animations to prevent stacking
         this.animator.stopAll();
 
+        // Store base glow intensity for this emotion (before animation modulation)
+        this.baseGlowIntensity = emotionData?.visual?.glowIntensity || 1.0;
+
         // Trigger emotion animation
         this.animator.playEmotion(emotion, {
             onUpdate: (props, _progress) => {
-                // Update properties from animation (multiplicative for scale)
+                // Update properties from animation
+                // Scale and glowIntensity are multiplicative (base * modifier)
                 if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
-                if (props.glowIntensity !== undefined) this.glowIntensity = props.glowIntensity;
+                if (props.glowIntensity !== undefined) {
+                    this.glowIntensity = this.baseGlowIntensity * props.glowIntensity;
+                } else {
+                    // Reset to base when animation doesn't specify (prevents stacking)
+                    this.glowIntensity = this.baseGlowIntensity;
+                }
                 if (props.position) this.position = props.position;
                 // NOTE: Ignore props.rotation - rotation is now managed by quaternion system
                 // Emotion animations (anger shake, fear tremble) should use baseEuler or RotationBehavior

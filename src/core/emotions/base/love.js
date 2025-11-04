@@ -62,7 +62,7 @@ export default {
     // 3D rotation behavior and effects
     '3d': {
         rotation: {
-            type: 'orbital',            // Circling, romantic pattern
+            type: 'gentle',             // Smooth gentle rotation (wobble-free)
             speed: 0.9,                 // Gentle rotation (matches modifiers.speed)
             axes: [0, 0.28, 0],         // Smooth Y-axis orbit
             musicSync: true             // Love syncs beautifully with music
