@@ -286,8 +286,8 @@ export default {
                 const t = tiltPhase * Math.PI * frequency;
                 const tiltProgress = Math.sin(t);
 
-                // Convert tilt angle to radians
-                const maxTiltRad = (tiltAngle * Math.PI / 180) * strength;
+                // Convert tilt angle to radians and reduce for subtle tilt
+                const maxTiltRad = (tiltAngle * Math.PI / 180) * strength * 0.4; // Reduced to 40% (18°)
 
                 // Z-axis rotation for side-to-side head tilt
                 zRotation = tiltProgress * maxTiltRad;
