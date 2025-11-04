@@ -47,10 +47,10 @@ export class Core3DManager {
         this.rotationBehavior = null; // Will be initialized in setEmotion
 
         // Righting behavior (self-stabilization like inflatable punching clowns)
-        // Default: strong righting on pitch/roll, free yaw spin
+        // Very strong righting keeps models always upright regardless of shake
         this.rightingBehavior = new RightingBehavior({
-            strength: 2.0,              // Strong righting force to counter shake
-            damping: 0.85,              // High damping for smooth return
+            strength: 5.0,              // Very strong righting force - always upright
+            damping: 0.9,               // High damping for smooth, no oscillation
             centerOfMass: [0, -0.3, 0], // Bottom-heavy
             axes: { pitch: true, roll: true, yaw: false }
         });
