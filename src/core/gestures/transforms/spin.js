@@ -300,10 +300,14 @@ export default {
             }
 
             // Calculate Y-axis rotation (spinning around vertical axis)
+            // Use sin curve so rotation returns to 0 at end for smooth landing
             const rotations = config.rotations || 1;
             const rotationAmount = rotations * Math.PI * 2 * strength;
             const direction = data.direction === 'counter-clockwise' ? -1 : 1;
-            const yRotation = rotationAmount * speedProgress * direction;
+
+            // Sin curve: 0 → peak → 0 (smooth return to origin for ambient rotation blending)
+            const rotationCurve = Math.sin(speedProgress * Math.PI);
+            const yRotation = rotationAmount * rotationCurve * direction;
 
             // Scale changes during spin
             const scaleAmount = config.scaleAmount || 0.1;

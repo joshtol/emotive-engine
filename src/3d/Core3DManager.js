@@ -214,27 +214,14 @@ export class Core3DManager {
                 }
             },
             callbacks: {
-                onUpdate: (props, progress) => {
+                onUpdate: (props, _progress) => {
                     if (props.position) this.position = props.position;
                     if (props.rotation) {
-                        // Blend rotation: gesture rotates relative to starting baseRotation,
-                        // then smoothly transitions to predicted end baseRotation
-
-                        // Gesture's rotation relative to start
-                        const gestureRotation = props.rotation;
-
-                        // Blend between startBaseRotation and predictedEndBaseRotation
-                        // based on gesture progress (so rotation "lands" smoothly)
-                        const blendedBaseRotation = [
-                            gestureState.startBaseRotation[0] + (gestureState.predictedEndBaseRotation[0] - gestureState.startBaseRotation[0]) * progress,
-                            gestureState.startBaseRotation[1] + (gestureState.predictedEndBaseRotation[1] - gestureState.startBaseRotation[1]) * progress,
-                            gestureState.startBaseRotation[2] + (gestureState.predictedEndBaseRotation[2] - gestureState.startBaseRotation[2]) * progress
-                        ];
-
-                        // Add gesture rotation to blended base rotation
-                        this.rotation[0] = blendedBaseRotation[0] + gestureRotation[0];
-                        this.rotation[1] = blendedBaseRotation[1] + gestureRotation[1];
-                        this.rotation[2] = blendedBaseRotation[2] + gestureRotation[2];
+                        // Add gesture rotation to current baseRotation (which continues updating)
+                        // Gestures must return rotation to [0,0,0] at end for smooth landing
+                        this.rotation[0] = this.baseRotation[0] + props.rotation[0];
+                        this.rotation[1] = this.baseRotation[1] + props.rotation[1];
+                        this.rotation[2] = this.baseRotation[2] + props.rotation[2];
                     }
                     if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
                     if (props.glowIntensity !== undefined) this.glowIntensity = props.glowIntensity;
@@ -519,7 +506,7 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
-        // Update base rotation using state-based rotation behavior
+        // Always update base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
             this.rotationBehavior.update(deltaTime, this.baseRotation);
         } else {
