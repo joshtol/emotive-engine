@@ -253,4 +253,26 @@ export default class RotationBehavior {
         this.shake = config.shake || { amplitude: 0, frequency: 0 };
         this.musicSync = config.musicSync !== undefined ? config.musicSync : false;
     }
+
+    /**
+     * Apply undertone multipliers to rotation behavior
+     * Called after updateConfig when an undertone is active
+     * @param {object} undertoneRotation - Undertone rotation multipliers
+     */
+    applyUndertoneMultipliers(undertoneRotation) {
+        // Apply speed multiplier
+        if (undertoneRotation.speedMultiplier !== undefined) {
+            this.speed *= undertoneRotation.speedMultiplier;
+        }
+
+        // Apply shake multiplier to shake amplitude
+        if (undertoneRotation.shakeMultiplier !== undefined && this.shake.amplitude) {
+            this.shake.amplitude *= undertoneRotation.shakeMultiplier;
+        }
+
+        // Override music sync if specified
+        if (undertoneRotation.musicSyncOverride !== undefined) {
+            this.musicSync = undertoneRotation.musicSyncOverride;
+        }
+    }
 }

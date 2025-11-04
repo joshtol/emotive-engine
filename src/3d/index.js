@@ -308,7 +308,7 @@ export class EmotiveMascot3D {
         }
 
         if (this.core3D) {
-            this.core3D.setEmotion(emotion);
+            this.core3D.setEmotion(emotion, this.undertone);
         }
 
         // Clear all particles for instant transition

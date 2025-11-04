@@ -130,4 +130,16 @@ export default class RightingBehavior {
         this.centerOfMass = config.centerOfMass || this.centerOfMass;
         this.axes = config.axes || this.axes;
     }
+
+    /**
+     * Apply undertone multipliers to righting behavior
+     * Called after updateConfig when an undertone is active
+     * @param {object} undertoneRighting - Undertone righting multipliers
+     */
+    applyUndertoneMultipliers(undertoneRighting) {
+        // Apply strength multiplier
+        if (undertoneRighting.strengthMultiplier !== undefined) {
+            this.strength *= undertoneRighting.strengthMultiplier;
+        }
+    }
 }

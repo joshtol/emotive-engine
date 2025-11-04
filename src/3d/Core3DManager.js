@@ -16,6 +16,7 @@ import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
+import { getUndertoneModifier } from '../config/undertoneModifiers.js';
 
 export class Core3DManager {
     constructor(canvas, options = {}) {
@@ -57,6 +58,7 @@ export class Core3DManager {
 
         // Current state
         this.emotion = options.emotion || 'neutral';
+        this.undertone = options.undertone || null;
         this.glowColor = [1.0, 1.0, 1.0]; // RGB
         this.glowIntensity = 1.0;
 
@@ -84,9 +86,12 @@ export class Core3DManager {
     /**
      * Set emotional state
      * Updates glow color, lighting, rotation behavior, and triggers emotion animation
+     * @param {string} emotion - Emotion name
+     * @param {string|null} undertone - Optional undertone modifier
      */
-    setEmotion(emotion) {
+    setEmotion(emotion, undertone = null) {
         this.emotion = emotion;
+        this.undertone = undertone;
 
         // Get emotion color and intensity from existing emotion system
         const emotionData = getEmotion(emotion);
@@ -128,11 +133,32 @@ export class Core3DManager {
             }
         }
 
+        // Apply undertone multipliers if present
+        const undertoneModifier = getUndertoneModifier(undertone);
+        if (undertoneModifier && undertoneModifier['3d']) {
+            const ut3d = undertoneModifier['3d'];
+
+            // Apply rotation multipliers to RotationBehavior
+            if (ut3d.rotation && this.rotationBehavior) {
+                this.rotationBehavior.applyUndertoneMultipliers(ut3d.rotation);
+            }
+
+            // Apply righting multipliers to RightingBehavior
+            if (ut3d.righting && this.rightingBehavior) {
+                this.rightingBehavior.applyUndertoneMultipliers(ut3d.righting);
+            }
+        }
+
         // Stop all previous emotion animations to prevent stacking
         this.animator.stopAll();
 
         // Store base glow intensity for this emotion (before animation modulation)
         this.baseGlowIntensity = emotionData?.visual?.glowIntensity || 1.0;
+
+        // Apply undertone glow multiplier to base intensity
+        if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].glow) {
+            this.baseGlowIntensity *= undertoneModifier['3d'].glow.intensityMultiplier;
+        }
 
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
         this.renderer.updateBloom(this.baseGlowIntensity, 1.0);
