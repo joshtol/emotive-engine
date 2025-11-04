@@ -119,6 +119,9 @@ export class Core3DManager {
             }
         }
 
+        // Stop all previous emotion animations to prevent stacking
+        this.animator.stopAll();
+
         // Trigger emotion animation
         this.animator.playEmotion(emotion, {
             onUpdate: (props, _progress) => {
