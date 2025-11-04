@@ -92,5 +92,31 @@ export default {
         peekInterval: 4000,     // Time between peek gestures
         maxThreatDistance: 300, // Distance for threat calculation
         alertThreshold: 0.7     // Threat level for maximum alert
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'suspicious',         // Biased toward facing forward - nervous watchfulness
+            speed: 1.0,                 // Normal speed for 4-second cycle
+            axes: [0, 0, 0],            // Managed by suspicious behavior (sawtooth rotation)
+            musicSync: false            // Suspicion doesn't sync to music
+        },
+        glow: {
+            color: '#6B46C1',           // Deep purple paranoia
+            intensity: 0.85,            // Watchful glow
+            pulse: {
+                speed: 0.6,             // Slow deliberate pulse (matches breathRate)
+                range: [0.7, 1.0]       // Subtle pulse (tense, controlled)
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.04,            // Very shallow breathing (matches breathDepth)
+                rate: 0.6               // Slow deliberate breathing (matches breathRate)
+            }
+        }
     }
 };

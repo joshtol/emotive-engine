@@ -76,6 +76,9 @@ export default class RotationBehavior {
         case 'still':
             return this._evaluateStill(deltaTime, baseRotation);
 
+        case 'suspicious':
+            return this._evaluateSuspicious(deltaTime, baseRotation);
+
         default:
             return this._evaluateGentle(deltaTime, baseRotation);
         }
@@ -177,7 +180,7 @@ export default class RotationBehavior {
 
     /**
      * Still rotation - minimal or no rotation
-     * Used by: focused, resting, suspicion
+     * Used by: focused, resting
      */
     _evaluateStill(deltaTime, baseRotation) {
         // Very slow or no rotation - just maintain current rotation
@@ -188,6 +191,45 @@ export default class RotationBehavior {
         baseRotation[0] += this.axes[0] * stillSpeed * dt;
         baseRotation[1] += this.axes[1] * stillSpeed * dt;
         baseRotation[2] += this.axes[2] * stillSpeed * dt;
+
+        return baseRotation;
+    }
+
+    /**
+     * Suspicious rotation - biased toward facing forward
+     * Used by: suspicion
+     *
+     * Like a nervous person keeping eyes on a threat - spends most time
+     * facing forward, then quick snap to look around before returning.
+     * Uses sawtooth wave for asymmetric rotation (slow one way, fast back).
+     */
+    _evaluateSuspicious(deltaTime, baseRotation) {
+        const dt = deltaTime * 0.001; // Convert to seconds
+        const time = this.time * 0.001; // Time in seconds
+
+        // Rotation cycle parameters
+        const cycleDuration = 4.0; // 4 second cycle (configurable via speed)
+        const adjustedCycle = cycleDuration / this.speed;
+
+        // Current position in cycle [0, 1]
+        const cycleProgress = (time % adjustedCycle) / adjustedCycle;
+
+        // Sawtooth wave: slow rotation away from forward (0 → 180°), quick snap back (180° → 0°)
+        // Spend 75% of time rotating slowly away, 25% snapping back
+        let targetYaw;
+        if (cycleProgress < 0.75) {
+            // Slow rotation phase: 0 → π over 75% of cycle
+            targetYaw = (cycleProgress / 0.75) * Math.PI;
+        } else {
+            // Quick snap back: π → 0 over 25% of cycle
+            const snapProgress = (cycleProgress - 0.75) / 0.25;
+            targetYaw = Math.PI * (1.0 - snapProgress);
+        }
+
+        // Smooth interpolation toward target (prevents instant jumps)
+        const lerpSpeed = 3.0; // Higher = faster following
+        const yawDelta = targetYaw - baseRotation[1];
+        baseRotation[1] += yawDelta * lerpSpeed * dt;
 
         return baseRotation;
     }
