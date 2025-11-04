@@ -149,10 +149,11 @@ export default {
                 wobbleAmount *= (motion.rhythmModulation.wobbleMultiplier || 1);
             }
 
-            // Upward Y movement - scale amplitude from pixels to 3D units
-            // amplitude is in pixels (e.g., 80), convert to reasonable 3D range (0-0.5)
+            // Upward Y movement - float up and back down (return to origin)
+            // Use sine wave: starts at 0, peaks at middle, returns to 0
             const PIXEL_TO_3D = 0.005; // 80px = 0.4 units
-            const floatDistance = amplitude * progress * strength * (1 - progress * 0.5) * PIXEL_TO_3D;
+            const floatCurve = Math.sin(progress * Math.PI); // 0 → 1 → 0
+            const floatDistance = amplitude * floatCurve * strength * PIXEL_TO_3D;
 
             // Horizontal wobble as it floats - scale from pixels
             const wobble = Math.sin(progress * Math.PI * 4) * wobbleAmount * 0.3 * PIXEL_TO_3D;
@@ -164,8 +165,8 @@ export default {
             const tiltX = Math.sin(progress * Math.PI * 2) * 0.1;
             const tiltZ = Math.cos(progress * Math.PI * 3) * 0.08;
 
-            // Scale increases slightly as it floats (depth perception)
-            const scale = 1.0 + progress * 0.1;
+            // Scale pulses with float height (depth perception) - returns to 1.0
+            const scale = 1.0 + floatCurve * 0.1; // Grows with height, shrinks back
 
             return {
                 position: [wobble, floatDistance, 0], // Positive Y for upward in 3D
