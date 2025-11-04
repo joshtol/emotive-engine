@@ -59,7 +59,7 @@ export class ProceduralAnimator {
 
             // Call update callback (if callbacks exist and result is props object)
             if (anim.callbacks && anim.callbacks.onUpdate && typeof result === 'object') {
-                anim.callbacks.onUpdate(result);
+                anim.callbacks.onUpdate(result, progress);
             }
 
             // Remove if complete
