@@ -93,5 +93,31 @@ export default {
     renderCore(_ctx, _x, _y, _radius) {
         // Return false to use default rendering
         return false;
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'gentle',             // Smooth slow spin
+            speed: 1.0,                 // 1.0x baseline rotation speed
+            axes: [0, 0.01, 0],         // Rotation rates [X, Y, Z] - gentle Y rotation
+            musicSync: false            // Neutral doesn't sync to music
+        },
+        glow: {
+            color: '#00BCD4',           // Cyan baseline
+            intensity: 0.9,             // Slightly softer glow
+            pulse: {
+                speed: 1.0,             // Normal pulsing (matches breathRate)
+                range: [0.8, 1.0]       // Subtle pulse between 80% and 100%
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.08,            // 8% size variation (matches breathDepth)
+                rate: 1.0               // Normal breathing (matches breathRate)
+            }
+        }
     }
 };

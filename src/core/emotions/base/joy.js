@@ -83,5 +83,31 @@ export default {
             pupilOffset: { x: 0, y: -0.1 },  // Looking slightly up
             sparkle: true  // Add sparkle effect
         };
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'rhythmic',           // Syncs to music BPM
+            speed: 1.8,                 // 1.8x faster rotation (matches modifiers.speed)
+            axes: [0, 0.015, 0],        // Rotation rates [X, Y, Z] - faster Y spin
+            musicSync: true             // Sync rotation speed pulses to BPM
+        },
+        glow: {
+            color: '#FFEB3B',           // Bright sunshine yellow
+            intensity: 1.6,             // Strong cheerful glow
+            pulse: {
+                speed: 1.5,             // Excited pulsing (matches breathRate)
+                range: [1.2, 1.8]       // Pulse between 120% and 180% intensity
+            }
+        },
+        scale: {
+            base: 1.0,
+            breathe: {
+                enabled: true,
+                depth: 0.10,            // 10% size variation (matches breathDepth)
+                rate: 1.5               // Excited breathing (matches breathRate)
+            }
+        }
     }
 };

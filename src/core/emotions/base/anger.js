@@ -77,5 +77,35 @@ export default {
         particleTrails: 'fire',    // Incendiary particle trail style
         glowPulse: true,          // Rhythmic aura fluctuation
         temperatureEffect: 'hot'   // Warm spectrum color shifting
+    },
+
+    // 3D rotation behavior and effects
+    '3d': {
+        rotation: {
+            type: 'unstable',           // Wobble/shake pattern - uncontrolled rage
+            speed: 1.5,                 // 1.5x faster than neutral rotation
+            axes: [0.05, 0.02, 0.03],   // Rotation rates [X, Y, Z] - wobbles on all axes
+            shake: {
+                amplitude: 0.02,        // Max rotation shake angle (radians)
+                frequency: 8            // Rapid tremor (8 Hz)
+            },
+            musicSync: false            // Anger doesn't sync to music - chaotic
+        },
+        glow: {
+            color: '#DC143C',           // Crimson rage (matches visual.glowColor)
+            intensity: 1.8,             // Strong burning aura
+            pulse: {
+                speed: 2.2,             // Rapid pulsing (matches breathRate)
+                range: [0.8, 2.0]       // Pulse between 80% and 200% intensity
+            }
+        },
+        scale: {
+            base: 1.0,                  // Normal size
+            breathe: {
+                enabled: true,
+                depth: 0.15,            // 15% size variation (matches breathDepth)
+                rate: 2.2               // Rapid breathing (matches breathRate)
+            }
+        }
     }
 };

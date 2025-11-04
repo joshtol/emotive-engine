@@ -11,6 +11,7 @@
 import { ThreeRenderer } from './ThreeRenderer.js';
 import { THREE_GEOMETRIES } from './geometries/ThreeGeometries.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
+import RotationBehavior from './behaviors/RotationBehavior.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 
@@ -40,6 +41,9 @@ export class Core3DManager {
         // Animation controller
         this.animator = new ProceduralAnimator();
 
+        // Rotation behavior system
+        this.rotationBehavior = null; // Will be initialized in setEmotion
+
         // Current state
         this.emotion = options.emotion || 'neutral';
         this.glowColor = [1.0, 1.0, 1.0]; // RGB
@@ -52,13 +56,16 @@ export class Core3DManager {
         this.morphScaleMultiplier = 1.0; // Separate multiplier for morph animations
         this.position = [0, 0, 0];
 
+        // Rhythm engine reference (for BPM sync)
+        this.rhythmEngine = options.rhythmEngine || null;
+
         // Initialize emotion
         this.setEmotion(this.emotion);
     }
 
     /**
      * Set emotional state
-     * Updates glow color, lighting, and triggers emotion animation
+     * Updates glow color, lighting, rotation behavior, and triggers emotion animation
      */
     setEmotion(emotion) {
         this.emotion = emotion;
@@ -80,6 +87,28 @@ export class Core3DManager {
 
             // Update bloom pass intensity
             this.renderer.updateBloom(this.glowIntensity);
+        }
+
+        // Initialize or update rotation behavior from 3d config
+        if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
+            if (this.rotationBehavior) {
+                // Update existing behavior
+                this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
+            } else {
+                // Create new rotation behavior
+                this.rotationBehavior = new RotationBehavior(
+                    emotionData['3d'].rotation,
+                    this.rhythmEngine
+                );
+            }
+        } else {
+            // Fall back to default gentle rotation if no 3d config
+            if (!this.rotationBehavior) {
+                this.rotationBehavior = new RotationBehavior(
+                    { type: 'gentle', speed: 1.0, axes: [0, 0.01, 0] },
+                    this.rhythmEngine
+                );
+            }
         }
 
         // Trigger emotion animation
@@ -415,8 +444,13 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
-        // Auto-rotate based on emotion (update base rotation)
-        this.baseRotation[1] += deltaTime * 0.0003; // Slow Y rotation
+        // Update base rotation using state-based rotation behavior
+        if (this.rotationBehavior) {
+            this.rotationBehavior.update(deltaTime, this.baseRotation);
+        } else {
+            // Fallback: simple Y rotation if no behavior defined
+            this.baseRotation[1] += deltaTime * 0.0003;
+        }
 
         // If no gesture is active, sync rotation to base rotation
         if (this.animator.animations.length === 0) {
