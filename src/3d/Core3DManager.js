@@ -8,6 +8,7 @@
  * - Emotion-based lighting and materials
  */
 
+import * as THREE from 'three';
 import { ThreeRenderer } from './ThreeRenderer.js';
 import { THREE_GEOMETRIES } from './geometries/ThreeGeometries.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
@@ -48,8 +49,14 @@ export class Core3DManager {
         this.emotion = options.emotion || 'neutral';
         this.glowColor = [1.0, 1.0, 1.0]; // RGB
         this.glowIntensity = 1.0;
-        this.rotation = [0, 0, 0]; // Euler angles (x, y, z)
-        this.baseRotation = [0, 0, 0]; // Base rotation (for ambient spin)
+
+        // Quaternion-based rotation system for smooth 3D orientation
+        this.baseQuaternion = new THREE.Quaternion(); // Ambient rotation (from emotion state)
+        this.gestureQuaternion = new THREE.Quaternion(); // Gesture delta rotation
+        this.finalQuaternion = new THREE.Quaternion(); // Combined result
+        this.tempEuler = new THREE.Euler(); // Temp for conversions
+        this.rotation = [0, 0, 0]; // Final Euler angles for renderer
+
         // Match 2D sizing: core is 1/12th of canvas size (coreSizeDivisor: 12)
         this.baseScale = 0.16; // Properly sized core relative to particles
         this.scale = 0.16; // Current scale (base + animation)
@@ -217,11 +224,9 @@ export class Core3DManager {
                 onUpdate: (props, _progress) => {
                     if (props.position) this.position = props.position;
                     if (props.rotation) {
-                        // Add gesture rotation to current baseRotation (which continues updating)
-                        // Gestures must return rotation to [0,0,0] at end for smooth landing
-                        this.rotation[0] = this.baseRotation[0] + props.rotation[0];
-                        this.rotation[1] = this.baseRotation[1] + props.rotation[1];
-                        this.rotation[2] = this.baseRotation[2] + props.rotation[2];
+                        // Convert gesture Euler rotation to quaternion
+                        this.tempEuler.set(props.rotation[0], props.rotation[1], props.rotation[2], 'XYZ');
+                        this.gestureQuaternion.setFromEuler(this.tempEuler);
                     }
                     if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
                     if (props.glowIntensity !== undefined) this.glowIntensity = props.glowIntensity;
@@ -506,20 +511,36 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
+        // Temporary Euler array for baseRotation (RotationBehavior modifies Euler angles)
+        const baseEuler = [0, 0, 0];
+
         // Always update base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
-            this.rotationBehavior.update(deltaTime, this.baseRotation);
+            this.rotationBehavior.update(deltaTime, baseEuler);
         } else {
             // Fallback: simple Y rotation if no behavior defined
-            this.baseRotation[1] += deltaTime * 0.0003;
+            baseEuler[1] += deltaTime * 0.0003;
         }
 
-        // If no gesture is active, sync rotation to base rotation
+        // Convert base Euler to quaternion
+        this.tempEuler.set(baseEuler[0], baseEuler[1], baseEuler[2], 'XYZ');
+        this.baseQuaternion.setFromEuler(this.tempEuler);
+
+        // If no gesture is active, reset gesture quaternion to identity
         if (this.animator.animations.length === 0) {
-            this.rotation[0] = this.baseRotation[0];
-            this.rotation[1] = this.baseRotation[1];
-            this.rotation[2] = this.baseRotation[2];
+            this.gestureQuaternion.identity();
         }
+
+        // Combine quaternions: finalQuaternion = baseQuaternion * gestureQuaternion
+        // This applies gesture rotation in the local space of the base rotation
+        this.finalQuaternion.copy(this.baseQuaternion);
+        this.finalQuaternion.multiply(this.gestureQuaternion);
+
+        // Convert final quaternion back to Euler angles for renderer
+        this.tempEuler.setFromQuaternion(this.finalQuaternion, 'XYZ');
+        this.rotation[0] = this.tempEuler.x;
+        this.rotation[1] = this.tempEuler.y;
+        this.rotation[2] = this.tempEuler.z;
 
         // Calculate final scale: base scale * morph multiplier
         const finalScale = this.scale * this.morphScaleMultiplier;

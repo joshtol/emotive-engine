@@ -158,12 +158,14 @@ export default {
             // Horizontal wobble as it floats - scale from pixels
             const wobble = Math.sin(progress * Math.PI * 4) * wobbleAmount * 0.3 * PIXEL_TO_3D;
 
-            // Gentle spinning rotation as it rises
-            const spinRotation = progress * Math.PI * 0.5 * strength;
+            // Gentle spinning rotation as it rises - returns to 0
+            const spinCurve = Math.sin(progress * Math.PI); // 0 → 1 → 0
+            const spinRotation = spinCurve * Math.PI * 0.5 * strength;
 
-            // Slight tilt for natural balloon-like motion
-            const tiltX = Math.sin(progress * Math.PI * 2) * 0.1;
-            const tiltZ = Math.cos(progress * Math.PI * 3) * 0.08;
+            // Slight tilt for natural balloon-like motion - returns to 0
+            const tiltCurve = Math.sin(progress * Math.PI); // 0 → 1 → 0
+            const tiltX = tiltCurve * Math.sin(progress * Math.PI * 2) * 0.1;
+            const tiltZ = tiltCurve * Math.cos(progress * Math.PI * 3) * 0.08;
 
             // Scale pulses with float height (depth perception) - returns to 1.0
             const scale = 1.0 + floatCurve * 0.1; // Grows with height, shrinks back
