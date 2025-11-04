@@ -39,6 +39,7 @@ import twitch from './motions/twitch.js';
 import sway from './motions/sway.js';
 import float from './motions/float.js';
 import jitter from './motions/jitter.js';
+import wiggle from './motions/wiggle.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
@@ -137,7 +138,6 @@ const shimmer = {
         return false;
     }
 };
-const wiggle = createPlaceholderGesture('wiggle', '〰️');
 const groove = createPlaceholderGesture('groove', '🎵');
 const point = createPlaceholderGesture('point', '👉');
 const lean = createPlaceholderGesture('lean', '↗️');
