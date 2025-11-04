@@ -250,8 +250,8 @@ export default {
             const frequency = config.frequency || 2;
             const strength = config.strength || 0.6;
 
-            // Scale pixels to 3D units
-            const PIXEL_TO_3D = 0.008; // 30px = 0.24 units
+            // Scale pixels to 3D units - keep bounce low to stay on-screen
+            const PIXEL_TO_3D = 0.002; // 30px = 0.06 units max, 0.036 with strength
             const amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
             // Apply easing
