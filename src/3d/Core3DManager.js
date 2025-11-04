@@ -421,7 +421,7 @@ export class Core3DManager {
         this.baseRotation[1] += deltaTime * 0.0003; // Slow Y rotation
 
         // If no gesture is active, sync rotation to base rotation
-        if (!this.animator.isAnimating()) {
+        if (this.animator.animations.length === 0) {
             this.rotation = [...this.baseRotation];
         }
 
