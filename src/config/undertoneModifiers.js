@@ -71,16 +71,28 @@ export const UNDERTONE_MODIFIERS = {
         amplitude: 1.0,
         intensity: 1.0,
         smoothness: 1.0,
-        regularity: 1.0
+        regularity: 1.0,
+        '3d': {
+            rotation: { speedMultiplier: 1.0, shakeMultiplier: 1.0 },
+            glow: { intensityMultiplier: 1.0, pulseSpeedMultiplier: 1.0 },
+            scale: { breathDepthMultiplier: 1.0, breathRateMultiplier: 1.0 },
+            righting: { strengthMultiplier: 1.0 }
+        }
     },
-    
+
     // Clear undertone - no modification
     clear: {
         speed: 1.0,
         amplitude: 1.0,
         intensity: 1.0,
         smoothness: 1.0,
-        regularity: 1.0
+        regularity: 1.0,
+        '3d': {
+            rotation: { speedMultiplier: 1.0, shakeMultiplier: 1.0 },
+            glow: { intensityMultiplier: 1.0, pulseSpeedMultiplier: 1.0 },
+            scale: { breathDepthMultiplier: 1.0, breathRateMultiplier: 1.0 },
+            righting: { strengthMultiplier: 1.0 }
+        }
     },
     
     nervous: {
@@ -90,7 +102,25 @@ export const UNDERTONE_MODIFIERS = {
         smoothness: 0.7,   // 30% less smooth (fluttery)
         regularity: 0.6,   // Irregular (butterflies)
         addFlutter: true,  // Butterfly-like flutter
-        addMicroShake: true // Subtle tremor
+        addMicroShake: true, // Subtle tremor
+        '3d': {
+            rotation: {
+                speedMultiplier: 1.2,      // Faster rotation matches speed
+                shakeMultiplier: 2.0,      // Much more shake/wobble (nervous tremor)
+                musicSyncOverride: false   // Disable music sync (chaotic)
+            },
+            glow: {
+                intensityMultiplier: 1.1,  // Slightly brighter (heightened)
+                pulseSpeedMultiplier: 1.5  // Faster pulsing (anxious heartbeat)
+            },
+            scale: {
+                breathDepthMultiplier: 0.7, // Shallow rapid breaths
+                breathRateMultiplier: 1.4   // Faster breathing (panic)
+            },
+            righting: {
+                strengthMultiplier: 0.9    // Slightly less stable (nervous wobble)
+            }
+        }
     },
     
     confident: {
@@ -100,7 +130,25 @@ export const UNDERTONE_MODIFIERS = {
         smoothness: 1.1,   // 10% smoother (controlled)
         regularity: 1.2,   // Very regular (assured)
         addPower: true,    // Strong, decisive motion
-        addHold: true      // Brief pause at peaks
+        addHold: true,     // Brief pause at peaks
+        '3d': {
+            rotation: {
+                speedMultiplier: 0.9,      // Slower, more deliberate
+                shakeMultiplier: 0.5,      // Much less shake (controlled)
+                musicSyncOverride: true    // Strong beat sync (assured)
+            },
+            glow: {
+                intensityMultiplier: 1.2,  // Brighter (bold presence)
+                pulseSpeedMultiplier: 0.9  // Slower steady pulse (calm confidence)
+            },
+            scale: {
+                breathDepthMultiplier: 1.2, // Deeper full breaths
+                breathRateMultiplier: 0.9   // Slower breathing (relaxed)
+            },
+            righting: {
+                strengthMultiplier: 1.3    // More stable (rock solid)
+            }
+        }
     },
     
     tired: {
@@ -110,7 +158,25 @@ export const UNDERTONE_MODIFIERS = {
         smoothness: 1.3,   // 30% smoother (sluggish)
         regularity: 0.8,   // Slightly irregular (drowsy)
         addDroop: true,    // Downward tendency
-        addPause: true     // Occasional hesitation
+        addPause: true,    // Occasional hesitation
+        '3d': {
+            rotation: {
+                speedMultiplier: 0.7,      // Much slower rotation (lethargic)
+                shakeMultiplier: 0.3,      // Minimal shake (no energy)
+                musicSyncOverride: false   // Ignore music (too tired)
+            },
+            glow: {
+                intensityMultiplier: 0.7,  // Dimmer (low energy)
+                pulseSpeedMultiplier: 0.7  // Slower pulse (drowsy)
+            },
+            scale: {
+                breathDepthMultiplier: 0.8, // Shallow tired breaths
+                breathRateMultiplier: 0.7   // Slow breathing (sleepy)
+            },
+            righting: {
+                strengthMultiplier: 0.8    // Less stable (drooping, sagging)
+            }
+        }
     },
     
     intense: {
@@ -120,7 +186,25 @@ export const UNDERTONE_MODIFIERS = {
         smoothness: 0.6,   // 40% less smooth (sharp)
         regularity: 0.9,   // Slightly irregular
         addPulse: true,    // Pulsing intensity
-        addFocus: true     // Concentrated motion
+        addFocus: true,    // Concentrated motion
+        '3d': {
+            rotation: {
+                speedMultiplier: 1.3,      // Faster rotation (heightened)
+                shakeMultiplier: 1.5,      // More shake (tension)
+                musicSyncOverride: true    // Lock to beat (focused)
+            },
+            glow: {
+                intensityMultiplier: 1.4,  // Much brighter (burning)
+                pulseSpeedMultiplier: 1.6  // Rapid pulsing (racing)
+            },
+            scale: {
+                breathDepthMultiplier: 1.3, // Deep intense breaths
+                breathRateMultiplier: 1.4   // Rapid breathing (adrenaline)
+            },
+            righting: {
+                strengthMultiplier: 1.1    // Slightly more stable (tense control)
+            }
+        }
     },
     
     subdued: {
@@ -130,7 +214,25 @@ export const UNDERTONE_MODIFIERS = {
         smoothness: 1.2,   // 20% smoother
         regularity: 1.1,   // Regular (restrained)
         addSoftness: true, // Gentle, muted motion
-        addFade: true      // Fading at edges
+        addFade: true,     // Fading at edges
+        '3d': {
+            rotation: {
+                speedMultiplier: 0.8,      // Slower rotation (gentle)
+                shakeMultiplier: 0.4,      // Minimal shake (calm)
+                musicSyncOverride: false   // Ignore music (internal focus)
+            },
+            glow: {
+                intensityMultiplier: 0.7,  // Dimmer (muted)
+                pulseSpeedMultiplier: 0.8  // Slower pulse (peaceful)
+            },
+            scale: {
+                breathDepthMultiplier: 0.9, // Shallow controlled breaths
+                breathRateMultiplier: 0.8   // Slow breathing (restrained)
+            },
+            righting: {
+                strengthMultiplier: 1.2    // More stable (controlled composure)
+            }
+        }
     }
 };
 
