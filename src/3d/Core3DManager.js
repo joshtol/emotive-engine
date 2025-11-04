@@ -211,53 +211,97 @@ export class Core3DManager {
         // Map 2D movements to 3D based on gesture type
         const gestureName = gesture.name;
 
+        // Clamp helper to prevent off-screen movement
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
         if (gestureName === 'bounce') {
-            // Vertical bounce → 3D Y position
-            props.position[1] = particle.vy * 0.02; // Scale velocity to position
-            props.scale = 1.0 + Math.abs(particle.vy) * 0.005; // Slight scale on bounce
+            // Vertical bounce → 3D Y position (clamped)
+            props.position[1] = clamp(particle.vy * 0.005, -0.3, 0.3);
+            props.scale = 1.0 + Math.abs(particle.vy) * 0.002;
 
         } else if (gestureName === 'pulse') {
             // Radial expansion → 3D scale
             const distanceFromCenter = Math.sqrt(particle.x * particle.x + particle.y * particle.y);
-            props.scale = 1.0 + distanceFromCenter * 0.01;
+            props.scale = 1.0 + distanceFromCenter * 0.003;
 
         } else if (gestureName === 'spin') {
-            // Orbital rotation → 3D Y rotation
-            const angle = Math.atan2(particle.y, particle.x);
-            props.rotation[1] = angle;
+            // Orbital rotation → 3D Y rotation (use progress for smooth spin)
+            props.rotation[1] = progress * Math.PI * 2;
 
         } else if (gestureName === 'float') {
-            // Upward float → 3D Y position + Z depth via size
-            props.position[1] = -particle.vy * 0.02; // Negative because 2D vy is upward
-            props.position[2] = (particle.size - 1) * 0.3; // Size change → depth
-            props.scale = 1.0 + (particle.size - 1) * 0.2;
+            // Upward float → 3D Y position (clamped, smooth)
+            props.position[1] = clamp(progress * 0.4, 0, 0.5);
+            props.scale = 1.0 + progress * 0.1;
+
+        } else if (gestureName === 'sway') {
+            // Gentle side-to-side → 3D X position + Z rotation
+            const swayAmount = Math.sin(progress * Math.PI * 2) * 0.15;
+            props.position[0] = swayAmount;
+            props.rotation[2] = swayAmount * 0.3;
+
+        } else if (gestureName === 'tilt') {
+            // Tilt → 3D Z rotation (roll)
+            const tiltAmount = Math.sin(progress * Math.PI) * 0.4;
+            props.rotation[2] = tiltAmount;
 
         } else if (gestureName === 'shake') {
-            // Jittery shake → 3D X/Z position + rotation
-            props.position[0] = particle.vx * 0.015;
-            props.position[2] = particle.vy * 0.01;
-            props.rotation[2] = particle.vx * 0.008; // Roll on Z axis
+            // Jittery shake → 3D X/Z position + rotation (reduced)
+            props.position[0] = clamp(particle.vx * 0.003, -0.15, 0.15);
+            props.position[2] = clamp(particle.vy * 0.002, -0.1, 0.1);
+            props.rotation[2] = clamp(particle.vx * 0.002, -0.2, 0.2);
 
         } else if (gestureName === 'wobble') {
-            // Wobble → 3D rotation on X and Z
-            props.rotation[0] = particle.vy * 0.01;
-            props.rotation[2] = particle.vx * 0.01;
+            // Wobble → 3D rotation on X and Z (figure-8)
+            props.rotation[0] = Math.sin(progress * Math.PI * 4) * 0.2;
+            props.rotation[2] = Math.cos(progress * Math.PI * 4) * 0.2;
 
         } else if (gestureName === 'nod') {
-            // Nod → 3D X rotation (pitch)
-            props.rotation[0] = particle.vy * 0.015;
+            // Nod → 3D X rotation (pitch) - down and up
+            props.rotation[0] = Math.sin(progress * Math.PI) * 0.3;
+
+        } else if (gestureName === 'lean') {
+            // Lean → 3D X and Z position + rotation
+            const leanDir = Math.PI * 0.25; // 45 degrees
+            props.position[0] = Math.cos(leanDir) * progress * 0.2;
+            props.position[1] = -Math.sin(leanDir) * progress * 0.1;
+            props.rotation[2] = progress * 0.3;
+
+        } else if (gestureName === 'groove') {
+            // Groove → rhythmic rotation on multiple axes
+            props.rotation[0] = Math.sin(progress * Math.PI * 2) * 0.15;
+            props.rotation[1] = progress * Math.PI * 0.5;
+            props.rotation[2] = Math.cos(progress * Math.PI * 2) * 0.15;
+
+        } else if (gestureName === 'point') {
+            // Point → extend on X axis with slight rotation
+            props.position[0] = progress * 0.3;
+            props.rotation[2] = -progress * 0.2;
+
+        } else if (gestureName === 'reach') {
+            // Reach → extend upward on Y axis
+            props.position[1] = progress * 0.4;
+            props.scale = 1.0 + progress * 0.15;
+
+        } else if (gestureName === 'headBob' || gestureName === 'headbob') {
+            // Head bob → quick nod motion
+            const bobProgress = Math.sin(progress * Math.PI * 3) * (1 - progress);
+            props.rotation[0] = bobProgress * 0.25;
+
+        } else if (gestureName === 'wiggle') {
+            // Wiggle → fast alternating rotation
+            props.rotation[1] = Math.sin(progress * Math.PI * 6) * 0.25;
+            props.position[0] = Math.sin(progress * Math.PI * 6) * 0.1;
 
         } else {
-            // Generic translation for unknown gestures
-            // X/Y velocity → position
-            props.position[0] = particle.vx * 0.01;
-            props.position[1] = -particle.vy * 0.01;
+            // Generic translation for unknown gestures (clamped)
+            // X/Y velocity → position (heavily reduced)
+            props.position[0] = clamp(particle.vx * 0.002, -0.2, 0.2);
+            props.position[1] = clamp(-particle.vy * 0.002, -0.2, 0.2);
 
-            // Size change → scale or Z depth
+            // Size change → scale (reduced)
             if (particle.size !== 1) {
                 const sizeChange = particle.size - 1;
-                props.position[2] = sizeChange * 0.2;
-                props.scale = 1.0 + sizeChange * 0.1;
+                props.scale = 1.0 + clamp(sizeChange * 0.05, -0.3, 0.3);
             }
         }
 

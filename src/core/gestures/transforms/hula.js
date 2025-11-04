@@ -239,7 +239,7 @@ export default {
             const verticalScale = 1.0 + Math.abs(Math.sin(data.angle)) * 0.1;
 
             return {
-                position: [particle.x + xOffset, particle.y, zOffset],
+                position: [xOffset, 0, zOffset], // Hula wobble via offsets, not particle pos
                 rotation: [0, yRotation, 0],
                 scale: verticalScale
             };

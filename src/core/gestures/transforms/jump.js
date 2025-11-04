@@ -365,7 +365,7 @@ export default {
             }
 
             return {
-                position: [particle.x, particle.y + yPosition, 0],
+                position: [0, yPosition, 0], // Jump is vertical Y movement only
                 rotation: [xRotation, 0, 0],
                 scale
             };

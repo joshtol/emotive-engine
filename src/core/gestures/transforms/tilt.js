@@ -314,7 +314,7 @@ export default {
             }
 
             return {
-                position: [particle.x, particle.y, 0],
+                position: [0, 0, 0], // Tilt happens via rotation, stay centered
                 rotation: [xRotation, 0, zRotation],
                 scale: 1.0
             };

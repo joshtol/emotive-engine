@@ -363,7 +363,7 @@ export default {
             const uniformScale = Math.sqrt(finalScaleX * finalScaleY);
 
             return {
-                position: [particle.x, particle.y, 0],
+                position: [0, 0, 0], // Stretch via scale only, stay centered
                 rotation: [0, 0, 0],
                 scale: uniformScale // Use averaged scale for 3D
             };

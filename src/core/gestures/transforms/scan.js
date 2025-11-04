@@ -228,7 +228,7 @@ export default {
             const z = data.layer * 0.2 - 0.2; // Layers at different depths
 
             return {
-                position: [particle.x, particle.y, z],
+                position: [0, 0, z], // Scan via rotation, stay centered with Z depth for layers
                 rotation: [xRotation, yRotation, zRotation],
                 scale
             };

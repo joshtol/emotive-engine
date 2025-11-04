@@ -310,11 +310,9 @@ export default {
             const scaleCurve = Math.sin(progress * Math.PI); // Peak at middle
             const scale = 1.0 + (scaleAmount * scaleCurve * strength);
 
-            // Position in 3D space (XY matches 2D, Z for depth)
-            const z = 0; // Spin happens in XY plane
-
+            // Spin happens via rotation, not position movement
             return {
-                position: [particle.x, particle.y, z],
+                position: [0, 0, 0], // Stay centered - spin via rotation
                 rotation: [0, yRotation, 0], // Y-axis rotation
                 scale
             };

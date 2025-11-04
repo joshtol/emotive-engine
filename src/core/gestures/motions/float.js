@@ -149,11 +149,13 @@ export default {
                 wobbleAmount *= (motion.rhythmModulation.wobbleMultiplier || 1);
             }
 
-            // Upward Y movement (negative Y is up in most coordinate systems)
-            const floatDistance = -amplitude * progress * strength * (1 - progress * 0.5);
+            // Upward Y movement - scale amplitude from pixels to 3D units
+            // amplitude is in pixels (e.g., 80), convert to reasonable 3D range (0-0.5)
+            const PIXEL_TO_3D = 0.005; // 80px = 0.4 units
+            const floatDistance = amplitude * progress * strength * (1 - progress * 0.5) * PIXEL_TO_3D;
 
-            // Horizontal wobble as it floats
-            const wobble = Math.sin(progress * Math.PI * 4) * wobbleAmount * 0.3;
+            // Horizontal wobble as it floats - scale from pixels
+            const wobble = Math.sin(progress * Math.PI * 4) * wobbleAmount * 0.3 * PIXEL_TO_3D;
 
             // Gentle spinning rotation as it rises
             const spinRotation = progress * Math.PI * 0.5 * strength;
@@ -166,7 +168,7 @@ export default {
             const scale = 1.0 + progress * 0.1;
 
             return {
-                position: [wobble, floatDistance, 0],
+                position: [wobble, floatDistance, 0], // Positive Y for upward in 3D
                 rotation: [tiltX, spinRotation, tiltZ],
                 scale
             };

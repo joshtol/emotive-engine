@@ -243,7 +243,7 @@ export default {
             const scale = currentContraction;
 
             return {
-                position: [particle.x + xOffset, particle.y, zOffset],
+                position: [xOffset, 0, zOffset], // Use offsets only for twist wobble, not particle pos
                 rotation: [xRotation, yRotation, zRotation],
                 scale
             };

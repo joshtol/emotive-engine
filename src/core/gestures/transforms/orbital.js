@@ -204,7 +204,7 @@ export default {
             // READ particle.z for depth (as specified in requirements)
             const z = particle.z || 0;
 
-            // Rotation to face direction of motion
+            // Rotation to face direction of motion (orbit as rotation)
             const tangentAngle = data.angle + Math.PI / 2;
             const yRotation = tangentAngle;
 
@@ -213,7 +213,7 @@ export default {
             const depthScale = 1.0 + z * 0.15;
 
             return {
-                position: [particle.x, particle.y, z],
+                position: [0, 0, z], // Orbital motion via rotation, only Z depth for scale effect
                 rotation: [0, yRotation, 0],
                 scale: depthScale
             };
