@@ -215,14 +215,14 @@ export default class RotationBehavior {
         const cycleProgress = (time % adjustedCycle) / adjustedCycle;
 
         // Sawtooth wave: slow rotation away from forward (0 → 180°), quick snap back (180° → 0°)
-        // Spend 75% of time rotating slowly away, 25% snapping back
+        // Spend 85% of time rotating slowly away, 15% snapping back (more forward-facing time)
         let targetYaw;
-        if (cycleProgress < 0.75) {
-            // Slow rotation phase: 0 → π over 75% of cycle
-            targetYaw = (cycleProgress / 0.75) * Math.PI;
+        if (cycleProgress < 0.85) {
+            // Slow rotation phase: 0 → π over 85% of cycle
+            targetYaw = (cycleProgress / 0.85) * Math.PI;
         } else {
-            // Quick snap back: π → 0 over 25% of cycle
-            const snapProgress = (cycleProgress - 0.75) / 0.25;
+            // Quick snap back: π → 0 over 15% of cycle
+            const snapProgress = (cycleProgress - 0.85) / 0.15;
             targetYaw = Math.PI * (1.0 - snapProgress);
         }
 

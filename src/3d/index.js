@@ -221,7 +221,10 @@ export class EmotiveMascot3D {
     animate(currentTime) {
         if (!this.isRunning) return;
 
-        const deltaTime = currentTime - this.lastFrameTime;
+        // Calculate deltaTime and cap it to prevent huge jumps when tab is inactive
+        // Max 100ms prevents rotation explosions when tabbing back in
+        const rawDeltaTime = currentTime - this.lastFrameTime;
+        const deltaTime = Math.min(rawDeltaTime, 100);
         this.lastFrameTime = currentTime;
 
         // Render 3D core
