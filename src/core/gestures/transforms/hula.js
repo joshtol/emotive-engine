@@ -221,22 +221,26 @@ export default {
             const data = particle.gestureData.hula;
             const config = motion.config || {};
 
+            // Fade-out envelope to return to origin at end
+            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0; // Fade last 15%
+
             // READ particle.z for depth
             const z = particle.z || 0;
 
-            // Y-axis rotation following the hula motion
-            const yRotation = data.angle + (data.direction * progress * Math.PI * 2);
+            // Y-axis rotation following the hula motion - fades to 0 at end
+            const yRotation = (data.angle + (data.direction * progress * Math.PI * 2)) * returnEnvelope;
 
             // XZ position offset creates the hula-hoop tilted ring effect
             // Wobble affects the XZ plane positioning
             const wobble = Math.sin(data.angle * 2 + data.wobblePhase) * (config.wobbleAmount || 0.15);
 
-            // Calculate XZ offset based on angle for circular motion in 3D
-            const xOffset = Math.cos(data.angle) * wobble * 10;
-            const zOffset = z; // Use existing Z calculation from apply()
+            // Calculate XZ offset based on angle for circular motion in 3D - fades to 0
+            const xOffset = Math.cos(data.angle) * wobble * 10 * returnEnvelope;
+            const zOffset = z * returnEnvelope; // Use existing Z calculation from apply()
 
-            // Scale based on vertical position (particles at top/bottom of hoop)
-            const verticalScale = 1.0 + Math.abs(Math.sin(data.angle)) * 0.1;
+            // Scale based on vertical position (particles at top/bottom of hoop) - returns to 1.0
+            const scaleVariation = Math.abs(Math.sin(data.angle)) * 0.1 * returnEnvelope;
+            const verticalScale = 1.0 + scaleVariation;
 
             return {
                 position: [xOffset, 0, zOffset], // Hula wobble via offsets, not particle pos

@@ -207,25 +207,26 @@ export default {
             const data = particle.gestureData.scan;
             // const config = motion.config || {};
 
-            // Calculate scan position for rotation
-            // const scanPosition = Math.sin(data.phase);
+            // Fade-out envelope to return to origin at end
+            const returnEnvelope = progress > 0.8 ? (1 - progress) / 0.2 : 1.0; // Fade last 20%
 
             // Rotation to face the direction of scan movement
-            // Y-axis rotation follows horizontal scan
-            const yRotation = data.phase; // Faces scan direction
+            // Y-axis rotation follows horizontal scan - fades to 0 at end
+            const yRotation = data.phase * returnEnvelope;
 
-            // Slight X-axis tilt based on layer (searchlight angle)
+            // Slight X-axis tilt based on layer (searchlight angle) - fades to 0
             const layerOffset = (data.layer - 1) * 0.2; // -0.2 to 0.4 radians
-            const xRotation = layerOffset;
+            const xRotation = layerOffset * returnEnvelope;
 
             // Z-axis for slight roll during pause (focusing effect)
-            const zRotation = data.isPaused ? Math.sin(progress * Math.PI * 4) * 0.05 : 0;
+            const zRotation = data.isPaused ? Math.sin(progress * Math.PI * 4) * 0.05 * returnEnvelope : 0;
 
-            // Scale pulse during pause (focusing)
-            const scale = data.isPaused ? 1.0 + Math.sin(progress * Math.PI * 8) * 0.05 : 1.0;
+            // Scale pulse during pause (focusing) - returns to 1.0 at end
+            const scalePulse = data.isPaused ? Math.sin(progress * Math.PI * 8) * 0.05 * returnEnvelope : 0;
+            const scale = 1.0 + scalePulse;
 
-            // Z-depth varies by layer
-            const z = data.layer * 0.2 - 0.2; // Layers at different depths
+            // Z-depth varies by layer - fades to 0 at end
+            const z = (data.layer * 0.2 - 0.2) * returnEnvelope;
 
             return {
                 position: [0, 0, z], // Scan via rotation, stay centered with Z depth for layers

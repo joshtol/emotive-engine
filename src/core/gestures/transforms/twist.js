@@ -217,9 +217,12 @@ export default {
             const config = motion.config || {};
             const strength = config.strength || 1.0;
 
+            // Fade-out envelope to return to origin at end
+            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0; // Fade last 15%
+
             // Calculate twist oscillation
             const twistProgress = progress * (config.twistFrequency || 2) * Math.PI * 2;
-            const twistAmount = Math.sin(twistProgress) * strength;
+            const twistAmount = Math.sin(twistProgress) * strength * returnEnvelope;
 
             // Y-axis rotation (primary twist axis)
             const rotationAngle = (config.rotationAngle || 45) * Math.PI / 180;
@@ -229,15 +232,15 @@ export default {
             const helixAngle = data.startAngle + yRotation;
             const helixRadius = (config.contractionFactor || 0.8) * data.startDistance;
 
-            // Calculate helical XZ offset
-            const xOffset = Math.cos(helixAngle) * helixRadius * 0.1;
-            const zOffset = Math.sin(helixAngle) * helixRadius * 0.1;
+            // Calculate helical XZ offset - fades to 0 at end
+            const xOffset = Math.cos(helixAngle) * helixRadius * 0.1 * returnEnvelope;
+            const zOffset = Math.sin(helixAngle) * helixRadius * 0.1 * returnEnvelope;
 
-            // X and Z rotation for additional twist dynamics
-            const xRotation = Math.cos(twistProgress) * 0.1 * strength;
-            const zRotation = Math.sin(twistProgress * 0.5) * 0.15 * strength;
+            // X and Z rotation for additional twist dynamics - fades to 0
+            const xRotation = Math.cos(twistProgress) * 0.1 * strength * returnEnvelope;
+            const zRotation = Math.sin(twistProgress * 0.5) * 0.15 * strength * returnEnvelope;
 
-            // Scale contracts during twist
+            // Scale contracts during twist - returns to 1.0 at end
             const contractionFactor = config.contractionFactor || 0.8;
             const currentContraction = 1 - ((1 - contractionFactor) * Math.abs(twistAmount));
             const scale = currentContraction;

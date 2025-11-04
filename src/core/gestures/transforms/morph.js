@@ -494,9 +494,10 @@ export default {
                 y = data.targetY + (data.startY - data.targetY) * eased;
             }
 
-            // Rotation follows the morph pattern direction
+            // Rotation follows the morph pattern direction - return to neutral at end
             const rotationDirection = data.rotationDirection || 1;
-            const yRotation = morphProgress * Math.PI * 2 * rotationDirection * 0.5;
+            const rotationCurve = Math.sin(morphProgress * Math.PI); // 0 → 1 → 0
+            const yRotation = rotationCurve * Math.PI * rotationDirection * 0.5;
 
             // Slight scale pulse at formation peak
             const scaleCurve = Math.sin(morphProgress * Math.PI);
