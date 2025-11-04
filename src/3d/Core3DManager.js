@@ -51,6 +51,7 @@ export class Core3DManager {
         this.glowIntensity = 1.0;
 
         // Quaternion-based rotation system for smooth 3D orientation
+        this.baseEuler = [0, 0, 0]; // Persistent base Euler angles (updated by RotationBehavior)
         this.baseQuaternion = new THREE.Quaternion(); // Ambient rotation (from emotion state)
         this.gestureQuaternion = new THREE.Quaternion(); // Gesture delta rotation
         this.finalQuaternion = new THREE.Quaternion(); // Combined result
@@ -451,19 +452,16 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
-        // Temporary Euler array for baseRotation (RotationBehavior modifies Euler angles)
-        const baseEuler = [0, 0, 0];
-
-        // Always update base rotation (ambient spin continues during gestures)
+        // Always update persistent base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
-            this.rotationBehavior.update(deltaTime, baseEuler);
+            this.rotationBehavior.update(deltaTime, this.baseEuler);
         } else {
             // Fallback: simple Y rotation if no behavior defined
-            baseEuler[1] += deltaTime * 0.0003;
+            this.baseEuler[1] += deltaTime * 0.0003;
         }
 
         // Convert base Euler to quaternion
-        this.tempEuler.set(baseEuler[0], baseEuler[1], baseEuler[2], 'XYZ');
+        this.tempEuler.set(this.baseEuler[0], this.baseEuler[1], this.baseEuler[2], 'XYZ');
         this.baseQuaternion.setFromEuler(this.tempEuler);
 
         // If no gesture is active, reset gesture quaternion to identity
