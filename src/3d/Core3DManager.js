@@ -99,6 +99,7 @@ export class Core3DManager {
      * @param {string|null} undertone - Optional undertone modifier
      */
     setEmotion(emotion, undertone = null) {
+        console.log('🎭 Core3DManager.setEmotion():', { emotion, undertone });
         this.emotion = emotion;
         this.undertone = undertone;
 
@@ -108,9 +109,11 @@ export class Core3DManager {
             // Convert hex to RGB
             if (emotionData.visual.glowColor) {
                 let rgb = this.hexToRGB(emotionData.visual.glowColor);
+                console.log('   🎨 Original RGB:', rgb);
 
                 // Apply undertone saturation modifier to glow color
                 rgb = this.applyUndertoneSaturation(rgb, undertone);
+                console.log('   🎨 After saturation:', rgb, 'undertone:', undertone);
 
                 this.glowColor = rgb;
             }
@@ -149,17 +152,24 @@ export class Core3DManager {
 
         // Apply undertone multipliers if present
         const undertoneModifier = getUndertoneModifier(undertone);
+        console.log('   📊 Undertone modifier:', undertoneModifier);
+
         if (undertoneModifier && undertoneModifier['3d']) {
             const ut3d = undertoneModifier['3d'];
+            console.log('   📊 3D modifiers:', ut3d);
 
             // Apply rotation multipliers to RotationBehavior
             if (ut3d.rotation && this.rotationBehavior) {
+                console.log('   🔄 Before rotation multipliers - speed:', this.rotationBehavior.speed, 'shake:', this.rotationBehavior.shake);
                 this.rotationBehavior.applyUndertoneMultipliers(ut3d.rotation);
+                console.log('   🔄 After rotation multipliers - speed:', this.rotationBehavior.speed, 'shake:', this.rotationBehavior.shake, 'wobble:', this.rotationBehavior.episodicWobble.enabled);
             }
 
             // Apply righting multipliers to RightingBehavior
             if (ut3d.righting && this.rightingBehavior) {
+                console.log('   ⚖️ Before righting - strength:', this.rightingBehavior.strength);
                 this.rightingBehavior.applyUndertoneMultipliers(ut3d.righting);
+                console.log('   ⚖️ After righting - strength:', this.rightingBehavior.strength);
             }
         }
 
@@ -168,10 +178,12 @@ export class Core3DManager {
 
         // Store base glow intensity for this emotion (before animation modulation)
         this.baseGlowIntensity = emotionData?.visual?.glowIntensity || 1.0;
+        console.log('   💡 Base glow intensity (before undertone):', this.baseGlowIntensity);
 
         // Apply undertone glow multiplier to base intensity
         if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].glow) {
             this.baseGlowIntensity *= undertoneModifier['3d'].glow.intensityMultiplier;
+            console.log('   💡 Base glow intensity (after undertone):', this.baseGlowIntensity, 'multiplier:', undertoneModifier['3d'].glow.intensityMultiplier);
         }
 
         // Apply undertone breathing multipliers
@@ -186,6 +198,7 @@ export class Core3DManager {
         // Calculate final breathing parameters (like 2D BreathingAnimator)
         this.breathRate = 1.0 * this.breathRateMult; // TODO: Add emotion-specific patterns
         this.breathDepth = this.breathingDepth * this.breathDepthMult;
+        console.log('   🫁 Breathing - rate:', this.breathRate, 'depth:', this.breathDepth, 'rateMult:', this.breathRateMult, 'depthMult:', this.breathDepthMult);
 
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
         this.renderer.updateBloom(this.baseGlowIntensity, 1.0);
@@ -537,6 +550,12 @@ export class Core3DManager {
 
         // Calculate breathing scale multiplier (1.0 ± breathDepth)
         const breathScale = 1.0 + Math.sin(this.breathingPhase) * this.breathDepth;
+
+        // Debug breathing every second
+        if (!this._lastBreathLog || Date.now() - this._lastBreathLog > 1000) {
+            console.log('🫁 Breathing scale:', breathScale.toFixed(3), 'depth:', this.breathDepth.toFixed(3), 'rate:', this.breathRate.toFixed(2));
+            this._lastBreathLog = Date.now();
+        }
 
         // Always update persistent base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
