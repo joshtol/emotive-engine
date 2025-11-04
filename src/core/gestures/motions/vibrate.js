@@ -152,31 +152,25 @@ export default {
                 amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
             }
 
+            // Scale down amplitude and use sin wave to return to origin
+            const PIXEL_TO_3D = 0.003; // Convert pixel amplitude to 3D units
+            const fadeOut = Math.sin(progress * Math.PI); // 0 → 1 → 0 (returns to origin)
+            const vibrateScale = amplitude * strength * PIXEL_TO_3D * fadeOut;
+
             // High-frequency random jitter in all three axes
-            const jitterX = (Math.random() - 0.5) * amplitude * strength * 0.5;
-            const jitterY = (Math.random() - 0.5) * amplitude * strength * 0.5;
-            const jitterZ = (Math.random() - 0.5) * amplitude * strength * 0.5;
+            const jitterX = (Math.random() - 0.5) * vibrateScale;
+            const jitterY = (Math.random() - 0.5) * vibrateScale;
+            const jitterZ = (Math.random() - 0.5) * vibrateScale;
 
-            // Slight rotation jitter for added chaos
-            const rotJitterX = (Math.random() - 0.5) * 0.05;
-            const rotJitterY = (Math.random() - 0.5) * 0.05;
-            const rotJitterZ = (Math.random() - 0.5) * 0.05;
-
-            // Fade out at the end
-            const fadeFactor = progress > 0.8 ? 1 - ((progress - 0.8) * 5) : 1.0;
+            // Subtle rotation jitter for added chaos
+            const rotJitterX = (Math.random() - 0.5) * 0.01 * fadeOut;
+            const rotJitterY = (Math.random() - 0.5) * 0.01 * fadeOut;
+            const rotJitterZ = (Math.random() - 0.5) * 0.01 * fadeOut;
 
             return {
-                position: [
-                    jitterX * fadeFactor,
-                    jitterY * fadeFactor,
-                    jitterZ * fadeFactor
-                ],
-                rotation: [
-                    rotJitterX * fadeFactor,
-                    rotJitterY * fadeFactor,
-                    rotJitterZ * fadeFactor
-                ],
-                scale: 1.0 + (Math.random() - 0.5) * 0.02 * fadeFactor
+                position: [jitterX, jitterY, jitterZ],
+                rotation: [rotJitterX, rotJitterY, rotJitterZ],
+                scale: 1.0 + (Math.random() - 0.5) * 0.01 * fadeOut
             };
         }
     }

@@ -124,22 +124,24 @@ export default {
                 intensity *= (motion.rhythmModulation.accentMultiplier || 1);
             }
 
-            // Fade out over time
-            const fadeOut = 1 - progress * 0.5;
-            const jitterScale = intensity * strength * 0.2 * fadeOut;
+            // Scale down amplitude and use sin wave to return to origin
+            const PIXEL_TO_3D = 0.002; // Convert pixel amplitude to 3D units
+            const fadeOut = Math.sin(progress * Math.PI); // 0 → 1 → 0 (returns to origin)
+            const jitterScale = intensity * strength * PIXEL_TO_3D * fadeOut;
 
-            // Random micro-movements in all three axes
+            // High-frequency random jitter in all three axes
+            const time = progress * 100; // High frequency
             const jitterX = (Math.random() - 0.5) * jitterScale;
             const jitterY = (Math.random() - 0.5) * jitterScale;
             const jitterZ = (Math.random() - 0.5) * jitterScale;
 
-            // Micro rotation jitter
-            const rotJitterX = (Math.random() - 0.5) * 0.03 * fadeOut;
-            const rotJitterY = (Math.random() - 0.5) * 0.03 * fadeOut;
-            const rotJitterZ = (Math.random() - 0.5) * 0.03 * fadeOut;
+            // Micro rotation jitter (already small)
+            const rotJitterX = (Math.random() - 0.5) * 0.005 * fadeOut;
+            const rotJitterY = (Math.random() - 0.5) * 0.005 * fadeOut;
+            const rotJitterZ = (Math.random() - 0.5) * 0.005 * fadeOut;
 
             // Nervous scale variation
-            const scale = 1.0 + (Math.random() - 0.5) * 0.05 * fadeOut;
+            const scale = 1.0 + (Math.random() - 0.5) * 0.02 * fadeOut;
 
             return {
                 position: [jitterX, jitterY, jitterZ],
