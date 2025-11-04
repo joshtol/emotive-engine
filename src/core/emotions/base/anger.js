@@ -84,10 +84,10 @@ export default {
         rotation: {
             type: 'unstable',           // Wobble/shake pattern - uncontrolled rage
             speed: 1.5,                 // 1.5x faster than neutral rotation
-            axes: [0.15, 0.3, 0.1],     // Rotation rates [X, Y, Z] - wobbles on all axes (0.3 rad/sec base)
+            axes: [0, 0.3, 0],          // Rotation rates [X, Y, Z] - only Y-axis base spin
             shake: {
-                amplitude: 0.02,        // Max rotation shake angle (radians)
-                frequency: 8            // Rapid tremor (8 Hz)
+                amplitude: 0.15,        // Max rotation shake angle (radians) - increased for visible wobble
+                frequency: 4            // Wobble frequency (4 Hz) - slower for wobbly feel
             },
             musicSync: false            // Anger doesn't sync to music - chaotic
         },
