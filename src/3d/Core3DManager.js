@@ -164,10 +164,6 @@ export class Core3DManager {
         // Start time-based animation
         const startTime = this.animator.time;
 
-        // Capture current baseRotation and predict where it will be when gesture ends
-        const startBaseRotation = [...this.baseRotation];
-        const predictedEndBaseRotation = this.predictBaseRotation(duration);
-
         const gestureState = {
             virtualParticle,
             gesture: gesture2D,
@@ -175,9 +171,7 @@ export class Core3DManager {
             startTime,
             startPosition: [...this.position],
             startRotation: [...this.rotation],
-            startScale: this.scale,
-            startBaseRotation,           // Where baseRotation was at gesture start
-            predictedEndBaseRotation     // Where baseRotation will be at gesture end
+            startScale: this.scale
         };
 
         // Add to animator's active animations
@@ -437,60 +431,6 @@ export class Core3DManager {
 
         // Add shrink animation
         this.animator.animations.push(shrinkAnimation);
-    }
-
-    /**
-     * Predict where baseRotation will be after a given duration
-     * Used to calculate smooth gesture landing position
-     * @param {number} duration - Duration in milliseconds
-     * @returns {Array} Predicted rotation [x, y, z]
-     */
-    predictBaseRotation(duration) {
-        if (!this.rotationBehavior) {
-            // Fallback: simple Y rotation prediction
-            const deltaY = duration * 0.0003;
-            return [
-                this.baseRotation[0],
-                this.baseRotation[1] + deltaY,
-                this.baseRotation[2]
-            ];
-        }
-
-        // Create a copy of current baseRotation to simulate future state
-        const predictedRotation = [...this.baseRotation];
-
-        // Simulate rotation behavior update
-        // Note: This is a simplified prediction - for complex behaviors like
-        // unstable/orbital, this is an approximation
-        const {config} = this.rotationBehavior;
-        const {type} = this.rotationBehavior;
-
-        if (type === 'gentle' || type === 'rhythmic' || type === 'still') {
-            // For simple rotation types, just apply axes * speed * time
-            const dt = duration * 0.001; // Convert to seconds
-            const speed = this.rotationBehavior.speed || 1.0;
-            const axes = this.rotationBehavior.axes || [0, 0.01, 0];
-
-            predictedRotation[0] += axes[0] * speed * dt;
-            predictedRotation[1] += axes[1] * speed * dt;
-            predictedRotation[2] += axes[2] * speed * dt;
-        } else if (type === 'unstable') {
-            // For unstable, predict base rotation (shake is high-frequency, averages out)
-            const dt = duration * 0.001;
-            const speed = this.rotationBehavior.speed || 1.0;
-            const axes = this.rotationBehavior.axes || [0.05, 0.02, 0.03];
-
-            predictedRotation[0] += axes[0] * speed * dt;
-            predictedRotation[1] += axes[1] * speed * dt;
-            predictedRotation[2] += axes[2] * speed * dt;
-            // Shake component is ignored (high-frequency oscillation averages to zero)
-        } else if (type === 'orbital') {
-            // Orbital is complex - just use current rotation as approximation
-            // (prediction would require knowing exact Lissajous phase)
-            return [...this.baseRotation];
-        }
-
-        return predictedRotation;
     }
 
     /**
