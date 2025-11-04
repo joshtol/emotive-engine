@@ -191,23 +191,8 @@ export class Core3DManager {
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
         this.renderer.updateBloom(this.baseGlowIntensity, 1.0);
 
-        // Trigger emotion animation
-        this.animator.playEmotion(emotion, {
-            onUpdate: (props, _progress) => {
-                // Update properties from animation
-                // Scale and glowIntensity are multiplicative (base * modifier)
-                if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
-                if (props.glowIntensity !== undefined) {
-                    this.glowIntensity = this.baseGlowIntensity * props.glowIntensity;
-                } else {
-                    // Reset to base when animation doesn't specify (prevents stacking)
-                    this.glowIntensity = this.baseGlowIntensity;
-                }
-                if (props.position) this.position = props.position;
-                // NOTE: Ignore props.rotation - rotation is now managed by quaternion system
-                // Emotion animations (anger shake, fear tremble) should use baseEuler or RotationBehavior
-            }
-        });
+        // Trigger emotion animation - now handled by blending system in render()
+        this.animator.playEmotion(emotion);
     }
 
     /**
@@ -557,16 +542,66 @@ export class Core3DManager {
         this.tempEuler.set(this.baseEuler[0], this.baseEuler[1], this.baseEuler[2], 'XYZ');
         this.baseQuaternion.setFromEuler(this.tempEuler);
 
-        // If no animations are active, reset to base values
-        if (this.animator.animations.length === 0) {
-            this.gestureQuaternion.identity();
-            this.glowIntensity = this.baseGlowIntensity;
-            this.scale = this.baseScale;
-            this.position = [0, 0, 0];
+        // ═══════════════════════════════════════════════════════════════════════════
+        // GESTURE BLENDING SYSTEM - Accumulate multiple simultaneous gestures
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Initialize accumulator with base values
+        const accumulated = {
+            position: [0, 0, 0],                               // Additive channel
+            rotationQuat: new THREE.Quaternion().identity(),   // Multiplicative channel
+            scale: 1.0,                                        // Multiplicative channel
+            glowIntensity: 1.0                                 // Multiplicative channel
+        };
+
+        // Blend all active animations
+        for (const animation of this.animator.animations) {
+            if (animation.evaluate) {
+                const elapsed = this.animator.time - animation.startTime;
+                const progress = Math.min(elapsed / animation.duration, 1);
+                const output = animation.evaluate(progress);
+
+                if (output) {
+                    // POSITION: Additive blending (bounce + sway)
+                    if (output.position) {
+                        accumulated.position[0] += output.position[0];
+                        accumulated.position[1] += output.position[1];
+                        accumulated.position[2] += output.position[2];
+                    }
+
+                    // ROTATION: Quaternion multiplication (orbital * twist)
+                    if (output.rotation) {
+                        this.tempEuler.set(
+                            output.rotation[0],
+                            output.rotation[1],
+                            output.rotation[2],
+                            'XYZ'
+                        );
+                        const gestureQuat = new THREE.Quaternion().setFromEuler(this.tempEuler);
+                        accumulated.rotationQuat.multiply(gestureQuat);
+                    }
+
+                    // SCALE: Multiplicative blending (expand × shrink)
+                    if (output.scale !== undefined) {
+                        accumulated.scale *= output.scale;
+                    }
+
+                    // GLOW: Multiplicative blending (glow × pulse)
+                    if (output.glowIntensity !== undefined) {
+                        accumulated.glowIntensity *= output.glowIntensity;
+                    }
+                }
+            }
         }
 
+        // Apply accumulated gesture results
+        this.position = accumulated.position;
+        this.gestureQuaternion.copy(accumulated.rotationQuat);
+        this.scale = this.baseScale * accumulated.scale;
+        this.glowIntensity = this.baseGlowIntensity * accumulated.glowIntensity;
+
         // Combine quaternions: finalQuaternion = baseQuaternion * gestureQuaternion
-        // This applies gesture rotation in the local space of the base rotation
+        // This applies accumulated gesture rotation in the local space of the base rotation
         this.finalQuaternion.copy(this.baseQuaternion);
         this.finalQuaternion.multiply(this.gestureQuaternion);
 

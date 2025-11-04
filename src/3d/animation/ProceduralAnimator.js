@@ -38,32 +38,21 @@ export class ProceduralAnimator {
 
     /**
      * Update animations (called each frame)
+     *
+     * NOTE: Gesture blending is now handled externally in Core3DManager.render()
+     * This method only updates time and removes completed animations.
+     * The blending system calls evaluate() directly and accumulates outputs.
      */
     update(deltaTime) {
         this.time += deltaTime;
 
-        // Update all active animations
+        // Remove completed animations
         for (let i = this.animations.length - 1; i >= 0; i--) {
             const anim = this.animations[i];
             const progress = Math.min((this.time - anim.startTime) / anim.duration, 1.0);
 
-            // Get current frame values
-            // Pass raw progress - gestures apply their own easing
-            const result = anim.evaluate(progress);
-
-            // Handle different return types:
-            // - If result is an object with props, it's a gesture animation
-            // - If result is a boolean true, the animation marked itself complete
-            // - Otherwise check progress >= 1.0
-            const isComplete = result === true || progress >= 1.0;
-
-            // Call update callback (if callbacks exist and result is props object)
-            if (anim.callbacks && anim.callbacks.onUpdate && typeof result === 'object') {
-                anim.callbacks.onUpdate(result, progress);
-            }
-
-            // Remove if complete
-            if (isComplete) {
+            // Check if animation is complete
+            if (progress >= 1.0) {
                 if (anim.callbacks && anim.callbacks.onComplete) {
                     anim.callbacks.onComplete();
                 }
