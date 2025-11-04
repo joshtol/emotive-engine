@@ -134,6 +134,9 @@ export class Core3DManager {
         // Store base glow intensity for this emotion (before animation modulation)
         this.baseGlowIntensity = emotionData?.visual?.glowIntensity || 1.0;
 
+        // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
+        this.renderer.updateBloom(this.baseGlowIntensity, 1.0);
+
         // Trigger emotion animation
         this.animator.playEmotion(emotion, {
             onUpdate: (props, _progress) => {
