@@ -106,7 +106,8 @@ export const UNDERTONE_MODIFIERS = {
         '3d': {
             rotation: {
                 speedMultiplier: 1.2,      // Faster rotation matches speed
-                shakeMultiplier: 2.0       // Much more shake/wobble (nervous tremor)
+                shakeMultiplier: 2.0,      // Much more shake/wobble (nervous tremor)
+                enableEpisodicWobble: true // Random shake bursts (at least once per rotation)
             },
             glow: {
                 intensityMultiplier: 1.1,  // Slightly brighter (heightened)

@@ -47,6 +47,18 @@ export default class RotationBehavior {
 
         // Internal state for time-based patterns
         this.time = 0;
+
+        // Episodic wobble (random shake bursts, e.g., for nervous undertone)
+        this.episodicWobble = {
+            enabled: false,              // Set by undertone
+            minInterval: 2000,           // Minimum time between wobbles (ms)
+            maxInterval: 5000,           // Maximum time between wobbles (ms)
+            amplitude: 0.05,             // Wobble amplitude (radians)
+            duration: 200,               // Wobble duration (ms)
+            nextWobbleTime: 0,           // When next wobble should trigger
+            wobbleStartTime: -1,         // When current wobble started (-1 = not wobbling)
+            wobbleTarget: [0, 0, 0]      // Random target angles for current wobble
+        };
     }
 
     /**
@@ -58,6 +70,11 @@ export default class RotationBehavior {
     update(deltaTime, baseRotation) {
         // Update internal time
         this.time += deltaTime;
+
+        // Apply episodic wobble if enabled (before type-specific behavior)
+        if (this.episodicWobble.enabled) {
+            this._applyEpisodicWobble(deltaTime, baseRotation);
+        }
 
         // Evaluate rotation based on type
         switch (this.type) {
@@ -242,6 +259,50 @@ export default class RotationBehavior {
     }
 
     /**
+     * Apply episodic wobble (random shake bursts)
+     * @param {number} deltaTime - Time since last frame (ms)
+     * @param {Array} baseRotation - Current base rotation to modify
+     */
+    _applyEpisodicWobble(deltaTime, baseRotation) {
+        const wobble = this.episodicWobble;
+
+        // Check if it's time to start a new wobble
+        if (wobble.wobbleStartTime === -1 && this.time >= wobble.nextWobbleTime) {
+            // Start new wobble
+            wobble.wobbleStartTime = this.time;
+
+            // Generate random target angles
+            wobble.wobbleTarget = [
+                (Math.random() - 0.5) * wobble.amplitude,  // Pitch
+                (Math.random() - 0.5) * wobble.amplitude,  // Yaw
+                (Math.random() - 0.5) * wobble.amplitude   // Roll
+            ];
+
+            // Schedule next wobble
+            const interval = wobble.minInterval + Math.random() * (wobble.maxInterval - wobble.minInterval);
+            wobble.nextWobbleTime = this.time + interval;
+        }
+
+        // Apply wobble if active
+        if (wobble.wobbleStartTime !== -1) {
+            const elapsed = this.time - wobble.wobbleStartTime;
+            const progress = Math.min(elapsed / wobble.duration, 1.0);
+
+            if (progress < 1.0) {
+                // Wobble in progress - use sine wave for smooth shake
+                const wobbleIntensity = Math.sin(progress * Math.PI);
+
+                baseRotation[0] += wobble.wobbleTarget[0] * wobbleIntensity;
+                baseRotation[1] += wobble.wobbleTarget[1] * wobbleIntensity;
+                baseRotation[2] += wobble.wobbleTarget[2] * wobbleIntensity;
+            } else {
+                // Wobble complete
+                wobble.wobbleStartTime = -1;
+            }
+        }
+    }
+
+    /**
      * Update config (when emotional state changes)
      * @param {object} config - New rotation config from state's 3d section
      */
@@ -268,6 +329,18 @@ export default class RotationBehavior {
         // Apply shake multiplier to shake amplitude
         if (undertoneRotation.shakeMultiplier !== undefined && this.shake.amplitude) {
             this.shake.amplitude *= undertoneRotation.shakeMultiplier;
+        }
+
+        // Enable episodic wobble for nervous undertone
+        if (undertoneRotation.enableEpisodicWobble !== undefined) {
+            this.episodicWobble.enabled = undertoneRotation.enableEpisodicWobble;
+
+            // Initialize first wobble timing if enabling
+            if (this.episodicWobble.enabled && this.episodicWobble.nextWobbleTime === 0) {
+                const interval = this.episodicWobble.minInterval +
+                                Math.random() * (this.episodicWobble.maxInterval - this.episodicWobble.minInterval);
+                this.episodicWobble.nextWobbleTime = this.time + interval;
+            }
         }
     }
 }
