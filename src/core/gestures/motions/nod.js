@@ -164,7 +164,9 @@ export default {
             const pitchRotation = oscillation * (amplitude * 0.02); // Convert to radians
 
             // Slight forward/back movement on Z-axis for natural head motion
-            const depthMovement = oscillation * (amplitude * 0.1);
+            // Scale pixels to 3D units to prevent aggressive camera approach
+            const PIXEL_TO_3D = 0.005; // 15px = 0.075 units
+            const depthMovement = oscillation * (amplitude * 0.1) * PIXEL_TO_3D;
 
             // Dampen at the end
             const dampening = progress > 0.9 ? 0.95 : 1.0;
