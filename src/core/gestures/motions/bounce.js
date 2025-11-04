@@ -250,8 +250,8 @@ export default {
             const frequency = config.frequency || 2;
             const strength = config.strength || 0.6;
 
-            // Scale pixels to 3D units - keep bounce low to stay on-screen
-            const PIXEL_TO_3D = 0.002; // 30px = 0.06 units max, 0.036 with strength
+            // Scale pixels to 3D units - keep bounce subtle to stay on-screen
+            const PIXEL_TO_3D = 0.003; // 30px = 0.09 units max, 0.054 with strength
             const amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
             // Apply easing
@@ -274,17 +274,14 @@ export default {
             // Y position - bounce up from neutral
             const yPosition = bounceHeight * dampedAmplitude;
 
-            // Squash and stretch based on vertical velocity
-            // At bottom (height = 0): squash (wider, shorter)
-            // At peak (height = 1): stretch (narrower, taller)
-            const squashStretch = 1 + (bounceHeight - 0.5) * 0.15; // ±7.5% scale
-            const scaleY = squashStretch;
-            const scaleX = 2 - squashStretch; // Inverse for volume conservation
+            // Subtle scale pulse for bounce feel
+            // Slight expansion at peak of bounce for energy
+            const scalePulse = 1.0 + bounceHeight * 0.08; // Up to 8% larger at peak
 
             return {
                 position: [0, yPosition, 0],
                 rotation: [0, 0, 0],
-                scale: [scaleX, scaleY, scaleX] // XZ squash, Y stretch
+                scale: scalePulse
             };
         }
     }
