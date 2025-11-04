@@ -289,20 +289,14 @@ export default {
          * @returns {Object} Transform with position, rotation, scale
          */
         evaluate(progress, motion) {
-            const {particle} = motion;
-            if (!particle || !particle.gestureData?.jump) {
-                return {
-                    position: [0, 0, 0],
-                    rotation: [0, 0, 0],
-                    scale: 1.0
-                };
-            }
-
-            // const data = particle.gestureData.jump;
-            const config = motion.config || {};
+            const config = motion.config || motion || {};
             const strength = motion.strength || 1.0;
 
-            const jumpHeight = (config.jumpHeight || 60) * strength * (particle.scaleFactor || 1.0);
+            // Scale pixels to 3D units - jump should be noticeable but not off-screen
+            const PIXEL_TO_3D = 0.004; // 60px = 0.24 units max
+            const jumpHeightPixels = config.jumpHeight || 60;
+            const jumpHeight = jumpHeightPixels * PIXEL_TO_3D * strength;
+
             const squash = config.squashAmount || 0.8;
             const stretch = config.stretchAmount || 1.2;
 
@@ -320,7 +314,7 @@ export default {
                 const easedSquash = squashProgress * (2 - squashProgress); // easeOutQuad
 
                 scale = 1.0 - (1 - squash) * easedSquash;
-                yPosition = -easedSquash * 5; // Slightly lower
+                yPosition = -easedSquash * 0.02; // Slightly lower (scaled to 3D)
 
             } else if (progress < jumpEnd) {
                 // PHASE 2: Jump (arc motion with stretch)
@@ -341,15 +335,21 @@ export default {
                 }
 
                 // Slight forward rotation at peak
-                xRotation = Math.sin(jumpProgress * Math.PI) * 0.1;
+                xRotation = Math.sin(jumpProgress * Math.PI) * 0.05;
 
             } else {
-                // PHASE 3: Landing (impact squash)
+                // PHASE 3: Landing (impact squash with bounce back)
                 const landProgress = (progress - jumpEnd) / (1 - jumpEnd);
 
-                yPosition = 0;
+                // Small bounce back on landing
+                if (landProgress < 0.5) {
+                    const bounceProgress = landProgress * 2;
+                    yPosition = -Math.sin(bounceProgress * Math.PI) * jumpHeight * 0.15;
+                } else {
+                    yPosition = 0;
+                }
 
-                if (config.landingImpact) {
+                if (config.landingImpact !== false) {
                     if (landProgress < 0.3) {
                         // Landing squash
                         const impactProgress = landProgress / 0.3;
