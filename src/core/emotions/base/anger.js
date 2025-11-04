@@ -86,8 +86,8 @@ export default {
             speed: 1.5,                 // 1.5x faster than neutral rotation
             axes: [0, 0.3, 0],          // Rotation rates [X, Y, Z] - only Y-axis base spin
             shake: {
-                amplitude: 0.15,        // Max rotation shake angle (radians) - increased for visible wobble
-                frequency: 4            // Wobble frequency (4 Hz) - slower for wobbly feel
+                amplitude: 0.08,        // Max rotation shake angle (radians) - subtle wobble
+                frequency: 3            // Wobble frequency (3 Hz) - gentle sway
             },
             musicSync: false            // Anger doesn't sync to music - chaotic
         },
