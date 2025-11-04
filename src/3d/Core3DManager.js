@@ -499,8 +499,9 @@ export class Core3DManager {
         // If no animations are active, reset to base values
         if (this.animator.animations.length === 0) {
             this.gestureQuaternion.identity();
-            // Reset glow to base when no emotion animation is modulating it
             this.glowIntensity = this.baseGlowIntensity;
+            this.scale = this.baseScale;
+            this.position = [0, 0, 0];
         }
 
         // Combine quaternions: finalQuaternion = baseQuaternion * gestureQuaternion
