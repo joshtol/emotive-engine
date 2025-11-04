@@ -137,7 +137,7 @@ export default {
         rotation: {
             type: 'gentle',             // Smooth slow spin
             speed: 0.5,                 // 0.5x slower rotation (matches modifiers.speed)
-            axes: [0, 0.005, 0],        // Rotation rates [X, Y, Z] - very slow Y rotation
+            axes: [0, 0.3, 0],          // Rotation rates [X, Y, Z] - 0.3 rad/sec base (speed 0.5x = 0.15 rad/sec actual)
             musicSync: true             // Can sync to slow ambient music
         },
         glow: {

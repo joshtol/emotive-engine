@@ -90,7 +90,7 @@ export default {
         rotation: {
             type: 'rhythmic',           // Syncs to music BPM
             speed: 1.8,                 // 1.8x faster rotation (matches modifiers.speed)
-            axes: [0, 0.015, 0],        // Rotation rates [X, Y, Z] - faster Y spin
+            axes: [0, 0.3, 0],          // Rotation rates [X, Y, Z] - 0.3 rad/sec base
             musicSync: true             // Sync rotation speed pulses to BPM
         },
         glow: {

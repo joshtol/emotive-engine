@@ -100,7 +100,7 @@ export default {
         rotation: {
             type: 'gentle',             // Smooth slow spin
             speed: 1.0,                 // 1.0x baseline rotation speed
-            axes: [0, 0.01, 0],         // Rotation rates [X, Y, Z] - gentle Y rotation
+            axes: [0, 0.3, 0],          // Rotation rates [X, Y, Z] - 0.3 rad/sec (~10 sec per rotation)
             musicSync: false            // Neutral doesn't sync to music
         },
         glow: {

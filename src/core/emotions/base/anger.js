@@ -84,7 +84,7 @@ export default {
         rotation: {
             type: 'unstable',           // Wobble/shake pattern - uncontrolled rage
             speed: 1.5,                 // 1.5x faster than neutral rotation
-            axes: [0.05, 0.02, 0.03],   // Rotation rates [X, Y, Z] - wobbles on all axes
+            axes: [0.15, 0.3, 0.1],     // Rotation rates [X, Y, Z] - wobbles on all axes (0.3 rad/sec base)
             shake: {
                 amplitude: 0.02,        // Max rotation shake angle (radians)
                 frequency: 8            // Rapid tremor (8 Hz)
