@@ -126,7 +126,8 @@ export class Core3DManager {
                 if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
                 if (props.glowIntensity !== undefined) this.glowIntensity = props.glowIntensity;
                 if (props.position) this.position = props.position;
-                if (props.rotation) this.rotation = props.rotation;
+                // NOTE: Ignore props.rotation - rotation is now managed by quaternion system
+                // Emotion animations (anger shake, fear tremble) should use baseEuler or RotationBehavior
             }
         });
     }
