@@ -235,7 +235,7 @@ export default {
 
     /**
      * 3D core translation
-     * Maps bounce motion to 3D transforms
+     * Maps bounce motion to 3D transforms with proper squash/stretch
      */
     '3d': {
         /**
@@ -246,29 +246,45 @@ export default {
          */
         evaluate(progress, motion) {
             const config = motion || {};
-            const amplitude = (config.amplitude || 30) * 0.02;
+            const amplitudePixels = config.amplitude || 30;
             const frequency = config.frequency || 2;
             const strength = config.strength || 0.6;
+
+            // Scale pixels to 3D units
+            const PIXEL_TO_3D = 0.008; // 30px = 0.24 units
+            const amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
             // Apply easing
             const easeProgress = progress < 0.5
                 ? 4 * progress * progress * progress
                 : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-            // Calculate oscillation
-            const oscillation = Math.sin(easeProgress * Math.PI * 2 * frequency);
+            // Calculate bounce with proper physics curve
+            // Use abs(sin) for bounce effect - always positive (up from ground)
+            const bouncePhase = easeProgress * Math.PI * frequency;
+            const bounceHeight = Math.abs(Math.sin(bouncePhase));
 
             // Apply damping
-            let dampedAmplitude = amplitude * strength;
+            let dampedAmplitude = amplitude;
             if (progress > 0.7) {
                 const dampProgress = (progress - 0.7) / 0.3;
                 dampedAmplitude *= (1 - dampProgress * 0.8);
             }
 
+            // Y position - bounce up from neutral
+            const yPosition = bounceHeight * dampedAmplitude;
+
+            // Squash and stretch based on vertical velocity
+            // At bottom (height = 0): squash (wider, shorter)
+            // At peak (height = 1): stretch (narrower, taller)
+            const squashStretch = 1 + (bounceHeight - 0.5) * 0.15; // ±7.5% scale
+            const scaleY = squashStretch;
+            const scaleX = 2 - squashStretch; // Inverse for volume conservation
+
             return {
-                position: [0, oscillation * dampedAmplitude, 0],
+                position: [0, yPosition, 0],
                 rotation: [0, 0, 0],
-                scale: 1.0 + Math.abs(oscillation) * 0.05
+                scale: [scaleX, scaleY, scaleX] // XZ squash, Y stretch
             };
         }
     }
