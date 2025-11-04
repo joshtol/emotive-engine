@@ -182,11 +182,9 @@ export class Core3DManager {
                     if (props.position) this.position = props.position;
                     if (props.rotation) {
                         // Add gesture rotation to base rotation (preserves ambient spin)
-                        this.rotation = [
-                            this.baseRotation[0] + props.rotation[0],
-                            this.baseRotation[1] + props.rotation[1],
-                            this.baseRotation[2] + props.rotation[2]
-                        ];
+                        this.rotation[0] = this.baseRotation[0] + props.rotation[0];
+                        this.rotation[1] = this.baseRotation[1] + props.rotation[1];
+                        this.rotation[2] = this.baseRotation[2] + props.rotation[2];
                     }
                     if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
                     if (props.glowIntensity !== undefined) this.glowIntensity = props.glowIntensity;
@@ -422,7 +420,9 @@ export class Core3DManager {
 
         // If no gesture is active, sync rotation to base rotation
         if (this.animator.animations.length === 0) {
-            this.rotation = [...this.baseRotation];
+            this.rotation[0] = this.baseRotation[0];
+            this.rotation[1] = this.baseRotation[1];
+            this.rotation[2] = this.baseRotation[2];
         }
 
         // Calculate final scale: base scale * morph multiplier
