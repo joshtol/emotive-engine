@@ -108,8 +108,10 @@ export default {
             const sway = Math.sin(progress * Math.PI * 2 * frequency);
             const verticalDrift = Math.cos(progress * Math.PI * 4) * 0.3;
 
-            // Side-to-side position movement
-            const swayAmount = amplitude * strength * 0.3;
+            // Side-to-side position movement - scale amplitude from pixels to 3D units
+            // amplitude is in pixels (e.g., 20), convert to reasonable 3D range
+            const PIXEL_TO_3D = 0.01; // 20px = 0.2 units
+            const swayAmount = amplitude * strength * 0.3 * PIXEL_TO_3D;
             const posX = sway * swayAmount;
             const posY = verticalDrift * swayAmount;
 
