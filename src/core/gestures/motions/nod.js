@@ -156,16 +156,18 @@ export default {
                 }
             }
 
-            // Calculate nodding oscillation
-            const oscillation = Math.sin(progress * Math.PI * 2 * frequency);
+            // Single deep nod - use half-sine wave for down-and-up motion
+            // Changed from 2 cycles to 1 for single deliberate nod
+            const oscillation = Math.sin(progress * Math.PI); // Single cycle (0 → 1 → 0)
 
             // Map to X-axis rotation (pitch) in radians
             // Nodding is rotation around X-axis: positive = looking down, negative = looking up
-            const pitchRotation = oscillation * (amplitude * 0.04); // Increased for more visible nod
+            // Increased multiplier for deeper nod
+            const pitchRotation = oscillation * (amplitude * 0.08); // Doubled for deeper single nod
 
             // Slight forward/back movement on Z-axis for natural head motion
             // Scale pixels to 3D units to prevent aggressive camera approach
-            const PIXEL_TO_3D = 0.01; // Increased from 0.005 for more visible depth
+            const PIXEL_TO_3D = 0.015; // Increased for more visible depth on single nod
             const depthMovement = oscillation * (amplitude * 0.1) * PIXEL_TO_3D;
 
             // Dampen at the end
