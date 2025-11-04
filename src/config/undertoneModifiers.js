@@ -106,8 +106,7 @@ export const UNDERTONE_MODIFIERS = {
         '3d': {
             rotation: {
                 speedMultiplier: 1.2,      // Faster rotation matches speed
-                shakeMultiplier: 2.0,      // Much more shake/wobble (nervous tremor)
-                musicSyncOverride: false   // Disable music sync (chaotic)
+                shakeMultiplier: 2.0       // Much more shake/wobble (nervous tremor)
             },
             glow: {
                 intensityMultiplier: 1.1,  // Slightly brighter (heightened)
@@ -134,8 +133,7 @@ export const UNDERTONE_MODIFIERS = {
         '3d': {
             rotation: {
                 speedMultiplier: 0.9,      // Slower, more deliberate
-                shakeMultiplier: 0.5,      // Much less shake (controlled)
-                musicSyncOverride: true    // Strong beat sync (assured)
+                shakeMultiplier: 0.5       // Much less shake (controlled)
             },
             glow: {
                 intensityMultiplier: 1.2,  // Brighter (bold presence)
@@ -162,8 +160,7 @@ export const UNDERTONE_MODIFIERS = {
         '3d': {
             rotation: {
                 speedMultiplier: 0.7,      // Much slower rotation (lethargic)
-                shakeMultiplier: 0.3,      // Minimal shake (no energy)
-                musicSyncOverride: false   // Ignore music (too tired)
+                shakeMultiplier: 0.3       // Minimal shake (no energy)
             },
             glow: {
                 intensityMultiplier: 0.7,  // Dimmer (low energy)
@@ -190,8 +187,7 @@ export const UNDERTONE_MODIFIERS = {
         '3d': {
             rotation: {
                 speedMultiplier: 1.3,      // Faster rotation (heightened)
-                shakeMultiplier: 1.5,      // More shake (tension)
-                musicSyncOverride: true    // Lock to beat (focused)
+                shakeMultiplier: 1.5       // More shake (tension)
             },
             glow: {
                 intensityMultiplier: 1.4,  // Much brighter (burning)
@@ -218,8 +214,7 @@ export const UNDERTONE_MODIFIERS = {
         '3d': {
             rotation: {
                 speedMultiplier: 0.8,      // Slower rotation (gentle)
-                shakeMultiplier: 0.4,      // Minimal shake (calm)
-                musicSyncOverride: false   // Ignore music (internal focus)
+                shakeMultiplier: 0.4       // Minimal shake (calm)
             },
             glow: {
                 intensityMultiplier: 0.7,  // Dimmer (muted)

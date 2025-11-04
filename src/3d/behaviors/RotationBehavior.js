@@ -269,10 +269,5 @@ export default class RotationBehavior {
         if (undertoneRotation.shakeMultiplier !== undefined && this.shake.amplitude) {
             this.shake.amplitude *= undertoneRotation.shakeMultiplier;
         }
-
-        // Override music sync if specified
-        if (undertoneRotation.musicSyncOverride !== undefined) {
-            this.musicSync = undertoneRotation.musicSyncOverride;
-        }
     }
 }
