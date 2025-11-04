@@ -161,11 +161,11 @@ export default {
 
             // Map to X-axis rotation (pitch) in radians
             // Nodding is rotation around X-axis: positive = looking down, negative = looking up
-            const pitchRotation = oscillation * (amplitude * 0.02); // Convert to radians
+            const pitchRotation = oscillation * (amplitude * 0.04); // Increased for more visible nod
 
             // Slight forward/back movement on Z-axis for natural head motion
             // Scale pixels to 3D units to prevent aggressive camera approach
-            const PIXEL_TO_3D = 0.005; // 15px = 0.075 units
+            const PIXEL_TO_3D = 0.01; // Increased from 0.005 for more visible depth
             const depthMovement = oscillation * (amplitude * 0.1) * PIXEL_TO_3D;
 
             // Dampen at the end
