@@ -298,7 +298,6 @@ export class EmotiveMascot3D {
      * @param {Object|string|null} options - Options object or undertone string
      */
     setEmotion(emotion, options) {
-        console.log('🎯 3D Index setEmotion() called:', { emotion, options });
         this.emotion = emotion;
 
         // Handle options parameter (can be undertone string or options object)
@@ -309,8 +308,6 @@ export class EmotiveMascot3D {
         } else {
             this.undertone = null;
         }
-
-        console.log('🎯 Parsed undertone:', this.undertone);
 
         if (this.core3D) {
             this.core3D.setEmotion(emotion, this.undertone);
@@ -329,12 +326,10 @@ export class EmotiveMascot3D {
      * @param {string|null} undertone - The undertone to apply
      */
     updateUndertone(undertone) {
-        console.log('🎯 3D Index updateUndertone() called:', undertone);
         this.undertone = undertone;
 
         // Re-apply emotion with new undertone
         if (this.core3D && this.emotion) {
-            console.log('🎯 Re-applying emotion with new undertone:', this.emotion, undertone);
             this.core3D.setEmotion(this.emotion, undertone);
         }
 
