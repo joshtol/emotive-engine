@@ -66,7 +66,7 @@ export default {
             speed: 1.4,                 // Faster rotation (matches modifiers.speed)
             axes: [0, 0.3, 0],          // Only Y-axis base spin
             shake: {
-                amplitude: 0.05,        // Noticeable trembling from fear
+                amplitude: 0.015,       // Subtle trembling (reduced to not overcome righting)
                 frequency: 3.5          // Rapid shaking (higher than anger)
             },
             musicSync: false            // Fear doesn't sync to music - chaotic

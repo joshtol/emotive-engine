@@ -49,8 +49,8 @@ export class Core3DManager {
         // Righting behavior (self-stabilization like inflatable punching clowns)
         // Very strong righting keeps models always upright regardless of shake
         this.rightingBehavior = new RightingBehavior({
-            strength: 20.0,             // Maximum righting force - rigidly locked upright
-            damping: 0.98,              // Near-perfect damping for immediate correction
+            strength: 50.0,             // Extremely strong righting - dominates all wobble
+            damping: 0.99,              // Higher damping for faster correction
             centerOfMass: [0, -0.3, 0], // Bottom-heavy
             axes: { pitch: true, roll: true, yaw: false }
         });

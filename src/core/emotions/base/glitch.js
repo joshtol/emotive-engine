@@ -75,7 +75,7 @@ export default {
             speed: 1.1,                 // Moderate speed (matches modifiers.speed)
             axes: [0, 0.35, 0],         // Moderate Y-axis spin
             shake: {
-                amplitude: 0.08,        // Strong glitch wobble
+                amplitude: 0.02,        // Moderate glitch wobble (reduced to not overcome righting)
                 frequency: 5.0          // Very high frequency glitching
             },
             musicSync: false            // Glitch is chaotic

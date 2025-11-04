@@ -66,7 +66,7 @@ export default {
             speed: 1.4,                 // Fast rotation (matches modifiers.speed)
             axes: [0, 0.4, 0],          // Faster Y-axis spin (more energetic than neutral)
             shake: {
-                amplitude: 0.03,        // Moderate vibration
+                amplitude: 0.01,        // Subtle vibration (reduced to not overcome righting)
                 frequency: 4.0          // High-frequency buzzing
             },
             musicSync: false            // Could sync to music in future

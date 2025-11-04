@@ -66,7 +66,7 @@ export default {
             speed: 1.6,                 // Rapid rotation (matches modifiers.speed)
             axes: [0, 0.45, 0],         // Fast Y-axis spin
             shake: {
-                amplitude: 0.04,        // Moderate startled wobble
+                amplitude: 0.01,        // Minimal startled wobble (reduced to not overcome righting)
                 frequency: 3.0          // Medium frequency jerking
             },
             musicSync: false            // Surprise is chaotic
