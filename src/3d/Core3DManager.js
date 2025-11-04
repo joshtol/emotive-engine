@@ -45,6 +45,7 @@ export class Core3DManager {
         this.glowColor = [1.0, 1.0, 1.0]; // RGB
         this.glowIntensity = 1.0;
         this.rotation = [0, 0, 0]; // Euler angles (x, y, z)
+        this.baseRotation = [0, 0, 0]; // Base rotation (for ambient spin)
         // Match 2D sizing: core is 1/12th of canvas size (coreSizeDivisor: 12)
         this.baseScale = 0.16; // Properly sized core relative to particles
         this.scale = 0.16; // Current scale (base + animation)
@@ -179,7 +180,14 @@ export class Core3DManager {
             callbacks: {
                 onUpdate: props => {
                     if (props.position) this.position = props.position;
-                    if (props.rotation) this.rotation = props.rotation;
+                    if (props.rotation) {
+                        // Add gesture rotation to base rotation (preserves ambient spin)
+                        this.rotation = [
+                            this.baseRotation[0] + props.rotation[0],
+                            this.baseRotation[1] + props.rotation[1],
+                            this.baseRotation[2] + props.rotation[2]
+                        ];
+                    }
                     if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
                     if (props.glowIntensity !== undefined) this.glowIntensity = props.glowIntensity;
                 },
@@ -409,8 +417,13 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
-        // Auto-rotate based on emotion
-        this.rotation[1] += deltaTime * 0.0003; // Slow Y rotation
+        // Auto-rotate based on emotion (update base rotation)
+        this.baseRotation[1] += deltaTime * 0.0003; // Slow Y rotation
+
+        // If no gesture is active, sync rotation to base rotation
+        if (!this.animator.isAnimating()) {
+            this.rotation = [...this.baseRotation];
+        }
 
         // Calculate final scale: base scale * morph multiplier
         const finalScale = this.scale * this.morphScaleMultiplier;
