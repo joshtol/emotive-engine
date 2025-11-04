@@ -234,7 +234,8 @@ export class Core3DManager {
                     }
                     // Reset to base state
                     this.position = [0, 0, 0];
-                    this.rotation = [0, 0, 0];
+                    // NOTE: Don't reset rotation - it's computed from quaternions in render()
+                    // gestureQuaternion will be reset to identity in render() when no gestures active
                     this.scale = this.baseScale;
                 }
             }
