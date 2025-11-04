@@ -13,6 +13,7 @@ import { ThreeRenderer } from './ThreeRenderer.js';
 import { THREE_GEOMETRIES } from './geometries/ThreeGeometries.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
+import RightingBehavior from './behaviors/RightingBehavior.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 
@@ -44,6 +45,15 @@ export class Core3DManager {
 
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
+
+        // Righting behavior (self-stabilization like inflatable punching clowns)
+        // Default: moderate righting on pitch/roll, free yaw spin
+        this.rightingBehavior = new RightingBehavior({
+            strength: 0.5,
+            damping: 0.8,
+            centerOfMass: [0, -0.3, 0], // Bottom-heavy
+            axes: { pitch: true, roll: true, yaw: false }
+        });
 
         // Current state
         this.emotion = options.emotion || 'neutral';
@@ -463,6 +473,12 @@ export class Core3DManager {
         } else {
             // Fallback: simple Y rotation if no behavior defined
             this.baseEuler[1] += deltaTime * 0.0003;
+        }
+
+        // Apply righting behavior (self-stabilization) after rotation
+        // This pulls tilted models back to upright while preserving yaw spin
+        if (this.rightingBehavior) {
+            this.rightingBehavior.update(deltaTime, this.baseEuler);
         }
 
         // Convert base Euler to quaternion
