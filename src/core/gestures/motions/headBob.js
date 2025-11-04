@@ -21,8 +21,8 @@
  *
  * VISUAL DIAGRAM:
  *        Quick rhythmic bobs
- *      ↓⭐↑ ↓⭐↑ ↓⭐↑
- *      (bobbing to music)
+ *      ↓⭐↑ ↓⭐↑
+ *      (bobbing to music - spam for continuous rhythm)
  *
  * USED BY:
  * - Music synchronization
@@ -45,16 +45,16 @@ export default {
         duration: 600,          // Legacy fallback
         musicalDuration: { musical: true, beats: 1 }, // 1 beat duration
         amplitude: 12,          // Bob distance (pixels) - smaller than nod
-        frequency: 3,           // 3 bobs per gesture
+        frequency: 2,           // 2 bobs per gesture - spammable for rhythm
         strength: 1.0,          // Motion intensity
-        damping: 0.2,           // Velocity damping (keeps energy up)
+        damping: 0.1,           // Minimal damping - smooth continuous motion
         easing: 'linear',       // Animation curve - steady rhythm
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'headBob',
             strength: 1.0,
             amplitude: 12,
-            frequency: 3
+            frequency: 2
         }
     },
 
@@ -128,8 +128,8 @@ export default {
             const config = motion.config || {};
             const strength = motion.strength || 1.0;
             const amplitude = config.amplitude || 12; // pixels
-            const frequency = config.frequency || 3; // 3 bobs
-            const damping = config.damping || 0.2;
+            const frequency = config.frequency || 2; // 2 bobs - spammable
+            const damping = config.damping || 0.1;
 
             // Quick rhythmic oscillation
             const oscillation = Math.sin(progress * Math.PI * 2 * frequency);
