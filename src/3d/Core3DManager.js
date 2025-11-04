@@ -695,23 +695,29 @@ export class Core3DManager {
             return rgb;
         }
 
-        // Saturation modifiers (from 2D ColorUtilities.js)
-        const saturationModifiers = {
-            'intense': 1.5,      // +50% saturation (very vivid)
-            'confident': 1.3,    // +30% saturation (bold)
-            'nervous': 1.15,     // +15% saturation (slightly heightened)
-            'tired': 0.8,        // -20% saturation (washed out)
-            'subdued': 0.5       // -50% saturation (ghostly)
+        // Saturation and lightness modifiers
+        const colorModifiers = {
+            'intense': { saturation: 1.5, lightness: 1.1 },     // Vivid + brighter
+            'confident': { saturation: 1.3, lightness: 1.05 },  // Bold + slightly brighter
+            'nervous': { saturation: 1.2, lightness: 1.0 },     // Heightened (was 1.15)
+            'tired': { saturation: 0.8, lightness: 0.9 },       // Washed + dimmer
+            'subdued': { saturation: 0.5, lightness: 0.85 }     // Ghostly + much dimmer
         };
 
-        const modifier = saturationModifiers[undertone] || 1.0;
-        if (modifier === 1.0) return rgb;
+        const mods = colorModifiers[undertone];
+        if (!mods) return rgb;
 
         // Convert to HSL
         const hsl = this.rgbToHsl(rgb[0], rgb[1], rgb[2]);
+        console.log('   🎨 Original HSL:', { h: hsl[0].toFixed(1), s: hsl[1].toFixed(1), l: hsl[2].toFixed(1) });
 
         // Apply saturation multiplier
-        hsl[1] = Math.min(100, hsl[1] * modifier);
+        hsl[1] = Math.min(100, hsl[1] * mods.saturation);
+
+        // Apply lightness multiplier (makes intense brighter, subdued darker)
+        hsl[2] = Math.min(100, Math.max(0, hsl[2] * mods.lightness));
+
+        console.log('   🎨 Modified HSL:', { h: hsl[0].toFixed(1), s: hsl[1].toFixed(1), l: hsl[2].toFixed(1) }, 'mods:', mods);
 
         // Convert back to RGB
         return this.hslToRgb(hsl[0], hsl[1], hsl[2]);
