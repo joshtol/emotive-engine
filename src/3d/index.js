@@ -301,13 +301,18 @@ export class EmotiveMascot3D {
         this.emotion = emotion;
 
         // Handle options parameter (can be undertone string or options object)
-        if (typeof options === 'string') {
-            this.undertone = options;
-        } else if (options && typeof options === 'object') {
-            this.undertone = options.undertone || null;
-        } else {
-            this.undertone = null;
+        // If no options provided, keep existing undertone
+        if (options !== undefined) {
+            if (typeof options === 'string') {
+                this.undertone = options;
+            } else if (options && typeof options === 'object') {
+                this.undertone = options.undertone || null;
+            } else if (options === null) {
+                // Explicitly clearing undertone
+                this.undertone = null;
+            }
         }
+        // else: options undefined, keep existing this.undertone
 
         if (this.core3D) {
             this.core3D.setEmotion(emotion, this.undertone);
