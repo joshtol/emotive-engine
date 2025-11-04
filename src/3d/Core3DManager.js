@@ -76,6 +76,15 @@ export class Core3DManager {
         this.morphScaleMultiplier = 1.0; // Separate multiplier for morph animations
         this.position = [0, 0, 0];
 
+        // Breathing animation (like 2D BreathingAnimator)
+        this.breathingPhase = 0;        // Current phase in breathing cycle [0, 2π]
+        this.breathingSpeed = 1.0;      // Base breathing speed
+        this.breathingDepth = 0.03;     // Base breathing depth (3% scale oscillation)
+        this.breathRate = 1.0;          // Emotion-specific rate multiplier
+        this.breathDepth = 0.03;        // Emotion-specific depth
+        this.breathRateMult = 1.0;      // Undertone rate multiplier
+        this.breathDepthMult = 1.0;     // Undertone depth multiplier
+
         // Rhythm engine reference (for BPM sync)
         this.rhythmEngine = options.rhythmEngine || null;
 
@@ -98,7 +107,12 @@ export class Core3DManager {
         if (emotionData && emotionData.visual) {
             // Convert hex to RGB
             if (emotionData.visual.glowColor) {
-                this.glowColor = this.hexToRGB(emotionData.visual.glowColor);
+                let rgb = this.hexToRGB(emotionData.visual.glowColor);
+
+                // Apply undertone saturation modifier to glow color
+                rgb = this.applyUndertoneSaturation(rgb, undertone);
+
+                this.glowColor = rgb;
             }
             // Set intensity from emotion data
             if (emotionData.visual.glowIntensity !== undefined) {
@@ -159,6 +173,19 @@ export class Core3DManager {
         if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].glow) {
             this.baseGlowIntensity *= undertoneModifier['3d'].glow.intensityMultiplier;
         }
+
+        // Apply undertone breathing multipliers
+        if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].scale) {
+            this.breathRateMult = undertoneModifier['3d'].scale.breathRateMultiplier || 1.0;
+            this.breathDepthMult = undertoneModifier['3d'].scale.breathDepthMultiplier || 1.0;
+        } else {
+            this.breathRateMult = 1.0;
+            this.breathDepthMult = 1.0;
+        }
+
+        // Calculate final breathing parameters (like 2D BreathingAnimator)
+        this.breathRate = 1.0 * this.breathRateMult; // TODO: Add emotion-specific patterns
+        this.breathDepth = this.breathingDepth * this.breathDepthMult;
 
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
         this.renderer.updateBloom(this.baseGlowIntensity, 1.0);
@@ -504,6 +531,13 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
+        // Update breathing animation (sine wave oscillation on scale)
+        const phaseIncrement = this.breathingSpeed * this.breathRate * (deltaTime / 1000);
+        this.breathingPhase += phaseIncrement;
+
+        // Calculate breathing scale multiplier (1.0 ± breathDepth)
+        const breathScale = 1.0 + Math.sin(this.breathingPhase) * this.breathDepth;
+
         // Always update persistent base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
             this.rotationBehavior.update(deltaTime, this.baseEuler);
@@ -541,8 +575,8 @@ export class Core3DManager {
         this.rotation[1] = this.tempEuler.y;
         this.rotation[2] = this.tempEuler.z;
 
-        // Calculate final scale: base scale * morph multiplier
-        const finalScale = this.scale * this.morphScaleMultiplier;
+        // Calculate final scale: base scale * morph multiplier * breathing
+        const finalScale = this.scale * this.morphScaleMultiplier * breathScale;
 
         // Update bloom pass with current glow intensity (smooth transitions)
         this.renderer.updateBloom(this.glowIntensity);
@@ -570,6 +604,98 @@ export class Core3DManager {
         const b = parseInt(hex.substring(4, 6), 16) / 255;
 
         return [r, g, b];
+    }
+
+    /**
+     * Convert RGB [0-1] to HSL [0-360, 0-100, 0-100]
+     */
+    rgbToHsl(r, g, b) {
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const diff = max - min;
+        const sum = max + min;
+
+        let h = 0;
+        let s = 0;
+        const l = sum / 2;
+
+        if (diff !== 0) {
+            s = l > 0.5 ? diff / (2 - sum) : diff / sum;
+
+            switch (max) {
+            case r: h = ((g - b) / diff + (g < b ? 6 : 0)) / 6; break;
+            case g: h = ((b - r) / diff + 2) / 6; break;
+            case b: h = ((r - g) / diff + 4) / 6; break;
+            }
+        }
+
+        return [h * 360, s * 100, l * 100];
+    }
+
+    /**
+     * Convert HSL [0-360, 0-100, 0-100] to RGB [0-1]
+     */
+    hslToRgb(h, s, l) {
+        h = h / 360;
+        s = s / 100;
+        l = l / 100;
+
+        let r, g, b;
+
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+
+        return [r, g, b];
+    }
+
+    /**
+     * Apply undertone saturation multiplier to RGB color
+     * @param {Array} rgb - RGB color [r, g, b] in [0-1]
+     * @param {string|null} undertone - Undertone name
+     * @returns {Array} Modified RGB color
+     */
+    applyUndertoneSaturation(rgb, undertone) {
+        if (!undertone || undertone === 'clear' || undertone === 'none') {
+            return rgb;
+        }
+
+        // Saturation modifiers (from 2D ColorUtilities.js)
+        const saturationModifiers = {
+            'intense': 1.5,      // +50% saturation (very vivid)
+            'confident': 1.3,    // +30% saturation (bold)
+            'nervous': 1.15,     // +15% saturation (slightly heightened)
+            'tired': 0.8,        // -20% saturation (washed out)
+            'subdued': 0.5       // -50% saturation (ghostly)
+        };
+
+        const modifier = saturationModifiers[undertone] || 1.0;
+        if (modifier === 1.0) return rgb;
+
+        // Convert to HSL
+        const hsl = this.rgbToHsl(rgb[0], rgb[1], rgb[2]);
+
+        // Apply saturation multiplier
+        hsl[1] = Math.min(100, hsl[1] * modifier);
+
+        // Convert back to RGB
+        return this.hslToRgb(hsl[0], hsl[1], hsl[2]);
     }
 
     /**
