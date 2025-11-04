@@ -496,9 +496,11 @@ export class Core3DManager {
         this.tempEuler.set(this.baseEuler[0], this.baseEuler[1], this.baseEuler[2], 'XYZ');
         this.baseQuaternion.setFromEuler(this.tempEuler);
 
-        // If no gesture is active, reset gesture quaternion to identity
+        // If no animations are active, reset to base values
         if (this.animator.animations.length === 0) {
             this.gestureQuaternion.identity();
+            // Reset glow to base when no emotion animation is modulating it
+            this.glowIntensity = this.baseGlowIntensity;
         }
 
         // Combine quaternions: finalQuaternion = baseQuaternion * gestureQuaternion
