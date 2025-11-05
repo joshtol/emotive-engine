@@ -434,17 +434,20 @@ export class Core3DManager {
         }
 
         // Cancel any existing morph animations to prevent stacking
-        const hadMorphAnimation = this.animator.animations.some(anim => anim.isMorphAnimation);
         this.animator.animations = this.animator.animations.filter(anim =>
             !anim.isMorphAnimation
         );
 
-        // If we cancelled a morph mid-transition, reset morph multiplier
-        if (hadMorphAnimation) {
-            this.morphScaleMultiplier = 1.0;
-        }
+        // Reset morph multiplier to normal scale when starting new morph
+        this.morphScaleMultiplier = 1.0;
 
-        // Smooth morph animation: scale down → swap geometry → scale up
+        // Swap geometry IMMEDIATELY (don't wait for shrink animation)
+        // The animation just handles the visual scale transition
+        this.geometry = targetGeometry;
+        this.geometryType = shapeName;
+        this.renderer.swapGeometry(this.geometry);
+
+        // Smooth morph animation: scale down → scale up (geometry already swapped)
         // Use animator.time (milliseconds) for timing, NOT Date.now()
         const startTime = this.animator.time;
         const halfDuration = duration / 2; // Already in milliseconds
@@ -461,12 +464,9 @@ export class Core3DManager {
                 // Morph scale multiplier: 1.0 → 0.3
                 this.morphScaleMultiplier = 1.0 - easeProgress * 0.7;
 
-                // When shrink is complete, swap geometry and start grow
-                if (t >= 1.0) {
-                    // Swap geometry at smallest point (optimized - don't recreate mesh)
-                    this.geometry = targetGeometry;
-                    this.geometryType = shapeName;
-                    this.renderer.swapGeometry(this.geometry);
+                // When shrink is complete, start grow animation
+                // Use >= 0.99 instead of >= 1.0 to handle frame timing precision
+                if (t >= 0.99) {
 
                     // Start grow animation (second half)
                     const growStartTime = this.animator.time;
