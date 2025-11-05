@@ -89,9 +89,11 @@ export default {
         const MIN_RADIUS = 100; // Slightly larger for hula effect
         const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 180); // At least 210-390 pixels
         
+        const initialAngle = calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
         particle.gestureData.hula = {
             radius,
-            angle: calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx), // Random angle if at center
+            angle: initialAngle,
+            initialAngle,  // Store initial angle for relative rotation
             originalVx: particle.vx,
             originalVy: particle.vy,
             originalZ: particle.z || 0,
@@ -221,31 +223,40 @@ export default {
             const data = particle.gestureData.hula;
             const config = motion.config || {};
 
-            // Fade-out envelope to return to origin at end
-            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0;
+            // Smooth entry/exit envelope - starts from 0, peaks at 1, returns to 0
+            let envelope = 1.0;
+            if (progress < 0.15) {
+                // Smooth entry (first 15%)
+                envelope = progress / 0.15;
+                envelope = Math.sin(envelope * Math.PI * 0.5); // Ease-in
+            } else if (progress > 0.85) {
+                // Smooth exit (last 15%)
+                envelope = (1 - progress) / 0.15;
+                envelope = Math.sin(envelope * Math.PI * 0.5); // Ease-out
+            }
 
-            // Hula-hoop motion: circular path in XZ plane with vertical Y oscillation
+            // Hula-hoop motion: RELATIVE circular path in XZ plane with vertical Y oscillation
             const hulaRadius = 0.25; // Hula hoop radius in 3D units
-            const angle = data.angle + (data.direction * progress * Math.PI * 2);
+            const {angle} = data; // Use current angle from apply()
 
-            // Circular motion in XZ plane
-            const xOffset = Math.cos(angle) * hulaRadius * returnEnvelope;
-            const zOffset = Math.sin(angle) * hulaRadius * returnEnvelope;
+            // RELATIVE circular motion in XZ plane (starts from 0, peaks, returns to 0)
+            const xOffset = Math.cos(angle) * hulaRadius * envelope;
+            const zOffset = Math.sin(angle) * hulaRadius * envelope;
 
-            // Vertical oscillation creates the hula-hoop wave effect
+            // RELATIVE vertical oscillation creates the hula-hoop wave effect
             const verticalOscillation = config.verticalOscillation || 0.3;
-            const yOffset = Math.sin(angle * 2 + data.wobblePhase) * verticalOscillation * returnEnvelope;
+            const yOffset = Math.sin(angle * 2 + data.wobblePhase) * verticalOscillation * envelope;
 
-            // Y-axis rotation to face direction of motion
-            const yRotation = angle * returnEnvelope;
+            // RELATIVE Y-axis rotation to face direction of motion
+            const yRotation = (angle - data.initialAngle) * envelope;
 
             // Scale variation based on vertical position (larger at top/bottom of wave)
-            const scaleVariation = Math.abs(Math.sin(angle)) * 0.15 * returnEnvelope;
+            const scaleVariation = Math.abs(Math.sin(angle)) * 0.15 * envelope;
             const verticalScale = 1.0 + scaleVariation;
 
             return {
-                position: [xOffset, yOffset, zOffset], // Circular XZ path + vertical Y wave
-                rotation: [0, yRotation, 0],
+                position: [xOffset, yOffset, zOffset], // RELATIVE offset from current position
+                rotation: [0, yRotation, 0],           // RELATIVE rotation from current
                 scale: verticalScale
             };
         }

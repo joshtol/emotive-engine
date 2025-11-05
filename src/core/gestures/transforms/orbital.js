@@ -107,10 +107,12 @@ export default {
         const MIN_RADIUS = 100;
         const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 180); // At least 180-360 pixels
         
+        const initialAngle = calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
         particle.gestureData.orbital = {
             radius,
             targetRadius: radius, // Store target for smooth transitions
-            angle: calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx), // Random angle if at center
+            angle: initialAngle,
+            initialAngle,  // Store initial angle for relative rotation
             originalVx: particle.vx,
             originalVy: particle.vy,
             originalZ: particle.z || 0,  // Store original z-coordinate
@@ -202,30 +204,40 @@ export default {
             const data = particle.gestureData.orbital;
             const config = motion.config || {};
 
-            // Fade-out envelope to return to origin at end
-            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0;
+            // Smooth entry/exit envelope - starts from 0, peaks at 1, returns to 0
+            let envelope = 1.0;
+            if (progress < 0.15) {
+                // Smooth entry (first 15%)
+                envelope = progress / 0.15;
+                envelope = Math.sin(envelope * Math.PI * 0.5); // Ease-in
+            } else if (progress > 0.85) {
+                // Smooth exit (last 15%)
+                envelope = (1 - progress) / 0.15;
+                envelope = Math.sin(envelope * Math.PI * 0.5); // Ease-out
+            }
 
-            // Orbital motion: circular path in XZ plane
+            // RELATIVE orbital motion: circular path in XZ plane
             const orbitRadius = 0.3; // Orbit radius in 3D units
-            const angle = data.angle + (progress * Math.PI * 2); // Full rotation during gesture
+            const {angle} = data; // Use current angle from apply()
 
-            const xOffset = Math.cos(angle) * orbitRadius * returnEnvelope;
-            const zOffset = Math.sin(angle) * orbitRadius * returnEnvelope;
+            // RELATIVE circular motion (starts from 0, peaks, returns to 0)
+            const xOffset = Math.cos(angle) * orbitRadius * envelope;
+            const zOffset = Math.sin(angle) * orbitRadius * envelope;
 
-            // Rotation to face direction of motion (tangent to orbit)
+            // RELATIVE rotation to face direction of motion (tangent to orbit)
             const tangentAngle = angle + Math.PI / 2;
-            const yRotation = tangentAngle * returnEnvelope;
+            const yRotation = (tangentAngle - (data.initialAngle + Math.PI / 2)) * envelope;
 
             // READ particle.z for depth variation
             const depthZ = particle.z || 0;
-            const finalZ = zOffset + (depthZ * 0.1 * returnEnvelope); // Add depth variation
+            const finalZ = zOffset + (depthZ * 0.1 * envelope); // Add depth variation
 
             // Scale based on depth (particles further back appear smaller)
-            const depthScale = 1.0 + depthZ * 0.15;
+            const depthScale = 1.0 + depthZ * 0.15 * envelope;
 
             return {
-                position: [xOffset, 0, finalZ], // Circular orbital motion in XZ plane
-                rotation: [0, yRotation, 0],
+                position: [xOffset, 0, finalZ], // RELATIVE offset from current position
+                rotation: [0, yRotation, 0],    // RELATIVE rotation from current
                 scale: depthScale
             };
         }
