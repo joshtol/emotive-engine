@@ -357,6 +357,11 @@
         </div>
 
         <div class="control-group">
+            <h3>Animation Toggles</h3>
+            <button data-action="toggle-blink" class="active">👁️ Blinking</button>
+        </div>
+
+        <div class="control-group">
             <h3>Motion Gestures</h3>
             <button data-action="gesture" data-value="bounce">Bounce</button>
             <button data-action="gesture" data-value="pulse">Pulse</button>
@@ -503,6 +508,18 @@
                             mascot.chain(value);
                         } else {
                             console.warn('chain() method not yet implemented in 3D engine');
+                        }
+                        break;
+
+                    case 'toggle-blink':
+                        if (mascot.blinkingEnabled) {
+                            console.log('Disabling blinking');
+                            mascot.disableBlinking();
+                            e.target.classList.remove('active');
+                        } else {
+                            console.log('Enabling blinking');
+                            mascot.enableBlinking();
+                            e.target.classList.add('active');
                         }
                         break;
                 }

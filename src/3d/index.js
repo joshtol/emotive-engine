@@ -486,6 +486,31 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Enable blinking
+     */
+    enableBlinking() {
+        if (this.core3D && this.core3D.blinkAnimator) {
+            this.core3D.blinkAnimator.resume();
+        }
+    }
+
+    /**
+     * Disable blinking
+     */
+    disableBlinking() {
+        if (this.core3D && this.core3D.blinkAnimator) {
+            this.core3D.blinkAnimator.pause();
+        }
+    }
+
+    /**
+     * Check if blinking is enabled
+     */
+    get blinkingEnabled() {
+        return this.core3D && this.core3D.blinkAnimator ? this.core3D.blinkAnimator.enabled : false;
+    }
+
+    /**
      * Helper: Convert RGB array to hex color
      */
     rgbToHex(rgb) {

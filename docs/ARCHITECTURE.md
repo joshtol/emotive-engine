@@ -606,6 +606,218 @@ test/unit/core/renderer/
 
 ---
 
+## 3D Rendering System
+
+The Emotive Engine includes an experimental 3D rendering mode using Three.js for WebGL-accelerated geometry rendering.
+
+### Architecture Overview
+
+The 3D system is a parallel implementation that maintains API compatibility with the 2D engine while using Three.js for core geometry rendering:
+
+```
+┌─────────────────────────────────────────┐
+│      EmotiveMascot3D (Public API)       │  Same API as 2D version
+└──────┬──────────────────────────────────┘
+       │
+       ├──▶ Core3DManager ────▶ Three.js Renderer (WebGL)
+       │         │
+       │         ├──▶ Geometry (sphere, crystal, diamond, etc.)
+       │         ├──▶ Animation Systems
+       │         │     ├── ProceduralAnimator (gestures)
+       │         │     ├── BreathingAnimator (breathing)
+       │         │     ├── GestureBlender (gesture composition)
+       │         │     ├── BlinkAnimator (blinking)
+       │         │     └── GeometryMorpher (shape transitions)
+       │         │
+       │         ├──▶ Behavior Systems
+       │         │     ├── RotationBehavior (emotion-aware rotation)
+       │         │     └── RightingBehavior (self-stabilization)
+       │         │
+       │         └──▶ Lighting & Effects
+       │               ├── Three-point lighting
+       │               ├── Fresnel glow shader
+       │               └── Post-processing (bloom, etc.)
+       │
+       └──▶ ParticleSystem ────▶ Canvas2D Overlay (reused from 2D)
+```
+
+### BlinkAnimator System
+
+The **BlinkAnimator** provides emotion-aware, geometry-specific blinking behavior for 3D mascots.
+
+#### Core Concepts
+
+1. **Geometry-Specific Blink Behaviors**: Each geometry (sphere, crystal, diamond, etc.) has its own unique blink style and duration defined in its configuration.
+
+2. **Emotion Modulation**: Emotions modify blink timing through two multipliers:
+   - `blinkRate`: Controls blink frequency (higher = more frequent)
+   - `blinkSpeed`: Controls animation speed (higher = faster blinks)
+
+3. **Automatic Timing**: BlinkAnimator handles randomized intervals (3-7 seconds) automatically.
+
+#### Configuration
+
+**Geometry Blink Configs** (in [ThreeGeometries.js](../src/3d/geometries/ThreeGeometries.js)):
+
+```javascript
+sphere: {
+    geometry: createSphere(64, 64),
+    blink: {
+        type: 'vertical-squish',
+        duration: 150,              // Base duration in ms
+        scaleAxis: [1.0, 0.3, 1.0], // Squish to 30% on Y-axis
+        curve: 'sine',
+        playful: {
+            anticipation: 0.03,
+            overshoot: 0.05
+        }
+    }
+}
+```
+
+**Emotion Blink Timing** (in emotion files like [neutral.js](../src/core/emotions/base/neutral.js)):
+
+```javascript
+visual: {
+    // ... other visual properties
+    blinkRate: 1.0,   // Baseline blink frequency
+    blinkSpeed: 1.0,  // Baseline blink animation speed
+}
+```
+
+#### Blink Duration Calculation
+
+The final blink duration is calculated as:
+
+```javascript
+finalDuration = geometry.blink.duration / emotion.blinkSpeed
+```
+
+**Examples:**
+- Crystal (120ms) + Excited (1.2×) = **100ms** (very snappy!)
+- Sphere (150ms) + Resting (0.7×) = **214ms** (slow, drowsy)
+- Diamond (100ms) + Anger (1.3×) = **77ms** (lightning fast!)
+
+#### Emotion Blink Timing Values
+
+| Emotion | blinkRate | blinkSpeed | Character |
+|---------|-----------|------------|-----------|
+| **neutral** | 1.0 | 1.0 | Baseline |
+| **excited** | 1.5 | 1.2 | Frequent, snappy |
+| **joy** | 1.3 | 1.1 | Happy |
+| **calm** | 0.8 | 1.0 | Relaxed |
+| **resting** | 0.4 | 0.7 | Sleepy, drowsy |
+| **sadness** | 0.6 | 0.8 | Withdrawn |
+| **focused** | 0.7 | 1.0 | Concentrating |
+| **anger** | 1.6 | 1.3 | Agitated |
+| **fear** | 1.7 | 1.4 | Anxious, nervous |
+| **love** | 1.2 | 1.0 | Affectionate |
+| **surprise** | 1.4 | 1.2 | Shocked, startled |
+| **suspicion** | 1.1 | 1.0 | Watchful |
+| **euphoria** | 1.4 | 1.1 | Euphoric |
+| **disgust** | 0.9 | 0.9 | Discomfort |
+| **glitch** | 1.3 | 1.2 | Erratic |
+
+#### Integration with Core3DManager
+
+The BlinkAnimator is integrated into the render loop:
+
+1. **Initialization**: BlinkAnimator created with geometry config
+2. **Emotion Updates**: `setEmotion()` updates blink timing multipliers
+3. **Morph Handling**: Blinks pause during geometry morphs, resume after
+4. **Render Loop**:
+   - Update blink animation each frame
+   - Apply blink scale AFTER gestures
+   - Combine with gesture → morph → breathing → blink
+
+```javascript
+// In Core3DManager.render()
+const blinkState = this.blinkAnimator.update(deltaTime);
+
+if (blinkState.isBlinking) {
+    // Apply scale (vertical squish, etc.)
+    finalScale *= blinkState.scale[1];
+
+    // Apply optional rotation
+    if (blinkState.rotation) {
+        this.rotation[0] += blinkState.rotation[0];
+        this.rotation[1] += blinkState.rotation[1];
+        this.rotation[2] += blinkState.rotation[2];
+    }
+
+    // Apply optional glow boost
+    if (blinkState.glowBoost) {
+        this.glowIntensity += blinkState.glowBoost;
+    }
+}
+```
+
+#### Public API
+
+```javascript
+// Enable/disable blinking
+mascot.enableBlinking();
+mascot.disableBlinking();
+
+// Check if blinking is enabled
+if (mascot.blinkingEnabled) {
+    console.log('Blinking is active');
+}
+```
+
+#### Geometry Blink Styles
+
+All 11 geometries have unique blink behaviors:
+
+| Geometry | Blink Type | Duration | Style |
+|----------|------------|----------|-------|
+| **sphere** | vertical-squish | 150ms | Classic squish |
+| **crystal** | facet-flash | 120ms | Snappier, faceted |
+| **diamond** | sparkle-blink | 100ms | Very fast sparkle |
+| **cube** | face-blink | 140ms | Face flash |
+| **pyramid** | apex-pulse | 130ms | Tip pulse |
+| **octahedron** | dual-apex-pulse | 135ms | Both tips |
+| **torus** | ring-squeeze | 160ms | Ring compression |
+| **cone** | tip-flash | 125ms | Cone tip flash |
+| **cylinder** | barrel-squeeze | 155ms | Barrel compression |
+| **capsule** | capsule-squeeze | 145ms | Capsule squish |
+| **tetrahedron** | vertex-flash | 110ms | Vertex flash |
+
+### 3D File Structure
+
+```
+src/3d/
+├── index.js                    # EmotiveMascot3D main class
+├── Core3DManager.js            # Three.js orchestration
+├── ThreeRenderer.js            # WebGL renderer setup
+├── animation/
+│   ├── ProceduralAnimator.js  # Gesture animations
+│   ├── BreathingAnimator.js   # Breathing effect
+│   ├── GestureBlender.js      # Multi-gesture composition
+│   ├── BlinkAnimator.js       # Blinking system ⭐
+│   └── GeometryMorpher.js     # Shape transitions
+├── behaviors/
+│   ├── RotationBehavior.js    # Emotion-aware rotation
+│   └── RightingBehavior.js    # Self-stabilization
+├── geometries/
+│   └── ThreeGeometries.js     # Geometry definitions + blink configs ⭐
+└── utils/
+    └── ColorUtilities.js      # Color conversion helpers
+```
+
+### Key Features
+
+1. **API Compatibility**: Same API as 2D engine (`setEmotion()`, `express()`, `morphTo()`)
+2. **Hybrid Rendering**: WebGL for 3D core + Canvas2D for particles
+3. **Emotion-Aware Lighting**: Dynamic lighting based on emotion colors
+4. **Post-Processing**: Optional bloom, glow, and shadow effects
+5. **Performance**: Hardware-accelerated WebGL rendering
+6. **Geometry Library**: 11 unique 3D shapes with smooth morphing
+7. **Self-Stabilization**: Righting behavior keeps mascots upright
+8. **Emotion-Aware Blinking**: Unique blink timing for each emotion
+
+---
+
 ## Extension Points
 
 ### Custom Emotions
