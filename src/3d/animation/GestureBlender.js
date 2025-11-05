@@ -22,6 +22,8 @@ export class GestureBlender {
         // Temp objects for quaternion calculations (reused to avoid allocations)
         this.tempEuler = new THREE.Euler();
         this.tempQuat = new THREE.Quaternion();
+        this.accumulatedRotationQuat = new THREE.Quaternion();
+        this.finalQuaternion = new THREE.Quaternion();
     }
 
     /**
@@ -34,10 +36,13 @@ export class GestureBlender {
      * @returns {Object} Blended gesture output
      */
     blend(animations, currentTime, baseQuaternion, baseScale, baseGlowIntensity) {
+        // Reset accumulated rotation quaternion to identity (reuse instead of allocate)
+        this.accumulatedRotationQuat.identity();
+
         // Initialize accumulator with identity values
         const accumulated = {
             position: [0, 0, 0],                               // Additive channel
-            rotationQuat: new THREE.Quaternion().identity(),   // Multiplicative channel
+            rotationQuat: this.accumulatedRotationQuat,        // Multiplicative channel (reused)
             scale: 1.0,                                        // Multiplicative channel
             glowIntensity: 1.0                                 // Multiplicative channel
         };
@@ -85,12 +90,10 @@ export class GestureBlender {
         // Combine base quaternion with accumulated gesture rotation
         // finalQuaternion = baseQuaternion * gestureQuaternion
         // This applies gesture rotation in the local space of the base rotation
-        const finalQuaternion = new THREE.Quaternion()
-            .copy(baseQuaternion)
-            .multiply(accumulated.rotationQuat);
+        this.finalQuaternion.copy(baseQuaternion).multiply(accumulated.rotationQuat);
 
         // Convert final quaternion back to Euler angles
-        this.tempEuler.setFromQuaternion(finalQuaternion, 'XYZ');
+        this.tempEuler.setFromQuaternion(this.finalQuaternion, 'XYZ');
         const finalRotation = [
             this.tempEuler.x,
             this.tempEuler.y,
