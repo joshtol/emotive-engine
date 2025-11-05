@@ -338,11 +338,15 @@ export class Core3DManager {
         // Update geometry morph animation
         const morphState = this.geometryMorpher.update(deltaTime);
 
-        // Handle morph completion
-        if (morphState.completed) {
+        // Swap geometry at midpoint (when scale is at minimum) for smooth transition
+        if (morphState.shouldSwapGeometry && this._targetGeometry) {
             this.geometry = this._targetGeometry;
             this.geometryType = this._targetGeometryType;
             this.renderer.swapGeometry(this.geometry);
+        }
+
+        // Clean up on completion
+        if (morphState.completed) {
             this._targetGeometry = null;
             this._targetGeometryType = null;
         }

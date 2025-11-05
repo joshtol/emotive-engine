@@ -23,6 +23,7 @@ export class GeometryMorpher {
         this.morphDuration = 800; // Match 2D default (converted from 1000ms to slightly faster for 3D)
         this.morphProgress = 0;
         this.visualProgress = 0; // Smoothed progress for rendering
+        this.hasSwappedGeometry = false; // Track if we've swapped at midpoint
 
         // Easing function
         this.easing = 'easeInOutCubic';
@@ -54,6 +55,7 @@ export class GeometryMorpher {
         this.morphProgress = 0;
         this.visualProgress = 0;
         this.isTransitioning = true;
+        this.hasSwappedGeometry = false; // Reset swap flag
 
         return true;
     }
@@ -92,6 +94,14 @@ export class GeometryMorpher {
         // Calculate scale multiplier for shrink/grow effect
         const scaleMultiplier = this.calculateScaleMultiplier(this.visualProgress);
 
+        // Signal to swap geometry at midpoint (when scale is at minimum ~0.5)
+        // This makes the swap imperceptible
+        let shouldSwap = false;
+        if (!this.hasSwappedGeometry && this.morphProgress >= 0.5) {
+            this.hasSwappedGeometry = true;
+            shouldSwap = true;
+        }
+
         // Check if complete
         if (this.morphProgress >= 1.0) {
             this.completeMorph();
@@ -100,8 +110,7 @@ export class GeometryMorpher {
                 progress: 1.0,
                 visualProgress: 1.0,
                 scaleMultiplier: 1.0,
-                completed: true,
-                targetType: this.targetGeometryType
+                completed: true
             };
         }
 
@@ -109,28 +118,43 @@ export class GeometryMorpher {
             isTransitioning: true,
             progress: this.morphProgress,
             visualProgress: this.visualProgress,
-            scaleMultiplier
+            scaleMultiplier,
+            shouldSwapGeometry: shouldSwap
         };
     }
 
     /**
      * Calculate scale multiplier for shrink/grow animation
-     * Shrinks to 70% in first half, grows back to 100% in second half
+     * Uses smooth continuous curve with playful overshoot
      * @param {number} progress - Visual progress (0-1)
      * @returns {number} Scale multiplier
      */
     calculateScaleMultiplier(progress) {
-        // First half: shrink from 1.0 to 0.7
-        // Second half: grow from 0.7 to 1.0
-        if (progress < 0.5) {
-            // Shrink phase: 1.0 -> 0.7
-            const shrinkProgress = progress / 0.5; // 0 to 1
-            return 1.0 - (shrinkProgress * 0.3); // 1.0 to 0.7
-        } else {
-            // Grow phase: 0.7 -> 1.0
-            const growProgress = (progress - 0.5) / 0.5; // 0 to 1
-            return 0.7 + (growProgress * 0.3); // 0.7 to 1.0
+        // Use a sine wave for smooth, continuous animation
+        // Starts at 1.0, dips to minimum at 0.5, returns to 1.0
+        // Add slight overshoot at the end for playfulness
+
+        const minScale = 0.6; // Shrink to 60% for more dramatic effect
+
+        // Main sine curve: smooth dip and rise
+        const sinePhase = Math.sin(progress * Math.PI);
+        const mainScale = 1.0 - (sinePhase * (1.0 - minScale));
+
+        // Add playful overshoot at the very end (last 20%)
+        if (progress > 0.8) {
+            const overshootPhase = (progress - 0.8) / 0.2; // 0 to 1
+            const overshoot = Math.sin(overshootPhase * Math.PI) * 0.05; // Small bounce
+            return mainScale + overshoot;
         }
+
+        // Add slight anticipation at the very start (first 10%)
+        if (progress < 0.1) {
+            const anticipationPhase = progress / 0.1; // 0 to 1
+            const anticipation = Math.sin(anticipationPhase * Math.PI) * 0.03; // Tiny dip
+            return mainScale - anticipation;
+        }
+
+        return mainScale;
     }
 
     /**
