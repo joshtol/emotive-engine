@@ -14,6 +14,7 @@ import { THREE_GEOMETRIES } from './geometries/ThreeGeometries.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
 import { BreathingAnimator } from './animation/BreathingAnimator.js';
 import { GestureBlender } from './animation/GestureBlender.js';
+import { GeometryMorpher } from './utils/GeometryMorpher.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
 import { getEmotion } from '../core/emotions/index.js';
@@ -53,6 +54,9 @@ export class Core3DManager {
         // Gesture blender
         this.gestureBlender = new GestureBlender();
 
+        // Geometry morpher for smooth shape transitions
+        this.geometryMorpher = new GeometryMorpher();
+
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
 
@@ -81,7 +85,6 @@ export class Core3DManager {
         // Match 2D sizing: core is 1/12th of canvas size (coreSizeDivisor: 12)
         this.baseScale = 0.16; // Properly sized core relative to particles
         this.scale = 0.16; // Current scale (base + animation)
-        this.morphScaleMultiplier = 1.0; // Separate multiplier for morph animations
         this.position = [0, 0, 0];
 
         // Rhythm engine reference (for BPM sync)
@@ -297,23 +300,21 @@ export class Core3DManager {
             return;
         }
 
-        // If already this shape, skip
-        if (this.geometryType === shapeName) {
+        // Start smooth morph transition (like 2D ShapeMorpher)
+        const started = this.geometryMorpher.startMorph(
+            this.geometryType,
+            shapeName,
+            duration
+        );
+
+        // If morph didn't start (already at target), skip
+        if (!started) {
             return;
         }
 
-        // Cancel any existing morph animations to prevent stacking
-        this.animator.animations = this.animator.animations.filter(anim =>
-            !anim.isMorphAnimation
-        );
-
-        // Ensure morph multiplier is at normal scale
-        this.morphScaleMultiplier = 1.0;
-
-        // Swap geometry instantly (no animation)
-        this.geometry = targetGeometry;
-        this.geometryType = shapeName;
-        this.renderer.swapGeometry(this.geometry);
+        // Store target geometry for when morph completes
+        this._targetGeometry = targetGeometry;
+        this._targetGeometryType = shapeName;
     }
 
     /**
@@ -334,11 +335,26 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
+        // Update geometry morph animation
+        const morphState = this.geometryMorpher.update(deltaTime);
+
+        // Handle morph completion
+        if (morphState.completed) {
+            this.geometry = this._targetGeometry;
+            this.geometryType = this._targetGeometryType;
+            this.renderer.swapGeometry(this.geometry);
+            this._targetGeometry = null;
+            this._targetGeometryType = null;
+        }
+
         // Update breathing animation
         this.breathingAnimator.update(deltaTime, this.emotion, getUndertoneModifier(this.undertone));
 
         // Get breathing scale multiplier
         const breathScale = this.breathingAnimator.getBreathingScale();
+
+        // Get morph scale multiplier (for shrink/grow effect)
+        const morphScale = morphState.scaleMultiplier;
 
         // Always update persistent base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
@@ -376,8 +392,8 @@ export class Core3DManager {
         this.glowIntensity = blended.glowIntensity;
         this.gestureQuaternion = blended.gestureQuaternion;
 
-        // Calculate final scale: base scale * morph multiplier * breathing
-        const finalScale = this.scale * this.morphScaleMultiplier * breathScale;
+        // Calculate final scale: base scale * morph scale * breathing
+        const finalScale = this.scale * morphScale * breathScale;
 
         // Update bloom pass with current glow intensity (smooth transitions)
         this.renderer.updateBloom(this.glowIntensity);
