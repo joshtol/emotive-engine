@@ -438,65 +438,13 @@ export class Core3DManager {
             !anim.isMorphAnimation
         );
 
-        // Reset morph multiplier to normal scale when starting new morph
+        // Ensure morph multiplier is at normal scale
         this.morphScaleMultiplier = 1.0;
 
-        // Swap geometry IMMEDIATELY (don't wait for shrink animation)
-        // The animation just handles the visual scale transition
+        // Swap geometry instantly (no animation)
         this.geometry = targetGeometry;
         this.geometryType = shapeName;
         this.renderer.swapGeometry(this.geometry);
-
-        // Smooth morph animation: scale down → scale up (geometry already swapped)
-        // Use animator.time (milliseconds) for timing, NOT Date.now()
-        const startTime = this.animator.time;
-        const halfDuration = duration / 2; // Already in milliseconds
-
-        // Shrink animation (first half)
-        const shrinkAnimation = {
-            startTime,
-            duration: halfDuration,
-            isMorphAnimation: true, // Flag for cancellation
-            evaluate: t => {
-                // t is already progress 0-1 from blending system
-                const easeProgress = this.easeInOutCubic(t);
-
-                // Morph scale multiplier: 1.0 → 0.3
-                this.morphScaleMultiplier = 1.0 - easeProgress * 0.7;
-
-                // When shrink is complete, start grow animation
-                // Use >= 0.99 instead of >= 1.0 to handle frame timing precision
-                if (t >= 0.99) {
-
-                    // Start grow animation (second half)
-                    const growStartTime = this.animator.time;
-                    const growAnimation = {
-                        startTime: growStartTime,
-                        duration: halfDuration,
-                        isMorphAnimation: true, // Flag for cancellation
-                        evaluate: t => {
-                            // t is already progress 0-1 from blending system
-                            const easeGrowProgress = this.easeInOutCubic(t);
-
-                            // Morph scale multiplier: 0.3 → 1.0
-                            this.morphScaleMultiplier = 0.3 + easeGrowProgress * 0.7;
-
-                            // Return output for blending system compatibility
-                            return { scale: 1.0 }; // Morph scale via separate multiplier
-                        }
-                    };
-
-                    // Add grow animation
-                    this.animator.animations.push(growAnimation);
-                }
-
-                // Return output for blending system compatibility
-                return { scale: 1.0 }; // Morph scale via separate multiplier
-            }
-        };
-
-        // Add shrink animation
-        this.animator.animations.push(shrinkAnimation);
     }
 
     /**
