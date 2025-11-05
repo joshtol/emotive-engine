@@ -188,6 +188,49 @@
             border-color: rgba(100, 200, 255, 0.6);
         }
 
+        /* Toggle button styles */
+        button[data-action="toggle-blink"] {
+            position: relative;
+            padding-left: 36px;
+        }
+
+        button[data-action="toggle-blink"]::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 12px;
+            background: rgba(255, 100, 100, 0.6);
+            border: 1px solid rgba(255, 100, 100, 0.8);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        button[data-action="toggle-blink"]::after {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        button[data-action="toggle-blink"].active::before {
+            background: rgba(100, 255, 100, 0.6);
+            border-color: rgba(100, 255, 100, 0.8);
+        }
+
+        button[data-action="toggle-blink"].active::after {
+            left: 18px;
+        }
+
         /* Info Box */
         .info-box {
             background: rgba(0, 0, 0, 0.3);
