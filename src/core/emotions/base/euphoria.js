@@ -28,6 +28,8 @@ export default {
         breathRate: 1.3,            // Elevated, joyful breathing
         breathDepth: 0.25,          // Full, satisfied breaths
         coreJitter: false,          // Stable, confident core
+        blinkRate: 1.4,             // More frequent blinking (euphoric)
+        blinkSpeed: 1.1,            // Slightly faster blink animation
         particleColors: [
             { color: '#FFB6C1', weight: 20 },  // Light pink bliss
             { color: '#FFD700', weight: 18 },  // Golden joy

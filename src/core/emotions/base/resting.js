@@ -28,6 +28,8 @@ export default {
         breathRate: 0.8,            // Deep, slow breathing
         breathDepth: 0.12,          // Pronounced rest breaths
         coreJitter: false,          // Perfectly still core
+        blinkRate: 0.4,             // Very infrequent blinking (sleepy)
+        blinkSpeed: 0.7,            // Slower, drowsy blink animation
         particleColors: [
             { color: '#9370DB', weight: 30 },  // Primary sleepy purple
             { color: '#A591C4', weight: 20 },  // Soft lavender drift

@@ -32,6 +32,8 @@ export default {
         breathRate: 1.0,             // Normal, relaxed breathing
         breathDepth: 0.08,           // Subtle breath variation
         coreJitter: false,           // Stable, still core
+        blinkRate: 1.0,              // Baseline blink frequency
+        blinkSpeed: 1.0,             // Baseline blink animation speed
         particleColors: [
             { color: '#00BCD4', weight: 25 },  // Primary cyan
             { color: '#00ACC1', weight: 20 },  // Darker cyan

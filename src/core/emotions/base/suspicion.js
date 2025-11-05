@@ -29,6 +29,8 @@ export default {
         breathRate: 0.6,            // Slower, more deliberate breathing
         breathDepth: 0.04,          // Very shallow, tense breaths
         coreJitter: 0.02,           // Slight nervous tremor
+        blinkRate: 1.1,             // Slightly more frequent blinking (watchful)
+        blinkSpeed: 1.0,            // Normal blink animation speed
         particleColors: [
             { color: '#6B46C1', weight: 30 },  // Deep purple paranoia
             { color: '#4A5568', weight: 25 },  // Shadowy slate gray

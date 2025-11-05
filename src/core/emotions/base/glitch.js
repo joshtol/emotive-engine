@@ -32,6 +32,8 @@ export default {
         coreJitter: false,          // No core shake
         coreSize: 1.0,              // Normal size
         eyeOpenness: 0.8,           // Wide but not fully open
+        blinkRate: 1.3,             // More frequent blinking (erratic)
+        blinkSpeed: 1.2,            // Faster blink animation (glitchy)
         particleColors: [
             // Enhanced rainbow colors - more vibrant and balanced
             { color: '#FF0080', weight: 18 },  // Bright magenta

@@ -242,19 +242,126 @@ export function createDodecahedron(radius = 0.5, detail = 0) {
  */
 export const THREE_GEOMETRIES = {
     // Original geometries
-    sphere: createSphere(64, 64),
-    crystal: createCrystal(6),
-    diamond: createDiamond(),
+    sphere: {
+        geometry: createSphere(64, 64),
+        blink: {
+            type: 'vertical-squish',
+            duration: 150,
+            scaleAxis: [1.0, 0.3, 1.0],  // Squish Y to 30% (like 2D)
+            curve: 'sine',
+            playful: {
+                anticipation: 0.03,
+                overshoot: 0.05
+            }
+        }
+    },
+
+    crystal: {
+        geometry: createCrystal(6),
+        blink: {
+            type: 'facet-flash',
+            duration: 120,  // Snappier
+            scaleAxis: [0.8, 0.8, 0.8],
+            glowBoost: 0.5,
+            curve: 'sine'
+        }
+    },
+
+    diamond: {
+        geometry: createDiamond(),
+        blink: {
+            type: 'sparkle-blink',
+            duration: 100,  // Very fast
+            scaleAxis: [0.85, 0.85, 0.85],
+            glowBoost: 0.8,
+            rotation: [0, Math.PI / 4, 0],  // Quick spin
+            curve: 'sine'
+        }
+    },
 
     // New Three.js primitive geometries
-    torus: createTorus(),
-    icosahedron: createIcosahedron(0.5, 1),
-    octahedron: createOctahedron(0.5, 0),
-    tetrahedron: createTetrahedron(0.5, 0),
-    dodecahedron: createDodecahedron(0.5, 0),
+    torus: {
+        geometry: createTorus(),
+        blink: {
+            type: 'vertical-squish',
+            duration: 150,
+            scaleAxis: [1.0, 0.4, 1.0],  // Squish the ring
+            rotation: [0, 0, Math.PI / 8],  // Slight tilt
+            curve: 'sine'
+        }
+    },
+
+    icosahedron: {
+        geometry: createIcosahedron(0.5, 1),
+        blink: {
+            type: 'geometric-pulse',
+            duration: 130,
+            scaleAxis: [0.7, 0.7, 0.7],
+            curve: 'sine'
+        }
+    },
+
+    octahedron: {
+        geometry: createOctahedron(0.5, 0),
+        blink: {
+            type: 'geometric-pulse',
+            duration: 130,
+            scaleAxis: [0.7, 0.7, 0.7],
+            curve: 'sine'
+        }
+    },
+
+    tetrahedron: {
+        geometry: createTetrahedron(0.5, 0),
+        blink: {
+            type: 'geometric-pulse',
+            duration: 110,  // Sharp/fast
+            scaleAxis: [0.75, 0.75, 0.75],
+            rotation: [Math.PI / 6, 0, 0],  // Tumble
+            curve: 'sine'
+        }
+    },
+
+    dodecahedron: {
+        geometry: createDodecahedron(0.5, 0),
+        blink: {
+            type: 'facet-flash',
+            duration: 140,
+            scaleAxis: [0.75, 0.75, 0.75],
+            glowBoost: 0.4,
+            curve: 'sine'
+        }
+    },
 
     // Variations for different aesthetics
-    'smooth-icosahedron': createIcosahedron(0.5, 2), // More subdivisions
-    'faceted-icosahedron': createIcosahedron(0.5, 0), // Sharp facets
-    'ring': createTorus(0.4, 0.1, 16, 64) // Thinner ring
+    'smooth-icosahedron': {
+        geometry: createIcosahedron(0.5, 2),
+        blink: {
+            type: 'geometric-pulse',
+            duration: 140,
+            scaleAxis: [0.75, 0.75, 0.75],
+            curve: 'sine'
+        }
+    },
+
+    'faceted-icosahedron': {
+        geometry: createIcosahedron(0.5, 0),
+        blink: {
+            type: 'facet-flash',
+            duration: 120,
+            scaleAxis: [0.7, 0.7, 0.7],
+            glowBoost: 0.3,
+            curve: 'sine'
+        }
+    },
+
+    'ring': {
+        geometry: createTorus(0.4, 0.1, 16, 64),
+        blink: {
+            type: 'vertical-squish',
+            duration: 140,
+            scaleAxis: [1.0, 0.5, 1.0],
+            curve: 'sine'
+        }
+    }
 };

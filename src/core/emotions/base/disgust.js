@@ -28,6 +28,8 @@ export default {
         breathRate: 0.7,            // Slow, queasy breathing
         breathDepth: 0.04,          // Shallow, uncomfortable breaths
         coreJitter: false,          // Stable but uneasy core
+        blinkRate: 0.9,             // Slightly less frequent blinking (discomfort)
+        blinkSpeed: 0.9,            // Slightly slower blink animation
         particleColors: [
             { color: '#9ACD32', weight: 25 },  // Yellow-green toxic
             { color: '#ADFF2F', weight: 20 },  // Bright acid green

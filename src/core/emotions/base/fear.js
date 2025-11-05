@@ -28,6 +28,8 @@ export default {
         breathRate: 2.5,            // Rapid, shallow breathing
         breathDepth: 0.06,          // Short, panicked breaths
         coreJitter: true,           // Trembling with anxiety
+        blinkRate: 1.7,             // Very frequent blinking (anxious)
+        blinkSpeed: 1.4,            // Faster blink animation (nervous)
         particleColors: [
             { color: '#8A2BE2', weight: 25 },  // Dark violet base
             { color: '#4B0082', weight: 20 },  // Indigo dread

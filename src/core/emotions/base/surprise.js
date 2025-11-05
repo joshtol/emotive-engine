@@ -28,6 +28,8 @@ export default {
         breathRate: 0.3,            // Gasping, held breath
         breathDepth: 0.18,          // Large shocked inhale
         coreJitter: false,          // Frozen in surprise
+        blinkRate: 1.4,             // More frequent blinking (shocked)
+        blinkSpeed: 1.2,            // Faster blink animation (startled)
         particleColors: [
             { color: '#FFD700', weight: 25 },  // Gold burst
             { color: '#FFA500', weight: 20 },  // Orange shock

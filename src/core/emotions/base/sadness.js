@@ -28,6 +28,8 @@ export default {
         breathRate: 0.6,            // Slow, heavy breathing
         breathDepth: 0.12,          // Deep, sighing breaths
         coreJitter: false,          // Still, heavy core
+        blinkRate: 0.6,             // Less frequent blinking (withdrawn)
+        blinkSpeed: 0.8,            // Slower, heavier blink animation
         particleColors: [
             { color: '#4169E1', weight: 25 },  // Royal blue sorrow
             { color: '#1E90FF', weight: 20 },  // Dodger blue tears

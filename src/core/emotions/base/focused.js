@@ -28,6 +28,8 @@ export default {
         breathRate: 1.2,            // Steady, measured breathing
         breathDepth: 0.08,          // Controlled, regular breaths
         coreJitter: true,           // Minimal tracking adjustments
+        blinkRate: 0.7,             // Less frequent blinking (concentrating)
+        blinkSpeed: 1.0,            // Normal blink animation speed
         particleColors: [
             { color: '#00CED1', weight: 30 },  // Primary focused cyan
             { color: '#4A9FA0', weight: 20 },  // Muted concentration tone

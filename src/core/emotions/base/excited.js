@@ -28,6 +28,8 @@ export default {
         breathRate: 2.0,            // Quick, excited breathing
         breathDepth: 0.14,          // Deep, energized breaths
         coreJitter: true,           // Vibrating with enthusiasm
+        blinkRate: 1.5,             // More frequent blinking (energetic)
+        blinkSpeed: 1.2,            // Faster blink animation (snappier)
         particleColors: [
             { color: '#FF6B35', weight: 25 },  // Vibrant orange energy
             { color: '#FF1744', weight: 20 },  // Red accent excitement

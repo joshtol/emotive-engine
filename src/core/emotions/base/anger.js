@@ -32,6 +32,8 @@ export default {
         breathRate: 2.2,            // Rapid, agitated breathing rhythm
         breathDepth: 0.15,          // Deep, forceful breath cycles
         coreJitter: true,           // Visual tremor from internal rage
+        blinkRate: 1.6,             // More frequent blinking (agitated)
+        blinkSpeed: 1.3,            // Faster, snappier blink animation
         particleColors: [
             { color: '#DC143C', weight: 25 },  // Crimson rage
             { color: '#FF0000', weight: 20 },  // Pure red fury

@@ -28,6 +28,8 @@ export default {
         breathRate: 0.75,           // Slow, content breathing
         breathDepth: 0.15,          // Deep, satisfied breaths
         coreJitter: false,          // Stable, secure feeling
+        blinkRate: 1.2,             // Slightly more frequent blinking (affectionate)
+        blinkSpeed: 1.0,            // Normal blink animation speed
         particleColors: [
             { color: '#FF1493', weight: 30 },  // Deep passionate pink
             { color: '#FF69B4', weight: 25 },  // Hot pink

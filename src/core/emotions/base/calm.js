@@ -32,6 +32,8 @@ export default {
         breathRate: 0.4,             // Much slower breathing than neutral (1.0)
         breathDepth: 0.12,           // Deeper breaths than neutral (0.08)
         coreJitter: false,           // Perfectly still core
+        blinkRate: 0.8,              // Less frequent blinking (relaxed)
+        blinkSpeed: 1.0,             // Normal blink animation speed
         particleColors: [
             { color: '#66D9CC', weight: 35 },  // Bright turquoise
             { color: '#99E6D9', weight: 25 },  // Light mint

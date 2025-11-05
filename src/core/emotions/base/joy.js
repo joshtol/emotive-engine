@@ -32,6 +32,8 @@ export default {
         breathRate: 1.5,            // Excited, happy breathing
         breathDepth: 0.10,          // Moderate breath variation
         coreJitter: false,          // Stable, confident happiness
+        blinkRate: 1.3,             // More frequent blinking (happy)
+        blinkSpeed: 1.1,            // Slightly faster blink animation
         particleColors: [
             { color: '#FFEB3B', weight: 25 },  // Bright sunshine yellow
             { color: '#FFC107', weight: 20 },  // Amber joy

@@ -14,6 +14,7 @@ import { THREE_GEOMETRIES } from './geometries/ThreeGeometries.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
 import { BreathingAnimator } from './animation/BreathingAnimator.js';
 import { GestureBlender } from './animation/GestureBlender.js';
+import { BlinkAnimator } from './animation/BlinkAnimator.js';
 import { GeometryMorpher } from './utils/GeometryMorpher.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
@@ -35,12 +36,16 @@ export class Core3DManager {
 
         // Load geometry
         this.geometryType = options.geometry || 'sphere';
-        this.geometry = THREE_GEOMETRIES[this.geometryType];
+        const geometryConfig = THREE_GEOMETRIES[this.geometryType];
 
-        if (!this.geometry) {
+        if (!geometryConfig) {
             console.warn(`Unknown geometry: ${this.geometryType}, falling back to sphere`);
-            this.geometry = THREE_GEOMETRIES.sphere;
+            this.geometryConfig = THREE_GEOMETRIES.sphere;
+        } else {
+            this.geometryConfig = geometryConfig;
         }
+
+        this.geometry = this.geometryConfig.geometry;
 
         // Create core mesh with geometry
         this.coreMesh = this.renderer.createCoreMesh(this.geometry);
@@ -56,6 +61,10 @@ export class Core3DManager {
 
         // Geometry morpher for smooth shape transitions
         this.geometryMorpher = new GeometryMorpher();
+
+        // Blink animator (emotion-aware)
+        this.blinkAnimator = new BlinkAnimator(this.geometryConfig);
+        this.blinkAnimator.setEmotion(this.emotion);
 
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
@@ -180,6 +189,9 @@ export class Core3DManager {
         // Update breathing animator with emotion and undertone
         this.breathingAnimator.setEmotion(emotion, undertoneModifier);
 
+        // Update blink animator with new emotion
+        this.blinkAnimator.setEmotion(emotion);
+
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
         this.renderer.updateBloom(this.baseGlowIntensity, 1.0);
 
@@ -294,8 +306,8 @@ export class Core3DManager {
      * @param {number} duration - Transition duration in ms (default: 800ms)
      */
     morphToShape(shapeName, duration = 800) {
-        const targetGeometry = THREE_GEOMETRIES[shapeName];
-        if (!targetGeometry) {
+        const targetGeometryConfig = THREE_GEOMETRIES[shapeName];
+        if (!targetGeometryConfig) {
             console.warn(`Unknown shape: ${shapeName}`);
             return;
         }
@@ -312,8 +324,12 @@ export class Core3DManager {
             return;
         }
 
+        // Pause blinks during morph (cleaner visual experience)
+        this.blinkAnimator.pause();
+
         // Store target geometry for when morph completes
-        this._targetGeometry = targetGeometry;
+        this._targetGeometryConfig = targetGeometryConfig;
+        this._targetGeometry = targetGeometryConfig.geometry;
         this._targetGeometryType = shapeName;
     }
 
@@ -342,13 +358,21 @@ export class Core3DManager {
         if (morphState.shouldSwapGeometry && this._targetGeometry) {
             this.geometry = this._targetGeometry;
             this.geometryType = this._targetGeometryType;
+            this.geometryConfig = this._targetGeometryConfig;
             this.renderer.swapGeometry(this.geometry);
+
+            // Update blink animator with new geometry's blink config
+            this.blinkAnimator.setGeometry(this._targetGeometryConfig);
         }
 
-        // Clean up on completion
+        // Clean up on completion and resume blinks
         if (morphState.completed) {
             this._targetGeometry = null;
             this._targetGeometryType = null;
+            this._targetGeometryConfig = null;
+
+            // Resume blinks after morph completes
+            this.blinkAnimator.resume();
         }
 
         // Update breathing animation
@@ -359,6 +383,9 @@ export class Core3DManager {
 
         // Get morph scale multiplier (for shrink/grow effect)
         const morphScale = morphState.scaleMultiplier;
+
+        // Update blink animation
+        const blinkState = this.blinkAnimator.update(deltaTime);
 
         // Always update persistent base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
@@ -396,8 +423,25 @@ export class Core3DManager {
         this.glowIntensity = blended.glowIntensity;
         this.gestureQuaternion = blended.gestureQuaternion;
 
-        // Calculate final scale: base scale * morph scale * breathing
-        const finalScale = this.scale * morphScale * breathScale;
+        // Apply blink effects (AFTER gestures, blending with other animations)
+        if (blinkState.isBlinking) {
+            // Apply blink rotation (additive to gesture rotation)
+            if (blinkState.rotation) {
+                this.rotation[0] += blinkState.rotation[0];
+                this.rotation[1] += blinkState.rotation[1];
+                this.rotation[2] += blinkState.rotation[2];
+            }
+
+            // Apply blink glow boost
+            if (blinkState.glowBoost) {
+                this.glowIntensity += blinkState.glowBoost;
+            }
+        }
+
+        // Calculate final scale: gesture * morph * breathing * BLINK
+        // Use Y-axis blink scale (primary squish axis) for uniform application
+        const blinkScale = blinkState.isBlinking ? blinkState.scale[1] : 1.0;
+        const finalScale = this.scale * morphScale * breathScale * blinkScale;
 
         // Update bloom pass with current glow intensity (smooth transitions)
         this.renderer.updateBloom(this.glowIntensity);
