@@ -12,6 +12,7 @@ import * as THREE from 'three';
 import { ThreeRenderer } from './ThreeRenderer.js';
 import { THREE_GEOMETRIES } from './geometries/ThreeGeometries.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
+import { BreathingAnimator } from './animation/BreathingAnimator.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
 import { getEmotion } from '../core/emotions/index.js';
@@ -45,6 +46,9 @@ export class Core3DManager {
         // Animation controller
         this.animator = new ProceduralAnimator();
 
+        // Breathing animator
+        this.breathingAnimator = new BreathingAnimator();
+
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
 
@@ -76,15 +80,6 @@ export class Core3DManager {
         this.scale = 0.16; // Current scale (base + animation)
         this.morphScaleMultiplier = 1.0; // Separate multiplier for morph animations
         this.position = [0, 0, 0];
-
-        // Breathing animation (like 2D BreathingAnimator)
-        this.breathingPhase = 0;        // Current phase in breathing cycle [0, 2π]
-        this.breathingSpeed = 1.0;      // Base breathing speed
-        this.breathingDepth = 0.03;     // Base breathing depth (3% scale oscillation)
-        this.breathRate = 1.0;          // Emotion-specific rate multiplier
-        this.breathDepth = 0.03;        // Emotion-specific depth
-        this.breathRateMult = 1.0;      // Undertone rate multiplier
-        this.breathDepthMult = 1.0;     // Undertone depth multiplier
 
         // Rhythm engine reference (for BPM sync)
         this.rhythmEngine = options.rhythmEngine || null;
@@ -176,18 +171,8 @@ export class Core3DManager {
             this.baseGlowIntensity *= undertoneModifier['3d'].glow.intensityMultiplier;
         }
 
-        // Apply undertone breathing multipliers
-        if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].scale) {
-            this.breathRateMult = undertoneModifier['3d'].scale.breathRateMultiplier || 1.0;
-            this.breathDepthMult = undertoneModifier['3d'].scale.breathDepthMultiplier || 1.0;
-        } else {
-            this.breathRateMult = 1.0;
-            this.breathDepthMult = 1.0;
-        }
-
-        // Calculate final breathing parameters (like 2D BreathingAnimator)
-        this.breathRate = 1.0 * this.breathRateMult; // TODO: Add emotion-specific patterns
-        this.breathDepth = this.breathingDepth * this.breathDepthMult;
+        // Update breathing animator with emotion and undertone
+        this.breathingAnimator.setEmotion(emotion, undertoneModifier);
 
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
         this.renderer.updateBloom(this.baseGlowIntensity, 1.0);
@@ -346,12 +331,11 @@ export class Core3DManager {
         // Update animations
         this.animator.update(deltaTime);
 
-        // Update breathing animation (sine wave oscillation on scale)
-        const phaseIncrement = this.breathingSpeed * this.breathRate * (deltaTime / 1000);
-        this.breathingPhase += phaseIncrement;
+        // Update breathing animation
+        this.breathingAnimator.update(deltaTime, this.emotion, getUndertoneModifier(this.undertone));
 
-        // Calculate breathing scale multiplier (1.0 ± breathDepth)
-        const breathScale = 1.0 + Math.sin(this.breathingPhase) * this.breathDepth;
+        // Get breathing scale multiplier
+        const breathScale = this.breathingAnimator.getBreathingScale();
 
         // Always update persistent base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
