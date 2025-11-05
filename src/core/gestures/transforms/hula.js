@@ -237,7 +237,10 @@ export default {
 
             // Hula-hoop motion: RELATIVE circular path in XZ plane with vertical Y oscillation
             const hulaRadius = 0.25; // Hula hoop radius in 3D units
-            const {angle} = data; // Use current angle from apply()
+
+            // Calculate angle based on progress for smooth hula motion
+            // Start from initial angle, rotate during gesture
+            const angle = data.initialAngle + (progress * Math.PI * 2 * data.direction);
 
             // RELATIVE circular motion in XZ plane (starts from 0, peaks, returns to 0)
             const xOffset = Math.cos(angle) * hulaRadius * envelope;

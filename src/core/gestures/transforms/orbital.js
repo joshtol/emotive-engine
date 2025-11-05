@@ -218,7 +218,10 @@ export default {
 
             // RELATIVE orbital motion: circular path in XZ plane
             const orbitRadius = 0.3; // Orbit radius in 3D units
-            const {angle} = data; // Use current angle from apply()
+
+            // Calculate angle based on progress for smooth circular motion
+            // Start from initial angle, complete full rotation during gesture
+            const angle = data.initialAngle + (progress * Math.PI * 2 * data.direction);
 
             // RELATIVE circular motion (starts from 0, peaks, returns to 0)
             const xOffset = Math.cos(angle) * orbitRadius * envelope;
