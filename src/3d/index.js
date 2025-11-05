@@ -124,7 +124,11 @@ export class EmotiveMascot3D {
             // Initialize 3D core renderer
             this.core3D = new Core3DManager(this.webglCanvas, {
                 geometry: this.config.coreGeometry,
-                emotion: this.config.defaultEmotion
+                emotion: this.config.defaultEmotion,
+                enablePostProcessing: this.config.enablePostProcessing,
+                enableShadows: this.config.enableShadows,
+                enableControls: this.config.enableControls,
+                autoRotate: this.config.autoRotate
             });
 
             // Initialize particle system (2D overlay)
@@ -190,7 +194,9 @@ export class EmotiveMascot3D {
         this.webglCanvas.style.top = '0';
         this.webglCanvas.style.left = '0';
         this.webglCanvas.style.zIndex = '2';
-        this.webglCanvas.style.pointerEvents = 'none'; // Click through to particles
+        // ENABLE pointer events for camera controls (mouse/touch interaction)
+        // Note: This means the WebGL canvas captures clicks, not the particle layer
+        this.webglCanvas.style.pointerEvents = 'auto';
         this.container.appendChild(this.webglCanvas);
     }
 

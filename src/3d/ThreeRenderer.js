@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export class ThreeRenderer {
     constructor(canvas, options = {}) {
@@ -53,6 +54,11 @@ export class ThreeRenderer {
         this.camera.position.set(0, 0, 3); // Match custom WebGL camera position
         this.camera.lookAt(0, 0, 0);
 
+        // Setup camera controls (OrbitControls)
+        if (options.enableControls !== false) {
+            this.setupCameraControls();
+        }
+
         // Setup lighting
         this.setupLights();
 
@@ -72,6 +78,46 @@ export class ThreeRenderer {
         this._tempColor = new THREE.Color();
         this._tempColor2 = new THREE.Color();
         this._white = new THREE.Color(1, 1, 1);
+    }
+
+    /**
+     * Setup camera controls (OrbitControls)
+     * Allows mouse/touch interaction to rotate and zoom the camera
+     */
+    setupCameraControls() {
+        // IMPORTANT: OrbitControls needs renderer.domElement, not the canvas directly
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+
+        // Enable smooth damping for better feel (especially important for touch)
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+
+        // Set distance limits (min/max zoom for both mouse wheel and pinch)
+        this.controls.minDistance = 2;
+        this.controls.maxDistance = 5;
+
+        // Disable panning to keep mascot centered
+        this.controls.enablePan = false;
+
+        // Enable auto-rotate for gentle spinning (can be toggled)
+        this.controls.autoRotate = this.options.autoRotate !== false; // default true
+        this.controls.autoRotateSpeed = 0.5; // slow, subtle rotation
+
+        // Limit vertical rotation to prevent upside-down views
+        this.controls.minPolarAngle = Math.PI * 0.2; // 36 degrees from top
+        this.controls.maxPolarAngle = Math.PI * 0.8; // 36 degrees from bottom
+
+        // Touch-specific optimizations
+        this.controls.rotateSpeed = 0.5; // Slower rotation for more control (both mouse and touch)
+        this.controls.zoomSpeed = 1.2; // Slightly faster zoom for better pinch responsiveness
+
+        // Touch gestures are enabled by default:
+        // - ONE finger: Rotate (orbit around mascot)
+        // - TWO fingers: Pinch to zoom + pan (but pan is disabled above)
+        // No need to configure this.controls.touches - defaults are optimal
+
+        // Prevent browser touch gestures from interfering with canvas interaction
+        this.renderer.domElement.style.touchAction = 'none';
     }
 
     /**
@@ -288,6 +334,75 @@ export class ThreeRenderer {
     }
 
     /**
+     * Set camera to a preset view with smooth transition
+     * @param {string} preset - Preset name ('front', 'side', 'top', 'angle')
+     * @param {number} duration - Transition duration in ms (default 1000)
+     */
+    setCameraPreset(preset, duration = 1000) {
+        if (!this.controls) return;
+
+        const presets = {
+            front: { x: 0, y: 0, z: 3 },
+            side: { x: 3, y: 0, z: 0 },
+            top: { x: 0, y: 3, z: 0.5 },
+            angle: { x: 2, y: 1.5, z: 2 },
+            back: { x: 0, y: 0, z: -3 }
+        };
+
+        const target = presets[preset];
+        if (!target) {
+            console.warn(`Unknown camera preset: ${preset}`);
+            return;
+        }
+
+        // Smoothly animate camera to target position
+        const startPos = this.camera.position.clone();
+        const endPos = new THREE.Vector3(target.x, target.y, target.z);
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1.0);
+
+            // Ease out cubic for smooth deceleration
+            const eased = 1 - Math.pow(1 - progress, 3);
+
+            this.camera.position.lerpVectors(startPos, endPos, eased);
+
+            if (progress < 1.0) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    /**
+     * Reset camera to default position
+     */
+    resetCamera() {
+        this.setCameraPreset('front', 1000);
+    }
+
+    /**
+     * Toggle auto-rotate on/off
+     * @param {boolean} enabled - Whether auto-rotate should be enabled
+     */
+    toggleAutoRotate(enabled) {
+        if (this.controls) {
+            this.controls.autoRotate = enabled !== undefined ? enabled : !this.controls.autoRotate;
+        }
+    }
+
+    /**
+     * Get current auto-rotate state
+     * @returns {boolean}
+     */
+    isAutoRotateEnabled() {
+        return this.controls ? this.controls.autoRotate : false;
+    }
+
+    /**
      * Render frame
      * @param {Object} params - Render parameters
      */
@@ -299,6 +414,11 @@ export class ThreeRenderer {
             glowColor = [1, 1, 1],
             glowIntensity = 1.0
         } = params;
+
+        // Update camera controls (required for damping and auto-rotate)
+        if (this.controls) {
+            this.controls.update();
+        }
 
         // Update core mesh transform
         if (this.coreMesh) {

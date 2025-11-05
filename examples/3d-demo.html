@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Emotive Engine 3D - Three.js Demo</title>
     <style>
         * {
@@ -92,6 +93,10 @@
             border-radius: 20px;
             background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
             box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+            /* Prevent browser touch gestures (zoom, pan, etc.) */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #mascot-container canvas {
@@ -99,6 +104,8 @@
             display: block;
             width: 100%;
             height: 100%;
+            /* Ensure canvas handles its own touch events */
+            touch-action: none;
         }
 
         /* Center the inner container div created by EmotiveMascot3D */
@@ -189,12 +196,14 @@
         }
 
         /* Toggle button styles */
-        button[data-action="toggle-blink"] {
+        button[data-action="toggle-blink"],
+        button[data-action="toggle-auto-rotate"] {
             position: relative;
             padding-left: 36px;
         }
 
-        button[data-action="toggle-blink"]::before {
+        button[data-action="toggle-blink"]::before,
+        button[data-action="toggle-auto-rotate"]::before {
             content: '';
             position: absolute;
             left: 8px;
@@ -208,7 +217,8 @@
             transition: all 0.3s ease;
         }
 
-        button[data-action="toggle-blink"]::after {
+        button[data-action="toggle-blink"]::after,
+        button[data-action="toggle-auto-rotate"]::after {
             content: '';
             position: absolute;
             left: 10px;
@@ -222,12 +232,14 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        button[data-action="toggle-blink"].active::before {
+        button[data-action="toggle-blink"].active::before,
+        button[data-action="toggle-auto-rotate"].active::before {
             background: rgba(100, 255, 100, 0.6);
             border-color: rgba(100, 255, 100, 0.8);
         }
 
-        button[data-action="toggle-blink"].active::after {
+        button[data-action="toggle-blink"].active::after,
+        button[data-action="toggle-auto-rotate"].active::after {
             left: 18px;
         }
 
@@ -374,6 +386,12 @@
                 <li>Three-point lighting system</li>
                 <li>Post-processing bloom effects</li>
                 <li>Emotion-based dynamic lighting</li>
+                <li>Interactive camera controls:
+                    <ul style="margin-left: 15px; font-size: 12px; opacity: 0.8;">
+                        <li>Desktop: Drag to rotate, scroll to zoom</li>
+                        <li>Mobile: Swipe to rotate, pinch to zoom</li>
+                    </ul>
+                </li>
                 <li>Real-time shadows (optional)</li>
                 <li>Custom Fresnel glow shader</li>
             </ul>
@@ -402,6 +420,17 @@
         <div class="control-group">
             <h3>Animation Toggles</h3>
             <button data-action="toggle-blink" class="active">👁️ Blinking</button>
+        </div>
+
+        <div class="control-group">
+            <h3>Camera Controls</h3>
+            <button data-action="camera-preset" data-value="front">📷 Front</button>
+            <button data-action="camera-preset" data-value="side">📷 Side</button>
+            <button data-action="camera-preset" data-value="top">📷 Top</button>
+            <button data-action="camera-preset" data-value="angle">📷 Angle</button>
+            <button data-action="camera-preset" data-value="back">📷 Back</button>
+            <button data-action="reset-camera">🔄 Reset</button>
+            <button data-action="toggle-auto-rotate" class="active">🔄 Auto-Rotate</button>
         </div>
 
         <div class="control-group">
@@ -487,7 +516,9 @@
                     coreGeometry: 'crystal',
                     enableParticles: true,
                     enablePostProcessing: true,
-                    enableShadows: false
+                    enableShadows: false,
+                    enableControls: true,
+                    autoRotate: true
                 });
 
                 mascot.init(container);
@@ -563,6 +594,34 @@
                             console.log('Enabling blinking');
                             mascot.enableBlinking();
                             e.target.classList.add('active');
+                        }
+                        break;
+
+                    case 'camera-preset':
+                        console.log('Setting camera preset:', value);
+                        if (mascot.core3D?.renderer?.setCameraPreset) {
+                            mascot.core3D.renderer.setCameraPreset(value);
+                        }
+                        break;
+
+                    case 'reset-camera':
+                        console.log('Resetting camera');
+                        if (mascot.core3D?.renderer?.resetCamera) {
+                            mascot.core3D.renderer.resetCamera();
+                        }
+                        break;
+
+                    case 'toggle-auto-rotate':
+                        if (mascot.core3D?.renderer?.controls) {
+                            const currentState = mascot.core3D.renderer.isAutoRotateEnabled();
+                            console.log('Toggling auto-rotate:', !currentState);
+                            mascot.core3D.renderer.toggleAutoRotate(!currentState);
+
+                            if (!currentState) {
+                                e.target.classList.add('active');
+                            } else {
+                                e.target.classList.remove('active');
+                            }
                         }
                         break;
                 }

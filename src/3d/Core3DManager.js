@@ -22,6 +22,10 @@ import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
 import { hexToRGB, rgbToHsl, hslToRgb, applyUndertoneSaturation } from './utils/ColorUtilities.js';
+import ParticleSystem from '../core/ParticleSystem.js';
+import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
+import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
+import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
 
 export class Core3DManager {
     constructor(canvas, options = {}) {
@@ -31,7 +35,9 @@ export class Core3DManager {
         // Initialize Three.js renderer
         this.renderer = new ThreeRenderer(canvas, {
             enablePostProcessing: options.enablePostProcessing !== false,
-            enableShadows: options.enableShadows || false
+            enableShadows: options.enableShadows || false,
+            enableControls: options.enableControls !== false, // Camera controls (mouse/touch)
+            autoRotate: options.autoRotate !== false // Auto-rotate enabled by default
         });
 
         // Load geometry
@@ -98,6 +104,43 @@ export class Core3DManager {
 
         // Rhythm engine reference (for BPM sync)
         this.rhythmEngine = options.rhythmEngine || null;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PARTICLE SYSTEM INTEGRATION
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Enable/disable particles
+        this.particlesEnabled = options.enableParticles !== false;
+
+        if (this.particlesEnabled) {
+            // Create 2D particle system (reuse existing logic)
+            const particleSystem = new ParticleSystem(50); // 50 particles max
+
+            // Set canvas size for particle spawning
+            particleSystem.canvasWidth = canvas.width;
+            particleSystem.canvasHeight = canvas.height;
+
+            // Create 3D translator (converts 2D → 3D)
+            const particleTranslator = new Particle3DTranslator({
+                worldScale: 2.0,
+                baseRadius: 1.5,
+                depthScale: 0.75,
+                verticalScale: 1.0
+            });
+
+            // Create 3D renderer (Three.js points system)
+            const particleRenderer = new Particle3DRenderer(50);
+
+            // Add particle points to scene
+            this.renderer.scene.add(particleRenderer.getPoints());
+
+            // Create orchestrator (coordinates everything)
+            this.particleOrchestrator = new Particle3DOrchestrator(
+                particleSystem,
+                particleTranslator,
+                particleRenderer
+            );
+        }
 
         // Initialize emotion
         this.setEmotion(this.emotion);
@@ -197,6 +240,14 @@ export class Core3DManager {
 
         // Trigger emotion animation - now handled by blending system in render()
         this.animator.playEmotion(emotion);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // UPDATE PARTICLE SYSTEM FOR NEW EMOTION
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (this.particlesEnabled && this.particleOrchestrator) {
+            // Notify orchestrator of emotion change (will recalculate config)
+            this.particleOrchestrator.setEmotion(emotion, undertone);
+        }
     }
 
     /**
@@ -248,8 +299,10 @@ export class Core3DManager {
         const gestureData = { initialized: false };
 
         this.animator.animations.push({
+            gestureName, // Store gesture name for particle system
             duration,
             startTime,
+            config, // Store config for particle system
             evaluate: t => {
                 // Reset virtual particle to center each frame
                 virtualParticle.x = 0;
@@ -443,6 +496,22 @@ export class Core3DManager {
         const blinkScale = blinkState.isBlinking ? blinkState.scale[1] : 1.0;
         const finalScale = this.scale * morphScale * breathScale * blinkScale;
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PARTICLE SYSTEM UPDATE & RENDERING (Orchestrated)
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (this.particlesEnabled && this.particleOrchestrator) {
+            // Delegate all particle logic to orchestrator
+            this.particleOrchestrator.update(
+                deltaTime,
+                this.emotion,
+                this.undertone,
+                this.animator.animations, // Active gestures
+                this.animator.time,       // Current animation time
+                { x: this.position[0], y: this.position[1], z: this.position[2] }, // Core position
+                { width: this.canvas.width, height: this.canvas.height } // Canvas size
+            );
+        }
+
         // Update bloom pass with current glow intensity (smooth transitions)
         this.renderer.updateBloom(this.glowIntensity);
 
@@ -462,5 +531,10 @@ export class Core3DManager {
     destroy() {
         this.renderer.destroy();
         this.animator.stopAll();
+
+        // Clean up particle system
+        if (this.particleOrchestrator) {
+            this.particleOrchestrator.destroy();
+        }
     }
 }
