@@ -200,20 +200,31 @@ export default {
             }
 
             const data = particle.gestureData.orbital;
+            const config = motion.config || {};
 
-            // READ particle.z for depth (as specified in requirements)
-            const z = particle.z || 0;
+            // Fade-out envelope to return to origin at end
+            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0;
 
-            // Rotation to face direction of motion (orbit as rotation)
-            const tangentAngle = data.angle + Math.PI / 2;
-            const yRotation = tangentAngle;
+            // Orbital motion: circular path in XZ plane
+            const orbitRadius = 0.3; // Orbit radius in 3D units
+            const angle = data.angle + (progress * Math.PI * 2); // Full rotation during gesture
+
+            const xOffset = Math.cos(angle) * orbitRadius * returnEnvelope;
+            const zOffset = Math.sin(angle) * orbitRadius * returnEnvelope;
+
+            // Rotation to face direction of motion (tangent to orbit)
+            const tangentAngle = angle + Math.PI / 2;
+            const yRotation = tangentAngle * returnEnvelope;
+
+            // READ particle.z for depth variation
+            const depthZ = particle.z || 0;
+            const finalZ = zOffset + (depthZ * 0.1 * returnEnvelope); // Add depth variation
 
             // Scale based on depth (particles further back appear smaller)
-            // Z ranges from -0.8 to 0.8, scale from 0.85 to 1.15
-            const depthScale = 1.0 + z * 0.15;
+            const depthScale = 1.0 + depthZ * 0.15;
 
             return {
-                position: [0, 0, z], // Orbital motion via rotation, only Z depth for scale effect
+                position: [xOffset, 0, finalZ], // Circular orbital motion in XZ plane
                 rotation: [0, yRotation, 0],
                 scale: depthScale
             };

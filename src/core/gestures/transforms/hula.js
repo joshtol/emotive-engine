@@ -222,29 +222,29 @@ export default {
             const config = motion.config || {};
 
             // Fade-out envelope to return to origin at end
-            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0; // Fade last 15%
+            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0;
 
-            // READ particle.z for depth
-            const z = particle.z || 0;
+            // Hula-hoop motion: circular path in XZ plane with vertical Y oscillation
+            const hulaRadius = 0.25; // Hula hoop radius in 3D units
+            const angle = data.angle + (data.direction * progress * Math.PI * 2);
 
-            // Y-axis rotation following the hula motion - fades to 0 at end
-            const yRotation = (data.angle + (data.direction * progress * Math.PI * 2)) * returnEnvelope;
+            // Circular motion in XZ plane
+            const xOffset = Math.cos(angle) * hulaRadius * returnEnvelope;
+            const zOffset = Math.sin(angle) * hulaRadius * returnEnvelope;
 
-            // XZ position offset creates the hula-hoop tilted ring effect
-            // Wobble affects the XZ plane positioning
-            const wobble = Math.sin(data.angle * 2 + data.wobblePhase) * (config.wobbleAmount || 0.15);
+            // Vertical oscillation creates the hula-hoop wave effect
+            const verticalOscillation = config.verticalOscillation || 0.3;
+            const yOffset = Math.sin(angle * 2 + data.wobblePhase) * verticalOscillation * returnEnvelope;
 
-            // Calculate XZ offset based on angle for circular motion in 3D - fades to 0
-            // Scale wobble to reasonable 3D units (0.15 * 0.1 = 0.015 max amplitude)
-            const xOffset = Math.cos(data.angle) * wobble * 0.1 * returnEnvelope;
-            const zOffset = z * returnEnvelope; // Use existing Z calculation from apply()
+            // Y-axis rotation to face direction of motion
+            const yRotation = angle * returnEnvelope;
 
-            // Scale based on vertical position (particles at top/bottom of hoop) - returns to 1.0
-            const scaleVariation = Math.abs(Math.sin(data.angle)) * 0.1 * returnEnvelope;
+            // Scale variation based on vertical position (larger at top/bottom of wave)
+            const scaleVariation = Math.abs(Math.sin(angle)) * 0.15 * returnEnvelope;
             const verticalScale = 1.0 + scaleVariation;
 
             return {
-                position: [xOffset, 0, zOffset], // Hula wobble via offsets, not particle pos
+                position: [xOffset, yOffset, zOffset], // Circular XZ path + vertical Y wave
                 rotation: [0, yRotation, 0],
                 scale: verticalScale
             };
