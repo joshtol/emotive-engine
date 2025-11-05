@@ -235,7 +235,8 @@ export default {
             const wobble = Math.sin(data.angle * 2 + data.wobblePhase) * (config.wobbleAmount || 0.15);
 
             // Calculate XZ offset based on angle for circular motion in 3D - fades to 0
-            const xOffset = Math.cos(data.angle) * wobble * 10 * returnEnvelope;
+            // Scale wobble to reasonable 3D units (0.15 * 0.1 = 0.015 max amplitude)
+            const xOffset = Math.cos(data.angle) * wobble * 0.1 * returnEnvelope;
             const zOffset = z * returnEnvelope; // Use existing Z calculation from apply()
 
             // Scale based on vertical position (particles at top/bottom of hoop) - returns to 1.0

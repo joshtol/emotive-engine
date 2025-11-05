@@ -233,8 +233,10 @@ export default {
             const helixRadius = (config.contractionFactor || 0.8) * data.startDistance;
 
             // Calculate helical XZ offset - fades to 0 at end
-            const xOffset = Math.cos(helixAngle) * helixRadius * 0.1 * returnEnvelope;
-            const zOffset = Math.sin(helixAngle) * helixRadius * 0.1 * returnEnvelope;
+            // PIXEL_TO_3D converts pixel distances to 3D world coordinates
+            const PIXEL_TO_3D = 0.01;
+            const xOffset = Math.cos(helixAngle) * helixRadius * 0.1 * returnEnvelope * PIXEL_TO_3D;
+            const zOffset = Math.sin(helixAngle) * helixRadius * 0.1 * returnEnvelope * PIXEL_TO_3D;
 
             // X and Z rotation for additional twist dynamics - fades to 0
             const xRotation = Math.cos(twistProgress) * 0.1 * strength * returnEnvelope;
