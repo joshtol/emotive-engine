@@ -44,7 +44,8 @@ export class ProceduralAnimator {
      * The blending system calls evaluate() directly and accumulates outputs.
      */
     update(deltaTime) {
-        this.time += deltaTime;
+        // Convert deltaTime from milliseconds to seconds
+        this.time += deltaTime / 1000;
 
         // Remove completed animations
         for (let i = this.animations.length - 1; i >= 0; i--) {
