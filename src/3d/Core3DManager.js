@@ -13,6 +13,7 @@ import { ThreeRenderer } from './ThreeRenderer.js';
 import { THREE_GEOMETRIES } from './geometries/ThreeGeometries.js';
 import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
 import { BreathingAnimator } from './animation/BreathingAnimator.js';
+import { GestureBlender } from './animation/GestureBlender.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
 import { getEmotion } from '../core/emotions/index.js';
@@ -49,6 +50,9 @@ export class Core3DManager {
         // Breathing animator
         this.breathingAnimator = new BreathingAnimator();
 
+        // Gesture blender
+        this.gestureBlender = new GestureBlender();
+
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
 
@@ -70,8 +74,7 @@ export class Core3DManager {
         // Quaternion-based rotation system for smooth 3D orientation
         this.baseEuler = [0, 0, 0]; // Persistent base Euler angles (updated by RotationBehavior)
         this.baseQuaternion = new THREE.Quaternion(); // Ambient rotation (from emotion state)
-        this.gestureQuaternion = new THREE.Quaternion(); // Gesture delta rotation
-        this.finalQuaternion = new THREE.Quaternion(); // Combined result
+        this.gestureQuaternion = new THREE.Quaternion(); // Gesture delta rotation (for debugging)
         this.tempEuler = new THREE.Euler(); // Temp for conversions
         this.rotation = [0, 0, 0]; // Final Euler angles for renderer
 
@@ -356,73 +359,22 @@ export class Core3DManager {
         this.baseQuaternion.setFromEuler(this.tempEuler);
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // GESTURE BLENDING SYSTEM - Accumulate multiple simultaneous gestures
+        // GESTURE BLENDING SYSTEM - Blend multiple simultaneous gestures
         // ═══════════════════════════════════════════════════════════════════════════
+        const blended = this.gestureBlender.blend(
+            this.animator.animations,
+            this.animator.time,
+            this.baseQuaternion,
+            this.baseScale,
+            this.baseGlowIntensity
+        );
 
-        // Initialize accumulator with base values
-        const accumulated = {
-            position: [0, 0, 0],                               // Additive channel
-            rotationQuat: new THREE.Quaternion().identity(),   // Multiplicative channel
-            scale: 1.0,                                        // Multiplicative channel
-            glowIntensity: 1.0                                 // Multiplicative channel
-        };
-
-        // Blend all active animations
-        for (const animation of this.animator.animations) {
-            if (animation.evaluate) {
-                const elapsed = this.animator.time - animation.startTime;
-                const progress = Math.min(elapsed / animation.duration, 1);
-                const output = animation.evaluate(progress);
-
-                if (output) {
-                    // POSITION: Additive blending (bounce + sway)
-                    if (output.position) {
-                        accumulated.position[0] += output.position[0];
-                        accumulated.position[1] += output.position[1];
-                        accumulated.position[2] += output.position[2];
-                    }
-
-                    // ROTATION: Quaternion multiplication (orbital * twist)
-                    if (output.rotation) {
-                        this.tempEuler.set(
-                            output.rotation[0],
-                            output.rotation[1],
-                            output.rotation[2],
-                            'XYZ'
-                        );
-                        const gestureQuat = new THREE.Quaternion().setFromEuler(this.tempEuler);
-                        accumulated.rotationQuat.multiply(gestureQuat);
-                    }
-
-                    // SCALE: Multiplicative blending (expand × shrink)
-                    if (output.scale !== undefined) {
-                        accumulated.scale *= output.scale;
-                    }
-
-                    // GLOW: Multiplicative blending (glow × pulse)
-                    if (output.glowIntensity !== undefined) {
-                        accumulated.glowIntensity *= output.glowIntensity;
-                    }
-                }
-            }
-        }
-
-        // Apply accumulated gesture results
-        this.position = accumulated.position;
-        this.gestureQuaternion.copy(accumulated.rotationQuat);
-        this.scale = this.baseScale * accumulated.scale;
-        this.glowIntensity = this.baseGlowIntensity * accumulated.glowIntensity;
-
-        // Combine quaternions: finalQuaternion = baseQuaternion * gestureQuaternion
-        // This applies accumulated gesture rotation in the local space of the base rotation
-        this.finalQuaternion.copy(this.baseQuaternion);
-        this.finalQuaternion.multiply(this.gestureQuaternion);
-
-        // Convert final quaternion back to Euler angles for renderer
-        this.tempEuler.setFromQuaternion(this.finalQuaternion, 'XYZ');
-        this.rotation[0] = this.tempEuler.x;
-        this.rotation[1] = this.tempEuler.y;
-        this.rotation[2] = this.tempEuler.z;
+        // Apply blended results
+        this.position = blended.position;
+        this.rotation = blended.rotation;
+        this.scale = blended.scale;
+        this.glowIntensity = blended.glowIntensity;
+        this.gestureQuaternion = blended.gestureQuaternion;
 
         // Calculate final scale: base scale * morph multiplier * breathing
         const finalScale = this.scale * this.morphScaleMultiplier * breathScale;
