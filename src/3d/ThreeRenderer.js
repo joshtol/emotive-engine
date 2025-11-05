@@ -360,7 +360,7 @@ export class ThreeRenderer {
         const endPos = new THREE.Vector3(target.x, target.y, target.z);
         const startTime = performance.now();
 
-        const animate = (currentTime) => {
+        const animate = currentTime => {
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1.0);
 

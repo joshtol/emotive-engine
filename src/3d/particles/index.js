@@ -29,13 +29,3 @@ export { Particle3DOrchestrator } from './Particle3DOrchestrator.js';
 export { ParticleEmotionCalculator } from './ParticleEmotionCalculator.js';
 export { GestureDataExtractor } from './GestureDataExtractor.js';
 export { ParticleEffectsBuilder } from './ParticleEffectsBuilder.js';
-
-// Export as default object for convenience
-export default {
-    Particle3DTranslator,
-    Particle3DRenderer,
-    Particle3DOrchestrator,
-    ParticleEmotionCalculator,
-    GestureDataExtractor,
-    ParticleEffectsBuilder
-};

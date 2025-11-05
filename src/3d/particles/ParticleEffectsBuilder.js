@@ -65,7 +65,7 @@ export class ParticleEffectsBuilder {
             return null;
         }
 
-        const gestureName = gestureData.gestureName;
+        const {gestureName} = gestureData;
         const builder = this.effectMap[gestureName];
 
         if (!builder) {

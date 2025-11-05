@@ -268,25 +268,41 @@ export class Particle3DTranslator {
 
     /**
      * POPCORN: Explosive bursts with random trajectories
+     * Uses particle's 2D canvas position (x, y) and converts to 3D with synthesized Z
      */
     _translatePopcorn(particle, corePosition, canvasSize) {
-        const behaviorData = particle.behaviorData || {};
+        const centerX = canvasSize.width / 2;
+        const centerY = canvasSize.height / 2;
 
-        // Start from core center
-        const pos = new THREE.Vector3(
-            corePosition.x,
-            corePosition.y,
-            corePosition.z
+        // Get base 3D position from 2D canvas coordinates
+        const pos = this._canvasToWorld(
+            particle.x,
+            particle.y,
+            particle.z,
+            centerX,
+            centerY,
+            corePosition
         );
 
-        // Add explosive trajectory
-        if (behaviorData.burstDirection) {
-            const dir = behaviorData.burstDirection;
-            const distance = (1 - particle.life) * this.baseRadius;
+        // Synthesize Z-axis movement from 2D velocity to create true 3D distribution
+        // Use particle's velocity direction to determine Z trajectory
+        const behaviorData = particle.behaviorData || {};
 
-            pos.x += dir.x * distance;
-            pos.y += dir.y * distance;
-            pos.z += dir.z * distance;
+        if (behaviorData.hasPopped) {
+            // After pop, particles should spread in all directions including Z
+            // Use the particle's horizontal velocity magnitude to drive Z variation
+            const velocityMagnitude = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+
+            // Create Z-axis component based on velocity and a pseudo-random offset
+            // Use particle's initial position as seed for consistent Z direction
+            const zSeed = (particle.x + particle.y) % 100;
+            const zDirection = (zSeed / 50) - 1; // Range: -1 to +1
+
+            // Scale Z offset by velocity magnitude and lifetime
+            const lifetimeProgress = 1 - particle.life;
+            const zOffset = zDirection * velocityMagnitude * 0.02 * lifetimeProgress * this.baseRadius;
+
+            pos.z += zOffset;
         }
 
         return pos;

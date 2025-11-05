@@ -81,7 +81,7 @@ export class ParticleEmotionCalculator {
             min: visual.minParticles !== undefined ? visual.minParticles : 0,
             max: visual.maxParticles !== undefined ? visual.maxParticles : 10,
             colors: visual.particleColors || null,
-            emotion: emotion
+            emotion
         };
     }
 

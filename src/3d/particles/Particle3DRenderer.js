@@ -151,7 +151,7 @@ export class Particle3DRenderer {
         this.geometry = new THREE.BufferGeometry();
 
         // Allocate typed arrays (pre-allocate for max particles)
-        const maxParticles = this.maxParticles;
+        const {maxParticles} = this;
 
         this.positions = new Float32Array(maxParticles * 3); // x, y, z
         this.sizes = new Float32Array(maxParticles); // size
