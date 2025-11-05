@@ -187,10 +187,11 @@ export default class RotationBehavior {
         const y = Math.sin(time * orbitSpeed * Math.PI * 2 * 2) * 0.1; // Double frequency for figure-8
         const z = Math.sin(time * orbitSpeed * Math.PI * 2 * 0.5) * 0.05;
 
-        // Set rotation (not additive for orbits)
-        baseRotation[0] = x;
+        // FIXED: Additive rotation (not setting) - works with righting behavior
+        // Previous code set rotation directly, completely bypassing righting corrections
+        baseRotation[0] += x * dt;
         baseRotation[1] += this.axes[1] * this.speed * dt; // Continue Y-axis spin
-        baseRotation[2] = z;
+        baseRotation[2] += z * dt;
 
         return baseRotation;
     }
