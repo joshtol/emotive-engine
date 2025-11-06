@@ -22,6 +22,7 @@ import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
 import { hexToRGB, rgbToHsl, hslToRgb, applyUndertoneSaturation } from './utils/ColorUtilities.js';
+import { getGlowIntensityForColor } from '../utils/glowIntensityFilter.js';
 import ParticleSystem from '../core/ParticleSystem.js';
 import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
@@ -91,6 +92,7 @@ export class Core3DManager {
         this.glowIntensity = 1.0;
         this.coreGlowEnabled = true; // Toggle to enable/disable core glow
         this.glowIntensityOverride = null; // Manual override for testing
+        this.intensityCalibrationOffset = 0; // Universal filter calibration offset
 
         // Quaternion-based rotation system for smooth 3D orientation
         this.baseEuler = [0, 0, 0]; // Persistent base Euler angles (updated by RotationBehavior)
@@ -169,10 +171,15 @@ export class Core3DManager {
                 rgb = applyUndertoneSaturation(rgb, undertone);
 
                 this.glowColor = rgb;
-            }
-            // Set intensity from emotion data
-            if (emotionData.visual.glowIntensity !== undefined) {
-                this.glowIntensity = emotionData.visual.glowIntensity;
+
+                // Calculate intensity using universal filter based on color luminance
+                // This ensures consistent visibility across all emotions regardless of color brightness
+                const materialMode = this.renderer.materialMode || 'glass';
+                this.glowIntensity = getGlowIntensityForColor(
+                    emotionData.visual.glowColor,
+                    this.intensityCalibrationOffset,
+                    materialMode
+                );
             }
 
             // Update Three.js lighting based on emotion
@@ -224,11 +231,23 @@ export class Core3DManager {
         this.animator.stopAll();
 
         // Store base glow intensity for this emotion (before animation modulation)
-        this.baseGlowIntensity = emotionData?.visual?.glowIntensity || 1.0;
+        // Use universal filter to calculate intensity from color luminance
+        // Pass material mode so formula adjusts correctly (glass vs glow mode)
+        const glowColor = emotionData?.visual?.glowColor || '#00BCD4';
+        const materialMode = this.renderer.materialMode || 'glass';
+        this.baseGlowIntensity = getGlowIntensityForColor(
+            glowColor,
+            this.intensityCalibrationOffset,
+            materialMode
+        );
+
+        console.log(`🎨 ${emotion.toUpperCase()} base intensity: ${this.baseGlowIntensity.toFixed(3)} (color: ${glowColor}, mode: ${materialMode})`);
 
         // Apply undertone glow multiplier to base intensity
         if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].glow) {
+            const beforeUndertone = this.baseGlowIntensity;
             this.baseGlowIntensity *= undertoneModifier['3d'].glow.intensityMultiplier;
+            console.log(`   🎭 Undertone ${undertone} multiplier: ${undertoneModifier['3d'].glow.intensityMultiplier.toFixed(3)}, final: ${this.baseGlowIntensity.toFixed(3)}`);
         }
 
         // Update breathing animator with emotion and undertone
@@ -280,6 +299,18 @@ export class Core3DManager {
             this.glowIntensity = intensity;
             this.baseGlowIntensity = intensity;
         }
+    }
+
+    /**
+     * Set universal filter intensity calibration offset
+     * Adjusts global brightness for all emotions in real-time
+     * @param {number} offset - Calibration offset (-0.5 to +0.5 recommended)
+     */
+    setIntensityCalibration(offset) {
+        this.intensityCalibrationOffset = offset;
+
+        // Recalculate current emotion's glow intensity with new offset
+        this.setEmotion(this.emotion, this.undertone);
     }
 
     /**
@@ -386,7 +417,8 @@ export class Core3DManager {
                         this.gestureQuaternion.setFromEuler(this.tempEuler);
                     }
                     if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
-                    if (props.glowIntensity !== undefined) this.glowIntensity = props.glowIntensity;
+                    // Apply glow intensity as multiplier on base intensity (not absolute override)
+                    if (props.glowIntensity !== undefined) this.glowIntensity = this.baseGlowIntensity * props.glowIntensity;
                 },
                 onComplete: () => {
                     // Clean up gesture
@@ -575,7 +607,19 @@ export class Core3DManager {
 
         // Calculate effective glow intensity (blink boost applied at render time, non-mutating)
         const blinkBoost = blinkState.isBlinking && blinkState.glowBoost ? blinkState.glowBoost : 0;
-        const effectiveGlowIntensity = this.coreGlowEnabled ? this.glowIntensity + blinkBoost : 0.0;
+
+        // In glass mode, always pass glow intensity (emissive multiplier controls visibility)
+        // In glow mode, respect coreGlowEnabled toggle for hard on/off
+        const isGlassMode = this.renderer.materialMode === 'glass';
+        const effectiveGlowIntensity = (isGlassMode || this.coreGlowEnabled)
+            ? this.glowIntensity + blinkBoost
+            : 0.0;
+
+        // Debug logging every 60 frames (~1 second)
+        if (this.frameCount % 60 === 0) {
+            console.log(`💡 Rendering ${this.emotion}: base=${this.baseGlowIntensity.toFixed(3)}, current=${this.glowIntensity.toFixed(3)}, effective=${effectiveGlowIntensity.toFixed(3)}`);
+        }
+        this.frameCount = (this.frameCount || 0) + 1;
 
         // Update bloom pass with effective glow intensity (smooth transitions)
         this.renderer.updateBloom(effectiveGlowIntensity);

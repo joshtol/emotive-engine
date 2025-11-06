@@ -20,7 +20,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#4169E1',       // Royal blue melancholy
-        glowIntensity: 0.85,        // Calibrated for glass visibility
         particleRate: 25,           // Steady tear-like emission
         minParticles: 0,            // Can fade to emptiness
         maxParticles: 25,           // Abundant sorrow display

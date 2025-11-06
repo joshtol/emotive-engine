@@ -203,9 +203,9 @@ export default {
             const scaleAmount = config.scaleAmount || 3.0;
             const scale = 1.0 + progress * scaleAmount * (strength / 3.0);
 
-            // Growing glow intensity
-            const glowAmount = config.glowAmount || 0.5;
-            const glowIntensity = 1.0 + progress * glowAmount * strength;
+            // Growing glow intensity (normalized to +25% max)
+            // Gradual brightening from 1.0 to 1.25 during expansion
+            const glowIntensity = 1.0 + progress * 0.25;
 
             return {
                 position: [0, 0, 0],

@@ -147,8 +147,10 @@ export default {
             // Explosive scale spike that decays
             const scale = 1.0 + (progress < 0.2 ? progress * 5 : (1 - progress) * 1.5) * strength;
 
-            // Bright flash that fades quickly
-            const glowIntensity = 1.0 + (progress < 0.3 ? (0.3 - progress) * 10 : 0) * strength;
+            // Bright flash that fades quickly (normalized to ±30% max)
+            // Early flash (0-30% progress) peaks at 1.3, then fades back to 1.0
+            const flashIntensity = progress < 0.3 ? (0.3 - progress) : 0;
+            const glowIntensity = 1.0 + Math.min(flashIntensity * 1.0, 0.3);
 
             // Minimal position/rotation for burst
             return {

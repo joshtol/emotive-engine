@@ -328,10 +328,10 @@ export default {
             // Combine for realistic flicker
             const flickerValue = baseSine * 0.3 + randomJump * 0.7;
 
-            // Map to dramatic glow intensity range
-            // When flickering low: nearly off (0.1)
-            // When flickering high: very bright (2.0)
-            const glowIntensity = minOpacity + (2.0 - minOpacity) * flickerValue;
+            // Map to normalized glow intensity range (±30% max)
+            // When flickering low: dim (0.7)
+            // When flickering high: bright (1.3)
+            const glowIntensity = 0.7 + 0.6 * flickerValue; // Range: 0.7 to 1.3
 
             // Jitter increases when glow is high (electrical energy)
             const jitterAmount = config.jitterAmount || 2;

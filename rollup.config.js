@@ -165,6 +165,7 @@ builds.push({
             file: 'dist/emotive-mascot-3d.js',
             format: 'es',
             sourcemap: true,
+            inlineDynamicImports: true,  // Inline dynamic imports (EXRLoader, RGBELoader)
             banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`
         },
         {
@@ -174,6 +175,7 @@ builds.push({
             name: 'EmotiveMascot3D',
             exports: 'named',
             sourcemap: true,
+            inlineDynamicImports: true,  // Inline dynamic imports (EXRLoader, RGBELoader)
             banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`
         }
     ],

@@ -20,7 +20,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FF6B35',       // Vibrant orange-red energy
-        glowIntensity: 0.80,        // Calibrated for glass visibility
         particleRate: 25,           // Increased emission frequency (was 15)
         minParticles: 8,            // More constant particles (was 5)
         maxParticles: 30,           // More maximum particles (was 20)

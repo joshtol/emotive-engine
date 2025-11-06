@@ -137,18 +137,19 @@ export default {
             const config = { ...this.config, ...motion };
 
             let glowIntensity;
+            // Normalized fade range: 0.7 to 1.3 (±30% max)
             if (config.fadeIn && !config.fadeOut) {
-                // Fade in - glow increases
-                glowIntensity = config.minOpacity + (config.maxOpacity - config.minOpacity) * progress;
+                // Fade in - glow increases from 0.7 to 1.3
+                glowIntensity = 0.7 + 0.6 * progress;
             } else if (config.fadeOut && !config.fadeIn) {
-                // Fade out - glow decreases
-                glowIntensity = config.maxOpacity - (config.maxOpacity - config.minOpacity) * progress;
+                // Fade out - glow decreases from 1.3 to 0.7
+                glowIntensity = 1.3 - 0.6 * progress;
             } else {
-                // Fade in then out
+                // Fade in then out: 0.7 → 1.3 → 0.7
                 if (progress < 0.5) {
-                    glowIntensity = config.minOpacity + (config.maxOpacity - config.minOpacity) * (progress * 2);
+                    glowIntensity = 0.7 + 0.6 * (progress * 2);
                 } else {
-                    glowIntensity = config.maxOpacity - (config.maxOpacity - config.minOpacity) * ((progress - 0.5) * 2);
+                    glowIntensity = 1.3 - 0.6 * ((progress - 0.5) * 2);
                 }
             }
 

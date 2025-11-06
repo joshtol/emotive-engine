@@ -24,7 +24,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#00BCD4',        // Cyan baseline (more modern)
-        glowIntensity: 0.80,         // Calibrated for glass visibility
         particleRate: 2,              // Minimal particle generation
         minParticles: 8,             // Baseline particle presence
         maxParticles: 10,            // Limited particle count

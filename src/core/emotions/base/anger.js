@@ -24,7 +24,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#DC143C',       // Crimson rage - more intense
-        glowIntensity: 0.90,        // Calibrated for glass visibility
         particleRate: 20,           // More frequent particle generation for chaos
         minParticles: 3,            // Maintain constant agitation
         maxParticles: 10,           // More particles for intensity

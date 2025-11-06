@@ -24,7 +24,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FFEB3B',       // Bright yellow sunshine
-        glowIntensity: 0.80,        // Calibrated for glass visibility
         particleRate: 40,           // Abundant celebration particles
         minParticles: 0,            // Can start from stillness
         maxParticles: 40,           // Maximum joyful expression

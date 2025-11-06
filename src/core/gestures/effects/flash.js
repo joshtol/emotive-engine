@@ -152,14 +152,15 @@ export default {
             const config = { ...this.config, ...motion };
             const strength = motion.strength || 1.0;
 
-            // Quick flash intensity spike then fade
+            // Quick flash intensity spike then fade (normalized to ±40% max)
+            const normalizedGlowPeak = 0.4; // Max 40% brighter
             let glowIntensity;
             if (progress < 0.3) {
-                // Quick rise to peak
-                glowIntensity = 1.0 + (progress / 0.3) * (config.glowPeak || 3.0) * strength;
+                // Quick rise to peak (1.0 to 1.4)
+                glowIntensity = 1.0 + (progress / 0.3) * normalizedGlowPeak;
             } else {
-                // Gradual fade
-                glowIntensity = 1.0 + (1 - (progress - 0.3) / 0.7) * (config.glowPeak || 3.0) * strength;
+                // Gradual fade (1.4 back to 1.0)
+                glowIntensity = 1.0 + (1 - (progress - 0.3) / 0.7) * normalizedGlowPeak;
             }
 
             // Brief scale pulse

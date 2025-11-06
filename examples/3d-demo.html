@@ -417,22 +417,43 @@
                 <input type="number" id="transmission-input" min="0" max="1" step="0.01" value="1.00" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
             </div>
 
-            <label style="display: block; margin-top: 8px; font-size: 12px;">Thickness (0-2):</label>
+            <label style="display: block; margin-top: 8px; font-size: 12px;">Thickness (0-5):</label>
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                <input type="range" id="thickness-slider" min="0" max="2" step="0.01" value="0.8" style="flex: 1;">
-                <input type="number" id="thickness-input" min="0" max="2" step="0.01" value="0.80" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+                <input type="range" id="thickness-slider" min="0" max="5" step="0.1" value="2.7" style="flex: 1;">
+                <input type="number" id="thickness-input" min="0" max="5" step="0.1" value="2.70" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+            </div>
+
+            <label style="display: block; margin-top: 8px; font-size: 12px;">Roughness (0-1):</label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <input type="range" id="roughness-slider" min="0" max="1" step="0.01" value="0.37" style="flex: 1;">
+                <input type="number" id="roughness-input" min="0" max="1" step="0.01" value="0.37" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
             </div>
 
             <label style="display: block; margin-top: 8px; font-size: 12px;">Emissive Multiplier (0-5):</label>
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                <input type="range" id="emissive-mult-slider" min="0" max="5" step="0.1" value="1.5" style="flex: 1;">
-                <input type="number" id="emissive-mult-input" min="0" max="5" step="0.1" value="1.50" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+                <input type="range" id="emissive-mult-slider" min="0" max="5" step="0.1" value="1.1" style="flex: 1;">
+                <input type="number" id="emissive-mult-input" min="0" max="5" step="0.1" value="1.10" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+            </div>
+
+            <label style="display: block; margin-top: 8px; font-size: 12px;">Intensity Calibration (-0.5 to +0.5):</label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <input type="range" id="intensity-calibration-slider" min="-0.5" max="0.5" step="0.01" value="0.135" style="flex: 1;">
+                <input type="number" id="intensity-calibration-input" min="-0.5" max="0.5" step="0.01" value="0.135" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+            </div>
+
+            <div style="font-size: 12px; margin-top: 12px; padding: 8px; background: rgba(0, 0, 0, 0.3); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="opacity: 0.7;">Current Emotion Intensity:</span>
+                    <span id="current-intensity-display" style="font-weight: bold; font-family: monospace; color: #4CAF50;">1.00</span>
+                </div>
             </div>
 
             <div style="font-size: 11px; opacity: 0.7; margin-top: 8px; line-height: 1.4;">
                 Transmission: how see-through the glass is<br>
-                Thickness: refraction intensity<br>
-                Emissive Multiplier: how much glow punches through
+                Thickness: refraction intensity (higher = more pronounced)<br>
+                Roughness: surface frosting (0=clear, 1=frosted)<br>
+                Emissive Multiplier: how much glow punches through<br>
+                Intensity Calibration: global brightness offset for all emotions
             </div>
         </div>
 
@@ -835,6 +856,12 @@
                         glowSlider.value = currentGlow;
                         glowInput.value = currentGlow.toFixed(2);
 
+                        // Update intensity display for glass controls
+                        const intensityDisplay = document.getElementById('current-intensity-display');
+                        if (intensityDisplay) {
+                            intensityDisplay.textContent = mascot.core3D.glowIntensity.toFixed(2);
+                        }
+
                         // Apply override if active using public API
                         if (glowOverride !== null) {
                             mascot.core3D.setGlowIntensity(glowOverride);
@@ -860,6 +887,8 @@
             const transmissionInput = document.getElementById('transmission-input');
             const thicknessSlider = document.getElementById('thickness-slider');
             const thicknessInput = document.getElementById('thickness-input');
+            const roughnessSlider = document.getElementById('roughness-slider');
+            const roughnessInput = document.getElementById('roughness-input');
             const emissiveMultSlider = document.getElementById('emissive-mult-slider');
             const emissiveMultInput = document.getElementById('emissive-mult-input');
 
@@ -913,6 +942,22 @@
                 }
             });
 
+            // Roughness control
+            roughnessSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                roughnessInput.value = value.toFixed(2);
+                renderer.updateGlassProperties({ roughness: value });
+                console.log('Roughness:', value);
+            });
+
+            roughnessInput.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value)) {
+                    roughnessSlider.value = value;
+                    renderer.updateGlassProperties({ roughness: value });
+                }
+            });
+
             // Emissive multiplier control
             emissiveMultSlider.addEventListener('input', (e) => {
                 const value = parseFloat(e.target.value);
@@ -928,6 +973,48 @@
                     renderer.updateGlassProperties({ emissiveMultiplier: value });
                 }
             });
+
+            // Intensity calibration control
+            const intensityCalibrationSlider = document.getElementById('intensity-calibration-slider');
+            const intensityCalibrationInput = document.getElementById('intensity-calibration-input');
+            const currentIntensityDisplay = document.getElementById('current-intensity-display');
+
+            // Helper to update intensity display
+            function updateIntensityDisplay() {
+                if (mascot && mascot.core3D) {
+                    const intensity = mascot.core3D.glowIntensity;
+                    currentIntensityDisplay.textContent = intensity.toFixed(2);
+                    console.log('Current glow intensity:', intensity.toFixed(2));
+                }
+            }
+
+            intensityCalibrationSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                intensityCalibrationInput.value = value.toFixed(2);
+
+                // Update the universal filter calibration
+                if (mascot && mascot.core3D) {
+                    mascot.core3D.setIntensityCalibration(value);
+                    updateIntensityDisplay();
+                    console.log('Intensity Calibration:', value);
+                }
+            });
+
+            intensityCalibrationInput.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value)) {
+                    intensityCalibrationSlider.value = value;
+
+                    // Update the universal filter calibration
+                    if (mascot && mascot.core3D) {
+                        mascot.core3D.setIntensityCalibration(value);
+                        updateIntensityDisplay();
+                    }
+                }
+            });
+
+            // Update display on initial load
+            setTimeout(updateIntensityDisplay, 100);
         }
     </script>
 </body>

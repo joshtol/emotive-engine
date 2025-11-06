@@ -20,7 +20,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FFD700',       // Bright gold (shining surprise)
-        glowIntensity: 0.80,        // Calibrated for glass visibility
         particleRate: 30,           // Rapid burst emission
         minParticles: 0,            // Can start from nothing
         maxParticles: 15,           // Burst of shocked particles

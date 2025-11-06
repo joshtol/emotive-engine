@@ -20,7 +20,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#9370DB',       // Sleepy purple twilight
-        glowIntensity: 0.85,        // Calibrated for glass visibility
         particleRate: 10,           // Lazy particle generation
         minParticles: 3,            // Minimal sleepy presence
         maxParticles: 5,            // Few drifting particles

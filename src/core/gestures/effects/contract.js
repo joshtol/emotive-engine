@@ -190,15 +190,16 @@ export default {
             const scaleTarget = config.scaleTarget || 0.2;
             const scale = 1.0 - progress * (1.0 - scaleTarget) * (strength / 2.5);
 
-            // Dimming glow intensity
-            const glowAmount = config.glowAmount || -0.2;
-            const glowIntensity = 1.0 + progress * glowAmount;
+            // Dimming glow intensity (normalized to -15% max)
+            // Gentle dimming from 1.0 to 0.85 during contraction
+            const glowReduction = progress * 0.15;
+            const glowIntensity = 1.0 - glowReduction;
 
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: Math.max(scaleTarget, scale),
-                glowIntensity: Math.max(0.5, glowIntensity)
+                glowIntensity // Range: 1.0 to 0.85
             };
         }
     }

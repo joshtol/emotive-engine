@@ -24,7 +24,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#66D9CC',        // Bright mint/turquoise (more distinct from neutral blue)
-        glowIntensity: 0.80,         // Calibrated for glass visibility
         particleRate: 25,            // Steady, peaceful emission like sadness
         minParticles: 8,             // Keep some particles always
         maxParticles: 25,            // Allow more particles like sadness

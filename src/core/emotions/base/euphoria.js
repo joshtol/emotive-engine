@@ -20,7 +20,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FFB6C1',       // Light pink euphoric glow
-        glowIntensity: 0.80,        // Calibrated for glass visibility
         particleRate: 35,           // Abundant particle emission
         minParticles: 15,           // Abundant positive energy
         maxParticles: 30,           // Maximum radiant display

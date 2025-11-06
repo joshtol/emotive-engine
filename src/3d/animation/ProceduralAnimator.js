@@ -70,14 +70,14 @@ export class ProceduralAnimator {
                 duration: 0.6,
                 evaluate: t => ({
                     scale: 1.0 + Math.sin(t * Math.PI) * 0.15,
-                    glowIntensity: 1.0 + Math.sin(t * Math.PI) * 0.3
+                    glowIntensity: 1.0 + Math.sin(t * Math.PI) * 0.15  // Gentle pulse ±15%
                 })
             },
             love: {
                 duration: 1.2,
                 evaluate: t => ({
                     scale: 1.0 + Math.sin(t * Math.PI * 2) * 0.08,
-                    glowIntensity: 1.2 + Math.sin(t * Math.PI * 2) * 0.2
+                    glowIntensity: 1.0 + Math.sin(t * Math.PI * 2) * 0.1  // Gentle pulse ±10%
                 })
             },
             curiosity: {
@@ -86,7 +86,8 @@ export class ProceduralAnimator {
                     const wiggle = Math.sin(t * Math.PI * 4) * 0.1;
                     return {
                         rotation: [0, wiggle, 0],
-                        scale: 1.0 + Math.sin(t * Math.PI) * 0.05
+                        scale: 1.0 + Math.sin(t * Math.PI) * 0.05,
+                        glowIntensity: 1.0  // Steady glow
                     };
                 }
             },
@@ -94,7 +95,7 @@ export class ProceduralAnimator {
                 duration: 1.5,
                 evaluate: t => ({
                     scale: 1.0 - t * 0.1,
-                    glowIntensity: 1.0 - t * 0.3
+                    glowIntensity: 1.0 - Math.sin(t * Math.PI) * 0.15  // Gentle fade ±15%
                 })
             },
             anger: {
@@ -104,7 +105,7 @@ export class ProceduralAnimator {
                     return {
                         rotation: [shake, shake, 0],
                         scale: 1.1 + Math.sin(t * Math.PI) * 0.1,
-                        glowIntensity: 1.5
+                        glowIntensity: 1.0 + Math.sin(t * Math.PI * 8) * 0.15  // Rapid flicker ±15%
                     };
                 }
             },
@@ -115,7 +116,7 @@ export class ProceduralAnimator {
                     return {
                         scale: 0.9 + tremble,
                         rotation: [tremble, 0, tremble],
-                        glowIntensity: 0.7
+                        glowIntensity: 1.0 + Math.sin(t * Math.PI * 10) * 0.1  // Nervous flicker ±10%
                     };
                 }
             },
@@ -123,14 +124,14 @@ export class ProceduralAnimator {
                 duration: 0.4,
                 evaluate: t => ({
                     scale: 1.0 + (1.0 - Math.cos(t * Math.PI)) * 0.25,
-                    glowIntensity: 1.0 + (1.0 - Math.cos(t * Math.PI)) * 0.4
+                    glowIntensity: 1.0 + (1.0 - Math.cos(t * Math.PI)) * 0.2  // Quick burst +20%
                 })
             },
             neutral: {
                 duration: 0.5,
                 evaluate: _t => ({
                     scale: 1.0,
-                    glowIntensity: 1.0
+                    glowIntensity: 1.0  // Steady baseline
                 })
             }
         };

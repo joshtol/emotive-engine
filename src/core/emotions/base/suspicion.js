@@ -20,7 +20,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#6B46C1',       // Deep purple paranoia
-        glowIntensity: 0.85,        // Watchful glow that intensifies with threat
         particleRate: 18,           // Increased surveillance particles
         minParticles: 6,            // More eyes watching
         maxParticles: 12,           // Heightened alert capacity

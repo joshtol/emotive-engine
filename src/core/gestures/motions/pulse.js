@@ -256,11 +256,14 @@ export default {
             // Calculate pulse value
             const pulseValue = Math.sin(easeProgress * Math.PI * 2 * frequency);
 
+            // Calculate glow variation (clamped to ±20% max)
+            const glowVariation = Math.max(-0.2, Math.min(0.2, pulseValue * glowAmount * strength));
+
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0 + pulseValue * scaleAmount * strength,
-                glowIntensity: 1.0 + pulseValue * glowAmount * strength
+                glowIntensity: 1.0 + glowVariation
             };
         }
     }

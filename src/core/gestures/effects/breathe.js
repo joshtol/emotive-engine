@@ -268,10 +268,11 @@ export default {
             const scaleOffset = breathPhase * 0.35 * envelope; // Apply envelope
             const scale = 1.0 + scaleOffset; // Range: 0.65 to 1.35, fading to 1.0
 
-            // Dramatic glow pulsing - dim on exhale, bright on inhale
-            // Exhale (dim): 0.5, Inhale (bright): 2.5
-            const glowOffset = breathPhase * 1.0 * envelope; // Apply envelope
-            const glowIntensity = 1.5 + glowOffset; // Range: 0.5 to 2.5
+            // Gentle glow pulsing - dim on exhale, bright on inhale
+            // Normalized to ±20% variation around 1.0 multiplier
+            // Exhale (dim): 0.8, Inhale (bright): 1.2
+            const glowOffset = breathPhase * 0.2 * envelope; // Apply envelope
+            const glowIntensity = 1.0 + glowOffset; // Range: 0.8 to 1.2
 
             // Slight Y-axis position shift - rise on inhale, lower on exhale
             const yOffset = breathPhase * 0.05 * envelope; // Apply envelope
@@ -280,7 +281,7 @@ export default {
                 position: [0, yOffset, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity: 1.0 + glowOffset // Fade glow back toward neutral (1.0)
+                glowIntensity // Use calculated multiplier (0.8 to 1.2)
             };
         }
     }

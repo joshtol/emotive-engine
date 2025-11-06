@@ -20,7 +20,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FF1493',       // Deep passionate pink (DeepPink)
-        glowIntensity: 0.85,        // Calibrated for glass visibility
         particleRate: 25,           // Generous particle flow
         minParticles: 10,           // Constant loving presence
         maxParticles: 18,           // Abundant affection display

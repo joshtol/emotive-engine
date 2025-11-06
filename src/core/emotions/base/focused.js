@@ -20,7 +20,6 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#00CED1',       // Sharp cyan concentration
-        glowIntensity: 0.80,        // Calibrated for glass visibility
         particleRate: 10,           // Steady, controlled emission
         minParticles: 5,            // Consistent focus presence
         maxParticles: 12,           // Controlled attention display

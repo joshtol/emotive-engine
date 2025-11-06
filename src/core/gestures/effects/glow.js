@@ -239,7 +239,9 @@ export default {
                 glowValue = Math.sin(easeProgress * Math.PI * 2 * frequency);
             }
 
-            const glowIntensity = 1.0 + glowValue * glowAmount;
+            // Normalize glow intensity to ±25% max
+            const normalizedGlowVariation = Math.max(-0.25, Math.min(0.25, glowValue * glowAmount));
+            const glowIntensity = 1.0 + normalizedGlowVariation;
 
             // Very subtle scale
             const scaleAmount = config.scaleAmount || 0.1;

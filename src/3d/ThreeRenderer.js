@@ -187,49 +187,64 @@ export class ThreeRenderer {
     }
 
     /**
-     * Create a vibrant environment map for glass material reflections
-     * Generates a colorful gradient cubemap procedurally
+     * Create environment map for glass material reflections
+     * Loads HDRI studio lighting or falls back to procedural generation
      */
-    createEnvironmentMap() {
-        const size = 512; // Higher resolution for better reflections
-        const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(size);
+    async createEnvironmentMap() {
+        // Try to load HDRI first
+        try {
+            const { EXRLoader } = await import('three/examples/jsm/loaders/EXRLoader.js');
+            const { RGBELoader } = await import('three/examples/jsm/loaders/RGBELoader.js');
+            const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+            pmremGenerator.compileEquirectangularShader();
 
-        // Create a vibrant gradient scene for the environment
+            // Try EXR first
+            try {
+                const exrLoader = new EXRLoader();
+                const texture = await exrLoader.loadAsync('/hdri/studio_01.exr');
+                texture.mapping = THREE.EquirectangularReflectionMapping;
+                this.envMap = pmremGenerator.fromEquirectangular(texture).texture;
+                pmremGenerator.dispose();
+                console.log('✅ Loaded HDRI environment map');
+                return;
+            } catch (exrError) {
+                console.warn('Could not load EXR, trying fallback:', exrError.message);
+            }
+        } catch (error) {
+            console.warn('HDRI loaders not available, using procedural envmap:', error.message);
+        }
+
+        // Fallback: Procedural environment map
+        const size = 512;
+        const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(size);
         const envScene = new THREE.Scene();
 
-        // Vibrant gradient colors
-        const skyColor = new THREE.Color(0x5599ff); // Bright sky blue
-        const horizonColor = new THREE.Color(0xff6b9d); // Pink horizon
-        const groundColor = new THREE.Color(0x1a1a2e); // Deep purple-blue
+        const skyColor = new THREE.Color(0x5599ff);
+        const horizonColor = new THREE.Color(0xff6b9d);
+        const groundColor = new THREE.Color(0x1a1a2e);
 
-        // Create gradient using hemisphere light
         const hemiLight = new THREE.HemisphereLight(skyColor, groundColor, 1.5);
         envScene.add(hemiLight);
 
-        // Add colorful point lights to create interesting reflections
-        const light1 = new THREE.PointLight(0x00d4ff, 2, 20); // Cyan
+        const light1 = new THREE.PointLight(0x00d4ff, 2, 20);
         light1.position.set(-5, 2, -5);
         envScene.add(light1);
 
-        const light2 = new THREE.PointLight(0xff1493, 2, 20); // Pink
+        const light2 = new THREE.PointLight(0xff1493, 2, 20);
         light2.position.set(5, 2, -5);
         envScene.add(light2);
 
-        const light3 = new THREE.PointLight(0xffaa00, 1.5, 20); // Orange
+        const light3 = new THREE.PointLight(0xffaa00, 1.5, 20);
         light3.position.set(0, 5, 0);
         envScene.add(light3);
 
-        // Background gradient (top to bottom)
         envScene.background = horizonColor;
 
-        // Create cube camera to capture the environment
         const cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRenderTarget);
-
-        // Render the environment
         cubeCamera.update(this.renderer, envScene);
 
-        // Store for use in materials
         this.envMap = cubeRenderTarget.texture;
+        console.log('Using procedural environment map');
     }
 
     /**
@@ -368,12 +383,12 @@ export class ThreeRenderer {
      */
     createGlassMaterial() {
         // Store default emissive multiplier (can be adjusted via UI)
-        this.glassEmissiveMultiplier = 1.5;
+        this.glassEmissiveMultiplier = 1.1;
 
         const material = new THREE.MeshPhysicalMaterial({
             transmission: 1.0,           // Full interior transparency (refraction)
-            thickness: 0.8,              // Moderate refraction intensity
-            roughness: 0.05,             // Nearly clear glass (slight softness)
+            thickness: 2.7,              // Strong refraction intensity (user-tuned)
+            roughness: 0.37,             // Slightly frosted surface (user-tuned)
             metalness: 0.0,              // Non-metallic
             ior: 1.5,                    // Index of refraction (glass)
             reflectivity: 0.5,           // Subtle surface reflections
@@ -445,6 +460,10 @@ export class ThreeRenderer {
             this.glassMaterial.thickness = props.thickness;
             this.glassMaterial.needsUpdate = true;
         }
+        if (props.roughness !== undefined) {
+            this.glassMaterial.roughness = props.roughness;
+            this.glassMaterial.needsUpdate = true;
+        }
         if (props.emissiveMultiplier !== undefined) {
             this.glassEmissiveMultiplier = props.emissiveMultiplier;
         }
@@ -492,11 +511,25 @@ export class ThreeRenderer {
      * @param {number} targetIntensity - Target glow intensity (0.0 - 2.0)
      * @param {number} transitionSpeed - Lerp factor (0.0 - 1.0), default 0.1
      */
+    /**
+     * Normalize intensity to a narrow range using logarithmic scaling
+     * Compresses wide intensity range (0.3-10.0) to uniform output (0.8-1.2)
+     * @param {number} intensity - Raw intensity value
+     * @returns {number} Normalized intensity (0.8-1.2)
+     */
+    normalizeIntensity(intensity) {
+        // Logarithmic scaling to compress wide range
+        const normalized = Math.log(intensity + 1) / Math.log(11); // 0.3-10.0 → 0.0-1.0
+        return 0.8 + normalized * 0.4; // Maps to 0.8-1.2 range (±20% variation)
+    }
+
     updateBloom(targetIntensity, transitionSpeed = 0.1) {
         if (this.bloomPass) {
-            // Smooth transitions for bloom strength and threshold
-            const targetStrength = Math.max(0.5, targetIntensity * 1.5);
-            const targetThreshold = Math.max(0.5, 1.0 - targetIntensity * 0.3);
+            // Normalize bloom strength to narrow range (1.2 - 1.8)
+            // Prevents exponential brightness differences between emotions
+            const normalized = this.normalizeIntensity(targetIntensity);
+            const targetStrength = 1.0 + normalized * 0.8; // Maps to 1.0-1.8 range
+            const targetThreshold = 0.85; // Keep threshold constant for consistency
 
             this.bloomPass.strength += (targetStrength - this.bloomPass.strength) * transitionSpeed;
             this.bloomPass.threshold += (targetThreshold - this.bloomPass.threshold) * transitionSpeed;
@@ -603,16 +636,19 @@ export class ThreeRenderer {
                 this._tempColor.setRGB(...glowColor);
                 this.coreMesh.material.uniforms.glowColor.value.lerp(this._tempColor, 0.15);
 
+                // Normalize intensity to prevent huge brightness differences
+                const normalizedIntensity = this.normalizeIntensity(glowIntensity);
                 const currentIntensity = this.coreMesh.material.uniforms.glowIntensity.value;
-                this.coreMesh.material.uniforms.glowIntensity.value += (glowIntensity - currentIntensity) * 0.15;
+                this.coreMesh.material.uniforms.glowIntensity.value += (normalizedIntensity - currentIntensity) * 0.15;
             } else if (this.coreMesh.material.emissive) {
                 // MeshPhysicalMaterial (glass material) - update emissive properties
                 this._tempColor.setRGB(...glowColor);
                 this.coreMesh.material.emissive.lerp(this._tempColor, 0.15);
 
-                // Update emissive intensity (smooth transition) - uses adjustable multiplier
+                // Normalize intensity then apply multiplier for glass visibility
+                const normalizedIntensity = this.normalizeIntensity(glowIntensity);
                 const multiplier = this.glassEmissiveMultiplier || 1.5;
-                const targetEmissiveIntensity = glowIntensity * multiplier;
+                const targetEmissiveIntensity = normalizedIntensity * multiplier;
                 const currentEmissiveIntensity = this.coreMesh.material.emissiveIntensity;
                 this.coreMesh.material.emissiveIntensity += (targetEmissiveIntensity - currentEmissiveIntensity) * 0.15;
 
