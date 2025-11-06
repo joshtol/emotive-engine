@@ -344,28 +344,44 @@ export default {
                 }
             }
 
-            // Handle alternating stretch
-            let finalScaleX, finalScaleY;
-            if (config.alternate) {
-                if (progress < 0.5) {
-                    finalScaleX = 1 + (scaleX - 1) * easeProgress * strength;
-                    finalScaleY = 1 + (1 / scaleX - 1) * (config.preserveArea ? 1 : 0);
-                } else {
-                    finalScaleX = scaleX + (1 - scaleX) * (easeProgress - 0.5) * 2 * strength;
-                    finalScaleY = 1 + (scaleY - 1) * (easeProgress - 0.5) * 2 * strength;
-                }
-            } else {
-                finalScaleX = 1 + (scaleX - 1) * easeProgress * strength;
-                finalScaleY = 1 + (scaleY - 1) * easeProgress * strength;
+            // Fade-out envelope for smooth return to neutral at end
+            // Last 20% of animation fades back to neutral
+            const fadeOutStart = 0.8;
+            let envelope = 1.0;
+            if (progress > fadeOutStart) {
+                const fadeProgress = (progress - fadeOutStart) / (1.0 - fadeOutStart);
+                // Ease-out cubic for smooth deceleration
+                envelope = 1.0 - (fadeProgress * fadeProgress * fadeProgress);
             }
 
-            // Average scale for uniform scaling (when needed)
-            const uniformScale = Math.sqrt(finalScaleX * finalScaleY);
+            // Handle alternating stretch - MUCH MORE DRAMATIC
+            let scaleOffset;
+            if (config.alternate) {
+                // Alternate between vertical and horizontal stretch
+                if (progress < 0.5) {
+                    // First half: stretch vertically (tall and thin)
+                    const t = progress * 2; // 0 to 1
+                    scaleOffset = t * 0.8; // Offset: 0.0 to 0.8
+                } else {
+                    // Second half: squash vertically (short and wide)
+                    const t = (progress - 0.5) * 2; // 0 to 1
+                    scaleOffset = 0.8 - t * 1.4; // Offset: 0.8 to -0.6
+                }
+            } else {
+                // Single stretch direction - dramatic vertical elongation
+                scaleOffset = easeProgress * 1.0 * strength; // Offset: 0.0 to 1.0
+            }
+
+            // Apply envelope to scale offset
+            const finalScale = 1.0 + scaleOffset * envelope; // Fade back to 1.0
+
+            // Add rotation wobble during stretch for more visual impact
+            const wobble = Math.sin(progress * Math.PI * 4) * 0.1 * easeProgress * envelope;
 
             return {
-                position: [0, 0, 0], // Stretch via scale only, stay centered
-                rotation: [0, 0, 0],
-                scale: uniformScale // Use averaged scale for 3D
+                position: [0, 0, 0],
+                rotation: [0, 0, wobble], // Z-axis wobble
+                scale: finalScale
             };
         }
     }

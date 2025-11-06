@@ -206,12 +206,20 @@ export class Particle3DRenderer {
      * @param {Particle3DTranslator} translator - Position translator
      * @param {Object} corePosition - 3D mascot position
      * @param {Object} canvasSize - Canvas dimensions
+     * @param {Object} rotationState - Mascot rotation state for orbital physics (optional)
+     * @param {number} deltaTime - Time delta for physics (optional)
+     * @param {Object} gestureData - Active gesture data (optional)
      */
-    updateParticles(particles, translator, corePosition, canvasSize) {
+    updateParticles(particles, translator, corePosition, canvasSize, rotationState, deltaTime, gestureData) {
         this.particleCount = Math.min(particles.length, this.maxParticles);
 
         // Update gesture effect time
         this.gestureEffects.time += 0.016; // ~60fps
+
+        // Update translator rotation state for orbital physics (with gesture info)
+        if (rotationState && deltaTime) {
+            translator.updateRotationState(rotationState, deltaTime, gestureData);
+        }
 
         // Update each particle's attributes
         for (let i = 0; i < this.particleCount; i++) {
@@ -222,7 +230,7 @@ export class Particle3DRenderer {
                 continue;
             }
 
-            // Translate 2D position to 3D
+            // Translate 2D position to 3D (with orbital physics if enabled)
             const pos3D = translator.translate2DTo3D(particle, corePosition, canvasSize);
 
             // Update position
@@ -275,46 +283,56 @@ export class Particle3DRenderer {
     _applyGestureEffects(particle, baseGlow, index) {
         let glow = baseGlow;
 
-        // Firefly effect (sparkle gesture)
+        // Firefly effect (sparkle gesture) - pulsing particles
         if (this.gestureEffects.firefly) {
             const particlePhase = (particle.x * 0.01 + particle.y * 0.01 + particle.size * 0.1) % (Math.PI * 2);
-            const fireflyGlow = 0.3 + Math.max(0, Math.sin(this.gestureEffects.time * 3 + particlePhase)) * 2.0;
+            const sineValue = (Math.sin(this.gestureEffects.time * 3 + particlePhase) + 1.0) * 0.5; // 0 to 1
+            const fireflyGlow = 2.0 + sineValue * 10.0; // Range: 2.0 to 12.0
             glow = Math.max(glow, fireflyGlow);
         }
 
-        // Flicker effect (shimmer gesture)
+        // Flicker effect - dramatic random flickering
         if (this.gestureEffects.flicker) {
+            // Create rapid, chaotic flicker
             const particlePhase = (particle.x * 0.02 + particle.y * 0.02) % (Math.PI * 2);
-            const flickerGlow = 0.5 + Math.sin(this.gestureEffects.time * 12 + particlePhase) * 1.0;
+            const time = this.gestureEffects.time * 15; // Fast flicker rate
+
+            // Combine fast oscillation with random jumps - normalized to 0-1
+            const baseSine = (Math.sin(time + particlePhase) + 1.0) * 0.5; // 0 to 1
+            const timeStep = Math.floor(time * 10 + index);
+            const randomJump = (Math.sin(timeStep * 123.456) + 1.0) * 0.5; // 0 to 1
+
+            // Random flicker - NEVER zero, always visible, range 2.0 to 12.0
+            const flickerValue = baseSine * 0.3 + randomJump * 0.7; // 0 to 1
+            const flickerGlow = 2.0 + flickerValue * 10.0; // Range: 2.0 to 12.0
+
             glow = Math.max(glow, flickerGlow);
         }
 
-        // Shimmer effect (subtle wave)
+        // Shimmer effect - traveling wave of glow
         if (this.gestureEffects.shimmer) {
             const dx = particle.x - (this.gestureEffects.centerX || 0);
             const dy = particle.y - (this.gestureEffects.centerY || 0);
             const distance = Math.sqrt(dx * dx + dy * dy);
             const normalizedDistance = distance / 200;
 
-            const wave = Math.sin(this.gestureEffects.time * 3 - normalizedDistance);
-            const shimmerGlow = 1 + wave * 0.15 * 1.2;
-            glow *= shimmerGlow;
+            const wave = (Math.sin(this.gestureEffects.time * 3 - normalizedDistance) + 1.0) * 0.5; // 0 to 1
+            const shimmerGlow = 2.0 + wave * 8.0; // Range: 2.0 to 10.0
+            glow = Math.max(glow, shimmerGlow);
         }
 
-        // Glow effect (radiant burst)
+        // Glow effect - dramatic pulsing radiant glow
         if (this.gestureEffects.glow) {
             const progress = this.gestureEffects.glowProgress || 0;
 
-            const dx = particle.x - (this.gestureEffects.centerX || 0);
-            const dy = particle.y - (this.gestureEffects.centerY || 0);
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const normalizedDistance = distance / 300;
+            // Simple pulsing glow that affects all particles
+            // Peak at middle of gesture (progress = 0.5)
+            const glowCurve = Math.sin(progress * Math.PI); // 0 to 1 to 0
 
-            const radiateDelay = Math.min(normalizedDistance * 0.3, 0.5);
-            const localProgress = Math.max(0, (progress - radiateDelay) / (1 - radiateDelay));
-            const localEnvelope = Math.sin(localProgress * Math.PI);
+            // Pulse from moderately bright to extremely bright
+            const glowPulse = 3.0 + glowCurve * 12.0; // Range: 3.0 to 15.0
 
-            glow = Math.max(3.0, glow) + localEnvelope * 2.0 * 3;
+            glow = Math.max(glow, glowPulse);
         }
 
         return glow;

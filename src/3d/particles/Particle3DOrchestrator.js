@@ -65,8 +65,9 @@ export class Particle3DOrchestrator {
      * @param {number} currentTime - Animation time
      * @param {Object} corePosition - 3D mascot position {x, y, z}
      * @param {Object} canvasSize - Canvas dimensions {width, height}
+     * @param {Object} rotationState - Mascot rotation state {euler, quaternion, angularVelocity}
      */
-    update(deltaTime, emotion, undertone, activeAnimations, currentTime, corePosition, canvasSize) {
+    update(deltaTime, emotion, undertone, activeAnimations, currentTime, corePosition, canvasSize, rotationState) {
         // Step 1: Calculate emotion-based particle configuration
         const emotionConfig = this._updateEmotionConfig(emotion, undertone);
 
@@ -79,8 +80,8 @@ export class Particle3DOrchestrator {
         // Step 4: Update particle physics with gesture motion
         this._updatePhysics(emotionConfig, gestureData, deltaTime, canvasSize, undertone);
 
-        // Step 5: Update rendering with visual effects
-        this._updateRendering(gestureData, corePosition, canvasSize);
+        // Step 5: Update rendering with visual effects and orbital physics
+        this._updateRendering(gestureData, corePosition, canvasSize, rotationState, deltaTime);
     }
 
     /**
@@ -170,8 +171,10 @@ export class Particle3DOrchestrator {
      * @param {Object} gestureData - Gesture data
      * @param {Object} corePosition - 3D mascot position
      * @param {Object} canvasSize - Canvas dimensions
+     * @param {Object} rotationState - Mascot rotation state for orbital physics
+     * @param {number} deltaTime - Time delta for physics
      */
-    _updateRendering(gestureData, corePosition, canvasSize) {
+    _updateRendering(gestureData, corePosition, canvasSize, rotationState, deltaTime) {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
@@ -180,12 +183,15 @@ export class Particle3DOrchestrator {
             ? this.effectsBuilder.build(gestureData, centerX, centerY)
             : null;
 
-        // Update 3D particle renderer
+        // Update 3D particle renderer with rotation state for orbital physics
         this.renderer.updateParticles(
             this.particleSystem.particles,
             this.translator,
             corePosition,
-            canvasSize
+            canvasSize,
+            rotationState,
+            deltaTime,
+            gestureData  // Pass gesture data to detect spin gestures
         );
 
         // Apply gesture visual effects

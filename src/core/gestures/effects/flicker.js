@@ -309,29 +309,43 @@ export default {
      */
     '3d': {
         evaluate(progress, motion) {
-            const config = { ...this.config, ...motion };
+            const config = motion.config || {};
             const strength = motion.strength || 0.7;
+            const flickerRate = config.flickerRate || 15;
+            const minOpacity = config.minOpacity || 0.3;
 
-            // Rapid opacity flickering translates to glow intensity
-            let glowIntensity;
-            if (config.strobe) {
-                const strobePhase = (progress * config.flickerRate) % 1;
-                glowIntensity = strobePhase < 0.5 ? 1.5 : 0.3;
-            } else {
-                // Random flicker pattern
-                const flickerValue = Math.sin(progress * config.frequency * Math.PI * 2) * 0.5 + 0.5;
-                glowIntensity = 0.5 + flickerValue * strength;
-            }
+            // Create rapid, random flickering effect
+            // Use a combination of fast oscillation and random jumps
+            const time = progress * flickerRate;
 
-            // Slight jitter in position
-            const jitterAmount = config.jitterAmount * 0.01 * strength;
-            const jitterX = (Math.random() - 0.5) * jitterAmount;
-            const jitterY = (Math.random() - 0.5) * jitterAmount;
+            // Fast sine wave as base
+            const baseSine = Math.sin(time * Math.PI * 2);
+
+            // Add random jumps based on integer time steps
+            const timeStep = Math.floor(time * 10);
+            const randomJump = (Math.sin(timeStep * 123.456) + 1) * 0.5; // 0-1
+
+            // Combine for realistic flicker
+            const flickerValue = baseSine * 0.3 + randomJump * 0.7;
+
+            // Map to dramatic glow intensity range
+            // When flickering low: nearly off (0.1)
+            // When flickering high: very bright (2.0)
+            const glowIntensity = minOpacity + (2.0 - minOpacity) * flickerValue;
+
+            // Jitter increases when glow is high (electrical energy)
+            const jitterAmount = config.jitterAmount || 2;
+            const jitterScale = 0.002 * strength * glowIntensity;
+            const jitterX = (Math.random() - 0.5) * jitterAmount * jitterScale;
+            const jitterY = (Math.random() - 0.5) * jitterAmount * jitterScale;
+
+            // Slight random rotation jitter for extra chaos
+            const rotJitter = (Math.random() - 0.5) * 0.02 * strength * glowIntensity;
 
             return {
                 position: [jitterX, jitterY, 0],
-                rotation: [0, 0, 0],
-                scale: 1.0,
+                rotation: [rotJitter * 0.5, 0, rotJitter],
+                scale: 1.0 + (glowIntensity - 1.0) * 0.05, // Slight scale pulse
                 glowIntensity
             };
         }

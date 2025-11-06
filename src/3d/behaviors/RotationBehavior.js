@@ -42,6 +42,16 @@ export default class RotationBehavior {
         // Shake/wobble config (for unstable type)
         this.shake = config.shake || { amplitude: 0, frequency: 0 };
 
+        // Eruption config (explosive bursts for anger)
+        this.eruption = config.eruption || { enabled: false };
+        if (this.eruption.enabled) {
+            this.eruption.interval = this.eruption.interval || 3000;
+            this.eruption.speedMultiplier = this.eruption.speedMultiplier || 3.0;
+            this.eruption.duration = this.eruption.duration || 400;
+            this.eruption.nextEruptionTime = this.eruption.interval;
+            this.eruption.eruptionStartTime = -1;
+        }
+
         // Music sync enabled
         this.musicSync = config.musicSync !== undefined ? config.musicSync : false;
 
@@ -123,20 +133,51 @@ export default class RotationBehavior {
     _evaluateUnstable(deltaTime, baseRotation) {
         const dt = deltaTime * 0.001; // Convert ms to seconds
 
-        // Base rotation on all axes (wobbles unpredictably)
-        baseRotation[0] += this.axes[0] * this.speed * dt;
-        baseRotation[1] += this.axes[1] * this.speed * dt;
-        baseRotation[2] += this.axes[2] * this.speed * dt;
+        // Check for eruption (explosive burst)
+        let eruptionMultiplier = 1.0;
+        if (this.eruption.enabled) {
+            // Check if it's time for next eruption
+            if (this.eruption.eruptionStartTime < 0 && this.time >= this.eruption.nextEruptionTime) {
+                this.eruption.eruptionStartTime = this.time;
+            }
+
+            // Apply eruption speed multiplier during active eruption
+            if (this.eruption.eruptionStartTime >= 0) {
+                const eruptionElapsed = this.time - this.eruption.eruptionStartTime;
+
+                if (eruptionElapsed < this.eruption.duration) {
+                    // Eruption is active - apply speed multiplier with ease in/out
+                    const progress = eruptionElapsed / this.eruption.duration;
+                    const easedProgress = Math.sin(progress * Math.PI); // Sine ease in/out
+                    eruptionMultiplier = 1.0 + (this.eruption.speedMultiplier - 1.0) * easedProgress;
+                } else {
+                    // Eruption finished - schedule next one
+                    this.eruption.eruptionStartTime = -1;
+                    this.eruption.nextEruptionTime = this.time + this.eruption.interval;
+                }
+            }
+        }
+
+        // Base rotation on all axes with eruption multiplier
+        const effectiveSpeed = this.speed * eruptionMultiplier;
+        baseRotation[0] += this.axes[0] * effectiveSpeed * dt;
+        baseRotation[1] += this.axes[1] * effectiveSpeed * dt;
+        baseRotation[2] += this.axes[2] * effectiveSpeed * dt;
 
         // Add shake/tremor using high-frequency sine waves
         const shakeTime = this.time * 0.001; // Time in seconds
         const freq = this.shake.frequency || 8; // Default 8 Hz
         const amp = this.shake.amplitude || 0.02; // Default 0.02 radians (~1 degree)
 
+        // Hard limit shake amplitude to never overcome righting mechanism
+        // Righting strength is 5.0, so max safe shake is ~0.02 radians to prevent tipping
+        const MAX_SAFE_SHAKE = 0.02;
+        const clampedAmp = Math.min(amp, MAX_SAFE_SHAKE);
+
         // Multi-frequency shake for more organic feel
-        const shakeX = Math.sin(shakeTime * freq * Math.PI * 2) * amp * 0.7;
-        const shakeY = Math.sin(shakeTime * freq * Math.PI * 2 * 1.3) * amp * 0.5;
-        const shakeZ = Math.sin(shakeTime * freq * Math.PI * 2 * 0.9) * amp * 0.8;
+        const shakeX = Math.sin(shakeTime * freq * Math.PI * 2) * clampedAmp * 0.7;
+        const shakeY = Math.sin(shakeTime * freq * Math.PI * 2 * 1.3) * clampedAmp * 0.5;
+        const shakeZ = Math.sin(shakeTime * freq * Math.PI * 2 * 0.9) * clampedAmp * 0.8;
 
         baseRotation[0] += shakeX;
         baseRotation[1] += shakeY;

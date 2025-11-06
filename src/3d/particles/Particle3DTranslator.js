@@ -56,7 +56,27 @@ export class Particle3DTranslator {
 
         // Behavior-specific translators
         this.behaviorTranslators = this._initBehaviorTranslators();
+
+        // Current gesture data (updated each frame)
+        this.currentGestureData = null;
     }
+
+    /**
+     * Update gesture state for gesture-based transformations
+     * Called once per frame before translating particles
+     *
+     * @param {Object} rotationState - {euler: [x,y,z], quaternion: THREE.Quaternion, angularVelocity: [x,y,z]}
+     * @param {number} deltaTime - Time since last frame (ms)
+     * @param {Object} gestureData - Active gesture data
+     */
+    updateRotationState(rotationState, deltaTime, gestureData = null) {
+        this.rotationState = rotationState;
+        this.deltaTime = deltaTime;
+
+        // Store current gesture data for use in translation
+        this.currentGestureData = gestureData;
+    }
+
 
     /**
      * Initialize behavior-specific translation functions
@@ -90,18 +110,60 @@ export class Particle3DTranslator {
     }
 
     /**
-     * Main translation function - converts 2D particle to 3D position
+     * Main translation function - converts 2D particle to 3D position with gesture override
      * @param {Object} particle - 2D particle with x, y, z, behavior
      * @param {Object} corePosition - 3D mascot position {x, y, z}
      * @param {Object} canvasSize - Canvas dimensions {width, height}
      * @returns {THREE.Vector3} 3D world position
      */
     translate2DTo3D(particle, corePosition, canvasSize) {
-        // Get behavior-specific translation
+        // Get behavior-specific translation (normal emotional state position)
         const translator = this.behaviorTranslators[particle.behavior] || this._translateDefault.bind(this);
+        const basePosition = translator(particle, corePosition, canvasSize);
 
-        // Call the appropriate translator
-        return translator(particle, corePosition, canvasSize);
+        // Apply gesture-specific transformations
+        if (this.currentGestureData && this.currentGestureData.gestureName === 'spin') {
+            return this._applySpinRotation(basePosition, corePosition, this.currentGestureData.progress);
+        }
+
+        // For other gestures (like scan), the 2D particle system handles the positioning
+        // We just translate those 2D positions to 3D without additional transforms
+        return basePosition;
+    }
+
+    /**
+     * Apply spin rotation to particle position
+     * Rotates particle around the core on Y-axis based on gesture progress
+     *
+     * @param {THREE.Vector3} position - Particle's base position from emotional behavior
+     * @param {Object} corePosition - Mascot center {x, y, z}
+     * @param {number} progress - Gesture progress (0-1)
+     * @returns {THREE.Vector3} Rotated position
+     */
+    _applySpinRotation(position, corePosition, progress) {
+        // Get position relative to core
+        const relativeX = position.x - corePosition.x;
+        const relativeY = position.y - corePosition.y;
+        const relativeZ = position.z - corePosition.z;
+
+        // Spin gesture rotates 360° (2π radians) around Y-axis
+        // Use sin curve so rotation smoothly returns to 0 at end
+        const rotationCurve = Math.sin(progress * Math.PI);
+        const angle = rotationCurve * Math.PI * 2; // 0 → 2π → 0
+
+        // Rotate around Y-axis (vertical)
+        const cosAngle = Math.cos(angle);
+        const sinAngle = Math.sin(angle);
+
+        const rotatedX = relativeX * cosAngle - relativeZ * sinAngle;
+        const rotatedZ = relativeX * sinAngle + relativeZ * cosAngle;
+
+        // Return rotated position in world space
+        return this.tempVec3.set(
+            corePosition.x + rotatedX,
+            corePosition.y + relativeY, // Y unchanged (spin on Y-axis)
+            corePosition.z + rotatedZ
+        );
     }
 
     /**
@@ -131,6 +193,50 @@ export class Particle3DTranslator {
         const worldZ = canvasZ * this.worldScale * 0.5 + corePosition.z; // Z contributes to actual depth
 
         return this.tempVec3.set(worldX, worldY, worldZ);
+    }
+
+    /**
+     * Generate uniform random direction on sphere (360°x360°x360°)
+     * Uses spherical coordinates with deterministic seeds from particle properties
+     * Caches result in behaviorData.direction3D to maintain consistent trajectory
+     *
+     * @param {Object} particle - Particle with properties for seeding
+     * @returns {Object} Normalized 3D direction vector {x, y, z}
+     */
+    _getUniformDirection3D(particle) {
+        const behaviorData = particle.behaviorData || {};
+
+        // Return cached direction if already generated
+        if (behaviorData.direction3D) {
+            return behaviorData.direction3D;
+        }
+
+        // Use particle's properties as deterministic seeds
+        const seed1 = particle.x + particle.y + particle.vx * 100;
+        const seed2 = particle.x * particle.y + particle.vy * 100;
+        const seed3 = particle.vx + particle.vy + particle.x * 0.1;
+
+        // Generate uniform spherical coordinates
+        // Theta (azimuth): 0 to 2π (horizontal rotation)
+        const theta = ((Math.sin(seed1 * 0.1) + 1) * 0.5) * Math.PI * 2;
+
+        // Phi (elevation): using cos for uniform distribution
+        // cos(phi) uniform in [-1, 1] ensures uniform surface distribution
+        const cosphi = Math.sin(seed2 * 0.1); // Range: -1 to +1
+        const phi = Math.acos(cosphi);
+
+        // Additional rotation for more randomness
+        const rotation = Math.sin(seed3 * 0.1) * Math.PI * 2;
+
+        // Convert spherical to Cartesian coordinates
+        const sinPhi = Math.sin(phi);
+        const x = sinPhi * Math.cos(theta + rotation);
+        const y = sinPhi * Math.sin(theta + rotation);
+        const z = cosphi;
+
+        // Cache the direction for consistent trajectory
+        behaviorData.direction3D = { x, y, z };
+        return behaviorData.direction3D;
     }
 
     /**
@@ -185,51 +291,82 @@ export class Particle3DTranslator {
     }
 
     /**
-     * AMBIENT: Gentle upward drift in 3D space
-     * Particles slowly rise and orbit
+     * AMBIENT: Gentle floating in 360°x360°x360° sphere
+     * Particles drift slowly around the mascot in all directions
      */
     _translateAmbient(particle, corePosition, canvasSize) {
+        // Get uniform 3D direction
+        const dir = this._getUniformDirection3D(particle);
+
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
-        // Base position
-        const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            centerX, centerY, corePosition
-        );
+        // Calculate distance from center in 2D
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.8;
 
         // Add slow spiral motion based on particle age
         const spiralAngle = particle.age * 0.5;
         const spiralRadius = 0.05;
-        pos.x += Math.cos(spiralAngle) * spiralRadius;
-        pos.z += Math.sin(spiralAngle) * spiralRadius;
+        const spiralX = Math.cos(spiralAngle) * spiralRadius;
+        const spiralZ = Math.sin(spiralAngle) * spiralRadius;
 
-        return pos;
+        // Position along 3D direction with gentle drift
+        return this.tempVec3.set(
+            corePosition.x + dir.x * worldDistance + spiralX,
+            corePosition.y + dir.y * worldDistance * this.verticalScale,
+            corePosition.z + dir.z * worldDistance + spiralZ
+        );
     }
 
     /**
-     * ORBITING: Circular paths around the core in 3D
-     * Uses spherical coordinates for true orbital motion
+     * ORBITING: Circular paths around the core in full 3D sphere
+     * Each particle orbits in its own tilted plane for 360°x360°x360° coverage
      */
     _translateOrbiting(particle, corePosition, canvasSize) {
         const behaviorData = particle.behaviorData || {};
 
-        // Get orbital parameters
+        // Get or generate unique orbital plane for this particle
+        if (!behaviorData.orbitPlane) {
+            const seed1 = particle.x + particle.y * 0.5;
+            const seed2 = particle.x * 0.7 + particle.y;
+
+            behaviorData.orbitPlane = {
+                inclination: ((Math.sin(seed1 * 0.1) + 1) * 0.5) * Math.PI,
+                rotation: ((Math.sin(seed2 * 0.1) + 1) * 0.5) * Math.PI * 2
+            };
+        }
+
+        const { inclination, rotation } = behaviorData.orbitPlane;
         const angle = behaviorData.angle || 0;
         const radius = (behaviorData.radius || 100) * 0.01 * this.baseRadius;
-        const verticalOffset = behaviorData.verticalOffset || 0;
 
         // Depth affects orbital radius
         const radiusMultiplier = 1.0 + (particle.z * this.depthScale);
         const finalRadius = radius * radiusMultiplier;
 
-        // Calculate orbital position
-        // Orbit in XZ plane with Y offset
-        const x = Math.cos(angle) * finalRadius + corePosition.x;
-        const y = verticalOffset * 0.01 * this.verticalScale + corePosition.y;
-        const z = Math.sin(angle) * finalRadius + corePosition.z;
+        // Calculate position in XZ plane first
+        const xFlat = Math.cos(angle) * finalRadius;
+        const zFlat = Math.sin(angle) * finalRadius;
 
-        return this.tempVec3.set(x, y, z);
+        // Rotate by inclination to tilt the orbital plane
+        const cosIncl = Math.cos(inclination);
+        const sinIncl = Math.sin(inclination);
+        const cosRot = Math.cos(rotation);
+        const sinRot = Math.sin(rotation);
+
+        // Apply 3D rotation for diverse orbital planes
+        const x = xFlat * cosRot - zFlat * cosIncl * sinRot;
+        const y = zFlat * sinIncl;
+        const z = xFlat * sinRot + zFlat * cosIncl * cosRot;
+
+        return this.tempVec3.set(
+            corePosition.x + x,
+            corePosition.y + y * this.verticalScale,
+            corePosition.z + z
+        );
     }
 
     /**
@@ -250,143 +387,156 @@ export class Particle3DTranslator {
     }
 
     /**
-     * FALLING: Downward motion with gravity
+     * FALLING: Tears falling in 360°x360°x360° sphere with downward bias
+     * Particles spawn in all directions but fall downward (sadness tears)
      */
     _translateFalling(particle, corePosition, canvasSize) {
-        const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
-            corePosition
-        );
+        // Get uniform 3D direction for spawn position
+        const dir = this._getUniformDirection3D(particle);
 
-        // Add downward emphasis
-        const fallBoost = particle.vy * 0.01; // vy is positive for downward
-        pos.y -= fallBoost;
+        const centerX = canvasSize.width / 2;
+        const centerY = canvasSize.height / 2;
 
-        return pos;
+        // Calculate distance from center in 2D
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.7;
+
+        // Position along 3D direction
+        const baseX = corePosition.x + dir.x * worldDistance;
+        const baseY = corePosition.y + dir.y * worldDistance * this.verticalScale;
+        const baseZ = corePosition.z + dir.z * worldDistance;
+
+        // Add downward fall based on particle age (gravity effect)
+        const fallAmount = particle.age * 0.3;
+
+        return this.tempVec3.set(baseX, baseY - fallAmount, baseZ);
     }
 
     /**
-     * POPCORN: Explosive bursts with random trajectories
-     * Uses particle's 2D canvas position (x, y) and converts to 3D with synthesized Z
+     * POPCORN: Explosive bursts with uniform spherical distribution (360°x360°x360°)
+     * Uses uniform sphere sampling for true omnidirectional emission
      */
     _translatePopcorn(particle, corePosition, canvasSize) {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
-
-        // Get base 3D position from 2D canvas coordinates
-        const pos = this._canvasToWorld(
-            particle.x,
-            particle.y,
-            particle.z,
-            centerX,
-            centerY,
-            corePosition
-        );
-
-        // Synthesize Z-axis movement from 2D velocity to create true 3D distribution
-        // Use particle's velocity direction to determine Z trajectory
         const behaviorData = particle.behaviorData || {};
 
-        if (behaviorData.hasPopped) {
-            // After pop, particles should spread in all directions including Z
-            // Use the particle's horizontal velocity magnitude to drive Z variation
-            const velocityMagnitude = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
-
-            // Create Z-axis component based on velocity and a pseudo-random offset
-            // Use particle's initial position as seed for consistent Z direction
-            const zSeed = (particle.x + particle.y) % 100;
-            const zDirection = (zSeed / 50) - 1; // Range: -1 to +1
-
-            // Scale Z offset by velocity magnitude and lifetime
-            const lifetimeProgress = 1 - particle.life;
-            const zOffset = zDirection * velocityMagnitude * 0.02 * lifetimeProgress * this.baseRadius;
-
-            pos.z += zOffset;
+        // Before pop, particle waits at center
+        if (!behaviorData.hasPopped) {
+            return this.tempVec3.set(
+                corePosition.x,
+                corePosition.y,
+                corePosition.z
+            );
         }
 
-        return pos;
+        // Get or generate uniform 3D direction
+        const dir = this._getUniformDirection3D(particle);
+
+        // Calculate distance traveled based on 2D position from center
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+
+        // Convert 2D distance to world units (scale down for less chaos)
+        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.5;
+
+        // Position particle along its 3D direction
+        return this.tempVec3.set(
+            corePosition.x + dir.x * worldDistance,
+            corePosition.y + dir.y * worldDistance * this.verticalScale,
+            corePosition.z + dir.z * worldDistance
+        );
     }
 
     /**
-     * BURST: Radial explosion from center
+     * BURST: Radial explosion from center with uniform 3D distribution
      */
     _translateBurst(particle, corePosition, canvasSize) {
-        const behaviorData = particle.behaviorData || {};
-        const angle = behaviorData.angle || 0;
-        const outwardSpeed = behaviorData.outwardSpeed || 2;
+        // Get uniform 3D direction
+        const dir = this._getUniformDirection3D(particle);
 
         // Expand outward over lifetime
+        const outwardSpeed = 2;
         const expansion = (1 - particle.life) * outwardSpeed * 0.5;
-
-        // Use spherical distribution
-        const phi = behaviorData.phi || Math.PI / 2;
         const radius = this.baseRadius * expansion;
 
-        return this._toCartesian(radius, angle, phi, corePosition);
+        // Position along 3D direction
+        return this.tempVec3.set(
+            corePosition.x + dir.x * radius,
+            corePosition.y + dir.y * radius * this.verticalScale,
+            corePosition.z + dir.z * radius
+        );
     }
 
     /**
-     * AGGRESSIVE: Fast chaotic motion in 3D
+     * AGGRESSIVE: Fast chaotic motion bursting outward in 360°x360°x360°
+     * Anger particles explode from center with violent, erratic movement
      */
     _translateAggressive(particle, corePosition, canvasSize) {
-        const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
-            corePosition
-        );
+        // Get uniform 3D direction for outward burst
+        const dir = this._getUniformDirection3D(particle);
 
-        // Add jitter based on velocity
-        const jitterScale = 0.02;
-        pos.x += particle.vx * jitterScale;
-        pos.y -= particle.vy * jitterScale;
-        pos.z += (particle.vx + particle.vy) * 0.5 * jitterScale;
-
-        return pos;
-    }
-
-    /**
-     * SCATTERING: Dispersing outward in all directions
-     */
-    _translateScattering(particle, corePosition, canvasSize) {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
-        // Calculate direction from center
+        // Calculate distance from center in 2D
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius;
 
-        // Scatter outward based on particle age
-        const scatterAmount = particle.age * 2;
-        const scatterRadius = (distance / centerX) * this.baseRadius * scatterAmount;
+        // Position along 3D direction with chaotic jitter
+        const jitterScale = 0.08; // Strong chaotic movement
+        const jitterX = Math.sin(particle.age * 10 + particle.x * 0.1) * jitterScale;
+        const jitterY = Math.cos(particle.age * 12 + particle.y * 0.1) * jitterScale;
+        const jitterZ = Math.sin(particle.age * 8 + particle.vx * 0.1) * jitterScale;
 
-        // Convert to 3D with spherical distribution
-        const theta = Math.atan2(dy, dx);
-        const phi = Math.PI / 2 + (particle.z * 0.5); // Use z for vertical spread
-
-        return this._toCartesian(scatterRadius, theta, phi, corePosition);
+        return this.tempVec3.set(
+            corePosition.x + dir.x * worldDistance + jitterX,
+            corePosition.y + dir.y * worldDistance * this.verticalScale + jitterY,
+            corePosition.z + dir.z * worldDistance + jitterZ
+        );
     }
 
     /**
-     * REPELLING: Push away from core
+     * SCATTERING: Dispersing outward in all directions with uniform 3D distribution
+     */
+    _translateScattering(particle, corePosition, canvasSize) {
+        // Get uniform 3D direction
+        const dir = this._getUniformDirection3D(particle);
+
+        // Scatter outward based on particle age
+        const scatterAmount = particle.age * 2;
+        const scatterRadius = this.baseRadius * scatterAmount;
+
+        // Position along 3D direction
+        return this.tempVec3.set(
+            corePosition.x + dir.x * scatterRadius,
+            corePosition.y + dir.y * scatterRadius * this.verticalScale,
+            corePosition.z + dir.z * scatterRadius
+        );
+    }
+
+    /**
+     * REPELLING: Push away from core with uniform 3D distribution
      */
     _translateRepelling(particle, corePosition, canvasSize) {
-        const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
-            corePosition
+        // Get uniform 3D direction
+        const dir = this._getUniformDirection3D(particle);
+
+        // Repel outward based on particle age
+        const repelStrength = particle.age * 1.5;
+        const repelRadius = this.baseRadius * repelStrength;
+
+        // Position along 3D direction
+        return this.tempVec3.set(
+            corePosition.x + dir.x * repelRadius,
+            corePosition.y + dir.y * repelRadius * this.verticalScale,
+            corePosition.z + dir.z * repelRadius
         );
-
-        // Calculate repulsion vector
-        const repelVec = this.tempVec3_2.copy(pos).sub(
-            new THREE.Vector3(corePosition.x, corePosition.y, corePosition.z)
-        );
-        repelVec.normalize().multiplyScalar(0.2);
-
-        pos.add(repelVec);
-
-        return pos;
     }
 
     /**
@@ -413,37 +563,51 @@ export class Particle3DTranslator {
     }
 
     /**
-     * RESTING: Minimal movement, nearly stationary
+     * RESTING: Minimal movement in 360°x360°x360° sphere
+     * Particles float gently around the mascot with subtle breathing motion
      */
     _translateResting(particle, corePosition, canvasSize) {
-        const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
-            corePosition
-        );
+        // Get uniform 3D direction
+        const dir = this._getUniformDirection3D(particle);
+
+        const centerX = canvasSize.width / 2;
+        const centerY = canvasSize.height / 2;
+
+        // Calculate distance from center in 2D
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.75;
 
         // Add very subtle breathing motion
         const breathPhase = particle.age * 0.3;
-        pos.y += Math.sin(breathPhase) * 0.02;
+        const breathOffset = Math.sin(breathPhase) * 0.02;
 
-        return pos;
+        // Position along 3D direction with gentle breathing
+        return this.tempVec3.set(
+            corePosition.x + dir.x * worldDistance,
+            corePosition.y + dir.y * worldDistance * this.verticalScale + breathOffset,
+            corePosition.z + dir.z * worldDistance
+        );
     }
 
     /**
-     * RADIANT: Expanding glow from center
+     * RADIANT: Expanding glow from center with uniform 3D distribution
      */
     _translateRadiant(particle, corePosition, canvasSize) {
-        const behaviorData = particle.behaviorData || {};
+        // Get uniform 3D direction
+        const dir = this._getUniformDirection3D(particle);
 
         // Expand outward uniformly
-        const expansion = behaviorData.expansionRate || 0.5;
+        const expansion = 0.5;
         const radius = this.baseRadius * expansion * (1 - particle.life);
 
-        // Spherical distribution
-        const theta = (behaviorData.angle || 0) + particle.age * 0.1;
-        const phi = Math.PI / 2 + (particle.z * Math.PI * 0.3);
-
-        return this._toCartesian(radius, theta, phi, corePosition);
+        // Position along 3D direction
+        return this.tempVec3.set(
+            corePosition.x + dir.x * radius,
+            corePosition.y + dir.y * radius * this.verticalScale,
+            corePosition.z + dir.z * radius
+        );
     }
 
     /**
@@ -494,21 +658,49 @@ export class Particle3DTranslator {
     }
 
     /**
-     * SURVEILLANCE: Tracking/scanning motion
+     * SURVEILLANCE: Tracking/scanning motion in full 3D sphere
+     * Particles orbit and scan like searchlights covering all angles
      */
     _translateSurveillance(particle, corePosition, canvasSize) {
         const behaviorData = particle.behaviorData || {};
 
-        // Orbital with vertical scanning
-        const angle = behaviorData.angle || 0;
+        // Get or generate unique orbital path for this particle
+        if (!behaviorData.orbitPath) {
+            // Each particle gets a unique orbital plane using its properties as seeds
+            const seed1 = particle.x + particle.y * 0.7;
+            const seed2 = particle.x * 0.3 + particle.y;
+
+            // Generate inclination and orientation for orbital plane
+            behaviorData.orbitPath = {
+                inclination: ((Math.sin(seed1 * 0.1) + 1) * 0.5) * Math.PI, // 0 to PI
+                orientation: ((Math.sin(seed2 * 0.1) + 1) * 0.5) * Math.PI * 2  // 0 to 2PI
+            };
+        }
+
+        const { inclination, orientation } = behaviorData.orbitPath;
         const radius = this.baseRadius * 1.2;
-        const scanHeight = Math.sin(particle.age * 2) * 0.5;
 
-        const x = Math.cos(angle) * radius + corePosition.x;
-        const y = scanHeight + corePosition.y;
-        const z = Math.sin(angle) * radius + corePosition.z;
+        // Orbit angle progresses with particle age
+        const orbitAngle = particle.age * 0.5 + orientation;
 
-        return this.tempVec3.set(x, y, z);
+        // Calculate position on tilted orbital plane
+        // First, position in XZ plane
+        const x = Math.cos(orbitAngle) * radius;
+        const z = Math.sin(orbitAngle) * radius;
+
+        // Then rotate by inclination to create 3D orbital paths
+        const cosIncl = Math.cos(inclination);
+        const sinIncl = Math.sin(inclination);
+
+        const x3d = x;
+        const y3d = z * sinIncl;  // Vertical component from tilt
+        const z3d = z * cosIncl;  // Depth component from tilt
+
+        return this.tempVec3.set(
+            corePosition.x + x3d,
+            corePosition.y + y3d * this.verticalScale,
+            corePosition.z + z3d
+        );
     }
 
     /**
@@ -553,7 +745,8 @@ export class Particle3DTranslator {
     }
 
     /**
-     * DIRECTED: Moves toward specific target
+     * DIRECTED: Moves toward specific target, or emits uniformly in 360°x360°x360° if no target
+     * Focused attention that can lock onto targets or scan in all directions
      */
     _translateDirected(particle, corePosition, canvasSize) {
         const behaviorData = particle.behaviorData || {};
@@ -580,7 +773,24 @@ export class Particle3DTranslator {
             return this.tempVec3.lerpVectors(currentPos, targetPos, progress);
         }
 
-        return this._translateDefault(particle, corePosition, canvasSize);
+        // No target: emit uniformly in all directions like focused beams
+        const dir = this._getUniformDirection3D(particle);
+
+        const centerX = canvasSize.width / 2;
+        const centerY = canvasSize.height / 2;
+
+        // Calculate distance from center in 2D (or use age for steady outward motion)
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.6;
+
+        // Position along 3D direction - focused beams radiating outward
+        return this.tempVec3.set(
+            corePosition.x + dir.x * worldDistance,
+            corePosition.y + dir.y * worldDistance * this.verticalScale,
+            corePosition.z + dir.z * worldDistance
+        );
     }
 
     /**
@@ -608,19 +818,40 @@ export class Particle3DTranslator {
      * ZEN: Meditative slow drift
      */
     _translateZen(particle, corePosition, canvasSize) {
-        const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
-            corePosition
-        );
+        // Get uniform 3D direction for orbital plane
+        const dir = this._getUniformDirection3D(particle);
 
-        // Very slow circular drift
+        // Zen particles orbit slowly in their own plane
         const zenAngle = particle.age * 0.2;
-        const zenRadius = 0.03;
-        pos.x += Math.cos(zenAngle) * zenRadius;
-        pos.z += Math.sin(zenAngle) * zenRadius;
+        const zenRadius = this.baseRadius * 0.7;
 
-        return pos;
+        // Create perpendicular vector for rotation plane
+        // Use cross product to get perpendicular direction
+        const up = { x: 0, y: 1, z: 0 };
+        const perp = {
+            x: dir.y * up.z - dir.z * up.y,
+            y: dir.z * up.x - dir.x * up.z,
+            z: dir.x * up.y - dir.y * up.x
+        };
+
+        // Normalize perpendicular vector
+        const perpMag = Math.sqrt(perp.x * perp.x + perp.y * perp.y + perp.z * perp.z);
+        if (perpMag > 0) {
+            perp.x /= perpMag;
+            perp.y /= perpMag;
+            perp.z /= perpMag;
+        }
+
+        // Orbit in 3D plane defined by dir and perp
+        const orbitX = Math.cos(zenAngle) * dir.x + Math.sin(zenAngle) * perp.x;
+        const orbitY = Math.cos(zenAngle) * dir.y + Math.sin(zenAngle) * perp.y;
+        const orbitZ = Math.cos(zenAngle) * dir.z + Math.sin(zenAngle) * perp.z;
+
+        return this.tempVec3.set(
+            corePosition.x + orbitX * zenRadius,
+            corePosition.y + orbitY * zenRadius * this.verticalScale,
+            corePosition.z + orbitZ * zenRadius
+        );
     }
 
     /**

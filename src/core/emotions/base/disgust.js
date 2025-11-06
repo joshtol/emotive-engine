@@ -20,7 +20,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#9ACD32',       // Sickly yellow-green (YellowGreen)
-        glowIntensity: 1.0,         // Stronger, toxic glow
+        glowIntensity: 0.80,        // Calibrated for glass visibility
         particleRate: 15,           // More particles for nauseating effect
         minParticles: 5,            // Maintain visible repulsion
         maxParticles: 12,           // Controlled rejection display

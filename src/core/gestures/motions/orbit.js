@@ -37,16 +37,26 @@
 /**
  * Apply orbital motion to a particle
  * Particles orbit around the center with dynamic z-depth changes
- * 
+ *
  * @param {Object} particle - The particle to animate
- * @param {Object} gestureData - Persistent data for this particle's gesture
- * @param {Object} config - Gesture configuration
  * @param {number} progress - Gesture progress (0-1)
- * @param {number} strength - Gesture strength multiplier
+ * @param {Object} motion - Gesture motion configuration
+ * @param {number} dt - Delta time (unused for orbit)
  * @param {number} centerX - Orb center X
  * @param {number} centerY - Orb center Y
  */
-export function applyOrbit(particle, gestureData, config, progress, strength, centerX, centerY) {
+export function applyOrbit(particle, progress, motion, dt, centerX, centerY) {
+    // Get or initialize gesture data
+    if (!particle.gestureData) {
+        particle.gestureData = {};
+    }
+    const gestureData = particle.gestureData;
+
+    // Extract config and strength from motion
+    // motion contains the merged config from default + rhythm modulation
+    const config = motion;
+    const strength = motion.amplitude || 1.0;
+
     // Initialize gesture data if needed
     if (!gestureData.initialized) {
         // Store original position and velocity

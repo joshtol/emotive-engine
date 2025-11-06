@@ -89,6 +89,8 @@ export class Core3DManager {
         this.undertone = options.undertone || null;
         this.glowColor = [1.0, 1.0, 1.0]; // RGB
         this.glowIntensity = 1.0;
+        this.coreGlowEnabled = true; // Toggle to enable/disable core glow
+        this.glowIntensityOverride = null; // Manual override for testing
 
         // Quaternion-based rotation system for smooth 3D orientation
         this.baseEuler = [0, 0, 0]; // Persistent base Euler angles (updated by RotationBehavior)
@@ -251,6 +253,44 @@ export class Core3DManager {
     }
 
     /**
+     * Enable or disable core glow
+     * @param {boolean} enabled - True to enable glow, false to disable
+     */
+    setCoreGlowEnabled(enabled) {
+        this.coreGlowEnabled = enabled;
+        console.log(`Core glow ${enabled ? 'enabled' : 'disabled'}`);
+    }
+
+    /**
+     * Set glass material mode
+     * @param {boolean} enabled - True for glass material, false for glow material
+     */
+    setGlassMaterialEnabled(enabled) {
+        const mode = enabled ? 'glass' : 'glow';
+        this.renderer.setMaterialMode(mode);
+    }
+
+    /**
+     * Set glow intensity override
+     * @param {number} intensity - Glow intensity value (typically 0.0 to 2.0), or null to clear override
+     */
+    setGlowIntensity(intensity) {
+        this.glowIntensityOverride = intensity;
+        if (intensity !== null) {
+            this.glowIntensity = intensity;
+            this.baseGlowIntensity = intensity;
+        }
+    }
+
+    /**
+     * Get current glow intensity
+     * @returns {number} Current glow intensity
+     */
+    getGlowIntensity() {
+        return this.glowIntensity;
+    }
+
+    /**
      * Play gesture animation using 2D gesture data translated to 3D
      */
     playGesture(gestureName) {
@@ -325,6 +365,16 @@ export class Core3DManager {
                     config,
                     strength: config.strength || 1.0
                 };
+
+                // Safety check: if gesture doesn't have 3D implementation, return neutral transform
+                if (!gesture2D['3d'] || !gesture2D['3d'].evaluate) {
+                    return {
+                        position: [0, 0, 0],
+                        rotation: [0, 0, 0],
+                        scale: 1.0
+                    };
+                }
+
                 return gesture2D['3d'].evaluate(t, motion);
             },
             callbacks: {
@@ -454,6 +504,13 @@ export class Core3DManager {
             this.rightingBehavior.update(deltaTime, this.baseEuler);
         }
 
+        // HARD LIMIT: Clamp pitch and roll to prevent lateral/dolphin tipping
+        // No emotion should ever tip more than ~20 degrees from upright
+        const MAX_TILT_ANGLE = 0.35; // ~20 degrees in radians
+        this.baseEuler[0] = Math.max(-MAX_TILT_ANGLE, Math.min(MAX_TILT_ANGLE, this.baseEuler[0])); // Pitch (X)
+        this.baseEuler[2] = Math.max(-MAX_TILT_ANGLE, Math.min(MAX_TILT_ANGLE, this.baseEuler[2])); // Roll (Z)
+        // Yaw (Y) is left unclamped for free rotation
+
         // Convert base Euler to quaternion
         this.tempEuler.set(this.baseEuler[0], this.baseEuler[1], this.baseEuler[2], 'XYZ');
         this.baseQuaternion.setFromEuler(this.tempEuler);
@@ -473,7 +530,10 @@ export class Core3DManager {
         this.position = blended.position;
         this.rotation = blended.rotation;
         this.scale = blended.scale;
-        this.glowIntensity = blended.glowIntensity;
+        // Only apply blended glow if no manual override is active
+        if (this.glowIntensityOverride === null) {
+            this.glowIntensity = blended.glowIntensity;
+        }
         this.gestureQuaternion = blended.gestureQuaternion;
 
         // Apply blink effects (AFTER gestures, blending with other animations)
@@ -483,11 +543,6 @@ export class Core3DManager {
                 this.rotation[0] += blinkState.rotation[0];
                 this.rotation[1] += blinkState.rotation[1];
                 this.rotation[2] += blinkState.rotation[2];
-            }
-
-            // Apply blink glow boost
-            if (blinkState.glowBoost) {
-                this.glowIntensity += blinkState.glowBoost;
             }
         }
 
@@ -508,12 +563,22 @@ export class Core3DManager {
                 this.animator.animations, // Active gestures
                 this.animator.time,       // Current animation time
                 { x: this.position[0], y: this.position[1], z: this.position[2] }, // Core position
-                { width: this.canvas.width, height: this.canvas.height } // Canvas size
+                { width: this.canvas.width, height: this.canvas.height }, // Canvas size
+                // Rotation state for orbital physics
+                {
+                    euler: this.baseEuler,
+                    quaternion: this.baseQuaternion,
+                    angularVelocity: this.rotationBehavior ? this.rotationBehavior.axes : [0, 0, 0]
+                }
             );
         }
 
-        // Update bloom pass with current glow intensity (smooth transitions)
-        this.renderer.updateBloom(this.glowIntensity);
+        // Calculate effective glow intensity (blink boost applied at render time, non-mutating)
+        const blinkBoost = blinkState.isBlinking && blinkState.glowBoost ? blinkState.glowBoost : 0;
+        const effectiveGlowIntensity = this.coreGlowEnabled ? this.glowIntensity + blinkBoost : 0.0;
+
+        // Update bloom pass with effective glow intensity (smooth transitions)
+        this.renderer.updateBloom(effectiveGlowIntensity);
 
         // Render with Three.js
         this.renderer.render({
@@ -521,7 +586,7 @@ export class Core3DManager {
             rotation: this.rotation,
             scale: finalScale,
             glowColor: this.glowColor,
-            glowIntensity: this.glowIntensity
+            glowIntensity: effectiveGlowIntensity
         });
     }
 

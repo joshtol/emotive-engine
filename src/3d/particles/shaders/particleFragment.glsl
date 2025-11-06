@@ -22,19 +22,20 @@ void main() {
     float edgeSoftness = 0.5;
     float gradient = smoothstep(0.5, 0.5 - edgeSoftness, dist);
 
-    // Apply glow intensity to brightness
-    float brightness = 1.0 + vGlowIntensity * 0.5;
+    // Apply glow intensity to brightness - EXTREME BOOST
+    float brightness = 1.0 + vGlowIntensity * 10.0; // 10x brightness multiplier
 
     // Create core glow (brighter in center)
     float coreGlow = 1.0 - (dist * 2.0);
     coreGlow = max(0.0, coreGlow);
 
-    // Combine color with glow
+    // Combine color with glow - MUCH brighter
     vec3 finalColor = vColor * brightness;
-    finalColor += vColor * coreGlow * vGlowIntensity * 0.3;
+    finalColor += vColor * coreGlow * vGlowIntensity * 5.0; // 5x core glow
 
-    // Apply alpha with gradient
-    float finalAlpha = vAlpha * gradient;
+    // Apply alpha with gradient - EXTREME alpha boost when glowing
+    float glowAlphaBoost = 1.0 + vGlowIntensity * 20.0; // 20x alpha boost at max glow!
+    float finalAlpha = vAlpha * gradient * glowAlphaBoost;
 
     gl_FragColor = vec4(finalColor, finalAlpha);
 }

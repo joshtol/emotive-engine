@@ -70,6 +70,11 @@ export class ThreeRenderer {
         // Core mascot mesh (will be created by Core3DManager)
         this.coreMesh = null;
 
+        // Material mode: 'glow' (default) or 'glass'
+        this.materialMode = 'glow';
+        this.glowMaterial = null;
+        this.glassMaterial = null;
+
         // Animation mixer for GLTF models
         this.mixer = null;
         this.clock = new THREE.Clock();
@@ -125,8 +130,11 @@ export class ThreeRenderer {
      * Creates ambient, key, fill, and rim lights for professional look
      */
     setupLights() {
-        // Ambient light - base illumination, no shadows
-        this.ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        // Scene background - dark gradient instead of pure black
+        this.scene.background = new THREE.Color(0x0a0a0f); // Very dark blue-gray
+
+        // Ambient light - moderate for balanced visibility
+        this.ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
         this.ambientLight.name = 'ambientLight';
         this.scene.add(this.ambientLight);
 
@@ -144,16 +152,84 @@ export class ThreeRenderer {
         this.scene.add(this.keyLight);
 
         // Fill light - softer light from side to reduce harsh shadows
-        this.fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        this.fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
         this.fillLight.position.set(-2, 1, 1);
         this.fillLight.name = 'fillLight';
         this.scene.add(this.fillLight);
 
         // Rim light - backlight for depth and separation from background
-        this.rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        this.rimLight = new THREE.DirectionalLight(0xffffff, 0.7);
         this.rimLight.position.set(0, 1, -2);
         this.rimLight.name = 'rimLight';
         this.scene.add(this.rimLight);
+
+        // Accent lights for glass material (colored rim lights) - subtle for glass effects only
+        // Blue accent from left
+        this.accentLight1 = new THREE.PointLight(0x00d4ff, 0.3, 10);
+        this.accentLight1.position.set(-3, 0, 1);
+        this.accentLight1.name = 'accentLight1';
+        this.scene.add(this.accentLight1);
+
+        // Pink accent from right
+        this.accentLight2 = new THREE.PointLight(0xff1493, 0.2, 10);
+        this.accentLight2.position.set(3, 0, 1);
+        this.accentLight2.name = 'accentLight2';
+        this.scene.add(this.accentLight2);
+
+        // Orange accent from top
+        this.accentLight3 = new THREE.PointLight(0xff6b35, 0.2, 10);
+        this.accentLight3.position.set(0, 3, -1);
+        this.accentLight3.name = 'accentLight3';
+        this.scene.add(this.accentLight3);
+
+        // Create environment map for glass reflections
+        this.createEnvironmentMap();
+    }
+
+    /**
+     * Create a vibrant environment map for glass material reflections
+     * Generates a colorful gradient cubemap procedurally
+     */
+    createEnvironmentMap() {
+        const size = 512; // Higher resolution for better reflections
+        const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(size);
+
+        // Create a vibrant gradient scene for the environment
+        const envScene = new THREE.Scene();
+
+        // Vibrant gradient colors
+        const skyColor = new THREE.Color(0x5599ff); // Bright sky blue
+        const horizonColor = new THREE.Color(0xff6b9d); // Pink horizon
+        const groundColor = new THREE.Color(0x1a1a2e); // Deep purple-blue
+
+        // Create gradient using hemisphere light
+        const hemiLight = new THREE.HemisphereLight(skyColor, groundColor, 1.5);
+        envScene.add(hemiLight);
+
+        // Add colorful point lights to create interesting reflections
+        const light1 = new THREE.PointLight(0x00d4ff, 2, 20); // Cyan
+        light1.position.set(-5, 2, -5);
+        envScene.add(light1);
+
+        const light2 = new THREE.PointLight(0xff1493, 2, 20); // Pink
+        light2.position.set(5, 2, -5);
+        envScene.add(light2);
+
+        const light3 = new THREE.PointLight(0xffaa00, 1.5, 20); // Orange
+        light3.position.set(0, 5, 0);
+        envScene.add(light3);
+
+        // Background gradient (top to bottom)
+        envScene.background = horizonColor;
+
+        // Create cube camera to capture the environment
+        const cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRenderTarget);
+
+        // Render the environment
+        cubeCamera.update(this.renderer, envScene);
+
+        // Store for use in materials
+        this.envMap = cubeRenderTarget.texture;
     }
 
     /**
@@ -193,8 +269,15 @@ export class ThreeRenderer {
             this.coreMesh = null;
         }
 
-        // Create custom glow material with Fresnel effect
-        const material = this.createGlowMaterial();
+        // Create glow material and store it
+        if (!this.glowMaterial) {
+            this.glowMaterial = this.createGlowMaterial();
+        }
+
+        // Use current material mode
+        const material = this.materialMode === 'glass'
+            ? (this.glassMaterial || this.createGlassMaterial())
+            : this.glowMaterial;
 
         // Create mesh
         this.coreMesh = new THREE.Mesh(geometry, material);
@@ -277,6 +360,94 @@ export class ThreeRenderer {
             transparent: false,
             side: THREE.FrontSide
         });
+    }
+
+    /**
+     * Create glass material with realistic refraction
+     * Uses MeshPhysicalMaterial with transmission for refraction through particles
+     */
+    createGlassMaterial() {
+        // Store default emissive multiplier (can be adjusted via UI)
+        this.glassEmissiveMultiplier = 1.5;
+
+        const material = new THREE.MeshPhysicalMaterial({
+            transmission: 1.0,           // Full interior transparency (refraction)
+            thickness: 0.8,              // Moderate refraction intensity
+            roughness: 0.05,             // Nearly clear glass (slight softness)
+            metalness: 0.0,              // Non-metallic
+            ior: 1.5,                    // Index of refraction (glass)
+            reflectivity: 0.5,           // Subtle surface reflections
+            envMapIntensity: 1.2,        // Environment reflection strength (boosted)
+            side: THREE.DoubleSide,      // Render both faces for proper refraction
+            transparent: true,
+            opacity: 1.0,
+            color: 0xffffff,             // Base color (can be tinted)
+            emissive: 0xffffff,          // Internal glow color (white, will be tinted by emotion)
+            emissiveIntensity: 0.6,      // Internal glow brightness (raised for visibility)
+            clearcoat: 0.8,              // Strong glossy coating for sparkle
+            clearcoatRoughness: 0.05,    // Very smooth for sharp highlights
+            iridescence: 0.4,            // Color shifting based on viewing angle
+            iridescenceIOR: 1.3,         // IOR for iridescence effect
+            iridescenceThicknessRange: [100, 400]  // Thickness range for color variation
+        });
+
+        // Apply environment map if available
+        if (this.envMap) {
+            material.envMap = this.envMap;
+        }
+
+        return material;
+    }
+
+    /**
+     * Set material mode and swap materials
+     * @param {string} mode - 'glow' or 'glass'
+     */
+    setMaterialMode(mode) {
+        if (!this.coreMesh) {
+            console.warn('Cannot set material mode: core mesh not created yet');
+            this.materialMode = mode; // Store for when mesh is created
+            return;
+        }
+
+        if (mode === this.materialMode) {
+            return; // Already in this mode
+        }
+
+        this.materialMode = mode;
+
+        // Create materials if they don't exist
+        if (mode === 'glass' && !this.glassMaterial) {
+            this.glassMaterial = this.createGlassMaterial();
+        } else if (mode === 'glow' && !this.glowMaterial) {
+            this.glowMaterial = this.createGlowMaterial();
+        }
+
+        // Swap material
+        const newMaterial = mode === 'glass' ? this.glassMaterial : this.glowMaterial;
+        this.coreMesh.material = newMaterial;
+
+        console.log(`Material mode set to: ${mode}`);
+    }
+
+    /**
+     * Update glass material properties
+     * @param {Object} props - Glass properties {transmission, thickness, emissiveMultiplier}
+     */
+    updateGlassProperties(props) {
+        if (!this.glassMaterial) return;
+
+        if (props.transmission !== undefined) {
+            this.glassMaterial.transmission = props.transmission;
+            this.glassMaterial.needsUpdate = true;
+        }
+        if (props.thickness !== undefined) {
+            this.glassMaterial.thickness = props.thickness;
+            this.glassMaterial.needsUpdate = true;
+        }
+        if (props.emissiveMultiplier !== undefined) {
+            this.glassEmissiveMultiplier = props.emissiveMultiplier;
+        }
     }
 
     /**
@@ -426,13 +597,29 @@ export class ThreeRenderer {
             this.coreMesh.rotation.set(...rotation);
             this.coreMesh.scale.setScalar(scale);
 
-            // Update material uniforms with smooth transitions (reuse temp color)
+            // Update material properties based on material type
             if (this.coreMesh.material.uniforms) {
+                // ShaderMaterial (glow material) - update uniforms
                 this._tempColor.setRGB(...glowColor);
                 this.coreMesh.material.uniforms.glowColor.value.lerp(this._tempColor, 0.15);
 
                 const currentIntensity = this.coreMesh.material.uniforms.glowIntensity.value;
                 this.coreMesh.material.uniforms.glowIntensity.value += (glowIntensity - currentIntensity) * 0.15;
+            } else if (this.coreMesh.material.emissive) {
+                // MeshPhysicalMaterial (glass material) - update emissive properties
+                this._tempColor.setRGB(...glowColor);
+                this.coreMesh.material.emissive.lerp(this._tempColor, 0.15);
+
+                // Update emissive intensity (smooth transition) - uses adjustable multiplier
+                const multiplier = this.glassEmissiveMultiplier || 1.5;
+                const targetEmissiveIntensity = glowIntensity * multiplier;
+                const currentEmissiveIntensity = this.coreMesh.material.emissiveIntensity;
+                this.coreMesh.material.emissiveIntensity += (targetEmissiveIntensity - currentEmissiveIntensity) * 0.15;
+
+                // Also tint the base color slightly for more vibrant glow
+                this._tempColor2.setRGB(...glowColor);
+                this._tempColor2.lerp(this._white, 0.7); // Mix 30% glow color with 70% white
+                this.coreMesh.material.color.lerp(this._tempColor2, 0.15);
             }
         }
 

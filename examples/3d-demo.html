@@ -197,13 +197,17 @@
 
         /* Toggle button styles */
         button[data-action="toggle-blink"],
-        button[data-action="toggle-auto-rotate"] {
+        button[data-action="toggle-auto-rotate"],
+        button[data-action="toggle-core-glow"],
+        button[data-action="toggle-glass-material"] {
             position: relative;
             padding-left: 36px;
         }
 
         button[data-action="toggle-blink"]::before,
-        button[data-action="toggle-auto-rotate"]::before {
+        button[data-action="toggle-auto-rotate"]::before,
+        button[data-action="toggle-core-glow"]::before,
+        button[data-action="toggle-glass-material"]::before {
             content: '';
             position: absolute;
             left: 8px;
@@ -218,7 +222,9 @@
         }
 
         button[data-action="toggle-blink"]::after,
-        button[data-action="toggle-auto-rotate"]::after {
+        button[data-action="toggle-auto-rotate"]::after,
+        button[data-action="toggle-core-glow"]::after,
+        button[data-action="toggle-glass-material"]::after {
             content: '';
             position: absolute;
             left: 10px;
@@ -233,13 +239,17 @@
         }
 
         button[data-action="toggle-blink"].active::before,
-        button[data-action="toggle-auto-rotate"].active::before {
+        button[data-action="toggle-auto-rotate"].active::before,
+        button[data-action="toggle-core-glow"].active::before,
+        button[data-action="toggle-glass-material"].active::before {
             background: rgba(100, 255, 100, 0.6);
             border-color: rgba(100, 255, 100, 0.8);
         }
 
         button[data-action="toggle-blink"].active::after,
-        button[data-action="toggle-auto-rotate"].active::after {
+        button[data-action="toggle-auto-rotate"].active::after,
+        button[data-action="toggle-core-glow"].active::after,
+        button[data-action="toggle-glass-material"].active::after {
             left: 18px;
         }
 
@@ -380,6 +390,52 @@
             <button data-action="undertone" data-value="energetic">Energetic</button>
         </div>
 
+        <div class="control-group">
+            <h3>Glow Intensity Override</h3>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <input type="range" id="glow-slider" min="0" max="3" step="0.01" value="1" style="flex: 1;">
+                <input type="number" id="glow-input" min="0" max="3" step="0.01" value="1.00" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+            </div>
+            <div style="display: flex; gap: 5px; margin-bottom: 8px;">
+                <button data-action="glow-fine-down" style="flex: 1; padding: 4px; font-size: 11px;">-0.01</button>
+                <button data-action="glow-down" style="flex: 1; padding: 4px; font-size: 11px;">-0.1</button>
+                <button data-action="reset-glow" style="flex: 1; padding: 4px; font-size: 11px;">Reset</button>
+                <button data-action="glow-up" style="flex: 1; padding: 4px; font-size: 11px;">+0.1</button>
+                <button data-action="glow-fine-up" style="flex: 1; padding: 4px; font-size: 11px;">+0.01</button>
+            </div>
+            <div style="font-size: 11px; opacity: 0.7; margin-top: 8px; line-height: 1.4;">
+                Fine-tune glow for current emotion. Slider range: 0-3 with 0.01 precision.
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Glass Material Controls</h3>
+
+            <label style="display: block; margin-top: 8px; font-size: 12px;">Transmission (0-1):</label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <input type="range" id="transmission-slider" min="0" max="1" step="0.01" value="1" style="flex: 1;">
+                <input type="number" id="transmission-input" min="0" max="1" step="0.01" value="1.00" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+            </div>
+
+            <label style="display: block; margin-top: 8px; font-size: 12px;">Thickness (0-2):</label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <input type="range" id="thickness-slider" min="0" max="2" step="0.01" value="0.8" style="flex: 1;">
+                <input type="number" id="thickness-input" min="0" max="2" step="0.01" value="0.80" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+            </div>
+
+            <label style="display: block; margin-top: 8px; font-size: 12px;">Emissive Multiplier (0-5):</label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <input type="range" id="emissive-mult-slider" min="0" max="5" step="0.1" value="1.5" style="flex: 1;">
+                <input type="number" id="emissive-mult-input" min="0" max="5" step="0.1" value="1.50" style="width: 70px; padding: 4px; font-family: monospace; text-align: right;">
+            </div>
+
+            <div style="font-size: 11px; opacity: 0.7; margin-top: 8px; line-height: 1.4;">
+                Transmission: how see-through the glass is<br>
+                Thickness: refraction intensity<br>
+                Emissive Multiplier: how much glow punches through
+            </div>
+        </div>
+
         <div class="info-box">
             <strong>About Three.js Rendering:</strong>
             <ul>
@@ -420,6 +476,8 @@
         <div class="control-group">
             <h3>Animation Toggles</h3>
             <button data-action="toggle-blink" class="active">👁️ Blinking</button>
+            <button data-action="toggle-core-glow" class="active">✨ Core Glow</button>
+            <button data-action="toggle-glass-material">🔮 Glass Material</button>
         </div>
 
         <div class="control-group">
@@ -460,7 +518,7 @@
             <button data-action="gesture" data-value="twist">Twist</button>
             <button data-action="gesture" data-value="hula">Hula</button>
             <button data-action="gesture" data-value="orbital">Orbital</button>
-            <button data-action="gesture" data-value="scan">Scan</button>
+            <!-- <button data-action="gesture" data-value="scan">Scan</button> -->
             <button data-action="gesture" data-value="stretch">Stretch</button>
         </div>
 
@@ -525,12 +583,18 @@
                 mascot.start();
 
                 // Set initial emotion
-                mascot.setEmotion('joy');
+                mascot.setEmotion('neutral');
 
                 document.getElementById('status').textContent = '✅ Ready';
                 document.getElementById('status').style.background = 'rgba(0, 255, 0, 0.2)';
 
                 console.log('✅ EmotiveMascot3D initialized');
+
+                // Setup glow intensity slider
+                setupGlowSlider();
+
+                // Setup glass material controls
+                setupGlassControls();
             } catch (error) {
                 console.error('Failed to initialize:', error);
                 document.getElementById('status').textContent = '❌ Error';
@@ -597,6 +661,31 @@
                         }
                         break;
 
+                    case 'toggle-core-glow':
+                        if (mascot.core3D?.coreGlowEnabled !== false) {
+                            console.log('Disabling core glow');
+                            mascot.core3D.setCoreGlowEnabled(false);
+                            e.target.classList.remove('active');
+                        } else {
+                            console.log('Enabling core glow');
+                            mascot.core3D.setCoreGlowEnabled(true);
+                            e.target.classList.add('active');
+                        }
+                        break;
+
+                    case 'toggle-glass-material':
+                        const isGlass = e.target.classList.contains('active');
+                        if (isGlass) {
+                            console.log('Switching to glow material');
+                            mascot.core3D.setGlassMaterialEnabled(false);
+                            e.target.classList.remove('active');
+                        } else {
+                            console.log('Switching to glass material');
+                            mascot.core3D.setGlassMaterialEnabled(true);
+                            e.target.classList.add('active');
+                        }
+                        break;
+
                     case 'camera-preset':
                         console.log('Setting camera preset:', value);
                         if (mascot.core3D?.renderer?.setCameraPreset) {
@@ -617,7 +706,9 @@
                             console.log('Toggling auto-rotate:', !currentState);
                             mascot.core3D.renderer.toggleAutoRotate(!currentState);
 
-                            if (!currentState) {
+                            // Check the NEW state after toggling
+                            const newState = mascot.core3D.renderer.isAutoRotateEnabled();
+                            if (newState) {
                                 e.target.classList.add('active');
                             } else {
                                 e.target.classList.remove('active');
@@ -632,6 +723,212 @@
 
         // Set initial active button
         document.querySelector('[data-value="joy"]').classList.add('active');
+
+        // Glow intensity slider setup function
+        function setupGlowSlider() {
+            let glowOverride = null;
+            let currentEmotion = 'neutral';
+            let originalGlowValues = {};
+
+            const glowSlider = document.getElementById('glow-slider');
+            const glowInput = document.getElementById('glow-input');
+
+            // Store original glow values
+            if (mascot.core3D) {
+                originalGlowValues[currentEmotion] = mascot.core3D.baseGlowIntensity || 1.0;
+            }
+
+            // Helper to update glow value across all controls
+            function updateGlowValue(value) {
+                value = Math.max(0, Math.min(3, value)); // Clamp to 0-3
+                value = Math.round(value * 100) / 100; // Round to 2 decimals
+
+                glowSlider.value = value;
+                glowInput.value = value.toFixed(2);
+                glowOverride = value;
+
+                // Apply override to current emotion using public API
+                if (mascot && mascot.core3D) {
+                    mascot.core3D.setGlowIntensity(value);
+                }
+            }
+
+            // Slider input (throttled)
+            let glowUpdateTimer = null;
+            glowSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                glowInput.value = value.toFixed(2);
+                glowOverride = value;
+
+                // Throttle updates to reduce spam
+                if (glowUpdateTimer) clearTimeout(glowUpdateTimer);
+                glowUpdateTimer = setTimeout(() => {
+                    if (mascot && mascot.core3D) {
+                        mascot.core3D.setGlowIntensity(value);
+                    }
+                }, 50);
+            });
+
+            // Number input (immediate update)
+            glowInput.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value)) {
+                    updateGlowValue(value);
+                }
+            });
+
+            // Click handlers for all glow controls
+            document.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+
+                if (action === 'reset-glow' && mascot && mascot.core3D) {
+                    glowOverride = null;
+
+                    // Clear override to restore emotion's natural glow
+                    mascot.core3D.setGlowIntensity(null);
+
+                    // Update controls to show emotion's base value
+                    const originalGlow = originalGlowValues[currentEmotion] || mascot.core3D.baseGlowIntensity || 1.0;
+                    glowSlider.value = originalGlow;
+                    glowInput.value = originalGlow.toFixed(2);
+
+                    console.log(`Reset glow to original: ${originalGlow.toFixed(2)}`);
+                }
+
+                // Fine control buttons
+                if (action === 'glow-fine-up') {
+                    const currentValue = parseFloat(glowSlider.value);
+                    updateGlowValue(currentValue + 0.01);
+                }
+                if (action === 'glow-fine-down') {
+                    const currentValue = parseFloat(glowSlider.value);
+                    updateGlowValue(currentValue - 0.01);
+                }
+                if (action === 'glow-up') {
+                    const currentValue = parseFloat(glowSlider.value);
+                    updateGlowValue(currentValue + 0.1);
+                }
+                if (action === 'glow-down') {
+                    const currentValue = parseFloat(glowSlider.value);
+                    updateGlowValue(currentValue - 0.1);
+                }
+            });
+
+            // Intercept emotion changes to update slider
+            const originalSetEmotion = mascot.setEmotion.bind(mascot);
+            mascot.setEmotion = function(emotion, undertone) {
+                currentEmotion = emotion;
+
+                // Call original first
+                const result = originalSetEmotion(emotion, undertone);
+
+                // Update slider after emotion change
+                setTimeout(() => {
+                    if (mascot.core3D) {
+                        const currentGlow = glowOverride !== null ? glowOverride : mascot.core3D.baseGlowIntensity;
+
+                        // Store original if we haven't yet
+                        if (!originalGlowValues[emotion]) {
+                            originalGlowValues[emotion] = mascot.core3D.baseGlowIntensity;
+                        }
+
+                        glowSlider.value = currentGlow;
+                        glowInput.value = currentGlow.toFixed(2);
+
+                        // Apply override if active using public API
+                        if (glowOverride !== null) {
+                            mascot.core3D.setGlowIntensity(glowOverride);
+                        }
+                    }
+                }, 50);
+
+                return result;
+            };
+
+            // Initialize controls with current emotion's value
+            if (mascot && mascot.core3D) {
+                const initialGlow = mascot.core3D.baseGlowIntensity || 1.0;
+                glowSlider.value = initialGlow;
+                glowInput.value = initialGlow.toFixed(2);
+                originalGlowValues[currentEmotion] = initialGlow;
+            }
+        }
+
+        // Glass material controls setup
+        function setupGlassControls() {
+            const transmissionSlider = document.getElementById('transmission-slider');
+            const transmissionInput = document.getElementById('transmission-input');
+            const thicknessSlider = document.getElementById('thickness-slider');
+            const thicknessInput = document.getElementById('thickness-input');
+            const emissiveMultSlider = document.getElementById('emissive-mult-slider');
+            const emissiveMultInput = document.getElementById('emissive-mult-input');
+
+            console.log('Setting up glass controls...', {
+                sliders: !!transmissionSlider,
+                mascot: !!mascot,
+                core3D: !!mascot?.core3D,
+                renderer: !!mascot?.core3D?.renderer
+            });
+
+            if (!transmissionSlider) {
+                console.error('Glass control sliders not found in DOM');
+                return;
+            }
+            if (!mascot || !mascot.core3D || !mascot.core3D.renderer) {
+                console.error('Mascot or renderer not available');
+                return;
+            }
+
+            const renderer = mascot.core3D.renderer;
+
+            // Transmission control
+            transmissionSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                transmissionInput.value = value.toFixed(2);
+                renderer.updateGlassProperties({ transmission: value });
+                console.log('Transmission:', value);
+            });
+
+            transmissionInput.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value)) {
+                    transmissionSlider.value = value;
+                    renderer.updateGlassProperties({ transmission: value });
+                }
+            });
+
+            // Thickness control
+            thicknessSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                thicknessInput.value = value.toFixed(2);
+                renderer.updateGlassProperties({ thickness: value });
+                console.log('Thickness:', value);
+            });
+
+            thicknessInput.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value)) {
+                    thicknessSlider.value = value;
+                    renderer.updateGlassProperties({ thickness: value });
+                }
+            });
+
+            // Emissive multiplier control
+            emissiveMultSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                emissiveMultInput.value = value.toFixed(1);
+                renderer.updateGlassProperties({ emissiveMultiplier: value });
+                console.log('Emissive Multiplier:', value);
+            });
+
+            emissiveMultInput.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value)) {
+                    emissiveMultSlider.value = value;
+                    renderer.updateGlassProperties({ emissiveMultiplier: value });
+                }
+            });
+        }
     </script>
 </body>
 </html>

@@ -24,7 +24,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#DC143C',       // Crimson rage - more intense
-        glowIntensity: 1.8,         // Stronger, burning aura
+        glowIntensity: 0.90,        // Calibrated for glass visibility
         particleRate: 20,           // More frequent particle generation for chaos
         minParticles: 3,            // Maintain constant agitation
         maxParticles: 10,           // More particles for intensity
@@ -84,12 +84,18 @@ export default {
     // 3D rotation behavior and effects
     '3d': {
         rotation: {
-            type: 'unstable',           // Wobble/shake pattern - uncontrolled rage
+            type: 'unstable',           // Trembling rage with explosive bursts
             speed: 1.5,                 // 1.5x faster than neutral rotation
             axes: [0, 0.3, 0],          // Rotation rates [X, Y, Z] - only Y-axis base spin
             shake: {
-                amplitude: 0.02,        // Max rotation shake angle (radians) - minimal wobble
-                frequency: 2.0          // Wobble frequency (2 Hz) - gentle sway
+                amplitude: 0.02,        // Max safe trembling (hard-limited by RotationBehavior)
+                frequency: 7.0          // Rapid vibration (7 Hz) - barely contained fury
+            },
+            eruption: {
+                enabled: true,          // Periodic explosive bursts
+                interval: 3000,         // Burst every 3 seconds
+                speedMultiplier: 3.5,   // Rotation speeds up 3.5x during burst
+                duration: 400           // Burst lasts 400ms
             },
             musicSync: false            // Anger doesn't sync to music - chaotic
         },

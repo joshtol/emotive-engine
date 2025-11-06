@@ -241,31 +241,46 @@ export default {
 
     /**
      * 3D core transformation for breathe gesture
-     * Gentle scale pulsing with subtle glow variation
+     * Dramatic breathing with expansion/contraction and glow pulsing
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
      * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
      */
     '3d': {
         evaluate(progress, motion) {
-            const config = { ...this.config, ...motion };
+            const config = motion.config || {};
+            const breathRate = config.breathRate || 0.3;
 
-            // Breathing phase - oscillates between exhale and inhale
-            const breathPhase = (Math.sin(progress * Math.PI * 2 * config.breathRate) + 1) / 2;
+            // Breathing phase - smooth sine wave oscillation
+            const breathPhase = Math.sin(progress * Math.PI * 2 * breathRate);
 
-            // Scale oscillation (inhale = larger, exhale = smaller)
-            const scaleAmount = config.scaleAmount || 0.25;
-            const scale = 1.0 + (breathPhase - 0.5) * scaleAmount;
+            // Fade-out envelope for smooth return to neutral at end
+            // Last 20% of animation fades back to neutral
+            const fadeOutStart = 0.8;
+            let envelope = 1.0;
+            if (progress > fadeOutStart) {
+                const fadeProgress = (progress - fadeOutStart) / (1.0 - fadeOutStart);
+                // Ease-out cubic for smooth deceleration
+                envelope = 1.0 - (fadeProgress * fadeProgress * fadeProgress);
+            }
 
-            // Glow oscillation (inhale = brighter, exhale = dimmer)
-            const glowAmount = config.glowAmount || 0.4;
-            const glowIntensity = 1.0 + (breathPhase - 0.5) * glowAmount;
+            // Dramatic scale pulsing - exhale (0.7x) to inhale (1.4x)
+            const scaleOffset = breathPhase * 0.35 * envelope; // Apply envelope
+            const scale = 1.0 + scaleOffset; // Range: 0.65 to 1.35, fading to 1.0
+
+            // Dramatic glow pulsing - dim on exhale, bright on inhale
+            // Exhale (dim): 0.5, Inhale (bright): 2.5
+            const glowOffset = breathPhase * 1.0 * envelope; // Apply envelope
+            const glowIntensity = 1.5 + glowOffset; // Range: 0.5 to 2.5
+
+            // Slight Y-axis position shift - rise on inhale, lower on exhale
+            const yOffset = breathPhase * 0.05 * envelope; // Apply envelope
 
             return {
-                position: [0, 0, 0],
+                position: [0, yOffset, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity
+                glowIntensity: 1.0 + glowOffset // Fade glow back toward neutral (1.0)
             };
         }
     }

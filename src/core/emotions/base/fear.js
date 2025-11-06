@@ -20,7 +20,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#8A2BE2',       // Dark violet (BlueViolet) - more ominous
-        glowIntensity: 0.9,         // Slightly stronger, pulsing glow
+        glowIntensity: 0.85,        // Calibrated for glass visibility
         particleRate: 18,           // More rapid nervous emission
         minParticles: 4,            // Constant anxious presence
         maxParticles: 16,           // Scattered fearful display
