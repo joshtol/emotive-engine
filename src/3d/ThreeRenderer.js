@@ -329,6 +329,11 @@ export class ThreeRenderer {
 
         // Swap to new geometry
         this.coreMesh.geometry = newGeometry;
+
+        // Recreate inner core to match new geometry (if in glass mode)
+        if (this.materialMode === 'glass') {
+            this.createInnerCore();
+        }
     }
 
     /**
@@ -429,14 +434,68 @@ export class ThreeRenderer {
     createInnerCore() {
         // Remove existing inner core if present
         if (this.innerCore) {
-            this.scene.remove(this.innerCore);
+            // Inner core is a child of coreMesh, not scene
+            if (this.coreMesh) {
+                this.coreMesh.remove(this.innerCore);
+            }
             this.innerCore.geometry.dispose();
             this.innerCore.material.dispose();
             this.innerCore = null;
         }
 
-        // Create smaller geometry for inner core (20% scale of outer for thin lightsaber effect)
-        const coreGeometry = new THREE.IcosahedronGeometry(0.2, 2);
+        if (!this.coreMesh || !this.coreMesh.geometry) return;
+
+        // Detect geometry type and create matching inner core
+        const outerGeometry = this.coreMesh.geometry;
+        let coreGeometry;
+
+        console.log('🔍 Creating inner core:', {
+            type: outerGeometry.type,
+            hasParams: !!outerGeometry.parameters,
+            tube: outerGeometry.parameters?.tube,
+            radius: outerGeometry.parameters?.radius
+        });
+
+        // Check geometry type by constructor or parameters
+        if (outerGeometry.type === 'TorusGeometry' || outerGeometry.parameters?.tube !== undefined) {
+            // TORUS: Create thinner torus that follows the donut hole
+            console.log('✅ Detected TORUS, creating torus inner core');
+            const params = outerGeometry.parameters;
+            const radius = params.radius || 1.0;
+            const tubeRadius = (params.tube || 0.4) * 0.25; // Much thinner tube for lightsaber effect
+            const radialSegments = params.radialSegments || 16;
+            const tubularSegments = params.tubularSegments || 100;
+            coreGeometry = new THREE.TorusGeometry(radius, tubeRadius, radialSegments, tubularSegments);
+        }
+        else if (outerGeometry.type === 'SphereGeometry') {
+            // SPHERE: Smaller sphere
+            const params = outerGeometry.parameters;
+            const radius = (params.radius || 1.0) * 0.2;
+            coreGeometry = new THREE.SphereGeometry(radius, 32, 32);
+        }
+        else if (outerGeometry.type === 'BoxGeometry') {
+            // BOX/CUBE: Smaller box
+            const params = outerGeometry.parameters;
+            const width = (params.width || 1.0) * 0.2;
+            const height = (params.height || 1.0) * 0.2;
+            const depth = (params.depth || 1.0) * 0.2;
+            coreGeometry = new THREE.BoxGeometry(width, height, depth);
+        }
+        else if (outerGeometry.type === 'IcosahedronGeometry' || outerGeometry.type === 'OctahedronGeometry') {
+            // CRYSTAL SHAPES: Smaller version (20% scale works perfectly)
+            const params = outerGeometry.parameters;
+            const radius = (params.radius || 1.0) * 0.2;
+            const detail = params.detail || 2;
+            if (outerGeometry.type === 'IcosahedronGeometry') {
+                coreGeometry = new THREE.IcosahedronGeometry(radius, detail);
+            } else {
+                coreGeometry = new THREE.OctahedronGeometry(radius, detail);
+            }
+        }
+        else {
+            // DEFAULT: Use small icosahedron for unknown geometries
+            coreGeometry = new THREE.IcosahedronGeometry(0.2, 2);
+        }
 
         // Bright white emissive material for lightsaber effect
         const coreMaterial = new THREE.MeshStandardMaterial({
