@@ -379,7 +379,8 @@ export class ThreeRenderer {
                     float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), fresnelPower);
 
                     // Combine white core with colored glow
-                    vec3 finalColor = coreColor + (glowColor * glowIntensity * fresnel);
+                    // Both core and glow respect glowIntensity for proper on/off toggle
+                    vec3 finalColor = (coreColor * glowIntensity) + (glowColor * glowIntensity * fresnel);
 
                     gl_FragColor = vec4(finalColor, 1.0);
                 }
@@ -749,7 +750,8 @@ export class ThreeRenderer {
             scale = 1.0,
             glowColor = [1, 1, 1],
             glowIntensity = 1.0,
-            glowColorHex = null  // Hex color for luminance normalization
+            glowColorHex = null,  // Hex color for luminance normalization
+            hasActiveGesture = false  // Whether a gesture is currently active
         } = params;
 
         // Update camera controls (required for damping and auto-rotate)
@@ -769,10 +771,26 @@ export class ThreeRenderer {
                 this._tempColor.setRGB(...glowColor);
                 this.coreMesh.material.uniforms.glowColor.value.lerp(this._tempColor, 0.15);
 
-                // Normalize intensity to prevent huge brightness differences
-                const normalizedIntensity = this.normalizeIntensity(glowIntensity);
+                // Normalize intensity to prevent huge brightness differences between emotions
+                // Use wider range during gestures to make effects visible
+                // Special case: if glowIntensity is 0 (glow disabled), pass 0 directly
+                let targetIntensity;
+                if (glowIntensity === 0) {
+                    targetIntensity = 0;
+                } else {
+                    if (hasActiveGesture) {
+                        // During gestures: bypass normalization entirely, use raw intensity
+                        // Direct mapping: gesture outputs 1.0-1.8 → shader sees 1.0-1.8
+                        targetIntensity = glowIntensity;
+                    } else {
+                        // Normal state: use normalized intensity for consistent emotions
+                        targetIntensity = this.normalizeIntensity(glowIntensity);
+                    }
+                }
                 const currentIntensity = this.coreMesh.material.uniforms.glowIntensity.value;
-                this.coreMesh.material.uniforms.glowIntensity.value += (normalizedIntensity - currentIntensity) * 0.15;
+                // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
+                const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
+                this.coreMesh.material.uniforms.glowIntensity.value += (targetIntensity - currentIntensity) * lerpSpeed;
             } else if (this.coreMesh.material.emissive) {
                 // MeshPhysicalMaterial (glass material) - update emissive properties
                 // BLOOM + COLOR SOLUTION:
@@ -788,10 +806,18 @@ export class ThreeRenderer {
                 // But keep base multiplier low to minimize remaining differences
                 const compensatedIntensity = glowIntensity * 0.15; // Much lower than glow mode
                 const currentEmissiveIntensity = this.coreMesh.material.emissiveIntensity;
-                this.coreMesh.material.emissiveIntensity += (compensatedIntensity - currentEmissiveIntensity) * 0.15;
+                // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
+                const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
+                this.coreMesh.material.emissiveIntensity += (compensatedIntensity - currentEmissiveIntensity) * lerpSpeed;
 
                 // Keep base color white for clean glass
                 this.coreMesh.material.color.lerp(this._white, 0.15);
+            }
+
+            // Control inner core visibility based on glow intensity
+            if (this.innerCore) {
+                // Hide inner core when glow is disabled (intensity = 0)
+                this.innerCore.visible = glowIntensity > 0;
             }
         }
 

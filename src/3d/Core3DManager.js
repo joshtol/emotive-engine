@@ -280,7 +280,7 @@ export class Core3DManager {
      */
     setCoreGlowEnabled(enabled) {
         this.coreGlowEnabled = enabled;
-        console.log(`Core glow ${enabled ? 'enabled' : 'disabled'}`);
+        console.log(`🔦 Core glow toggle: ${enabled ? 'enabled' : 'disabled'}, coreGlowEnabled=${this.coreGlowEnabled}`);
     }
 
     /**
@@ -294,7 +294,7 @@ export class Core3DManager {
 
     /**
      * Set glow intensity override
-     * @param {number} intensity - Glow intensity value (typically 0.0 to 2.0), or null to clear override
+     * @param {number} intensity - Glow intensity value (0.3-10.0 range for auto system, 0.8-1.2 for normalized), or null to clear override
      */
     setGlowIntensity(intensity) {
         this.glowIntensityOverride = intensity;
@@ -302,6 +302,28 @@ export class Core3DManager {
             this.glowIntensity = intensity;
             this.baseGlowIntensity = intensity;
         }
+    }
+
+    /**
+     * Convert linear slider value (0-100) to logarithmic glow intensity (0.3-10.0)
+     * Use this for UI sliders to make intensity changes feel linear to the user
+     *
+     * @param {number} sliderValue - Linear slider value (0-100)
+     * @returns {number} Logarithmic intensity value (0.3-10.0)
+     *
+     * @example
+     * const sliderVal = 50; // Middle of slider
+     * const intensity = core3d.sliderToIntensity(sliderVal);
+     * core3d.setGlowIntensity(intensity);
+     */
+    sliderToIntensity(sliderValue) {
+        // Map 0-100 to 0.3-10.0 using exponential curve
+        // This makes the slider feel linear while outputting the wide range the system expects
+        const normalized = sliderValue / 100; // 0-1
+        const min = 0.3;
+        const max = 10.0;
+        // Exponential mapping: intensity = min * (max/min)^normalized
+        return min * Math.pow(max / min, normalized);
     }
 
     /**
@@ -409,7 +431,9 @@ export class Core3DManager {
                     };
                 }
 
-                return gesture2D['3d'].evaluate(t, motion);
+                // Call with gesture2D as context so 'this.config' works
+                const result = gesture2D['3d'].evaluate.call(gesture2D, t, motion);
+                return result;
             },
             callbacks: {
                 onUpdate: (props, _progress) => {
@@ -421,7 +445,9 @@ export class Core3DManager {
                     }
                     if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
                     // Apply glow intensity as multiplier on base intensity (not absolute override)
-                    if (props.glowIntensity !== undefined) this.glowIntensity = this.baseGlowIntensity * props.glowIntensity;
+                    if (props.glowIntensity !== undefined) {
+                        this.glowIntensity = this.baseGlowIntensity * props.glowIntensity;
+                    }
                 },
                 onComplete: () => {
                     // Clean up gesture
@@ -609,20 +635,19 @@ export class Core3DManager {
         }
 
         // Calculate effective glow intensity (blink boost applied at render time, non-mutating)
-        const blinkBoost = blinkState.isBlinking && blinkState.glowBoost ? blinkState.glowBoost : 0;
+        // Use multiplicative blending (1.0 + boost) so fade can still reach 0
+        const blinkBoostMultiplier = blinkState.isBlinking && blinkState.glowBoost ? (1.0 + blinkState.glowBoost) : 1.0;
 
-        // In glass mode, always pass glow intensity (emissive multiplier controls visibility)
-        // In glow mode, respect coreGlowEnabled toggle for hard on/off
-        const isGlassMode = this.renderer.materialMode === 'glass';
-        const effectiveGlowIntensity = (isGlassMode || this.coreGlowEnabled)
-            ? this.glowIntensity + blinkBoost
+        // Respect coreGlowEnabled toggle for both glass and glow modes
+        // When disabled, set intensity to 0 which hides inner core and emissive glow
+        // Also multiply by virtual particle opacity for fade/ghost effects
+        const baseIntensity = this.coreGlowEnabled
+            ? this.glowIntensity * blinkBoostMultiplier
             : 0.0;
 
-        // Debug logging every 60 frames (~1 second)
-        if (this.frameCount % 60 === 0) {
-            console.log(`💡 Rendering ${this.emotion}: base=${this.baseGlowIntensity.toFixed(3)}, current=${this.glowIntensity.toFixed(3)}, effective=${effectiveGlowIntensity.toFixed(3)}`);
-        }
-        this.frameCount = (this.frameCount || 0) + 1;
+        const virtualParticle = this.emotiveEngine?.getVirtualParticle();
+        const opacity = virtualParticle?.opacity ?? 1.0;
+        const effectiveGlowIntensity = baseIntensity * opacity;
 
         // Update bloom pass with effective glow intensity (smooth transitions)
         this.renderer.updateBloom(effectiveGlowIntensity);
@@ -634,7 +659,8 @@ export class Core3DManager {
             scale: finalScale,
             glowColor: this.glowColor,
             glowColorHex: this.glowColorHex,  // For bloom luminance normalization
-            glowIntensity: effectiveGlowIntensity
+            glowIntensity: effectiveGlowIntensity,
+            hasActiveGesture: this.animator.animations.length > 0  // Faster lerp during gestures
         });
     }
 

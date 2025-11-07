@@ -219,9 +219,9 @@ export default {
             const config = { ...this.config, ...motion };
             const easeProgress = -(Math.cos(Math.PI * progress) - 1) / 2;
 
-            // Calculate glow pulse
-            let glowValue;
-            const frequency = config.frequency || 1;
+            // Calculate glow pulse - single rise and fall (not oscillating)
+            // Use sin(progress * π) to go: 0 → 1 → 0 (single pulse)
+            const glowValue = Math.sin(easeProgress * Math.PI);
             let glowAmount = config.glowAmount || 0.8;
 
             // Apply rhythm modulation if present
@@ -230,18 +230,9 @@ export default {
                 glowAmount *= (motion.rhythmModulation.accentMultiplier || 1);
             }
 
-            const rawPulse = (easeProgress * frequency * 2) % 2;
-            const holdPeak = config.holdPeak || 0.3;
-
-            if (holdPeak > 0 && rawPulse > (1 - holdPeak) && rawPulse < (1 + holdPeak)) {
-                glowValue = 1;
-            } else {
-                glowValue = Math.sin(easeProgress * Math.PI * 2 * frequency);
-            }
-
-            // Normalize glow intensity to ±25% max
-            const normalizedGlowVariation = Math.max(-0.25, Math.min(0.25, glowValue * glowAmount));
-            const glowIntensity = 1.0 + normalizedGlowVariation;
+            // Glow adds brightness (doesn't go negative)
+            // Maps 0→1→0 to 0%→+80%→0% intensity increase
+            const glowIntensity = 1.0 + (glowValue * glowAmount);
 
             // Very subtle scale
             const scaleAmount = config.scaleAmount || 0.1;

@@ -20,7 +20,8 @@ export default {
     
     // Default configuration
     config: {
-        fadeIn: false,      // Enable fade in effect
+        duration: 2000,     // 2 second duration (longer for lerping to catch up)
+        fadeIn: true,       // Enable fade in effect (for fade-out-and-back)
         fadeOut: true,      // Enable fade out effect
         minOpacity: 0,      // Minimum opacity level
         maxOpacity: 1       // Maximum opacity level
@@ -127,7 +128,7 @@ export default {
 
     /**
      * 3D core transformation for fade gesture
-     * Opacity fade translates to glowIntensity fade
+     * Opacity fade translates to glowIntensity multiplier
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
      * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
@@ -137,19 +138,22 @@ export default {
             const config = { ...this.config, ...motion };
 
             let glowIntensity;
-            // Normalized fade range: 0.7 to 1.3 (±30% max)
+            const minOpacity = config.minOpacity ?? 0.0;
+            const maxOpacity = config.maxOpacity ?? 1.0;
+
             if (config.fadeIn && !config.fadeOut) {
-                // Fade in - glow increases from 0.7 to 1.3
-                glowIntensity = 0.7 + 0.6 * progress;
+                // Fade in only - glow increases from minOpacity to maxOpacity
+                glowIntensity = minOpacity + (maxOpacity - minOpacity) * progress;
             } else if (config.fadeOut && !config.fadeIn) {
-                // Fade out - glow decreases from 1.3 to 0.7
-                glowIntensity = 1.3 - 0.6 * progress;
+                // Fade out only - glow decreases from maxOpacity to minOpacity
+                glowIntensity = maxOpacity - (maxOpacity - minOpacity) * progress;
             } else {
-                // Fade in then out: 0.7 → 1.3 → 0.7
+                // Fade out then back in: maxOpacity → minOpacity → maxOpacity
+                // This creates the classic "fade" effect (bright → dark → bright)
                 if (progress < 0.5) {
-                    glowIntensity = 0.7 + 0.6 * (progress * 2);
+                    glowIntensity = maxOpacity - (maxOpacity - minOpacity) * (progress * 2);
                 } else {
-                    glowIntensity = 1.3 - 0.6 * ((progress - 0.5) * 2);
+                    glowIntensity = minOpacity + (maxOpacity - minOpacity) * ((progress - 0.5) * 2);
                 }
             }
 
