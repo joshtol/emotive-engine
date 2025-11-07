@@ -26,6 +26,35 @@
  */
 
 /**
+ * Normalize color to have equal luminance across all colors
+ * This ensures bloom pass sees the same brightness regardless of color hue
+ *
+ * @param {string} hexColor - Hex color code (e.g., '#FF6B35')
+ * @param {number} targetLuminance - Target luminance value (default 0.5)
+ * @returns {Object} RGB object with normalized values {r, g, b}
+ *
+ * @example
+ * normalizeColorLuminance('#FFEB3B', 0.5) // Scales down bright yellow
+ * normalizeColorLuminance('#6B46C1', 0.5) // Scales up dark purple
+ */
+export function normalizeColorLuminance(hexColor, targetLuminance = 0.5) {
+    const currentLuminance = calculateLuminance(hexColor);
+    const scaleFactor = targetLuminance / Math.max(currentLuminance, 0.01);
+
+    // Get RGB values
+    const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+    const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+    const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+
+    // Scale RGB to achieve target luminance
+    return {
+        r: Math.min(1.0, r * scaleFactor),
+        g: Math.min(1.0, g * scaleFactor),
+        b: Math.min(1.0, b * scaleFactor)
+    };
+}
+
+/**
  * Calculate relative luminance using W3C/WCAG sRGB formula
  * Uses ITU-R BT.709 coefficients for color-to-luminance conversion
  *

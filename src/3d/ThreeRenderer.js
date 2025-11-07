@@ -17,6 +17,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
 
 export class ThreeRenderer {
     constructor(canvas, options = {}) {
@@ -304,6 +305,12 @@ export class ThreeRenderer {
         }
 
         this.scene.add(this.coreMesh);
+
+        // Create white inner core for glass mode (lightsaber effect)
+        if (this.materialMode === 'glass') {
+            this.createInnerCore();
+        }
+
         return this.coreMesh;
     }
 
@@ -383,7 +390,8 @@ export class ThreeRenderer {
      */
     createGlassMaterial() {
         // Store default emissive multiplier (can be adjusted via UI)
-        this.glassEmissiveMultiplier = 1.1;
+        // Using white emissive for uniform bloom, so this needs to be low
+        this.glassEmissiveMultiplier = 0.60;
 
         const material = new THREE.MeshPhysicalMaterial({
             transmission: 1.0,           // Full interior transparency (refraction)
@@ -415,6 +423,38 @@ export class ThreeRenderer {
     }
 
     /**
+     * Create white inner core for lightsaber effect in glass mode
+     * Creates a smaller mesh inside the glass crystal with bright white emissive
+     */
+    createInnerCore() {
+        // Remove existing inner core if present
+        if (this.innerCore) {
+            this.scene.remove(this.innerCore);
+            this.innerCore.geometry.dispose();
+            this.innerCore.material.dispose();
+            this.innerCore = null;
+        }
+
+        // Create smaller geometry for inner core (20% scale of outer for thin lightsaber effect)
+        const coreGeometry = new THREE.IcosahedronGeometry(0.2, 2);
+
+        // Bright white emissive material for lightsaber effect
+        const coreMaterial = new THREE.MeshStandardMaterial({
+            emissive: 0xffffff,
+            emissiveIntensity: 2.0,  // Bright white core
+            color: 0xffffff,
+            transparent: false,
+            opacity: 1.0
+        });
+
+        this.innerCore = new THREE.Mesh(coreGeometry, coreMaterial);
+        this.innerCore.name = 'innerCore';
+
+        // Add inner core as child of main core mesh so it transforms with it
+        this.coreMesh.add(this.innerCore);
+    }
+
+    /**
      * Set material mode and swap materials
      * @param {string} mode - 'glow' or 'glass'
      */
@@ -441,6 +481,17 @@ export class ThreeRenderer {
         // Swap material
         const newMaterial = mode === 'glass' ? this.glassMaterial : this.glowMaterial;
         this.coreMesh.material = newMaterial;
+
+        // Create or remove inner core based on mode
+        if (mode === 'glass') {
+            this.createInnerCore();
+        } else if (this.innerCore) {
+            // Remove inner core when switching to glow mode
+            this.coreMesh.remove(this.innerCore);
+            this.innerCore.geometry.dispose();
+            this.innerCore.material.dispose();
+            this.innerCore = null;
+        }
 
         console.log(`Material mode set to: ${mode}`);
     }
@@ -523,17 +574,39 @@ export class ThreeRenderer {
         return 0.8 + normalized * 0.4; // Maps to 0.8-1.2 range (±20% variation)
     }
 
+    /**
+     * Calculate relative luminance of RGB color (0-1 range)
+     * Uses sRGB formula with gamma correction
+     * @param {number} r - Red (0-1)
+     * @param {number} g - Green (0-1)
+     * @param {number} b - Blue (0-1)
+     * @returns {number} Relative luminance (0-1)
+     */
+    calculateColorLuminance(r, g, b) {
+        const linearize = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
+    }
+
     updateBloom(targetIntensity, transitionSpeed = 0.1) {
         if (this.bloomPass) {
-            // Normalize bloom strength to narrow range (1.2 - 1.8)
-            // Prevents exponential brightness differences between emotions
             const normalized = this.normalizeIntensity(targetIntensity);
-            const targetStrength = 1.0 + normalized * 0.8; // Maps to 1.0-1.8 range
-            const targetThreshold = 0.85; // Keep threshold constant for consistency
+            const targetThreshold = 0.85; // Fixed threshold
+
+            // Glass mode needs much lower bloom strength to avoid haziness
+            // Since we're using white emissive at fixed intensity for uniformity
+            let targetStrength, targetRadius;
+            if (this.materialMode === 'glass') {
+                targetStrength = 0.3;  // Low strength for subtle glass glow
+                targetRadius = 0.2;     // Tight radius to reduce haze
+            } else {
+                // Glow mode uses variable bloom
+                targetStrength = 1.0 + normalized * 0.8; // Maps to 1.0-1.8 range
+                targetRadius = 0.4;
+            }
 
             this.bloomPass.strength += (targetStrength - this.bloomPass.strength) * transitionSpeed;
             this.bloomPass.threshold += (targetThreshold - this.bloomPass.threshold) * transitionSpeed;
-            this.bloomPass.radius = 0.4; // Keep radius constant
+            this.bloomPass.radius = targetRadius;
         }
     }
 
@@ -616,7 +689,8 @@ export class ThreeRenderer {
             rotation = [0, 0, 0],
             scale = 1.0,
             glowColor = [1, 1, 1],
-            glowIntensity = 1.0
+            glowIntensity = 1.0,
+            glowColorHex = null  // Hex color for luminance normalization
         } = params;
 
         // Update camera controls (required for damping and auto-rotate)
@@ -642,20 +716,23 @@ export class ThreeRenderer {
                 this.coreMesh.material.uniforms.glowIntensity.value += (normalizedIntensity - currentIntensity) * 0.15;
             } else if (this.coreMesh.material.emissive) {
                 // MeshPhysicalMaterial (glass material) - update emissive properties
+                // BLOOM + COLOR SOLUTION:
+                // User wants BOTH uniform bloom AND visible emotion colors
+                // Compromise: Use colored emissive with per-color intensity compensation
+                // to MINIMIZE (not eliminate) brightness differences
+
+                // Apply emotion color to emissive
                 this._tempColor.setRGB(...glowColor);
                 this.coreMesh.material.emissive.lerp(this._tempColor, 0.15);
 
-                // Normalize intensity then apply multiplier for glass visibility
-                const normalizedIntensity = this.normalizeIntensity(glowIntensity);
-                const multiplier = this.glassEmissiveMultiplier || 1.5;
-                const targetEmissiveIntensity = normalizedIntensity * multiplier;
+                // Use the ORIGINAL glowIntensity which compensates for color luminance
+                // But keep base multiplier low to minimize remaining differences
+                const compensatedIntensity = glowIntensity * 0.15; // Much lower than glow mode
                 const currentEmissiveIntensity = this.coreMesh.material.emissiveIntensity;
-                this.coreMesh.material.emissiveIntensity += (targetEmissiveIntensity - currentEmissiveIntensity) * 0.15;
+                this.coreMesh.material.emissiveIntensity += (compensatedIntensity - currentEmissiveIntensity) * 0.15;
 
-                // Also tint the base color slightly for more vibrant glow
-                this._tempColor2.setRGB(...glowColor);
-                this._tempColor2.lerp(this._white, 0.7); // Mix 30% glow color with 70% white
-                this.coreMesh.material.color.lerp(this._tempColor2, 0.15);
+                // Keep base color white for clean glass
+                this.coreMesh.material.color.lerp(this._white, 0.15);
             }
         }
 
@@ -693,6 +770,16 @@ export class ThreeRenderer {
      * Cleanup resources
      */
     destroy() {
+        // Dispose inner core
+        if (this.innerCore) {
+            if (this.coreMesh) {
+                this.coreMesh.remove(this.innerCore);
+            }
+            this.innerCore.geometry.dispose();
+            this.innerCore.material.dispose();
+            this.innerCore = null;
+        }
+
         // Dispose core mesh
         if (this.coreMesh) {
             this.scene.remove(this.coreMesh);

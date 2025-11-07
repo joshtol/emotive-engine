@@ -89,6 +89,7 @@ export class Core3DManager {
         this.emotion = options.emotion || 'neutral';
         this.undertone = options.undertone || null;
         this.glowColor = [1.0, 1.0, 1.0]; // RGB
+        this.glowColorHex = '#FFFFFF'; // Hex color for luminance normalization
         this.glowIntensity = 1.0;
         this.coreGlowEnabled = true; // Toggle to enable/disable core glow
         this.glowIntensityOverride = null; // Manual override for testing
@@ -171,6 +172,8 @@ export class Core3DManager {
                 rgb = applyUndertoneSaturation(rgb, undertone);
 
                 this.glowColor = rgb;
+                // Store hex color for bloom luminance normalization
+                this.glowColorHex = emotionData.visual.glowColor;
 
                 // Calculate intensity using universal filter based on color luminance
                 // This ensures consistent visibility across all emotions regardless of color brightness
@@ -630,6 +633,7 @@ export class Core3DManager {
             rotation: this.rotation,
             scale: finalScale,
             glowColor: this.glowColor,
+            glowColorHex: this.glowColorHex,  // For bloom luminance normalization
             glowIntensity: effectiveGlowIntensity
         });
     }
