@@ -787,7 +787,8 @@ export class ThreeRenderer {
             glowColor = [1, 1, 1],
             glowIntensity = 1.0,
             glowColorHex = null,  // Hex color for luminance normalization
-            hasActiveGesture = false  // Whether a gesture is currently active
+            hasActiveGesture = false,  // Whether a gesture is currently active
+            calibrationRotation = [0, 0, 0]  // Manual rotation offset applied on top of animations
         } = params;
 
         // Update camera controls (required for damping and auto-rotate)
@@ -798,7 +799,15 @@ export class ThreeRenderer {
         // Update core mesh transform
         if (this.coreMesh) {
             this.coreMesh.position.set(...position);
-            this.coreMesh.rotation.set(...rotation);
+
+            // Apply animated rotation + calibration offset
+            // Calibration rotation is added on top of animation system rotation
+            this.coreMesh.rotation.set(
+                rotation[0] + calibrationRotation[0],
+                rotation[1] + calibrationRotation[1],
+                rotation[2] + calibrationRotation[2]
+            );
+
             this.coreMesh.scale.setScalar(scale);
 
             // Update material properties based on material type

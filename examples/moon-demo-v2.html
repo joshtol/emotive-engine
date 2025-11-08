@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moon Phase Demo V2 (UNCACHED) - Emotive Engine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: white;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+
+        .left-menu,
+        .right-menu {
+            width: 18vw;
+            min-width: 200px;
+            max-width: 280px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 1.5vw;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .left-menu {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .right-menu {
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .center-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: 2vmin;
+        }
+
+        .section {
+            margin-bottom: clamp(15px, 2vw, 25px);
+            padding-bottom: clamp(12px, 1.5vw, 20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: clamp(11px, 1vw, 13px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        .current-phase {
+            text-align: center;
+            font-size: clamp(32px, 3vw, 42px);
+            margin: clamp(10px, 1.2vw, 15px) 0;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+        }
+
+        .current-name {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: clamp(11px, 1vw, 13px);
+            margin-bottom: clamp(10px, 1.2vw, 15px);
+        }
+
+        .phase-grid,
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(5px, 0.6vw, 8px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+        }
+
+        button {
+            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: clamp(6px, 0.6vw, 8px);
+            cursor: pointer;
+            font-size: clamp(9px, 0.8vw, 11px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(2px, 0.3vw, 4px);
+            min-width: 0;
+            width: 100%;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        .slider-control {
+            margin-bottom: clamp(10px, 1.2vw, 15px);
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: clamp(4px, 0.5vw, 6px);
+            font-size: clamp(10px, 0.9vw, 12px);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .slider-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .increment-controls {
+            display: flex;
+            gap: clamp(4px, 0.5vw, 6px);
+            margin-bottom: clamp(6px, 0.7vw, 8px);
+        }
+
+        .increment-btn {
+            flex: 1;
+            padding: clamp(4px, 0.5vw, 6px);
+            font-size: clamp(10px, 0.9vw, 12px);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: clamp(12px, 1.2vw, 16px);
+            height: clamp(12px, 1.2vw, 16px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: clamp(12px, 1.2vw, 16px);
+            height: clamp(12px, 1.2vw, 16px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+        }
+
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: clamp(6px, 0.6vw, 8px);
+            padding: clamp(10px, 1vw, 12px);
+            font-size: clamp(10px, 0.85vw, 11px);
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        #moon-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
+            box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+        }
+
+        #moon-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Mobile/Tablet Responsive */
+        @media (max-width: 1000px) {
+            body {
+                flex-direction: column;
+            }
+
+            .left-menu,
+            .right-menu {
+                width: 100%;
+                min-width: unset;
+                max-width: unset;
+                max-height: 35vh;
+                border: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 15px;
+            }
+
+            .left-menu {
+                order: 1;
+            }
+
+            .center-content {
+                order: 2;
+                flex: 1;
+                min-height: 30vh;
+            }
+
+            .right-menu {
+                order: 3;
+                border-bottom: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .phase-grid,
+            .emotion-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .current-phase {
+                font-size: clamp(28px, 6vw, 36px);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .phase-grid,
+            .emotion-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .left-menu,
+            .right-menu {
+                padding: 12px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .left-menu::-webkit-scrollbar,
+        .right-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .left-menu::-webkit-scrollbar-track,
+        .right-menu::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .left-menu::-webkit-scrollbar-thumb,
+        .right-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .left-menu::-webkit-scrollbar-thumb:hover,
+        .right-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="left-menu">
+        <div class="section">
+            <h2>Current Phase</h2>
+            <div class="current-phase" id="current-emoji">🌑</div>
+            <div class="current-name" id="current-name">New Moon</div>
+        </div>
+
+        <div class="section">
+            <h2>Named Phases</h2>
+            <div class="phase-grid">
+                <button data-phase="new" class="active">🌑 New</button>
+                <button data-phase="waxing-crescent">🌒 Waxing Crescent</button>
+                <button data-phase="first-quarter">🌓 First Quarter</button>
+                <button data-phase="waxing-gibbous">🌔 Waxing Gibbous</button>
+                <button data-phase="full">🌕 Full</button>
+                <button data-phase="waning-gibbous">🌖 Waning Gibbous</button>
+                <button data-phase="last-quarter">🌗 Last Quarter</button>
+                <button data-phase="waning-crescent">🌘 Waning Crescent</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Moon Rotation (Calibration)</h2>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>X-Axis (Tilt Up/Down)</span>
+                    <span class="slider-value" id="rotation-x-value">26.0°</span>
+                </div>
+                <div class="increment-controls">
+                    <button class="increment-btn" data-axis="rotX" data-delta="-5">-5°</button>
+                    <button class="increment-btn" data-axis="rotX" data-delta="-1">-1°</button>
+                    <button class="increment-btn" data-axis="rotX" data-delta="1">+1°</button>
+                    <button class="increment-btn" data-axis="rotX" data-delta="5">+5°</button>
+                </div>
+                <input type="range" id="rotation-x-slider" min="-180" max="180" step="0.5" value="26.0">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Y-Axis (Turn Left/Right)</span>
+                    <span class="slider-value" id="rotation-y-value">-91.5°</span>
+                </div>
+                <div class="increment-controls">
+                    <button class="increment-btn" data-axis="rotY" data-delta="-5">-5°</button>
+                    <button class="increment-btn" data-axis="rotY" data-delta="-1">-1°</button>
+                    <button class="increment-btn" data-axis="rotY" data-delta="1">+1°</button>
+                    <button class="increment-btn" data-axis="rotY" data-delta="5">+5°</button>
+                </div>
+                <input type="range" id="rotation-y-slider" min="-180" max="180" step="0.5" value="-91.5">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Z-Axis (Roll CCW/CW)</span>
+                    <span class="slider-value" id="rotation-z-value">13.5°</span>
+                </div>
+                <div class="increment-controls">
+                    <button class="increment-btn" data-axis="rotZ" data-delta="-5">-5°</button>
+                    <button class="increment-btn" data-axis="rotZ" data-delta="-1">-1°</button>
+                    <button class="increment-btn" data-axis="rotZ" data-delta="1">+1°</button>
+                    <button class="increment-btn" data-axis="rotZ" data-delta="5">+5°</button>
+                </div>
+                <input type="range" id="rotation-z-slider" min="-180" max="180" step="0.5" value="13.5">
+            </div>
+
+            <button id="reset-rotation" style="width: 100%; margin-top: 8px;">🔄 Reset Calibration</button>
+
+            <div class="info-box" style="margin-top: 10px;">
+                <strong>Classic Earth-facing view</strong><br>
+                Calibrated: X=26°, Y=-91.5°, Z=13.5°<br>
+                Shows "Man in the Moon" orientation
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Shadow Position</h2>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>X Offset (Fine Control)</span>
+                    <span class="slider-value" id="shadow-x-value">0.0</span>
+                </div>
+                <div class="increment-controls">
+                    <button class="increment-btn" data-axis="x" data-delta="-0.5">-0.5</button>
+                    <button class="increment-btn" data-axis="x" data-delta="-0.1">-0.1</button>
+                    <button class="increment-btn" data-axis="x" data-delta="0.1">+0.1</button>
+                    <button class="increment-btn" data-axis="x" data-delta="0.5">+0.5</button>
+                </div>
+                <input type="range" id="shadow-x-slider" min="-200" max="200" step="0.1" value="0">
+            </div>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Y Offset</span>
+                    <span class="slider-value" id="shadow-y-value">0.0</span>
+                </div>
+                <div class="increment-controls">
+                    <button class="increment-btn" data-axis="y" data-delta="-10">-10</button>
+                    <button class="increment-btn" data-axis="y" data-delta="-1">-1</button>
+                    <button class="increment-btn" data-axis="y" data-delta="1">+1</button>
+                    <button class="increment-btn" data-axis="y" data-delta="10">+10</button>
+                </div>
+                <input type="range" id="shadow-y-slider" min="-100" max="100" step="1" value="0">
+            </div>
+            <div class="info-box">
+                <strong>Range: -200 to +200</strong><br>
+                • 0 = Full, 0.7 = Gibbous<br>
+                • 1.0 = Quarter, 1.5 = Crescent<br>
+                • 50-200 = New moon range<br>
+                Use ±0.1 buttons for fine control!<br>
+                Drag slider to find darkest point
+            </div>
+        </div>
+    </div>
+    <div class="center-content">
+        <div id="moon-container"></div>
+    </div>
+    <div class="right-menu">
+        <div class="section">
+            <h2>Emotions</h2>
+            <div class="emotion-grid">
+                <button class="emotion-btn" data-emotion="joy">😊 Joy</button>
+                <button class="emotion-btn" data-emotion="calm">😌 Calm</button>
+                <button class="emotion-btn" data-emotion="excited">🤩 Excited</button>
+                <button class="emotion-btn active" data-emotion="neutral">😐 Neutral</button>
+                <button class="emotion-btn" data-emotion="curious">🤔 Curious</button>
+                <button class="emotion-btn" data-emotion="focused">🎯 Focused</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Camera</h2>
+            <button id="reset-camera">📷 Reset View</button>
+            <div class="info-box" style="margin-top: 10px;">
+                <strong>🔒 Tidally Locked</strong><br>
+                Like the real moon, the same side always faces you. Only the terminator (shadow) moves across the surface as phases change.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>How it works:</strong><br>
+                The shader uses world-space directional lighting with exponential Z decay. The terminator (shadow boundary) moves across the tidally-locked moon surface as you change phases, just like the real lunar cycle!
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Updated: 2025-01-08 - Expanded slider range to -100/+100 + adaptive Z lighting
+        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase } from '../dist/emotive-mascot-3d.js?v=2';
+
+        // Store current rotation values (declared early for use in initialization)
+        // Calibrated to show classic "Man in the Moon" Earth-facing view
+        let currentRotation = { x: 26.0, y: -91.5, z: 13.5 };
+
+        const container = document.getElementById('moon-container');
+        const mascot = new EmotiveMascot3D({
+            canvasId: 'moon',
+            coreGeometry: 'moon',
+            enableParticles: true,
+            enableControls: true,
+            autoRotate: false
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Ensure auto-rotate is OFF for tidal locking (force disable)
+        setTimeout(() => {
+            console.log('🔍 Checking mascot structure:', {
+                hasMascot: !!mascot,
+                hasCore3D: !!mascot.core3D,
+                hasCalibrationRotation: !!mascot.core3D?.calibrationRotation,
+                hasCoreMesh: !!mascot.core3D?.coreMesh,
+                hasRenderer: !!mascot.core3D?.renderer,
+                hasControls: !!mascot.core3D?.renderer?.controls
+            });
+
+            if (mascot.core3D?.renderer?.controls) {
+                mascot.core3D.renderer.controls.autoRotate = false;
+                console.log('🔒 Moon tidally locked - autoRotate forcibly disabled');
+            }
+
+            // Calibration rotation is already initialized in Core3DManager
+            // Just log the current values
+            if (mascot.core3D?.calibrationRotation) {
+                const radX = mascot.core3D.calibrationRotation[0];
+                const radY = mascot.core3D.calibrationRotation[1];
+                const radZ = mascot.core3D.calibrationRotation[2];
+                const degX = (radX * 180 / Math.PI).toFixed(1);
+                const degY = (radY * 180 / Math.PI).toFixed(1);
+                const degZ = (radZ * 180 / Math.PI).toFixed(1);
+                console.log(`🌙 Initial calibration rotation: X=${degX}°, Y=${degY}°, Z=${degZ}°`);
+            } else {
+                console.error('❌ calibrationRotation not found!');
+            }
+        }, 500);
+
+        console.log('✅ Moon demo initialized');
+
+        // Phase name to emoji mapping
+        const phaseEmojis = {
+            'new': '🌑',
+            'waxing-crescent': '🌒',
+            'first-quarter': '🌓',
+            'waxing-gibbous': '🌔',
+            'full': '🌕',
+            'waning-gibbous': '🌖',
+            'last-quarter': '🌗',
+            'waning-crescent': '🌘'
+        };
+
+        const phaseNames = {
+            'new': 'New Moon',
+            'waxing-crescent': 'Waxing Crescent',
+            'first-quarter': 'First Quarter',
+            'waxing-gibbous': 'Waxing Gibbous',
+            'full': 'Full Moon',
+            'waning-gibbous': 'Waning Gibbous',
+            'last-quarter': 'Last Quarter',
+            'waning-crescent': 'Waning Crescent'
+        };
+
+        // Update current phase display
+        function updatePhaseDisplay(phase, emoji = null, name = null) {
+            const emojiEl = document.getElementById('current-emoji');
+            const nameEl = document.getElementById('current-name');
+
+            if (emoji && name) {
+                emojiEl.textContent = emoji;
+                nameEl.textContent = name;
+            } else if (typeof phase === 'string') {
+                emojiEl.textContent = phaseEmojis[phase] || '🌙';
+                nameEl.textContent = phaseNames[phase] || phase;
+            }
+        }
+
+        // Named phase buttons
+        document.querySelectorAll('[data-phase]').forEach(button => {
+            button.addEventListener('click', async () => {
+                const phase = button.dataset.phase;
+                console.log('Setting phase:', phase);
+
+                // Update active state
+                document.querySelectorAll('[data-phase]').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Update display
+                updatePhaseDisplay(phase);
+
+                // Animate phase change
+                if (mascot.core3D?.customMaterial) {
+                    try {
+                        await animateMoonPhase(mascot.core3D.customMaterial, phase, 1500);
+                        console.log(`✅ Phase changed to: ${phase}`);
+                    } catch (err) {
+                        console.error('❌ Phase animation failed:', err);
+                    }
+                } else {
+                    console.warn('⚠️ Moon material not available');
+                }
+            });
+        });
+
+        // Rotation controls - 3 axes
+        const rotationXSlider = document.getElementById('rotation-x-slider');
+        const rotationYSlider = document.getElementById('rotation-y-slider');
+        const rotationZSlider = document.getElementById('rotation-z-slider');
+        const rotationXValue = document.getElementById('rotation-x-value');
+        const rotationYValue = document.getElementById('rotation-y-value');
+        const rotationZValue = document.getElementById('rotation-z-value');
+
+        function updateRotation(axis, degrees) {
+            degrees = Math.max(-180, Math.min(180, degrees));
+            currentRotation[axis] = degrees;
+
+            // Update UI
+            if (axis === 'x') {
+                rotationXValue.textContent = degrees.toFixed(1) + '°';
+                rotationXSlider.value = degrees;
+            } else if (axis === 'y') {
+                rotationYValue.textContent = degrees.toFixed(1) + '°';
+                rotationYSlider.value = degrees;
+            } else if (axis === 'z') {
+                rotationZValue.textContent = degrees.toFixed(1) + '°';
+                rotationZSlider.value = degrees;
+            }
+
+            // Apply rotation via calibrationRotation array (added on top of animations)
+            if (mascot.core3D?.calibrationRotation !== undefined) {
+                const radiansX = currentRotation.x * Math.PI / 180;
+                const radiansY = currentRotation.y * Math.PI / 180;
+                const radiansZ = currentRotation.z * Math.PI / 180;
+
+                mascot.core3D.calibrationRotation[0] = radiansX;
+                mascot.core3D.calibrationRotation[1] = radiansY;
+                mascot.core3D.calibrationRotation[2] = radiansZ;
+
+                console.log(`🌙 Moon calibration: X=${currentRotation.x.toFixed(1)}°, Y=${currentRotation.y.toFixed(1)}°, Z=${currentRotation.z.toFixed(1)}°`);
+            } else {
+                console.error('❌ Cannot rotate - calibrationRotation not available:', {
+                    hasMascot: !!mascot,
+                    hasCore3D: !!mascot?.core3D,
+                    hasCalibrationRotation: !!mascot?.core3D?.calibrationRotation
+                });
+            }
+        }
+
+        rotationXSlider.addEventListener('input', (e) => {
+            updateRotation('x', parseFloat(e.target.value));
+        });
+
+        rotationYSlider.addEventListener('input', (e) => {
+            updateRotation('y', parseFloat(e.target.value));
+        });
+
+        rotationZSlider.addEventListener('input', (e) => {
+            updateRotation('z', parseFloat(e.target.value));
+        });
+
+        // Reset rotation button
+        document.getElementById('reset-rotation').addEventListener('click', () => {
+            updateRotation('x', 26.0);
+            updateRotation('y', -91.5);
+            updateRotation('z', 13.5);
+        });
+
+        // Direct shadow control sliders
+        const shadowXSlider = document.getElementById('shadow-x-slider');
+        const shadowYSlider = document.getElementById('shadow-y-slider');
+        const shadowXValue = document.getElementById('shadow-x-value');
+        const shadowYValue = document.getElementById('shadow-y-value');
+
+        function updateShadow(axis, value) {
+            value = Math.max(-200, Math.min(200, value)); // Extended range for new moon
+
+            if (axis === 'x') {
+                shadowXValue.textContent = value.toFixed(1);
+                shadowXSlider.value = value;
+                if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+                    mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = value;
+                }
+            } else {
+                shadowYValue.textContent = value.toFixed(1);
+                shadowYSlider.value = value;
+                if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+                    mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = value;
+                }
+            }
+        }
+
+        shadowXSlider.addEventListener('input', (e) => {
+            updateShadow('x', parseFloat(e.target.value));
+        });
+
+        shadowYSlider.addEventListener('input', (e) => {
+            updateShadow('y', parseFloat(e.target.value));
+        });
+
+        // Increment buttons
+        document.querySelectorAll('.increment-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const axis = button.dataset.axis;
+                const delta = parseFloat(button.dataset.delta);
+
+                if (axis === 'rotX') {
+                    updateRotation('x', currentRotation.x + delta);
+                } else if (axis === 'rotY') {
+                    updateRotation('y', currentRotation.y + delta);
+                } else if (axis === 'rotZ') {
+                    updateRotation('z', currentRotation.z + delta);
+                } else {
+                    const currentValue = axis === 'x'
+                        ? parseFloat(shadowXSlider.value)
+                        : parseFloat(shadowYSlider.value);
+                    updateShadow(axis, currentValue + delta);
+                }
+            });
+        });
+
+        // Emotion buttons
+        document.querySelectorAll('[data-emotion]').forEach(button => {
+            button.addEventListener('click', () => {
+                const emotion = button.dataset.emotion;
+                console.log('Setting emotion:', emotion);
+
+                // Update active state
+                document.querySelectorAll('[data-emotion]').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Set emotion
+                mascot.setEmotion(emotion);
+            });
+        });
+
+        // Camera controls
+        document.getElementById('reset-camera').addEventListener('click', () => {
+            if (mascot.core3D?.renderer?.resetCamera) {
+                mascot.core3D.renderer.resetCamera();
+                console.log('📷 Camera reset - Moon tidally locked (same side always faces Earth)');
+            }
+        });
+    </script>
+</body>
+</html>

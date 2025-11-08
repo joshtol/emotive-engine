@@ -88,6 +88,22 @@ export class Core3DManager {
         // Create core mesh with geometry (and optional custom material)
         this.coreMesh = this.renderer.createCoreMesh(this.geometry, customMaterial);
 
+        // Calibration rotation offset (applied on top of all animations)
+        // Used for moon orientation calibration
+        this.calibrationRotation = [0, 0, 0]; // [X, Y, Z] in radians
+
+        // Set initial calibration rotation for moon to show classic Earth-facing side
+        // This shows the "Man in the Moon" view with Mare Imbrium upper-right
+        // Calibrated manually: X=26° (tilt), Y=-91.5° (turn), Z=13.5° (roll)
+        if (this.geometryType === 'moon') {
+            this.calibrationRotation = [
+                26.0 * Math.PI / 180,    // X: 26° tilt up/down
+                -91.5 * Math.PI / 180,   // Y: -91.5° turn left/right
+                13.5 * Math.PI / 180     // Z: 13.5° roll CCW/CW
+            ];
+            console.log('🌙 Moon calibration rotation set: X=26.0°, Y=-91.5°, Z=13.5°');
+        }
+
         // Animation controller
         this.animator = new ProceduralAnimator();
 
@@ -229,7 +245,10 @@ export class Core3DManager {
         }
 
         // Initialize or update rotation behavior from 3d config
-        if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
+        // EXCEPTION: Moon is tidally locked - no rotation behavior
+        if (this.geometryType === 'moon') {
+            this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
+        } else if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
             if (this.rotationBehavior) {
                 // Update existing behavior
                 this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
@@ -630,10 +649,12 @@ export class Core3DManager {
         // Always update persistent base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
             this.rotationBehavior.update(deltaTime, this.baseEuler);
-        } else {
+        } else if (this.geometryType !== 'moon') {
             // Fallback: simple Y rotation if no behavior defined
+            // EXCEPT for moon (tidally locked - no rotation)
             this.baseEuler[1] += deltaTime * 0.0003;
         }
+        // Moon gets no rotation update - stays tidally locked
 
         // Apply righting behavior (self-stabilization) after rotation
         // This pulls tilted models back to upright while preserving yaw spin
@@ -736,7 +757,8 @@ export class Core3DManager {
             glowColor: this.glowColor,
             glowColorHex: this.glowColorHex,  // For bloom luminance normalization
             glowIntensity: effectiveGlowIntensity,
-            hasActiveGesture: this.animator.animations.length > 0  // Faster lerp during gestures
+            hasActiveGesture: this.animator.animations.length > 0,  // Faster lerp during gestures
+            calibrationRotation: this.calibrationRotation  // Applied on top of animated rotation
         });
     }
 
