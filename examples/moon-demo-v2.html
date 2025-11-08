@@ -312,7 +312,7 @@
             <div class="slider-control">
                 <div class="slider-label">
                     <span>X-Axis (Tilt Up/Down)</span>
-                    <span class="slider-value" id="rotation-x-value">26.0°</span>
+                    <span class="slider-value" id="rotation-x-value">19.5°</span>
                 </div>
                 <div class="increment-controls">
                     <button class="increment-btn" data-axis="rotX" data-delta="-5">-5°</button>
@@ -320,13 +320,13 @@
                     <button class="increment-btn" data-axis="rotX" data-delta="1">+1°</button>
                     <button class="increment-btn" data-axis="rotX" data-delta="5">+5°</button>
                 </div>
-                <input type="range" id="rotation-x-slider" min="-180" max="180" step="0.5" value="26.0">
+                <input type="range" id="rotation-x-slider" min="-180" max="180" step="0.5" value="19.5">
             </div>
 
             <div class="slider-control">
                 <div class="slider-label">
                     <span>Y-Axis (Turn Left/Right)</span>
-                    <span class="slider-value" id="rotation-y-value">-91.5°</span>
+                    <span class="slider-value" id="rotation-y-value">-91.0°</span>
                 </div>
                 <div class="increment-controls">
                     <button class="increment-btn" data-axis="rotY" data-delta="-5">-5°</button>
@@ -334,7 +334,7 @@
                     <button class="increment-btn" data-axis="rotY" data-delta="1">+1°</button>
                     <button class="increment-btn" data-axis="rotY" data-delta="5">+5°</button>
                 </div>
-                <input type="range" id="rotation-y-slider" min="-180" max="180" step="0.5" value="-91.5">
+                <input type="range" id="rotation-y-slider" min="-180" max="180" step="0.5" value="-91.0">
             </div>
 
             <div class="slider-control">
@@ -355,7 +355,7 @@
 
             <div class="info-box" style="margin-top: 10px;">
                 <strong>Classic Earth-facing view</strong><br>
-                Calibrated: X=26°, Y=-91.5°, Z=13.5°<br>
+                Calibrated: X=19.5°, Y=-91°, Z=13.5°<br>
                 Shows "Man in the Moon" orientation
             </div>
         </div>
@@ -437,7 +437,7 @@
 
         // Store current rotation values (declared early for use in initialization)
         // Calibrated to show classic "Man in the Moon" Earth-facing view
-        let currentRotation = { x: 26.0, y: -91.5, z: 13.5 };
+        let currentRotation = { x: 19.5, y: -91.0, z: 13.5 };
 
         const container = document.getElementById('moon-container');
         const mascot = new EmotiveMascot3D({
@@ -606,8 +606,8 @@
 
         // Reset rotation button
         document.getElementById('reset-rotation').addEventListener('click', () => {
-            updateRotation('x', 26.0);
-            updateRotation('y', -91.5);
+            updateRotation('x', 19.5);
+            updateRotation('y', -91.0);
             updateRotation('z', 13.5);
         });
 

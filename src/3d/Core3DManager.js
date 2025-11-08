@@ -94,14 +94,14 @@ export class Core3DManager {
 
         // Set initial calibration rotation for moon to show classic Earth-facing side
         // This shows the "Man in the Moon" view with Mare Imbrium upper-right
-        // Calibrated manually: X=26° (tilt), Y=-91.5° (turn), Z=13.5° (roll)
+        // Calibrated manually: X=19.5° (tilt), Y=-91.0° (turn), Z=13.5° (roll)
         if (this.geometryType === 'moon') {
             this.calibrationRotation = [
-                26.0 * Math.PI / 180,    // X: 26° tilt up/down
-                -91.5 * Math.PI / 180,   // Y: -91.5° turn left/right
+                19.5 * Math.PI / 180,    // X: 19.5° tilt up/down
+                -91.0 * Math.PI / 180,   // Y: -91.0° turn left/right
                 13.5 * Math.PI / 180     // Z: 13.5° roll CCW/CW
             ];
-            console.log('🌙 Moon calibration rotation set: X=26.0°, Y=-91.5°, Z=13.5°');
+            console.log('🌙 Moon calibration rotation set: X=19.5°, Y=-91.0°, Z=13.5°');
         }
 
         // Animation controller
