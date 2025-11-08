@@ -6,6 +6,7 @@
  */
 
 import * as THREE from 'three';
+import { createMoon } from './Moon.js';
 
 /**
  * Create smooth sphere geometry
@@ -361,6 +362,19 @@ export const THREE_GEOMETRIES = {
             type: 'vertical-squish',
             duration: 140,
             scaleAxis: [1.0, 0.5, 1.0],
+            curve: 'sine'
+        }
+    },
+
+    // Astronomical geometries
+    moon: {
+        geometry: createMoon(64, 64),
+        material: 'custom', // Signal to use createMoonMaterial() with textures
+        blink: {
+            type: 'gentle-pulse',
+            duration: 180,                   // Slow, calm blink (matches calm emotion)
+            scaleAxis: [0.95, 0.95, 0.95],  // Subtle uniform scale
+            glowBoost: 0.2,                 // Soft glow increase
             curve: 'sine'
         }
     }

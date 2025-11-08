@@ -274,9 +274,10 @@ export class ThreeRenderer {
     /**
      * Create core mascot mesh with custom glow material
      * @param {THREE.BufferGeometry} geometry - Three.js geometry
+     * @param {THREE.Material} customMaterial - Optional custom material (e.g., moon textures)
      * @returns {THREE.Mesh}
      */
-    createCoreMesh(geometry) {
+    createCoreMesh(geometry, customMaterial = null) {
         // Remove existing mesh if present
         if (this.coreMesh) {
             this.scene.remove(this.coreMesh);
@@ -285,15 +286,24 @@ export class ThreeRenderer {
             this.coreMesh = null;
         }
 
-        // Create glow material and store it
-        if (!this.glowMaterial) {
-            this.glowMaterial = this.createGlowMaterial();
-        }
+        // Determine which material to use
+        let material;
 
-        // Use current material mode
-        const material = this.materialMode === 'glass'
-            ? (this.glassMaterial || this.createGlassMaterial())
-            : this.glowMaterial;
+        if (customMaterial) {
+            // Use provided custom material (e.g., moon with NASA textures)
+            material = customMaterial;
+            console.log('✅ Using custom material for geometry');
+        } else {
+            // Create glow material and store it
+            if (!this.glowMaterial) {
+                this.glowMaterial = this.createGlowMaterial();
+            }
+
+            // Use current material mode
+            material = this.materialMode === 'glass'
+                ? (this.glassMaterial || this.createGlassMaterial())
+                : this.glowMaterial;
+        }
 
         // Create mesh
         this.coreMesh = new THREE.Mesh(geometry, material);
@@ -317,8 +327,9 @@ export class ThreeRenderer {
     /**
      * Swap geometry without recreating mesh (performance optimization)
      * @param {THREE.BufferGeometry} newGeometry - New geometry to swap to
+     * @param {THREE.Material} customMaterial - Optional custom material to swap to
      */
-    swapGeometry(newGeometry) {
+    swapGeometry(newGeometry, customMaterial = null) {
         if (!this.coreMesh) return;
 
         // Dispose old geometry
@@ -330,8 +341,33 @@ export class ThreeRenderer {
         // Swap to new geometry
         this.coreMesh.geometry = newGeometry;
 
-        // Recreate inner core to match new geometry (if in glass mode)
-        if (this.materialMode === 'glass') {
+        // If custom material provided, swap material too
+        if (customMaterial) {
+            console.log('✅ Swapping to custom material during morph');
+            // Dispose old material (but NOT if it's glow/glass material - we reuse those)
+            if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
+                this.coreMesh.material.dispose();
+            }
+            // Assign new custom material
+            this.coreMesh.material = customMaterial;
+        } else {
+            // Swapping back to standard material - restore glow or glass
+            const standardMaterial = this.materialMode === 'glass'
+                ? (this.glassMaterial || this.createGlassMaterial())
+                : this.glowMaterial;
+
+            if (this.coreMesh.material !== standardMaterial) {
+                console.log('✅ Restoring standard material:', this.materialMode);
+                // Dispose custom material
+                if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
+                    this.coreMesh.material.dispose();
+                }
+                this.coreMesh.material = standardMaterial;
+            }
+        }
+
+        // Recreate inner core to match new geometry (if in glass mode and NOT custom material)
+        if (this.materialMode === 'glass' && !customMaterial) {
             this.createInnerCore();
         }
     }

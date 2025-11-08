@@ -39,3 +39,4 @@ export const CORE_GEOMETRIES = {
 export { createSphere } from './Sphere.js';
 export { createCrystal } from './Crystal.js';
 export { createDiamond } from './Diamond.js';
+export { createMoon, createMoonMaterial, createMoonCrescentMaterial, createMoonFallbackMaterial, updateMoonGlow, updateCrescentShadow } from './Moon.js';

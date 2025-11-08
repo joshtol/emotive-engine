@@ -27,6 +27,7 @@ import ParticleSystem from '../core/ParticleSystem.js';
 import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
 import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
+import { createMoonMaterial, createMoonShadowMaterial, createMoonFallbackMaterial, updateMoonGlow } from './geometries/Moon.js';
 
 export class Core3DManager {
     constructor(canvas, options = {}) {
@@ -54,8 +55,38 @@ export class Core3DManager {
 
         this.geometry = this.geometryConfig.geometry;
 
-        // Create core mesh with geometry
-        this.coreMesh = this.renderer.createCoreMesh(this.geometry);
+        // Check if this geometry requires custom material (e.g., moon with textures)
+        let customMaterial = null;
+        if (this.geometryConfig.material === 'custom') {
+            // Handle custom materials based on geometry type
+            if (this.geometryType === 'moon') {
+                // Create texture loader
+                const textureLoader = new THREE.TextureLoader();
+
+                // Detect device for resolution selection (4K desktop, 2K mobile)
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const resolution = isMobile ? '2k' : '4k';
+
+                console.log(`🌙 Loading moon textures with ORIGINAL shader (${resolution})...`);
+
+                // Use crescent shader with ORIGINAL working logic
+                customMaterial = createMoonShadowMaterial(textureLoader, {
+                    resolution,
+                    glowColor: new THREE.Color(0xffffff),
+                    glowIntensity: 1.0,
+                    shadowOffsetX: 0.7,  // Offset to the right
+                    shadowOffsetY: 0.0,
+                    shadowCoverage: 1.0  // Not used for now - hardcoded in shader
+                });
+
+                // Store material reference for glow updates
+                this.customMaterial = customMaterial;
+                this.customMaterialType = 'moon';
+            }
+        }
+
+        // Create core mesh with geometry (and optional custom material)
+        this.coreMesh = this.renderer.createCoreMesh(this.geometry, customMaterial);
 
         // Animation controller
         this.animator = new ProceduralAnimator();
@@ -187,6 +218,12 @@ export class Core3DManager {
 
             // Update Three.js lighting based on emotion
             this.renderer.updateLighting(emotion, emotionData);
+
+            // Update custom material (moon) with emotion glow color
+            if (this.customMaterial && this.customMaterialType === 'moon') {
+                const glowColorThree = new THREE.Color(this.glowColor[0], this.glowColor[1], this.glowColor[2]);
+                updateMoonGlow(this.customMaterial, glowColorThree, this.glowIntensity);
+            }
 
             // Note: Bloom is updated every frame in render() for smooth transitions
         }
@@ -523,7 +560,46 @@ export class Core3DManager {
             this.geometry = this._targetGeometry;
             this.geometryType = this._targetGeometryType;
             this.geometryConfig = this._targetGeometryConfig;
-            this.renderer.swapGeometry(this.geometry);
+
+            // Check if target geometry needs custom material (e.g., moon)
+            let customMaterial = null;
+            if (this._targetGeometryConfig.material === 'custom') {
+                if (this._targetGeometryType === 'moon') {
+                    // Create texture loader
+                    const textureLoader = new THREE.TextureLoader();
+
+                    // Detect device for resolution selection
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    const resolution = isMobile ? '2k' : '4k';
+
+                    console.log(`🌙 Loading moon textures with ORIGINAL shader on morph (${resolution})...`);
+
+                    // Use crescent shader with ORIGINAL working logic
+                    customMaterial = createMoonShadowMaterial(textureLoader, {
+                        resolution,
+                        glowColor: new THREE.Color(this.glowColor[0], this.glowColor[1], this.glowColor[2]),
+                        glowIntensity: this.glowIntensity,
+                        shadowOffsetX: 0.7,  // Offset to the right
+                        shadowOffsetY: 0.0,
+                        shadowCoverage: 1.0  // Not used for now - hardcoded in shader
+                    });
+
+                    // Store material reference for glow updates
+                    this.customMaterial = customMaterial;
+                    this.customMaterialType = 'moon';
+                }
+            } else {
+                // Morphing away from custom material - clear reference
+                this.customMaterial = null;
+                this.customMaterialType = null;
+            }
+
+            // Swap geometry (and material if custom)
+            if (customMaterial) {
+                this.renderer.swapGeometry(this.geometry, customMaterial);
+            } else {
+                this.renderer.swapGeometry(this.geometry);
+            }
 
             // Update blink animator with new geometry's blink config
             this.blinkAnimator.setGeometry(this._targetGeometryConfig);
