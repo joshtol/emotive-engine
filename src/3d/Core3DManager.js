@@ -92,16 +92,21 @@ export class Core3DManager {
         // Used for moon orientation calibration
         this.calibrationRotation = [0, 0, 0]; // [X, Y, Z] in radians
 
+        // Camera-space roll: rotates the tidally-locked face around camera's viewing axis
+        // Applied AFTER all world-space rotations, spins the face like a wheel
+        this.cameraRoll = 0; // in radians
+
         // Set initial calibration rotation for moon to show classic Earth-facing side
         // This shows the "Man in the Moon" view with Mare Imbrium upper-right
-        // Calibrated manually: X=19.5° (tilt), Y=-91.0° (turn), Z=13.5° (roll)
+        // Calibrated manually: X=55.5°, Y=-85.0°, Z=-60.5° (quaternion-based rotation)
         if (this.geometryType === 'moon') {
             this.calibrationRotation = [
-                19.5 * Math.PI / 180,    // X: 19.5° tilt up/down
-                -91.0 * Math.PI / 180,   // Y: -91.0° turn left/right
-                13.5 * Math.PI / 180     // Z: 13.5° roll CCW/CW
+                55.5 * Math.PI / 180,    // X: world-space rotation
+                -85.0 * Math.PI / 180,   // Y: world-space rotation
+                -60.5 * Math.PI / 180    // Z: camera-space roll (spins face CW/CCW)
             ];
-            console.log('🌙 Moon calibration rotation set: X=19.5°, Y=-91.0°, Z=13.5°');
+            this.cameraRoll = 0; // Camera-space roll (spin the face)
+            console.log('🌙 Moon calibration rotation set: X=55.5°, Y=-85.0°, Z=-60.5°');
         }
 
         // Animation controller

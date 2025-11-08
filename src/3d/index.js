@@ -549,3 +549,12 @@ export default EmotiveMascot3D;
 // Named exports for tree-shaking
 export { Core3DManager } from './Core3DManager.js';
 export * from './geometries/index.js';
+
+// Export moon phase utilities
+export {
+    MOON_PHASES,
+    getMoonPhaseNames,
+    getPhaseFromProgress,
+    setMoonPhase,
+    animateMoonPhase
+} from './geometries/Moon.js';

@@ -1,30 +1,37 @@
 /**
  * Moon Crescent Shadow Shader
  *
- * Creates a camera-fixed crescent shadow using directional half-space clipping.
- * The shadow stays in the same screen position regardless of moon rotation/position.
+ * Creates realistic lunar phases using world-space directional lighting.
+ * The shadow rotates naturally with the moon sphere.
  *
  * Based on real lunar terminator physics:
- * - Light direction is fixed in view space (camera coordinates)
- * - Fragments facing away from light are in shadow (discarded)
+ * - Light direction is fixed in world space (like the sun)
+ * - Normals rotate with the moon (in world space)
+ * - dot(normal, lightDir) < 0 = shadow side
+ * - dot(normal, lightDir) > 0 = lit side
  * - Creates smooth curved terminator line like real moon phases
  */
 
 export const moonCrescentVertexShader = `
 /**
  * Moon Crescent Vertex Shader
+ * Passes world-space normal to fragment shader for realistic lighting
  */
 
 varying vec3 vPosition; // LOCAL position
 varying vec3 vWorldPosition;
-varying vec3 vNormal; // VIEW SPACE normal (after normalMatrix transform)
+varying vec3 vWorldNormal; // WORLD SPACE normal (rotates with moon)
 varying vec3 vViewPosition;
 varying vec2 vUv;
 
 void main() {
     vUv = uv;
     vPosition = position;
-    vNormal = normalize(normalMatrix * normal); // Transform to view space
+
+    // Transform normal to WORLD space (not view space)
+    // This makes the shadow rotate with the moon geometry
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+
     vec4 worldPosition = modelMatrix * vec4(position, 1.0);
     vWorldPosition = worldPosition.xyz;
     vec4 viewPosition = viewMatrix * worldPosition;
@@ -37,79 +44,118 @@ export const moonCrescentFragmentShader = `
 /**
  * Moon Crescent Fragment Shader
  *
- * Uses directional half-space test to create terminator line:
- * - Light direction fixed in view space
- * - Normals rotate with moon (in view space)
+ * Uses directional half-space test in WORLD SPACE to create realistic terminator:
+ * - Light direction fixed in world space (like the sun)
+ * - Normals rotate with moon geometry (in world space)
  * - dot(normal, lightDir) < 0 = shadow side
  * - dot(normal, lightDir) > 0 = lit side
+ * - Smooth terminator with earthshine on dark side
  */
 
 uniform sampler2D colorMap;
 uniform sampler2D normalMap;
 uniform vec2 shadowOffset; // Controls light direction (x=horizontal, y=vertical)
 uniform float shadowCoverage; // Unused for directional shadow
-uniform float shadowSoftness; // Terminator edge softness
+uniform float shadowSoftness; // Terminator edge softness (default: 0.05)
 uniform vec3 glowColor;
 uniform float glowIntensity;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
-varying vec3 vNormal; // Already in view space from vertex shader
+varying vec3 vWorldNormal; // WORLD SPACE normal (rotates with moon)
 varying vec3 vViewPosition;
 varying vec2 vUv;
 
 void main() {
-    // DIRECTIONAL SHADOW in VIEW SPACE - camera-fixed crescent
-    // Shadow direction stays constant on screen, moon rotates underneath
+    // DIRECTIONAL SHADOW in WORLD SPACE - realistic moon phase lighting
+    // Light direction is fixed in world space, shadow rotates with moon
 
-    // Light direction in view space (camera coordinates)
-    // shadowOffset.x controls horizontal position (left/right)
-    // shadowOffset.y controls vertical position (up/down)
-    // Positive X = light from right, negative X = light from left
-    vec3 lightDir = normalize(vec3(shadowOffset.x, shadowOffset.y, 1.0));
+    // Use world-space normal (rotates with moon geometry)
+    vec3 worldNormal = normalize(vWorldNormal);
 
-    // vNormal is already in view space (normalMatrix applied in vertex shader)
-    vec3 viewNormal = normalize(vNormal);
+    // Light direction in WORLD SPACE
+    // shadowOffset.x controls horizontal angle (left/right)
+    // shadowOffset.y controls vertical angle (up/down)
+    // For thin crescents, we need extreme angles (light from the side or behind)
 
-    // Calculate how much this fragment faces the light
-    // > 0 = facing light (lit side)
-    // < 0 = facing away from light (shadow side)
-    float facing = dot(viewNormal, lightDir);
+    float lightX = shadowOffset.x;
+    float lightY = shadowOffset.y;
 
-    // Discard fragments on shadow side (facing away from light)
-    if (facing < 0.0) {
-        discard;
-    }
+    // Adaptive Z component with LOGARITHMIC scaling for wider angular range
+    // Goal: Spread phases across full 0° to 180° instead of plateauing at 135°
+    //
+    // Target angles after normalization:
+    // - Full moon (x=0): 0° (light from front)
+    // - Quarter moon (x=1): 90° (light from side)
+    // - Crescent (x=3): 120° (thin crescent)
+    // - New moon (x=10): 170° (nearly behind)
 
-    // Soft edge at terminator for smooth transition
-    float alpha = 1.0;
-    if (facing < shadowSoftness) {
-        alpha = smoothstep(0.0, shadowSoftness, facing);
-    }
+    float offsetMagnitude = length(vec2(lightX, lightY));
 
-    // Sample texture
+    // Use exponential decay for Z to spread angular range
+    // Formula: Z = 1.0 - offsetMagnitude^1.5 for better distribution
+    float lightZ = 1.0 - pow(offsetMagnitude, 1.5);
+
+    // Normalize the light direction vector
+    vec3 lightDir = normalize(vec3(lightX, lightY, lightZ));
+
+    // Calculate how much this fragment faces the light source
+    float facing = dot(worldNormal, lightDir);
+
+    // Smooth transition at terminator (shadow boundary)
+    // Sharp edge with enhanced anti-aliasing for photorealistic terminator
+    // Use fwidth() for automatic screen-space anti-aliasing
+    float edgeWidth = max(fwidth(facing) * 4.0, shadowSoftness * 0.5);
+    float shadowFactor = smoothstep(-edgeWidth, edgeWidth, facing);
+
+    // Sample moon surface texture
     vec4 texColor = texture2D(colorMap, vUv);
 
-    // If texture not loaded yet, show gray fallback
+    // Fallback to gray if texture not loaded yet
     float brightness = texColor.r + texColor.g + texColor.b;
     if (brightness < 0.03) {
         texColor = vec4(0.5, 0.5, 0.5, 1.0);
     }
 
-    // Lighting - simple directional from light source
-    float diffuse = max(dot(viewNormal, lightDir), 0.0);
-    float ambient = 0.3;
-    float lighting = ambient + (1.0 - ambient) * diffuse;
+    // LIMB DARKENING: Moon gets darker at edges (spherical falloff)
+    vec3 viewDir = normalize(-vViewPosition);
+    float rimFactor = dot(worldNormal, viewDir);
+    float limbDarkening = smoothstep(0.0, 0.6, rimFactor); // Subtle edge darkening
 
-    // Apply lighting to texture
-    vec3 litColor = texColor.rgb * lighting;
+    // DIFFUSE LIGHTING: Vary brightness across lit surface (not uniform)
+    // More realistic Lambertian diffuse reflection
+    float diffuse = max(facing, 0.0);
+    float diffuseLighting = mix(0.7, 1.0, diffuse); // Subtle variation
 
-    // Add emissive glow for visibility and emotion
-    vec3 emissive = vec3(0.15, 0.15, 0.15);
-    vec3 emotionGlow = glowColor * glowIntensity * 0.15;
-    vec3 finalColor = litColor + emissive + emotionGlow;
+    // EARTHSHINE: Almost invisible (~1% for ultimate realism)
+    vec3 earthshine = texColor.rgb * 0.01 * vec3(0.35, 0.4, 0.6);
 
-    gl_FragColor = vec4(finalColor, alpha);
+    // Apply dramatic shadow transition with maximum contrast
+    float litFactor = pow(shadowFactor, 2.0); // Maximum contrast
+
+    // TEXTURE ENHANCEMENT: Boost surface detail contrast
+    // Slightly darken dark areas, brighten bright areas of texture
+    vec3 detailEnhanced = texColor.rgb * 1.08; // Subtle boost
+    float textureLuminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
+    detailEnhanced = mix(texColor.rgb * 0.95, texColor.rgb * 1.12, smoothstep(0.3, 0.7, textureLuminance));
+
+    // Combine enhanced texture with diffuse lighting
+    vec3 litColor = detailEnhanced * diffuseLighting;
+    vec3 shadowedColor = mix(earthshine, litColor, litFactor);
+
+    // Apply limb darkening (slightly stronger for more depth)
+    shadowedColor *= mix(0.6, 1.0, limbDarkening);
+
+    // Nearly zero emissive for pure realism
+    vec3 emissive = vec3(0.02, 0.02, 0.02) * shadowFactor;
+
+    // Emotion glow (almost invisible)
+    vec3 emotionGlow = glowColor * glowIntensity * 0.02 * shadowFactor;
+
+    // Combine all lighting components
+    vec3 finalColor = shadowedColor + emissive + emotionGlow;
+
+    gl_FragColor = vec4(finalColor, 1.0);
 }
 `;
 

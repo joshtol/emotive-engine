@@ -788,7 +788,8 @@ export class ThreeRenderer {
             glowIntensity = 1.0,
             glowColorHex = null,  // Hex color for luminance normalization
             hasActiveGesture = false,  // Whether a gesture is currently active
-            calibrationRotation = [0, 0, 0]  // Manual rotation offset applied on top of animations
+            calibrationRotation = [0, 0, 0],  // Manual rotation offset applied on top of animations
+            cameraRoll = 0  // Camera-space roll rotation applied after all other rotations
         } = params;
 
         // Update camera controls (required for damping and auto-rotate)
@@ -800,13 +801,51 @@ export class ThreeRenderer {
         if (this.coreMesh) {
             this.coreMesh.position.set(...position);
 
-            // Apply animated rotation + calibration offset
-            // Calibration rotation is added on top of animation system rotation
-            this.coreMesh.rotation.set(
-                rotation[0] + calibrationRotation[0],
-                rotation[1] + calibrationRotation[1],
-                rotation[2] + calibrationRotation[2]
-            );
+            // Apply animated rotation + calibration offset using quaternions
+            // X and Y rotate around world axes, Z rotates around camera's viewing direction
+
+            // Start with base rotation from animation system
+            const baseQuat = new THREE.Quaternion();
+            const baseEuler = new THREE.Euler(rotation[0], rotation[1], rotation[2], 'XYZ');
+            baseQuat.setFromEuler(baseEuler);
+
+            // Apply calibration rotations
+            const quatX = new THREE.Quaternion();
+            const quatY = new THREE.Quaternion();
+            const quatZ = new THREE.Quaternion();
+
+            quatX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), calibrationRotation[0]); // X-axis (world)
+            quatY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), calibrationRotation[1]); // Y-axis (world)
+
+            // Z rotates around camera's viewing direction (camera to moon)
+            const cameraToMesh = new THREE.Vector3();
+            cameraToMesh.subVectors(this.coreMesh.position, this.camera.position).normalize();
+            quatZ.setFromAxisAngle(cameraToMesh, calibrationRotation[2]); // Z-axis (camera view direction)
+
+            // Combine: base rotation, then X, then Y, then Z
+            const finalQuat = baseQuat.clone();
+            finalQuat.multiply(quatX);
+            finalQuat.multiply(quatY);
+            finalQuat.multiply(quatZ);
+
+            this.coreMesh.rotation.setFromQuaternion(finalQuat);
+
+            // Apply camera-space roll (rotates around camera's forward vector)
+            if (cameraRoll !== 0) {
+                // Get camera direction (from camera to mesh)
+                const cameraDir = new THREE.Vector3();
+                cameraDir.subVectors(this.coreMesh.position, this.camera.position).normalize();
+
+                // Create quaternion for rotation around camera direction
+                const rollQuat = new THREE.Quaternion();
+                rollQuat.setFromAxisAngle(cameraDir, cameraRoll);
+
+                // Apply camera roll to mesh rotation
+                const meshQuat = new THREE.Quaternion();
+                meshQuat.setFromEuler(this.coreMesh.rotation);
+                meshQuat.premultiply(rollQuat);
+                this.coreMesh.rotation.setFromQuaternion(meshQuat);
+            }
 
             this.coreMesh.scale.setScalar(scale);
 

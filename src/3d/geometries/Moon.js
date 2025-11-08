@@ -12,6 +12,109 @@ import * as THREE from 'three';
 import { getShadowShaders } from '../shaders/index.js';
 
 /**
+ * Moon Phase Definitions
+ * Maps phase names to light direction vectors in view space
+ *
+ * Light direction controls which side of the moon is illuminated:
+ * - Positive X: Light from right (waxing phases)
+ * - Negative X: Light from left (waning phases)
+ * - Larger magnitude: More moon visible
+ */
+export const MOON_PHASES = {
+    // Calibrated with exponential Z formula (2025-01-08)
+    // Formula: Z = 1.0 - offsetMagnitude^1.5
+    // Manually calibrated to match astronomical reference images
+
+    // New moon - Light from directly behind (extreme offset)
+    'new': { x: 200.0, y: 0.0, coverage: 0.0 },
+
+    // Waxing phases (light from right side, progressively more frontal)
+    'waxing-crescent': { x: 1.5, y: 0.0, coverage: 0.25 },    // Thin crescent on right (CALIBRATED)
+    'first-quarter': { x: 1.0, y: 0.0, coverage: 0.5 },       // Half moon, light from right
+    'waxing-gibbous': { x: 0.7, y: 0.0, coverage: 0.75 },     // More than half (CALIBRATED)
+
+    // Full moon - Light from directly in front
+    'full': { x: 0.0, y: 0.0, coverage: 1.0 },
+
+    // Waning phases (mirror of waxing, light from left side)
+    'waning-gibbous': { x: -0.7, y: 0.0, coverage: 0.75 },    // More than half (CALIBRATED)
+    'last-quarter': { x: -1.0, y: 0.0, coverage: 0.5 },       // Half moon, light from left
+    'waning-crescent': { x: -1.5, y: 0.0, coverage: 0.25 }    // Thin crescent on left (CALIBRATED)
+};
+
+/**
+ * Get all available moon phase names
+ * @returns {string[]} Array of phase names
+ */
+export function getMoonPhaseNames() {
+    return Object.keys(MOON_PHASES);
+}
+
+/**
+ * Map phase progress (0-1) to light direction
+ *
+ * The shader uses normalize(shadowOffset.x, shadowOffset.y, 1.0) as light direction.
+ * - shadowOffset.x = 0: light from camera (0,0,1) → FULL MOON (completely lit)
+ * - shadowOffset.x = large: light from side → NEW MOON (dark/thin crescent)
+ *
+ * Truth table:
+ * 0% -> x: 10 (new moon - dark)
+ * 12.5% -> x: 3 (waxing crescent)
+ * 25% -> x: 1 (first quarter - half lit)
+ * 37.5% -> x: 0.3 (waxing gibbous)
+ * 50% -> x: 0 (full moon - fully lit)
+ * 62.5% -> x: -0.3 (waning gibbous)
+ * 75% -> x: -1 (last quarter - half lit)
+ * 87.5% -> x: -3 (waning crescent)
+ * 100% -> x: 10 (new moon - cycle complete)
+ *
+ * @param {number} progress - Phase progress from 0 to 1
+ * @returns {Object} Light direction {x, y} and coverage
+ */
+export function getPhaseFromProgress(progress) {
+    // Normalize to 0-1 range
+    const normalized = ((progress % 1) + 1) % 1;
+
+    let x;
+    if (normalized <= 0.5) {
+        // Waxing phases: 0 to 0.5 maps to 10 → 0 (dark to full)
+        // Use exponential decay to match shader's normalize() compression
+        // At 0: x=10, at 0.25: x=1, at 0.5: x=0
+
+        // Map 0-0.5 to 10-0 with proper curve
+        // Formula: x = 10 * (1 - t)^2.5 where t goes 0->1
+        const t = normalized * 2.0; // 0 to 1
+        x = 10.0 * Math.pow(1.0 - t, 2.5);
+    } else {
+        // Waning phases: 0.5 to 1.0 maps to 0 → 10 (via negative side)
+        // 0.5 -> 0, 0.625 -> -0.3, 0.75 -> -1, 0.875 -> -3, 1.0 -> 10
+
+        const t = (normalized - 0.5) * 2.0; // 0 to 1
+
+        if (t <= 0.25) {
+            // 0.5 to 0.625: smooth transition to waning gibbous (0 to -0.3)
+            x = -0.3 * (t / 0.25);
+        } else if (t <= 0.5) {
+            // 0.625 to 0.75: waning gibbous to last quarter (-0.3 to -1)
+            const subT = (t - 0.25) / 0.25;
+            x = -0.3 - (0.7 * subT);
+        } else if (t <= 0.75) {
+            // 0.75 to 0.875: last quarter to waning crescent (-1 to -3)
+            const subT = (t - 0.5) / 0.25;
+            x = -1.0 - (2.0 * subT);
+        } else {
+            // 0.875 to 1.0: waning crescent to new moon (-3 to 10)
+            const subT = (t - 0.75) / 0.25;
+            x = -3.0 + (13.0 * Math.pow(subT, 0.4));
+        }
+    }
+
+    const coverage = 1.0 - Math.abs(normalized - 0.5) * 2.0;
+
+    return { x, y: 0.0, coverage };
+}
+
+/**
  * Create moon sphere geometry
  * Uses high segment count for smooth normals and proper texture mapping
  *
@@ -126,7 +229,7 @@ export function createMoonFallbackMaterial(glowColor = new THREE.Color(0xffffff)
 
 /**
  * Create moon material with shader-based shadow effects
- * Supports multiple shadow types: crescent, lunar-eclipse, solar-eclipse, black-hole
+ * Supports multiple shadow types and moon phases
  *
  * @param {THREE.TextureLoader} textureLoader - Three.js texture loader
  * @param {Object} options - Material configuration options
@@ -134,8 +237,9 @@ export function createMoonFallbackMaterial(glowColor = new THREE.Color(0xffffff)
  * @param {THREE.Color} options.glowColor - Emissive glow color (default: white)
  * @param {number} options.glowIntensity - Emissive intensity (default: 1.0)
  * @param {string} options.shadowType - Shadow effect type: 'crescent', 'lunar-eclipse', 'solar-eclipse', 'black-hole' (default: 'crescent')
- * @param {number} options.shadowOffsetX - Shadow X offset/direction (default: 0.7)
- * @param {number} options.shadowOffsetY - Shadow Y offset/direction (default: 0.0)
+ * @param {string|number} options.moonPhase - Moon phase name or progress 0-1 (default: 'waxing-crescent')
+ * @param {number} options.shadowOffsetX - Manual shadow X offset (overrides moonPhase)
+ * @param {number} options.shadowOffsetY - Manual shadow Y offset (overrides moonPhase)
  * @param {number} options.shadowCoverage - Shadow coverage 0-1 (default: 0.85)
  * @returns {THREE.ShaderMaterial}
  */
@@ -144,8 +248,37 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
     const glowColor = options.glowColor || new THREE.Color(1, 1, 1);
     const glowIntensity = options.glowIntensity || 1.0;
     const shadowType = options.shadowType || 'crescent';
-    const shadowOffsetX = options.shadowOffsetX !== undefined ? options.shadowOffsetX : 0.7;
-    const shadowOffsetY = options.shadowOffsetY !== undefined ? options.shadowOffsetY : 0.0;
+
+    // Determine shadow offset from moonPhase or manual override
+    let shadowOffsetX, shadowOffsetY;
+
+    if (options.shadowOffsetX !== undefined) {
+        // Manual override
+        ({ shadowOffsetX } = options);
+        shadowOffsetY = options.shadowOffsetY !== undefined ? options.shadowOffsetY : 0.0;
+    } else if (options.moonPhase !== undefined) {
+        // Use moon phase
+        let phaseData;
+        if (typeof options.moonPhase === 'string') {
+            [phaseData] = [MOON_PHASES[options.moonPhase]];
+            if (!phaseData) {
+                console.warn(`Unknown moon phase: ${options.moonPhase}, using waxing-crescent`);
+                phaseData = MOON_PHASES['waxing-crescent'];
+            }
+        } else if (typeof options.moonPhase === 'number') {
+            phaseData = getPhaseFromProgress(options.moonPhase);
+        } else {
+            phaseData = MOON_PHASES['waxing-crescent'];
+        }
+        shadowOffsetX = phaseData.x;
+        shadowOffsetY = phaseData.y;
+    } else {
+        // Default to waxing-crescent
+        const defaultPhase = MOON_PHASES['waxing-crescent'];
+        shadowOffsetX = defaultPhase.x;
+        shadowOffsetY = defaultPhase.y;
+    }
+
     const shadowCoverage = options.shadowCoverage !== undefined ? options.shadowCoverage : 0.85;
 
     // Determine texture paths
@@ -214,6 +347,110 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
  */
 export function createMoonCrescentMaterial(textureLoader, options = {}) {
     return createMoonShadowMaterial(textureLoader, { ...options, shadowType: 'crescent' });
+}
+
+/**
+ * Set moon phase instantly
+ * Changes the shadow position to show a specific lunar phase
+ *
+ * @param {THREE.ShaderMaterial} material - Moon shadow material
+ * @param {string|number} phase - Phase name (e.g., 'waxing-crescent') or progress (0-1)
+ * @returns {boolean} True if phase was set successfully
+ */
+export function setMoonPhase(material, phase) {
+    if (!material.uniforms || !material.uniforms.shadowOffset) {
+        console.warn('Material does not have shadowOffset uniform');
+        return false;
+    }
+
+    let phaseData;
+
+    // Handle named phase
+    if (typeof phase === 'string') {
+        phaseData = MOON_PHASES[phase];
+        if (!phaseData) {
+            console.warn(`Unknown moon phase: ${phase}`);
+            return false;
+        }
+    }
+    // Handle numeric progress (0-1)
+    else if (typeof phase === 'number') {
+        phaseData = getPhaseFromProgress(phase);
+    } else {
+        console.warn('Phase must be a string or number');
+        return false;
+    }
+
+    // Update shadow offset uniform
+    material.uniforms.shadowOffset.value.set(phaseData.x, phaseData.y);
+
+    return true;
+}
+
+/**
+ * Animate moon phase transition
+ * Smoothly transitions from current phase to target phase
+ *
+ * @param {THREE.ShaderMaterial} material - Moon shadow material
+ * @param {string|number} targetPhase - Target phase name or progress (0-1)
+ * @param {number} duration - Animation duration in milliseconds (default: 2000)
+ * @returns {Promise} Resolves when animation completes
+ */
+export function animateMoonPhase(material, targetPhase, duration = 2000) {
+    return new Promise((resolve, reject) => {
+        if (!material.uniforms || !material.uniforms.shadowOffset) {
+            reject(new Error('Material does not have shadowOffset uniform'));
+            return;
+        }
+
+        // Get target phase data
+        let targetData;
+        if (typeof targetPhase === 'string') {
+            targetData = MOON_PHASES[targetPhase];
+            if (!targetData) {
+                reject(new Error(`Unknown moon phase: ${targetPhase}`));
+                return;
+            }
+        } else if (typeof targetPhase === 'number') {
+            targetData = getPhaseFromProgress(targetPhase);
+        } else {
+            reject(new Error('Phase must be a string or number'));
+            return;
+        }
+
+        // Get current and target positions
+        const startX = material.uniforms.shadowOffset.value.x;
+        const startY = material.uniforms.shadowOffset.value.y;
+        const targetX = targetData.x;
+        const targetY = targetData.y;
+
+        const startTime = Date.now();
+
+        // Animation loop
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1.0);
+
+            // Ease in-out cubic
+            const eased = progress < 0.5
+                ? 4 * progress * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+            // Interpolate
+            const currentX = startX + (targetX - startX) * eased;
+            const currentY = startY + (targetY - startY) * eased;
+
+            material.uniforms.shadowOffset.value.set(currentX, currentY);
+
+            if (progress < 1.0) {
+                requestAnimationFrame(animate);
+            } else {
+                resolve();
+            }
+        };
+
+        animate();
+    });
 }
 
 /**

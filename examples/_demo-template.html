@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Template - Emotive Engine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: white;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+
+        .left-menu,
+        .right-menu {
+            width: 18vw;
+            min-width: 200px;
+            max-width: 280px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 1.5vw;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .left-menu {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .right-menu {
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .center-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: 2vmin;
+        }
+
+        .section {
+            margin-bottom: clamp(15px, 2vw, 25px);
+            padding-bottom: clamp(12px, 1.5vw, 20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: clamp(11px, 1vw, 13px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        /* Button Grid */
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(5px, 0.6vw, 8px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+        }
+
+        button {
+            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: clamp(6px, 0.6vw, 8px);
+            cursor: pointer;
+            font-size: clamp(9px, 0.8vw, 11px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(2px, 0.3vw, 4px);
+            min-width: 0;
+            width: 100%;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        /* Slider */
+        .slider-control {
+            margin-bottom: clamp(10px, 1.2vw, 15px);
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: clamp(4px, 0.5vw, 6px);
+            font-size: clamp(10px, 0.9vw, 12px);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .slider-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: clamp(12px, 1.2vw, 16px);
+            height: clamp(12px, 1.2vw, 16px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: clamp(12px, 1.2vw, 16px);
+            height: clamp(12px, 1.2vw, 16px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: clamp(6px, 0.6vw, 8px);
+            padding: clamp(10px, 1vw, 12px);
+            font-size: clamp(10px, 0.85vw, 11px);
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        /* Animation Container */
+        #animation-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
+            box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+        }
+
+        #animation-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Mobile/Tablet Responsive */
+        @media (max-width: 1000px) {
+            body {
+                flex-direction: column;
+            }
+
+            .left-menu,
+            .right-menu {
+                width: 100%;
+                min-width: unset;
+                max-width: unset;
+                max-height: 35vh;
+                border: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 15px;
+            }
+
+            .left-menu {
+                order: 1;
+            }
+
+            .center-content {
+                order: 2;
+                flex: 1;
+                min-height: 30vh;
+            }
+
+            .right-menu {
+                order: 3;
+                border-bottom: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .button-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .button-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .left-menu,
+            .right-menu {
+                padding: 12px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .left-menu::-webkit-scrollbar,
+        .right-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .left-menu::-webkit-scrollbar-track,
+        .right-menu::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .left-menu::-webkit-scrollbar-thumb,
+        .right-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .left-menu::-webkit-scrollbar-thumb:hover,
+        .right-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Section Title</h2>
+            <div class="button-grid">
+                <button class="active">Button 1</button>
+                <button>Button 2</button>
+                <button>Button 3</button>
+                <button>Button 4</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Slider Control</h2>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Label</span>
+                    <span class="slider-value" id="slider-value">50%</span>
+                </div>
+                <input type="range" id="slider" min="0" max="100" value="50">
+            </div>
+            <div class="info-box">
+                <strong>Info:</strong><br>
+                Some helpful information here.
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER ANIMATION -->
+    <div class="center-content">
+        <div id="animation-container"></div>
+    </div>
+
+    <!-- RIGHT MENU -->
+    <div class="right-menu">
+        <div class="section">
+            <h2>Options</h2>
+            <div class="button-grid">
+                <button>Option 1</button>
+                <button>Option 2</button>
+                <button>Option 3</button>
+                <button>Option 4</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Controls</h2>
+            <button id="control-1">Control 1</button>
+            <button id="control-2">Control 2</button>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Description:</strong><br>
+                Explain what this demo does here.
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '../dist/emotive-mascot-3d.js';
+
+        // Initialize mascot
+        const container = document.getElementById('animation-container');
+        const mascot = new EmotiveMascot3D({
+            canvasId: 'demo',
+            coreGeometry: 'sphere', // Change to your geometry
+            enableParticles: true,
+            enableControls: true,
+            autoRotate: false
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        console.log('✅ Demo initialized');
+
+        // Slider example
+        const slider = document.getElementById('slider');
+        const sliderValue = document.getElementById('slider-value');
+
+        slider.addEventListener('input', (e) => {
+            sliderValue.textContent = `${e.target.value}%`;
+            // Do something with the value
+            console.log('Slider value:', e.target.value);
+        });
+
+        // Button examples
+        document.querySelectorAll('.button-grid button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active state
+                button.parentElement.querySelectorAll('button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+
+                console.log('Button clicked:', button.textContent);
+            });
+        });
+
+        // Control button examples
+        document.getElementById('control-1').addEventListener('click', () => {
+            console.log('Control 1 clicked');
+        });
+
+        document.getElementById('control-2').addEventListener('click', () => {
+            console.log('Control 2 clicked');
+        });
+    </script>
+</body>
+</html>

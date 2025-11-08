@@ -496,6 +496,22 @@
         </div>
 
         <div class="control-group">
+            <h3>Moon Phases</h3>
+            <button data-action="moon-phase" data-value="new">🌑 New</button>
+            <button data-action="moon-phase" data-value="waxing-crescent">🌒 Waxing Crescent</button>
+            <button data-action="moon-phase" data-value="first-quarter">🌓 First Quarter</button>
+            <button data-action="moon-phase" data-value="waxing-gibbous">🌔 Waxing Gibbous</button>
+            <button data-action="moon-phase" data-value="full">🌕 Full</button>
+            <button data-action="moon-phase" data-value="waning-gibbous">🌖 Waning Gibbous</button>
+            <button data-action="moon-phase" data-value="last-quarter">🌗 Last Quarter</button>
+            <button data-action="moon-phase" data-value="waning-crescent">🌘 Waning Crescent</button>
+            <div style="margin-top: 10px;">
+                <label for="phaseSlider" style="color: white; font-size: 12px;">Phase Progress:</label>
+                <input type="range" id="phaseSlider" min="0" max="100" value="12" style="width: 100%;">
+            </div>
+        </div>
+
+        <div class="control-group">
             <h3>Animation Toggles</h3>
             <button data-action="toggle-blink" class="active">👁️ Blinking</button>
             <button data-action="toggle-core-glow" class="active">✨ Core Glow</button>
@@ -722,6 +738,21 @@
                         }
                         break;
 
+                    case 'moon-phase':
+                        console.log('Setting moon phase:', value);
+                        if (mascot.core3D?.customMaterial) {
+                            const { setMoonPhase, animateMoonPhase } = window.EmotiveMascot3D;
+                            if (setMoonPhase) {
+                                // Use animated transition
+                                animateMoonPhase(mascot.core3D.customMaterial, value, 1500)
+                                    .then(() => console.log(`Moon phase changed to: ${value}`))
+                                    .catch(err => console.error('Moon phase animation failed:', err));
+                            }
+                        } else {
+                            console.warn('Moon material not available (switch to moon geometry first)');
+                        }
+                        break;
+
                     case 'toggle-auto-rotate':
                         if (mascot.core3D?.renderer?.controls) {
                             const currentState = mascot.core3D.renderer.isAutoRotateEnabled();
@@ -798,6 +829,20 @@
                     updateGlowValue(value);
                 }
             });
+
+            // Moon phase slider
+            const phaseSlider = document.getElementById('phaseSlider');
+            if (phaseSlider) {
+                phaseSlider.addEventListener('input', (e) => {
+                    const progress = parseInt(e.target.value) / 100; // 0-1 range
+                    if (mascot?.core3D?.customMaterial) {
+                        const { setMoonPhase } = window.EmotiveMascot3D;
+                        if (setMoonPhase) {
+                            setMoonPhase(mascot.core3D.customMaterial, progress);
+                        }
+                    }
+                });
+            }
 
             // Click handlers for all glow controls
             document.addEventListener('click', (e) => {
