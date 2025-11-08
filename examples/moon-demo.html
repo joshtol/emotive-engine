@@ -288,18 +288,18 @@
     <div class="left-menu">
         <div class="section">
             <h2>Current Phase</h2>
-            <div class="current-phase" id="current-emoji">🌑</div>
-            <div class="current-name" id="current-name">New Moon</div>
+            <div class="current-phase" id="current-emoji">🌕</div>
+            <div class="current-name" id="current-name">Full Moon</div>
         </div>
 
         <div class="section">
             <h2>Named Phases</h2>
             <div class="phase-grid">
-                <button data-phase="new" class="active">🌑 New</button>
+                <button data-phase="new">🌑 New</button>
                 <button data-phase="waxing-crescent">🌒 Waxing Crescent</button>
                 <button data-phase="first-quarter">🌓 First Quarter</button>
                 <button data-phase="waxing-gibbous">🌔 Waxing Gibbous</button>
-                <button data-phase="full">🌕 Full</button>
+                <button data-phase="full" class="active">🌕 Full</button>
                 <button data-phase="waning-gibbous">🌖 Waning Gibbous</button>
                 <button data-phase="last-quarter">🌗 Last Quarter</button>
                 <button data-phase="waning-crescent">🌘 Waning Crescent</button>
@@ -311,8 +311,8 @@
 
             <div class="slider-control">
                 <div class="slider-label">
-                    <span>X-Axis (Tilt Up/Down)</span>
-                    <span class="slider-value" id="rotation-x-value">19.5°</span>
+                    <span>X-Axis (Rotation around X)</span>
+                    <span class="slider-value" id="rotation-x-value">55.5°</span>
                 </div>
                 <div class="increment-controls">
                     <button class="increment-btn" data-axis="rotX" data-delta="-5">-5°</button>
@@ -320,13 +320,13 @@
                     <button class="increment-btn" data-axis="rotX" data-delta="1">+1°</button>
                     <button class="increment-btn" data-axis="rotX" data-delta="5">+5°</button>
                 </div>
-                <input type="range" id="rotation-x-slider" min="-180" max="180" step="0.5" value="19.5">
+                <input type="range" id="rotation-x-slider" min="-180" max="180" step="0.5" value="55.5">
             </div>
 
             <div class="slider-control">
                 <div class="slider-label">
-                    <span>Y-Axis (Turn Left/Right)</span>
-                    <span class="slider-value" id="rotation-y-value">-91.0°</span>
+                    <span>Y-Axis (Rotation around Y)</span>
+                    <span class="slider-value" id="rotation-y-value">-85.0°</span>
                 </div>
                 <div class="increment-controls">
                     <button class="increment-btn" data-axis="rotY" data-delta="-5">-5°</button>
@@ -334,13 +334,13 @@
                     <button class="increment-btn" data-axis="rotY" data-delta="1">+1°</button>
                     <button class="increment-btn" data-axis="rotY" data-delta="5">+5°</button>
                 </div>
-                <input type="range" id="rotation-y-slider" min="-180" max="180" step="0.5" value="-91.0">
+                <input type="range" id="rotation-y-slider" min="-180" max="180" step="0.5" value="-85.0">
             </div>
 
             <div class="slider-control">
                 <div class="slider-label">
-                    <span>Z-Axis (Roll CCW/CW)</span>
-                    <span class="slider-value" id="rotation-z-value">13.5°</span>
+                    <span>Z-Axis (Spin Face CW/CCW)</span>
+                    <span class="slider-value" id="rotation-z-value">-60.5°</span>
                 </div>
                 <div class="increment-controls">
                     <button class="increment-btn" data-axis="rotZ" data-delta="-5">-5°</button>
@@ -348,15 +348,20 @@
                     <button class="increment-btn" data-axis="rotZ" data-delta="1">+1°</button>
                     <button class="increment-btn" data-axis="rotZ" data-delta="5">+5°</button>
                 </div>
-                <input type="range" id="rotation-z-slider" min="-180" max="180" step="0.5" value="13.5">
+                <input type="range" id="rotation-z-slider" min="-180" max="180" step="0.5" value="-60.5">
             </div>
 
             <button id="reset-rotation" style="width: 100%; margin-top: 8px;">🔄 Reset Calibration</button>
 
             <div class="info-box" style="margin-top: 10px;">
-                <strong>Classic Earth-facing view</strong><br>
-                Calibrated: X=19.5°, Y=-91°, Z=13.5°<br>
-                Shows "Man in the Moon" orientation
+                <strong>Independent Axis Rotation</strong><br>
+                • X & Y: World-space axes<br>
+                • Z: Camera-space (spins face CW/CCW as viewed)
+            </div>
+
+            <div class="info-box" style="margin-top: 10px;">
+                <strong>Current Calibration</strong><br>
+                X=55.5°, Y=-85°, Z=-60.5°
             </div>
         </div>
 
@@ -437,7 +442,7 @@
 
         // Store current rotation values (declared early for use in initialization)
         // Calibrated to show classic "Man in the Moon" Earth-facing view
-        let currentRotation = { x: 19.5, y: -91.0, z: 13.5 };
+        let currentRotation = { x: 55.5, y: -85.0, z: -60.5 };
 
         const container = document.getElementById('moon-container');
         const mascot = new EmotiveMascot3D({
@@ -450,6 +455,12 @@
 
         mascot.init(container);
         mascot.start();
+
+        // Set to full moon on load
+        if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+            mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = 0;
+            mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = 0;
+        }
 
         // Ensure auto-rotate is OFF for tidal locking (force disable)
         setTimeout(() => {
@@ -606,9 +617,9 @@
 
         // Reset rotation button
         document.getElementById('reset-rotation').addEventListener('click', () => {
-            updateRotation('x', 19.5);
-            updateRotation('y', -91.0);
-            updateRotation('z', 13.5);
+            updateRotation('x', 55.5);
+            updateRotation('y', -85.0);
+            updateRotation('z', -60.5);
         });
 
         // Direct shadow control sliders
