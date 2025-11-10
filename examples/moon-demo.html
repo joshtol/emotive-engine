@@ -420,6 +420,11 @@
         </div>
 
         <div class="section">
+            <h2>Particles</h2>
+            <button id="toggle-particles" class="active">✨ Particles On</button>
+        </div>
+
+        <div class="section">
             <h2>Camera</h2>
             <button id="reset-camera">📷 Reset View</button>
             <div class="info-box" style="margin-top: 10px;">
@@ -437,8 +442,8 @@
     </div>
 
     <script type="module">
-        // Updated: 2025-01-08 - Expanded slider range to -100/+100 + adaptive Z lighting
-        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase } from '../dist/emotive-mascot-3d.js?v=2';
+        // Updated: 2025-01-10 - Added particle toggle, disabled blinking/breathing by default
+        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase } from '../dist/emotive-mascot-3d.js?t=1762809806';
 
         // Store current rotation values (declared early for use in initialization)
         // Calibrated to show classic "Man in the Moon" Earth-facing view
@@ -450,7 +455,9 @@
             coreGeometry: 'moon',
             enableParticles: true,
             enableControls: true,
-            autoRotate: false
+            autoRotate: false,
+            enableBlinking: false,
+            enableBreathing: false
         });
 
         mascot.init(container);
@@ -688,6 +695,25 @@
                 // Set emotion
                 mascot.setEmotion(emotion);
             });
+        });
+
+        // Particle toggle
+        let particlesEnabled = true;
+        document.getElementById('toggle-particles').addEventListener('click', () => {
+            particlesEnabled = !particlesEnabled;
+            const button = document.getElementById('toggle-particles');
+
+            if (particlesEnabled) {
+                mascot.enableParticles();
+                button.classList.add('active');
+                button.textContent = '✨ Particles On';
+                console.log('✨ Particles enabled');
+            } else {
+                mascot.disableParticles();
+                button.classList.remove('active');
+                button.textContent = '✨ Particles Off';
+                console.log('💨 Particles disabled');
+            }
         });
 
         // Camera controls

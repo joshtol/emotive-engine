@@ -128,7 +128,9 @@ export class EmotiveMascot3D {
                 enablePostProcessing: this.config.enablePostProcessing,
                 enableShadows: this.config.enableShadows,
                 enableControls: this.config.enableControls,
-                autoRotate: this.config.autoRotate
+                autoRotate: this.config.autoRotate,
+                enableBlinking: this.config.enableBlinking,
+                enableBreathing: this.config.enableBreathing
             });
 
             // Initialize particle system (2D overlay)
@@ -238,60 +240,67 @@ export class EmotiveMascot3D {
             this.core3D.render(deltaTime);
         }
 
-        // Render 2D particles
-        if (this.particleSystem) {
-            const centerX = this.canvas2D.width / 2;
-            const centerY = this.canvas2D.height / 2;
+        // Render 2D particles (or clear canvas if disabled)
+        if (this.canvas2D) {
             const ctx = this.canvas2D.getContext('2d');
 
-            // Get current emotion and its visual parameters
-            const currentEmotion = this.core3D ? this.core3D.emotion : 'neutral';
-            const emotionData = getEmotion(currentEmotion);
-            const glowColor = this.core3D ? this.rgbToHex(this.core3D.glowColor) : '#FFFFFF';
-
-            // Extract emotion-specific particle parameters
-            const particleBehavior = emotionData?.visual?.particleBehavior || 'ambient';
-            const particleRate = emotionData?.visual?.particleRate || 15;
-            const minParticles = emotionData?.visual?.minParticles || 5;
-            const maxParticles = emotionData?.visual?.maxParticles || 30;
-            const particleColors = emotionData?.visual?.particleColors || null;
-
-            // Spawn particles - EXACT same as 2D site, no modifications
-            this.particleSystem.spawn(
-                particleBehavior,   // Use emotion's particle behavior
-                currentEmotion,     // emotion
-                particleRate,       // Use emotion's spawn rate
-                centerX, centerY,   // position
-                deltaTime,          // deltaTime
-                null,               // count (rate-based)
-                minParticles,       // Use emotion's min particles
-                maxParticles,       // Use emotion's max particles
-                1.0,                // scaleFactor (same as 2D)
-                1.0,                // particleSizeMultiplier
-                particleColors,     // Use emotion's color palette
-                this.undertone      // undertone modifier
-            );
-
-            // Apply gesture to particles if active
-            let gestureMotion = null;
-            let gestureProgress = 0;
-            if (this.currentGesture) {
-                const elapsed = currentTime - this.currentGesture.startTime;
-                gestureProgress = Math.min(elapsed / this.currentGesture.duration, 1);
-                gestureMotion = {
-                    ...this.currentGesture.config,
-                    type: this.currentGesture.name  // Use gesture NAME (e.g., "bounce"), not TYPE
-                };
-            }
-
-            // Update particles - EXACT same as 2D site
-            this.particleSystem.update(deltaTime, centerX, centerY, gestureMotion, gestureProgress, this.undertone);
-
-            // Clear canvas before rendering
+            // Always clear canvas first
             ctx.clearRect(0, 0, this.canvas2D.width, this.canvas2D.height);
 
-            // Render particles with emotion color
-            this.particleSystem.render(ctx, glowColor, null);
+            // Fill with transparent to ensure clearing
+            ctx.fillStyle = 'rgba(0,0,0,0)';
+            ctx.fillRect(0, 0, this.canvas2D.width, this.canvas2D.height);
+
+            if (this.particleSystem) {
+                const centerX = this.canvas2D.width / 2;
+                const centerY = this.canvas2D.height / 2;
+
+                // Get current emotion and its visual parameters
+                const currentEmotion = this.core3D ? this.core3D.emotion : 'neutral';
+                const emotionData = getEmotion(currentEmotion);
+                const glowColor = this.core3D ? this.rgbToHex(this.core3D.glowColor) : '#FFFFFF';
+
+                // Extract emotion-specific particle parameters
+                const particleBehavior = emotionData?.visual?.particleBehavior || 'ambient';
+                const particleRate = emotionData?.visual?.particleRate || 15;
+                const minParticles = emotionData?.visual?.minParticles || 5;
+                const maxParticles = emotionData?.visual?.maxParticles || 30;
+                const particleColors = emotionData?.visual?.particleColors || null;
+
+                // Spawn particles - EXACT same as 2D site, no modifications
+                this.particleSystem.spawn(
+                    particleBehavior,   // Use emotion's particle behavior
+                    currentEmotion,     // emotion
+                    particleRate,       // Use emotion's spawn rate
+                    centerX, centerY,   // position
+                    deltaTime,          // deltaTime
+                    null,               // count (rate-based)
+                    minParticles,       // Use emotion's min particles
+                    maxParticles,       // Use emotion's max particles
+                    1.0,                // scaleFactor (same as 2D)
+                    1.0,                // particleSizeMultiplier
+                    particleColors,     // Use emotion's color palette
+                    this.undertone      // undertone modifier
+                );
+
+                // Apply gesture to particles if active
+                let gestureMotion = null;
+                let gestureProgress = 0;
+                if (this.currentGesture) {
+                    const elapsed = currentTime - this.currentGesture.startTime;
+                    gestureProgress = Math.min(elapsed / this.currentGesture.duration, 1);
+                    gestureMotion = {
+                        ...this.currentGesture.config,
+                        type: this.currentGesture.name  // Use gesture NAME (e.g., "bounce"), not TYPE
+                    };
+                }
+
+                // Update particles - EXACT same as 2D site
+                this.particleSystem.update(deltaTime, centerX, centerY, gestureMotion, gestureProgress, this.undertone);
+
+                // Render particles with emotion color
+                this.particleSystem.render(ctx, glowColor, null);
+            }
         }
 
         // Continue loop
@@ -466,11 +475,22 @@ export class EmotiveMascot3D {
      * Enable particles
      */
     enableParticles() {
+        // Enable 3D WebGL particle system rendering (remove draw range restriction)
+        if (this.core3D?.particleOrchestrator?.renderer) {
+            // Particles will update normally and render will set proper draw range
+            this.core3D.particleVisibility = true;
+            console.log('✨ 3D Particles enabled');
+        }
+
+        // Enable 2D canvas particle system (if needed)
         if (!this.particleSystem && this.canvas2D) {
             const maxParticles = this.config.maxParticles || 300;
             this.particleSystem = new ParticleSystem(maxParticles, this.errorBoundary);
             this.particleSystem.canvasWidth = this.canvas2D.width;
             this.particleSystem.canvasHeight = this.canvas2D.height;
+            console.log('✨ 2D Particles enabled - system created');
+        } else if (this.particleSystem) {
+            console.log('⚠️ 2D Particles already enabled');
         }
     }
 
@@ -478,9 +498,22 @@ export class EmotiveMascot3D {
      * Disable particles
      */
     disableParticles() {
+        // Disable 3D WebGL particle system rendering (set draw range to 0)
+        if (this.core3D?.particleOrchestrator?.renderer) {
+            this.core3D.particleVisibility = false;
+            // Immediately hide particles by setting draw range to 0
+            this.core3D.particleOrchestrator.renderer.geometry.setDrawRange(0, 0);
+            console.log('💨 3D Particles disabled');
+        }
+
+        // Disable 2D canvas particle system
         if (this.particleSystem) {
             this.particleSystem.destroy();
             this.particleSystem = null;
+            console.log('💨 2D Particles disabled - system destroyed');
+            // Canvas will be automatically cleared on next animation frame
+        } else {
+            console.log('⚠️ 2D Particles already disabled');
         }
     }
 
@@ -514,6 +547,31 @@ export class EmotiveMascot3D {
      */
     get blinkingEnabled() {
         return this.core3D && this.core3D.blinkAnimator ? this.core3D.blinkAnimator.enabled : false;
+    }
+
+    /**
+     * Enable breathing
+     */
+    enableBreathing() {
+        if (this.core3D) {
+            this.core3D.breathingEnabled = true;
+        }
+    }
+
+    /**
+     * Disable breathing
+     */
+    disableBreathing() {
+        if (this.core3D) {
+            this.core3D.breathingEnabled = false;
+        }
+    }
+
+    /**
+     * Check if breathing is enabled
+     */
+    get breathingEnabled() {
+        return this.core3D ? this.core3D.breathingEnabled !== false : true;
     }
 
     /**

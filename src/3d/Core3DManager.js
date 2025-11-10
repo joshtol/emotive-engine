@@ -114,6 +114,7 @@ export class Core3DManager {
 
         // Breathing animator
         this.breathingAnimator = new BreathingAnimator();
+        this.breathingEnabled = options.enableBreathing !== false; // Enabled by default
 
         // Gesture blender
         this.gestureBlender = new GestureBlender();
@@ -124,6 +125,11 @@ export class Core3DManager {
         // Blink animator (emotion-aware)
         this.blinkAnimator = new BlinkAnimator(this.geometryConfig);
         this.blinkAnimator.setEmotion(this.emotion);
+
+        // Disable blinking if requested
+        if (options.enableBlinking === false) {
+            this.blinkAnimator.pause();
+        }
 
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
@@ -168,6 +174,7 @@ export class Core3DManager {
 
         // Enable/disable particles
         this.particlesEnabled = options.enableParticles !== false;
+        this.particleVisibility = true; // Runtime toggle for particle rendering
 
         if (this.particlesEnabled) {
             // Create 2D particle system (reuse existing logic)
@@ -642,8 +649,8 @@ export class Core3DManager {
         // Update breathing animation
         this.breathingAnimator.update(deltaTime, this.emotion, getUndertoneModifier(this.undertone));
 
-        // Get breathing scale multiplier
-        const breathScale = this.breathingAnimator.getBreathingScale();
+        // Get breathing scale multiplier (return 1.0 if disabled)
+        const breathScale = this.breathingEnabled ? this.breathingAnimator.getBreathingScale() : 1.0;
 
         // Get morph scale multiplier (for shrink/grow effect)
         const morphScale = morphState.scaleMultiplier;
@@ -717,7 +724,7 @@ export class Core3DManager {
         // ═══════════════════════════════════════════════════════════════════════════
         // PARTICLE SYSTEM UPDATE & RENDERING (Orchestrated)
         // ═══════════════════════════════════════════════════════════════════════════
-        if (this.particlesEnabled && this.particleOrchestrator) {
+        if (this.particlesEnabled && this.particleVisibility && this.particleOrchestrator) {
             // Delegate all particle logic to orchestrator
             this.particleOrchestrator.update(
                 deltaTime,
