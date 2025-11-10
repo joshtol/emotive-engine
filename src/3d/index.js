@@ -130,7 +130,8 @@ export class EmotiveMascot3D {
                 enableControls: this.config.enableControls,
                 autoRotate: this.config.autoRotate,
                 enableBlinking: this.config.enableBlinking,
-                enableBreathing: this.config.enableBreathing
+                enableBreathing: this.config.enableBreathing,
+                cameraDistance: this.config.cameraDistance
             });
 
             // Initialize particle system (2D overlay)

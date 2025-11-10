@@ -39,7 +39,8 @@ export class Core3DManager {
             enablePostProcessing: options.enablePostProcessing !== false,
             enableShadows: options.enableShadows || false,
             enableControls: options.enableControls !== false, // Camera controls (mouse/touch)
-            autoRotate: options.autoRotate !== false // Auto-rotate enabled by default
+            autoRotate: options.autoRotate !== false, // Auto-rotate enabled by default
+            cameraDistance: options.cameraDistance // Camera Z distance (undefined = default 3)
         });
 
         // Load geometry

@@ -52,7 +52,8 @@ export class ThreeRenderer {
             0.1, // near
             100 // far
         );
-        this.camera.position.set(0, 0, 3); // Match custom WebGL camera position
+        const cameraDistance = options.cameraDistance !== undefined ? options.cameraDistance : 3;
+        this.camera.position.set(0, 0, cameraDistance);
         this.camera.lookAt(0, 0, 0);
 
         // Setup camera controls (OrbitControls)
