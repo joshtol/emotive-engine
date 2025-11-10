@@ -364,6 +364,27 @@
                 X=55.5°, Y=-85°, Z=-60.5°
             </div>
         </div>
+    </div>
+    <div class="center-content">
+        <div id="moon-container"></div>
+    </div>
+    <div class="right-menu">
+        <div class="section">
+            <h2>Emotions</h2>
+            <div class="emotion-grid">
+                <button class="emotion-btn" data-emotion="joy">😊 Joy</button>
+                <button class="emotion-btn" data-emotion="calm">😌 Calm</button>
+                <button class="emotion-btn" data-emotion="excited">🤩 Excited</button>
+                <button class="emotion-btn active" data-emotion="neutral">😐 Neutral</button>
+                <button class="emotion-btn" data-emotion="curious">🤔 Curious</button>
+                <button class="emotion-btn" data-emotion="focused">🎯 Focused</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Particles</h2>
+            <button id="toggle-particles">✨ Particles Off</button>
+        </div>
 
         <div class="section">
             <h2>Shadow Position</h2>
@@ -401,27 +422,6 @@
                 Use ±0.1 buttons for fine control!<br>
                 Drag slider to find darkest point
             </div>
-        </div>
-    </div>
-    <div class="center-content">
-        <div id="moon-container"></div>
-    </div>
-    <div class="right-menu">
-        <div class="section">
-            <h2>Emotions</h2>
-            <div class="emotion-grid">
-                <button class="emotion-btn" data-emotion="joy">😊 Joy</button>
-                <button class="emotion-btn" data-emotion="calm">😌 Calm</button>
-                <button class="emotion-btn" data-emotion="excited">🤩 Excited</button>
-                <button class="emotion-btn active" data-emotion="neutral">😐 Neutral</button>
-                <button class="emotion-btn" data-emotion="curious">🤔 Curious</button>
-                <button class="emotion-btn" data-emotion="focused">🎯 Focused</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Particles</h2>
-            <button id="toggle-particles" class="active">✨ Particles On</button>
         </div>
 
         <div class="section">
@@ -462,6 +462,9 @@
 
         mascot.init(container);
         mascot.start();
+
+        // Disable particles on load (initialized but hidden)
+        mascot.disableParticles();
 
         // Set to full moon on load
         if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
@@ -697,8 +700,8 @@
             });
         });
 
-        // Particle toggle
-        let particlesEnabled = true;
+        // Particle toggle (start disabled)
+        let particlesEnabled = false;
         document.getElementById('toggle-particles').addEventListener('click', () => {
             particlesEnabled = !particlesEnabled;
             const button = document.getElementById('toggle-particles');
