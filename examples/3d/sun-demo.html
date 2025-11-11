@@ -382,11 +382,13 @@
 
                     case 'gesture':
                         console.log('Playing gesture:', value);
-                        mascot.playGesture(value);
+                        mascot.express(value);
                         break;
 
                     case 'toggle-particles':
-                        if (mascot.particlesEnabled) {
+                        // Check 3D particle visibility (sun demo uses 3D particles, not 2D)
+                        const particlesVisible = mascot.core3D?.particleVisibility || false;
+                        if (particlesVisible) {
                             mascot.disableParticles();
                             e.target.classList.remove('active');
                             console.log('💨 Particles disabled');

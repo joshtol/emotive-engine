@@ -272,11 +272,12 @@ export class ThreeRenderer {
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)
+        // Sun-optimized: Extreme bloom for NASA-quality solar corona
         this.bloomPass = new UnrealBloomPass(
             new THREE.Vector2(this.canvas.width, this.canvas.height),
-            2.5, // strength (increased from 1.5 for dramatic sun glow)
-            0.8, // radius (increased from 0.4 for larger glow spread)
-            0.1  // threshold (lowered from 0.85 - bloom even dim areas for radiant effect)
+            5.0, // strength - dramatic radiant glow for sun (was 2.5)
+            1.5, // radius - large glow spread for solar atmosphere (was 0.8)
+            0.05 // threshold - bloom everything for maximum radiance (was 0.1)
         );
         this.bloomPass.name = 'bloomPass';
         this.composer.addPass(this.bloomPass);
@@ -293,7 +294,7 @@ export class ThreeRenderer {
         if (this.coreMesh) {
             this.scene.remove(this.coreMesh);
             this.coreMesh.geometry.dispose();
-            this.coreMesh.material.dispose();
+            this.disposeMaterial(this.coreMesh.material);
             this.coreMesh = null;
         }
 
@@ -357,7 +358,7 @@ export class ThreeRenderer {
             console.log('✅ Swapping to custom material during morph');
             // Dispose old material (but NOT if it's glow/glass material - we reuse those)
             if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
-                this.coreMesh.material.dispose();
+                this.disposeMaterial(this.coreMesh.material);
             }
             // Assign new custom material
             this.coreMesh.material = customMaterial;
@@ -371,7 +372,7 @@ export class ThreeRenderer {
                 console.log('✅ Restoring standard material:', this.materialMode);
                 // Dispose custom material
                 if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
-                    this.coreMesh.material.dispose();
+                    this.disposeMaterial(this.coreMesh.material);
                 }
                 this.coreMesh.material = standardMaterial;
             }
@@ -487,7 +488,7 @@ export class ThreeRenderer {
                 this.coreMesh.remove(this.innerCore);
             }
             this.innerCore.geometry.dispose();
-            this.innerCore.material.dispose();
+            this.disposeMaterial(this.innerCore.material);
             this.innerCore = null;
         }
 
@@ -596,7 +597,7 @@ export class ThreeRenderer {
             // Remove inner core when switching to glow mode
             this.coreMesh.remove(this.innerCore);
             this.innerCore.geometry.dispose();
-            this.innerCore.material.dispose();
+            this.disposeMaterial(this.innerCore.material);
             this.innerCore = null;
         }
 
@@ -694,21 +695,28 @@ export class ThreeRenderer {
         return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
     }
 
-    updateBloom(targetIntensity, transitionSpeed = 0.1) {
+    updateBloom(targetIntensity, transitionSpeed = 0.1, geometryType = null) {
         if (this.bloomPass) {
             const normalized = this.normalizeIntensity(targetIntensity);
-            const targetThreshold = 0.85; // Fixed threshold
+            let targetThreshold, targetStrength, targetRadius;
 
-            // Glass mode needs much lower bloom strength to avoid haziness
-            // Since we're using white emissive at fixed intensity for uniformity
-            let targetStrength, targetRadius;
-            if (this.materialMode === 'glass') {
+            // Sun geometry needs controlled bloom for NASA-quality photosphere detail
+            // Reduced values to show texture while maintaining edge glow
+            if (geometryType === 'sun') {
+                targetStrength = 1.2;   // Moderate glow strength (was 5.0 - too extreme)
+                targetRadius = 0.5;     // Tighter glow spread (was 1.5 - too large)
+                targetThreshold = 0.3;  // Higher threshold to preserve texture detail (was 0.05)
+            } else if (this.materialMode === 'glass') {
+                // Glass mode needs much lower bloom strength to avoid haziness
+                // Since we're using white emissive at fixed intensity for uniformity
                 targetStrength = 0.3;  // Low strength for subtle glass glow
                 targetRadius = 0.2;     // Tight radius to reduce haze
+                targetThreshold = 0.85; // Fixed threshold
             } else {
                 // Glow mode uses variable bloom
                 targetStrength = 1.0 + normalized * 0.8; // Maps to 1.0-1.8 range
                 targetRadius = 0.4;
+                targetThreshold = 0.85; // Fixed threshold
             }
 
             this.bloomPass.strength += (targetStrength - this.bloomPass.strength) * transitionSpeed;
@@ -948,6 +956,40 @@ export class ThreeRenderer {
     }
 
     /**
+     * Dispose material and all its textures (prevent GPU memory leaks)
+     * @param {THREE.Material} material - Material to dispose
+     * @private
+     */
+    disposeMaterial(material) {
+        if (!material) return;
+
+        // Dispose all texture properties (map, normalMap, envMap, etc.)
+        const textureProperties = [
+            'map', 'lightMap', 'bumpMap', 'normalMap', 'specularMap',
+            'envMap', 'alphaMap', 'aoMap', 'displacementMap', 'emissiveMap',
+            'gradientMap', 'metalnessMap', 'roughnessMap'
+        ];
+
+        textureProperties.forEach(prop => {
+            if (material[prop]) {
+                material[prop].dispose();
+            }
+        });
+
+        // For ShaderMaterial, dispose textures in uniforms (e.g., sun's colorMap, normalMap)
+        if (material.uniforms) {
+            Object.values(material.uniforms).forEach(uniform => {
+                if (uniform.value && uniform.value.isTexture) {
+                    uniform.value.dispose();
+                }
+            });
+        }
+
+        // Dispose the material itself
+        material.dispose();
+    }
+
+    /**
      * Cleanup resources
      */
     destroy() {
@@ -957,7 +999,7 @@ export class ThreeRenderer {
                 this.coreMesh.remove(this.innerCore);
             }
             this.innerCore.geometry.dispose();
-            this.innerCore.material.dispose();
+            this.disposeMaterial(this.innerCore.material);
             this.innerCore = null;
         }
 
@@ -965,8 +1007,18 @@ export class ThreeRenderer {
         if (this.coreMesh) {
             this.scene.remove(this.coreMesh);
             this.coreMesh.geometry.dispose();
-            this.coreMesh.material.dispose();
+            this.disposeMaterial(this.coreMesh.material);
             this.coreMesh = null;
+        }
+
+        // Dispose shared materials (glow and glass)
+        if (this.glowMaterial) {
+            this.disposeMaterial(this.glowMaterial);
+            this.glowMaterial = null;
+        }
+        if (this.glassMaterial) {
+            this.disposeMaterial(this.glassMaterial);
+            this.glassMaterial = null;
         }
 
         // Dispose composer

@@ -18,7 +18,7 @@ import { BlinkAnimator } from './animation/BlinkAnimator.js';
 import { GeometryMorpher } from './utils/GeometryMorpher.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
-import { createSunMaterial } from './geometries/Sun.js';
+import { createSunMaterial, updateSunMaterial } from './geometries/Sun.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
@@ -107,6 +107,7 @@ export class Core3DManager {
                 // Store material reference for glow updates
                 this.customMaterial = customMaterial;
                 this.customMaterialType = 'sun';
+                console.log('🔥 Sun material created with surface-mapped fire animation');
             }
         }
 
@@ -202,34 +203,38 @@ export class Core3DManager {
         this.particlesEnabled = options.enableParticles !== false;
         this.particleVisibility = this.particlesEnabled; // Runtime toggle matches initial state
 
-        if (this.particlesEnabled) {
-            // Create 2D particle system (reuse existing logic)
-            const particleSystem = new ParticleSystem(50); // 50 particles max
+        // ALWAYS create particle system (even if disabled) so it can be toggled later
+        // Create 2D particle system (reuse existing logic)
+        const particleSystem = new ParticleSystem(50); // 50 particles max
 
-            // Set canvas size for particle spawning
-            particleSystem.canvasWidth = canvas.width;
-            particleSystem.canvasHeight = canvas.height;
+        // Set canvas size for particle spawning
+        particleSystem.canvasWidth = canvas.width;
+        particleSystem.canvasHeight = canvas.height;
 
-            // Create 3D translator (converts 2D → 3D)
-            const particleTranslator = new Particle3DTranslator({
-                worldScale: 2.0,
-                baseRadius: 1.5,
-                depthScale: 0.75,
-                verticalScale: 1.0
-            });
+        // Create 3D translator (converts 2D → 3D)
+        const particleTranslator = new Particle3DTranslator({
+            worldScale: 2.0,
+            baseRadius: 1.5,
+            depthScale: 0.75,
+            verticalScale: 1.0
+        });
 
-            // Create 3D renderer (Three.js points system)
-            const particleRenderer = new Particle3DRenderer(50);
+        // Create 3D renderer (Three.js points system)
+        const particleRenderer = new Particle3DRenderer(50);
 
-            // Add particle points to scene
-            this.renderer.scene.add(particleRenderer.getPoints());
+        // Add particle points to scene
+        this.renderer.scene.add(particleRenderer.getPoints());
 
-            // Create orchestrator (coordinates everything)
-            this.particleOrchestrator = new Particle3DOrchestrator(
-                particleSystem,
-                particleTranslator,
-                particleRenderer
-            );
+        // Create orchestrator (coordinates everything)
+        this.particleOrchestrator = new Particle3DOrchestrator(
+            particleSystem,
+            particleTranslator,
+            particleRenderer
+        );
+
+        // If particles disabled, hide them immediately
+        if (!this.particlesEnabled) {
+            particleRenderer.geometry.setDrawRange(0, 0);
         }
 
         // Initialize emotion
@@ -278,16 +283,8 @@ export class Core3DManager {
                 const glowColorThree = new THREE.Color(this.glowColor[0], this.glowColor[1], this.glowColor[2]);
                 updateMoonGlow(this.customMaterial, glowColorThree, this.glowIntensity);
             } else if (this.customMaterial && this.customMaterialType === 'sun') {
-                // Update sun color based on emotion
-                // Sun uses MeshBasicMaterial (no emissive property needed)
-                // Scale color by intensity to control brightness
-                const brightness = 1.0 + (this.glowIntensity * 2.0); // Scale HDR brightness
-                const baseColor = new THREE.Color(
-                    this.glowColor[0] * brightness,
-                    this.glowColor[1] * brightness,
-                    this.glowColor[2] * brightness * 0.95  // Slightly reduce blue for warm tint
-                );
-                this.customMaterial.color.copy(baseColor);
+                // Update sun material colors (no time delta needed here - just color update)
+                updateSunMaterial(this.coreMesh, this.glowColor, this.glowIntensity, 0);
             }
 
             // Note: Bloom is updated every frame in render() for smooth transitions
@@ -369,7 +366,7 @@ export class Core3DManager {
         this.blinkAnimator.setEmotion(emotion);
 
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
-        this.renderer.updateBloom(this.baseGlowIntensity, 1.0);
+        this.renderer.updateBloom(this.baseGlowIntensity, 1.0, this.geometryType);
 
         // Trigger emotion animation - now handled by blending system in render()
         this.animator.playEmotion(emotion);
@@ -766,7 +763,8 @@ export class Core3DManager {
         // ═══════════════════════════════════════════════════════════════════════════
         // PARTICLE SYSTEM UPDATE & RENDERING (Orchestrated)
         // ═══════════════════════════════════════════════════════════════════════════
-        if (this.particlesEnabled && this.particleVisibility && this.particleOrchestrator) {
+        // Only check particleVisibility (runtime toggle), not particlesEnabled (initial config)
+        if (this.particleVisibility && this.particleOrchestrator) {
             // Delegate all particle logic to orchestrator
             this.particleOrchestrator.update(
                 deltaTime,
@@ -801,7 +799,12 @@ export class Core3DManager {
         const effectiveGlowIntensity = baseIntensity * opacity;
 
         // Update bloom pass with effective glow intensity (smooth transitions)
-        this.renderer.updateBloom(effectiveGlowIntensity);
+        this.renderer.updateBloom(effectiveGlowIntensity, 0.1, this.geometryType);
+
+        // Update sun material animation if using sun geometry
+        if (this.customMaterialType === 'sun') {
+            updateSunMaterial(this.coreMesh, this.glowColor, effectiveGlowIntensity, deltaTime);
+        }
 
         // Render with Three.js
         this.renderer.render({

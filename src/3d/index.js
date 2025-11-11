@@ -125,6 +125,7 @@ export class EmotiveMascot3D {
             this.core3D = new Core3DManager(this.webglCanvas, {
                 geometry: this.config.coreGeometry,
                 emotion: this.config.defaultEmotion,
+                enableParticles: this.config.enableParticles,
                 enablePostProcessing: this.config.enablePostProcessing,
                 enableShadows: this.config.enableShadows,
                 enableControls: this.config.enableControls,
@@ -503,7 +504,9 @@ export class EmotiveMascot3D {
      * Check if auto-rotate is enabled
      */
     get autoRotateEnabled() {
-        return this.core3D?.renderer?.controls?.autoRotate || false;
+        // Check rotationDisabled flag (inverse logic) for accurate state
+        // rotationDisabled is the source of truth set by enable/disableAutoRotate
+        return this.core3D?.rotationDisabled === false;
     }
 
     /**
