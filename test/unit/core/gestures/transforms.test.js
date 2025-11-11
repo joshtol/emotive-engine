@@ -11,7 +11,6 @@ import stretch from '../../../../src/core/gestures/transforms/stretch.js';
 import tilt from '../../../../src/core/gestures/transforms/tilt.js';
 import orbital from '../../../../src/core/gestures/transforms/orbital.js';
 import hula from '../../../../src/core/gestures/transforms/hula.js';
-import scan from '../../../../src/core/gestures/transforms/scan.js';
 import twist from '../../../../src/core/gestures/transforms/twist.js';
 
 describe('Gesture Transforms - Bulk Validation', () => {
@@ -23,7 +22,6 @@ describe('Gesture Transforms - Bulk Validation', () => {
         { gesture: tilt, name: 'tilt' },
         { gesture: orbital, name: 'orbital' },
         { gesture: hula, name: 'hula' },
-        { gesture: scan, name: 'scan' },
         { gesture: twist, name: 'twist' }
     ];
 
