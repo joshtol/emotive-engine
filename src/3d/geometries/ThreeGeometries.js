@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import { createMoon } from './Moon.js';
+import { createSunGeometry } from './Sun.js';
 
 /**
  * Create smooth sphere geometry
@@ -375,6 +376,18 @@ export const THREE_GEOMETRIES = {
             duration: 180,                   // Slow, calm blink (matches calm emotion)
             scaleAxis: [0.95, 0.95, 0.95],  // Subtle uniform scale
             glowBoost: 0.2,                 // Soft glow increase
+            curve: 'sine'
+        }
+    },
+
+    sun: {
+        geometry: createSphere(64, 64), // Use smooth sphere for sun
+        material: 'emissive', // Signal to use emissive self-luminous material
+        blink: {
+            type: 'radial-pulse',
+            duration: 200,                   // Slow, powerful pulse
+            scaleAxis: [1.05, 1.05, 1.05],  // Slight expansion
+            glowBoost: 0.5,                 // Strong glow increase
             curve: 'sine'
         }
     }

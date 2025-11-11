@@ -56,7 +56,7 @@ export class Core3DManager {
 
         this.geometry = this.geometryConfig.geometry;
 
-        // Check if this geometry requires custom material (e.g., moon with textures)
+        // Check if this geometry requires custom material (e.g., moon with textures, sun with emissive)
         let customMaterial = null;
         if (this.geometryConfig.material === 'custom') {
             // Handle custom materials based on geometry type
@@ -83,6 +83,30 @@ export class Core3DManager {
                 // Store material reference for glow updates
                 this.customMaterial = customMaterial;
                 this.customMaterialType = 'moon';
+            }
+        } else if (this.geometryConfig.material === 'emissive') {
+            // Handle emissive materials (e.g., sun)
+            if (this.geometryType === 'sun') {
+                console.log('☀️ Creating sun with emissive material...');
+
+                // Create emissive material for sun
+                const baseColor = new THREE.Color(
+                    this.glowColor[0] * 1.0,
+                    this.glowColor[1] * 0.95,
+                    this.glowColor[2] * 0.7
+                );
+
+                customMaterial = new THREE.MeshStandardMaterial({
+                    color: baseColor,
+                    emissive: baseColor,
+                    emissiveIntensity: this.glowIntensity * 2.0,
+                    roughness: 1.0,
+                    metalness: 0.0
+                });
+
+                // Store material reference for glow updates
+                this.customMaterial = customMaterial;
+                this.customMaterialType = 'sun';
             }
         }
 
@@ -249,10 +273,20 @@ export class Core3DManager {
             // Update Three.js lighting based on emotion
             this.renderer.updateLighting(emotion, emotionData);
 
-            // Update custom material (moon) with emotion glow color
+            // Update custom material with emotion glow color
             if (this.customMaterial && this.customMaterialType === 'moon') {
                 const glowColorThree = new THREE.Color(this.glowColor[0], this.glowColor[1], this.glowColor[2]);
                 updateMoonGlow(this.customMaterial, glowColorThree, this.glowIntensity);
+            } else if (this.customMaterial && this.customMaterialType === 'sun') {
+                // Update sun emissive color based on emotion
+                const baseColor = new THREE.Color(
+                    this.glowColor[0] * 1.0,
+                    this.glowColor[1] * 0.95,
+                    this.glowColor[2] * 0.7
+                );
+                this.customMaterial.color.copy(baseColor);
+                this.customMaterial.emissive.copy(baseColor);
+                this.customMaterial.emissiveIntensity = this.glowIntensity * 2.0;
             }
 
             // Note: Bloom is updated every frame in render() for smooth transitions
