@@ -277,11 +277,11 @@
     <div class="right-menu">
         <div class="section visual-controls">
             <h2>Visual Controls</h2>
-            <button data-action="toggle-particles" class="active">✨ Particles</button>
+            <button data-action="toggle-particles">✨ Particles</button>
             <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-            <button data-action="toggle-blink" class="active">👁️ Blinking</button>
-            <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
-            <button data-action="toggle-auto-rotate" class="active">🔄 Auto-Rotate</button>
+            <button data-action="toggle-blink">👁️ Blinking</button>
+            <button data-action="toggle-breathing">🫁 Breathing</button>
+            <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
         </div>
 
         <div class="section">
@@ -335,13 +335,13 @@
                 const container = document.getElementById('sun-container');
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'sun',
-                    enableParticles: true,
+                    enableParticles: false,
                     enablePostProcessing: true,
                     enableShadows: false,
                     enableControls: true,
-                    autoRotate: true,
-                    enableBlinking: true,
-                    enableBreathing: true,
+                    autoRotate: false,
+                    enableBlinking: false,
+                    enableBreathing: false,
                     cameraDistance: 1.2
                 });
 
@@ -434,17 +434,14 @@
                         break;
 
                     case 'toggle-auto-rotate':
-                        const currentState = mascot.autoRotateEnabled;
-                        const newState = !currentState;
-
-                        if (newState) {
-                            mascot.enableAutoRotate();
-                            console.log('▶️ Auto-rotate ON');
-                            e.target.classList.add('active');
-                        } else {
+                        if (mascot.autoRotateEnabled) {
                             mascot.disableAutoRotate();
                             console.log('🛑 Auto-rotate OFF');
                             e.target.classList.remove('active');
+                        } else {
+                            mascot.enableAutoRotate();
+                            console.log('▶️ Auto-rotate ON');
+                            e.target.classList.add('active');
                         }
                         break;
                 }

@@ -274,9 +274,9 @@ export class ThreeRenderer {
         // Bloom pass - glow/bloom effect (Unreal Engine style)
         this.bloomPass = new UnrealBloomPass(
             new THREE.Vector2(this.canvas.width, this.canvas.height),
-            1.5, // strength
-            0.4, // radius
-            0.85 // threshold (only bright areas bloom)
+            2.5, // strength (increased from 1.5 for dramatic sun glow)
+            0.8, // radius (increased from 0.4 for larger glow spread)
+            0.1  // threshold (lowered from 0.85 - bloom even dim areas for radiant effect)
         );
         this.bloomPass.name = 'bloomPass';
         this.composer.addPass(this.bloomPass);

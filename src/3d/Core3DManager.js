@@ -87,21 +87,18 @@ export class Core3DManager {
         } else if (this.geometryConfig.material === 'emissive') {
             // Handle emissive materials (e.g., sun)
             if (this.geometryType === 'sun') {
-                console.log('☀️ Creating sun with emissive material...');
+                console.log('☀️ Creating sun with emissive material (NASA photosphere: 5,772K)...');
 
-                // Create emissive material for sun
-                const baseColor = new THREE.Color(
-                    this.glowColor[0] * 1.0,
-                    this.glowColor[1] * 0.95,
-                    this.glowColor[2] * 0.7
-                );
+                // NASA-accurate sun color: Black-body radiation at 5,772K
+                // Photosphere effective temperature: 5,772 K (official NASA data)
+                // Appears brilliant white with warm tint
+                const baseColor = new THREE.Color(1.0, 1.0, 0.95); // Warm white
 
-                customMaterial = new THREE.MeshStandardMaterial({
+                // Use MeshBasicMaterial for self-luminous sun (doesn't need lights)
+                // This is crucial - MeshBasicMaterial is unlit and always visible at full brightness
+                customMaterial = new THREE.MeshBasicMaterial({
                     color: baseColor,
-                    emissive: baseColor,
-                    emissiveIntensity: this.glowIntensity * 2.0,
-                    roughness: 1.0,
-                    metalness: 0.0
+                    toneMapped: false // Bypass tone mapping for HDR bright values
                 });
 
                 // Store material reference for glow updates
@@ -278,15 +275,16 @@ export class Core3DManager {
                 const glowColorThree = new THREE.Color(this.glowColor[0], this.glowColor[1], this.glowColor[2]);
                 updateMoonGlow(this.customMaterial, glowColorThree, this.glowIntensity);
             } else if (this.customMaterial && this.customMaterialType === 'sun') {
-                // Update sun emissive color based on emotion
+                // Update sun color based on emotion
+                // Sun uses MeshBasicMaterial (no emissive property needed)
+                // Scale color by intensity to control brightness
+                const brightness = 1.0 + (this.glowIntensity * 2.0); // Scale HDR brightness
                 const baseColor = new THREE.Color(
-                    this.glowColor[0] * 1.0,
-                    this.glowColor[1] * 0.95,
-                    this.glowColor[2] * 0.7
+                    this.glowColor[0] * brightness,
+                    this.glowColor[1] * brightness,
+                    this.glowColor[2] * brightness * 0.95  // Slightly reduce blue for warm tint
                 );
                 this.customMaterial.color.copy(baseColor);
-                this.customMaterial.emissive.copy(baseColor);
-                this.customMaterial.emissiveIntensity = this.glowIntensity * 2.0;
             }
 
             // Note: Bloom is updated every frame in render() for smooth transitions
