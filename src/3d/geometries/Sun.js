@@ -40,17 +40,86 @@ import * as THREE from 'three';
 export const SUN_PHOTOSPHERE_TEMP_K = 5772;
 
 /**
+ * Create sun material with NASA photosphere texture
+ *
+ * Loads NASA-based photosphere texture and creates self-luminous material.
+ * Uses MeshBasicMaterial for unlit rendering with HDR bloom effect.
+ *
+ * @param {THREE.TextureLoader} textureLoader - Three.js texture loader instance
+ * @param {Object} options - Configuration options
+ * @param {string} options.resolution - Texture resolution ('2k' or '4k', default: '4k')
+ * @param {Array<number>} options.glowColor - RGB color array [r, g, b] for emotion tinting
+ * @param {number} options.glowIntensity - Glow intensity multiplier (scales HDR brightness)
+ * @returns {THREE.MeshBasicMaterial}
+ */
+export function createSunMaterial(textureLoader, options = {}) {
+    const resolution = options.resolution || '4k';
+    const glowColor = options.glowColor || [1, 1, 1];
+    const glowIntensity = options.glowIntensity || 1.0;
+
+    // Determine texture path based on resolution
+    const colorPath = `/assets/textures/Sun/sun-photosphere-${resolution}.jpg`;
+
+    // NASA-accurate base color: Brilliant white (5,772K black-body radiation)
+    // Use HDR values for dramatic bloom
+    const brightness = 1.0 + (glowIntensity * 2.0);
+    const baseColor = new THREE.Color(
+        brightness * glowColor[0],
+        brightness * glowColor[1],
+        brightness * glowColor[2] * 0.95  // Slight warm tint
+    );
+
+    // Load texture asynchronously
+    const colorMap = textureLoader.load(
+        colorPath,
+        // onLoad callback
+        texture => {
+            console.log(`✅ Sun photosphere texture loaded: ${resolution}`);
+        },
+        // onProgress callback
+        undefined,
+        // onError callback
+        error => {
+            console.warn(`⚠️ Failed to load sun texture (${resolution}), using color fallback:`, error);
+        }
+    );
+
+    // Configure texture wrapping for seamless sphere mapping
+    colorMap.wrapS = colorMap.wrapT = THREE.RepeatWrapping;
+
+    // Enable anisotropic filtering for better quality at oblique angles
+    colorMap.anisotropy = 16;
+
+    // Use MeshBasicMaterial for self-luminous sun (unlit, always at full brightness)
+    // This is essential - MeshBasicMaterial doesn't need lights and always renders at full color
+    const material = new THREE.MeshBasicMaterial({
+        map: colorMap,           // NASA photosphere texture
+        color: baseColor,        // HDR color for bloom + emotion tinting
+        toneMapped: false       // Bypass tone mapping to preserve HDR brightness for bloom
+    });
+
+    return material;
+}
+
+/**
  * Create sun geometry with NASA-accurate characteristics
  *
  * The sun is rendered as a self-luminous sphere using MeshBasicMaterial.
  * The base color is brilliant white (5,772K black-body spectrum), with emotion-based
  * tinting applied over time. Uses HDR color values (>1.0) for dramatic bloom effect.
  *
- * @param {Array<number>} glowColor - RGB color array [r, g, b] for emotion tinting
- * @param {number} glowIntensity - Glow intensity multiplier (scales HDR brightness)
+ * @param {THREE.TextureLoader} textureLoader - Three.js texture loader instance (optional)
+ * @param {Object} options - Configuration options
+ * @param {Array<number>} options.glowColor - RGB color array [r, g, b] for emotion tinting
+ * @param {number} options.glowIntensity - Glow intensity multiplier (scales HDR brightness)
+ * @param {string} options.resolution - Texture resolution ('2k' or '4k', default: '4k')
  * @returns {THREE.Mesh} Sun mesh with self-luminous material
  */
-export function createSunGeometry(glowColor, glowIntensity = 1.0) {
+export function createSunGeometry(textureLoader = null, options = {}) {
+    const glowColor = options.glowColor || [1, 1, 1];
+    const glowIntensity = options.glowIntensity || 1.0;
+    const resolution = options.resolution || '4k';
+
     // Create high-resolution sphere geometry for smooth photosphere
     const geometry = new THREE.SphereGeometry(
         0.5,  // radius (normalized)
@@ -58,28 +127,25 @@ export function createSunGeometry(glowColor, glowIntensity = 1.0) {
         64    // height segments
     );
 
-    // NASA-accurate base color: Brilliant white (5,772K black-body radiation)
-    // Use HDR values for dramatic bloom
-    const brightness = 1.0 + (glowIntensity * 2.0);
-    const baseColor = new THREE.Color(
-        brightness,
-        brightness,
-        brightness * 0.95  // Slight warm tint
-    );
+    let material;
 
-    // Apply emotion tinting if provided
-    if (glowColor && glowColor.length === 3) {
-        baseColor.r *= glowColor[0];
-        baseColor.g *= glowColor[1];
-        baseColor.b *= glowColor[2];
+    // Use textured material if loader provided, otherwise fallback to color-only
+    if (textureLoader) {
+        material = createSunMaterial(textureLoader, { glowColor, glowIntensity, resolution });
+    } else {
+        // Fallback: color-only material (no texture)
+        const brightness = 1.0 + (glowIntensity * 2.0);
+        const baseColor = new THREE.Color(
+            brightness * glowColor[0],
+            brightness * glowColor[1],
+            brightness * glowColor[2] * 0.95  // Slight warm tint
+        );
+
+        material = new THREE.MeshBasicMaterial({
+            color: baseColor,
+            toneMapped: false // Bypass tone mapping to preserve HDR brightness for bloom
+        });
     }
-
-    // Use MeshBasicMaterial for self-luminous sun (unlit, always at full brightness)
-    // This is essential - MeshBasicMaterial doesn't need lights and always renders at full color
-    const material = new THREE.MeshBasicMaterial({
-        color: baseColor,
-        toneMapped: false // Bypass tone mapping to preserve HDR brightness for bloom
-    });
 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = false;  // Sun doesn't cast shadows (it IS the light source)

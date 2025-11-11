@@ -18,6 +18,7 @@ import { BlinkAnimator } from './animation/BlinkAnimator.js';
 import { GeometryMorpher } from './utils/GeometryMorpher.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
+import { createSunMaterial } from './geometries/Sun.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
@@ -89,16 +90,18 @@ export class Core3DManager {
             if (this.geometryType === 'sun') {
                 console.log('☀️ Creating sun with emissive material (NASA photosphere: 5,772K)...');
 
-                // NASA-accurate sun color: Black-body radiation at 5,772K
-                // Photosphere effective temperature: 5,772 K (official NASA data)
-                // Appears brilliant white with warm tint
-                const baseColor = new THREE.Color(1.0, 1.0, 0.95); // Warm white
+                // Create texture loader
+                const textureLoader = new THREE.TextureLoader();
 
-                // Use MeshBasicMaterial for self-luminous sun (doesn't need lights)
-                // This is crucial - MeshBasicMaterial is unlit and always visible at full brightness
-                customMaterial = new THREE.MeshBasicMaterial({
-                    color: baseColor,
-                    toneMapped: false // Bypass tone mapping for HDR bright values
+                // Get initial emotion glow color (default to warm white)
+                const glowColor = this.glowColor || [1.0, 1.0, 0.95];
+                const glowIntensity = this.glowIntensity || 1.0;
+
+                // Create sun material with NASA photosphere texture
+                customMaterial = createSunMaterial(textureLoader, {
+                    glowColor,
+                    glowIntensity,
+                    resolution: '4k'
                 });
 
                 // Store material reference for glow updates

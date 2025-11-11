@@ -40,4 +40,4 @@ export { createSphere } from './Sphere.js';
 export { createCrystal } from './Crystal.js';
 export { createDiamond } from './Diamond.js';
 export { createMoon, createMoonMaterial, createMoonCrescentMaterial, createMoonFallbackMaterial, updateMoonGlow, updateCrescentShadow } from './Moon.js';
-export { createSunGeometry, updateSunMaterial } from './Sun.js';
+export { createSunGeometry, createSunMaterial, updateSunMaterial } from './Sun.js';
