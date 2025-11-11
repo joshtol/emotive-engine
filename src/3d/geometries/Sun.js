@@ -113,10 +113,13 @@ export function createSunMaterial(textureLoader, options = {}) {
         normalMap,                                  // Granulation surface detail
         normalScale: new THREE.Vector2(0.3, 0.3),  // Subtle bump (sun is gaseous, not rocky)
 
-        // Self-luminous properties
+        // Self-luminous properties (HDR values for dramatic sun)
         emissive: baseColor,                        // Self-glow color
         emissiveMap: colorMap,                      // Use same texture for emissive
-        emissiveIntensity: 1.0,                     // Full brightness
+        emissiveIntensity: 3.0,                     // High intensity for sun brilliance
+
+        // Base color should also be bright
+        color: new THREE.Color(brightness, brightness, brightness * 0.95),
 
         // Surface properties
         roughness: 1.0,                             // Maximum roughness (gaseous plasma)
