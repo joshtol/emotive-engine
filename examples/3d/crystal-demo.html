@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<!--
+  CRYSTAL SHOWCASE - Emotive Engine 3D Demo
+
+  A comprehensive demonstration of the crystal geometry with full emotional range,
+  gestures, and particle effects.
+
+  What you'll learn:
+  - 3D crystal rendering with dynamic lighting
+  - Complete emotion system (14+ emotions)
+  - Full gesture library (motion, transform, effect)
+  - Particle system controls
+  - Glow intensity management
+  - Undertone modifiers
+
+  Complexity: ⭐⭐⭐ Advanced 3D
+  Features: Crystal geometry, emotions, gestures, particles, glow control
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crystal Showcase - Emotive Engine 3D</title>
+    <meta name="description" content="Comprehensive 3D crystal demo with emotions, gestures, and particle effects">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: white;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .left-menu,
+        .right-menu {
+            width: 18vw;
+            min-width: 200px;
+            max-width: 280px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 1.5vw;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .left-menu {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .right-menu {
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .center-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: 2vmin;
+        }
+
+        .section {
+            margin-bottom: clamp(15px, 2vw, 25px);
+            padding-bottom: clamp(12px, 1.5vw, 20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: clamp(11px, 1vw, 13px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        /* Button Grid */
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(5px, 0.6vw, 8px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+        }
+
+        button {
+            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: clamp(6px, 0.6vw, 8px);
+            cursor: pointer;
+            font-size: clamp(9px, 0.8vw, 11px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(2px, 0.3vw, 4px);
+            min-width: 0;
+            width: 100%;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        /* Single column for visual controls */
+        .visual-controls button {
+            width: 100%;
+            margin-bottom: clamp(6px, 0.7vw, 8px);
+        }
+
+        /* Slider */
+        .slider-control {
+            margin-bottom: clamp(10px, 1.2vw, 15px);
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: clamp(4px, 0.5vw, 6px);
+            font-size: clamp(10px, 0.9vw, 12px);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .slider-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: clamp(12px, 1.2vw, 16px);
+            height: clamp(12px, 1.2vw, 16px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: clamp(12px, 1.2vw, 16px);
+            height: clamp(12px, 1.2vw, 16px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: clamp(6px, 0.6vw, 8px);
+            padding: clamp(10px, 1vw, 12px);
+            font-size: clamp(10px, 0.85vw, 11px);
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        /* Animation Container */
+        #crystal-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
+            box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+        }
+
+        #crystal-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Mobile/Tablet Responsive */
+        @media (max-width: 1000px) {
+            body {
+                flex-direction: column;
+            }
+
+            .left-menu,
+            .right-menu {
+                width: 100%;
+                min-width: unset;
+                max-width: unset;
+                max-height: 35vh;
+                border: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 15px;
+            }
+
+            .left-menu {
+                order: 1;
+            }
+
+            .center-content {
+                order: 2;
+                flex: 1;
+                min-height: 30vh;
+            }
+
+            .right-menu {
+                order: 3;
+                border-bottom: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .button-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .button-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .left-menu,
+            .right-menu {
+                padding: 12px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .left-menu::-webkit-scrollbar,
+        .right-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .left-menu::-webkit-scrollbar-track,
+        .right-menu::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .left-menu::-webkit-scrollbar-thumb,
+        .right-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .left-menu::-webkit-scrollbar-thumb:hover,
+        .right-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU: Emotions & Controls -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Emotions</h2>
+            <div class="button-grid">
+                <button data-action="emotion" data-value="joy">😊 Joy</button>
+                <button data-action="emotion" data-value="love">❤️ Love</button>
+                <button data-action="emotion" data-value="excited">🎉 Excited</button>
+                <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
+                <button data-action="emotion" data-value="calm">😌 Calm</button>
+                <button data-action="emotion" data-value="focused">🎯 Focused</button>
+                <button data-action="emotion" data-value="resting">😴 Resting</button>
+                <button data-action="emotion" data-value="sadness">😢 Sadness</button>
+                <button data-action="emotion" data-value="anger">😠 Anger</button>
+                <button data-action="emotion" data-value="fear">😰 Fear</button>
+                <button data-action="emotion" data-value="surprise">😲 Surprise</button>
+                <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
+                <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
+                <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Undertones</h2>
+            <div class="button-grid">
+                <button data-action="undertone" data-value="null">Clear</button>
+                <button data-action="undertone" data-value="subdued">Subdued</button>
+                <button data-action="undertone" data-value="tired">Tired</button>
+                <button data-action="undertone" data-value="nervous">Nervous</button>
+                <button data-action="undertone" data-value="confident">Confident</button>
+                <button data-action="undertone" data-value="intense">Intense</button>
+                <button data-action="undertone" data-value="energetic">Energetic</button>
+            </div>
+        </div>
+
+        <div class="section visual-controls">
+            <h2>Visual Controls</h2>
+            <button data-action="toggle-particles" class="active">✨ Particles</button>
+            <button data-action="toggle-glow" class="active">💫 Core Glow</button>
+            <button data-action="toggle-glass" class="active">🔮 Glass Material</button>
+            <button data-action="toggle-blink" class="active">👁️ Blinking</button>
+            <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
+            <button data-action="toggle-auto-rotate" class="active">🔄 Auto-Rotate</button>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>About Crystal Demo:</strong><br>
+                This demo showcases the full emotional range and gesture library of the Emotive Engine 3D system with a crystal geometry.
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: 3D Crystal Animation -->
+    <div class="center-content">
+        <div id="crystal-container"></div>
+    </div>
+
+    <!-- RIGHT MENU: Gestures & Camera -->
+    <div class="right-menu">
+        <div class="section">
+            <h2>Motion Gestures</h2>
+            <div class="button-grid">
+                <button data-action="gesture" data-value="bounce">Bounce</button>
+                <button data-action="gesture" data-value="pulse">Pulse</button>
+                <button data-action="gesture" data-value="float">Float</button>
+                <button data-action="gesture" data-value="shake">Shake</button>
+                <button data-action="gesture" data-value="sway">Sway</button>
+                <button data-action="gesture" data-value="wiggle">Wiggle</button>
+                <button data-action="gesture" data-value="nod">Nod</button>
+                <button data-action="gesture" data-value="headBob">Head Bob</button>
+                <button data-action="gesture" data-value="orbit">Orbit</button>
+                <button data-action="gesture" data-value="jitter">Jitter</button>
+                <button data-action="gesture" data-value="twitch">Twitch</button>
+                <button data-action="gesture" data-value="vibrate">Vibrate</button>
+                <button data-action="gesture" data-value="lean">Lean</button>
+                <button data-action="gesture" data-value="point">Point</button>
+                <button data-action="gesture" data-value="reach">Reach</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Transform Gestures</h2>
+            <div class="button-grid">
+                <button data-action="gesture" data-value="spin">Spin</button>
+                <button data-action="gesture" data-value="tilt">Tilt</button>
+                <button data-action="gesture" data-value="jump">Jump</button>
+                <button data-action="gesture" data-value="twist">Twist</button>
+                <button data-action="gesture" data-value="hula">Hula</button>
+                <button data-action="gesture" data-value="orbital">Orbital</button>
+                <button data-action="gesture" data-value="stretch">Stretch</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Effect Gestures</h2>
+            <div class="button-grid">
+                <button data-action="gesture" data-value="wave">Wave</button>
+                <button data-action="gesture" data-value="flash">Flash</button>
+                <button data-action="gesture" data-value="glow">Glow</button>
+                <button data-action="gesture" data-value="breathe">Breathe</button>
+                <button data-action="gesture" data-value="drift">Drift</button>
+                <button data-action="gesture" data-value="burst">Burst</button>
+                <button data-action="gesture" data-value="flicker">Flicker</button>
+                <button data-action="gesture" data-value="fade">Fade</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Camera Controls</h2>
+            <div class="button-grid">
+                <button data-action="camera" data-value="front">📷 Front</button>
+                <button data-action="camera" data-value="side">📷 Side</button>
+                <button data-action="camera" data-value="top">📷 Top</button>
+                <button data-action="camera" data-value="angle">📷 Angle</button>
+                <button data-action="camera" data-value="back">📷 Back</button>
+                <button data-action="reset-camera">🔄 Reset</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Gesture System:</strong><br>
+                Click any gesture button to trigger an animation. Gestures can be combined with emotions for expressive animations.
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
+
+        let autoRotateDisabled = false; // Track if user manually disabled auto-rotate
+
+        // Initialize mascot
+        const container = document.getElementById('crystal-container');
+        const mascot = new EmotiveMascot3D({
+            canvasId: 'crystal',
+            coreGeometry: 'crystal',
+            enableParticles: true,
+            enableControls: true,
+            autoRotate: true,
+            enableBlinking: true,
+            enablePostProcessing: true,
+            cameraDistance: 1.0  // Closer default zoom
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Set initial emotion
+        mascot.setEmotion('love');
+
+        // Enable glass material by default
+        setTimeout(() => {
+            if (mascot.core3D) {
+                mascot.core3D.setGlassMaterialEnabled(true);
+                console.log('🔮 Glass material enabled by default');
+            }
+        }, 100);
+
+        console.log('✅ Crystal Demo initialized');
+
+        // Track toggle states
+        let particlesEnabled = true;
+        let glowEnabled = true;
+        let glassEnabled = true;
+
+        // Event delegation for all buttons
+        document.addEventListener('click', (e) => {
+            if (!e.target.matches('button[data-action]') || !mascot) return;
+
+            const action = e.target.dataset.action;
+            const value = e.target.dataset.value;
+
+            // Update active state for emotion buttons
+            if (action === 'emotion') {
+                document.querySelectorAll('[data-action="emotion"]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+            }
+
+            try {
+                switch (action) {
+                    case 'emotion':
+                        console.log('Setting emotion:', value);
+                        mascot.setEmotion(value);
+                        break;
+
+                    case 'gesture':
+                        console.log('Playing gesture:', value);
+                        mascot.express(value);
+                        break;
+
+                    case 'undertone':
+                        const undertone = value === 'null' ? null : value;
+                        console.log('Setting undertone:', undertone);
+                        mascot.updateUndertone(undertone);
+                        break;
+
+                    case 'toggle-particles':
+                        particlesEnabled = !particlesEnabled;
+                        if (particlesEnabled) {
+                            mascot.enableParticles();
+                            e.target.classList.add('active');
+                            console.log('✨ Particles enabled');
+                        } else {
+                            mascot.disableParticles();
+                            e.target.classList.remove('active');
+                            console.log('💨 Particles disabled');
+                        }
+                        break;
+
+                    case 'toggle-glow':
+                        glowEnabled = !glowEnabled;
+                        if (mascot.core3D) {
+                            mascot.core3D.setCoreGlowEnabled(glowEnabled);
+                            if (glowEnabled) {
+                                e.target.classList.add('active');
+                                console.log('✨ Core glow enabled');
+                            } else {
+                                e.target.classList.remove('active');
+                                console.log('💨 Core glow disabled');
+                            }
+                        }
+                        break;
+
+                    case 'toggle-glass':
+                        glassEnabled = !glassEnabled;
+                        if (mascot.core3D) {
+                            mascot.core3D.setGlassMaterialEnabled(glassEnabled);
+                            if (glassEnabled) {
+                                e.target.classList.add('active');
+                                console.log('🔮 Glass material enabled');
+                            } else {
+                                e.target.classList.remove('active');
+                                console.log('💨 Glass material disabled');
+                            }
+                        }
+                        break;
+
+                    case 'toggle-blink':
+                        if (mascot.blinkingEnabled) {
+                            mascot.disableBlinking();
+                            e.target.classList.remove('active');
+                            console.log('👁️ Blinking disabled');
+                        } else {
+                            mascot.enableBlinking();
+                            e.target.classList.add('active');
+                            console.log('👁️ Blinking enabled');
+                        }
+                        break;
+
+                    case 'toggle-breathing':
+                        if (mascot.breathingEnabled) {
+                            mascot.disableBreathing();
+                            e.target.classList.remove('active');
+                            console.log('🫁 Breathing disabled');
+                        } else {
+                            mascot.enableBreathing();
+                            e.target.classList.add('active');
+                            console.log('🫁 Breathing enabled');
+                        }
+                        break;
+
+                    case 'toggle-auto-rotate':
+                        console.log('🔍 AUTO-ROTATE TOGGLE CLICKED');
+                        const currentState = mascot.autoRotateEnabled;
+                        const newState = !currentState;
+
+                        if (newState) {
+                            mascot.enableAutoRotate();
+                            autoRotateDisabled = false;
+                            console.log('▶️ Auto-rotate ON');
+                            e.target.classList.add('active');
+                        } else {
+                            mascot.disableAutoRotate();
+                            autoRotateDisabled = true;
+                            console.log('🛑 Auto-rotate OFF');
+                            e.target.classList.remove('active');
+                        }
+                        break;
+
+                    case 'camera':
+                        console.log('Setting camera preset:', value);
+                        if (mascot.core3D?.renderer?.setCameraPreset) {
+                            mascot.core3D.renderer.setCameraPreset(value);
+                        }
+                        break;
+
+                    case 'reset-camera':
+                        console.log('Resetting camera');
+                        if (mascot.core3D?.renderer?.resetCamera) {
+                            mascot.core3D.renderer.resetCamera();
+                        }
+                        break;
+                }
+            } catch (error) {
+                console.error('Action failed:', error);
+            }
+        });
+
+        // Set initial active emotion button
+        document.querySelector('[data-value="love"]').classList.add('active');
+    </script>
+</body>
+</html>

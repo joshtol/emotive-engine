@@ -134,6 +134,7 @@ export class Core3DManager {
 
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
+        this.rotationDisabled = false; // Track if rotation was manually disabled
 
         // Righting behavior (self-stabilization like inflatable punching clowns)
         // Tuned for smooth return to upright without oscillation
@@ -259,7 +260,10 @@ export class Core3DManager {
 
         // Initialize or update rotation behavior from 3d config
         // EXCEPTION: Moon is tidally locked - no rotation behavior
-        if (this.geometryType === 'moon') {
+        // EXCEPTION: If rotation was manually disabled, respect that
+        if (this.rotationDisabled) {
+            this.rotationBehavior = null; // Keep rotation disabled
+        } else if (this.geometryType === 'moon') {
             this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
         } else if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
             if (this.rotationBehavior) {
@@ -274,7 +278,8 @@ export class Core3DManager {
             }
         } else {
             // Fall back to default gentle rotation if no 3d config
-            if (!this.rotationBehavior) {
+            // BUT: Don't create if rotation is disabled
+            if (!this.rotationBehavior && !this.rotationDisabled) {
                 this.rotationBehavior = new RotationBehavior(
                     { type: 'gentle', speed: 1.0, axes: [0, 0.01, 0] },
                     this.rhythmEngine
@@ -662,9 +667,10 @@ export class Core3DManager {
         // Always update persistent base rotation (ambient spin continues during gestures)
         if (this.rotationBehavior) {
             this.rotationBehavior.update(deltaTime, this.baseEuler);
-        } else if (this.geometryType !== 'moon') {
+        } else if (this.geometryType !== 'moon' && !this.rotationDisabled) {
             // Fallback: simple Y rotation if no behavior defined
             // EXCEPT for moon (tidally locked - no rotation)
+            // EXCEPT when user has manually disabled rotation
             this.baseEuler[1] += deltaTime * 0.0003;
         }
         // Moon gets no rotation update - stays tidally locked
