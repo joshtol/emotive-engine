@@ -18,8 +18,9 @@
  * - toneMapped: false to preserve HDR brightness values for bloom
  *
  * THREE.JS IMPLEMENTATION:
- * - Material: MeshBasicMaterial (not MeshStandardMaterial)
- * - Reason: Sun is self-luminous and doesn't need external lights
+ * - Material: MeshStandardMaterial with emissive properties
+ * - Emissive: Self-luminous glow (doesn't need external lights)
+ * - Normal Map: Shows photosphere granulation detail (convection cells)
  * - toneMapped: false allows HDR values > 1.0 for dramatic bloom
  * - UnrealBloomPass creates the radiant glow effect
  *
@@ -50,15 +51,16 @@ export const SUN_PHOTOSPHERE_TEMP_K = 5772;
  * @param {string} options.resolution - Texture resolution ('2k' or '4k', default: '4k')
  * @param {Array<number>} options.glowColor - RGB color array [r, g, b] for emotion tinting
  * @param {number} options.glowIntensity - Glow intensity multiplier (scales HDR brightness)
- * @returns {THREE.MeshBasicMaterial}
+ * @returns {THREE.MeshStandardMaterial}
  */
 export function createSunMaterial(textureLoader, options = {}) {
     const resolution = options.resolution || '4k';
     const glowColor = options.glowColor || [1, 1, 1];
     const glowIntensity = options.glowIntensity || 1.0;
 
-    // Determine texture path based on resolution
+    // Determine texture paths based on resolution
     const colorPath = `/assets/textures/Sun/sun-photosphere-${resolution}.jpg`;
+    const normalPath = `/assets/textures/Sun/sun-photosphere-normal-${resolution}.jpg`;
 
     // NASA-accurate base color: Brilliant white (5,772K black-body radiation)
     // Use HDR values for dramatic bloom
@@ -69,7 +71,7 @@ export function createSunMaterial(textureLoader, options = {}) {
         brightness * glowColor[2] * 0.95  // Slight warm tint
     );
 
-    // Load texture asynchronously
+    // Load color texture asynchronously
     const colorMap = textureLoader.load(
         colorPath,
         // onLoad callback
@@ -84,18 +86,43 @@ export function createSunMaterial(textureLoader, options = {}) {
         }
     );
 
+    // Load normal map for granulation detail (optional)
+    const normalMap = textureLoader.load(
+        normalPath,
+        texture => {
+            console.log(`✅ Sun normal map loaded: ${resolution}`);
+        },
+        undefined,
+        error => {
+            console.warn(`⚠️ Sun normal map not found (${resolution}), continuing without surface detail:`, error);
+        }
+    );
+
     // Configure texture wrapping for seamless sphere mapping
     colorMap.wrapS = colorMap.wrapT = THREE.RepeatWrapping;
+    normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
 
     // Enable anisotropic filtering for better quality at oblique angles
     colorMap.anisotropy = 16;
+    normalMap.anisotropy = 16;
 
-    // Use MeshBasicMaterial for self-luminous sun (unlit, always at full brightness)
-    // This is essential - MeshBasicMaterial doesn't need lights and always renders at full color
-    const material = new THREE.MeshBasicMaterial({
-        map: colorMap,           // NASA photosphere texture
-        color: baseColor,        // HDR color for bloom + emotion tinting
-        toneMapped: false       // Bypass tone mapping to preserve HDR brightness for bloom
+    // Use MeshStandardMaterial with emissive for self-luminous sun with surface detail
+    // This allows normal mapping for granulation while maintaining glow
+    const material = new THREE.MeshStandardMaterial({
+        map: colorMap,                              // NASA photosphere texture
+        normalMap,                                  // Granulation surface detail
+        normalScale: new THREE.Vector2(0.3, 0.3),  // Subtle bump (sun is gaseous, not rocky)
+
+        // Self-luminous properties
+        emissive: baseColor,                        // Self-glow color
+        emissiveMap: colorMap,                      // Use same texture for emissive
+        emissiveIntensity: 1.0,                     // Full brightness
+
+        // Surface properties
+        roughness: 1.0,                             // Maximum roughness (gaseous plasma)
+        metalness: 0.0,                             // Non-metallic
+
+        toneMapped: false                           // Bypass tone mapping for HDR bloom
     });
 
     return material;

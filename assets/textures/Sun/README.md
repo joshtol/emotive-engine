@@ -17,13 +17,15 @@ Dynamics Observatory data.
   and convection cells
 - **Temperature**: Based on 5,772K black-body radiation (NASA official)
 
-### Normal Map (Optional)
+### Normal Map (Recommended for Granulation Detail)
 
-- **Filename**: `sun-photosphere-normal.jpg`
+- **Filename**: `sun-photosphere-normal-4k.jpg`
 - **Resolution**: 4096x4096 (4K recommended)
-- **Description**: Normal map for surface detail and depth
-- **Status**: Optional - can be generated from color map or downloaded from NASA
-  SVS
+- **Description**: Normal map showing photosphere granulation (convection cells)
+- **Purpose**: Adds surface depth to show the sun's convection cell patterns
+- **Status**: Recommended - generates subtle 3D detail for realism
+- **How to create**: Can be generated from color map using image processing
+  tools (Photoshop, GIMP, online normal map generators)
 
 ## NASA Official Sources
 
@@ -55,33 +57,44 @@ Dynamics Observatory data.
 
 ## Installation
 
-1. Download the 4K sun texture from Solar System Scope:
+1. **Download the color texture** from Solar System Scope:
 
     ```bash
     # 2K version (smaller download)
     curl -o assets/textures/Sun/sun-photosphere-4k.jpg https://www.solarsystemscope.com/textures/download/2k_sun.jpg
     ```
 
-2. Or download 8K version and resize to 4K for optimal quality/performance
+2. **Generate normal map** (recommended for granulation detail):
+    - Option A: Use online normal map generator (e.g.,
+      https://cpetry.github.io/NormalMap-Online/)
+    - Option B: Use Photoshop: Filter > 3D > Generate Normal Map
+    - Option C: Use GIMP with normalmap plugin
+    - Save as: `sun-photosphere-normal-4k.jpg`
 
-3. Place the texture file in this directory
+3. Or download 8K version and resize to 4K for optimal quality/performance
 
-4. The texture will be automatically loaded by `Sun.js` geometry
+4. Place both texture files in this directory
+
+5. Textures will be automatically loaded by `Sun.js` geometry
 
 ## Directory Structure
 
 ```
 assets/textures/Sun/
 ├── README.md (this file)
-├── sun-photosphere-4k.jpg (to download)
-└── sun-photosphere-normal.jpg (optional)
+├── sun-photosphere-4k.jpg (downloaded ✓)
+└── sun-photosphere-normal-4k.jpg (to generate - recommended)
 ```
 
 ## Technical Details
 
 ### Material Properties
 
-- **Material**: MeshBasicMaterial (self-luminous, unlit)
+- **Material**: MeshStandardMaterial with emissive properties
+- **Emissive**: Self-luminous (full brightness without external lights)
+- **Normal Map**: Photosphere granulation detail (subtle, 0.3 scale)
+- **Roughness**: 1.0 (maximum - gaseous plasma surface)
+- **Metalness**: 0.0 (non-metallic)
 - **Tone Mapping**: Disabled (toneMapped: false) for HDR brightness
 - **Base Color**: Brilliant white (5,772K black-body spectrum)
 - **Emotion Tinting**: Applied over NASA-accurate base color
