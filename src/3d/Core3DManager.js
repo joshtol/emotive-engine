@@ -197,7 +197,7 @@ export class Core3DManager {
 
         // Enable/disable particles
         this.particlesEnabled = options.enableParticles !== false;
-        this.particleVisibility = true; // Runtime toggle for particle rendering
+        this.particleVisibility = this.particlesEnabled; // Runtime toggle matches initial state
 
         if (this.particlesEnabled) {
             // Create 2D particle system (reuse existing logic)
