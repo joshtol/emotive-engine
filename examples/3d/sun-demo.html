@@ -285,6 +285,14 @@
         </div>
 
         <div class="section">
+            <h2>Eclipse</h2>
+            <div class="button-grid">
+                <button data-action="eclipse" data-value="annular">🌑 Annular Eclipse</button>
+                <button data-action="eclipse" data-value="total">🌚 Total Eclipse</button>
+            </div>
+        </div>
+
+        <div class="section">
             <h2>Motion Gestures</h2>
             <div class="button-grid">
                 <button data-action="gesture" data-value="bounce">Bounce</button>
@@ -444,6 +452,25 @@
                             mascot.enableAutoRotate();
                             console.log('▶️ Auto-rotate ON');
                             e.target.classList.add('active');
+                        }
+                        break;
+
+                    case 'eclipse':
+                        // Toggle between eclipse types
+                        const eclipseType = e.target.dataset.value;
+                        const eclipseButtons = document.querySelectorAll('[data-action="eclipse"]');
+
+                        if (e.target.classList.contains('active')) {
+                            // Turn OFF eclipse
+                            mascot.core3D.setSunShadow('off');
+                            e.target.classList.remove('active');
+                            console.log('☀️ Eclipse OFF');
+                        } else {
+                            // Turn ON this eclipse type and turn off others
+                            eclipseButtons.forEach(btn => btn.classList.remove('active'));
+                            mascot.core3D.setSunShadow(eclipseType);
+                            e.target.classList.add('active');
+                            console.log(`🌑 ${eclipseType.toUpperCase()} Eclipse ON`);
                         }
                         break;
                 }

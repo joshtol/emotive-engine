@@ -28,14 +28,23 @@ export class ThreeRenderer {
         this.scene = new THREE.Scene();
         this.scene.background = null; // Transparent background for particle overlay
 
-        // Create WebGL renderer
+        // Create WebGL renderer with high precision to reduce banding
         this.renderer = new THREE.WebGLRenderer({
             canvas,
             alpha: true, // Transparent background
             antialias: true,
             powerPreference: 'high-performance',
-            preserveDrawingBuffer: false
+            preserveDrawingBuffer: false,
+            precision: 'highp', // High precision float for smoother gradients
+            logarithmicDepthBuffer: false,
+            stencil: false
         });
+
+        // Force higher color depth if available
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        this.renderer.toneMapping = THREE.NoToneMapping;
+        this.renderer.toneMappingExposure = 1.0;
+
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setSize(canvas.width, canvas.height, false);
 
@@ -272,14 +281,14 @@ export class ThreeRenderer {
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)
-        // Sun-optimized: Extreme bloom for NASA-quality solar corona
         this.bloomPass = new UnrealBloomPass(
             new THREE.Vector2(this.canvas.width, this.canvas.height),
-            5.0, // strength - dramatic radiant glow for sun (was 2.5)
-            1.5, // radius - large glow spread for solar atmosphere (was 0.8)
-            0.05 // threshold - bloom everything for maximum radiance (was 0.1)
+            1.2, // strength - moderate glow
+            0.5, // radius - tight spread
+            0.3  // threshold - preserve texture detail
         );
         this.bloomPass.name = 'bloomPass';
+        this.bloomPass.enabled = true;
         this.composer.addPass(this.bloomPass);
     }
 

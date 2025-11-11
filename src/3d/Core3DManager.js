@@ -28,6 +28,7 @@ import ParticleSystem from '../core/ParticleSystem.js';
 import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
 import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
+import { SolarEclipse } from './effects/SolarEclipse.js';
 import { createMoonMaterial, createMoonShadowMaterial, createMoonFallbackMaterial, updateMoonGlow } from './geometries/Moon.js';
 
 export class Core3DManager {
@@ -235,6 +236,12 @@ export class Core3DManager {
         // If particles disabled, hide them immediately
         if (!this.particlesEnabled) {
             particleRenderer.geometry.setDrawRange(0, 0);
+        }
+
+        // Initialize solar eclipse system for sun geometry
+        if (this.geometryType === 'sun') {
+            const sunRadius = this.geometry.parameters?.radius || 0.5;
+            this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius);
         }
 
         // Initialize emotion
@@ -571,6 +578,20 @@ export class Core3DManager {
     }
 
     /**
+     * Set solar eclipse type (only works for sun geometry)
+     * @param {string} eclipseType - Eclipse type: 'off', 'annular', or 'total'
+     */
+    setSunShadow(eclipseType = 'off') {
+        if (this.geometryType !== 'sun' || !this.solarEclipse) {
+            console.warn('⚠️ Eclipse only available for sun geometry');
+            return;
+        }
+
+        // Set eclipse type on the solar eclipse manager
+        this.solarEclipse.setEclipseType(eclipseType);
+    }
+
+    /**
      * Morph to different shape with smooth transition
      * @param {string} shapeName - Target geometry name
      * @param {number} duration - Transition duration in ms (default: 800ms)
@@ -804,6 +825,11 @@ export class Core3DManager {
         // Update sun material animation if using sun geometry
         if (this.customMaterialType === 'sun') {
             updateSunMaterial(this.coreMesh, this.glowColor, effectiveGlowIntensity, deltaTime);
+
+            // Update solar eclipse effects every frame
+            if (this.solarEclipse) {
+                this.solarEclipse.update(this.renderer.camera, this.coreMesh, deltaTime);
+            }
         }
 
         // Render with Three.js

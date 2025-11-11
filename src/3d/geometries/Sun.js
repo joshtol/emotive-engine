@@ -112,17 +112,23 @@ export function createSunMaterial(textureLoader, options = {}) {
             baseColor: { value: baseColor },
             emissiveIntensity: { value: 2.0 },  // Reduced from 6.0 to prevent core blowout
             glowColor: { value: new THREE.Color(1, 1, 1) },  // For ThreeRenderer compatibility
-            glowIntensity: { value: 1.0 }  // For ThreeRenderer compatibility
+            glowIntensity: { value: 1.0 },  // For ThreeRenderer compatibility
+            // Shadow uniforms (same as moon crescent shader)
+            shadowOffset: { value: new THREE.Vector2(200.0, 0.0) },  // Start far away (no shadow)
+            shadowCoverage: { value: 0.5 },  // Shadow coverage (0.5 = half the sun radius)
+            shadowSoftness: { value: 0.1 }   // Edge softness for anti-aliasing
         },
         vertexShader: `
             varying vec2 vUv;
             varying vec3 vNormal;
             varying vec3 vPosition;
+            varying vec3 vWorldPosition;
 
             void main() {
                 vUv = uv;
                 vNormal = normalize(normalMatrix * normal);
                 vPosition = position;
+                vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
         `,
@@ -132,10 +138,14 @@ export function createSunMaterial(textureLoader, options = {}) {
             uniform sampler2D normalMap;
             uniform vec3 baseColor;
             uniform float emissiveIntensity;
+            uniform vec2 shadowOffset;
+            uniform float shadowCoverage;
+            uniform float shadowSoftness;
 
             varying vec2 vUv;
             varying vec3 vNormal;
             varying vec3 vPosition;
+            varying vec3 vWorldPosition;
 
             // Simplex noise for fire animation (Ashima Arts)
             vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -226,8 +236,31 @@ export function createSunMaterial(textureLoader, options = {}) {
                 // Apply base color tinting
                 finalColor *= baseColor;
 
-                // Apply emissive intensity for HDR bloom
+                // Apply emissive intensity for HDR bloom FIRST (so bloom sees full brightness)
                 finalColor *= emissiveIntensity;
+
+                // ═══════════════════════════════════════════════════════════════════════════
+                // SHADOW DARKENING (applied AFTER bloom intensity so it doesn't affect bloom)
+                // ═══════════════════════════════════════════════════════════════════════════
+
+                // Sun sphere center (world space origin)
+                float sunRadius = 0.5; // Matches geometry radius
+
+                // Shadow sphere center (offset from sun center)
+                vec3 shadowCenter = vec3(shadowOffset.x, shadowOffset.y, 0.0);
+
+                // Calculate distance from fragment to shadow sphere center
+                float distToShadow = distance(vWorldPosition, shadowCenter);
+
+                // Shadow threshold (shadow sphere radius adjusted by coverage)
+                float shadowRadius = sunRadius * shadowCoverage;
+
+                // Calculate shadow factor (0 = full shadow, 1 = no shadow)
+                float shadowFactor = smoothstep(shadowRadius - shadowSoftness, shadowRadius + shadowSoftness, distToShadow);
+
+                // Darken ONLY the final color output (not the bloom calculation)
+                float shadowDarkness = 0.05; // How dark the shadow gets (5% brightness)
+                finalColor *= mix(shadowDarkness, 1.0, shadowFactor);
 
                 gl_FragColor = vec4(finalColor, 1.0);
             }
