@@ -473,6 +473,40 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Enable auto-rotation
+     */
+    enableAutoRotate() {
+        if (this.core3D?.renderer?.controls) {
+            this.core3D.renderer.controls.autoRotate = true;
+        }
+        if (this.core3D) {
+            this.core3D.rotationDisabled = false;
+            // Re-trigger emotion to restore rotation behavior
+            this.setEmotion(this.core3D.emotion, this.undertone);
+        }
+    }
+
+    /**
+     * Disable auto-rotation (stops both camera and emotion-based rotation)
+     */
+    disableAutoRotate() {
+        if (this.core3D?.renderer?.controls) {
+            this.core3D.renderer.controls.autoRotate = false;
+        }
+        if (this.core3D) {
+            this.core3D.rotationDisabled = true;
+            this.core3D.rotationBehavior = null;
+        }
+    }
+
+    /**
+     * Check if auto-rotate is enabled
+     */
+    get autoRotateEnabled() {
+        return this.core3D?.renderer?.controls?.autoRotate || false;
+    }
+
+    /**
      * Enable particles
      */
     enableParticles() {

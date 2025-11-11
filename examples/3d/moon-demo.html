@@ -1,9 +1,25 @@
 <!DOCTYPE html>
+<!--
+  INTERACTIVE MOON - Emotive Engine 3D Demo
+
+  A realistic moon with dynamic lighting and emotional states.
+
+  What you'll learn:
+  - 3D rendering with custom geometry (moon)
+  - Dynamic shadow positioning for moon phases
+  - Camera controls and rotation calibration
+  - Particle system toggling
+  - Emotion mapping to celestial objects
+
+  Complexity: ⭐⭐⭐ Advanced 3D
+  Features: Moon phases, tidally-locked rotation, shadow control
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moon Phase Demo V2 (UNCACHED) - Emotive Engine</title>
+    <title>Interactive Moon - Emotive Engine 3D</title>
+    <meta name="description" content="Realistic 3D moon with dynamic lighting, phases, and emotional expressions">
     <style>
         * {
             margin: 0;
@@ -370,23 +386,6 @@
     </div>
     <div class="right-menu">
         <div class="section">
-            <h2>Emotions</h2>
-            <div class="emotion-grid">
-                <button class="emotion-btn" data-emotion="joy">😊 Joy</button>
-                <button class="emotion-btn" data-emotion="calm">😌 Calm</button>
-                <button class="emotion-btn" data-emotion="excited">🤩 Excited</button>
-                <button class="emotion-btn active" data-emotion="neutral">😐 Neutral</button>
-                <button class="emotion-btn" data-emotion="curious">🤔 Curious</button>
-                <button class="emotion-btn" data-emotion="focused">🎯 Focused</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Particles</h2>
-            <button id="toggle-particles">✨ Particles Off</button>
-        </div>
-
-        <div class="section">
             <h2>Shadow Position</h2>
             <div class="slider-control">
                 <div class="slider-label">
@@ -443,7 +442,7 @@
 
     <script type="module">
         // Updated: 2025-01-10 - Added particle toggle, disabled blinking/breathing by default
-        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase } from '../dist/emotive-mascot-3d.js?t=1762809806';
+        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase } from '../../dist/emotive-mascot-3d.js?t=1762809806';
 
         // Store current rotation values (declared early for use in initialization)
         // Calibrated to show classic "Man in the Moon" Earth-facing view
@@ -458,7 +457,7 @@
             autoRotate: false,
             enableBlinking: false,
             enableBreathing: false,
-            cameraDistance: 1.5  // 2x closer zoom (default is 3)
+            cameraDistance: 1.0  // Closer default zoom
         });
 
         mascot.init(container);
@@ -684,40 +683,6 @@
                     updateShadow(axis, currentValue + delta);
                 }
             });
-        });
-
-        // Emotion buttons
-        document.querySelectorAll('[data-emotion]').forEach(button => {
-            button.addEventListener('click', () => {
-                const emotion = button.dataset.emotion;
-                console.log('Setting emotion:', emotion);
-
-                // Update active state
-                document.querySelectorAll('[data-emotion]').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-
-                // Set emotion
-                mascot.setEmotion(emotion);
-            });
-        });
-
-        // Particle toggle (start disabled)
-        let particlesEnabled = false;
-        document.getElementById('toggle-particles').addEventListener('click', () => {
-            particlesEnabled = !particlesEnabled;
-            const button = document.getElementById('toggle-particles');
-
-            if (particlesEnabled) {
-                mascot.enableParticles();
-                button.classList.add('active');
-                button.textContent = '✨ Particles On';
-                console.log('✨ Particles enabled');
-            } else {
-                mascot.disableParticles();
-                button.classList.remove('active');
-                button.textContent = '✨ Particles Off';
-                console.log('💨 Particles disabled');
-            }
         });
 
         // Camera controls

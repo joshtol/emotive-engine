@@ -52,8 +52,8 @@ export class ThreeRenderer {
             0.1, // near
             100 // far
         );
-        const cameraDistance = options.cameraDistance !== undefined ? options.cameraDistance : 3;
-        this.camera.position.set(0, 0, cameraDistance);
+        this.cameraDistance = options.cameraDistance !== undefined ? options.cameraDistance : 3;
+        this.camera.position.set(0, 0, this.cameraDistance);
         this.camera.lookAt(0, 0, 0);
 
         // Setup camera controls (OrbitControls)
@@ -97,11 +97,14 @@ export class ThreeRenderer {
 
         // Enable smooth damping for better feel (especially important for touch)
         this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.05;
+        this.controls.dampingFactor = 0.1; // Increased from 0.05 for faster response
 
         // Set distance limits (min/max zoom for both mouse wheel and pinch)
-        this.controls.minDistance = 2;
-        this.controls.maxDistance = 5;
+        // Use configured camera distance as the baseline, allowing zoom from 50% to 200% of initial distance
+        const minZoom = this.cameraDistance * 0.5;
+        const maxZoom = this.cameraDistance * 2.0;
+        this.controls.minDistance = minZoom;
+        this.controls.maxDistance = maxZoom;
 
         // Disable panning to keep mascot centered
         this.controls.enablePan = false;
@@ -114,14 +117,21 @@ export class ThreeRenderer {
         this.controls.minPolarAngle = Math.PI * 0.2; // 36 degrees from top
         this.controls.maxPolarAngle = Math.PI * 0.8; // 36 degrees from bottom
 
-        // Touch-specific optimizations
-        this.controls.rotateSpeed = 0.5; // Slower rotation for more control (both mouse and touch)
-        this.controls.zoomSpeed = 1.2; // Slightly faster zoom for better pinch responsiveness
+        // Touch-specific optimizations - improved responsiveness
+        this.controls.rotateSpeed = 0.8; // Increased from 0.5 for faster touch rotation
+        this.controls.zoomSpeed = 1.5; // Increased from 1.2 for more responsive pinch zoom
 
-        // Touch gestures are enabled by default:
+        // Touch gestures configuration
         // - ONE finger: Rotate (orbit around mascot)
         // - TWO fingers: Pinch to zoom + pan (but pan is disabled above)
-        // No need to configure this.controls.touches - defaults are optimal
+
+        // Mobile-specific improvements
+        if ('ontouchstart' in window) {
+            // Faster response on touch devices
+            this.controls.dampingFactor = 0.15; // Even faster on touch
+            this.controls.rotateSpeed = 1.0; // More responsive rotation on mobile
+            this.controls.zoomSpeed = 2.0; // Very responsive pinch zoom
+        }
 
         // Prevent browser touch gestures from interfering with canvas interaction
         this.renderer.domElement.style.touchAction = 'none';
@@ -715,12 +725,13 @@ export class ThreeRenderer {
     setCameraPreset(preset, duration = 1000) {
         if (!this.controls) return;
 
+        const d = this.cameraDistance;
         const presets = {
-            front: { x: 0, y: 0, z: 3 },
-            side: { x: 3, y: 0, z: 0 },
-            top: { x: 0, y: 3, z: 0.5 },
-            angle: { x: 2, y: 1.5, z: 2 },
-            back: { x: 0, y: 0, z: -3 }
+            front: { x: 0, y: 0, z: d },
+            side: { x: d, y: 0, z: 0 },
+            top: { x: 0, y: d, z: 0.5 },
+            angle: { x: d * 0.67, y: d * 0.5, z: d * 0.67 },
+            back: { x: 0, y: 0, z: -d }
         };
 
         const target = presets[preset];

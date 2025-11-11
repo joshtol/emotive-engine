@@ -316,7 +316,7 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D from '../dist/emotive-mascot-3d.js';
+        import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
 
         // Initialize mascot
         const container = document.getElementById('animation-container');
@@ -330,6 +330,17 @@
 
         mascot.init(container);
         mascot.start();
+
+        // Improve touch responsiveness (optional - already configured in engine)
+        // The engine automatically detects touch devices and applies optimal settings:
+        // - Faster damping (0.15 vs 0.1 on desktop)
+        // - More responsive rotation (1.0 vs 0.8)
+        // - Faster pinch zoom (2.0 vs 1.5)
+        // You can override these if needed:
+        // if (mascot.core3D?.renderer?.controls) {
+        //     mascot.core3D.renderer.controls.rotateSpeed = 1.2;
+        //     mascot.core3D.renderer.controls.zoomSpeed = 2.5;
+        // }
 
         console.log('✅ Demo initialized');
 
