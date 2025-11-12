@@ -71,27 +71,44 @@ export function createSunMaterial(textureLoader, options = {}) {
         brightness * glowColor[2] * 0.95  // Slight warm tint
     );
 
-    // Load color texture asynchronously
+    // Initialize pending texture tracking for cleanup
+    const pendingTextures = new Map();
+
+    // Load color texture asynchronously with tracking
+    pendingTextures.set(colorPath, { texture: null });
+
     const colorMap = textureLoader.load(
         colorPath,
         texture => {
-            console.log(`✅ Sun photosphere texture loaded: ${resolution}`);
+            const pending = pendingTextures.get(colorPath);
+            if (pending) {
+                pending.texture = texture;
+            }
+            pendingTextures.delete(colorPath);
         },
         undefined,
         error => {
             console.warn(`⚠️ Failed to load sun texture (${resolution}), using color fallback:`, error);
+            pendingTextures.delete(colorPath);
         }
     );
 
     // Load normal map for granulation detail (optional)
+    pendingTextures.set(normalPath, { texture: null });
+
     const normalMap = textureLoader.load(
         normalPath,
         texture => {
-            console.log(`✅ Sun normal map loaded: ${resolution}`);
+            const pending = pendingTextures.get(normalPath);
+            if (pending) {
+                pending.texture = texture;
+            }
+            pendingTextures.delete(normalPath);
         },
         undefined,
         error => {
             console.warn(`⚠️ Sun normal map not found (${resolution}), continuing without surface detail:`, error);
+            pendingTextures.delete(normalPath);
         }
     );
 
@@ -295,6 +312,9 @@ export function createSunMaterial(textureLoader, options = {}) {
     // Store uniforms reference for updates
     material.userData.uniforms = material.uniforms;
 
+    // Store pending textures for disposal
+    material.userData.pendingTextures = pendingTextures;
+
     return material;
 }
 
@@ -429,6 +449,16 @@ export function disposeSun(sunMesh) {
     // Dispose material and its textures
     if (sunMesh.material) {
         const {material} = sunMesh;
+
+        // Clean up pending texture loads
+        if (material.userData && material.userData.pendingTextures) {
+            material.userData.pendingTextures.forEach(({texture}) => {
+                if (texture) {
+                    texture.dispose();
+                }
+            });
+            material.userData.pendingTextures.clear();
+        }
 
         // Dispose textures (for shader material)
         if (material.uniforms) {

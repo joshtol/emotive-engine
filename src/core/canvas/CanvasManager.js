@@ -254,11 +254,28 @@ class CanvasManager {
     }
 
     /**
-     * Cleanup method to remove event listeners
+     * Cleanup method to remove event listeners and canvas resources
      */
     destroy() {
         window.removeEventListener('resize', this.handleResize);
         clearTimeout(this.resizeTimeout);
+
+        // Clear canvas context
+        if (this.ctx) {
+            this.ctx.clearRect(0, 0, this.width, this.height);
+            this.ctx = null;
+        }
+
+        // Clean up canvas reference
+        if (this.canvas) {
+            this.canvas.width = 0;
+            this.canvas.height = 0;
+            this.canvas = null;
+        }
+
+        // Clear callbacks and timeouts
+        this.resizeCallbacks = [];
+        this.resizeTimeout = null;
     }
 }
 

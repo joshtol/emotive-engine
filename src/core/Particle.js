@@ -111,8 +111,10 @@ class Particle {
         // Make particles more ephemeral
         this.baseOpacity = 0.3 + Math.random() * 0.4;  // 30-70% max opacity for ethereal look
         
-        // Color caching for performance
+        // Color caching for performance with LRU eviction
         this.cachedColors = new Map(); // Cache RGBA strings
+        this.maxCachedColors = 20; // Maximum cached colors per particle
+        this.colorAccessOrder = []; // LRU tracking for color keys
         this.lastColor = null;
         this.lastOpacity = -1;
         
@@ -376,6 +378,7 @@ class Particle {
         
         // Clear cached colors for reuse
         this.cachedColors.clear();
+        this.colorAccessOrder = []; // Clear LRU tracking
         this.opacity = 0.0;  // Start invisible
         this.isFadingOut = false;
         this.baseOpacity = 0.3 + Math.random() * 0.4;  // Reset base opacity
@@ -409,11 +412,25 @@ class Particle {
         // Round opacity to reduce cache entries
         const roundedOpacity = Math.round(opacity * 100) / 100;
         const cacheKey = `${hexColor}_${roundedOpacity}`;
-        
+
         if (!this.cachedColors.has(cacheKey)) {
+            // LRU eviction: Remove oldest key when limit reached
+            if (this.cachedColors.size >= this.maxCachedColors) {
+                const oldestKey = this.colorAccessOrder.shift();
+                this.cachedColors.delete(oldestKey);
+            }
+
             this.cachedColors.set(cacheKey, this.hexToRgba(hexColor, roundedOpacity));
+            this.colorAccessOrder.push(cacheKey);
+        } else {
+            // Update access order for existing key (move to end)
+            const existingIndex = this.colorAccessOrder.indexOf(cacheKey);
+            if (existingIndex !== -1) {
+                this.colorAccessOrder.splice(existingIndex, 1);
+            }
+            this.colorAccessOrder.push(cacheKey);
         }
-        
+
         return this.cachedColors.get(cacheKey);
     }
 

@@ -278,9 +278,20 @@ export class GlowRenderer {
      * Clean up resources
      */
     destroy() {
-        this.offscreenCanvas = null;
-        this.offscreenCtx = null;
+        // Clean up offscreen canvas
+        if (this.offscreenCanvas) {
+            if (this.offscreenCtx) {
+                this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+                this.offscreenCtx = null;
+            }
+            this.offscreenCanvas.width = 0;
+            this.offscreenCanvas.height = 0;
+            this.offscreenCanvas = null;
+        }
+
+        // Clear cached values
         this.cachedGlowColor = null;
+        this.cachedGlowRadius = 0;
     }
 }
 

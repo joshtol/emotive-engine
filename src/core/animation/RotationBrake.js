@@ -224,6 +224,31 @@ export class RotationBrake {
         const elapsed = performance.now() - this.brakeStartTime;
         return Math.min(elapsed / this.brakeDuration, 1);
     }
+
+    /**
+     * Clean up all resources and references
+     * Prevents memory leaks by nulling renderer references and clearing state
+     */
+    destroy() {
+        // Stop any active braking
+        this.stop();
+
+        // Clear callbacks to prevent retention
+        this.onComplete = null;
+        this.onProgress = null;
+
+        // Clear promise reference
+        this.resolvePromise = null;
+
+        // Null renderer reference
+        this.renderer = null;
+
+        // Clear internal state
+        this.brakeStartTime = null;
+        this.brakeStartRotation = 0;
+        this.brakeTargetRotation = 0;
+        this.brakeStartVelocity = 0;
+    }
 }
 
 export default RotationBrake;

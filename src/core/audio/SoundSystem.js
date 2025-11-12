@@ -67,6 +67,8 @@ export class SoundSystem {
         // Track warning frequency to reduce spam
         this.warningTimestamps = {};
         this.warningThrottle = 5000; // Only show same warning every 5 seconds
+        this.maxWarningKeys = 50; // Maximum warning keys to cache
+        this.warningAccessOrder = []; // LRU tracking for warning keys
     
         // Current ambient oscillator
         this.currentOscillator = null;
@@ -574,10 +576,23 @@ export class SoundSystem {
     throttledWarn(message, key) {
         const now = Date.now();
         const lastWarning = this.warningTimestamps[key] || 0;
-    
+
         if (now - lastWarning > this.warningThrottle) {
+            // LRU eviction: Remove oldest key when limit reached
+            if (Object.keys(this.warningTimestamps).length >= this.maxWarningKeys) {
+                const oldestKey = this.warningAccessOrder.shift();
+                delete this.warningTimestamps[oldestKey];
+            }
+
             // SoundSystem warning
             this.warningTimestamps[key] = now;
+
+            // Track access order for LRU
+            const existingIndex = this.warningAccessOrder.indexOf(key);
+            if (existingIndex !== -1) {
+                this.warningAccessOrder.splice(existingIndex, 1);
+            }
+            this.warningAccessOrder.push(key);
         }
     }
 }

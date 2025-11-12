@@ -25,6 +25,9 @@ class ElementTargetingAnimations extends ElementTargeting {
         this.activeAnimations = new Map();
         this.animationQueue = [];
         this.isAnimating = false;
+        this.queueTimeouts = new Set();
+        this.activeRAFIds = new Set();
+        this.animationRAFIds = new Map(); // Track RAF ID per animation
     }
 
     /**
@@ -71,18 +74,33 @@ class ElementTargetingAnimations extends ElementTargeting {
 
             if (progress < 1) {
                 this.activeAnimations.set(animationId, animate);
-                requestAnimationFrame(animate);
+                const rafId = requestAnimationFrame(animate);
+                this.activeRAFIds.add(rafId);
+                this.animationRAFIds.set(animationId, rafId);
             } else {
                 this.activeAnimations.delete(animationId);
+                const rafId = this.animationRAFIds.get(animationId);
+                if (rafId !== undefined) {
+                    this.activeRAFIds.delete(rafId);
+                    this.animationRAFIds.delete(animationId);
+                }
                 if (onComplete) onComplete();
             }
         };
 
         this.activeAnimations.set(animationId, animate);
-        requestAnimationFrame(animate);
+        const rafId = requestAnimationFrame(animate);
+        this.activeRAFIds.add(rafId);
+        this.animationRAFIds.set(animationId, rafId);
 
         return () => {
             this.activeAnimations.delete(animationId);
+            const rafId = this.animationRAFIds.get(animationId);
+            if (rafId !== undefined) {
+                cancelAnimationFrame(rafId);
+                this.activeRAFIds.delete(rafId);
+                this.animationRAFIds.delete(animationId);
+            }
         };
     }
 
@@ -129,18 +147,35 @@ class ElementTargetingAnimations extends ElementTargeting {
 
             if (progress < 1) {
                 this.activeAnimations.set(animationId, animate);
-                setTimeout(() => requestAnimationFrame(animate), 1000 / frequency);
+                setTimeout(() => {
+                    const rafId = requestAnimationFrame(animate);
+                    this.activeRAFIds.add(rafId);
+                    this.animationRAFIds.set(animationId, rafId);
+                }, 1000 / frequency);
             } else {
                 this.activeAnimations.delete(animationId);
+                const rafId = this.animationRAFIds.get(animationId);
+                if (rafId !== undefined) {
+                    this.activeRAFIds.delete(rafId);
+                    this.animationRAFIds.delete(animationId);
+                }
                 if (onComplete) onComplete();
             }
         };
 
         this.activeAnimations.set(animationId, animate);
-        requestAnimationFrame(animate);
+        const rafId = requestAnimationFrame(animate);
+        this.activeRAFIds.add(rafId);
+        this.animationRAFIds.set(animationId, rafId);
 
         return () => {
             this.activeAnimations.delete(animationId);
+            const rafId = this.animationRAFIds.get(animationId);
+            if (rafId !== undefined) {
+                cancelAnimationFrame(rafId);
+                this.activeRAFIds.delete(rafId);
+                this.animationRAFIds.delete(animationId);
+            }
         };
     }
 
@@ -185,18 +220,33 @@ class ElementTargetingAnimations extends ElementTargeting {
 
             if (progress < 1) {
                 this.activeAnimations.set(animationId, animate);
-                requestAnimationFrame(animate);
+                const rafId = requestAnimationFrame(animate);
+                this.activeRAFIds.add(rafId);
+                this.animationRAFIds.set(animationId, rafId);
             } else {
                 this.activeAnimations.delete(animationId);
+                const rafId = this.animationRAFIds.get(animationId);
+                if (rafId !== undefined) {
+                    this.activeRAFIds.delete(rafId);
+                    this.animationRAFIds.delete(animationId);
+                }
                 if (onComplete) onComplete();
             }
         };
 
         this.activeAnimations.set(animationId, animate);
-        requestAnimationFrame(animate);
+        const rafId = requestAnimationFrame(animate);
+        this.activeRAFIds.add(rafId);
+        this.animationRAFIds.set(animationId, rafId);
 
         return () => {
             this.activeAnimations.delete(animationId);
+            const rafId = this.animationRAFIds.get(animationId);
+            if (rafId !== undefined) {
+                cancelAnimationFrame(rafId);
+                this.activeRAFIds.delete(rafId);
+                this.animationRAFIds.delete(animationId);
+            }
         };
     }
 
@@ -243,18 +293,33 @@ class ElementTargetingAnimations extends ElementTargeting {
 
             if (progress < 1) {
                 this.activeAnimations.set(animationId, animate);
-                requestAnimationFrame(animate);
+                const rafId = requestAnimationFrame(animate);
+                this.activeRAFIds.add(rafId);
+                this.animationRAFIds.set(animationId, rafId);
             } else {
                 this.activeAnimations.delete(animationId);
+                const rafId = this.animationRAFIds.get(animationId);
+                if (rafId !== undefined) {
+                    this.activeRAFIds.delete(rafId);
+                    this.animationRAFIds.delete(animationId);
+                }
                 if (onComplete) onComplete();
             }
         };
 
         this.activeAnimations.set(animationId, animate);
-        requestAnimationFrame(animate);
+        const rafId = requestAnimationFrame(animate);
+        this.activeRAFIds.add(rafId);
+        this.animationRAFIds.set(animationId, rafId);
 
         return () => {
             this.activeAnimations.delete(animationId);
+            const rafId = this.animationRAFIds.get(animationId);
+            if (rafId !== undefined) {
+                cancelAnimationFrame(rafId);
+                this.activeRAFIds.delete(rafId);
+                this.animationRAFIds.delete(animationId);
+            }
         };
     }
 
@@ -307,18 +372,33 @@ class ElementTargetingAnimations extends ElementTargeting {
 
             if (progress < 1) {
                 this.activeAnimations.set(animationId, animate);
-                requestAnimationFrame(animate);
+                const rafId = requestAnimationFrame(animate);
+                this.activeRAFIds.add(rafId);
+                this.animationRAFIds.set(animationId, rafId);
             } else {
                 this.activeAnimations.delete(animationId);
+                const rafId = this.animationRAFIds.get(animationId);
+                if (rafId !== undefined) {
+                    this.activeRAFIds.delete(rafId);
+                    this.animationRAFIds.delete(animationId);
+                }
                 if (onComplete) onComplete();
             }
         };
 
         this.activeAnimations.set(animationId, animate);
-        requestAnimationFrame(animate);
+        const rafId = requestAnimationFrame(animate);
+        this.activeRAFIds.add(rafId);
+        this.animationRAFIds.set(animationId, rafId);
 
         return () => {
             this.activeAnimations.delete(animationId);
+            const rafId = this.animationRAFIds.get(animationId);
+            if (rafId !== undefined) {
+                cancelAnimationFrame(rafId);
+                this.activeRAFIds.delete(rafId);
+                this.animationRAFIds.delete(animationId);
+            }
         };
     }
 
@@ -343,11 +423,13 @@ class ElementTargetingAnimations extends ElementTargeting {
         if (animation) {
             const cleanup = this.executeAnimation(animation);
             if (cleanup) {
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
+                    this.queueTimeouts.delete(timeoutId);
                     cleanup();
                     this.isAnimating = false;
                     this.processAnimationQueue();
                 }, animation.duration || 1000);
+                this.queueTimeouts.add(timeoutId);
             }
         }
     }
@@ -383,6 +465,11 @@ class ElementTargetingAnimations extends ElementTargeting {
         this.activeAnimations.forEach((animation, id) => {
             this.activeAnimations.delete(id);
         });
+        this.activeRAFIds.forEach(id => cancelAnimationFrame(id));
+        this.activeRAFIds.clear();
+        this.animationRAFIds.clear();
+        this.queueTimeouts.forEach(id => clearTimeout(id));
+        this.queueTimeouts.clear();
         this.animationQueue = [];
         this.isAnimating = false;
     }

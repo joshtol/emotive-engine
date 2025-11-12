@@ -27,6 +27,11 @@ export class GradientCache {
 
         // LRU tracking
         this.accessOrder = [];
+
+        // Automatic cleanup interval
+        this.cleanupInterval = setInterval(() => {
+            this.clearExpired();
+        }, 60000); // Run every 60 seconds
     }
 
     /**
@@ -169,6 +174,10 @@ export class GradientCache {
      * Clear all cached gradients
      */
     clear() {
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+            this.cleanupInterval = null;
+        }
         this.cache.clear();
         this.accessOrder = [];
     }
@@ -193,6 +202,13 @@ export class GradientCache {
                 this.accessOrder.splice(index, 1);
             }
         });
+    }
+
+    /**
+     * Destroy the cache and cleanup resources
+     */
+    destroy() {
+        this.clear();
     }
 
     /**

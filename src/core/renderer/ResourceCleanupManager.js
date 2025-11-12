@@ -108,5 +108,10 @@ export class ResourceCleanupManager {
         if (this.renderer.specialEffects) {
             this.renderer.specialEffects.destroy();
         }
+
+        // Clean up offscreen canvas resources
+        if (this.renderer.cleanupOffscreenCanvas) {
+            this.renderer.cleanupOffscreenCanvas();
+        }
     }
 }

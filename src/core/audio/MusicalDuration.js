@@ -34,8 +34,10 @@ class MusicalDuration {
             'dotted-half': 3
         };
         
-        // Cache for performance
+        // Cache for performance with LRU eviction
         this.cache = new Map();
+        this.maxCacheSize = 100; // Maximum cache entries
+        this.cacheAccessOrder = []; // LRU tracking for cache keys
         this.lastBPM = 0;
         
         // Pre-warm cache with common BPMs and durations
@@ -58,7 +60,15 @@ class MusicalDuration {
             commonDurations.forEach(duration => {
                 const key = `${bpm}_${JSON.stringify(duration)}`;
                 const ms = this.toMilliseconds(duration, bpm);
+
+                // LRU eviction: Remove oldest key when limit reached
+                if (this.cache.size >= this.maxCacheSize) {
+                    const oldestKey = this.cacheAccessOrder.shift();
+                    this.cache.delete(oldestKey);
+                }
+
                 this.cache.set(key, ms);
+                this.cacheAccessOrder.push(key);
             });
         });
     }

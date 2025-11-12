@@ -605,13 +605,28 @@ class EmotiveRenderer {
             desynchronized: true,  // Reduces latency
             willReadFrequently: false
         });
-        
+
         if (!this.offscreenCtx) {
             // Offscreen context not available
         }
-        
+
         // Match dimensions
         this.updateOffscreenSize();
+    }
+
+    /**
+     * Clean up offscreen canvas resources
+     */
+    cleanupOffscreenCanvas() {
+        if (this.offscreenCanvas) {
+            if (this.offscreenCtx) {
+                this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+                this.offscreenCtx = null;
+            }
+            this.offscreenCanvas.width = 0;
+            this.offscreenCanvas.height = 0;
+            this.offscreenCanvas = null;
+        }
     }
     
     /**

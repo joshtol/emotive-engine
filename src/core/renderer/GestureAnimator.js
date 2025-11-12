@@ -828,6 +828,65 @@ export class GestureAnimator {
         this.activeGestures.clear();
         this.isPaused = false;
     }
+
+    /**
+     * Destroy the gesture animator and release all resources
+     * Prevents memory leaks by clearing references and cleaning up state
+     */
+    destroy() {
+        // Stop all active gestures first
+        this.stopAllGestures();
+
+        // Destroy all modular animators
+        if (this.physicalGestureAnimator && typeof this.physicalGestureAnimator.destroy === 'function') {
+            this.physicalGestureAnimator.destroy();
+        }
+        if (this.visualEffectAnimator && typeof this.visualEffectAnimator.destroy === 'function') {
+            this.visualEffectAnimator.destroy();
+        }
+        if (this.breathGestureAnimator && typeof this.breathGestureAnimator.destroy === 'function') {
+            this.breathGestureAnimator.destroy();
+        }
+        if (this.movementGestureAnimator && typeof this.movementGestureAnimator.destroy === 'function') {
+            this.movementGestureAnimator.destroy();
+        }
+        if (this.shapeTransformAnimator && typeof this.shapeTransformAnimator.destroy === 'function') {
+            this.shapeTransformAnimator.destroy();
+        }
+        if (this.expressionGestureAnimator && typeof this.expressionGestureAnimator.destroy === 'function') {
+            this.expressionGestureAnimator.destroy();
+        }
+        if (this.directionalGestureAnimator && typeof this.directionalGestureAnimator.destroy === 'function') {
+            this.directionalGestureAnimator.destroy();
+        }
+        if (this.complexAnimationAnimator && typeof this.complexAnimationAnimator.destroy === 'function') {
+            this.complexAnimationAnimator.destroy();
+        }
+
+        // Clear modular animator references
+        this.physicalGestureAnimator = null;
+        this.visualEffectAnimator = null;
+        this.breathGestureAnimator = null;
+        this.movementGestureAnimator = null;
+        this.shapeTransformAnimator = null;
+        this.expressionGestureAnimator = null;
+        this.directionalGestureAnimator = null;
+        this.complexAnimationAnimator = null;
+
+        // Clear gesture animations state
+        this.gestureAnimations = null;
+
+        // Clear active gestures map
+        this.activeGestures.clear();
+        this.activeGestures = null;
+
+        // Clear renderer reference
+        this.renderer = null;
+
+        // Reset other properties
+        this.scaleFactor = null;
+        this.isPaused = false;
+    }
 }
 
 export default GestureAnimator;

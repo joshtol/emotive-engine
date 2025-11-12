@@ -11,6 +11,7 @@
 export class OrbScaleAnimator {
     constructor(mascot) {
         this.mascot = mascot;
+        this.animationId = null;
     }
 
     /**
@@ -57,7 +58,7 @@ export class OrbScaleAnimator {
 
             // Continue animation
             if (progress < 1 && this.mascot.isRunning) {
-                requestAnimationFrame(animate);
+                this.animationId = requestAnimationFrame(animate);
             }
         };
 
@@ -113,5 +114,19 @@ export class OrbScaleAnimator {
         return t < 0.5
             ? 2 * t * t
             : -1 + (4 - 2 * t) * t;
+    }
+
+    /**
+     * Clean up resources and cancel animations
+     */
+    destroy() {
+        // Cancel any pending animation frame
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+
+        // Null mascot reference
+        this.mascot = null;
     }
 }

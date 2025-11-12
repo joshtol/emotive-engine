@@ -153,6 +153,16 @@ export function disposeMoon(moonMesh) {
     if (moonMesh.material) {
         const {material} = moonMesh;
 
+        // Clean up pending texture loads
+        if (material.userData && material.userData.pendingTextures) {
+            material.userData.pendingTextures.forEach(({texture}) => {
+                if (texture) {
+                    texture.dispose();
+                }
+            });
+            material.userData.pendingTextures.clear();
+        }
+
         // Dispose textures
         if (material.map) material.map.dispose();
         if (material.normalMap) material.normalMap.dispose();
@@ -185,36 +195,51 @@ export function disposeMoon(moonMesh) {
  */
 export function createMoonMaterial(textureLoader, options = {}) {
     const resolution = options.resolution || '4k';
-    const glowColor = options.glowColor || new THREE.Color(0xffffff);
-    const glowIntensity = options.glowIntensity || 0;
 
     // Determine texture paths based on resolution
     const colorPath = `/assets/textures/Moon/moon-color-${resolution}.jpg`;
     const normalPath = `/assets/textures/Moon/moon-normal-${resolution}.jpg`;
 
-    // Load textures asynchronously
+    // Initialize pending texture tracking for cleanup
+    const pendingTextures = new Map();
+
+    // Load textures asynchronously with tracking
+    pendingTextures.set(colorPath, { texture: null });
+
     const colorMap = textureLoader.load(
         colorPath,
         // onLoad callback
         texture => {
-            console.log(`✅ Moon color texture loaded: ${resolution}`);
+            const pending = pendingTextures.get(colorPath);
+            if (pending) {
+                pending.texture = texture;
+            }
+            pendingTextures.delete(colorPath);
         },
         // onProgress callback
         undefined,
         // onError callback
         error => {
             console.error(`❌ Failed to load moon color texture (${resolution}):`, error);
+            pendingTextures.delete(colorPath);
         }
     );
+
+    pendingTextures.set(normalPath, { texture: null });
 
     const normalMap = textureLoader.load(
         normalPath,
         texture => {
-            console.log(`✅ Moon normal map loaded: ${resolution}`);
+            const pending = pendingTextures.get(normalPath);
+            if (pending) {
+                pending.texture = texture;
+            }
+            pendingTextures.delete(normalPath);
         },
         undefined,
         error => {
             console.error(`❌ Failed to load moon normal map (${resolution}):`, error);
+            pendingTextures.delete(normalPath);
         }
     );
 
@@ -247,6 +272,9 @@ export function createMoonMaterial(textureLoader, options = {}) {
         transparent: false, // Will be true in Phase 3 with shader material
         side: THREE.FrontSide
     });
+
+    // Store pending textures for disposal
+    material.userData.pendingTextures = pendingTextures;
 
     return material;
 }
@@ -347,27 +375,48 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
         side: THREE.FrontSide
     });
 
+    // Initialize pending texture tracking for cleanup
+    const pendingTextures = new Map();
+
     // Load textures and update material when ready
+    pendingTextures.set(colorPath, { texture: null });
+
     const colorMap = textureLoader.load(
         colorPath,
         texture => {
-            console.log(`✅ Moon crescent color texture loaded: ${resolution}`);
             material.uniforms.colorMap.value = texture;
             material.needsUpdate = true;
+            const pending = pendingTextures.get(colorPath);
+            if (pending) {
+                pending.texture = texture;
+            }
+            pendingTextures.delete(colorPath);
         },
         undefined,
-        error => console.error('❌ Failed to load moon crescent color texture:', error)
+        error => {
+            console.error('❌ Failed to load moon crescent color texture:', error);
+            pendingTextures.delete(colorPath);
+        }
     );
+
+    pendingTextures.set(normalPath, { texture: null });
 
     const normalMap = textureLoader.load(
         normalPath,
         texture => {
-            console.log(`✅ Moon crescent normal map loaded: ${resolution}`);
             material.uniforms.normalMap.value = texture;
             material.needsUpdate = true;
+            const pending = pendingTextures.get(normalPath);
+            if (pending) {
+                pending.texture = texture;
+            }
+            pendingTextures.delete(normalPath);
         },
         undefined,
-        error => console.error('❌ Failed to load moon crescent normal map:', error)
+        error => {
+            console.error('❌ Failed to load moon crescent normal map:', error);
+            pendingTextures.delete(normalPath);
+        }
     );
 
     // Configure textures
@@ -376,9 +425,8 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
     colorMap.anisotropy = 16;
     normalMap.anisotropy = 16;
 
-    console.log(`🌙 Moon shadow material created with '${shadowType}' shader`);
-    console.log('   Shadow offset:', shadowOffsetX, shadowOffsetY);
-    console.log('   Shadow coverage:', shadowCoverage);
+    // Store pending textures for disposal
+    material.userData.pendingTextures = pendingTextures;
 
     return material;
 }
