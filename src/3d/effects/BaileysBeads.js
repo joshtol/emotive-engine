@@ -25,12 +25,19 @@ export class BaileysBeads {
         this.beads = [];
         this.visible = false;
 
+        // Reusable temp vectors to avoid per-frame allocations (performance optimization)
+        this._directionToCamera = new THREE.Vector3();
+        this._up = new THREE.Vector3(0, 1, 0);
+        this._right = new THREE.Vector3();
+        this._upVector = new THREE.Vector3();
+        this._beadOffset = new THREE.Vector3();
+
         // Create bead sprite instances
         this.createBeads();
     }
 
     /**
-     * Create individual bead sprites
+     * Create individual bead sprites with chromatic aberration
      * @private
      */
     createBeads() {
@@ -54,34 +61,67 @@ export class BaileysBeads {
         const texture = new THREE.CanvasTexture(canvas);
         texture.needsUpdate = true;
 
-        // Create material for beads
-        const material = new THREE.SpriteMaterial({
-            map: texture,
-            blending: THREE.AdditiveBlending,
-            transparent: true,
-            depthWrite: false,
-            opacity: 0
-        });
-
         // Create beads at fixed angular positions around the limb
         // These simulate lunar valleys at specific locations
         const valleys = this.generateLunarValleys();
 
         for (let i = 0; i < this.beadCount; i++) {
-            const sprite = new THREE.Sprite(material.clone());
-            sprite.scale.set(0.08, 0.08, 1); // Small, bright points
+            // Create RGB channel group for chromatic aberration effect
+            const beadGroup = new THREE.Group();
 
-            // Store metadata for each bead
-            sprite.userData = {
+            // Red channel sprite (slight offset outward)
+            const redMaterial = new THREE.SpriteMaterial({
+                map: texture.clone(),
+                blending: THREE.AdditiveBlending,
+                transparent: true,
+                depthWrite: false,
+                opacity: 0,
+                color: new THREE.Color(1.0, 0.3, 0.3) // Red-tinted
+            });
+            const redSprite = new THREE.Sprite(redMaterial);
+            redSprite.scale.set(0.08, 0.08, 1);
+            beadGroup.add(redSprite);
+
+            // Green channel sprite (center, brightest)
+            const greenMaterial = new THREE.SpriteMaterial({
+                map: texture.clone(),
+                blending: THREE.AdditiveBlending,
+                transparent: true,
+                depthWrite: false,
+                opacity: 0,
+                color: new THREE.Color(0.8, 1.0, 0.8) // Slight green tint
+            });
+            const greenSprite = new THREE.Sprite(greenMaterial);
+            greenSprite.scale.set(0.08, 0.08, 1);
+            beadGroup.add(greenSprite);
+
+            // Blue channel sprite (slight offset inward)
+            const blueMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                blending: THREE.AdditiveBlending,
+                transparent: true,
+                depthWrite: false,
+                opacity: 0,
+                color: new THREE.Color(0.3, 0.5, 1.0) // Blue-tinted
+            });
+            const blueSprite = new THREE.Sprite(blueMaterial);
+            blueSprite.scale.set(0.08, 0.08, 1);
+            beadGroup.add(blueSprite);
+
+            // Store metadata for bead group
+            beadGroup.userData = {
                 angle: valleys[i].angle,
-                depth: valleys[i].depth, // How "deep" the valley is (affects brightness)
+                depth: valleys[i].depth,
                 baseIntensity: valleys[i].baseIntensity,
                 targetOpacity: 0,
-                currentOpacity: 0
+                currentOpacity: 0,
+                redSprite,
+                greenSprite,
+                blueSprite
             };
 
-            this.beads.push(sprite);
-            this.scene.add(sprite);
+            this.beads.push(beadGroup);
+            this.scene.add(beadGroup);
         }
     }
 
@@ -118,12 +158,13 @@ export class BaileysBeads {
 
     /**
      * Update bead positions and visibility based on eclipse coverage
+     * @param {THREE.Camera} camera - Camera for billboard positioning
      * @param {THREE.Vector3} sunPosition - Current sun position in world space
      * @param {number} coverage - Eclipse coverage (0=no eclipse, 1=total)
      * @param {number} deltaTime - Time since last frame in seconds
      * @param {number} worldScale - Current world scale of the sun (for proper sizing)
      */
-    update(sunPosition, coverage, deltaTime, worldScale = 1.0) {
+    update(camera, sunPosition, coverage, deltaTime, worldScale = 1.0) {
         console.log('🔮 Bailey\'s Beads Update:');
         console.log(`   visible: ${this.visible}`);
         console.log(`   coverage: ${coverage.toFixed(4)}`);
@@ -131,6 +172,73 @@ export class BaileysBeads {
         console.log('   sunPosition:', sunPosition);
         console.log(`   beads.length: ${this.beads.length}`);
 
+        // ALWAYS update bead positions to follow the sun, regardless of visibility
+        // Only opacity should be controlled by visibility state
+
+        // Update bead positions to circle around sun
+        // Account for world scale to stay on the rim regardless of sun size/transforms
+        const scaledRadius = this.sunRadius * worldScale * 1.0; // Exactly on the rim
+
+        console.log('   📍 Positioning beads:');
+        console.log(`      scaledRadius: ${scaledRadius.toFixed(4)}`);
+        console.log(`      base sunRadius: ${this.sunRadius.toFixed(4)}`);
+
+        // Calculate camera-relative vectors for proper positioning (like shadow disk)
+        // REUSE temp vectors to avoid allocations
+        const cameraPosition = camera.position;
+        this._directionToCamera.subVectors(cameraPosition, sunPosition).normalize();
+        this._right.crossVectors(this._directionToCamera, this._up).normalize();
+        this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
+
+        for (const bead of this.beads) {
+            const {angle, redSprite, greenSprite, blueSprite} = bead.userData;
+
+            // Position beads on a circle in screen space (perpendicular to camera view)
+            // Calculate position on rim using right and up vectors (billboard-style)
+            const rimX = Math.cos(angle) * scaledRadius;
+            const rimY = Math.sin(angle) * scaledRadius;
+
+            // Build world position using camera-relative vectors - REUSE temp vector
+            this._beadOffset.set(0, 0, 0); // Reset
+            this._beadOffset.addScaledVector(this._right, rimX);
+            this._beadOffset.addScaledVector(this._upVector, rimY);
+            this._beadOffset.addScaledVector(this._directionToCamera, scaledRadius * 0.01); // Slightly in front
+
+            const baseX = sunPosition.x + this._beadOffset.x;
+            const baseY = sunPosition.y + this._beadOffset.y;
+            const baseZ = sunPosition.z + this._beadOffset.z;
+
+            // Chromatic aberration offset amount (radial from center in screen space)
+            const chromaticOffset = worldScale * 0.008;
+
+            // Position RGB channels with radial chromatic aberration in screen space
+            // Red channel: offset outward (away from center)
+            const redOffsetX = Math.cos(angle) * chromaticOffset;
+            const redOffsetY = Math.sin(angle) * chromaticOffset;
+            redSprite.position.set(redOffsetX, redOffsetY, 0.001);
+
+            // Green channel: center (no offset)
+            greenSprite.position.set(0, 0, 0);
+
+            // Blue channel: offset inward (toward center)
+            blueSprite.position.set(-redOffsetX, -redOffsetY, -0.001);
+
+            // Position the bead group at billboard location
+            bead.position.set(baseX, baseY, baseZ);
+
+            // Force matrix update to ensure position changes are applied immediately
+            // Without this, sprites may lag behind during gesture animations
+            bead.updateMatrixWorld(true);
+
+            // Scale all sprites with sun to maintain consistent visual size
+            // Reduced from 0.4 to 0.15 for smaller, more focused beads
+            const beadScale = worldScale * 0.15;
+            redSprite.scale.set(beadScale, beadScale, 1);
+            greenSprite.scale.set(beadScale, beadScale, 1);
+            blueSprite.scale.set(beadScale, beadScale, 1);
+        }
+
+        // Now handle opacity based on visibility and coverage
         if (!this.visible) {
             // Fade out all beads
             for (const bead of this.beads) {
@@ -138,7 +246,7 @@ export class BaileysBeads {
             }
             console.log('   ❌ Not visible - fading out all beads');
         } else {
-            // Bailey's Beads are visible in the range 0.95 to 1.0 coverage
+            // Bailey's Beads are visible in the range 0.90 to 1.0 coverage
             // They fade in as coverage approaches 0.95 and fade out at exactly 1.0
             const beadStart = 0.90; // Start showing beads
             const beadFull = 0.97;  // Full intensity
@@ -174,7 +282,8 @@ export class BaileysBeads {
                     targetOpacity = angularProximity * bead.userData.baseIntensity * intensityMultiplier * bead.userData.depth;
 
                     // Multiply by brightness multiplier to make beads much more visible
-                    targetOpacity *= 5.0;
+                    // Increased from 5.0 → 15.0 → 30.0 for intense brilliance
+                    targetOpacity *= 30.0;
 
                     if (targetOpacity > 0.05) {
                         visibleBeadCount++;
@@ -185,48 +294,37 @@ export class BaileysBeads {
             }
 
             console.log(`   💎 Beads with targetOpacity > 0.05: ${visibleBeadCount}`);
-
-            // Update bead positions to circle around sun
-            // Account for world scale to stay on the rim regardless of sun size/transforms
-            const scaledRadius = this.sunRadius * worldScale * 1.0; // Exactly on the rim
-
-            console.log('   📍 Positioning beads:');
-            console.log(`      scaledRadius: ${scaledRadius.toFixed(4)}`);
-            console.log(`      base sunRadius: ${this.sunRadius.toFixed(4)}`);
-
-            for (const bead of this.beads) {
-                const {angle} = bead.userData;
-
-                bead.position.set(
-                    sunPosition.x + Math.cos(angle) * scaledRadius,
-                    sunPosition.y + Math.sin(angle) * scaledRadius,
-                    sunPosition.z + 0.01 // Slightly in front of sun
-                );
-
-                // Scale beads with sun to maintain consistent visual size
-                // Increased from 0.08 to 0.4 to make beads much more visible
-                const beadScale = worldScale * 0.4;
-                bead.scale.set(beadScale, beadScale, 1);
-            }
-
-            // Log first bead as sample
-            if (this.beads.length > 0) {
-                const firstBead = this.beads[0];
-                console.log('   🔍 First bead sample:');
-                console.log('      position:', firstBead.position);
-                console.log('      scale:', firstBead.scale);
-                console.log(`      targetOpacity: ${firstBead.userData.targetOpacity.toFixed(4)}`);
-                console.log(`      currentOpacity: ${firstBead.userData.currentOpacity.toFixed(4)}`);
-                console.log(`      material.opacity: ${firstBead.material.opacity.toFixed(4)}`);
-            }
         }
 
-        // Smooth opacity transitions
-        const fadeSpeed = 3.0; // Beads fade in/out quickly
+        // Log first bead as sample
+        if (this.beads.length > 0) {
+            const firstBead = this.beads[0];
+            const {greenSprite} = firstBead.userData;
+            console.log('   🔍 First bead sample:');
+            console.log('      position:', firstBead.position);
+            console.log('      scale:', greenSprite.scale);
+            console.log(`      targetOpacity: ${firstBead.userData.targetOpacity.toFixed(4)}`);
+            console.log(`      currentOpacity: ${firstBead.userData.currentOpacity.toFixed(4)}`);
+            console.log(`      greenSprite.opacity: ${greenSprite.material.opacity.toFixed(4)}`);
+        }
+
+        // Smooth opacity transitions for all RGB channels
+        // Use consistent fade speed for smooth animation
+        const fadeSpeed = 3.0;
         for (const bead of this.beads) {
+            const {redSprite, greenSprite, blueSprite} = bead.userData;
             const diff = bead.userData.targetOpacity - bead.userData.currentOpacity;
             bead.userData.currentOpacity += diff * fadeSpeed * deltaTime;
-            bead.material.opacity = bead.userData.currentOpacity;
+
+            // Clamp to zero when very close (prevents floating point lingering)
+            if (bead.userData.currentOpacity < 0.001) {
+                bead.userData.currentOpacity = 0;
+            }
+
+            // Apply opacity to all RGB channels (green slightly brighter for white center)
+            redSprite.material.opacity = bead.userData.currentOpacity * 0.7;
+            greenSprite.material.opacity = bead.userData.currentOpacity * 1.0;
+            blueSprite.material.opacity = bead.userData.currentOpacity * 0.7;
         }
     }
 
@@ -243,10 +341,26 @@ export class BaileysBeads {
      */
     dispose() {
         for (const bead of this.beads) {
-            if (bead.material.map) {
-                bead.material.map.dispose();
+            const {redSprite, greenSprite, blueSprite} = bead.userData;
+
+            // Dispose red sprite
+            if (redSprite.material.map) {
+                redSprite.material.map.dispose();
             }
-            bead.material.dispose();
+            redSprite.material.dispose();
+
+            // Dispose green sprite
+            if (greenSprite.material.map) {
+                greenSprite.material.map.dispose();
+            }
+            greenSprite.material.dispose();
+
+            // Dispose blue sprite
+            if (blueSprite.material.map) {
+                blueSprite.material.map.dispose();
+            }
+            blueSprite.material.dispose();
+
             this.scene.remove(bead);
         }
         this.beads = [];

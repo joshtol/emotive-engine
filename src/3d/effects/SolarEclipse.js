@@ -31,7 +31,7 @@ export class SolarEclipse {
         this.previousEclipseType = ECLIPSE_TYPES.OFF; // Store previous type for exit animations
         this.enabled = false;
         this.time = 0;
-        this.randomSeed = Math.random() * 1000; // Random seed for corona pattern
+        this.randomSeed = 12345; // Fixed initial seed - will be randomized on first total eclipse
 
         // Transition animation state
         this.isTransitioning = false;
@@ -151,11 +151,11 @@ export class SolarEclipse {
 
                         // Highly varied ray lengths with more extremes
                         float lengthVariation = random1 * random1 * random1; // Cubed for even more variation
-                        float rayLength = 0.08 + lengthVariation * 0.5; // 0.08 to 0.58
+                        float rayLength = 0.08 + lengthVariation * 0.6; // 0.08 to 0.68 (extended)
 
-                        // 15% chance of very long streamers
+                        // 15% chance of very long streamers (extended further)
                         float isLong = step(0.85, random2);
-                        rayLength = mix(rayLength, 0.4 + random3 * 0.6, isLong); // 0.4 to 1.0
+                        rayLength = mix(rayLength, 0.5 + random3 * 0.8, isLong); // 0.5 to 1.3 (longer rays)
 
                         // Very thin rays by default, some thicker
                         float baseWidth = 0.02 + random4 * random4 * 0.15; // 0.02 to 0.17 (much thinner)
@@ -181,22 +181,42 @@ export class SolarEclipse {
                         rayIntensity = max(rayIntensity, streamerIntensity);
                     }
 
-                    // Base corona glow (thin bright ring)
-                    float baseGlow = smoothstep(shadowEdge - 0.02, shadowEdge, dist) *
-                                    (1.0 - smoothstep(shadowEdge + 0.05, shadowEdge + 0.1, dist));
+                    // Base corona glow (very thin bright ring for realistic total eclipse)
+                    float baseGlow = smoothstep(shadowEdge - 0.01, shadowEdge, dist) *
+                                    (1.0 - smoothstep(shadowEdge + 0.02, shadowEdge + 0.04, dist));
 
                     // Combine: base glow + streamers
                     float finalIntensity = (baseGlow * 0.6 + rayIntensity) * intensity;
 
-                    // Cool white gradient (blue-white to pale blue)
-                    vec3 finalColor = mix(
-                        vec3(1.0, 1.0, 1.0),     // Pure white at base
-                        vec3(0.8, 0.9, 1.0),     // Pale blue at tips
-                        smoothstep(shadowEdge, shadowEdge + 0.3, dist)
-                    ) * finalIntensity;
+                    // Enhanced gradient: white → cool blue-white → deep blue with distance
+                    // Distance normalized to corona extent (0 = shadow edge, 1 = far corona)
+                    float coronaDist = clamp((dist - shadowEdge) / 0.6, 0.0, 1.0);
 
-                    // Alpha with sharper falloff
-                    float alpha = finalIntensity * 0.9;
+                    // Multi-stage color gradient for realistic corona
+                    vec3 innerGlow = vec3(1.0, 1.0, 1.0);           // Pure white at base
+                    vec3 middleGlow = vec3(0.9, 0.95, 1.0);         // Cool white
+                    vec3 outerGlow = vec3(0.6, 0.75, 0.95);         // Pale blue
+                    vec3 farGlow = vec3(0.3, 0.5, 0.8);             // Deep blue
+
+                    // Three-stage color mix
+                    vec3 coronaColor;
+                    if (coronaDist < 0.3) {
+                        // Inner: white → cool white
+                        coronaColor = mix(innerGlow, middleGlow, coronaDist / 0.3);
+                    } else if (coronaDist < 0.7) {
+                        // Middle: cool white → pale blue
+                        coronaColor = mix(middleGlow, outerGlow, (coronaDist - 0.3) / 0.4);
+                    } else {
+                        // Outer: pale blue → deep blue
+                        coronaColor = mix(outerGlow, farGlow, (coronaDist - 0.7) / 0.3);
+                    }
+
+                    vec3 finalColor = coronaColor * finalIntensity;
+
+                    // Enhanced alpha falloff: stronger near shadow, gradual fade to transparent
+                    // Quadratic falloff for smooth but noticeable fade
+                    float alphaFalloff = pow(1.0 - coronaDist, 1.5);
+                    float alpha = finalIntensity * alphaFalloff * 0.95;
 
                     gl_FragColor = vec4(finalColor, alpha);
                 }
@@ -253,10 +273,16 @@ export class SolarEclipse {
             console.log(`🌑 Starting transition: ${this.transitionDirection} (${this.eclipseType} ↔ ${eclipseType})`);
         }
 
-        // Regenerate random seed for new corona pattern on total eclipse
-        if (eclipseType === ECLIPSE_TYPES.TOTAL) {
+        // Regenerate random seed for new corona pattern ONLY when switching TO total eclipse
+        // (not when already total - prevents double regeneration on repeated clicks)
+        console.log(`🌟 Corona seed check: eclipseType=${eclipseType}, previousEclipseType=${this.previousEclipseType}`);
+        if (eclipseType === ECLIPSE_TYPES.TOTAL && this.previousEclipseType !== ECLIPSE_TYPES.TOTAL) {
+            console.log(`🌟 Regenerating corona seed from ${this.randomSeed}`);
             this.randomSeed = Math.random() * 1000;
             this.coronaDisk.material.uniforms.randomSeed.value = this.randomSeed;
+            console.log(`🌟 New corona seed: ${this.randomSeed}`);
+        } else {
+            console.log(`🌟 Keeping existing corona seed: ${this.randomSeed}`);
         }
     }
 
@@ -447,10 +473,10 @@ export class SolarEclipse {
             }
 
             this.baileysBeads.setVisible(beadsVisible);
-            this.baileysBeads.update(sunPosition, coverage, deltaTime, worldScale);
+            this.baileysBeads.update(camera, sunPosition, coverage, deltaTime, worldScale);
         } else {
             this.baileysBeads.setVisible(false);
-            this.baileysBeads.update(sunPosition, 0, deltaTime, worldScale);
+            this.baileysBeads.update(camera, sunPosition, 0, deltaTime, worldScale);
         }
     }
 
