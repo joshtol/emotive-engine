@@ -343,7 +343,7 @@
                 const container = document.getElementById('sun-container');
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'sun',
-                    enableParticles: false,
+                    enableParticles: true, // Enable particle system (but start hidden)
                     enablePostProcessing: true,
                     enableShadows: false,
                     enableControls: true,
@@ -356,6 +356,9 @@
                 mascot.init(container);
                 mascot.start();
                 mascot.setEmotion('joy');
+
+                // Start with particles disabled (system exists but hidden)
+                mascot.disableParticles();
 
                 console.log('☀️ EmotiveMascot3D Sun initialized');
             } catch (error) {
