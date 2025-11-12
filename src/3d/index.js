@@ -245,8 +245,7 @@ export class EmotiveMascot3D {
         // Calculate deltaTime and cap it to prevent huge jumps when tab is inactive
         // Max 100ms prevents rotation explosions when tabbing back in
         const rawDeltaTime = currentTime - this.lastFrameTime;
-        const deltaTimeMs = Math.min(rawDeltaTime, 100);
-        const deltaTime = deltaTimeMs / 1000.0; // Convert to seconds for animations
+        const deltaTime = Math.min(rawDeltaTime, 100); // deltaTime in milliseconds
 
         this.lastFrameTime = currentTime;
 
@@ -280,16 +279,13 @@ export class EmotiveMascot3D {
                 const maxParticles = emotionData?.visual?.maxParticles || 30;
                 const particleColors = emotionData?.visual?.particleColors || null;
 
-                // Convert deltaTime from seconds to milliseconds for 2D particle system
-                const deltaTimeMs = deltaTime * 1000;
-
                 // Spawn particles - EXACT same as 2D site, no modifications
                 this.particleSystem.spawn(
                     particleBehavior,   // Use emotion's particle behavior
                     currentEmotion,     // emotion
                     particleRate,       // Use emotion's spawn rate
                     centerX, centerY,   // position
-                    deltaTimeMs,        // deltaTime in milliseconds
+                    deltaTime,          // deltaTime in milliseconds
                     null,               // count (rate-based)
                     minParticles,       // Use emotion's min particles
                     maxParticles,       // Use emotion's max particles
@@ -312,7 +308,7 @@ export class EmotiveMascot3D {
                 }
 
                 // Update particles - EXACT same as 2D site
-                this.particleSystem.update(deltaTimeMs, centerX, centerY, gestureMotion, gestureProgress, this.undertone);
+                this.particleSystem.update(deltaTime, centerX, centerY, gestureMotion, gestureProgress, this.undertone);
 
                 // Render particles with emotion color
                 this.particleSystem.render(this.ctx2D, glowColor, null);

@@ -51,8 +51,8 @@ export class GestureBlender {
         for (const animation of animations) {
             if (animation.evaluate) {
                 const elapsed = currentTime - animation.startTime;
-                const durationSeconds = animation.duration / 1000; // Convert ms to seconds
-                const progress = Math.min(elapsed / durationSeconds, 1);
+                const durationMs = animation.duration; // Duration in milliseconds
+                const progress = Math.min(elapsed / durationMs, 1);
                 const output = animation.evaluate(progress);
 
                 if (output) {

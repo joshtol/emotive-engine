@@ -36,7 +36,7 @@ export class SolarEclipse {
         // Transition animation state
         this.isTransitioning = false;
         this.transitionProgress = 0;
-        this.transitionDuration = 0.4; // 0.4 seconds for quick, snappy eclipse transition
+        this.transitionDuration = 400; // 400ms for quick, snappy eclipse transition
         this.transitionDirection = 'in'; // 'in' or 'out'
 
         // Reusable temp objects to avoid per-frame allocations (performance optimization)
@@ -352,7 +352,7 @@ export class SolarEclipse {
      *
      * @param {THREE.Camera} camera - Camera for position calculations
      * @param {THREE.Mesh} sunMesh - Sun mesh for position/scale (already updated for current frame)
-     * @param {number} deltaTime - Time since last frame (seconds)
+     * @param {number} deltaTime - Time since last frame (milliseconds)
      */
     update(camera, sunMesh, deltaTime) {
         const cameraPosition = camera.position;

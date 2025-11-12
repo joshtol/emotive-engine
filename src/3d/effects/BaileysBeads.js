@@ -190,7 +190,7 @@ export class BaileysBeads {
      * @param {THREE.Camera} camera - Camera for billboard positioning
      * @param {THREE.Vector3} sunPosition - Current sun position in world space
      * @param {number} coverage - Eclipse coverage (0=no eclipse, 1=total)
-     * @param {number} deltaTime - Time since last frame in seconds
+     * @param {number} deltaTime - Time since last frame in milliseconds
      * @param {number} worldScale - Current world scale of the sun (for proper sizing)
      */
     update(camera, sunPosition, coverage, deltaTime, worldScale = 1.0) {
@@ -310,7 +310,7 @@ export class BaileysBeads {
         for (const bead of this.beads) {
             const {redSprite, greenSprite, blueSprite} = bead.userData;
             const diff = bead.userData.targetOpacity - bead.userData.currentOpacity;
-            bead.userData.currentOpacity += diff * fadeSpeed * deltaTime;
+            bead.userData.currentOpacity += diff * fadeSpeed * (deltaTime / 1000); // Convert ms to seconds
 
             // Clamp to zero when very close (prevents floating point lingering)
             if (bead.userData.currentOpacity < 0.001) {

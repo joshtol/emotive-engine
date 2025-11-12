@@ -87,8 +87,8 @@ export class OrbitalPhysics {
         if (deltaTime <= 0) return;
 
         // Calculate angular velocity from rotation change
-        // ω = Δθ / Δt (in radians per second)
-        const dt = deltaTime / 1000; // Convert to seconds
+        // ω = Δθ / Δt (in radians per millisecond, will normalize below)
+        const dt = deltaTime; // deltaTime in milliseconds
 
         // Calculate rotation delta (current - last)
         const deltaX = currentRotation.x - this.lastRotation.x;
@@ -136,8 +136,8 @@ export class OrbitalPhysics {
     applyOrbitalPhysics(particlePosition, particle, corePosition, deltaTime) {
         if (deltaTime <= 0) return particlePosition;
 
-        const dt = deltaTime / 1000; // Convert to seconds
-        const dtClamped = Math.min(dt, 0.1); // Clamp to prevent huge jumps
+        const dt = deltaTime / 16.67; // Normalize to 60fps frame time
+        const dtClamped = Math.min(dt, 6); // Clamp to prevent huge jumps (~100ms)
 
         // Initialize particle physics state if needed
         if (!particle.orbitalPhysics) {

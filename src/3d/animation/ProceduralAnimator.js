@@ -49,8 +49,8 @@ export class ProceduralAnimator {
         // Remove completed animations
         for (let i = this.animations.length - 1; i >= 0; i--) {
             const anim = this.animations[i];
-            const durationSeconds = anim.duration / 1000; // Convert ms to seconds
-            const progress = Math.min((this.time - anim.startTime) / durationSeconds, 1.0);
+            const durationMs = anim.duration; // Duration in milliseconds
+            const progress = Math.min((this.time - anim.startTime) / durationMs, 1.0);
 
             // Check if animation is complete
             if (progress >= 1.0) {

@@ -155,13 +155,9 @@ export class Particle3DOrchestrator {
         // Build undertone modifier for particle update
         const undertoneModifier = undertone ? { undertone } : null;
 
-        // CRITICAL: Convert deltaTime from seconds to milliseconds
-        // 3D system uses seconds, but 2D ParticleSystem expects milliseconds
-        const deltaTimeMs = deltaTime * 1000;
-
         // Update particle physics with gesture motion
         this.particleSystem.update(
-            deltaTimeMs,
+            deltaTime, // deltaTime in milliseconds
             centerX,
             centerY,
             gestureData ? gestureData.motion : null, // gestureMotion
