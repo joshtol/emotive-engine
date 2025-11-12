@@ -309,12 +309,12 @@ export default function CherokeePage() {
         canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
         canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
-        const existingScript = document.querySelector('script[src^="/emotive-engine-lean.js"]')
+        const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
         let script = existingScript as HTMLScriptElement
 
         if (!existingScript) {
           script = document.createElement('script')
-          script.src = `/emotive-engine-lean.js`
+          script.src = `/emotive-engine.js`
           script.async = true
 
           await new Promise((resolve, reject) => {
@@ -324,8 +324,8 @@ export default function CherokeePage() {
           })
         }
 
-        // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
-        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
+        // Access the global EmotiveMascot (full build exports as EmotiveMascot)
+        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
 
         if (!EmotiveMascot) {
           console.error('EmotiveMascot not found on window object')

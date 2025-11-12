@@ -115,7 +115,7 @@ builds.push({
         {
             file: 'dist/emotive-mascot.lean.umd.js',
             format: 'umd',
-            name: 'EmotiveMascot',  // Same name as full build for easy swapping
+            name: 'EmotiveMascotLean',  // Different name for lean build
             exports: 'named',
             sourcemap: true,
             banner: `/*! Emotive Engine Lean v${process.env.npm_package_version || '3.0.0'} | MIT License */`

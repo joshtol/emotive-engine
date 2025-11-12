@@ -72,15 +72,15 @@ export default function RetailPage() {
         canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
         canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
 
-        // Load EmotiveMascot (lean bundle) - ALWAYS reload to get latest version
-        const existingScript = document.querySelector('script[src^="/emotive-engine-lean.js"]')
+        // Load EmotiveMascot (full build) - ALWAYS reload to get latest version
+        const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
         if (existingScript) {
           existingScript.remove()
-          delete (window as any).EmotiveMascotLean
+          delete (window as any).EmotiveMascot
         }
 
         const script = document.createElement('script')
-        script.src = `/emotive-engine-lean.js?v=${Date.now()}`
+        script.src = `/emotive-engine.js?v=${Date.now()}`
         script.async = false  // Load synchronously to ensure it's available
 
         await new Promise((resolve, reject) => {
@@ -89,8 +89,8 @@ export default function RetailPage() {
           document.head.appendChild(script)
         })
 
-        // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
-        let EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
+        // Access the global EmotiveMascot (full build exports as EmotiveMascot)
+        let EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
 
         if (!EmotiveMascot) {
           console.error('[RetailPage] EmotiveMascot not found on window object after load')
