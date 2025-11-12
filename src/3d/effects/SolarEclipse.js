@@ -1,8 +1,15 @@
 /**
  * Solar Eclipse Effect Manager
  *
- * Orchestrates solar eclipse shadow disk effect.
- * Supports annular and total eclipses.
+ * Orchestrates solar eclipse shadow disk and corona effects.
+ * Supports annular and total eclipses with billboarded rendering.
+ *
+ * SYNCHRONIZATION ARCHITECTURE:
+ * - The eclipse effects are updated in ThreeRenderer.render() AFTER sun transforms
+ *   are applied to ensure shadow/corona position matches the current frame's sun
+ *   position, preventing visible lag during gesture animations.
+ * - Shadow disk and corona are always added directly to the scene (not as children)
+ *   and manually positioned each frame to maintain billboarding and proper scaling.
  */
 
 import * as THREE from 'three';
@@ -13,10 +20,12 @@ export class SolarEclipse {
      * Create a solar eclipse effect manager
      * @param {THREE.Scene} scene - Three.js scene
      * @param {number} sunRadius - Radius of the sun geometry
+     * @param {THREE.Mesh} sunMesh - Sun mesh to parent shadow disk to
      */
-    constructor(scene, sunRadius) {
+    constructor(scene, sunRadius, sunMesh = null) {
         this.scene = scene;
         this.sunRadius = sunRadius;
+        this.sunMesh = sunMesh;
         this.eclipseType = ECLIPSE_TYPES.OFF;
         this.enabled = false;
         this.time = 0;
@@ -34,20 +43,23 @@ export class SolarEclipse {
      * @private
      */
     createShadowDisk() {
-        const initialShadowRadius = this.sunRadius * 0.5;
+        // Start with a reasonable size - will be scaled in update()
+        const initialShadowRadius = this.sunRadius;
         const shadowGeometry = new THREE.CircleGeometry(initialShadowRadius, 64);
         const shadowMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000,
             transparent: false,
-            side: THREE.FrontSide,
-            depthWrite: true,
-            depthTest: true,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+            depthTest: false,
             fog: false
         });
 
         this.shadowDisk = new THREE.Mesh(shadowGeometry, shadowMaterial);
+        this.shadowDisk.renderOrder = 10000;
+
+        // Always add to scene, never as child
         this.shadowDisk.position.set(200, 0, 0); // Start off-screen
-        this.shadowDisk.renderOrder = 999; // Render on top
         this.scene.add(this.shadowDisk);
     }
 
@@ -204,8 +216,13 @@ export class SolarEclipse {
 
     /**
      * Update eclipse effects (call every frame)
+     *
+     * IMPORTANT: This method must be called AFTER the sun mesh's position, rotation,
+     * and scale have been updated for the current frame to ensure synchronized movement.
+     * Called from ThreeRenderer.render() after transforms are applied.
+     *
      * @param {THREE.Camera} camera - Camera for position calculations
-     * @param {THREE.Mesh} sunMesh - Sun mesh for position/scale
+     * @param {THREE.Mesh} sunMesh - Sun mesh for position/scale (already updated for current frame)
      * @param {number} deltaTime - Time since last frame (seconds)
      */
     update(camera, sunMesh, deltaTime) {
@@ -224,22 +241,27 @@ export class SolarEclipse {
 
             // Calculate shadow size based on eclipse type
             const shadowRadius = scaledSunRadius * config.shadowCoverage;
-            const shadowScale = shadowRadius / this.sunRadius / 0.5;
+            // Shadow geometry has radius = sunRadius, so scale it to match shadowRadius
+            const shadowScale = shadowRadius / this.sunRadius;
             this.shadowDisk.scale.setScalar(shadowScale);
 
-            // CAMERA LOCKING: Position shadow between camera and sun
+            // Position shadow disk between camera and sun
             const directionToCamera = new THREE.Vector3()
                 .subVectors(cameraPosition, sunPosition)
                 .normalize();
 
-            // Place shadow very close to sun surface
-            const shadowOffset = scaledSunRadius * 1.001;
+            const shadowOffset = scaledSunRadius * 1.01;
             this.shadowDisk.position.copy(sunPosition).add(
                 directionToCamera.multiplyScalar(shadowOffset)
             );
 
-            // Make shadow face the camera (billboard effect)
+            // Make shadow face camera (billboard effect)
             this.shadowDisk.lookAt(cameraPosition);
+
+            // Debug log every 60 frames
+            if (Math.random() < 0.016) {
+                console.log(`🌑 Shadow: pos=${this.shadowDisk.position.toArray().map(n => n.toFixed(2))}, scale=${shadowScale.toFixed(2)}, visible=${this.shadowDisk.visible}`);
+            }
 
             // Update corona disk for TOTAL eclipse only
             if (this.eclipseType === ECLIPSE_TYPES.TOTAL) {

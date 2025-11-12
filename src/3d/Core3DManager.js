@@ -241,7 +241,7 @@ export class Core3DManager {
         // Initialize solar eclipse system for sun geometry
         if (this.geometryType === 'sun') {
             const sunRadius = this.geometry.parameters?.radius || 0.5;
-            this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius);
+            this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.coreMesh);
         }
 
         // Initialize emotion
@@ -825,11 +825,6 @@ export class Core3DManager {
         // Update sun material animation if using sun geometry
         if (this.customMaterialType === 'sun') {
             updateSunMaterial(this.coreMesh, this.glowColor, effectiveGlowIntensity, deltaTime);
-
-            // Update solar eclipse effects every frame
-            if (this.solarEclipse) {
-                this.solarEclipse.update(this.renderer.camera, this.coreMesh, deltaTime);
-            }
         }
 
         // Render with Three.js
@@ -841,7 +836,9 @@ export class Core3DManager {
             glowColorHex: this.glowColorHex,  // For bloom luminance normalization
             glowIntensity: effectiveGlowIntensity,
             hasActiveGesture: this.animator.animations.length > 0,  // Faster lerp during gestures
-            calibrationRotation: this.calibrationRotation  // Applied on top of animated rotation
+            calibrationRotation: this.calibrationRotation,  // Applied on top of animated rotation
+            solarEclipse: this.solarEclipse,  // Pass eclipse manager for synchronized updates
+            deltaTime  // Pass deltaTime for eclipse animation
         });
     }
 

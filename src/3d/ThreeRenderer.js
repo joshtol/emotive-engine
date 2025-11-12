@@ -807,6 +807,17 @@ export class ThreeRenderer {
     /**
      * Render frame
      * @param {Object} params - Render parameters
+     * @param {Array<number>} [params.position=[0,0,0]] - Core mesh position [x, y, z]
+     * @param {Array<number>} [params.rotation=[0,0,0]] - Core mesh rotation [x, y, z]
+     * @param {number} [params.scale=1.0] - Core mesh scale
+     * @param {Array<number>} [params.glowColor=[1,1,1]] - Glow color RGB [r, g, b]
+     * @param {number} [params.glowIntensity=1.0] - Glow intensity
+     * @param {string} [params.glowColorHex=null] - Hex color for luminance normalization
+     * @param {boolean} [params.hasActiveGesture=false] - Whether a gesture is currently active
+     * @param {Array<number>} [params.calibrationRotation=[0,0,0]] - Manual rotation offset
+     * @param {number} [params.cameraRoll=0] - Camera-space roll rotation
+     * @param {SolarEclipse} [params.solarEclipse=null] - Solar eclipse manager for synchronized updates
+     * @param {number} [params.deltaTime=0] - Delta time for eclipse animation (seconds)
      */
     render(params = {}) {
         const {
@@ -818,7 +829,9 @@ export class ThreeRenderer {
             glowColorHex = null,  // Hex color for luminance normalization
             hasActiveGesture = false,  // Whether a gesture is currently active
             calibrationRotation = [0, 0, 0],  // Manual rotation offset applied on top of animations
-            cameraRoll = 0  // Camera-space roll rotation applied after all other rotations
+            cameraRoll = 0,  // Camera-space roll rotation applied after all other rotations
+            solarEclipse = null,  // Solar eclipse manager for synchronized updates
+            deltaTime = 0  // Delta time for eclipse animation
         } = params;
 
         // Update camera controls (required for damping and auto-rotate)
@@ -877,6 +890,14 @@ export class ThreeRenderer {
             }
 
             this.coreMesh.scale.setScalar(scale);
+
+            // Update solar eclipse effects after transforms are applied (synchronized movement)
+            // CRITICAL: Eclipse update must happen AFTER position/rotation/scale are applied to coreMesh
+            // to ensure shadow disk and corona are positioned based on the CURRENT frame's transforms,
+            // not the previous frame's. This prevents visible lag during gesture animations.
+            if (solarEclipse) {
+                solarEclipse.update(this.camera, this.coreMesh, deltaTime);
+            }
 
             // Update material properties based on material type
             if (this.coreMesh.material.uniforms) {
