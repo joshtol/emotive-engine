@@ -236,7 +236,7 @@ export function createSunMaterial(textureLoader, options = {}) {
                 // Apply base color tinting
                 finalColor *= baseColor;
 
-                // Apply emissive intensity for HDR bloom FIRST (so bloom sees full brightness)
+                // Apply emissive intensity for HDR bloom
                 finalColor *= emissiveIntensity;
 
                 // ═══════════════════════════════════════════════════════════════════════════
@@ -261,6 +261,30 @@ export function createSunMaterial(textureLoader, options = {}) {
                 // Darken ONLY the final color output (not the bloom calculation)
                 float shadowDarkness = 0.05; // How dark the shadow gets (5% brightness)
                 finalColor *= mix(shadowDarkness, 1.0, shadowFactor);
+
+                // ═══════════════════════════════════════════════════════════════════════════
+                // RADIAL CORONA WAVES (applied AFTER shadow, visible around eclipse edge)
+                // ═══════════════════════════════════════════════════════════════════════════
+
+                // Calculate angle from sun center in world space XY plane
+                float angle = atan(vWorldPosition.y, vWorldPosition.x);
+
+                // Create radial wave pattern (16 petals for finer detail, rotating slowly)
+                float wave = sin(angle * 16.0 + time * 0.3) * 0.5 + 0.5;
+
+                // Apply waves to visible (non-shadowed) edges
+                float distFromCenter = length(vWorldPosition.xy);
+
+                // Edge factor: strong at sun's edge where bloom will amplify it
+                float edgeFactor = smoothstep(0.35, 0.5, distFromCenter);
+
+                // Only apply waves to non-shadowed areas (visible during eclipse)
+                // Combine with shadow factor so waves appear around shadow edge
+                float waveStrength = edgeFactor * shadowFactor;
+
+                // Very strong modulation (2x variation) for dramatic eclipse corona
+                float coronaModulation = 1.0 + (wave * 2.0 - 1.0) * waveStrength;
+                finalColor *= coronaModulation;
 
                 gl_FragColor = vec4(finalColor, 1.0);
             }
