@@ -94,6 +94,20 @@ export class ThreeRenderer {
         this._tempColor = new THREE.Color();
         this._tempColor2 = new THREE.Color();
         this._white = new THREE.Color(1, 1, 1);
+
+        // Quaternion/Euler temp objects for render() - avoid 10-15 allocations per frame
+        this._tempQuat = new THREE.Quaternion();
+        this._tempEuler = new THREE.Euler();
+        this._quatX = new THREE.Quaternion();
+        this._quatY = new THREE.Quaternion();
+        this._quatZ = new THREE.Quaternion();
+        this._rollQuat = new THREE.Quaternion();
+        this._meshQuat = new THREE.Quaternion();
+        this._xAxis = new THREE.Vector3(1, 0, 0);
+        this._yAxis = new THREE.Vector3(0, 1, 0);
+        this._zAxis = new THREE.Vector3(0, 0, 1);
+        this._cameraToMesh = new THREE.Vector3();
+        this._cameraDir = new THREE.Vector3();
     }
 
     /**
@@ -846,47 +860,38 @@ export class ThreeRenderer {
             // Apply animated rotation + calibration offset using quaternions
             // X and Y rotate around world axes, Z rotates around camera's viewing direction
 
-            // Start with base rotation from animation system
-            const baseQuat = new THREE.Quaternion();
-            const baseEuler = new THREE.Euler(rotation[0], rotation[1], rotation[2], 'XYZ');
-            baseQuat.setFromEuler(baseEuler);
+            // Start with base rotation from animation system - REUSE temp objects
+            this._tempEuler.set(rotation[0], rotation[1], rotation[2], 'XYZ');
+            this._tempQuat.setFromEuler(this._tempEuler);
 
-            // Apply calibration rotations
-            const quatX = new THREE.Quaternion();
-            const quatY = new THREE.Quaternion();
-            const quatZ = new THREE.Quaternion();
+            // Apply calibration rotations - REUSE quaternions
+            this._quatX.setFromAxisAngle(this._xAxis, calibrationRotation[0]); // X-axis (world)
+            this._quatY.setFromAxisAngle(this._yAxis, calibrationRotation[1]); // Y-axis (world)
 
-            quatX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), calibrationRotation[0]); // X-axis (world)
-            quatY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), calibrationRotation[1]); // Y-axis (world)
-
-            // Z rotates around camera's viewing direction (camera to moon)
-            const cameraToMesh = new THREE.Vector3();
-            cameraToMesh.subVectors(this.coreMesh.position, this.camera.position).normalize();
-            quatZ.setFromAxisAngle(cameraToMesh, calibrationRotation[2]); // Z-axis (camera view direction)
+            // Z rotates around camera's viewing direction (camera to moon) - REUSE vector
+            this._cameraToMesh.subVectors(this.coreMesh.position, this.camera.position).normalize();
+            this._quatZ.setFromAxisAngle(this._cameraToMesh, calibrationRotation[2]); // Z-axis (camera view direction)
 
             // Combine: base rotation, then X, then Y, then Z
-            const finalQuat = baseQuat.clone();
-            finalQuat.multiply(quatX);
-            finalQuat.multiply(quatY);
-            finalQuat.multiply(quatZ);
+            // Reuse tempQuat for final result (already contains base rotation)
+            this._tempQuat.multiply(this._quatX);
+            this._tempQuat.multiply(this._quatY);
+            this._tempQuat.multiply(this._quatZ);
 
-            this.coreMesh.rotation.setFromQuaternion(finalQuat);
+            this.coreMesh.rotation.setFromQuaternion(this._tempQuat);
 
             // Apply camera-space roll (rotates around camera's forward vector)
             if (cameraRoll !== 0) {
-                // Get camera direction (from camera to mesh)
-                const cameraDir = new THREE.Vector3();
-                cameraDir.subVectors(this.coreMesh.position, this.camera.position).normalize();
+                // Get camera direction (from camera to mesh) - REUSE vector
+                this._cameraDir.subVectors(this.coreMesh.position, this.camera.position).normalize();
 
-                // Create quaternion for rotation around camera direction
-                const rollQuat = new THREE.Quaternion();
-                rollQuat.setFromAxisAngle(cameraDir, cameraRoll);
+                // Create quaternion for rotation around camera direction - REUSE quaternion
+                this._rollQuat.setFromAxisAngle(this._cameraDir, cameraRoll);
 
-                // Apply camera roll to mesh rotation
-                const meshQuat = new THREE.Quaternion();
-                meshQuat.setFromEuler(this.coreMesh.rotation);
-                meshQuat.premultiply(rollQuat);
-                this.coreMesh.rotation.setFromQuaternion(meshQuat);
+                // Apply camera roll to mesh rotation - REUSE quaternion
+                this._meshQuat.setFromEuler(this.coreMesh.rotation);
+                this._meshQuat.premultiply(this._rollQuat);
+                this.coreMesh.rotation.setFromQuaternion(this._meshQuat);
             }
 
             this.coreMesh.scale.setScalar(scale);
@@ -1006,11 +1011,22 @@ export class ThreeRenderer {
             }
         });
 
-        // For ShaderMaterial, dispose textures in uniforms (e.g., sun's colorMap, normalMap)
+        // For ShaderMaterial, dispose textures and clear Color objects in uniforms
         if (material.uniforms) {
             Object.values(material.uniforms).forEach(uniform => {
-                if (uniform.value && uniform.value.isTexture) {
-                    uniform.value.dispose();
+                if (uniform.value) {
+                    // Dispose textures
+                    if (uniform.value.isTexture) {
+                        uniform.value.dispose();
+                    }
+                    // Clear Color objects to break references
+                    if (uniform.value.isColor) {
+                        uniform.value = null;
+                    }
+                    // Clear Vector objects to break references
+                    if (uniform.value.isVector2 || uniform.value.isVector3 || uniform.value.isVector4) {
+                        uniform.value = null;
+                    }
                 }
             });
         }

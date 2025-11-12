@@ -545,8 +545,7 @@ export class Core3DManager {
                 }
 
                 // Call with gesture2D as context so 'this.config' works
-                const result = gesture2D['3d'].evaluate.call(gesture2D, t, motion);
-                return result;
+                return gesture2D['3d'].evaluate.call(gesture2D, t, motion);
             },
             callbacks: {
                 onUpdate: (props, _progress) => {
@@ -852,6 +851,12 @@ export class Core3DManager {
         // Clean up particle system
         if (this.particleOrchestrator) {
             this.particleOrchestrator.destroy();
+        }
+
+        // Clean up solar eclipse system
+        if (this.solarEclipse) {
+            this.solarEclipse.dispose();
+            this.solarEclipse = null;
         }
     }
 }

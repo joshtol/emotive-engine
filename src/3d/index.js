@@ -210,8 +210,8 @@ export class EmotiveMascot3D {
     start() {
         if (this.isRunning) return;
         this.isRunning = true;
-        this.lastFrameTime = performance.now();
-        this.animate(this.lastFrameTime);
+        this.lastFrameTime = null; // Will be set on first animate() call
+        this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
     }
 
     /**
@@ -231,10 +231,19 @@ export class EmotiveMascot3D {
     animate(currentTime) {
         if (!this.isRunning) return;
 
+        // Initialize lastFrameTime on first frame
+        if (this.lastFrameTime === null) {
+            this.lastFrameTime = currentTime;
+            this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
+            return;
+        }
+
         // Calculate deltaTime and cap it to prevent huge jumps when tab is inactive
         // Max 100ms prevents rotation explosions when tabbing back in
         const rawDeltaTime = currentTime - this.lastFrameTime;
-        const deltaTime = Math.min(rawDeltaTime, 100);
+        const deltaTimeMs = Math.min(rawDeltaTime, 100);
+        const deltaTime = deltaTimeMs / 1000.0; // Convert to seconds for animations
+
         this.lastFrameTime = currentTime;
 
         // Render 3D core

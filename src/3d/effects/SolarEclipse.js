@@ -27,9 +27,23 @@ export class SolarEclipse {
         this.sunRadius = sunRadius;
         this.sunMesh = sunMesh;
         this.eclipseType = ECLIPSE_TYPES.OFF;
+        this.previousEclipseType = ECLIPSE_TYPES.OFF; // Store previous type for exit animations
         this.enabled = false;
         this.time = 0;
         this.randomSeed = Math.random() * 1000; // Random seed for corona pattern
+
+        // Transition animation state
+        this.isTransitioning = false;
+        this.transitionProgress = 0;
+        this.transitionDuration = 0.4; // 0.4 seconds for quick, snappy eclipse transition
+        this.transitionDirection = 'in'; // 'in' or 'out'
+
+        // Reusable temp objects to avoid per-frame allocations (performance optimization)
+        this._directionToCamera = new THREE.Vector3();
+        this._up = new THREE.Vector3(0, 1, 0);
+        this._right = new THREE.Vector3();
+        this._upVector = new THREE.Vector3();
+        this._tempOffset = new THREE.Vector3();
 
         // Create shadow disk
         this.createShadowDisk();
@@ -197,21 +211,61 @@ export class SolarEclipse {
 
     /**
      * Set eclipse type (annular, total, or off)
+     * Triggers transition animation when type changes
      * @param {string} eclipseType - Eclipse type from ECLIPSE_TYPES
      */
     setEclipseType(eclipseType) {
+        // Only trigger transition if type actually changed
+        if (eclipseType === this.eclipseType) {
+            console.log(`🌑 Eclipse type unchanged: ${eclipseType}`);
+            return;
+        }
+
+        console.log(`🌑 Eclipse type changing: ${this.eclipseType} → ${eclipseType}`);
+
+        const wasEnabled = this.enabled;
+        this.previousEclipseType = this.eclipseType; // Store previous type before changing
         this.eclipseType = eclipseType;
         this.enabled = (eclipseType !== ECLIPSE_TYPES.OFF);
 
-        if (!this.enabled) {
-            // Move shadow off-screen when disabled
-            this.shadowDisk.position.set(200, 0, 0);
-            this.coronaDisk.position.set(200, 0, 0);
-        } else if (eclipseType === ECLIPSE_TYPES.TOTAL) {
-            // Regenerate random seed for new corona pattern
+        // Determine transition direction
+        if (!wasEnabled && this.enabled) {
+            // Entering eclipse: slide in from right
+            this.transitionDirection = 'in';
+            this.isTransitioning = true;
+            this.transitionProgress = 0;
+            console.log(`🌑 Starting transition: ${this.transitionDirection} (OFF → ${eclipseType})`);
+        } else if (wasEnabled && !this.enabled) {
+            // Exiting eclipse: slide out to left
+            this.transitionDirection = 'out';
+            this.isTransitioning = true;
+            this.transitionProgress = 0;
+            console.log(`🌑 Starting transition: ${this.transitionDirection} (${this.eclipseType} → OFF)`);
+        } else if (wasEnabled && this.enabled) {
+            // Switching between annular/total: quick cross-fade
+            this.isTransitioning = true;
+            this.transitionProgress = 0;
+            this.transitionDirection = 'switch';
+            console.log(`🌑 Starting transition: ${this.transitionDirection} (${this.eclipseType} ↔ ${eclipseType})`);
+        }
+
+        // Regenerate random seed for new corona pattern on total eclipse
+        if (eclipseType === ECLIPSE_TYPES.TOTAL) {
             this.randomSeed = Math.random() * 1000;
             this.coronaDisk.material.uniforms.randomSeed.value = this.randomSeed;
         }
+    }
+
+    /**
+     * Cubic ease in-out function for smooth transitions
+     * @param {number} t - Progress value (0-1)
+     * @returns {number} Eased value (0-1)
+     * @private
+     */
+    easeInOutCubic(t) {
+        return t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     /**
@@ -233,38 +287,94 @@ export class SolarEclipse {
         // Update time for corona animation
         this.time += deltaTime;
 
-        // Update shadow disk if eclipse is active
-        if (this.enabled) {
-            const config = getEclipseConfig(this.eclipseType);
+        // Update transition animation
+        if (this.isTransitioning) {
+            const progressDelta = deltaTime / this.transitionDuration;
+            this.transitionProgress += progressDelta;
+
+            if (this.transitionProgress >= 1.0) {
+                this.transitionProgress = 1.0;
+                this.isTransitioning = false;
+            }
+        }
+
+        // Update shadow disk if eclipse is active or transitioning out
+        if (this.enabled || (this.transitionDirection === 'out' && this.isTransitioning)) {
+            // Use previous eclipse type during exit animation (since eclipseType is now OFF)
+            const activeEclipseType = (this.transitionDirection === 'out' && this.isTransitioning)
+                ? this.previousEclipseType
+                : this.eclipseType;
+            const config = getEclipseConfig(activeEclipseType);
             const worldScale = sunScale.x;
             const scaledSunRadius = this.sunRadius * worldScale;
 
+            // Use linear progress for constant speed (no easing - prevents jerkiness)
+            const easedProgress = this.transitionProgress;
+
             // Calculate shadow size based on eclipse type
             const shadowRadius = scaledSunRadius * config.shadowCoverage;
-            // Shadow geometry has radius = sunRadius, so scale it to match shadowRadius
-            const shadowScale = shadowRadius / this.sunRadius;
-            this.shadowDisk.scale.setScalar(shadowScale);
+            const baseShadowScale = shadowRadius / this.sunRadius;
 
-            // Position shadow disk between camera and sun
-            const directionToCamera = new THREE.Vector3()
-                .subVectors(cameraPosition, sunPosition)
-                .normalize();
+            // Keep shadow at full size throughout transition (no scale animation)
+            // The moon-like eclipse entrance is achieved purely through horizontal slide
+            this.shadowDisk.scale.setScalar(baseShadowScale);
+
+            // Position shadow disk between camera and sun - REUSE temp vector
+            this._directionToCamera.subVectors(cameraPosition, sunPosition).normalize();
+
+            // Calculate arc path offset for realistic eclipse motion
+            // Arc geometry: Downward-facing arc (inverted parabola) passing through sun center
+            // Entry: lower-left → center (apex at top)
+            // Exit: center (apex at top) → lower-right
+            let horizontalOffset = 0;
+            let verticalOffset = 0;
+
+            if (this.isTransitioning) {
+                const arcRadius = scaledSunRadius * 2.5; // Larger radius for extended arc path
+
+                if (this.transitionDirection === 'in') {
+                    // Arc in from lower-left to center (apex)
+                    const arcProgress = easedProgress; // 0 → 1
+                    // Progress from -1.5 (far left) to 0 (center) - extended range
+                    const arcT = -1.5 + (arcProgress * 1.5);
+
+                    horizontalOffset = arcT * arcRadius;
+                    // Downward arc: y = -x² (negative parabola)
+                    verticalOffset = -(arcT * arcT) * arcRadius;
+                } else if (this.transitionDirection === 'out') {
+                    // Arc out from center (apex) to lower-right
+                    const arcProgress = easedProgress; // 0 → 1
+                    // Progress from 0 (center) to 1.5 (far right) - extended range
+                    const arcT = arcProgress * 1.5;
+
+                    horizontalOffset = arcT * arcRadius;
+                    // Downward arc: y = -x² (negative parabola)
+                    verticalOffset = -(arcT * arcT) * arcRadius;
+                }
+            }
+
+            // Get perpendicular vectors for arc motion - REUSE temp vectors
+            this._right.crossVectors(this._directionToCamera, this._up).normalize();
+            this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
 
             const shadowOffset = scaledSunRadius * 1.01;
-            this.shadowDisk.position.copy(sunPosition).add(
-                directionToCamera.multiplyScalar(shadowOffset)
-            );
+            // Build position using temp vector to avoid allocations
+            this._tempOffset.copy(this._directionToCamera).multiplyScalar(shadowOffset);
+            this.shadowDisk.position.copy(sunPosition).add(this._tempOffset);
+
+            // Add horizontal offset
+            this._tempOffset.copy(this._right).multiplyScalar(horizontalOffset);
+            this.shadowDisk.position.add(this._tempOffset);
+
+            // Add vertical offset
+            this._tempOffset.copy(this._upVector).multiplyScalar(verticalOffset);
+            this.shadowDisk.position.add(this._tempOffset);
 
             // Make shadow face camera (billboard effect)
             this.shadowDisk.lookAt(cameraPosition);
 
-            // Debug log every 60 frames
-            if (Math.random() < 0.016) {
-                console.log(`🌑 Shadow: pos=${this.shadowDisk.position.toArray().map(n => n.toFixed(2))}, scale=${shadowScale.toFixed(2)}, visible=${this.shadowDisk.visible}`);
-            }
-
             // Update corona disk for TOTAL eclipse only
-            if (this.eclipseType === ECLIPSE_TYPES.TOTAL) {
+            if (activeEclipseType === ECLIPSE_TYPES.TOTAL) {
                 // Position corona at sun center
                 this.coronaDisk.position.copy(sunPosition);
 
@@ -273,6 +383,21 @@ export class SolarEclipse {
 
                 // Billboard corona to camera
                 this.coronaDisk.lookAt(cameraPosition);
+
+                // Apply fade-in animation to corona intensity
+                let coronaIntensity = 1.2;
+                if (this.isTransitioning && this.transitionDirection === 'in') {
+                    // Fade in corona after shadow is mostly visible (starts at 70% shadow progress)
+                    const coronaFadeStart = 0.7;
+                    const coronaFadeProgress = Math.max(0, (easedProgress - coronaFadeStart) / (1.0 - coronaFadeStart));
+                    coronaIntensity = 1.2 * coronaFadeProgress;
+                } else if (this.isTransitioning && this.transitionDirection === 'out') {
+                    // Fade out corona quickly (finishes at 30% progress)
+                    const coronaFadeEnd = 0.3;
+                    const coronaFadeProgress = Math.min(1.0, easedProgress / coronaFadeEnd);
+                    coronaIntensity = 1.2 * (1.0 - coronaFadeProgress);
+                }
+                this.coronaDisk.material.uniforms.intensity.value = coronaIntensity;
 
                 // Update shader time uniform
                 this.coronaDisk.material.uniforms.time.value = this.time;
@@ -293,18 +418,28 @@ export class SolarEclipse {
     dispose() {
         // Dispose shadow disk
         if (this.shadowDisk) {
+            this.scene.remove(this.shadowDisk);
             this.shadowDisk.geometry.dispose();
             this.shadowDisk.material.dispose();
-            this.scene.remove(this.shadowDisk);
             this.shadowDisk = null;
         }
 
         // Dispose corona disk
         if (this.coronaDisk) {
-            this.coronaDisk.geometry.dispose();
-            this.coronaDisk.material.dispose();
             this.scene.remove(this.coronaDisk);
+            this.coronaDisk.geometry.dispose();
+            // Dispose shader material uniforms
+            if (this.coronaDisk.material.uniforms) {
+                if (this.coronaDisk.material.uniforms.glowColor?.value) {
+                    this.coronaDisk.material.uniforms.glowColor.value = null;
+                }
+            }
+            this.coronaDisk.material.dispose();
             this.coronaDisk = null;
         }
+
+        // Clear references
+        this.scene = null;
+        this.sunMesh = null;
     }
 }
