@@ -147,6 +147,13 @@ export class BreathingAnimator {
             depthMult: this.breathDepthMult
         };
     }
+
+    /**
+     * Cleanup all resources
+     */
+    destroy() {
+        this.emotionBreathPatterns = null;
+    }
 }
 
 export default BreathingAnimator;

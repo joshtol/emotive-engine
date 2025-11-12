@@ -73,6 +73,7 @@ export class EmotiveMascot3D {
         this.isRunning = false;
         this.animationFrameId = null;
         this.lastFrameTime = 0;
+        this.gestureTimeouts = []; // Track setTimeout IDs for cleanup
 
         // Event system (reuse from 2D engine)
         this.eventManager = new EventManager();
@@ -134,6 +135,9 @@ export class EmotiveMascot3D {
                 enableBreathing: this.config.enableBreathing,
                 cameraDistance: this.config.cameraDistance
             });
+
+            // Cache 2D canvas context to prevent repeated getContext() calls
+            this.ctx2D = this.canvas2D.getContext('2d');
 
             // Initialize particle system (2D overlay)
             if (this.config.enableParticles) {
@@ -252,15 +256,13 @@ export class EmotiveMascot3D {
         }
 
         // Render 2D particles (or clear canvas if disabled)
-        if (this.canvas2D) {
-            const ctx = this.canvas2D.getContext('2d');
-
+        if (this.canvas2D && this.ctx2D) {
             // Always clear canvas first
-            ctx.clearRect(0, 0, this.canvas2D.width, this.canvas2D.height);
+            this.ctx2D.clearRect(0, 0, this.canvas2D.width, this.canvas2D.height);
 
             // Fill with transparent to ensure clearing
-            ctx.fillStyle = 'rgba(0,0,0,0)';
-            ctx.fillRect(0, 0, this.canvas2D.width, this.canvas2D.height);
+            this.ctx2D.fillStyle = 'rgba(0,0,0,0)';
+            this.ctx2D.fillRect(0, 0, this.canvas2D.width, this.canvas2D.height);
 
             if (this.particleSystem) {
                 const centerX = this.canvas2D.width / 2;
@@ -278,13 +280,16 @@ export class EmotiveMascot3D {
                 const maxParticles = emotionData?.visual?.maxParticles || 30;
                 const particleColors = emotionData?.visual?.particleColors || null;
 
+                // Convert deltaTime from seconds to milliseconds for 2D particle system
+                const deltaTimeMs = deltaTime * 1000;
+
                 // Spawn particles - EXACT same as 2D site, no modifications
                 this.particleSystem.spawn(
                     particleBehavior,   // Use emotion's particle behavior
                     currentEmotion,     // emotion
                     particleRate,       // Use emotion's spawn rate
                     centerX, centerY,   // position
-                    deltaTime,          // deltaTime
+                    deltaTimeMs,        // deltaTime in milliseconds
                     null,               // count (rate-based)
                     minParticles,       // Use emotion's min particles
                     maxParticles,       // Use emotion's max particles
@@ -307,10 +312,10 @@ export class EmotiveMascot3D {
                 }
 
                 // Update particles - EXACT same as 2D site
-                this.particleSystem.update(deltaTime, centerX, centerY, gestureMotion, gestureProgress, this.undertone);
+                this.particleSystem.update(deltaTimeMs, centerX, centerY, gestureMotion, gestureProgress, this.undertone);
 
                 // Render particles with emotion color
-                this.particleSystem.render(ctx, glowColor, null);
+                this.particleSystem.render(this.ctx2D, glowColor, null);
             }
         }
 
@@ -397,12 +402,13 @@ export class EmotiveMascot3D {
             };
 
             // Clear gesture when complete
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
                 if (this.currentGesture && this.currentGesture.name === gestureName) {
                     // console.log(`[3D] Gesture ${gestureName} completed`);
                     this.currentGesture = null;
                 }
             }, duration);
+            this.gestureTimeouts.push(timeoutId);
         }
 
         this.eventManager.emit('gesture:trigger', { gesture: gestureName });
@@ -464,7 +470,8 @@ export class EmotiveMascot3D {
 
             currentStep++;
             if (currentStep < steps.length) {
-                setTimeout(executeStep, stepDuration);
+                const timeoutId = setTimeout(executeStep, stepDuration);
+                this.gestureTimeouts.push(timeoutId);
             }
         };
 
@@ -522,11 +529,21 @@ export class EmotiveMascot3D {
      * Enable particles
      */
     enableParticles() {
-        // Enable 3D WebGL particle system rendering (remove draw range restriction)
+        // Enable 3D WebGL particle system rendering
         if (this.core3D?.particleOrchestrator?.renderer) {
-            // Particles will update normally and render will set proper draw range
+            // Enable visibility and force emotion recalculation to spawn particles immediately
             this.core3D.particleVisibility = true;
-            console.log('✨ 3D Particles enabled');
+            this.core3D.particleOrchestrator.renderer.setVisible(true);
+            this.core3D.particleOrchestrator.setEmotion(this.core3D.emotion, this.core3D.undertone);
+
+            const {points} = this.core3D.particleOrchestrator.renderer;
+            const geom = this.core3D.particleOrchestrator.renderer.geometry;
+            console.log('✨ 3D Particles enabled', {
+                pointsVisible: points.visible,
+                drawRangeStart: geom.drawRange.start,
+                drawRangeCount: geom.drawRange.count,
+                particleCount: this.core3D.particleOrchestrator.getParticleCount()
+            });
         }
 
         // Only enable 2D canvas particle system if we don't have 3D particles
@@ -549,11 +566,12 @@ export class EmotiveMascot3D {
      * Disable particles
      */
     disableParticles() {
-        // Disable 3D WebGL particle system rendering (set draw range to 0)
+        // Disable 3D WebGL particle system rendering
         if (this.core3D?.particleOrchestrator?.renderer) {
             this.core3D.particleVisibility = false;
-            // Immediately hide particles by setting draw range to 0
-            this.core3D.particleOrchestrator.renderer.geometry.setDrawRange(0, 0);
+            this.core3D.particleOrchestrator.renderer.setVisible(false);
+            // Clear particles immediately and let update loop handle draw range naturally
+            this.core3D.particleOrchestrator.clear();
             console.log('💨 3D Particles disabled');
         }
 
@@ -647,12 +665,40 @@ export class EmotiveMascot3D {
      */
     destroy() {
         this.stop();
+
+        // Clear all pending gesture timeouts
+        this.gestureTimeouts.forEach(id => clearTimeout(id));
+        this.gestureTimeouts = [];
+
+        // Clear all event listeners to prevent memory leaks
+        if (this.eventManager && this.eventManager._listeners) {
+            Object.keys(this.eventManager._listeners).forEach(key => {
+                this.eventManager._listeners[key] = [];
+            });
+            this.eventManager._listeners = null;
+        }
+
         if (this.core3D) {
             this.core3D.destroy();
         }
         if (this.particleSystem) {
             this.particleSystem.destroy();
         }
+
+        // Null out DOM element references to prevent memory leaks
+        this.container = null;
+        this.webglCanvas = null;
+        this.canvas2D = null;
+        this.ctx2D = null;
+
+        // Null out config object
+        this.config = null;
+
+        // Null out ErrorBoundary
+        this.errorBoundary = null;
+
+        // Null out current gesture reference
+        this.currentGesture = null;
     }
 }
 

@@ -123,11 +123,53 @@ export function getPhaseFromProgress(progress) {
  * @returns {THREE.SphereGeometry}
  */
 export function createMoon(widthSegments = 64, heightSegments = 64) {
-    return new THREE.SphereGeometry(
+    const geometry = new THREE.SphereGeometry(
         0.9,           // radius 0.9 = 1.8 diameter (matches crystal height)
         widthSegments, // 64 segments for smooth normal mapping
         heightSegments
     );
+
+    // Track for disposal
+    geometry.userData.tracked = true;
+
+    return geometry;
+}
+
+/**
+ * Dispose of moon geometry and material resources
+ * Call this when removing a moon from the scene
+ *
+ * @param {THREE.Mesh} moonMesh - Moon mesh to dispose
+ */
+export function disposeMoon(moonMesh) {
+    if (!moonMesh) return;
+
+    // Dispose geometry
+    if (moonMesh.geometry) {
+        moonMesh.geometry.dispose();
+    }
+
+    // Dispose material and its textures
+    if (moonMesh.material) {
+        const {material} = moonMesh;
+
+        // Dispose textures
+        if (material.map) material.map.dispose();
+        if (material.normalMap) material.normalMap.dispose();
+
+        // Dispose shader material uniforms
+        if (material.uniforms) {
+            if (material.uniforms.colorMap && material.uniforms.colorMap.value) {
+                material.uniforms.colorMap.value.dispose();
+            }
+            if (material.uniforms.normalMap && material.uniforms.normalMap.value) {
+                material.uniforms.normalMap.value.dispose();
+            }
+        }
+
+        // Dispose material
+        material.dispose();
+    }
 }
 
 /**
@@ -394,10 +436,13 @@ export function setMoonPhase(material, phase) {
  * @param {THREE.ShaderMaterial} material - Moon shadow material
  * @param {string|number} targetPhase - Target phase name or progress (0-1)
  * @param {number} duration - Animation duration in milliseconds (default: 2000)
- * @returns {Promise} Resolves when animation completes
+ * @returns {Object} Object with { promise, cancel } - promise resolves when animation completes, cancel() stops the animation
  */
 export function animateMoonPhase(material, targetPhase, duration = 2000) {
-    return new Promise((resolve, reject) => {
+    let animationId = null;
+    let cancelled = false;
+
+    const promise = new Promise((resolve, reject) => {
         if (!material.uniforms || !material.uniforms.shadowOffset) {
             reject(new Error('Material does not have shadowOffset uniform'));
             return;
@@ -428,6 +473,12 @@ export function animateMoonPhase(material, targetPhase, duration = 2000) {
 
         // Animation loop
         const animate = () => {
+            // Check if animation was cancelled
+            if (cancelled) {
+                resolve({ cancelled: true });
+                return;
+            }
+
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1.0);
 
@@ -443,14 +494,26 @@ export function animateMoonPhase(material, targetPhase, duration = 2000) {
             material.uniforms.shadowOffset.value.set(currentX, currentY);
 
             if (progress < 1.0) {
-                requestAnimationFrame(animate);
+                animationId = requestAnimationFrame(animate);
             } else {
-                resolve();
+                resolve({ cancelled: false });
             }
         };
 
         animate();
     });
+
+    // Return promise with cancel function
+    return {
+        promise,
+        cancel: () => {
+            cancelled = true;
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+    };
 }
 
 /**

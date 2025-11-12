@@ -234,6 +234,13 @@ export class ParticleEffectsBuilder {
 
         return merged;
     }
+
+    /**
+     * Dispose of resources and clear references
+     */
+    destroy() {
+        this.effectMap = null;
+    }
 }
 
 export default ParticleEffectsBuilder;

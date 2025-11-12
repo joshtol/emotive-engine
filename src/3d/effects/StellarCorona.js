@@ -46,6 +46,9 @@ export class StellarCorona {
         this.layers = [];
         this.time = 0;
 
+        // Temp color for reuse
+        this._tempColor = new THREE.Color();
+
         this.createCoronaLayers();
     }
 
@@ -286,9 +289,14 @@ export class StellarCorona {
      * @param {THREE.Color|number} color - Color (THREE.Color or hex)
      */
     setColor(color) {
-        const colorObj = color instanceof THREE.Color ? color : new THREE.Color(color);
+        // Reuse temp color instead of allocating new THREE.Color
+        if (color instanceof THREE.Color) {
+            this._tempColor.copy(color);
+        } else {
+            this._tempColor.set(color);
+        }
         this.layers.forEach(layer => {
-            layer.material.uniforms.glowColor.value.copy(colorObj);
+            layer.material.uniforms.glowColor.value.copy(this._tempColor);
         });
     }
 
@@ -307,10 +315,20 @@ export class StellarCorona {
      */
     dispose() {
         this.layers.forEach(layer => {
+            // Clean up Float32Array from geometry userData
+            if (layer.geometry.userData.originalPositions) {
+                layer.geometry.userData.originalPositions = null;
+            }
             layer.geometry.dispose();
             layer.material.dispose();
             this.scene.remove(layer);
         });
         this.layers = [];
+
+        // Clear temp objects
+        this._tempColor = null;
+
+        // Clear scene reference
+        this.scene = null;
     }
 }

@@ -423,12 +423,18 @@ export class Particle3DTranslator {
         const centerY = canvasSize.height / 2;
         const behaviorData = particle.behaviorData || {};
 
-        // Before pop, particle waits at center
+        // Before pop, position particle slightly in front of origin so it's visible
+        // (at origin with camera at z=1.2, particles would be nearly invisible during fade-in)
         if (!behaviorData.hasPopped) {
+            // Get or generate the direction the particle will travel when it pops
+            const dir = this._getUniformDirection3D(particle);
+
+            // Position slightly away from center (0.05 world units) so particles are visible while waiting
+            const waitDistance = this.baseRadius * 0.05;
             return this.tempVec3.set(
-                corePosition.x,
-                corePosition.y,
-                corePosition.z
+                corePosition.x + dir.x * waitDistance,
+                corePosition.y + dir.y * waitDistance * this.verticalScale,
+                corePosition.z + dir.z * waitDistance
             );
         }
 
@@ -868,6 +874,40 @@ export class Particle3DTranslator {
      */
     setBaseRadius(radius) {
         this.baseRadius = radius;
+    }
+
+    /**
+     * Clean up cached particle state data
+     * Call this periodically or when particles are removed to prevent memory leaks
+     * @param {Array} particles - Array of particles to clean up
+     */
+    cleanupParticleCaches(particles) {
+        for (const particle of particles) {
+            if (!particle.isAlive && particle.behaviorData) {
+                // Clear cached 3D direction
+                if (particle.behaviorData.direction3D) {
+                    particle.behaviorData.direction3D = null;
+                }
+                // Clear orbital plane data
+                if (particle.behaviorData.orbitPlane) {
+                    particle.behaviorData.orbitPlane = null;
+                }
+                // Clear orbital path data
+                if (particle.behaviorData.orbitPath) {
+                    particle.behaviorData.orbitPath = null;
+                }
+            }
+        }
+    }
+
+    /**
+     * Dispose of resources and clear references
+     */
+    dispose() {
+        this.tempVec3 = null;
+        this.tempVec3_2 = null;
+        this.rotationState = null;
+        this.currentGestureData = null;
     }
 }
 

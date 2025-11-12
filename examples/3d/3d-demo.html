@@ -658,7 +658,8 @@
                         console.log('Setting moon phase:', value);
                         if (mascot.core3D?.customMaterial) {
                             // Use animated transition with imported function
-                            animateMoonPhase(mascot.core3D.customMaterial, value, 1500)
+                            const animation = animateMoonPhase(mascot.core3D.customMaterial, value, 1500);
+                            animation.promise
                                 .then(() => console.log(`Moon phase changed to: ${value}`))
                                 .catch(err => console.error('Moon phase animation failed:', err));
                         } else {

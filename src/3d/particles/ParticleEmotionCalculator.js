@@ -29,6 +29,8 @@ export class ParticleEmotionCalculator {
     constructor() {
         // Cache for performance (emotion data rarely changes)
         this.cachedConfigs = new Map();
+        // Cache size limit to prevent unbounded growth
+        this.maxCacheSize = 100; // Support up to 100 emotion:undertone combinations
     }
 
     /**
@@ -59,6 +61,12 @@ export class ParticleEmotionCalculator {
 
         // Apply special emotion behaviors
         const finalConfig = this._applySpecialBehaviors(modifiedConfig, emotion);
+
+        // Enforce cache size limit (LRU-style: remove oldest entry)
+        if (this.cachedConfigs.size >= this.maxCacheSize) {
+            const firstKey = this.cachedConfigs.keys().next().value;
+            this.cachedConfigs.delete(firstKey);
+        }
 
         // Cache and return
         this.cachedConfigs.set(cacheKey, finalConfig);

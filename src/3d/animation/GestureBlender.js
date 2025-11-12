@@ -113,6 +113,16 @@ export class GestureBlender {
             gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
         };
     }
+
+    /**
+     * Cleanup all resources
+     */
+    destroy() {
+        this.tempEuler = null;
+        this.tempQuat = null;
+        this.accumulatedRotationQuat = null;
+        this.finalQuaternion = null;
+    }
 }
 
 export default GestureBlender;

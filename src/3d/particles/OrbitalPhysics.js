@@ -53,6 +53,8 @@ export class OrbitalPhysics {
         this.tempVec3_1 = new THREE.Vector3();
         this.tempVec3_2 = new THREE.Vector3();
         this.tempVec3_3 = new THREE.Vector3();
+        this.tempVec3_4 = new THREE.Vector3(); // For return values
+        this.zeroVec = new THREE.Vector3(0, 0, 0); // Reusable zero vector
         this.tempQuaternion = new THREE.Quaternion();
         this.tempEuler = new THREE.Euler();
 
@@ -93,8 +95,8 @@ export class OrbitalPhysics {
         const deltaY = currentRotation.y - this.lastRotation.y;
         const deltaZ = currentRotation.z - this.lastRotation.z;
 
-        // Angular velocity (radians per second)
-        const rawAngularVelocity = new THREE.Vector3(
+        // Angular velocity (radians per second) - reuse temp vector
+        const rawAngularVelocity = this.tempVec3_3.set(
             deltaX / dt,
             deltaY / dt,
             deltaZ / dt
@@ -107,8 +109,8 @@ export class OrbitalPhysics {
             // Significant rotation (gesture) - apply orbital physics
             this.currentAngularVelocity.copy(rawAngularVelocity);
         } else {
-            // Ambient rotation - decay toward zero
-            this.currentAngularVelocity.lerp(new THREE.Vector3(0, 0, 0), 0.1);
+            // Ambient rotation - decay toward zero (reuse zero vector)
+            this.currentAngularVelocity.lerp(this.zeroVec, 0.1);
         }
 
         // Debug log angular velocity
@@ -168,7 +170,8 @@ export class OrbitalPhysics {
 
         // Convert behavior delta to local space (unrotate it)
         // This is the particle's movement in the rotating reference frame
-        const invQuaternion = this.lastQuaternion.clone().invert();
+        // Reuse tempQuaternion to avoid allocation
+        const invQuaternion = this.tempQuaternion.copy(this.lastQuaternion).invert();
         behaviorDelta.applyQuaternion(invQuaternion);
 
         // Apply behavior movement to local position
@@ -206,14 +209,15 @@ export class OrbitalPhysics {
         if (this.centrifugalStrength > 0 && rotationMagnitude > 0.01) {
             // Simple outward push proportional to rotation speed
             const centrifugalMag = rotationMagnitude * this.centrifugalStrength * 0.5;
-            const outwardDir = physicsState.localPosition.clone().normalize();
+            // Reuse temp vector to avoid allocation
+            const outwardDir = this.tempVec3_1.copy(physicsState.localPosition).normalize();
             physicsState.localPosition.add(outwardDir.multiplyScalar(centrifugalMag));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // 4. CONVERT TO WORLD SPACE and return NEW vector
+        // 4. CONVERT TO WORLD SPACE and return reused vector
         // ═══════════════════════════════════════════════════════════════════════════
-        return new THREE.Vector3().copy(physicsState.localPosition).add(corePosition);
+        return this.tempVec3_4.copy(physicsState.localPosition).add(corePosition);
     }
 
     /**
@@ -223,6 +227,22 @@ export class OrbitalPhysics {
         this.currentAngularVelocity.set(0, 0, 0);
         this.lastRotation.set(0, 0, 0);
         this.lastQuaternion.identity();
+    }
+
+    /**
+     * Dispose of resources and clear references
+     */
+    dispose() {
+        this.lastRotation = null;
+        this.lastQuaternion = null;
+        this.currentAngularVelocity = null;
+        this.tempVec3_1 = null;
+        this.tempVec3_2 = null;
+        this.tempVec3_3 = null;
+        this.tempVec3_4 = null;
+        this.zeroVec = null;
+        this.tempQuaternion = null;
+        this.tempEuler = null;
     }
 
     /**

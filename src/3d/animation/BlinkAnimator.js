@@ -245,6 +245,15 @@ export class BlinkAnimator {
             nextBlinkTime: this.nextBlinkTime
         };
     }
+
+    /**
+     * Cleanup all resources
+     */
+    destroy() {
+        this.blinkConfig = null;
+        this.enabled = false;
+        this.isBlinking = false;
+    }
 }
 
 export default BlinkAnimator;

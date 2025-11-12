@@ -369,11 +369,11 @@ class ParticleSystem {
         // PERFORMANCE OPTIMIZATION: Skip cleanup for small particle counts
         // 50 particles don't need periodic cleanup overhead
         // Cleanup is unnecessary for such small numbers
-        
+
         // PERFORMANCE OPTIMIZATION: Skip memory leak detection for small particle counts
         // 50 particles don't need memory tracking overhead
         // Memory leaks aren't a concern with such small numbers
-        
+
         // PERFORMANCE OPTIMIZATION: Use simple filter instead of complex loop
         // More efficient for small particle counts
         this.particles = this.particles.filter(particle => {

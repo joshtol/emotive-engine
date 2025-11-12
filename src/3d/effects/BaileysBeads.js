@@ -33,6 +33,10 @@ export class BaileysBeads {
         this._right = new THREE.Vector3();
         this._upVector = new THREE.Vector3();
         this._beadOffset = new THREE.Vector3();
+        this._tempColor = new THREE.Color(); // Temp color for reuse
+
+        // Track shared texture for disposal
+        this.sharedTexture = null;
 
         // Create bead sprite instances
         this.createBeads();
@@ -63,6 +67,9 @@ export class BaileysBeads {
         const texture = new THREE.CanvasTexture(canvas);
         texture.needsUpdate = true;
 
+        // Store texture for disposal
+        this.sharedTexture = texture;
+
         // Create beads at fixed angular positions around the limb
         // These simulate lunar valleys at specific locations
         const valleys = this.generateLunarValleys();
@@ -78,7 +85,7 @@ export class BaileysBeads {
                 transparent: true,
                 depthWrite: false,
                 opacity: 0,
-                color: new THREE.Color(1.0, 0.3, 0.3) // Red-tinted
+                color: this._tempColor.setRGB(1.0, 0.3, 0.3) // Red-tinted (reuse temp color)
             });
             const redSprite = new THREE.Sprite(redMaterial);
             redSprite.scale.set(0.08, 0.08, 1);
@@ -91,7 +98,7 @@ export class BaileysBeads {
                 transparent: true,
                 depthWrite: false,
                 opacity: 0,
-                color: new THREE.Color(0.8, 1.0, 0.8) // Slight green tint
+                color: this._tempColor.setRGB(0.8, 1.0, 0.8) // Slight green tint (reuse temp color)
             });
             const greenSprite = new THREE.Sprite(greenMaterial);
             greenSprite.scale.set(0.08, 0.08, 1);
@@ -104,7 +111,7 @@ export class BaileysBeads {
                 transparent: true,
                 depthWrite: false,
                 opacity: 0,
-                color: new THREE.Color(0.3, 0.5, 1.0) // Blue-tinted
+                color: this._tempColor.setRGB(0.3, 0.5, 1.0) // Blue-tinted (reuse temp color)
             });
             const blueSprite = new THREE.Sprite(blueMaterial);
             blueSprite.scale.set(0.08, 0.08, 1);
@@ -353,5 +360,22 @@ export class BaileysBeads {
             this.scene.remove(bead);
         }
         this.beads = [];
+
+        // Dispose shared texture
+        if (this.sharedTexture) {
+            this.sharedTexture.dispose();
+            this.sharedTexture = null;
+        }
+
+        // Clear temp objects
+        this._directionToCamera = null;
+        this._up = null;
+        this._right = null;
+        this._upVector = null;
+        this._beadOffset = null;
+        this._tempColor = null;
+
+        // Clear scene reference
+        this.scene = null;
     }
 }

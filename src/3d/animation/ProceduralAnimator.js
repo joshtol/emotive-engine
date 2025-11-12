@@ -251,6 +251,16 @@ export class ProceduralAnimator {
     }
 
     /**
+     * Cleanup all resources
+     */
+    destroy() {
+        this.stopAll();
+        this.animations = null;
+        this.currentAnimation = null;
+        this.time = 0;
+    }
+
+    /**
      * Easing function (smooth in-out)
      */
     easeInOutCubic(t) {

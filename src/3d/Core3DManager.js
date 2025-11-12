@@ -244,8 +244,57 @@ export class Core3DManager {
             this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.coreMesh);
         }
 
+        // Virtual particle object pool for gesture animations (prevent closure memory leaks)
+        this.virtualParticlePool = this.createVirtualParticlePool(5); // Pool of 5 reusable particles
+        this.nextPoolIndex = 0;
+
         // Initialize emotion
         this.setEmotion(this.emotion);
+    }
+
+    /**
+     * Create reusable virtual particle object pool
+     * @param {number} size - Pool size
+     * @returns {Array} Array of reusable particle objects
+     */
+    createVirtualParticlePool(size) {
+        const pool = [];
+        for (let i = 0; i < size; i++) {
+            pool.push({
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                size: 1,
+                baseSize: 1,
+                opacity: 1,
+                scaleFactor: 1,
+                gestureData: null
+            });
+        }
+        return pool;
+    }
+
+    /**
+     * Get next virtual particle from pool (round-robin)
+     * @returns {Object} Reusable virtual particle object
+     */
+    getVirtualParticleFromPool() {
+        const particle = this.virtualParticlePool[this.nextPoolIndex];
+        this.nextPoolIndex = (this.nextPoolIndex + 1) % this.virtualParticlePool.length;
+
+        // Reset particle to default state
+        particle.x = 0;
+        particle.y = 0;
+        particle.vx = 0;
+        particle.vy = 0;
+        particle.size = 1;
+        particle.baseSize = 1;
+        particle.opacity = 1;
+        particle.scaleFactor = 1;
+        particle.gestureData = null;
+
+        return particle;
     }
 
     /**
@@ -471,18 +520,8 @@ export class Core3DManager {
             return;
         }
 
-        // Create a virtual particle to extract gesture behavior
-        const virtualParticle = {
-            x: 0,
-            y: 0,
-            vx: 0,
-            vy: 0,
-            size: 1,
-            baseSize: 1,
-            opacity: 1,
-            scaleFactor: 1,
-            gestureData: null
-        };
+        // Get reusable virtual particle from pool (prevent closure memory leaks)
+        const virtualParticle = this.getVirtualParticleFromPool();
 
         // Get gesture config for duration
         const config = gesture2D.config || {};
@@ -502,6 +541,14 @@ export class Core3DManager {
             startRotation: [...this.rotation],
             startScale: this.scale
         };
+
+        // Enforce animation array size limit (prevent unbounded growth memory leak)
+        const MAX_ACTIVE_ANIMATIONS = 10;
+        if (this.animator.animations.length >= MAX_ACTIVE_ANIMATIONS) {
+            // Remove oldest animation (FIFO cleanup)
+            const removed = this.animator.animations.shift();
+            console.warn(`⚠️ Animation limit reached (${MAX_ACTIVE_ANIMATIONS}), removed oldest: ${removed.gestureName || 'unknown'}`);
+        }
 
         // Add to animator's active animations
         // Create persistent gesture data object for this gesture instance
@@ -650,6 +697,21 @@ export class Core3DManager {
             this.geometryType = this._targetGeometryType;
             this.geometryConfig = this._targetGeometryConfig;
 
+            // Dispose old custom material textures before creating new ones (prevent GPU memory leak)
+            if (this.customMaterial) {
+                // Dispose individual textures first
+                if (this.customMaterial.map) {
+                    this.customMaterial.map.dispose();
+                }
+                if (this.customMaterial.normalMap) {
+                    this.customMaterial.normalMap.dispose();
+                }
+                // Then dispose the material itself
+                this.renderer.disposeMaterial(this.customMaterial);
+                this.customMaterial = null;
+                this.customMaterialType = null;
+            }
+
             // Check if target geometry needs custom material (e.g., moon)
             let customMaterial = null;
             if (this._targetGeometryConfig.material === 'custom') {
@@ -677,11 +739,8 @@ export class Core3DManager {
                     this.customMaterial = customMaterial;
                     this.customMaterialType = 'moon';
                 }
-            } else {
-                // Morphing away from custom material - clear reference
-                this.customMaterial = null;
-                this.customMaterialType = null;
             }
+            // Note: If not using custom material, references were already cleared above
 
             // Swap geometry (and material if custom)
             if (customMaterial) {
@@ -845,18 +904,85 @@ export class Core3DManager {
      * Cleanup
      */
     destroy() {
+        // Dispose custom material textures if they exist
+        if (this.customMaterial) {
+            this.renderer.disposeMaterial(this.customMaterial);
+            this.customMaterial = null;
+            this.customMaterialType = null;
+        }
+
         this.renderer.destroy();
         this.animator.stopAll();
 
-        // Clean up particle system
+        // Clean up particle system (remove from scene before destroying)
         if (this.particleOrchestrator) {
+            // Get particle points reference before destroying
+            const particleRenderer = this.particleOrchestrator.renderer;
+            if (particleRenderer) {
+                const points = particleRenderer.getPoints();
+                if (points && this.renderer?.scene) {
+                    this.renderer.scene.remove(points);
+                    console.log('🧹 Removed particle points from scene');
+                }
+            }
             this.particleOrchestrator.destroy();
+            this.particleOrchestrator = null;
         }
 
-        // Clean up solar eclipse system
+        // Clean up solar eclipse system (remove from scene before disposing)
         if (this.solarEclipse) {
+            // Eclipse cleanup will remove all meshes from scene internally
             this.solarEclipse.dispose();
             this.solarEclipse = null;
+            console.log('🧹 Disposed solar eclipse system');
         }
+
+        // Clean up virtual particle pool
+        if (this.virtualParticlePool) {
+            this.virtualParticlePool.length = 0;
+            this.virtualParticlePool = null;
+        }
+
+        // Clean up animator sub-components
+        this.animator.destroy?.();
+        this.breathingAnimator.destroy?.();
+        this.gestureBlender.destroy?.();
+        this.geometryMorpher.destroy?.();
+        this.blinkAnimator.destroy?.();
+
+        // Clean up behavior objects
+        if (this.rotationBehavior) {
+            this.rotationBehavior.destroy?.();
+            this.rotationBehavior = null;
+        }
+        if (this.rightingBehavior) {
+            this.rightingBehavior.destroy?.();
+            this.rightingBehavior = null;
+        }
+
+        // Clean up temp THREE.js objects
+        this.tempEuler = null;
+        this.baseQuaternion = null;
+        this.gestureQuaternion = null;
+
+        // Clean up geometry references
+        this.geometry = null;
+        this.geometryConfig = null;
+        this._targetGeometry = null;
+        this._targetGeometryConfig = null;
+        this._targetGeometryType = null;
+
+        // Clean up canvas and options references
+        this.canvas = null;
+        this.options = null;
+
+        // Clean up core mesh reference
+        this.coreMesh = null;
+
+        // Clean up rhythm engine reference
+        this.rhythmEngine = null;
+
+        // Clean up emotive engine reference
+        this.emotiveEngine = null;
     }
 }

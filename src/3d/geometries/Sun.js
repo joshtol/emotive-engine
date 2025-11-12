@@ -325,6 +325,9 @@ export function createSunGeometry(textureLoader = null, options = {}) {
         32    // height segments
     );
 
+    // Track for disposal
+    geometry.userData.tracked = true;
+
     let material;
 
     // Use textured material if loader provided, otherwise fallback to color-only
@@ -373,9 +376,10 @@ export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, delta
     if (material.userData && material.userData.uniforms) {
         const {uniforms} = material.userData;
 
-        // Update animation time
+        // Update animation time with modulo to prevent unbounded growth
+        // Reset every ~6.28 seconds (2π) to keep noise patterns seamless
         if (deltaTime > 0) {
-            uniforms.time.value += deltaTime;
+            uniforms.time.value = (uniforms.time.value + deltaTime) % (Math.PI * 2.0);
         }
 
         // Sun is ALWAYS NASA-accurate brilliant white (5,772K photosphere)
@@ -405,5 +409,42 @@ export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, delta
         // DO NOT apply emotion tinting - sun stays white regardless of emotion
 
         material.color.copy(baseColor);
+    }
+}
+
+/**
+ * Dispose of sun geometry and material resources
+ * Call this when removing a sun from the scene
+ *
+ * @param {THREE.Mesh} sunMesh - Sun mesh to dispose
+ */
+export function disposeSun(sunMesh) {
+    if (!sunMesh) return;
+
+    // Dispose geometry
+    if (sunMesh.geometry) {
+        sunMesh.geometry.dispose();
+    }
+
+    // Dispose material and its textures
+    if (sunMesh.material) {
+        const {material} = sunMesh;
+
+        // Dispose textures (for shader material)
+        if (material.uniforms) {
+            if (material.uniforms.colorMap && material.uniforms.colorMap.value) {
+                material.uniforms.colorMap.value.dispose();
+            }
+            if (material.uniforms.normalMap && material.uniforms.normalMap.value) {
+                material.uniforms.normalMap.value.dispose();
+            }
+        }
+
+        // Dispose textures (for standard material)
+        if (material.map) material.map.dispose();
+        if (material.normalMap) material.normalMap.dispose();
+
+        // Dispose material
+        material.dispose();
     }
 }

@@ -786,11 +786,13 @@ export class ThreeRenderer {
             this.camera.position.lerpVectors(startPos, endPos, eased);
 
             if (progress < 1.0) {
-                requestAnimationFrame(animate);
+                this.cameraAnimationId = requestAnimationFrame(animate);
+            } else {
+                this.cameraAnimationId = null;
             }
         };
 
-        requestAnimationFrame(animate);
+        this.cameraAnimationId = requestAnimationFrame(animate);
     }
 
     /**
@@ -1039,6 +1041,12 @@ export class ThreeRenderer {
      * Cleanup resources
      */
     destroy() {
+        // Cancel camera animation RAF
+        if (this.cameraAnimationId) {
+            cancelAnimationFrame(this.cameraAnimationId);
+            this.cameraAnimationId = null;
+        }
+
         // Dispose inner core
         if (this.innerCore) {
             if (this.coreMesh) {
@@ -1073,6 +1081,30 @@ export class ThreeRenderer {
             this.composer = null;
         }
 
+        // Dispose controls (removes DOM event listeners)
+        if (this.controls) {
+            this.controls.dispose();
+            this.controls = null;
+        }
+
+        // Dispose lights with shadow maps
+        if (this.keyLight?.shadow?.map) this.keyLight.shadow.map.dispose();
+        if (this.fillLight?.shadow?.map) this.fillLight.shadow.map.dispose();
+        if (this.rimLight?.shadow?.map) this.rimLight.shadow.map.dispose();
+        this.keyLight = null;
+        this.fillLight = null;
+        this.rimLight = null;
+        this.ambientLight = null;
+        this.accentLight1 = null;
+        this.accentLight2 = null;
+        this.accentLight3 = null;
+
+        // Dispose environment map
+        if (this.envMap) {
+            this.envMap.dispose();
+            this.envMap = null;
+        }
+
         // Dispose renderer
         if (this.renderer) {
             this.renderer.dispose();
@@ -1081,5 +1113,34 @@ export class ThreeRenderer {
 
         // Clear scene
         this.scene.clear();
+
+        // Dispose animation mixer
+        if (this.mixer) {
+            this.mixer.stopAllAction();
+            this.mixer = null;
+        }
+
+        // Clear clock
+        this.clock = null;
+
+        // Clear camera
+        this.camera = null;
+
+        // Clear temp THREE objects
+        this._tempColor = null;
+        this._tempColor2 = null;
+        this._white = null;
+        this._tempQuat = null;
+        this._tempEuler = null;
+        this._quatX = null;
+        this._quatY = null;
+        this._quatZ = null;
+        this._rollQuat = null;
+        this._meshQuat = null;
+        this._xAxis = null;
+        this._yAxis = null;
+        this._zAxis = null;
+        this._cameraToMesh = null;
+        this._cameraDir = null;
     }
 }

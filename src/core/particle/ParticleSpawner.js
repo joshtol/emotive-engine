@@ -200,6 +200,7 @@ class ParticleSpawner {
 
         // TIME-BASED SPAWNING using accumulation
         // particleRate represents desired particles per second
+        // deltaTime is in milliseconds
         // Cap deltaTime to prevent huge accumulation spikes
         const cappedDeltaTime = Math.min(deltaTime, 50);
         const particlesPerSecond = particleRate;

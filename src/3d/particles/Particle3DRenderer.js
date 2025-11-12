@@ -212,9 +212,11 @@ export class Particle3DRenderer {
      */
     updateParticles(particles, translator, corePosition, canvasSize, rotationState, deltaTime, gestureData) {
         this.particleCount = Math.min(particles.length, this.maxParticles);
-
-        // Update gesture effect time
+        // Update gesture effect time - cap at 2π to prevent indefinite accumulation
         this.gestureEffects.time += 0.016; // ~60fps
+        if (this.gestureEffects.time > Math.PI * 2) {
+            this.gestureEffects.time = this.gestureEffects.time % (Math.PI * 2);
+        }
 
         // Update translator rotation state for orbital physics (with gesture info)
         if (rotationState && deltaTime) {
@@ -250,11 +252,11 @@ export class Particle3DRenderer {
             this.colors[colorIndex + 1] = color.g;
             this.colors[colorIndex + 2] = color.b;
 
-            // Update alpha (reduce overall opacity)
-            this.alphas[i] = particle.opacity * (particle.baseOpacity || 0.15) * 0.15; // Extremely transparent
+            // Update alpha
+            this.alphas[i] = particle.opacity * (particle.baseOpacity || 1.0);
 
-            // Calculate glow intensity (base + gesture effects) - minimal glow
-            let glowIntensity = particle.hasGlow ? (particle.glowSizeMultiplier || 1.5) * 0.05 : 0;
+            // Calculate glow intensity (base + gesture effects)
+            let glowIntensity = particle.hasGlow ? (particle.glowSizeMultiplier || 1.5) * 0.3 : 0;
 
             // Apply gesture effects
             glowIntensity = this._applyGestureEffects(particle, glowIntensity, i);
@@ -396,6 +398,58 @@ export class Particle3DRenderer {
      */
     setVisible(visible) {
         this.points.visible = visible;
+    }
+
+    /**
+     * Resize particle buffer capacity
+     * Properly disposes old geometry before creating new one
+     * @param {number} newMaxParticles - New maximum particle count
+     */
+    resize(newMaxParticles) {
+        if (newMaxParticles === this.maxParticles) {
+            return; // No change needed
+        }
+
+        // Dispose old geometry to free GPU memory
+        if (this.geometry) {
+            this.geometry.dispose();
+        }
+
+        // Update max particles
+        this.maxParticles = newMaxParticles;
+
+        // Recreate geometry with new size
+        this._initGeometry();
+
+        // Update points reference to new geometry
+        if (this.points) {
+            this.points.geometry = this.geometry;
+        }
+    }
+
+    /**
+     * Clean up per-particle physics state
+     * Call this when particles are removed to prevent memory accumulation
+     * @param {Array} particles - Current active particles array
+     */
+    cleanupParticleStates(particles) {
+        // Remove behaviorData from dead particles to prevent memory leaks
+        for (const particle of particles) {
+            if (!particle.isAlive() && particle.behaviorData) {
+                // Clear cached 3D direction and orbital data
+                if (particle.behaviorData.direction3D) {
+                    particle.behaviorData.direction3D = null;
+                }
+                if (particle.behaviorData.orbitPlane) {
+                    particle.behaviorData.orbitPlane = null;
+                }
+                if (particle.behaviorData.orbitPath) {
+                    particle.behaviorData.orbitPath = null;
+                }
+                // Clear entire behaviorData object
+                particle.behaviorData = null;
+            }
+        }
     }
 
     /**

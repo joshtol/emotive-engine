@@ -144,7 +144,7 @@ export class Particle3DOrchestrator {
      * Update particle physics with gesture motion
      * @param {Object} config - Emotion config
      * @param {Object} gestureData - Gesture data
-     * @param {number} deltaTime - Time delta
+     * @param {number} deltaTime - Time delta in SECONDS (will be converted to milliseconds)
      * @param {Object} canvasSize - Canvas dimensions
      * @param {string|null} undertone - Current undertone
      */
@@ -155,9 +155,13 @@ export class Particle3DOrchestrator {
         // Build undertone modifier for particle update
         const undertoneModifier = undertone ? { undertone } : null;
 
+        // CRITICAL: Convert deltaTime from seconds to milliseconds
+        // 3D system uses seconds, but 2D ParticleSystem expects milliseconds
+        const deltaTimeMs = deltaTime * 1000;
+
         // Update particle physics with gesture motion
         this.particleSystem.update(
-            deltaTime,
+            deltaTimeMs,
             centerX,
             centerY,
             gestureData ? gestureData.motion : null, // gestureMotion
@@ -258,8 +262,18 @@ export class Particle3DOrchestrator {
     destroy() {
         this.particleSystem.destroy();
         this.renderer.dispose();
+        if (this.translator) {
+            this.translator.dispose?.();
+            this.translator = null;
+        }
         this.emotionCalculator.clearCache();
+        this.emotionCalculator = null;
         this.gestureExtractor.reset();
+        this.gestureExtractor = null;
+        if (this.effectsBuilder) {
+            this.effectsBuilder.destroy?.();
+            this.effectsBuilder = null;
+        }
     }
 }
 

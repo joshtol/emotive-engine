@@ -45,6 +45,7 @@ export class SolarEclipse {
         this._right = new THREE.Vector3();
         this._upVector = new THREE.Vector3();
         this._tempOffset = new THREE.Vector3();
+        this._tempColor = new THREE.Color(); // Temp color for reuse
 
         // Create shadow disk
         this.createShadowDisk();
@@ -540,12 +541,7 @@ export class SolarEclipse {
         if (this.coronaDisk) {
             this.scene.remove(this.coronaDisk);
             this.coronaDisk.geometry.dispose();
-            // Dispose shader material uniforms
-            if (this.coronaDisk.material.uniforms) {
-                if (this.coronaDisk.material.uniforms.glowColor?.value) {
-                    this.coronaDisk.material.uniforms.glowColor.value = null;
-                }
-            }
+            // Dispose shader material uniforms - no need to null, just dispose material
             this.coronaDisk.material.dispose();
             this.coronaDisk = null;
         }
@@ -555,6 +551,14 @@ export class SolarEclipse {
             this.baileysBeads.dispose();
             this.baileysBeads = null;
         }
+
+        // Clear temp objects
+        this._directionToCamera = null;
+        this._up = null;
+        this._right = null;
+        this._upVector = null;
+        this._tempOffset = null;
+        this._tempColor = null;
 
         // Clear references
         this.scene = null;
