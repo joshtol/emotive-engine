@@ -564,9 +564,9 @@ export default function CherokeePage() {
     let gestureInterval: NodeJS.Timeout | null = null
 
     const initCardMascot = async () => {
-      // Wait for EmotiveMascot to load (lean bundle)
+      // Wait for EmotiveMascot to load (full build)
       let attempts = 0
-      while (!(window as any).EmotiveMascotLean && attempts < 50 && !cancelled) {
+      while (!(window as any).EmotiveMascot && attempts < 50 && !cancelled) {
         await new Promise(resolve => setTimeout(resolve, 100))
         attempts++
       }
@@ -597,8 +597,8 @@ export default function CherokeePage() {
       if (!greeting) return
 
       try {
-        // Access the global EmotiveMascot (lean bundle exports as EmotiveMascotLean)
-        const EmotiveMascot = (window as any).EmotiveMascotLean?.default || (window as any).EmotiveMascotLean
+        // Access the global EmotiveMascot (full build exports as EmotiveMascot)
+        const EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
 
         if (!EmotiveMascot) {
           console.error('EmotiveMascot not found on window object')
