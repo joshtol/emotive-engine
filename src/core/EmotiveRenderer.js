@@ -282,11 +282,7 @@ class EmotiveRenderer {
 
         // Store canvas reference for gaze tracking
         this.canvas = canvasManager.canvas;
-        
-        // Cache for expensive gradients
-        this.glowCache = new Map();
-        this.maxCacheSize = 10;
-        
+
         // Gesture animations
         this.gestureAnimations = {
             bounce: {

@@ -139,7 +139,7 @@ export class EmotionalStateManager {
      */
     updateUndertone(undertone) {
         // Clear glow cache when undertone changes (colors will change)
-        if (this.renderer.state.undertone !== undertone) {
+        if (this.renderer.state.undertone !== undertone && this.renderer.glowCache) {
             this.renderer.glowCache.clear();
         }
 
@@ -177,7 +177,7 @@ export class EmotionalStateManager {
     setEmotionalState(emotion, properties, undertone = null) {
 
         // Clear glow cache when emotion or undertone changes (colors will change)
-        if (this.renderer.state.emotion !== emotion || this.renderer.state.undertone !== undertone) {
+        if ((this.renderer.state.emotion !== emotion || this.renderer.state.undertone !== undertone) && this.renderer.glowCache) {
             this.renderer.glowCache.clear();
         }
 
