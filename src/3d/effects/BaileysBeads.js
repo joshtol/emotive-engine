@@ -21,7 +21,9 @@ export class BaileysBeads {
     constructor(scene, sunRadius) {
         this.scene = scene;
         this.sunRadius = sunRadius;
-        this.beadCount = 20; // Number of potential bead positions around the limb
+        this.heroBeadCount = 3; // Rule of thirds: 3 hero beads
+        this.supportBeadCount = 15; // Supporting beads clustered around heroes
+        this.beadCount = this.heroBeadCount + this.supportBeadCount; // Total: 18 beads
         this.beads = [];
         this.visible = false;
 
@@ -113,6 +115,8 @@ export class BaileysBeads {
                 angle: valleys[i].angle,
                 depth: valleys[i].depth,
                 baseIntensity: valleys[i].baseIntensity,
+                isHero: valleys[i].isHero, // Rule of thirds: hero beads are larger/brighter
+                sizeMultiplier: valleys[i].isHero ? 1.5 : 1.0, // Hero beads 50% larger
                 targetOpacity: 0,
                 currentOpacity: 0,
                 redSprite,
@@ -126,10 +130,10 @@ export class BaileysBeads {
     }
 
     /**
-     * Generate simulated lunar valley positions
-     * Uses seeded randomness for consistent bead patterns
+     * Generate simulated lunar valley positions using rule of thirds
+     * 3 hero beads at 120° intervals + supporting beads clustered around them
      * @private
-     * @returns {Array} Array of valley data {angle, depth, baseIntensity}
+     * @returns {Array} Array of valley data {angle, depth, baseIntensity, isHero}
      */
     generateLunarValleys() {
         const valleys = [];
@@ -141,15 +145,33 @@ export class BaileysBeads {
             return seed / 233280;
         };
 
-        for (let i = 0; i < this.beadCount; i++) {
-            // Distribute around circle with slight clustering
-            const baseAngle = (i / this.beadCount) * Math.PI * 2;
-            const jitter = (seededRandom() - 0.5) * 0.3;
+        // RULE OF THIRDS: 3 hero beads positioned 120° apart
+        const baseHeroAngle = seededRandom() * Math.PI * 2; // Random rotation
+        for (let h = 0; h < this.heroBeadCount; h++) {
+            const heroAngle = baseHeroAngle + (h * Math.PI * 2 / 3); // 120° spacing
 
             valleys.push({
-                angle: baseAngle + jitter,
-                depth: 0.3 + seededRandom() * 0.7, // Varies valley depth
-                baseIntensity: 0.5 + seededRandom() * 0.5 // Varies bead brightness
+                angle: heroAngle,
+                depth: 0.8 + seededRandom() * 0.2, // Hero beads: deeper valleys (0.8-1.0)
+                baseIntensity: 0.8 + seededRandom() * 0.2, // Hero beads: brighter (0.8-1.0)
+                isHero: true
+            });
+        }
+
+        // Supporting beads clustered around hero beads
+        for (let i = 0; i < this.supportBeadCount; i++) {
+            // Assign to nearest hero bead (thirds grouping)
+            const heroTarget = Math.floor(i / (this.supportBeadCount / 3));
+            const heroAngle = baseHeroAngle + (heroTarget * Math.PI * 2 / 3);
+
+            // Cluster around hero with varied offset
+            const clusterOffset = (seededRandom() - 0.5) * 1.2; // ±0.6 radians (~±34°)
+
+            valleys.push({
+                angle: heroAngle + clusterOffset,
+                depth: 0.3 + seededRandom() * 0.5, // Supporting beads: shallower (0.3-0.8)
+                baseIntensity: 0.4 + seededRandom() * 0.4, // Supporting beads: dimmer (0.4-0.8)
+                isHero: false
             });
         }
 
@@ -165,23 +187,12 @@ export class BaileysBeads {
      * @param {number} worldScale - Current world scale of the sun (for proper sizing)
      */
     update(camera, sunPosition, coverage, deltaTime, worldScale = 1.0) {
-        console.log('🔮 Bailey\'s Beads Update:');
-        console.log(`   visible: ${this.visible}`);
-        console.log(`   coverage: ${coverage.toFixed(4)}`);
-        console.log(`   worldScale: ${worldScale.toFixed(4)}`);
-        console.log('   sunPosition:', sunPosition);
-        console.log(`   beads.length: ${this.beads.length}`);
-
         // ALWAYS update bead positions to follow the sun, regardless of visibility
         // Only opacity should be controlled by visibility state
 
         // Update bead positions to circle around sun
         // Account for world scale to stay on the rim regardless of sun size/transforms
         const scaledRadius = this.sunRadius * worldScale * 1.0; // Exactly on the rim
-
-        console.log('   📍 Positioning beads:');
-        console.log(`      scaledRadius: ${scaledRadius.toFixed(4)}`);
-        console.log(`      base sunRadius: ${this.sunRadius.toFixed(4)}`);
 
         // Calculate camera-relative vectors for proper positioning (like shadow disk)
         // REUSE temp vectors to avoid allocations
@@ -191,7 +202,7 @@ export class BaileysBeads {
         this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
 
         for (const bead of this.beads) {
-            const {angle, redSprite, greenSprite, blueSprite} = bead.userData;
+            const {angle, redSprite, greenSprite, blueSprite, sizeMultiplier} = bead.userData;
 
             // Position beads on a circle in screen space (perpendicular to camera view)
             // Calculate position on rim using right and up vectors (billboard-style)
@@ -231,8 +242,9 @@ export class BaileysBeads {
             bead.updateMatrixWorld(true);
 
             // Scale all sprites with sun to maintain consistent visual size
-            // Reduced from 0.4 to 0.15 for smaller, more focused beads
-            const beadScale = worldScale * 0.15;
+            // Hero beads are 50% larger (rule of thirds)
+            const baseScale = worldScale * 0.15;
+            const beadScale = baseScale * sizeMultiplier; // Apply hero multiplier
             redSprite.scale.set(beadScale, beadScale, 1);
             greenSprite.scale.set(beadScale, beadScale, 1);
             blueSprite.scale.set(beadScale, beadScale, 1);
@@ -244,17 +256,12 @@ export class BaileysBeads {
             for (const bead of this.beads) {
                 bead.userData.targetOpacity = 0;
             }
-            console.log('   ❌ Not visible - fading out all beads');
         } else {
             // Bailey's Beads are visible in the range 0.90 to 1.0 coverage
             // They fade in as coverage approaches 0.95 and fade out at exactly 1.0
             const beadStart = 0.90; // Start showing beads
             const beadFull = 0.97;  // Full intensity
             const beadEnd = 1.00;   // Completely hidden at totality
-
-            console.log(`   ✅ Visible - coverage range check: ${beadStart} <= ${coverage.toFixed(4)} < ${beadEnd}`);
-
-            let visibleBeadCount = 0;
             for (const bead of this.beads) {
                 let targetOpacity = 0;
 
@@ -282,30 +289,12 @@ export class BaileysBeads {
                     targetOpacity = angularProximity * bead.userData.baseIntensity * intensityMultiplier * bead.userData.depth;
 
                     // Multiply by brightness multiplier to make beads much more visible
-                    // Increased from 5.0 → 15.0 → 30.0 for intense brilliance
-                    targetOpacity *= 30.0;
-
-                    if (targetOpacity > 0.05) {
-                        visibleBeadCount++;
-                    }
+                    // Increased from 5.0 → 15.0 → 30.0 → 50.0 for maximum brilliance
+                    targetOpacity *= 50.0;
                 }
 
                 bead.userData.targetOpacity = targetOpacity;
             }
-
-            console.log(`   💎 Beads with targetOpacity > 0.05: ${visibleBeadCount}`);
-        }
-
-        // Log first bead as sample
-        if (this.beads.length > 0) {
-            const firstBead = this.beads[0];
-            const {greenSprite} = firstBead.userData;
-            console.log('   🔍 First bead sample:');
-            console.log('      position:', firstBead.position);
-            console.log('      scale:', greenSprite.scale);
-            console.log(`      targetOpacity: ${firstBead.userData.targetOpacity.toFixed(4)}`);
-            console.log(`      currentOpacity: ${firstBead.userData.currentOpacity.toFixed(4)}`);
-            console.log(`      greenSprite.opacity: ${greenSprite.material.opacity.toFixed(4)}`);
         }
 
         // Smooth opacity transitions for all RGB channels

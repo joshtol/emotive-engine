@@ -86,7 +86,7 @@ export class SolarEclipse {
      * @private
      */
     createCoronaDisk() {
-        const coronaRadius = this.sunRadius * 2; // 2x sun diameter
+        const coronaRadius = this.sunRadius * 2.05; // x sun diameter
         const coronaGeometry = new THREE.CircleGeometry(coronaRadius, 64);
 
         // Shader material with radial wave pattern
@@ -133,14 +133,57 @@ export class SolarEclipse {
                     // Shadow edge - where corona starts
                     float shadowEdge = 0.465;
 
-                    // Varied radial streamer pattern
+                    // Varied radial streamer pattern with artistic composition
                     float rayIntensity = 0.0;
 
-                    // 32 streamers with non-uniform angular distribution
-                    for (float i = 0.0; i < 32.0; i++) {
-                        // Use hash to create non-uniform angular positions
-                        float angleOffset = hash(i * 7.7321 + randomSeed) * 6.28318;
-                        float rayAngle = angleOffset;
+                    // RULE OF THIRDS: Place 3 hero rays at compositionally strong points
+                    // Golden angles based on rule of thirds: 1/3, 2/3, and offset positions
+                    float heroAngles[3];
+                    heroAngles[0] = hash(randomSeed * 1.234) * 6.28318; // First hero ray (random rotation)
+                    heroAngles[1] = heroAngles[0] + 2.0944; // 120° apart (1/3 circle)
+                    heroAngles[2] = heroAngles[0] + 4.1888; // 240° apart (2/3 circle)
+
+                    // Process hero rays first (3 extra-long dramatic rays)
+                    for (int h = 0; h < 3; h++) {
+                        float rayAngle = heroAngles[h];
+                        float angleDiff = abs(mod(angle - rayAngle + 3.14159, 6.28318) - 3.14159);
+
+                        // Hero rays: extra long and prominent (fit within 0.535 normalized space)
+                        float heroLength = 0.45 + hash(float(h) * 31.415 + randomSeed) * 0.08; // 0.45 to 0.53 (max available, longer!)
+                        float heroWidth = 0.15 + hash(float(h) * 27.183 + randomSeed) * 0.15; // 0.15 to 0.3 (thick!)
+
+                        float distFromEdge = dist - shadowEdge;
+
+                        // Ghostly ethereal taper - very gradual falloff
+                        float taper = pow(1.0 - clamp(distFromEdge / max(heroLength, 0.001), 0.0, 1.0), 3.0);
+                        float rayWidth = heroWidth * taper;
+
+                        // Soft feathered edges instead of hard cutoff
+                        float edgeSoftness = 0.08; // Feather distance
+                        float angularMask = smoothstep(rayWidth + edgeSoftness, rayWidth - edgeSoftness, angleDiff);
+
+                        // Very gentle radial falloff for ethereal look
+                        float radialFalloff = pow(taper, 0.8);
+
+                        // Soft radial range with feathered ends
+                        float radialMask = smoothstep(-0.05, 0.0, distFromEdge) *
+                                          smoothstep(heroLength + 0.1, heroLength, distFromEdge);
+
+                        float heroIntensity = angularMask * radialFalloff * radialMask * 0.7; // Reduced intensity for ghostly effect
+                        rayIntensity = max(rayIntensity, heroIntensity);
+                    }
+
+                    // 45 supporting rays with rule-of-thirds-aware distribution
+                    for (float i = 0.0; i < 45.0; i++) {
+                        // Cluster more rays around hero ray positions (rule of thirds)
+                        float clusterTarget = mod(i, 3.0); // Which hero ray to cluster near
+                        float clusterAngle = heroAngles[int(clusterTarget)];
+
+                        // Base distribution with clustering tendency
+                        float spreadAngle = (i / 45.0) * 6.28318;
+                        float clusterPull = (hash(i * 13.579 + randomSeed) - 0.5) * 1.5; // Stronger variation
+                        float rayAngle = spreadAngle + clusterPull;
+
                         float angleDiff = abs(mod(angle - rayAngle + 3.14159, 6.28318) - 3.14159);
 
                         // Unique random values per ray
@@ -149,35 +192,36 @@ export class SolarEclipse {
                         float random3 = hash(i * 37.719 + randomSeed);
                         float random4 = hash(i * 93.989 + randomSeed);
 
-                        // Highly varied ray lengths with more extremes
-                        float lengthVariation = random1 * random1 * random1; // Cubed for even more variation
-                        float rayLength = 0.08 + lengthVariation * 0.6; // 0.08 to 0.68 (extended)
+                        // Varied lengths following power law distribution (more short, fewer long)
+                        float lengthVariation = random1 * random1; // Squared for naturalistic distribution
+                        float rayLength = 0.1 + lengthVariation * 0.7; // 0.1 to 0.8
 
-                        // 15% chance of very long streamers (extended further)
-                        float isLong = step(0.85, random2);
-                        rayLength = mix(rayLength, 0.5 + random3 * 0.8, isLong); // 0.5 to 1.3 (longer rays)
+                        // 20% chance of long streamers (supporting the hero rays)
+                        float isLong = step(0.80, random2);
+                        rayLength = mix(rayLength, 0.7 + random3 * 0.6, isLong); // 0.7 to 1.3
 
-                        // Very thin rays by default, some thicker
-                        float baseWidth = 0.02 + random4 * random4 * 0.15; // 0.02 to 0.17 (much thinner)
+                        // Varied widths with power law (more thin, fewer thick)
+                        float baseWidth = 0.03 + (random4 * random4) * 0.2; // 0.03 to 0.23 (naturally varied)
 
                         // Taper: wide at base, narrow at tip
                         float distFromEdge = dist - shadowEdge;
 
-                        // Check if we're in the ray's radial range
-                        float inRadialRange = step(0.0, distFromEdge) * step(distFromEdge, rayLength);
-
-                        // Sharp taper for pointed tips
-                        float taper = pow(1.0 - clamp(distFromEdge / max(rayLength, 0.001), 0.0, 1.0), 2.5);
+                        // Ghostly ethereal taper - very gradual falloff
+                        float taper = pow(1.0 - clamp(distFromEdge / max(rayLength, 0.001), 0.0, 1.0), 3.5);
                         float rayWidth = baseWidth * taper;
 
-                        // Check if we're in the ray's angular range
-                        float inAngularRange = step(angleDiff, rayWidth);
+                        // Soft feathered edges for ethereal wisps
+                        float edgeSoftness = 0.05; // Feather distance for supporting rays
+                        float angularMask = smoothstep(rayWidth + edgeSoftness, rayWidth - edgeSoftness, angleDiff);
 
-                        // Intensity with gradient falloff
-                        float angularMask = (1.0 - clamp(angleDiff / max(rayWidth, 0.001), 0.0, 1.0)) * inAngularRange;
-                        float radialFalloff = pow(taper, 0.5); // Gentler radial falloff
+                        // Very gentle radial falloff for ghostly appearance
+                        float radialFalloff = pow(taper, 1.0);
 
-                        float streamerIntensity = angularMask * radialFalloff * inRadialRange;
+                        // Soft radial range with feathered ends
+                        float radialMask = smoothstep(-0.03, 0.0, distFromEdge) *
+                                          smoothstep(rayLength + 0.08, rayLength, distFromEdge);
+
+                        float streamerIntensity = angularMask * radialFalloff * radialMask * 0.5; // Reduced for ethereal wisps
                         rayIntensity = max(rayIntensity, streamerIntensity);
                     }
 
