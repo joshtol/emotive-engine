@@ -35,15 +35,16 @@ class GestureScheduler {
         this.isProcessing = false;
         this.processInterval = null;
         this.lastProcessTime = 0;
-        
+        this.pendingTimeouts = new Set(); // Track all pending timeouts for cleanup
+
         // Visual feedback callbacks
         this.onGestureQueued = null;
         this.onGestureTriggered = null;
         this.onGestureCompleted = null;
-        
+
         // Start processing loop
         this.startProcessing();
-        
+
         // Listen to rhythm events
         this.setupRhythmListeners();
     }
@@ -489,16 +490,19 @@ class GestureScheduler {
         if (this.onGestureTriggered) {
             this.onGestureTriggered(queueItem);
         }
-        
+
         // Schedule completion and queue processing
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
+            // Remove from pending timeouts
+            this.pendingTimeouts.delete(timeoutId);
+
             // Mark as inactive
             this.activeGestures.delete(gestureName);
-            
+
             if (this.currentGesture === gestureName) {
                 this.currentGesture = null;
             }
-            
+
             // Check if there are queued instances
             const gestureQueue = this.gestureQueues.get(gestureName);
             if (gestureQueue && gestureQueue.length > 0) {
@@ -507,16 +511,19 @@ class GestureScheduler {
                 this.queue.push(nextItem);
                 this.queue.sort((a, b) => a.triggerTime - b.triggerTime);
             }
-            
+
             // Cleanup empty queue
             if (gestureQueue && gestureQueue.length === 0) {
                 this.gestureQueues.delete(gestureName);
             }
-            
+
             if (this.onGestureCompleted) {
                 this.onGestureCompleted(queueItem);
             }
         }, duration);
+
+        // Track timeout for cleanup
+        this.pendingTimeouts.add(timeoutId);
     }
     
     /**
@@ -644,6 +651,45 @@ class GestureScheduler {
             nextGesture: this.queue[0] || null,
             isProcessing: this.isProcessing
         };
+    }
+
+    /**
+     * Destroy the scheduler and clean up all resources
+     * CRITICAL for preventing memory leaks
+     */
+    destroy() {
+        // Stop the processing interval
+        this.stopProcessing();
+
+        // Clear all pending timeouts
+        this.pendingTimeouts.forEach(timeoutId => {
+            clearTimeout(timeoutId);
+        });
+        this.pendingTimeouts.clear();
+
+        // Clear all data structures
+        this.queue = [];
+        this.activeGestures.clear();
+        this.gestureQueues.clear();
+
+        // Remove rhythm engine event listeners
+        // Note: rhythmEngine.off() should be implemented in rhythm.js
+        // For now, we'll null out our references
+        rhythmEngine.off('beat');
+        rhythmEngine.off('subdivision');
+
+        // Null out callback references
+        this.onGestureQueued = null;
+        this.onGestureTriggered = null;
+        this.onGestureCompleted = null;
+
+        // Clear current gesture state
+        this.currentGesture = null;
+        this.currentGestureStartTime = 0;
+        this.isProcessing = false;
+
+        // Null mascot reference to prevent circular references
+        this.mascot = null;
     }
 }
 

@@ -46,6 +46,7 @@ export class TimelineRecorder {
         this._getEngine = getEngine;
         this._audioManager = audioManager;
         this._state = state;
+        this._activeTimeouts = new Set();
     }
 
     /**
@@ -101,7 +102,8 @@ export class TimelineRecorder {
 
         // Schedule all events
         timeline.forEach(event => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                this._activeTimeouts.delete(timeoutId);
                 if (!this._state.isPlaying) return;
 
                 const engine = this._getEngine();
@@ -119,13 +121,16 @@ export class TimelineRecorder {
                     break;
                 }
             }, event.time);
+            this._activeTimeouts.add(timeoutId);
         });
 
         // Stop playback after last event
         const lastEventTime = Math.max(...timeline.map(e => e.time));
-        setTimeout(() => {
+        const stopTimeoutId = setTimeout(() => {
+            this._activeTimeouts.delete(stopTimeoutId);
             this._state.isPlaying = false;
         }, lastEventTime);
+        this._activeTimeouts.add(stopTimeoutId);
     }
 
     /**
@@ -136,6 +141,9 @@ export class TimelineRecorder {
      */
     stopPlayback() {
         this._state.isPlaying = false;
+        // Clear all pending timeouts
+        this._activeTimeouts.forEach(id => clearTimeout(id));
+        this._activeTimeouts.clear();
     }
 
     /**
@@ -260,5 +268,19 @@ export class TimelineRecorder {
             emotion: engine?.state?.emotion || 'neutral',
             shape: engine?.state?.currentShape || 'circle'
         };
+    }
+
+    /**
+     * Clean up resources
+     * Call this when the TimelineRecorder is no longer needed
+     *
+     * @example
+     * timelineRecorder.destroy();
+     */
+    destroy() {
+        this.stopPlayback();
+        this._getEngine = null;
+        this._audioManager = null;
+        this._state = null;
     }
 }

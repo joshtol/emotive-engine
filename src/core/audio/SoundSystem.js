@@ -87,6 +87,18 @@ export class SoundSystem {
             ['disgust', { frequency: 110, waveform: 'sawtooth', volume: 0.07 }],
             ['love', { frequency: 528, waveform: 'sine', volume: 0.11 }]
         ]);
+
+        // Emotional modifiers for gesture sounds (created once to prevent memory leaks)
+        this.emotionalModifiers = new Map([
+            ['neutral', { intensity: 1.0, speed: 1.0 }],
+            ['joy', { intensity: 1.3, speed: 1.2 }],
+            ['sadness', { intensity: 0.6, speed: 0.8 }],
+            ['anger', { intensity: 1.5, speed: 1.4 }],
+            ['fear', { intensity: 0.8, speed: 1.3 }],
+            ['surprise', { intensity: 1.4, speed: 1.5 }],
+            ['disgust', { intensity: 0.7, speed: 0.9 }],
+            ['love', { intensity: 1.1, speed: 0.9 }]
+        ]);
     }
 
     /**
@@ -522,18 +534,7 @@ export class SoundSystem {
    * @returns {Object} Modifier values
    */
     getEmotionalModifiers(emotion) {
-        const modifiers = new Map([
-            ['neutral', { intensity: 1.0, speed: 1.0 }],
-            ['joy', { intensity: 1.3, speed: 1.2 }],
-            ['sadness', { intensity: 0.6, speed: 0.8 }],
-            ['anger', { intensity: 1.5, speed: 1.4 }],
-            ['fear', { intensity: 0.8, speed: 1.3 }],
-            ['surprise', { intensity: 1.4, speed: 1.5 }],
-            ['disgust', { intensity: 0.7, speed: 0.9 }],
-            ['love', { intensity: 1.1, speed: 0.9 }]
-        ]);
-
-        return modifiers.get(emotion) || modifiers.get('neutral');
+        return this.emotionalModifiers.get(emotion) || this.emotionalModifiers.get('neutral');
     }
 
     /**

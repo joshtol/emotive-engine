@@ -405,34 +405,48 @@ export class CanvasContextRecovery {
         this.context = null;
         this.isContextLost = false;
         this.recoveryCallbacks = [];
-        
+
+        // Bind handlers for removal
+        this.handleContextLost = this.handleContextLost.bind(this);
+        this.handleContextRestored = this.handleContextRestored.bind(this);
+
         this.setupContextLossHandling();
+    }
+
+    /**
+     * Handle context lost event
+     * @param {Event} event - Context lost event
+     */
+    handleContextLost(event) {
+        event.preventDefault();
+        this.isContextLost = true;
+        // Canvas context lost
+    }
+
+    /**
+     * Handle context restored event
+     */
+    handleContextRestored() {
+        this.isContextLost = false;
+        this.context = this.canvas.getContext('2d');
+        // Canvas context restored
+
+        // Execute recovery callbacks
+        this.recoveryCallbacks.forEach(callback => {
+            try {
+                callback(this.context);
+            } catch {
+                // Context recovery callback failed
+            }
+        });
     }
 
     /**
      * Set up context loss and recovery handling
      */
     setupContextLossHandling() {
-        this.canvas.addEventListener('webglcontextlost', event => {
-            event.preventDefault();
-            this.isContextLost = true;
-            // Canvas context lost
-        });
-
-        this.canvas.addEventListener('webglcontextrestored', () => {
-            this.isContextLost = false;
-            this.context = this.canvas.getContext('2d');
-            // Canvas context restored
-            
-            // Execute recovery callbacks
-            this.recoveryCallbacks.forEach(callback => {
-                try {
-                    callback(this.context);
-                } catch {
-                    // Context recovery callback failed
-                }
-            });
-        });
+        this.canvas.addEventListener('webglcontextlost', this.handleContextLost);
+        this.canvas.addEventListener('webglcontextrestored', this.handleContextRestored);
     }
 
     /**
@@ -492,6 +506,19 @@ export class CanvasContextRecovery {
         }
 
         return false;
+    }
+
+    /**
+     * Clean up event listeners and references
+     */
+    destroy() {
+        if (this.canvas) {
+            this.canvas.removeEventListener('webglcontextlost', this.handleContextLost);
+            this.canvas.removeEventListener('webglcontextrestored', this.handleContextRestored);
+            this.canvas = null;
+        }
+        this.context = null;
+        this.recoveryCallbacks = [];
     }
 }
 

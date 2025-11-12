@@ -54,6 +54,13 @@ export class ThreeRenderer {
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         }
 
+        // WebGL context loss handling (critical for mobile stability)
+        this._contextLost = false;
+        this._boundHandleContextLost = this.handleContextLost.bind(this);
+        this._boundHandleContextRestored = this.handleContextRestored.bind(this);
+        canvas.addEventListener('webglcontextlost', this._boundHandleContextLost, false);
+        canvas.addEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+
         // Create camera
         this.camera = new THREE.PerspectiveCamera(
             45, // FOV (matches custom WebGL)
@@ -239,8 +246,9 @@ export class ThreeRenderer {
                 const texture = await exrLoader.loadAsync('/hdri/studio_01.exr');
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 this.envMap = pmremGenerator.fromEquirectangular(texture).texture;
+                texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (10-22MB GPU memory leak fix)
                 pmremGenerator.dispose();
-                console.log('✅ Loaded HDRI environment map');
+                // console.log('✅ Loaded HDRI environment map');
                 return;
             } catch (exrError) {
                 console.warn('Could not load EXR, trying fallback:', exrError.message);
@@ -279,7 +287,13 @@ export class ThreeRenderer {
         cubeCamera.update(this.renderer, envScene);
 
         this.envMap = cubeRenderTarget.texture;
-        console.log('Using procedural environment map');
+
+        // CRITICAL: Store procedural environment resources for proper disposal (GPU memory leak fix)
+        this._envCubeRenderTarget = cubeRenderTarget;
+        this._envScene = envScene;
+        this._envCubeCamera = cubeCamera;
+
+        // console.log('Using procedural environment map');
     }
 
     /**
@@ -307,6 +321,68 @@ export class ThreeRenderer {
     }
 
     /**
+     * Handle WebGL context loss
+     * Prevents default behavior and sets flag to stop rendering
+     * @param {Event} event - Context lost event
+     */
+    handleContextLost(event) {
+        event.preventDefault();
+        this._contextLost = true;
+        console.warn('⚠️ WebGL context lost - rendering paused');
+
+        // Cancel any ongoing animation frames
+        if (this.cameraAnimationId) {
+            cancelAnimationFrame(this.cameraAnimationId);
+            this.cameraAnimationId = null;
+        }
+    }
+
+    /**
+     * Handle WebGL context restoration
+     * Recreates resources and resumes rendering
+     */
+    handleContextRestored() {
+        // console.log('✅ WebGL context restored - recreating resources');
+        this._contextLost = false;
+
+        // Recreate all GPU resources
+        this.recreateResources();
+    }
+
+    /**
+     * Recreate all GPU resources after context loss
+     * Rebuilds geometries, materials, textures, and post-processing
+     */
+    recreateResources() {
+        // console.log('🔄 Recreating GPU resources after context restoration');
+
+        // Recreate environment map
+        this.createEnvironmentMap();
+
+        // Recreate materials
+        if (this.materialMode === 'glow') {
+            this.glowMaterial = this.createGlowMaterial();
+            if (this.coreMesh) {
+                this.coreMesh.material = this.glowMaterial;
+            }
+        } else if (this.materialMode === 'glass') {
+            this.glassMaterial = this.createGlassMaterial();
+            if (this.coreMesh) {
+                this.coreMesh.material = this.glassMaterial;
+            }
+            // Recreate inner core
+            if (this.coreMesh) {
+                this.createInnerCore();
+            }
+        }
+
+        // Note: Three.js automatically recreates geometries and textures
+        // when they are first accessed after context restoration
+
+        // console.log('✅ GPU resources recreated successfully');
+    }
+
+    /**
      * Create core mascot mesh with custom glow material
      * @param {THREE.BufferGeometry} geometry - Three.js geometry
      * @param {THREE.Material} customMaterial - Optional custom material (e.g., moon textures)
@@ -327,7 +403,7 @@ export class ThreeRenderer {
         if (customMaterial) {
             // Use provided custom material (e.g., moon with NASA textures)
             material = customMaterial;
-            console.log('✅ Using custom material for geometry');
+            // console.log('✅ Using custom material for geometry');
         } else {
             // Create glow material and store it
             if (!this.glowMaterial) {
@@ -378,7 +454,7 @@ export class ThreeRenderer {
 
         // If custom material provided, swap material too
         if (customMaterial) {
-            console.log('✅ Swapping to custom material during morph');
+            // console.log('✅ Swapping to custom material during morph');
             // Dispose old material (but NOT if it's glow/glass material - we reuse those)
             if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
                 this.disposeMaterial(this.coreMesh.material);
@@ -392,7 +468,7 @@ export class ThreeRenderer {
                 : this.glowMaterial;
 
             if (this.coreMesh.material !== standardMaterial) {
-                console.log('✅ Restoring standard material:', this.materialMode);
+                // console.log('✅ Restoring standard material:', this.materialMode);
                 // Dispose custom material
                 if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
                     this.disposeMaterial(this.coreMesh.material);
@@ -1041,6 +1117,12 @@ export class ThreeRenderer {
      * Cleanup resources
      */
     destroy() {
+        // Remove WebGL context event listeners
+        if (this.canvas) {
+            this.canvas.removeEventListener('webglcontextlost', this._boundHandleContextLost, false);
+            this.canvas.removeEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+        }
+
         // Cancel camera animation RAF
         if (this.cameraAnimationId) {
             cancelAnimationFrame(this.cameraAnimationId);
@@ -1103,6 +1185,24 @@ export class ThreeRenderer {
         if (this.envMap) {
             this.envMap.dispose();
             this.envMap = null;
+        }
+
+        // CRITICAL: Dispose procedural environment resources (GPU memory leak fix)
+        if (this._envCubeRenderTarget) {
+            this._envCubeRenderTarget.dispose();
+            this._envCubeRenderTarget = null;
+        }
+        if (this._envScene) {
+            // Dispose all geometries and materials in environment scene
+            this._envScene.traverse(obj => {
+                if (obj.geometry) obj.geometry.dispose();
+                if (obj.material) this.disposeMaterial(obj.material);
+            });
+            this._envScene.clear();
+            this._envScene = null;
+        }
+        if (this._envCubeCamera) {
+            this._envCubeCamera = null;
         }
 
         // Dispose renderer
