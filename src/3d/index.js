@@ -529,15 +529,19 @@ export class EmotiveMascot3D {
             console.log('✨ 3D Particles enabled');
         }
 
-        // Enable 2D canvas particle system (if needed)
-        if (!this.particleSystem && this.canvas2D) {
-            const maxParticles = this.config.maxParticles || 300;
-            this.particleSystem = new ParticleSystem(maxParticles, this.errorBoundary);
-            this.particleSystem.canvasWidth = this.canvas2D.width;
-            this.particleSystem.canvasHeight = this.canvas2D.height;
-            console.log('✨ 2D Particles enabled - system created');
-        } else if (this.particleSystem) {
-            console.log('⚠️ 2D Particles already enabled');
+        // Only enable 2D canvas particle system if we don't have 3D particles
+        // (3D mode uses WebGL particles, not 2D canvas particles)
+        if (!this.core3D?.particleOrchestrator) {
+            // Enable 2D canvas particle system (if needed)
+            if (!this.particleSystem && this.canvas2D) {
+                const maxParticles = this.config.maxParticles || 300;
+                this.particleSystem = new ParticleSystem(maxParticles, this.errorBoundary);
+                this.particleSystem.canvasWidth = this.canvas2D.width;
+                this.particleSystem.canvasHeight = this.canvas2D.height;
+                console.log('✨ 2D Particles enabled - system created');
+            } else if (this.particleSystem) {
+                console.log('⚠️ 2D Particles already enabled');
+            }
         }
     }
 
@@ -553,14 +557,18 @@ export class EmotiveMascot3D {
             console.log('💨 3D Particles disabled');
         }
 
-        // Disable 2D canvas particle system
-        if (this.particleSystem) {
-            this.particleSystem.destroy();
-            this.particleSystem = null;
-            console.log('💨 2D Particles disabled - system destroyed');
-            // Canvas will be automatically cleared on next animation frame
-        } else {
-            console.log('⚠️ 2D Particles already disabled');
+        // Only disable 2D canvas particle system if we don't have 3D particles
+        // (3D mode uses WebGL particles, not 2D canvas particles)
+        if (!this.core3D?.particleOrchestrator) {
+            // Disable 2D canvas particle system
+            if (this.particleSystem) {
+                this.particleSystem.destroy();
+                this.particleSystem = null;
+                console.log('💨 2D Particles disabled - system destroyed');
+                // Canvas will be automatically cleared on next animation frame
+            } else {
+                console.log('⚠️ 2D Particles already disabled');
+            }
         }
     }
 
