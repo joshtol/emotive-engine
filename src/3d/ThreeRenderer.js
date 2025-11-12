@@ -309,8 +309,14 @@ export class ThreeRenderer {
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)
+        // PERFORMANCE: Use half resolution for bloom - bloom is a blur effect so lower resolution
+        // doesn't affect visual quality significantly, but improves performance by 2-4x
+        const bloomResolution = new THREE.Vector2(
+            Math.floor(this.canvas.width / 2),
+            Math.floor(this.canvas.height / 2)
+        );
         this.bloomPass = new UnrealBloomPass(
-            new THREE.Vector2(this.canvas.width, this.canvas.height),
+            bloomResolution,
             1.2, // strength - moderate glow
             0.5, // radius - tight spread
             0.3  // threshold - preserve texture detail
@@ -1065,6 +1071,14 @@ export class ThreeRenderer {
 
         if (this.composer) {
             this.composer.setSize(width, height);
+
+            // PERFORMANCE: Update bloom pass resolution to half size for better performance
+            if (this.bloomPass && this.bloomPass.resolution) {
+                this.bloomPass.resolution.set(
+                    Math.floor(width / 2),
+                    Math.floor(height / 2)
+                );
+            }
         }
     }
 
