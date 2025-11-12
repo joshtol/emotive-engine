@@ -14,6 +14,7 @@
 
 import * as THREE from 'three';
 import { ECLIPSE_TYPES, getEclipseConfig } from './EclipseTypes.js';
+import { BaileysBeads } from './BaileysBeads.js';
 
 export class SolarEclipse {
     /**
@@ -50,6 +51,9 @@ export class SolarEclipse {
 
         // Create corona disk
         this.createCoronaDisk();
+
+        // Create Bailey's Beads effect
+        this.baileysBeads = new BaileysBeads(scene, sunRadius);
     }
 
     /**
@@ -283,6 +287,7 @@ export class SolarEclipse {
         const cameraPosition = camera.position;
         const sunPosition = sunMesh.position;
         const sunScale = sunMesh.scale;
+        const worldScale = sunScale.x; // World scale for consistent sizing
 
         // Update time for corona animation
         this.time += deltaTime;
@@ -305,7 +310,6 @@ export class SolarEclipse {
                 ? this.previousEclipseType
                 : this.eclipseType;
             const config = getEclipseConfig(activeEclipseType);
-            const worldScale = sunScale.x;
             const scaledSunRadius = this.sunRadius * worldScale;
 
             // Use linear progress for constant speed (no easing - prevents jerkiness)
@@ -410,6 +414,44 @@ export class SolarEclipse {
             this.shadowDisk.position.set(200, 0, 0);
             this.coronaDisk.position.set(200, 0, 0);
         }
+
+        // Update Bailey's Beads effect
+        // Beads are ONLY visible when shadow is near the sun's rim (final 20% of transition)
+        if (this.eclipseType === ECLIPSE_TYPES.TOTAL) {
+            // Calculate coverage based on transition progress
+            let coverage = 0;
+            let beadsVisible = false;
+
+            if (this.transitionDirection === 'in' && this.isTransitioning) {
+                // Beads only appear in final 20% of transition (when shadow is nearly covering sun)
+                const beadsStartProgress = 0.8; // Start showing beads at 80% of transition
+                if (this.transitionProgress >= beadsStartProgress) {
+                    beadsVisible = true;
+                    // Map 0.8-1.0 transition progress to 0.9-1.0 coverage
+                    const normalizedProgress = (this.transitionProgress - beadsStartProgress) / (1.0 - beadsStartProgress);
+                    coverage = 0.9 + (normalizedProgress * 0.1);
+                }
+            } else if (this.transitionDirection === 'out' && this.isTransitioning) {
+                // Beads appear in first 20% of exit transition (when shadow is leaving sun's rim)
+                const beadsEndProgress = 0.2; // Stop showing beads at 20% of exit transition
+                if (this.transitionProgress <= beadsEndProgress) {
+                    beadsVisible = true;
+                    // Map 0.0-0.2 transition progress to 1.0-0.9 coverage
+                    const normalizedProgress = this.transitionProgress / beadsEndProgress;
+                    coverage = 1.0 - (normalizedProgress * 0.1);
+                }
+            } else if (!this.isTransitioning) {
+                // At totality: coverage = 1.0 (beads hidden)
+                coverage = 1.0;
+                beadsVisible = false;
+            }
+
+            this.baileysBeads.setVisible(beadsVisible);
+            this.baileysBeads.update(sunPosition, coverage, deltaTime, worldScale);
+        } else {
+            this.baileysBeads.setVisible(false);
+            this.baileysBeads.update(sunPosition, 0, deltaTime, worldScale);
+        }
     }
 
     /**
@@ -436,6 +478,12 @@ export class SolarEclipse {
             }
             this.coronaDisk.material.dispose();
             this.coronaDisk = null;
+        }
+
+        // Dispose Bailey's Beads
+        if (this.baileysBeads) {
+            this.baileysBeads.dispose();
+            this.baileysBeads = null;
         }
 
         // Clear references
