@@ -20,7 +20,7 @@ export class GeometryMorpher {
         this.currentGeometryType = null;
         this.targetGeometryType = null;
         this.morphStartTime = 0;
-        this.morphDuration = 800; // Match 2D default (converted from 1000ms to slightly faster for 3D)
+        this.morphDuration = 1000; // Smooth, relaxed transition (increased from 800ms)
         this.morphProgress = 0;
         this.visualProgress = 0; // Smoothed progress for rendering
         this.hasSwappedGeometry = false; // Track if we've swapped at midpoint
@@ -36,7 +36,7 @@ export class GeometryMorpher {
      * @param {number} duration - Duration in milliseconds
      * @returns {boolean} True if morph started, false if already at target
      */
-    startMorph(currentType, targetType, duration = 800) {
+    startMorph(currentType, targetType, duration = 1000) {
         // If already at target, skip
         if (currentType === targetType && !this.isTransitioning) {
             return false;
@@ -132,27 +132,13 @@ export class GeometryMorpher {
     calculateScaleMultiplier(progress) {
         // Use a sine wave for smooth, continuous animation
         // Starts at 1.0, dips to minimum at 0.5, returns to 1.0
-        // Add slight overshoot at the end for playfulness
+        // Smooth and gentle transition without overshoot
 
-        const minScale = 0.6; // Shrink to 60% for more dramatic effect
+        const minScale = 0.75; // Shrink to 75% for subtle, smooth effect
 
-        // Main sine curve: smooth dip and rise
+        // Pure sine curve for ultra-smooth animation
         const sinePhase = Math.sin(progress * Math.PI);
         const mainScale = 1.0 - (sinePhase * (1.0 - minScale));
-
-        // Add playful overshoot at the very end (last 20%)
-        if (progress > 0.8) {
-            const overshootPhase = (progress - 0.8) / 0.2; // 0 to 1
-            const overshoot = Math.sin(overshootPhase * Math.PI) * 0.05; // Small bounce
-            return mainScale + overshoot;
-        }
-
-        // Add slight anticipation at the very start (first 10%)
-        if (progress < 0.1) {
-            const anticipationPhase = progress / 0.1; // 0 to 1
-            const anticipation = Math.sin(anticipationPhase * Math.PI) * 0.03; // Tiny dip
-            return mainScale - anticipation;
-        }
 
         return mainScale;
     }

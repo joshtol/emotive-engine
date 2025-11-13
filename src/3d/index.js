@@ -493,9 +493,12 @@ export class EmotiveMascot3D {
             this.core3D.renderer.controls.autoRotate = true;
         }
         if (this.core3D) {
-            this.core3D.rotationDisabled = false;
-            // Re-trigger emotion to restore rotation behavior
-            this.setEmotion(this.core3D.emotion, this.undertone);
+            // Don't enable rotation for geometries with special rotation rules (moon is tidally locked)
+            if (this.core3D.geometryType !== 'moon') {
+                this.core3D.rotationDisabled = false;
+                // Re-trigger emotion to restore rotation behavior
+                this.setEmotion(this.core3D.emotion, this.undertone);
+            }
         }
     }
 
