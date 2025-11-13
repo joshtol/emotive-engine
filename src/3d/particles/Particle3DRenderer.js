@@ -38,6 +38,7 @@ const particleVertexShader = `
  * ENHANCEMENTS:
  * - Depth attribute for distance-based effects
  * - Style attribute for cell-shaded borders
+ * - Camera occlusion detection for particles between camera and core
  */
 
 // Per-particle attributes
@@ -48,12 +49,16 @@ attribute float glowIntensity;
 attribute float depth;        // NEW: Normalized distance (0=near, 1=far)
 attribute float style;        // NEW: 0.0=solid, 1.0=bordered
 
+// Uniforms
+uniform float coreScale; // Core scale multiplier (baseScale * breath * morph * blink)
+
 // Varying to fragment shader
 varying vec3 vColor;
 varying float vAlpha;
 varying float vGlowIntensity;
 varying float vDepth;         // NEW: Depth for blur/fade
 varying float vStyle;         // NEW: Style for rendering
+varying float vCameraOcclusion; // NEW: Fade particles between camera and core
 
 void main() {
     // Pass attributes to fragment shader
@@ -66,9 +71,16 @@ void main() {
     // Calculate position in clip space
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 
+    // Camera occlusion detection
+    // Fade out particles that are between camera and core (z > core.z)
+    // Assuming core is at z=-5 to -10 range, fade particles from z=-3 to z=0
+    float cameraZ = mvPosition.z;
+    vCameraOcclusion = smoothstep(-1.0, -4.0, cameraZ); // Fade out from z=-1 to z=-4
+
     // Calculate point size with perspective scaling
-    // Closer particles appear larger
-    float perspectiveScale = 150.0 / length(mvPosition.xyz);
+    // DIRECTLY link particle size to core scale to maintain EXACT ratio regardless of screen size
+    // Particle size now scales proportionally with core (breath, morph, blink animations included)
+    float perspectiveScale = coreScale * (150.0 / length(mvPosition.xyz));
     gl_PointSize = size * perspectiveScale;
 
     // Final position
@@ -78,14 +90,15 @@ void main() {
 
 const particleFragmentShader = `
 /**
- * Particle Fragment Shader - Enhanced with Multiple Effects
- * Creates soft, glowing particles with depth-of-field and style variety
+ * Particle Fragment Shader - CONDITIONAL BUBBLE HIGHLIGHTS
+ * Applies bubble highlights ONLY to hasGlow particles (1/3 of particles)
+ * Regular particles use gradient style
  *
- * ENHANCEMENTS (from report):
- * - Priority 1: Depth-of-field (distance-based blur and opacity)
- * - Priority 2: Cell-shaded borders (ring style for 1/3 of particles)
- * - Priority 3: Multi-layer glow system (outer + inner layers)
- * - Priority 4: Multi-stop color gradients (bright center → dark edge)
+ * ENHANCEMENTS:
+ * - Conditional bubble appearance with top-left highlight (hasGlow only)
+ * - Depth-of-field blur
+ * - Cell-shaded borders for variety
+ * - Camera occlusion for particles between camera and core
  */
 
 // From vertex shader
@@ -94,6 +107,7 @@ varying float vAlpha;
 varying float vGlowIntensity;
 varying float vDepth;
 varying float vStyle;
+varying float vCameraOcclusion;
 
 void main() {
     // Calculate distance from center of point sprite
@@ -105,69 +119,109 @@ void main() {
         discard;
     }
 
-    // PRIORITY 1: Depth-of-Field Effect
-    // Distance-based edge softness (near=sharp 0.2, far=soft 0.5)
+    // Camera occlusion fade - particles between camera and core fade out
+    if (vCameraOcclusion < 0.01) {
+        discard; // Kill particles very close to camera
+    }
+
+    // Depth-of-Field Effect
     float depthBlur = mix(0.2, 0.5, vDepth);
     float gradient = smoothstep(0.5, 0.5 - depthBlur, dist);
 
-    // Distance-based opacity falloff (distant particles dimmer)
-    float depthOpacity = mix(1.0, 0.6, vDepth * 0.5);
+    // Distance-based opacity falloff (minimal fade - just blur, not much opacity change)
+    float depthOpacity = mix(1.0, 0.9, vDepth * 0.3);
 
-    // PRIORITY 4: Multi-Stop Color Gradient
-    // Three-stop gradient: bright center → mid-tone → dark edge
-    float gradientPos = dist * 2.0; // 0 (center) to 1 (edge)
-
-    vec3 centerColor = vColor * 1.3; // Bright center
-    vec3 midColor = vColor * 1.0;    // Normal mid
-    vec3 edgeColor = vColor * 0.7;   // Dark edge
-
-    vec3 gradientColor;
-    if (gradientPos < 0.5) {
-        // Blend center → mid
-        gradientColor = mix(centerColor, midColor, gradientPos * 2.0);
-    } else {
-        // Blend mid → edge
-        gradientColor = mix(midColor, edgeColor, (gradientPos - 0.5) * 2.0);
-    }
-
-    // PRIORITY 3: Enhanced Multi-Layer Glow System
-    vec3 finalColor = gradientColor;
+    vec3 finalColor;
     float glowAlpha = 0.0;
 
-    if (vGlowIntensity > 0.5) {
-        // Outer glow ring (soft, large halo)
+    // Determine if particle has glow from base properties (hasGlow) OR gesture effects
+    // Base glow threshold is 0.1, but gesture effects boost glow to 2.0-15.0 range
+    bool hasBubbleHighlight = vGlowIntensity > 0.1 && vGlowIntensity < 2.0; // Only base glow (hasGlow particles)
+    bool hasGestureGlow = vGlowIntensity >= 2.0; // Gesture-boosted glow
+
+    // CONDITIONAL RENDERING: Bubble highlights for hasGlow particles, gesture glow for all
+    if (hasBubbleHighlight) {
+        // === BUBBLE PARTICLE (hasGlow = true, no gesture) ===
+
+        // BUBBLE HIGHLIGHT - top-left specular highlight
+        vec2 highlightOffset = vec2(-0.15, -0.15); // Top-left position
+        float highlightDist = length(center - highlightOffset);
+        float highlight = smoothstep(0.15, 0.05, highlightDist); // Soft circular highlight
+        highlight *= 0.7; // Intensity of highlight
+
+        // Bubble gradient - darker at edges, lighter in center
+        float bubbleGradient = 1.0 - (dist * 0.8);
+        vec3 bubbleColor = vColor * (0.6 + bubbleGradient * 0.4);
+
+        // Add white highlight for bubble effect
+        finalColor = mix(bubbleColor, vec3(1.0, 1.0, 1.0), highlight);
+
+        // Subtle glow for bubble particles
         float outerGlow = 1.0 - smoothstep(0.3, 0.5, dist);
-        outerGlow *= vGlowIntensity * 0.3;
+        outerGlow *= vGlowIntensity * 0.2; // Increased from 0.1
 
-        // Inner glow core (bright, concentrated)
         float innerGlow = 1.0 - smoothstep(0.0, 0.2, dist);
-        innerGlow *= vGlowIntensity * 0.5;
+        innerGlow *= vGlowIntensity * 0.3; // Increased from 0.15
 
-        // Combine glow layers
         float totalGlow = outerGlow + innerGlow;
-        finalColor += finalColor * totalGlow;
-        glowAlpha = totalGlow * 0.3;
+        finalColor += finalColor * totalGlow * 0.5; // Increased from 0.3
+        glowAlpha = totalGlow * 0.15; // Increased from 0.1
+    } else {
+        // === REGULAR PARTICLE (hasGlow = false) ===
+
+        // Previous gradient style - three-stop gradient
+        vec3 centerColor = vColor * 1.1;  // Slightly brighter center
+        vec3 midColor = vColor * 0.95;     // Mid-tone
+        vec3 edgeColor = vColor * 0.7;     // Darker edge
+
+        // Three-stop gradient using smoothstep
+        float centerGrad = smoothstep(0.3, 0.0, dist);   // Bright center
+        float midGrad = smoothstep(0.5, 0.15, dist);     // Mid transition
+
+        // Blend the three colors
+        finalColor = mix(edgeColor, midColor, midGrad);
+        finalColor = mix(finalColor, centerColor, centerGrad);
     }
 
-    // PRIORITY 2: Cell-Shaded Border Style
-    float finalAlpha = vAlpha * gradient * depthOpacity;
+    // Apply gesture glow effects to ALL particles (if active)
+    if (hasGestureGlow) {
+        // Gesture effects boost glow intensity dramatically (2.0-15.0 range)
+        float gestureIntensity = (vGlowIntensity - 2.0) / 13.0; // Normalize to 0-1
+
+        // Outer glow ring
+        float outerGlow = 1.0 - smoothstep(0.3, 0.5, dist);
+        outerGlow *= gestureIntensity * 0.5;
+
+        // Inner glow
+        float innerGlow = 1.0 - smoothstep(0.0, 0.2, dist);
+        innerGlow *= gestureIntensity * 0.8;
+
+        float totalGestureGlow = outerGlow + innerGlow;
+        finalColor += finalColor * totalGestureGlow;
+        glowAlpha = max(glowAlpha, totalGestureGlow * 0.2);
+    }
+
+    // Cell-Shaded Border Style (for variety - 1/3 of particles)
+    float finalAlpha = vAlpha * gradient * depthOpacity * vCameraOcclusion;
 
     if (vStyle > 0.5) {
-        // Cell-shaded particle: render border ring
-        float borderWidth = 0.08; // 8% of particle radius
-        float borderDist = abs(dist - 0.4); // Distance from border ring
+        // Border ring
+        float borderWidth = 0.08;
+        float borderDist = abs(dist - 0.4);
         float borderAlpha = smoothstep(borderWidth, 0.0, borderDist);
 
-        // Mix core and border
-        float coreMask = smoothstep(0.4, 0.35, dist); // Inner core
-        finalAlpha = mix(borderAlpha * 0.9, finalAlpha, coreMask);
+        float coreMask = smoothstep(0.4, 0.35, dist);
+        finalAlpha = mix(borderAlpha * 0.8, finalAlpha, coreMask);
 
         // Slightly brighter border
-        finalColor = mix(finalColor * 1.2, finalColor, coreMask);
+        finalColor = mix(finalColor * 1.05, finalColor, coreMask);
     }
 
     // Apply glow alpha if stronger than base
-    finalAlpha = max(finalAlpha, glowAlpha);
+    finalAlpha = max(finalAlpha, glowAlpha * vCameraOcclusion);
+
+    // Overall brightness reduction (keep particles subtle)
+    finalColor *= 0.6;
 
     gl_FragColor = vec4(finalColor, finalAlpha);
 }
@@ -254,7 +308,9 @@ export class Particle3DRenderer {
      */
     _initMaterial() {
         this.material = new THREE.ShaderMaterial({
-            uniforms: {},
+            uniforms: {
+                coreScale: { value: 1.0 } // Core scale multiplier (baseScale * breath * morph * blink)
+            },
             vertexShader: particleVertexShader,
             fragmentShader: particleFragmentShader,
             transparent: true,
@@ -281,9 +337,19 @@ export class Particle3DRenderer {
      * @param {Object} rotationState - Mascot rotation state for orbital physics (optional)
      * @param {number} deltaTime - Time delta for physics (optional)
      * @param {Object} gestureData - Active gesture data (optional)
+     * @param {number} coreScale - Final core scale to maintain particle/core size ratio (optional)
      */
-    updateParticles(particles, translator, corePosition, canvasSize, rotationState, deltaTime, gestureData) {
+    updateParticles(particles, translator, corePosition, canvasSize, rotationState, deltaTime, gestureData, coreScale) {
         this.particleCount = Math.min(particles.length, this.maxParticles);
+
+        // Update core scale uniform to maintain EXACT particle/core size ratio
+        // Use coreScale if provided, otherwise fall back to viewport height approach
+        if (coreScale !== undefined) {
+            this.material.uniforms.coreScale.value = coreScale;
+        } else if (canvasSize && canvasSize.height) {
+            // Fallback to viewport height (old approach)
+            this.material.uniforms.coreScale.value = canvasSize.height / 600.0;
+        }
         // Update gesture effect time - cap at 2π to prevent indefinite accumulation
         this.gestureEffects.time += 0.016; // ~60fps
         if (this.gestureEffects.time > Math.PI * 2) {
@@ -313,10 +379,9 @@ export class Particle3DRenderer {
             this.positions[posIndex + 1] = pos3D.y;
             this.positions[posIndex + 2] = pos3D.z;
 
-            // PRIORITY 5: Size variety (0.8x-1.2x variation for organic feel)
+            // PRIORITY 5: Size variety - use particle's stable baseSize (already has variation)
             const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
-            const sizeVariation = 0.8 + Math.random() * 0.4; // 0.8x - 1.2x
-            this.sizes[i] = depthSize * 0.3 * sizeVariation; // Scale for point sprite size
+            this.sizes[i] = depthSize * 0.85; // Scale for point sprite size (particle.size already varies 4-10px) - increased for better visibility
 
             // Update color
             const color = this._parseColor(particle.color || '#ffffff');
@@ -329,8 +394,8 @@ export class Particle3DRenderer {
             this.alphas[i] = particle.opacity * (particle.baseOpacity || 1.0);
 
             // PRIORITY 3: Enhanced glow with size multipliers (1.33x-1.66x)
-            // Map 2D glow multiplier (1.33-1.66) to shader intensity (3.0-12.0 range)
-            let glowIntensity = particle.hasGlow ? (particle.glowSizeMultiplier || 1.5) * 3.0 : 0;
+            // Reduced intensity - was too bright and distracting
+            let glowIntensity = particle.hasGlow ? (particle.glowSizeMultiplier || 1.5) * 0.5 : 0;
 
             // Apply gesture effects (these can boost glow further)
             glowIntensity = this._applyGestureEffects(particle, glowIntensity, i);

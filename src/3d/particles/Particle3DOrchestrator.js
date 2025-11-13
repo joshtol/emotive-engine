@@ -66,8 +66,9 @@ export class Particle3DOrchestrator {
      * @param {Object} corePosition - 3D mascot position {x, y, z}
      * @param {Object} canvasSize - Canvas dimensions {width, height}
      * @param {Object} rotationState - Mascot rotation state {euler, quaternion, angularVelocity}
+     * @param {number} coreScale - Final core scale (baseScale * breath * morph * blink)
      */
-    update(deltaTime, emotion, undertone, activeAnimations, currentTime, corePosition, canvasSize, rotationState) {
+    update(deltaTime, emotion, undertone, activeAnimations, currentTime, corePosition, canvasSize, rotationState, coreScale) {
         // Step 1: Calculate emotion-based particle configuration
         const emotionConfig = this._updateEmotionConfig(emotion, undertone);
 
@@ -81,7 +82,7 @@ export class Particle3DOrchestrator {
         this._updatePhysics(emotionConfig, gestureData, deltaTime, canvasSize, undertone);
 
         // Step 5: Update rendering with visual effects and orbital physics
-        this._updateRendering(gestureData, corePosition, canvasSize, rotationState, deltaTime);
+        this._updateRendering(gestureData, corePosition, canvasSize, rotationState, deltaTime, coreScale);
     }
 
     /**
@@ -173,8 +174,9 @@ export class Particle3DOrchestrator {
      * @param {Object} canvasSize - Canvas dimensions
      * @param {Object} rotationState - Mascot rotation state for orbital physics
      * @param {number} deltaTime - Time delta for physics
+     * @param {number} coreScale - Final core scale for size ratio
      */
-    _updateRendering(gestureData, corePosition, canvasSize, rotationState, deltaTime) {
+    _updateRendering(gestureData, corePosition, canvasSize, rotationState, deltaTime, coreScale) {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
@@ -191,7 +193,8 @@ export class Particle3DOrchestrator {
             canvasSize,
             rotationState,
             deltaTime,
-            gestureData  // Pass gesture data to detect spin gestures
+            gestureData,  // Pass gesture data to detect spin gestures
+            coreScale     // Pass core scale to maintain particle/core size ratio
         );
 
         // Apply gesture visual effects

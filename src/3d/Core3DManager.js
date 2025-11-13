@@ -858,7 +858,8 @@ export class Core3DManager {
                     euler: this.baseEuler,
                     quaternion: this.baseQuaternion,
                     angularVelocity: this.rotationBehavior ? this.rotationBehavior.axes : [0, 0, 0]
-                }
+                },
+                this.baseScale // Pass base scale only (shader handles perspective)
             );
         }
 
