@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<!--
+  FULL 3D DEMO - Emotive Engine Comprehensive Showcase
+
+  A complete demonstration of all 3D geometries with emotional expression.
+
+  What you'll learn:
+  - All geometry types (sphere, crystal, diamond, moon, sun, platonic solids)
+  - Geometry morphing with smooth transitions
+  - Emotion-driven color changes
+  - Glass and emissive materials
+  - Eclipse effects (sun)
+  - Moon phases
+
+  Complexity: ⭐⭐⭐ Advanced 3D
+  Features: All geometries, morphing, materials, emotions, particles
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Showcase - Emotive Engine Complete Demo</title>
+    <meta name="description" content="Complete 3D demo with all geometries, emotions, and materials">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: white;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .left-menu,
+        .right-menu {
+            width: 18vw;
+            min-width: 200px;
+            max-width: 280px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 1.5vw;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .left-menu {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .right-menu {
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .center-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: 2vmin;
+        }
+
+        .section {
+            margin-bottom: clamp(15px, 2vw, 25px);
+            padding-bottom: clamp(12px, 1.5vw, 20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: clamp(11px, 1vw, 13px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(5px, 0.6vw, 8px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+        }
+
+        button {
+            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: clamp(6px, 0.6vw, 8px);
+            cursor: pointer;
+            font-size: clamp(9px, 0.8vw, 11px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(2px, 0.3vw, 4px);
+            min-width: 0;
+            width: 100%;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        #mascot-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
+            box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+            touch-action: none;
+        }
+
+        #mascot-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: clamp(6px, 0.6vw, 8px);
+            padding: clamp(10px, 1vw, 12px);
+            font-size: clamp(10px, 0.85vw, 11px);
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        .visual-controls button {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 1000px) {
+            body {
+                flex-direction: column;
+            }
+
+            .left-menu,
+            .right-menu {
+                width: 100%;
+                min-width: unset;
+                max-width: unset;
+                max-height: 35vh;
+                border: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 15px;
+            }
+
+            .left-menu {
+                order: 1;
+            }
+
+            .center-content {
+                order: 2;
+                flex: 1;
+                min-height: 30vh;
+            }
+
+            .right-menu {
+                order: 3;
+                border-bottom: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .button-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .button-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .left-menu,
+            .right-menu {
+                padding: 12px;
+            }
+        }
+
+        .left-menu::-webkit-scrollbar,
+        .right-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .left-menu::-webkit-scrollbar-track,
+        .right-menu::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .left-menu::-webkit-scrollbar-thumb,
+        .right-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .left-menu::-webkit-scrollbar-thumb:hover,
+        .right-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU: Emotions -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Emotions</h2>
+            <div class="button-grid">
+                <button data-action="emotion" data-value="joy">😊 Joy</button>
+                <button data-action="emotion" data-value="love">❤️ Love</button>
+                <button data-action="emotion" data-value="excited">🎉 Excited</button>
+                <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
+                <button data-action="emotion" data-value="calm">😌 Calm</button>
+                <button data-action="emotion" data-value="focused">🎯 Focused</button>
+                <button data-action="emotion" data-value="resting">😴 Resting</button>
+                <button data-action="emotion" data-value="sadness">😢 Sadness</button>
+                <button data-action="emotion" data-value="anger">😠 Anger</button>
+                <button data-action="emotion" data-value="fear">😰 Fear</button>
+                <button data-action="emotion" data-value="surprise">😲 Surprise</button>
+                <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
+                <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
+                <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Undertones</h2>
+            <div class="button-grid">
+                <button data-action="undertone" data-value="null">Clear</button>
+                <button data-action="undertone" data-value="subdued">Subdued</button>
+                <button data-action="undertone" data-value="tired">Tired</button>
+                <button data-action="undertone" data-value="nervous">Nervous</button>
+                <button data-action="undertone" data-value="confident">Confident</button>
+                <button data-action="undertone" data-value="intense">Intense</button>
+                <button data-action="undertone" data-value="energetic">Energetic</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Full 3D Demo:</strong><br>
+                Explore all geometries with smooth morphing transitions. Each shape has unique materials and animations!
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: 3D Animation -->
+    <div class="center-content">
+        <div id="mascot-container"></div>
+    </div>
+
+    <!-- RIGHT MENU: Controls & Geometries -->
+    <div class="right-menu">
+        <div class="section">
+            <h2>Core Geometries</h2>
+            <div class="button-grid">
+                <button data-action="geometry" data-value="sphere" class="active">🔮 Sphere</button>
+                <button data-action="geometry" data-value="crystal">💎 Crystal</button>
+                <button data-action="geometry" data-value="diamond">💠 Diamond</button>
+                <button data-action="geometry" data-value="moon">🌙 Moon</button>
+                <button data-action="geometry" data-value="sun">☀️ Sun</button>
+                <button data-action="geometry" data-value="torus">🍩 Torus</button>
+                <button data-action="geometry" data-value="icosahedron">⚽ Icosahedron</button>
+                <button data-action="geometry" data-value="octahedron">🔶 Octahedron</button>
+                <button data-action="geometry" data-value="tetrahedron">🔺 Tetrahedron</button>
+                <button data-action="geometry" data-value="dodecahedron">⬡ Dodecahedron</button>
+            </div>
+        </div>
+
+        <div class="section visual-controls">
+            <h2>Visual Controls</h2>
+            <button data-action="toggle-particles">✨ Particles</button>
+            <button data-action="toggle-glow" class="active">💫 Core Glow</button>
+            <button data-action="toggle-blink" class="active">👁️ Blinking</button>
+            <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
+            <button data-action="toggle-auto-rotate" class="active">🔄 Auto-Rotate</button>
+        </div>
+
+        <div class="section" id="eclipse-section" style="display: none;">
+            <h2>Eclipse (Sun Only)</h2>
+            <div class="button-grid">
+                <button data-action="eclipse" data-value="annular">🌑 Annular</button>
+                <button data-action="eclipse" data-value="total">🌚 Total</button>
+            </div>
+        </div>
+
+        <div class="section" id="moon-phase-section" style="display: none;">
+            <h2>Moon Phases</h2>
+            <div class="button-grid">
+                <button data-action="moon-phase" data-value="new">🌑 New</button>
+                <button data-action="moon-phase" data-value="waxing-crescent">🌒 Waxing Crescent</button>
+                <button data-action="moon-phase" data-value="first-quarter">🌓 First Quarter</button>
+                <button data-action="moon-phase" data-value="waxing-gibbous">🌔 Waxing Gibbous</button>
+                <button data-action="moon-phase" data-value="full" class="active">🌕 Full</button>
+                <button data-action="moon-phase" data-value="waning-gibbous">🌖 Waning Gibbous</button>
+                <button data-action="moon-phase" data-value="last-quarter">🌗 Last Quarter</button>
+                <button data-action="moon-phase" data-value="waning-crescent">🌘 Waning Crescent</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Motion Gestures</h2>
+            <div class="button-grid">
+                <button data-action="gesture" data-value="bounce">Bounce</button>
+                <button data-action="gesture" data-value="pulse">Pulse</button>
+                <button data-action="gesture" data-value="float">Float</button>
+                <button data-action="gesture" data-value="shake">Shake</button>
+                <button data-action="gesture" data-value="sway">Sway</button>
+                <button data-action="gesture" data-value="wiggle">Wiggle</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Transform Gestures</h2>
+            <div class="button-grid">
+                <button data-action="gesture" data-value="spin">Spin</button>
+                <button data-action="gesture" data-value="jump">Jump</button>
+                <button data-action="gesture" data-value="twist">Twist</button>
+                <button data-action="gesture" data-value="stretch">Stretch</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Effect Gestures</h2>
+            <div class="button-grid">
+                <button data-action="gesture" data-value="flash">Flash</button>
+                <button data-action="gesture" data-value="glow">Glow</button>
+                <button data-action="gesture" data-value="breathe">Breathe</button>
+                <button data-action="gesture" data-value="flicker">Flicker</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Smooth Morphing:</strong><br>
+                Click any geometry to see smooth transitions. Materials automatically switch between glass and emissive modes.
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D, { animateMoonPhase } from '../../dist/emotive-mascot-3d.js';
+
+        let mascot = null;
+        let currentGeometry = 'sphere';
+
+        // Initialize 3D mascot
+        (async () => {
+            try {
+                const container = document.getElementById('mascot-container');
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'sphere',
+                    enableParticles: true,
+                    enablePostProcessing: true,
+                    enableShadows: false,
+                    enableControls: true,
+                    autoRotate: true,
+                    cameraDistance: 1.2
+                });
+
+                mascot.init(container);
+                mascot.start();
+                mascot.setEmotion('joy');
+
+                // Start with particles disabled
+                mascot.disableParticles();
+
+                console.log('✅ EmotiveMascot3D Full Demo initialized');
+            } catch (error) {
+                console.error('❌ Failed to initialize:', error);
+            }
+        })();
+
+        // Event delegation for all buttons
+        document.addEventListener('click', (e) => {
+            if (!e.target.matches('button[data-action]') || !mascot) return;
+
+            const action = e.target.dataset.action;
+            const value = e.target.dataset.value;
+
+            try {
+                switch (action) {
+                    case 'emotion':
+                        console.log('Setting emotion:', value);
+                        mascot.setEmotion(value);
+                        // Update active state
+                        document.querySelectorAll('[data-action="emotion"]').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        break;
+
+                    case 'undertone':
+                        console.log('Setting undertone:', value);
+                        mascot.setUndertone(value === 'null' ? null : value);
+                        // Update active state
+                        document.querySelectorAll('[data-action="undertone"]').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        break;
+
+                    case 'geometry':
+                        // Switch geometry using built-in morph system
+                        // Glass material is automatically enabled/disabled based on geometry type
+                        console.log(`🔄 Morphing to ${value} geometry...`);
+                        mascot.morphTo(value);
+                        currentGeometry = value;
+
+                        // Update button states
+                        document.querySelectorAll('[data-action="geometry"]').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+
+                        // Show/hide geometry-specific controls
+                        const eclipseSection = document.getElementById('eclipse-section');
+                        const moonPhaseSection = document.getElementById('moon-phase-section');
+
+                        eclipseSection.style.display = (value === 'sun') ? 'block' : 'none';
+                        moonPhaseSection.style.display = (value === 'moon') ? 'block' : 'none';
+
+                        // Initialize moon to full phase when switching to it
+                        if (value === 'moon' && mascot.core3D?.customMaterial) {
+                            setTimeout(() => {
+                                animateMoonPhase(mascot.core3D.customMaterial, 'full', 0);
+                            }, 400); // Wait for morph to swap geometry
+                        }
+                        break;
+
+                    case 'gesture':
+                        console.log('Playing gesture:', value);
+                        mascot.express(value);
+                        break;
+
+                    case 'toggle-particles':
+                        const particlesVisible = mascot.core3D?.particleVisibility || false;
+                        if (particlesVisible) {
+                            mascot.disableParticles();
+                            e.target.classList.remove('active');
+                            console.log('💨 Particles disabled');
+                        } else {
+                            mascot.enableParticles();
+                            e.target.classList.add('active');
+                            console.log('✨ Particles enabled');
+                        }
+                        break;
+
+                    case 'toggle-glow':
+                        if (mascot.core3D?.coreGlowEnabled !== false) {
+                            mascot.core3D.setCoreGlowEnabled(false);
+                            e.target.classList.remove('active');
+                            console.log('💫 Core glow disabled');
+                        } else {
+                            mascot.core3D.setCoreGlowEnabled(true);
+                            e.target.classList.add('active');
+                            console.log('💫 Core glow enabled');
+                        }
+                        break;
+
+                    case 'toggle-blink':
+                        if (mascot.blinkingEnabled) {
+                            mascot.disableBlinking();
+                            e.target.classList.remove('active');
+                            console.log('👁️ Blinking disabled');
+                        } else {
+                            mascot.enableBlinking();
+                            e.target.classList.add('active');
+                            console.log('👁️ Blinking enabled');
+                        }
+                        break;
+
+                    case 'toggle-breathing':
+                        if (mascot.breathingEnabled) {
+                            mascot.disableBreathing();
+                            e.target.classList.remove('active');
+                            console.log('🫁 Breathing disabled');
+                        } else {
+                            mascot.enableBreathing();
+                            e.target.classList.add('active');
+                            console.log('🫁 Breathing enabled');
+                        }
+                        break;
+
+                    case 'toggle-auto-rotate':
+                        if (mascot.autoRotateEnabled) {
+                            mascot.disableAutoRotate();
+                            console.log('🛑 Auto-rotate OFF');
+                            e.target.classList.remove('active');
+                        } else {
+                            mascot.enableAutoRotate();
+                            console.log('▶️ Auto-rotate ON');
+                            e.target.classList.add('active');
+                        }
+                        break;
+
+                    case 'eclipse':
+                        // Only works with sun geometry
+                        if (currentGeometry !== 'sun') {
+                            console.warn('Eclipse only works with sun geometry');
+                            break;
+                        }
+
+                        // Toggle between eclipse types
+                        const eclipseType = e.target.dataset.value;
+                        const eclipseButtons = document.querySelectorAll('[data-action="eclipse"]');
+
+                        if (e.target.classList.contains('active')) {
+                            // Turn OFF eclipse
+                            mascot.core3D.setSunShadow('off');
+                            e.target.classList.remove('active');
+                            console.log('☀️ Eclipse OFF');
+                        } else {
+                            // Turn ON this eclipse type and turn off others
+                            eclipseButtons.forEach(btn => btn.classList.remove('active'));
+                            mascot.core3D.setSunShadow(eclipseType);
+                            e.target.classList.add('active');
+                            console.log(`🌑 ${eclipseType.toUpperCase()} Eclipse ON`);
+                        }
+                        break;
+
+                    case 'moon-phase':
+                        // Only works with moon geometry
+                        if (currentGeometry !== 'moon') {
+                            console.warn('Moon phases only work with moon geometry');
+                            break;
+                        }
+
+                        const phase = e.target.dataset.value;
+                        if (mascot.core3D?.customMaterial) {
+                            console.log(`🌙 Changing moon phase to: ${phase}`);
+                            animateMoonPhase(mascot.core3D.customMaterial, phase, 1500);
+
+                            // Update button states
+                            document.querySelectorAll('[data-action="moon-phase"]').forEach(btn => btn.classList.remove('active'));
+                            e.target.classList.add('active');
+                        }
+                        break;
+                }
+            } catch (error) {
+                console.error('Action failed:', error);
+            }
+        });
+
+        // Set initial active button
+        document.querySelector('[data-value="joy"]').classList.add('active');
+    </script>
+</body>
+</html>

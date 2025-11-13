@@ -703,6 +703,27 @@ export class Core3DManager {
 
             // Update blink animator with new geometry's blink config
             this.blinkAnimator.setGeometry(this._targetGeometryConfig);
+
+            // Update rotation behavior for special geometries (moon is tidally locked)
+            if (this._targetGeometryType === 'moon') {
+                this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
+            } else if (this.rotationDisabled) {
+                this.rotationBehavior = null; // Keep rotation disabled if user disabled it
+            } else {
+                // Re-apply emotion rotation behavior for new geometry
+                const emotionData = getEmotion(this.emotion);
+                if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
+                    if (this.rotationBehavior) {
+                        this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
+                    } else {
+                        // Create new rotation behavior
+                        this.rotationBehavior = new RotationBehavior(
+                            emotionData['3d'].rotation,
+                            this.rhythmEngine
+                        );
+                    }
+                }
+            }
         }
 
         // Clean up on completion and resume blinks
