@@ -221,7 +221,7 @@ export class Core3DManager {
         });
 
         // Create 3D renderer (Three.js points system)
-        const particleRenderer = new Particle3DRenderer(50);
+        const particleRenderer = new Particle3DRenderer(50, { renderer: this.renderer.renderer });
 
         // Add particle points to scene
         this.renderer.scene.add(particleRenderer.getPoints());

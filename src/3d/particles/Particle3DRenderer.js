@@ -51,6 +51,8 @@ attribute float style;        // NEW: 0.0=solid, 1.0=bordered
 
 // Uniforms
 uniform float coreScale; // Core scale multiplier (baseScale * breath * morph * blink)
+uniform float viewportHeight; // Viewport height for screen-size compensation
+uniform float pixelRatio; // Device pixel ratio for consistent sizing
 
 // Varying to fragment shader
 varying vec3 vColor;
@@ -80,7 +82,9 @@ void main() {
     // Calculate point size with perspective scaling
     // DIRECTLY link particle size to core scale to maintain EXACT ratio regardless of screen size
     // Particle size now scales proportionally with core (breath, morph, blink animations included)
-    float perspectiveScale = coreScale * (150.0 / length(mvPosition.xyz));
+    // The viewportHeight uniform compensates for screen size (larger screens = more pixels)
+    // Divide by pixelRatio to maintain consistent size (gl_PointSize is in CSS pixels, not physical pixels)
+    float perspectiveScale = coreScale * (150.0 / length(mvPosition.xyz)) * (viewportHeight / 600.0) / pixelRatio;
     gl_PointSize = size * perspectiveScale;
 
     // Final position
@@ -124,12 +128,12 @@ void main() {
         discard; // Kill particles very close to camera
     }
 
-    // Depth-of-Field Effect
-    float depthBlur = mix(0.2, 0.5, vDepth);
+    // Depth-of-Field Effect (reduced for subtlety)
+    float depthBlur = mix(0.25, 0.35, vDepth);
     float gradient = smoothstep(0.5, 0.5 - depthBlur, dist);
 
     // Distance-based opacity falloff (minimal fade - just blur, not much opacity change)
-    float depthOpacity = mix(1.0, 0.9, vDepth * 0.3);
+    float depthOpacity = mix(1.0, 0.95, vDepth * 0.2);
 
     vec3 finalColor;
     float glowAlpha = 0.0;
@@ -311,7 +315,9 @@ export class Particle3DRenderer {
     _initMaterial() {
         this.material = new THREE.ShaderMaterial({
             uniforms: {
-                coreScale: { value: 1.0 } // Core scale multiplier (baseScale * breath * morph * blink)
+                coreScale: { value: 1.0 }, // Core scale multiplier (baseScale * breath * morph * blink)
+                viewportHeight: { value: 600.0 }, // Viewport height for screen-size compensation
+                pixelRatio: { value: 1.0 } // Device pixel ratio for consistent sizing
             },
             vertexShader: particleVertexShader,
             fragmentShader: particleFragmentShader,
@@ -346,12 +352,18 @@ export class Particle3DRenderer {
         this.particleCount = Math.min(particles.length, this.maxParticles);
 
         // Update core scale uniform to maintain EXACT particle/core size ratio
-        // Use coreScale if provided, otherwise fall back to viewport height approach
         if (coreScale !== undefined) {
             this.material.uniforms.coreScale.value = coreScale;
-        } else if (canvasSize && canvasSize.height) {
-            // Fallback to viewport height (old approach)
-            this.material.uniforms.coreScale.value = canvasSize.height / 600.0;
+        }
+
+        // Update viewport height for screen-size compensation
+        if (canvasSize && canvasSize.height) {
+            this.material.uniforms.viewportHeight.value = canvasSize.height;
+        }
+
+        // Update pixel ratio (read from renderer which has the capped value)
+        if (this.options.renderer) {
+            this.material.uniforms.pixelRatio.value = this.options.renderer.getPixelRatio();
         }
         // Update gesture effect time - cap at 2π to prevent indefinite accumulation
         this.gestureEffects.time += 0.016; // ~60fps
