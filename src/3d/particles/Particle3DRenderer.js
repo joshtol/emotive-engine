@@ -32,8 +32,12 @@ import * as THREE from 'three';
 // Define shaders inline (avoid import issues with .glsl files)
 const particleVertexShader = `
 /**
- * Particle Vertex Shader
+ * Particle Vertex Shader - Enhanced with Depth-of-Field
  * Handles per-particle positioning, sizing, and depth-based scaling
+ *
+ * ENHANCEMENTS:
+ * - Depth attribute for distance-based effects
+ * - Style attribute for cell-shaded borders
  */
 
 // Per-particle attributes
@@ -41,17 +45,23 @@ attribute float size;
 attribute vec3 customColor;
 attribute float alpha;
 attribute float glowIntensity;
+attribute float depth;        // NEW: Normalized distance (0=near, 1=far)
+attribute float style;        // NEW: 0.0=solid, 1.0=bordered
 
 // Varying to fragment shader
 varying vec3 vColor;
 varying float vAlpha;
 varying float vGlowIntensity;
+varying float vDepth;         // NEW: Depth for blur/fade
+varying float vStyle;         // NEW: Style for rendering
 
 void main() {
     // Pass attributes to fragment shader
     vColor = customColor;
     vAlpha = alpha;
     vGlowIntensity = glowIntensity;
+    vDepth = depth;
+    vStyle = style;
 
     // Calculate position in clip space
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
@@ -68,14 +78,22 @@ void main() {
 
 const particleFragmentShader = `
 /**
- * Particle Fragment Shader
- * Creates soft, glowing particles with radial gradients
+ * Particle Fragment Shader - Enhanced with Multiple Effects
+ * Creates soft, glowing particles with depth-of-field and style variety
+ *
+ * ENHANCEMENTS (from report):
+ * - Priority 1: Depth-of-field (distance-based blur and opacity)
+ * - Priority 2: Cell-shaded borders (ring style for 1/3 of particles)
+ * - Priority 3: Multi-layer glow system (outer + inner layers)
+ * - Priority 4: Multi-stop color gradients (bright center → dark edge)
  */
 
 // From vertex shader
 varying vec3 vColor;
 varying float vAlpha;
 varying float vGlowIntensity;
+varying float vDepth;
+varying float vStyle;
 
 void main() {
     // Calculate distance from center of point sprite
@@ -87,23 +105,69 @@ void main() {
         discard;
     }
 
-    // Create radial gradient for soft edges (sharper falloff)
-    float edgeSoftness = 0.3;
-    float gradient = smoothstep(0.5, 0.5 - edgeSoftness, dist);
+    // PRIORITY 1: Depth-of-Field Effect
+    // Distance-based edge softness (near=sharp 0.2, far=soft 0.5)
+    float depthBlur = mix(0.2, 0.5, vDepth);
+    float gradient = smoothstep(0.5, 0.5 - depthBlur, dist);
 
-    // Apply glow intensity to brightness (minimal)
-    float brightness = 1.0 + vGlowIntensity * 0.05;
+    // Distance-based opacity falloff (distant particles dimmer)
+    float depthOpacity = mix(1.0, 0.6, vDepth * 0.5);
 
-    // Create core glow (brighter in center) - extremely subtle
-    float coreGlow = 1.0 - (dist * 2.0);
-    coreGlow = max(0.0, coreGlow);
+    // PRIORITY 4: Multi-Stop Color Gradient
+    // Three-stop gradient: bright center → mid-tone → dark edge
+    float gradientPos = dist * 2.0; // 0 (center) to 1 (edge)
 
-    // Combine color with glow (minimal glow contribution)
-    vec3 finalColor = vColor * brightness;
-    finalColor += vColor * coreGlow * vGlowIntensity * 0.02;
+    vec3 centerColor = vColor * 1.3; // Bright center
+    vec3 midColor = vColor * 1.0;    // Normal mid
+    vec3 edgeColor = vColor * 0.7;   // Dark edge
 
-    // Apply alpha with gradient
-    float finalAlpha = vAlpha * gradient;
+    vec3 gradientColor;
+    if (gradientPos < 0.5) {
+        // Blend center → mid
+        gradientColor = mix(centerColor, midColor, gradientPos * 2.0);
+    } else {
+        // Blend mid → edge
+        gradientColor = mix(midColor, edgeColor, (gradientPos - 0.5) * 2.0);
+    }
+
+    // PRIORITY 3: Enhanced Multi-Layer Glow System
+    vec3 finalColor = gradientColor;
+    float glowAlpha = 0.0;
+
+    if (vGlowIntensity > 0.5) {
+        // Outer glow ring (soft, large halo)
+        float outerGlow = 1.0 - smoothstep(0.3, 0.5, dist);
+        outerGlow *= vGlowIntensity * 0.3;
+
+        // Inner glow core (bright, concentrated)
+        float innerGlow = 1.0 - smoothstep(0.0, 0.2, dist);
+        innerGlow *= vGlowIntensity * 0.5;
+
+        // Combine glow layers
+        float totalGlow = outerGlow + innerGlow;
+        finalColor += finalColor * totalGlow;
+        glowAlpha = totalGlow * 0.3;
+    }
+
+    // PRIORITY 2: Cell-Shaded Border Style
+    float finalAlpha = vAlpha * gradient * depthOpacity;
+
+    if (vStyle > 0.5) {
+        // Cell-shaded particle: render border ring
+        float borderWidth = 0.08; // 8% of particle radius
+        float borderDist = abs(dist - 0.4); // Distance from border ring
+        float borderAlpha = smoothstep(borderWidth, 0.0, borderDist);
+
+        // Mix core and border
+        float coreMask = smoothstep(0.4, 0.35, dist); // Inner core
+        finalAlpha = mix(borderAlpha * 0.9, finalAlpha, coreMask);
+
+        // Slightly brighter border
+        finalColor = mix(finalColor * 1.2, finalColor, coreMask);
+    }
+
+    // Apply glow alpha if stronger than base
+    finalAlpha = max(finalAlpha, glowAlpha);
 
     gl_FragColor = vec4(finalColor, finalAlpha);
 }
@@ -125,6 +189,8 @@ export class Particle3DRenderer {
         this.colors = null;
         this.alphas = null;
         this.glowIntensities = null;
+        this.depths = null;        // NEW: Depth for depth-of-field
+        this.styles = null;        // NEW: Style for cell-shaded borders
 
         // Current particle count
         this.particleCount = 0;
@@ -158,6 +224,8 @@ export class Particle3DRenderer {
         this.colors = new Float32Array(maxParticles * 3); // r, g, b
         this.alphas = new Float32Array(maxParticles); // alpha
         this.glowIntensities = new Float32Array(maxParticles); // glow
+        this.depths = new Float32Array(maxParticles); // depth (0=near, 1=far)
+        this.styles = new Float32Array(maxParticles); // style (0=solid, 1=bordered)
 
         // Create buffer attributes
         this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
@@ -165,6 +233,8 @@ export class Particle3DRenderer {
         this.geometry.setAttribute('customColor', new THREE.BufferAttribute(this.colors, 3));
         this.geometry.setAttribute('alpha', new THREE.BufferAttribute(this.alphas, 1));
         this.geometry.setAttribute('glowIntensity', new THREE.BufferAttribute(this.glowIntensities, 1));
+        this.geometry.setAttribute('depth', new THREE.BufferAttribute(this.depths, 1));
+        this.geometry.setAttribute('style', new THREE.BufferAttribute(this.styles, 1));
 
         // Set dynamic flags for attributes that will be updated
         this.geometry.attributes.position.setUsage(THREE.DynamicDrawUsage);
@@ -172,6 +242,8 @@ export class Particle3DRenderer {
         this.geometry.attributes.customColor.setUsage(THREE.DynamicDrawUsage);
         this.geometry.attributes.alpha.setUsage(THREE.DynamicDrawUsage);
         this.geometry.attributes.glowIntensity.setUsage(THREE.DynamicDrawUsage);
+        this.geometry.attributes.depth.setUsage(THREE.DynamicDrawUsage);
+        this.geometry.attributes.style.setUsage(THREE.DynamicDrawUsage);
 
         // Set initial draw range to 0 (no particles yet)
         this.geometry.setDrawRange(0, 0);
@@ -241,9 +313,10 @@ export class Particle3DRenderer {
             this.positions[posIndex + 1] = pos3D.y;
             this.positions[posIndex + 2] = pos3D.z;
 
-            // Update size (depth-adjusted)
+            // PRIORITY 5: Size variety (0.8x-1.2x variation for organic feel)
             const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
-            this.sizes[i] = depthSize * 0.3; // Scale for point sprite size (2x larger)
+            const sizeVariation = 0.8 + Math.random() * 0.4; // 0.8x - 1.2x
+            this.sizes[i] = depthSize * 0.3 * sizeVariation; // Scale for point sprite size
 
             // Update color
             const color = this._parseColor(particle.color || '#ffffff');
@@ -252,16 +325,29 @@ export class Particle3DRenderer {
             this.colors[colorIndex + 1] = color.g;
             this.colors[colorIndex + 2] = color.b;
 
-            // Update alpha
+            // PRIORITY 5: Read baseOpacity from 2D particle (already varies 0.3-0.7)
             this.alphas[i] = particle.opacity * (particle.baseOpacity || 1.0);
 
-            // Calculate glow intensity (base + gesture effects)
-            let glowIntensity = particle.hasGlow ? (particle.glowSizeMultiplier || 1.5) * 0.3 : 0;
+            // PRIORITY 3: Enhanced glow with size multipliers (1.33x-1.66x)
+            // Map 2D glow multiplier (1.33-1.66) to shader intensity (3.0-12.0 range)
+            let glowIntensity = particle.hasGlow ? (particle.glowSizeMultiplier || 1.5) * 3.0 : 0;
 
-            // Apply gesture effects
+            // Apply gesture effects (these can boost glow further)
             glowIntensity = this._applyGestureEffects(particle, glowIntensity, i);
 
             this.glowIntensities[i] = glowIntensity;
+
+            // PRIORITY 1: Calculate depth for depth-of-field
+            // Normalize particle.z from [-1, 1] to [0, 1] for shader
+            // z=-1 (far behind) → depth=1.0 (max blur)
+            // z=0 (at orb) → depth=0.5 (medium blur)
+            // z=1 (far front) → depth=0.0 (sharp)
+            const normalizedDepth = (1.0 - particle.z) * 0.5; // Invert and scale
+            this.depths[i] = Math.max(0.0, Math.min(1.0, normalizedDepth));
+
+            // PRIORITY 2: Read cell-shaded style from 2D particle
+            // 1/3 of 2D particles have isCellShaded=true
+            this.styles[i] = particle.isCellShaded ? 1.0 : 0.0;
         }
 
         // Mark attributes as needing update
@@ -270,6 +356,8 @@ export class Particle3DRenderer {
         this.geometry.attributes.customColor.needsUpdate = true;
         this.geometry.attributes.alpha.needsUpdate = true;
         this.geometry.attributes.glowIntensity.needsUpdate = true;
+        this.geometry.attributes.depth.needsUpdate = true;
+        this.geometry.attributes.style.needsUpdate = true;
 
         // Update draw range
         this.geometry.setDrawRange(0, this.particleCount);
@@ -467,6 +555,8 @@ export class Particle3DRenderer {
         this.colors = null;
         this.alphas = null;
         this.glowIntensities = null;
+        this.depths = null;
+        this.styles = null;
     }
 }
 
