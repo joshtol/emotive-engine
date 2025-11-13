@@ -285,6 +285,15 @@
         </div>
 
         <div class="section">
+            <h2>Core Geometry</h2>
+            <div class="button-grid">
+                <button data-action="geometry" data-value="sun" class="active">☀️ Sun</button>
+                <button data-action="geometry" data-value="crystal">💎 Crystal</button>
+            </div>
+        </div>
+
+
+        <div class="section">
             <h2>Eclipse</h2>
             <div class="button-grid">
                 <button data-action="eclipse" data-value="annular">🌑 Annular Eclipse</button>
@@ -456,6 +465,17 @@
                             console.log('▶️ Auto-rotate ON');
                             e.target.classList.add('active');
                         }
+                        break;
+
+                    case 'geometry':
+                        // Switch geometry using built-in morph system
+                        // Glass material is automatically enabled/disabled based on geometry type
+                        console.log(`🔄 Morphing to ${value} geometry...`);
+                        mascot.morphTo(value);
+
+                        // Update button states
+                        document.querySelectorAll('[data-action="geometry"]').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
                         break;
 
                     case 'eclipse':

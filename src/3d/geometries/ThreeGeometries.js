@@ -260,6 +260,7 @@ export const THREE_GEOMETRIES = {
 
     crystal: {
         geometry: createCrystal(6),
+        defaultGlassMode: true, // Crystal looks best with glass material
         blink: {
             type: 'facet-flash',
             duration: 120,  // Snappier
@@ -271,6 +272,7 @@ export const THREE_GEOMETRIES = {
 
     diamond: {
         geometry: createDiamond(),
+        defaultGlassMode: true, // Diamond looks best with glass material
         blink: {
             type: 'sparkle-blink',
             duration: 100,  // Very fast

@@ -128,12 +128,12 @@ void main() {
         discard; // Kill particles very close to camera
     }
 
-    // Depth-of-Field Effect (reduced for subtlety)
-    float depthBlur = mix(0.25, 0.35, vDepth);
+    // Depth-of-Field Effect (extremely subtle - barely any fade)
+    float depthBlur = mix(0.30, 0.31, vDepth);
     float gradient = smoothstep(0.5, 0.5 - depthBlur, dist);
 
-    // Distance-based opacity falloff (minimal fade - just blur, not much opacity change)
-    float depthOpacity = mix(1.0, 0.95, vDepth * 0.2);
+    // Distance-based opacity falloff (almost none)
+    float depthOpacity = mix(1.0, 0.98, vDepth * 0.1);
 
     vec3 finalColor;
     float glowAlpha = 0.0;
@@ -224,8 +224,8 @@ void main() {
     // Apply glow alpha if stronger than base
     finalAlpha = max(finalAlpha, glowAlpha * vCameraOcclusion);
 
-    // Overall brightness reduction (keep particles subtle)
-    finalColor *= 0.6;
+    // Overall brightness adjustment
+    finalColor *= 0.85;
 
     gl_FragColor = vec4(finalColor, finalAlpha);
 }

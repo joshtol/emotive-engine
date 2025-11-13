@@ -393,8 +393,9 @@ export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, delta
     const {material} = sunMesh;
 
     // Check if using custom shader material with uniforms
-    if (material.userData && material.userData.uniforms) {
-        const {uniforms} = material.userData;
+    if (material.uniforms && material.uniforms.baseColor) {
+        // Direct access to ShaderMaterial uniforms
+        const {uniforms} = material;
 
         // Update animation time with modulo to prevent unbounded growth
         // Reset every ~6.28 seconds (2π) to keep noise patterns seamless
@@ -416,7 +417,7 @@ export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, delta
 
         uniforms.baseColor.value.copy(baseColor);
         uniforms.emissiveIntensity.value = 2.0;  // Reduced from 6.0 to prevent core blowout
-    } else {
+    } else if (material.color) {
         // Fallback for basic material (no shader uniforms)
         // Sun is ALWAYS NASA white - ignores emotion colors
         const brightness = 1.0 + (glowIntensity * 2.0);

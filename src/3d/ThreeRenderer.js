@@ -1111,13 +1111,14 @@ export class ThreeRenderer {
                     // Dispose textures
                     if (uniform.value.isTexture) {
                         uniform.value.dispose();
+                        uniform.value = null;
                     }
                     // Clear Color objects to break references
-                    if (uniform.value.isColor) {
+                    else if (uniform.value.isColor) {
                         uniform.value = null;
                     }
                     // Clear Vector objects to break references
-                    if (uniform.value.isVector2 || uniform.value.isVector3 || uniform.value.isVector4) {
+                    else if (uniform.value.isVector2 || uniform.value.isVector3 || uniform.value.isVector4) {
                         uniform.value = null;
                     }
                 }

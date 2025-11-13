@@ -18,7 +18,7 @@ import { BlinkAnimator } from './animation/BlinkAnimator.js';
 import { GeometryMorpher } from './utils/GeometryMorpher.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
-import { createSunMaterial, updateSunMaterial } from './geometries/Sun.js';
+import { updateSunMaterial } from './geometries/Sun.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
@@ -29,7 +29,8 @@ import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
 import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
 import { SolarEclipse } from './effects/SolarEclipse.js';
-import { createMoonMaterial, createMoonShadowMaterial, createMoonFallbackMaterial, updateMoonGlow } from './geometries/Moon.js';
+import { updateMoonGlow } from './geometries/Moon.js';
+import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
 
 export class Core3DManager {
     constructor(canvas, options = {}) {
@@ -59,57 +60,17 @@ export class Core3DManager {
         this.geometry = this.geometryConfig.geometry;
 
         // Check if this geometry requires custom material (e.g., moon with textures, sun with emissive)
+        // Use MaterialFactory for centralized material creation
         let customMaterial = null;
-        if (this.geometryConfig.material === 'custom') {
-            // Handle custom materials based on geometry type
-            if (this.geometryType === 'moon') {
-                // Create texture loader
-                const textureLoader = new THREE.TextureLoader();
+        const materialResult = createCustomMaterial(this.geometryType, this.geometryConfig, {
+            glowColor: this.glowColor || [1.0, 1.0, 0.95],
+            glowIntensity: this.glowIntensity || 1.0
+        });
 
-                // Detect device for resolution selection (4K desktop, 2K mobile)
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                const resolution = isMobile ? '2k' : '4k';
-
-                console.log(`🌙 Loading moon textures with ORIGINAL shader (${resolution})...`);
-
-                // Use crescent shader with ORIGINAL working logic
-                customMaterial = createMoonShadowMaterial(textureLoader, {
-                    resolution,
-                    glowColor: new THREE.Color(0xffffff),
-                    glowIntensity: 1.0,
-                    shadowOffsetX: 0.7,  // Offset to the right
-                    shadowOffsetY: 0.0,
-                    shadowCoverage: 1.0  // Not used for now - hardcoded in shader
-                });
-
-                // Store material reference for glow updates
-                this.customMaterial = customMaterial;
-                this.customMaterialType = 'moon';
-            }
-        } else if (this.geometryConfig.material === 'emissive') {
-            // Handle emissive materials (e.g., sun)
-            if (this.geometryType === 'sun') {
-                console.log('☀️ Creating sun with emissive material (NASA photosphere: 5,772K)...');
-
-                // Create texture loader
-                const textureLoader = new THREE.TextureLoader();
-
-                // Get initial emotion glow color (default to warm white)
-                const glowColor = this.glowColor || [1.0, 1.0, 0.95];
-                const glowIntensity = this.glowIntensity || 1.0;
-
-                // Create sun material with NASA photosphere texture
-                customMaterial = createSunMaterial(textureLoader, {
-                    glowColor,
-                    glowIntensity,
-                    resolution: '4k'
-                });
-
-                // Store material reference for glow updates
-                this.customMaterial = customMaterial;
-                this.customMaterialType = 'sun';
-                console.log('🔥 Sun material created with surface-mapped fire animation');
-            }
+        if (materialResult) {
+            customMaterial = materialResult.material;
+            this.customMaterial = customMaterial;
+            this.customMaterialType = materialResult.type;
         }
 
         // Create core mesh with geometry (and optional custom material)
@@ -247,6 +208,12 @@ export class Core3DManager {
         // Virtual particle object pool for gesture animations (prevent closure memory leaks)
         this.virtualParticlePool = this.createVirtualParticlePool(5); // Pool of 5 reusable particles
         this.nextPoolIndex = 0;
+
+        // Apply default glass mode for initial geometry (if specified)
+        // Crystal and diamond geometries have defaultGlassMode: true
+        if (this.geometryConfig.defaultGlassMode) {
+            this.setGlassMaterialEnabled(true);
+        }
 
         // Initialize emotion
         this.setEmotion(this.emotion);
@@ -699,46 +666,26 @@ export class Core3DManager {
 
             // Dispose old custom material textures before creating new ones (prevent GPU memory leak)
             if (this.customMaterial) {
-                // Dispose individual textures first
-                if (this.customMaterial.map) {
-                    this.customMaterial.map.dispose();
-                }
-                if (this.customMaterial.normalMap) {
-                    this.customMaterial.normalMap.dispose();
-                }
+                // Use MaterialFactory for proper disposal of textures
+                disposeCustomMaterial(this.customMaterial);
                 // Then dispose the material itself
                 this.renderer.disposeMaterial(this.customMaterial);
                 this.customMaterial = null;
                 this.customMaterialType = null;
             }
 
-            // Check if target geometry needs custom material (e.g., moon)
+            // Check if target geometry needs custom material (e.g., moon, sun, future black hole)
+            // Use MaterialFactory for centralized material creation
             let customMaterial = null;
-            if (this._targetGeometryConfig.material === 'custom') {
-                if (this._targetGeometryType === 'moon') {
-                    // Create texture loader
-                    const textureLoader = new THREE.TextureLoader();
+            const materialResult = createCustomMaterial(this._targetGeometryType, this._targetGeometryConfig, {
+                glowColor: this.glowColor || [1.0, 1.0, 0.95],
+                glowIntensity: this.glowIntensity || 1.0
+            });
 
-                    // Detect device for resolution selection
-                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                    const resolution = isMobile ? '2k' : '4k';
-
-                    console.log(`🌙 Loading moon textures with ORIGINAL shader on morph (${resolution})...`);
-
-                    // Use crescent shader with ORIGINAL working logic
-                    customMaterial = createMoonShadowMaterial(textureLoader, {
-                        resolution,
-                        glowColor: new THREE.Color(this.glowColor[0], this.glowColor[1], this.glowColor[2]),
-                        glowIntensity: this.glowIntensity,
-                        shadowOffsetX: 0.7,  // Offset to the right
-                        shadowOffsetY: 0.0,
-                        shadowCoverage: 1.0  // Not used for now - hardcoded in shader
-                    });
-
-                    // Store material reference for glow updates
-                    this.customMaterial = customMaterial;
-                    this.customMaterialType = 'moon';
-                }
+            if (materialResult) {
+                customMaterial = materialResult.material;
+                this.customMaterial = customMaterial;
+                this.customMaterialType = materialResult.type;
             }
             // Note: If not using custom material, references were already cleared above
 
@@ -747,6 +694,11 @@ export class Core3DManager {
                 this.renderer.swapGeometry(this.geometry, customMaterial);
             } else {
                 this.renderer.swapGeometry(this.geometry);
+
+                // Apply default glass mode for this geometry (only for non-custom materials)
+                // Crystal and diamond have defaultGlassMode: true, others default to false
+                const shouldEnableGlass = this._targetGeometryConfig.defaultGlassMode === true;
+                this.setGlassMaterialEnabled(shouldEnableGlass);
             }
 
             // Update blink animator with new geometry's blink config
