@@ -128,12 +128,12 @@ void main() {
         discard; // Kill particles very close to camera
     }
 
-    // Depth-of-Field Effect (extremely subtle - barely any fade)
-    float depthBlur = mix(0.30, 0.31, vDepth);
+    // Depth-of-Field Effect (slightly more blur for softer appearance)
+    float depthBlur = mix(0.32, 0.34, vDepth);  // Increased from 0.30-0.31 to 0.32-0.34
     float gradient = smoothstep(0.5, 0.5 - depthBlur, dist);
 
-    // Distance-based opacity falloff (almost none)
-    float depthOpacity = mix(1.0, 0.98, vDepth * 0.1);
+    // Distance-based opacity falloff (slightly dimmer overall)
+    float depthOpacity = mix(0.92, 0.90, vDepth * 0.1);  // Reduced from 1.0-0.98 to 0.92-0.90
 
     vec3 finalColor;
     float glowAlpha = 0.0;

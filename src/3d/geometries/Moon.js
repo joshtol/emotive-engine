@@ -10,6 +10,18 @@
 
 import * as THREE from 'three';
 import { getShadowShaders } from '../shaders/index.js';
+import { getMoonWithBlendLayersShaders } from '../shaders/shadows/moonWithBlendLayers.js';
+
+/**
+ * Moon Calibration Rotation
+ * Calibrated to show the classic "Man in the Moon" Earth-facing view
+ * These values rotate the moon texture to match how we see it from Earth
+ */
+export const MOON_CALIBRATION_ROTATION = {
+    x: 55.5,   // degrees
+    y: -85.0,  // degrees
+    z: -60.5   // degrees
+};
 
 /**
  * Moon Phase Definitions
@@ -367,7 +379,15 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
             shadowCoverage: { value: shadowCoverage },
             shadowSoftness: { value: 0.05 }, // Edge blur amount
             glowColor: { value: glowColor },
-            glowIntensity: { value: glowIntensity }
+            glowIntensity: { value: glowIntensity },
+            opacity: { value: 0.0 }, // Start invisible, fade in when texture loads
+            // Lunar Eclipse (Blood Moon) uniforms
+            eclipseProgress: { value: 0.0 },  // 0 = no eclipse, 1 = totality
+            eclipseIntensity: { value: 0.0 }, // Darkening strength
+            bloodMoonColor: { value: [0.85, 0.18, 0.08] }, // Deep reddish-orange
+            blendMode: { value: 0.0 }, // 0=Multiply, 1=LinearBurn, 2=ColorBurn, 3=ColorDodge, 4=Screen, 5=Overlay
+            blendStrength: { value: 2.0 }, // Blend strength multiplier (0-5)
+            emissiveStrength: { value: 0.3 } // Emissive glow strength
         },
         vertexShader,
         fragmentShader,
@@ -385,7 +405,21 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
         colorPath,
         texture => {
             material.uniforms.colorMap.value = texture;
-            material.needsUpdate = true;
+
+            // Fade in moon when texture loads (avoid gray flash)
+            const startTime = performance.now();
+            const fadeIn = () => {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / 300, 1.0); // 300ms fade
+                material.uniforms.opacity.value = progress;
+                material.needsUpdate = true;
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(fadeIn);
+                }
+            };
+            fadeIn();
+
             const pending = pendingTextures.get(colorPath);
             if (pending) {
                 pending.texture = texture;
@@ -599,4 +633,99 @@ export function updateCrescentShadow(material, offsetX, offsetY, coverage) {
         material.uniforms.shadowOffset.value.set(offsetX, offsetY);
         material.uniforms.shadowCoverage.value = coverage;
     }
+}
+
+/**
+ * Create Moon Crescent Material with Blend Multiplexer
+ * Supports up to 4 sequential blend mode layers for complex color grading
+ *
+ * @param {THREE.TextureLoader} textureLoader - Three.js texture loader
+ * @param {Object} options - Material configuration options
+ * @param {THREE.Color} options.glowColor - Glow color (default: white)
+ * @param {number} options.glowIntensity - Glow intensity (default: 1.0)
+ * @returns {THREE.ShaderMaterial} Shader material with multiplexer blend modes
+ */
+export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
+    const {
+        resolution = '4k',
+        glowColor = new THREE.Color(0xffffff),
+        glowIntensity = 1.0
+    } = options;
+
+    const { vertexShader, fragmentShader } = getMoonWithBlendLayersShaders();
+
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            colorMap: { value: null },
+            normalMap: { value: null },
+            shadowOffset: { value: new THREE.Vector2(0, 0) },
+            shadowCoverage: { value: 0.5 },
+            shadowSoftness: { value: 0.05 },
+            glowColor: { value: glowColor },
+            glowIntensity: { value: glowIntensity },
+            opacity: { value: 0.0 },
+
+            // Lunar Eclipse (Blood Moon) uniforms
+            eclipseProgress: { value: 0.0 },
+            eclipseIntensity: { value: 0.0 },
+            bloodMoonColor: { value: [0.85, 0.18, 0.08] },
+            emissiveStrength: { value: 0.3 },
+
+            // Blend Multiplexer Layer 1
+            layer1Mode: { value: 0.0 },  // 0=Multiply
+            layer1Strength: { value: 2.0 },
+            layer1Enabled: { value: 0.0 },  // Disabled by default
+
+            // Blend Multiplexer Layer 2
+            layer2Mode: { value: 1.0 },  // 1=Linear Burn
+            layer2Strength: { value: 1.5 },
+            layer2Enabled: { value: 0.0 },
+
+            // Blend Multiplexer Layer 3
+            layer3Mode: { value: 2.0 },  // 2=Color Burn
+            layer3Strength: { value: 1.0 },
+            layer3Enabled: { value: 0.0 },
+
+            // Blend Multiplexer Layer 4
+            layer4Mode: { value: 3.0 },  // 3=Color Dodge
+            layer4Strength: { value: 1.0 },
+            layer4Enabled: { value: 0.0 }
+        },
+        vertexShader,
+        fragmentShader,
+        transparent: true,
+        depthWrite: true,
+        side: THREE.FrontSide
+    });
+
+    // Load textures with fade-in (same as standard material)
+    const colorPath = `/assets/textures/Moon/moon-color-${resolution}.jpg`;
+    const normalPath = `/assets/textures/Moon/moon-normal-${resolution}.jpg`;
+
+    const colorMap = textureLoader.load(
+        colorPath,
+        texture => {
+            material.uniforms.colorMap.value = texture;
+
+            // Fade in moon when texture loads
+            const startTime = performance.now();
+            const fadeIn = () => {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / 300, 1.0); // 300ms fade
+                material.uniforms.opacity.value = progress;
+                material.needsUpdate = true;
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(fadeIn);
+                }
+            };
+            fadeIn();
+        }
+    );
+
+    const normalMap = textureLoader.load(normalPath, texture => {
+        material.uniforms.normalMap.value = texture;
+    });
+
+    return material;
 }

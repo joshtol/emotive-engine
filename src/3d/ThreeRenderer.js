@@ -141,7 +141,7 @@ export class ThreeRenderer {
         this.controls.enablePan = false;
 
         // Enable auto-rotate for gentle spinning (can be toggled)
-        this.controls.autoRotate = this.options.autoRotate !== false; // default true
+        this.controls.autoRotate = this.options.autoRotate === true; // default false
         this.controls.autoRotateSpeed = 0.5; // slow, subtle rotation
 
         // Limit vertical rotation to prevent upside-down views
@@ -843,9 +843,10 @@ export class ThreeRenderer {
         const presets = {
             front: { x: 0, y: 0, z: d },
             side: { x: d, y: 0, z: 0 },
-            top: { x: 0, y: d, z: 0.5 },
+            top: { x: 0, y: d, z: 0 },  // True top-down view (directly above)
             angle: { x: d * 0.67, y: d * 0.5, z: d * 0.67 },
-            back: { x: 0, y: 0, z: -d }
+            back: { x: 0, y: 0, z: -d },
+            bottom: { x: 0, y: -d, z: 0 }  // Bottom view (directly below)
         };
 
         const target = presets[preset];
@@ -853,6 +854,21 @@ export class ThreeRenderer {
             console.warn(`Unknown camera preset: ${preset}`);
             return;
         }
+
+        // If instant (duration = 0), set position directly
+        if (duration === 0) {
+            // Fully reset OrbitControls to initial state
+            this.controls.reset();
+            // Then set to target position
+            this.camera.position.set(target.x, target.y, target.z);
+            this.camera.lookAt(0, 0, 0);
+            this.controls.target.set(0, 0, 0);
+            this.controls.update();
+            return;
+        }
+
+        // Reset OrbitControls target to center (origin) for animated presets
+        this.controls.target.set(0, 0, 0);
 
         // Smoothly animate camera to target position
         const startPos = this.camera.position.clone();
@@ -867,6 +883,8 @@ export class ThreeRenderer {
             const eased = 1 - Math.pow(1 - progress, 3);
 
             this.camera.position.lerpVectors(startPos, endPos, eased);
+            this.camera.lookAt(0, 0, 0);
+            this.controls.update();
 
             if (progress < 1.0) {
                 this.cameraAnimationId = requestAnimationFrame(animate);

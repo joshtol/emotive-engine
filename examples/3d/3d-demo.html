@@ -299,7 +299,19 @@
             <button data-action="toggle-glow" class="active">💫 Core Glow</button>
             <button data-action="toggle-blink" class="active">👁️ Blinking</button>
             <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
-            <button data-action="toggle-auto-rotate" class="active">🔄 Auto-Rotate</button>
+            <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
+        </div>
+
+        <div class="section">
+            <h2>Camera Position</h2>
+            <div class="button-grid">
+                <button data-action="camera" data-value="front" class="active">📷 Front</button>
+                <button data-action="camera" data-value="side">📷 Side</button>
+                <button data-action="camera" data-value="top">📷 Top</button>
+                <button data-action="camera" data-value="bottom">📷 Bottom</button>
+                <button data-action="camera" data-value="angle">📷 Angle</button>
+                <button data-action="camera" data-value="back">📷 Back</button>
+            </div>
         </div>
 
         <div class="section" id="eclipse-section" style="display: none;">
@@ -321,6 +333,15 @@
                 <button data-action="moon-phase" data-value="waning-gibbous">🌖 Waning Gibbous</button>
                 <button data-action="moon-phase" data-value="last-quarter">🌗 Last Quarter</button>
                 <button data-action="moon-phase" data-value="waning-crescent">🌘 Waning Crescent</button>
+            </div>
+        </div>
+
+        <div class="section" id="lunar-eclipse-section" style="display: none;">
+            <h2>Lunar Eclipse (Moon Only)</h2>
+            <div class="button-grid">
+                <button data-action="lunar-eclipse" data-value="penumbral">🌔 Penumbral</button>
+                <button data-action="lunar-eclipse" data-value="partial">🌗 Partial</button>
+                <button data-action="lunar-eclipse" data-value="total">🩸 Total (Blood Moon)</button>
             </div>
         </div>
 
@@ -365,7 +386,7 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { animateMoonPhase } from '../../dist/emotive-mascot-3d.js';
+        import EmotiveMascot3D, { animateMoonPhase } from '../../dist/emotive-mascot-3d.js?t=1762827000';
 
         let mascot = null;
         let currentGeometry = 'sphere';
@@ -380,7 +401,7 @@
                     enablePostProcessing: true,
                     enableShadows: false,
                     enableControls: true,
-                    autoRotate: true,
+                    autoRotate: false,
                     cameraDistance: 1.2
                 });
 
@@ -436,15 +457,30 @@
                         // Show/hide geometry-specific controls
                         const eclipseSection = document.getElementById('eclipse-section');
                         const moonPhaseSection = document.getElementById('moon-phase-section');
+                        const lunarEclipseSection = document.getElementById('lunar-eclipse-section');
 
                         eclipseSection.style.display = (value === 'sun') ? 'block' : 'none';
                         moonPhaseSection.style.display = (value === 'moon') ? 'block' : 'none';
+                        lunarEclipseSection.style.display = (value === 'moon') ? 'block' : 'none';
 
-                        // Initialize moon to full phase when switching to it
-                        if (value === 'moon' && mascot.core3D?.customMaterial) {
+                        // Initialize moon to full phase when switching to it (copied from moon-demo)
+                        if (value === 'moon') {
+                            // Wait for morph to complete and material to be created
+                            // Morph duration is 1000ms, swap happens at 500ms
                             setTimeout(() => {
-                                animateMoonPhase(mascot.core3D.customMaterial, 'full', 0);
-                            }, 400); // Wait for morph to swap geometry
+                                // Set to full moon on load (exactly as moon-demo does)
+                                if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+                                    mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = 0;
+                                    mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = 0;
+                                    console.log('🌕 Moon initialized to full phase');
+                                }
+
+                                // Ensure auto-rotate is OFF for tidal locking (force disable, exactly as moon-demo does)
+                                if (mascot.core3D?.renderer?.controls) {
+                                    mascot.core3D.renderer.controls.autoRotate = false;
+                                    console.log('🔒 Moon tidally locked - autoRotate forcibly disabled');
+                                }
+                            }, 600); // Wait for geometry swap at midpoint
                         }
                         break;
 
@@ -554,6 +590,41 @@
                             // Update button states
                             document.querySelectorAll('[data-action="moon-phase"]').forEach(btn => btn.classList.remove('active'));
                             e.target.classList.add('active');
+                        }
+                        break;
+
+                    case 'camera':
+                        const cameraPreset = e.target.dataset.value;
+                        console.log(`📷 Setting camera to: ${cameraPreset}`);
+                        mascot.setCameraPreset(cameraPreset, 1000);
+
+                        // Update button states
+                        document.querySelectorAll('[data-action="camera"]').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        break;
+
+                    case 'lunar-eclipse':
+                        // Only works with moon geometry
+                        if (currentGeometry !== 'moon') {
+                            console.warn('Lunar eclipse only works with moon geometry');
+                            break;
+                        }
+
+                        // Toggle between eclipse types
+                        const lunarEclipseType = e.target.dataset.value;
+                        const lunarEclipseButtons = document.querySelectorAll('[data-action="lunar-eclipse"]');
+
+                        if (e.target.classList.contains('active')) {
+                            // Turn OFF eclipse
+                            mascot.core3D.setMoonEclipse('off');
+                            e.target.classList.remove('active');
+                            console.log('🌕 Lunar eclipse OFF');
+                        } else {
+                            // Turn ON this eclipse type and turn off others
+                            lunarEclipseButtons.forEach(btn => btn.classList.remove('active'));
+                            mascot.core3D.setMoonEclipse(lunarEclipseType);
+                            e.target.classList.add('active');
+                            console.log(`🩸 ${lunarEclipseType.toUpperCase()} Lunar Eclipse ON`);
                         }
                         break;
                 }

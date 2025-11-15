@@ -14,7 +14,7 @@
  */
 
 import * as THREE from 'three';
-import { createMoonShadowMaterial } from '../geometries/Moon.js';
+import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geometries/Moon.js';
 import { createSunMaterial } from '../geometries/Sun.js';
 
 /**
@@ -24,14 +24,15 @@ import { createSunMaterial } from '../geometries/Sun.js';
  * @param {Object} options - Material creation options
  * @param {Array<number>} options.glowColor - RGB color array [r, g, b] (0-1 range)
  * @param {number} options.glowIntensity - Glow intensity (default: 1.0)
+ * @param {string} options.materialVariant - Material variant (e.g., 'multiplexer' for moon)
  * @returns {Object|null} Material object with { material, type } or null if no custom material
  */
 export function createCustomMaterial(geometryType, geometryConfig, options = {}) {
-    const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0 } = options;
+    const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null } = options;
 
     // Check if geometry requires custom material
     if (geometryConfig.material === 'custom') {
-        return createCustomTypeMaterial(geometryType, glowColor, glowIntensity);
+        return createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant);
     }
 
     // Check if geometry requires emissive material
@@ -47,12 +48,12 @@ export function createCustomMaterial(geometryType, geometryConfig, options = {})
  * Create custom-type materials (moon, etc.)
  * @private
  */
-function createCustomTypeMaterial(geometryType, glowColor, glowIntensity) {
+function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
     case 'moon':
-        return createMoonMaterial(textureLoader, glowColor, glowIntensity);
+        return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant);
 
         // Future: Add more custom materials here
         // case 'blackhole':
@@ -89,20 +90,35 @@ function createEmissiveMaterial(geometryType, glowColor, glowIntensity) {
  * Create moon material with shadow support
  * @private
  */
-function createMoonMaterial(textureLoader, glowColor, glowIntensity) {
+function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant = null) {
     // Detect device for resolution selection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const resolution = isMobile ? '2k' : '4k';
 
+    // Check for multiplexer variant
+    if (materialVariant === 'multiplexer') {
+        console.log(`🎨 Creating moon multiplexer material (${resolution})...`);
+
+        const material = createMoonMultiplexerMaterial(textureLoader, {
+            resolution,
+            glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
+            glowIntensity
+        });
+
+        return {
+            material,
+            type: 'moon-multiplexer'
+        };
+    }
+
+    // Default: standard shadow material
     console.log(`🌙 Creating moon material (${resolution})...`);
 
     const material = createMoonShadowMaterial(textureLoader, {
         resolution,
         glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
         glowIntensity,
-        shadowOffsetX: 0.7,  // Offset to the right
-        shadowOffsetY: 0.0,
-        shadowCoverage: 1.0  // Not used for now - hardcoded in shader
+        moonPhase: 'full' // Start with full moon (shadowOffset: 0, 0)
     });
 
     return {

@@ -59,6 +59,15 @@ uniform float shadowCoverage; // Unused for directional shadow
 uniform float shadowSoftness; // Terminator edge softness (default: 0.05)
 uniform vec3 glowColor;
 uniform float glowIntensity;
+uniform float opacity; // Fade in opacity (0-1) to prevent gray flash during texture load
+
+// Lunar Eclipse (Blood Moon) uniforms
+uniform float eclipseProgress; // 0.0 = no eclipse, 1.0 = totality
+uniform float eclipseIntensity; // Darkening strength (0.0-1.0)
+uniform vec3 bloodMoonColor; // Deep reddish-orange for total eclipse
+uniform float blendMode; // 0=Multiply, 1=LinearBurn, 2=ColorBurn, 3=ColorDodge, 4=Screen, 5=Overlay
+uniform float blendStrength; // Blend strength multiplier (0.0-5.0)
+uniform float emissiveStrength; // Emissive glow strength (0.0-1.0)
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
@@ -103,9 +112,9 @@ void main() {
     float facing = dot(worldNormal, lightDir);
 
     // Smooth transition at terminator (shadow boundary)
-    // Sharp edge with enhanced anti-aliasing for photorealistic terminator
+    // Softer edge for realistic lunar terminator (like real moon photography)
     // Use fwidth() for automatic screen-space anti-aliasing
-    float edgeWidth = max(fwidth(facing) * 4.0, shadowSoftness * 0.5);
+    float edgeWidth = max(fwidth(facing) * 4.0, shadowSoftness * 3.0);
     float shadowFactor = smoothstep(-edgeWidth, edgeWidth, facing);
 
     // Sample moon surface texture
@@ -155,7 +164,85 @@ void main() {
     // Combine all lighting components
     vec3 finalColor = shadowedColor + emissive + emotionGlow;
 
-    gl_FragColor = vec4(finalColor, 1.0);
+    // ═══════════════════════════════════════════════════════════════════════════
+    // LUNAR ECLIPSE (BLOOD MOON) EFFECT
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Simulates Earth's umbral shadow with Rayleigh scattering (reddish glow)
+    if (eclipseProgress > 0.001) {
+        // Calculate gradient from lit edge to dark center
+        // Use rim factor (view angle) to create radial gradient
+        float gradientFactor = rimFactor; // 1.0 at edges, 0.0 at center
+
+        // Darken the moon (Earth's shadow)
+        float darkeningFactor = 1.0 - eclipseIntensity;
+        finalColor *= darkeningFactor;
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHOTOSHOP-STYLE BLEND MODES: Multiple modes for deep saturation control
+        // ═══════════════════════════════════════════════════════════════════
+
+        // Define blood moon gradient colors
+        vec3 deepRed = vec3(0.6, 0.2, 0.12);       // Dark burnt red-orange (center)
+        vec3 brightOrange = vec3(0.95, 0.45, 0.22); // Bright burnt orange (edges)
+
+        // Create radial gradient from center (dark) to edge (bright)
+        vec3 bloodGradient = mix(deepRed, brightOrange, pow(gradientFactor, 1.8));
+
+        // Apply blend strength multiplier
+        vec3 blendColor = bloodGradient * blendStrength;
+
+        // Calculate all blend modes
+        vec3 finalBlend;
+        int mode = int(blendMode + 0.5); // Round to nearest int
+
+        if (mode == 0) {
+            // MULTIPLY: base * blend
+            finalBlend = finalColor * blendColor;
+        } else if (mode == 1) {
+            // LINEAR BURN: base + blend - 1
+            finalBlend = max(finalColor + blendColor - vec3(1.0), vec3(0.0));
+        } else if (mode == 2) {
+            // COLOR BURN: (blend==0.0) ? 0.0 : max((1.0-((1.0-base)/blend)), 0.0)
+            finalBlend = vec3(
+                blendColor.r == 0.0 ? 0.0 : max(1.0 - ((1.0 - finalColor.r) / blendColor.r), 0.0),
+                blendColor.g == 0.0 ? 0.0 : max(1.0 - ((1.0 - finalColor.g) / blendColor.g), 0.0),
+                blendColor.b == 0.0 ? 0.0 : max(1.0 - ((1.0 - finalColor.b) / blendColor.b), 0.0)
+            );
+        } else if (mode == 3) {
+            // COLOR DODGE: (blend==1.0) ? 1.0 : min(base/(1.0-blend), 1.0)
+            finalBlend = vec3(
+                blendColor.r == 1.0 ? 1.0 : min(finalColor.r / (1.0 - blendColor.r), 1.0),
+                blendColor.g == 1.0 ? 1.0 : min(finalColor.g / (1.0 - blendColor.g), 1.0),
+                blendColor.b == 1.0 ? 1.0 : min(finalColor.b / (1.0 - blendColor.b), 1.0)
+            );
+        } else if (mode == 4) {
+            // SCREEN: 1 - (1 - base) * (1 - blend)
+            finalBlend = vec3(1.0) - (vec3(1.0) - finalColor) * (vec3(1.0) - blendColor);
+        } else {
+            // OVERLAY: base < 0.5 ? (2 * base * blend) : (1 - 2 * (1 - base) * (1 - blend))
+            finalBlend = vec3(
+                finalColor.r < 0.5 ? (2.0 * finalColor.r * blendColor.r) : (1.0 - 2.0 * (1.0 - finalColor.r) * (1.0 - blendColor.r)),
+                finalColor.g < 0.5 ? (2.0 * finalColor.g * blendColor.g) : (1.0 - 2.0 * (1.0 - finalColor.g) * (1.0 - blendColor.g)),
+                finalColor.b < 0.5 ? (2.0 * finalColor.b * blendColor.b) : (1.0 - 2.0 * (1.0 - finalColor.b) * (1.0 - blendColor.b))
+            );
+        }
+
+        // Apply blood moon effect
+        finalColor = mix(finalColor, finalBlend, eclipseProgress);
+
+        // Add emissive glow for visibility
+        finalColor += bloodGradient * emissiveStrength * eclipseProgress;
+
+        // Add bright rim glow during totality (refracted atmosphere light)
+        if (eclipseProgress > 0.7) {
+            float rimIntensity = pow(gradientFactor, 2.5); // Sharp falloff from edge
+            vec3 rimGlow = brightOrange * rimIntensity * (eclipseProgress - 0.7) * 2.5;
+            finalColor += rimGlow;
+        }
+    }
+
+    // Apply fade-in opacity to prevent gray flash during texture load
+    gl_FragColor = vec4(finalColor, opacity);
 }
 `;
 

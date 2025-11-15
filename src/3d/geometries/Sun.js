@@ -80,6 +80,19 @@ export function createSunMaterial(textureLoader, options = {}) {
     const colorMap = textureLoader.load(
         colorPath,
         texture => {
+            // Fade in sun when texture loads (avoid odd pattern flash)
+            const startTime = performance.now();
+            const fadeIn = () => {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / 300, 1.0); // 300ms fade
+                material.uniforms.opacity.value = progress;
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(fadeIn);
+                }
+            };
+            fadeIn();
+
             const pending = pendingTextures.get(colorPath);
             if (pending) {
                 pending.texture = texture;
@@ -133,7 +146,8 @@ export function createSunMaterial(textureLoader, options = {}) {
             // Shadow uniforms (same as moon crescent shader)
             shadowOffset: { value: new THREE.Vector2(200.0, 0.0) },  // Start far away (no shadow)
             shadowCoverage: { value: 0.5 },  // Shadow coverage (0.5 = half the sun radius)
-            shadowSoftness: { value: 0.1 }   // Edge softness for anti-aliasing
+            shadowSoftness: { value: 0.1 },   // Edge softness for anti-aliasing
+            opacity: { value: 0.0 }  // Start invisible, fade in when texture loads
         },
         vertexShader: `
             varying vec2 vUv;
@@ -158,6 +172,7 @@ export function createSunMaterial(textureLoader, options = {}) {
             uniform vec2 shadowOffset;
             uniform float shadowCoverage;
             uniform float shadowSoftness;
+            uniform float opacity;  // Fade in opacity (0-1) to prevent texture flash
 
             varying vec2 vUv;
             varying vec3 vNormal;
@@ -303,9 +318,11 @@ export function createSunMaterial(textureLoader, options = {}) {
                 float coronaModulation = 1.0 + (wave * 2.0 - 1.0) * waveStrength;
                 finalColor *= coronaModulation;
 
-                gl_FragColor = vec4(finalColor, 1.0);
+                // Apply fade-in opacity to prevent texture flash during load
+                gl_FragColor = vec4(finalColor, opacity);
             }
         `,
+        transparent: true,  // Enable opacity/alpha blending for fade-in
         toneMapped: false
     });
 

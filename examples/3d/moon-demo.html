@@ -433,6 +433,65 @@
         </div>
 
         <div class="section">
+            <h2>🩸 Blood Moon (Lunar Eclipse)</h2>
+            <div class="button-grid" style="margin-bottom: 15px;">
+                <button class="phase-btn" data-eclipse="off" style="background: rgba(100, 100, 100, 0.3);">Off</button>
+                <button class="phase-btn" data-eclipse="total" style="background: rgba(200, 50, 50, 0.3);">🩸 Total</button>
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Blend Mode</span>
+                    <span class="slider-value" id="blend-mode-value">Multiply</span>
+                </div>
+                <select id="blend-mode-select" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; font-size: 14px;">
+                    <option value="0">Multiply</option>
+                    <option value="1">Linear Burn</option>
+                    <option value="2">Color Burn</option>
+                    <option value="3">Color Dodge</option>
+                    <option value="4">Screen</option>
+                    <option value="5">Overlay</option>
+                </select>
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Blend Strength</span>
+                    <span class="slider-value" id="blend-strength-value">2.0</span>
+                </div>
+                <input type="range" id="blend-strength-slider" min="0" max="5" step="0.1" value="2.0">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Emissive Glow</span>
+                    <span class="slider-value" id="emissive-value">0.3</span>
+                </div>
+                <input type="range" id="emissive-slider" min="0" max="1" step="0.01" value="0.3">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Darkening (Eclipse Intensity)</span>
+                    <span class="slider-value" id="darkening-value">0.0</span>
+                </div>
+                <input type="range" id="darkening-slider" min="0" max="1" step="0.01" value="0.0">
+            </div>
+
+            <div class="info-box">
+                <strong>Blend Modes:</strong><br>
+                • <strong>Multiply:</strong> Darker, subdued tones - classic darkening<br>
+                • <strong>Linear Burn:</strong> Deep saturation - intense color<br>
+                • <strong>Color Burn:</strong> Darkens with high contrast - dramatic shadows<br>
+                • <strong>Color Dodge:</strong> Brightens highlights - glowing edges<br>
+                • <strong>Screen:</strong> Lightens overall - soft glow effect<br>
+                • <strong>Overlay:</strong> Contrast boost - vivid depth<br>
+                <br>
+                Adjust <strong>Blend Strength</strong> (0-5) to control intensity!
+            </div>
+        </div>
+
+        <div class="section">
             <div class="info-box">
                 <strong>How it works:</strong><br>
                 The shader uses world-space directional lighting with exponential Z decay. The terminator (shadow boundary) moves across the tidally-locked moon surface as you change phases, just like the real lunar cycle!
@@ -442,7 +501,7 @@
 
     <script type="module">
         // Updated: 2025-01-10 - Added particle toggle, disabled blinking/breathing by default
-        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase } from '../../dist/emotive-mascot-3d.js?t=1762809806';
+        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase } from '../../dist/emotive-mascot-3d.js?t=1736871234';
 
         // Store current rotation values (declared early for use in initialization)
         // Calibrated to show classic "Man in the Moon" Earth-facing view
@@ -691,6 +750,67 @@
             if (mascot.core3D?.renderer?.resetCamera) {
                 mascot.core3D.renderer.resetCamera();
                 console.log('📷 Camera reset - Moon tidally locked (same side always faces Earth)');
+            }
+        });
+
+        // Blood Moon (Lunar Eclipse) controls
+        document.querySelectorAll('[data-eclipse]').forEach(button => {
+            button.addEventListener('click', () => {
+                const eclipseType = button.dataset.eclipse;
+                if (mascot.core3D) {
+                    mascot.core3D.setMoonEclipse(eclipseType);
+
+                    // Update darkening slider when eclipse is activated
+                    if (eclipseType === 'total') {
+                        document.getElementById('darkening-slider').value = 1.0;
+                        document.getElementById('darkening-value').textContent = '1.0';
+                        mascot.core3D.setBloodMoonBlend({ eclipseIntensity: 1.0 });
+                    } else {
+                        document.getElementById('darkening-slider').value = 0.0;
+                        document.getElementById('darkening-value').textContent = '0.0';
+                        mascot.core3D.setBloodMoonBlend({ eclipseIntensity: 0.0 });
+                    }
+                }
+            });
+        });
+
+        // Blood Moon blend controls
+        const blendModeSelect = document.getElementById('blend-mode-select');
+        const blendStrengthSlider = document.getElementById('blend-strength-slider');
+        const emissiveSlider = document.getElementById('emissive-slider');
+        const darkeningSlider = document.getElementById('darkening-slider');
+
+        const blendModeNames = ['Multiply', 'Linear Burn', 'Color Burn', 'Color Dodge', 'Screen', 'Overlay'];
+
+        blendModeSelect.addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            document.getElementById('blend-mode-value').textContent = blendModeNames[value];
+            if (mascot.core3D) {
+                mascot.core3D.setBloodMoonBlend({ blendMode: value });
+            }
+        });
+
+        blendStrengthSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('blend-strength-value').textContent = value.toFixed(1);
+            if (mascot.core3D) {
+                mascot.core3D.setBloodMoonBlend({ blendStrength: value });
+            }
+        });
+
+        emissiveSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('emissive-value').textContent = value.toFixed(2);
+            if (mascot.core3D) {
+                mascot.core3D.setBloodMoonBlend({ emissiveStrength: value });
+            }
+        });
+
+        darkeningSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('darkening-value').textContent = value.toFixed(2);
+            if (mascot.core3D) {
+                mascot.core3D.setBloodMoonBlend({ eclipseIntensity: value });
             }
         });
     </script>

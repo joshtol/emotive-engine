@@ -133,7 +133,8 @@ export class EmotiveMascot3D {
                 autoRotate: this.config.autoRotate,
                 enableBlinking: this.config.enableBlinking,
                 enableBreathing: this.config.enableBreathing,
-                cameraDistance: this.config.cameraDistance
+                cameraDistance: this.config.cameraDistance,
+                materialVariant: this.config.materialVariant
             });
 
             // Cache 2D canvas context to prevent repeated getContext() calls
@@ -489,12 +490,15 @@ export class EmotiveMascot3D {
      * Enable auto-rotation
      */
     enableAutoRotate() {
-        if (this.core3D?.renderer?.controls) {
-            this.core3D.renderer.controls.autoRotate = true;
-        }
         if (this.core3D) {
             // Don't enable rotation for geometries with special rotation rules (moon is tidally locked)
             if (this.core3D.geometryType !== 'moon') {
+                // Enable OrbitControls camera rotation
+                if (this.core3D.renderer?.controls) {
+                    this.core3D.renderer.controls.autoRotate = true;
+                }
+
+                // Enable geometry's internal rotation behavior
                 this.core3D.rotationDisabled = false;
                 // Re-trigger emotion to restore rotation behavior
                 this.setEmotion(this.core3D.emotion, this.undertone);
@@ -512,6 +516,17 @@ export class EmotiveMascot3D {
         if (this.core3D) {
             this.core3D.rotationDisabled = true;
             this.core3D.rotationBehavior = null;
+        }
+    }
+
+    /**
+     * Set camera to a preset position
+     * @param {string} preset - Camera preset: 'front', 'side', 'top', 'bottom', 'angle', 'back'
+     * @param {number} duration - Animation duration in ms (0 for instant)
+     */
+    setCameraPreset(preset, duration = 1000) {
+        if (this.core3D?.renderer?.setCameraPreset) {
+            this.core3D.renderer.setCameraPreset(preset, duration);
         }
     }
 

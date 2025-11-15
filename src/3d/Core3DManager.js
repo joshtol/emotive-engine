@@ -29,7 +29,8 @@ import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
 import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
 import { SolarEclipse } from './effects/SolarEclipse.js';
-import { updateMoonGlow } from './geometries/Moon.js';
+import { LunarEclipse } from './effects/LunarEclipse.js';
+import { updateMoonGlow, MOON_CALIBRATION_ROTATION } from './geometries/Moon.js';
 import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
 
 export class Core3DManager {
@@ -64,7 +65,8 @@ export class Core3DManager {
         let customMaterial = null;
         const materialResult = createCustomMaterial(this.geometryType, this.geometryConfig, {
             glowColor: this.glowColor || [1.0, 1.0, 0.95],
-            glowIntensity: this.glowIntensity || 1.0
+            glowIntensity: this.glowIntensity || 1.0,
+            materialVariant: options.materialVariant || null
         });
 
         if (materialResult) {
@@ -86,15 +88,15 @@ export class Core3DManager {
 
         // Set initial calibration rotation for moon to show classic Earth-facing side
         // This shows the "Man in the Moon" view with Mare Imbrium upper-right
-        // Calibrated manually: X=55.5°, Y=-85.0°, Z=-60.5° (quaternion-based rotation)
         if (this.geometryType === 'moon') {
+            const degToRad = Math.PI / 180;
             this.calibrationRotation = [
-                55.5 * Math.PI / 180,    // X: world-space rotation
-                -85.0 * Math.PI / 180,   // Y: world-space rotation
-                -60.5 * Math.PI / 180    // Z: camera-space roll (spins face CW/CCW)
+                MOON_CALIBRATION_ROTATION.x * degToRad,  // X: world-space rotation
+                MOON_CALIBRATION_ROTATION.y * degToRad,  // Y: world-space rotation
+                MOON_CALIBRATION_ROTATION.z * degToRad   // Z: camera-space roll (spins face CW/CCW)
             ];
             this.cameraRoll = 0; // Camera-space roll (spin the face)
-            console.log('🌙 Moon calibration rotation set: X=55.5°, Y=-85.0°, Z=-60.5°');
+            console.log(`🌙 Moon calibration rotation set: X=${MOON_CALIBRATION_ROTATION.x}°, Y=${MOON_CALIBRATION_ROTATION.y}°, Z=${MOON_CALIBRATION_ROTATION.z}°`);
         }
 
         // Animation controller
@@ -121,7 +123,7 @@ export class Core3DManager {
 
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
-        this.rotationDisabled = false; // Track if rotation was manually disabled
+        this.rotationDisabled = options.autoRotate === false; // Disable rotation if autoRotate is false
 
         // Righting behavior (self-stabilization like inflatable punching clowns)
         // Tuned for smooth return to upright without oscillation
@@ -203,6 +205,11 @@ export class Core3DManager {
         if (this.geometryType === 'sun') {
             const sunRadius = this.geometry.parameters?.radius || 0.5;
             this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.coreMesh);
+        }
+
+        // Initialize lunar eclipse system for moon geometry
+        if (this.geometryType === 'moon' && this.customMaterial) {
+            this.lunarEclipse = new LunarEclipse(this.customMaterial);
         }
 
         // Virtual particle object pool for gesture animations (prevent closure memory leaks)
@@ -605,6 +612,83 @@ export class Core3DManager {
     }
 
     /**
+     * Set lunar eclipse (Blood Moon) effect
+     * @param {string} eclipseType - 'off', 'penumbral', 'partial', 'total'
+     */
+    setMoonEclipse(eclipseType = 'off') {
+        if (this.geometryType !== 'moon' || !this.lunarEclipse) {
+            console.warn('⚠️ Lunar eclipse only available for moon geometry');
+            return;
+        }
+
+        // Set eclipse type on the lunar eclipse manager
+        this.lunarEclipse.setEclipseType(eclipseType);
+    }
+
+    /**
+     * Set blood moon blend parameters
+     * @param {Object} params - { blendMode, blendStrength, emissiveStrength, eclipseIntensity }
+     */
+    setBloodMoonBlend(params = {}) {
+        if (this.geometryType !== 'moon' || !this.customMaterial) {
+            console.warn('⚠️ Blood moon blend only available for moon geometry');
+            return;
+        }
+
+        if (params.blendMode !== undefined) {
+            this.customMaterial.uniforms.blendMode.value = params.blendMode;
+        }
+        if (params.blendStrength !== undefined) {
+            this.customMaterial.uniforms.blendStrength.value = params.blendStrength;
+        }
+        if (params.emissiveStrength !== undefined) {
+            this.customMaterial.uniforms.emissiveStrength.value = params.emissiveStrength;
+        }
+        if (params.eclipseIntensity !== undefined) {
+            this.customMaterial.uniforms.eclipseIntensity.value = params.eclipseIntensity;
+        }
+    }
+
+    /**
+     * Update a specific blend multiplexer layer
+     * @param {number} layerIndex - Layer index (1-4)
+     * @param {Object} params - { mode, strength, enabled }
+     */
+    setBlendLayer(layerIndex, params = {}) {
+        if (this.geometryType !== 'moon' || !this.customMaterial) {
+            console.warn('⚠️ Blend layers only available for moon geometry');
+            return;
+        }
+
+        const layerPrefix = `layer${layerIndex}`;
+
+        if (params.mode !== undefined && this.customMaterial.uniforms[`${layerPrefix}Mode`]) {
+            this.customMaterial.uniforms[`${layerPrefix}Mode`].value = params.mode;
+        }
+        if (params.strength !== undefined && this.customMaterial.uniforms[`${layerPrefix}Strength`]) {
+            this.customMaterial.uniforms[`${layerPrefix}Strength`].value = params.strength;
+        }
+        if (params.enabled !== undefined && this.customMaterial.uniforms[`${layerPrefix}Enabled`]) {
+            this.customMaterial.uniforms[`${layerPrefix}Enabled`].value = params.enabled ? 1.0 : 0.0;
+        }
+    }
+
+    /**
+     * Update all blend multiplexer layers at once
+     * @param {Array} layers - Array of layer configs [{mode, strength, enabled}, ...]
+     */
+    setAllBlendLayers(layers) {
+        if (this.geometryType !== 'moon' || !this.customMaterial) {
+            console.warn('⚠️ Blend layers only available for moon geometry');
+            return;
+        }
+
+        layers.forEach((layer, index) => {
+            this.setBlendLayer(index + 1, layer);
+        });
+    }
+
+    /**
      * Morph to different shape with smooth transition
      * @param {string} shapeName - Target geometry name
      * @param {number} duration - Transition duration in ms (default: 800ms)
@@ -704,23 +788,81 @@ export class Core3DManager {
             // Update blink animator with new geometry's blink config
             this.blinkAnimator.setGeometry(this._targetGeometryConfig);
 
+            // Dispose or create solar eclipse for sun geometry
+            if (this._targetGeometryType === 'sun') {
+                // Create solar eclipse if morphing to sun
+                if (!this.solarEclipse) {
+                    const sunRadius = this.geometry.parameters?.radius || 0.5;
+                    this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.renderer.coreMesh);
+                    console.log('☀️ Solar eclipse system initialized');
+                }
+            } else {
+                // Dispose solar eclipse if morphing away from sun
+                if (this.solarEclipse) {
+                    this.solarEclipse.dispose();
+                    this.solarEclipse = null;
+                    console.log('🌑 Solar eclipse system disposed');
+                }
+            }
+
+            // Dispose or create lunar eclipse for moon geometry
+            if (this._targetGeometryType === 'moon') {
+                // Create lunar eclipse if morphing to moon and custom material exists
+                if (!this.lunarEclipse && this.customMaterial) {
+                    this.lunarEclipse = new LunarEclipse(this.customMaterial);
+                    console.log('🌙 Lunar eclipse system initialized');
+                }
+            } else {
+                // Dispose lunar eclipse if morphing away from moon
+                if (this.lunarEclipse) {
+                    this.lunarEclipse.dispose();
+                    this.lunarEclipse = null;
+                    console.log('🌕 Lunar eclipse system disposed');
+                }
+            }
+
             // Update rotation behavior for special geometries (moon is tidally locked)
             if (this._targetGeometryType === 'moon') {
                 this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
-            } else if (this.rotationDisabled) {
-                this.rotationBehavior = null; // Keep rotation disabled if user disabled it
+                // Also disable OrbitControls camera rotation for moon (tidally locked)
+                if (this.renderer?.controls) {
+                    this.renderer.controls.autoRotate = false;
+                }
+
+                // Reset camera to front view INSTANTLY (immune to auto-rotate position)
+                // This ensures moon always faces camera directly with calibrated orientation
+                // Use instant reset (0ms) to avoid camera still moving during morph
+                if (this.renderer?.setCameraPreset) {
+                    this.renderer.setCameraPreset('front', 0);
+                }
+
+                // Apply calibrated rotation to show "Man in the Moon" Earth-facing view
+                const degToRad = Math.PI / 180;
+                this.calibrationRotation[0] = MOON_CALIBRATION_ROTATION.x * degToRad;
+                this.calibrationRotation[1] = MOON_CALIBRATION_ROTATION.y * degToRad;
+                this.calibrationRotation[2] = MOON_CALIBRATION_ROTATION.z * degToRad;
+                console.log('🌙 Applied moon calibration rotation (Earth-facing view)');
             } else {
-                // Re-apply emotion rotation behavior for new geometry
-                const emotionData = getEmotion(this.emotion);
-                if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
-                    if (this.rotationBehavior) {
-                        this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
-                    } else {
-                        // Create new rotation behavior
-                        this.rotationBehavior = new RotationBehavior(
-                            emotionData['3d'].rotation,
-                            this.rhythmEngine
-                        );
+                // Clear calibration rotation for non-moon geometries
+                this.calibrationRotation[0] = 0;
+                this.calibrationRotation[1] = 0;
+                this.calibrationRotation[2] = 0;
+
+                if (this.rotationDisabled) {
+                    this.rotationBehavior = null; // Keep rotation disabled if user disabled it
+                } else {
+                    // Re-apply emotion rotation behavior for new geometry
+                    const emotionData = getEmotion(this.emotion);
+                    if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
+                        if (this.rotationBehavior) {
+                            this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
+                        } else {
+                            // Create new rotation behavior
+                            this.rotationBehavior = new RotationBehavior(
+                                emotionData['3d'].rotation,
+                                this.rhythmEngine
+                            );
+                        }
                     }
                 }
             }
@@ -758,6 +900,16 @@ export class Core3DManager {
             this.baseEuler[1] += deltaTime * 0.0003;
         }
         // Moon gets no rotation update - stays tidally locked
+
+        // DEBUG: Log rotation state for moon
+        // if (this.geometryType === 'moon') {
+        //     console.log('🌙 Moon rotation:', {
+        //         geometryType: this.geometryType,
+        //         rotationBehavior: !!this.rotationBehavior,
+        //         rotationDisabled: this.rotationDisabled,
+        //         baseEuler: this.baseEuler
+        //     });
+        // }
 
         // Apply righting behavior (self-stabilization) after rotation
         // This pulls tilted models back to upright while preserving yaw spin
@@ -872,6 +1024,11 @@ export class Core3DManager {
             solarEclipse: this.solarEclipse,  // Pass eclipse manager for synchronized updates
             deltaTime  // Pass deltaTime for eclipse animation
         });
+
+        // Update lunar eclipse animation (Blood Moon)
+        if (this.lunarEclipse) {
+            this.lunarEclipse.update(deltaTime);
+        }
     }
 
     /**
@@ -909,6 +1066,13 @@ export class Core3DManager {
             this.solarEclipse.dispose();
             this.solarEclipse = null;
             console.log('🧹 Disposed solar eclipse system');
+        }
+
+        // Clean up lunar eclipse system
+        if (this.lunarEclipse) {
+            this.lunarEclipse.dispose();
+            this.lunarEclipse = null;
+            console.log('🧹 Disposed lunar eclipse system');
         }
 
         // Clean up virtual particle pool

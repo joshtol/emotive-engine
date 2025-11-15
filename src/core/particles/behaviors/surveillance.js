@@ -105,7 +105,7 @@ export default {
         
         // Check for mode changes
         if (state.modeTimer > state.nextModeChange) {
-            this.changeMode(particle, state);
+            this.changeMode(particle, state, config);
             state.modeTimer = 0;
             state.nextModeChange = 2000 + Math.random() * 4000;
         }
@@ -204,17 +204,21 @@ export default {
     /**
      * Patrolling mode - edge surveillance
      */
-    updatePatrolling(particle, dt, state, _config) {
+    updatePatrolling(particle, dt, state, config) {
         // Patrol in a circle around the edge
         state.patrolAngle += 0.01 * dt;
-        
-        const targetX = Math.cos(state.patrolAngle) * state.patrolRadius;
-        const targetY = Math.sin(state.patrolAngle) * state.patrolRadius;
-        
+
+        // Calculate target position relative to core center
+        const coreX = config.corePosition?.x ?? config.canvasWidth / 2;
+        const coreY = config.corePosition?.y ?? config.canvasHeight / 2;
+
+        const targetX = coreX + Math.cos(state.patrolAngle) * state.patrolRadius;
+        const targetY = coreY + Math.sin(state.patrolAngle) * state.patrolRadius;
+
         // Move toward patrol position
         const dx = targetX - particle.x;
         const dy = targetY - particle.y;
-        
+
         particle.vx = dx * 0.02;
         particle.vy = dy * 0.02;
     },
@@ -222,17 +226,21 @@ export default {
     /**
      * Change behavior mode
      */
-    changeMode(particle, state) {
+    changeMode(particle, state, config) {
         const rand = Math.random();
-        
+
+        // Get core position for relative positioning
+        const coreX = config?.corePosition?.x ?? (config?.canvasWidth / 2 || particle.x);
+        const coreY = config?.corePosition?.y ?? (config?.canvasHeight / 2 || particle.y);
+
         // Mode transition probabilities based on role
         if (state.primaryRole === 'scanner') {
             if (rand < 0.1) {
-                // Dart to new position
+                // Dart to new position (relative to core)
                 state.mode = 'darting';
                 state.dartTarget = {
-                    x: (Math.random() - 0.5) * 200,
-                    y: (Math.random() - 0.5) * 200
+                    x: coreX + (Math.random() - 0.5) * 200,
+                    y: coreY + (Math.random() - 0.5) * 200
                 };
                 state.dartSpeed = 3 + Math.random() * 2;
             } else if (rand < 0.2) {
