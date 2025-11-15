@@ -181,29 +181,20 @@ void main() {
     finalColor = result;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // LUNAR ECLIPSE EFFECT (Earth's Shadow + Blood Moon Coloration)
-    // Managed by LunarEclipse.js - handles shadow animation and blood moon color
+    // LUNAR ECLIPSE EFFECT (Earth's Shadow Sweep)
+    // Managed by LunarEclipse.js - will animate shadow position across moon
+    // TODO: Add shadow position/sweep uniforms when implementing Earth shadow animation
     // ═══════════════════════════════════════════════════════════════════════════
     if (eclipseProgress > 0.001) {
-        // Calculate blood moon gradient (edge to center)
-        float gradientFactor = rimFactor; // 1.0 at edges, 0.0 at center
-        vec3 deepRed = vec3(0.6, 0.2, 0.12);       // Dark burnt red-orange (center)
-        vec3 brightOrange = vec3(0.95, 0.45, 0.22); // Bright burnt orange (edges)
-        vec3 bloodGradient = mix(deepRed, brightOrange, pow(gradientFactor, 1.8));
-
-        // Darken the moon (Earth's umbral shadow)
-        float darkeningFactor = 1.0 - eclipseIntensity;
+        // Simple darkening for now (placeholder for shadow sweep)
+        // When shadow sweep is implemented, this will darken based on shadow position
+        float darkeningFactor = 1.0 - (eclipseIntensity * eclipseProgress);
         finalColor *= darkeningFactor;
 
-        // Add emissive blood moon glow for visibility during totality
-        finalColor += bloodGradient * emissiveStrength * eclipseProgress;
-
-        // Add bright rim glow during totality (refracted atmosphere light)
-        if (eclipseProgress > 0.7) {
-            float rimIntensity = pow(gradientFactor, 2.5);
-            vec3 rimGlow = brightOrange * rimIntensity * (eclipseProgress - 0.7) * 2.5;
-            finalColor += rimGlow;
-        }
+        // Blood moon emissive glow (constant color, not gradient)
+        // This is the reddish glow from Earth's atmosphere scattering
+        vec3 bloodMoonGlow = vec3(0.8, 0.25, 0.15); // Burnt orange-red
+        finalColor += bloodMoonGlow * emissiveStrength * eclipseProgress;
     }
 
     gl_FragColor = vec4(finalColor, opacity);
