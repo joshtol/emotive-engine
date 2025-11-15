@@ -143,43 +143,37 @@ void main() {
     vec3 finalColor = shadowedColor + emissive + emotionGlow;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // BLOOD MOON GRADIENT (always calculated for blend layers)
-    // ═══════════════════════════════════════════════════════════════════════════
-    float gradientFactor = rimFactor;
-    vec3 deepRed = vec3(0.6, 0.2, 0.12);
-    vec3 brightOrange = vec3(0.95, 0.45, 0.22);
-    vec3 bloodGradient = mix(deepRed, brightOrange, pow(gradientFactor, 1.8));
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // SEQUENTIAL BLEND MODE LAYERS (work independently of eclipse)
+    // UNIVERSAL BLEND MODE LAYERS
     // Apply each enabled layer in order (Layer 1 → Layer 2 → Layer 3 → Layer 4)
+    // These are universal color grading tools - NOT tied to eclipse effects
     // ═══════════════════════════════════════════════════════════════════════════
     vec3 result = finalColor;
 
     // Layer 1
     if (layer1Enabled > 0.5) {
-        vec3 blendColor1 = bloodGradient * layer1Strength;
+        // Use strength as gray blend color (neutral, universal)
+        vec3 blendColor1 = vec3(layer1Strength);
         int mode1 = int(layer1Mode + 0.5);
         result = applyBlendMode(result, blendColor1, mode1);
     }
 
     // Layer 2
     if (layer2Enabled > 0.5) {
-        vec3 blendColor2 = bloodGradient * layer2Strength;
+        vec3 blendColor2 = vec3(layer2Strength);
         int mode2 = int(layer2Mode + 0.5);
         result = applyBlendMode(result, blendColor2, mode2);
     }
 
     // Layer 3
     if (layer3Enabled > 0.5) {
-        vec3 blendColor3 = bloodGradient * layer3Strength;
+        vec3 blendColor3 = vec3(layer3Strength);
         int mode3 = int(layer3Mode + 0.5);
         result = applyBlendMode(result, blendColor3, mode3);
     }
 
     // Layer 4
     if (layer4Enabled > 0.5) {
-        vec3 blendColor4 = bloodGradient * layer4Strength;
+        vec3 blendColor4 = vec3(layer4Strength);
         int mode4 = int(layer4Mode + 0.5);
         result = applyBlendMode(result, blendColor4, mode4);
     }
@@ -187,17 +181,24 @@ void main() {
     finalColor = result;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // LUNAR ECLIPSE (BLOOD MOON) EFFECT
+    // LUNAR ECLIPSE EFFECT (Earth's Shadow + Blood Moon Coloration)
+    // Managed by LunarEclipse.js - handles shadow animation and blood moon color
     // ═══════════════════════════════════════════════════════════════════════════
     if (eclipseProgress > 0.001) {
-        // Darken the moon (Earth's shadow)
+        // Calculate blood moon gradient (edge to center)
+        float gradientFactor = rimFactor; // 1.0 at edges, 0.0 at center
+        vec3 deepRed = vec3(0.6, 0.2, 0.12);       // Dark burnt red-orange (center)
+        vec3 brightOrange = vec3(0.95, 0.45, 0.22); // Bright burnt orange (edges)
+        vec3 bloodGradient = mix(deepRed, brightOrange, pow(gradientFactor, 1.8));
+
+        // Darken the moon (Earth's umbral shadow)
         float darkeningFactor = 1.0 - eclipseIntensity;
         finalColor *= darkeningFactor;
 
-        // Add emissive glow for visibility
+        // Add emissive blood moon glow for visibility during totality
         finalColor += bloodGradient * emissiveStrength * eclipseProgress;
 
-        // Add bright rim glow during totality
+        // Add bright rim glow during totality (refracted atmosphere light)
         if (eclipseProgress > 0.7) {
             float rimIntensity = pow(gradientFactor, 2.5);
             vec3 rimGlow = brightOrange * rimIntensity * (eclipseProgress - 0.7) * 2.5;
