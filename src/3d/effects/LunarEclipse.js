@@ -45,6 +45,13 @@ export class LunarEclipse {
         this.animationDuration = 3000; // 3 seconds for full transition
         this.startTime = 0;
 
+        // Shadow animation state
+        this.shadowX = -2.0; // Start off-screen left
+        this.shadowY = 0.0;  // Centered vertically
+        this.shadowRadius = 0.70; // Shadow size (Earth's umbra)
+        this.targetShadowX = -2.0;
+        this.shadowSpeed = 1.0; // Shadow movement speed multiplier
+
         // Initialize shader uniforms if not present
         if (!this.material.uniforms.eclipseProgress) {
             this.material.uniforms.eclipseProgress = { value: 0.0 };
@@ -52,6 +59,8 @@ export class LunarEclipse {
             this.material.uniforms.bloodMoonColor = {
                 value: [this.bloodMoonColor.r, this.bloodMoonColor.g, this.bloodMoonColor.b]
             };
+            this.material.uniforms.eclipseShadowPos = { value: [this.shadowX, this.shadowY] };
+            this.material.uniforms.eclipseShadowRadius = { value: this.shadowRadius };
         }
     }
 
@@ -64,19 +73,23 @@ export class LunarEclipse {
 
         this.eclipseType = type;
 
-        // Set target progress based on type
+        // Set target progress and shadow position based on type
         switch (type) {
         case 'off':
             this.targetProgress = 0.0;
+            this.targetShadowX = -2.0; // Move shadow off-screen left (exit)
             break;
         case 'penumbral':
             this.targetProgress = 0.3; // 30% coverage (subtle darkening)
+            this.targetShadowX = -0.65; // Shadow edge just touching moon
             break;
         case 'partial':
             this.targetProgress = 0.65; // 65% coverage (edge of umbra)
+            this.targetShadowX = -0.40; // Shadow partially covering moon
             break;
         case 'total':
             this.targetProgress = 1.0; // 100% coverage (full blood moon)
+            this.targetShadowX = 0.0;  // Shadow centered on moon
             break;
         default:
             console.warn(`Unknown lunar eclipse type: ${type}`);
@@ -87,7 +100,7 @@ export class LunarEclipse {
         this.animating = true;
         this.startTime = performance.now();
 
-        console.log(`🌕🌑 Lunar Eclipse: ${type} (progress: ${this.progress.toFixed(2)} → ${this.targetProgress.toFixed(2)})`);
+        console.log(`🌕🌑 Lunar Eclipse: ${type} (progress: ${this.progress.toFixed(2)} → ${this.targetProgress.toFixed(2)}, shadow: ${this.shadowX.toFixed(2)} → ${this.targetShadowX.toFixed(2)})`);
     }
 
     /**
@@ -107,8 +120,12 @@ export class LunarEclipse {
         // Interpolate eclipse progress
         this.progress = this.progress + (this.targetProgress - this.progress) * eased;
 
+        // Interpolate shadow position (animate shadow sweep)
+        this.shadowX = this.shadowX + (this.targetShadowX - this.shadowX) * eased * this.shadowSpeed;
+
         // Update shader uniforms
         this.material.uniforms.eclipseProgress.value = this.progress;
+        this.material.uniforms.eclipseShadowPos.value = [this.shadowX, this.shadowY];
 
         // Eclipse intensity affects darkening (separate from color shift)
         // Total eclipse: strong darkening + red color
@@ -127,7 +144,7 @@ export class LunarEclipse {
         // Stop animation when complete
         if (animProgress >= 1.0) {
             this.animating = false;
-            console.log(`🌕 Eclipse animation complete: ${this.eclipseType}`);
+            console.log(`🌕 Eclipse animation complete: ${this.eclipseType} (shadow pos: ${this.shadowX.toFixed(2)})`);
         }
     }
 
@@ -146,12 +163,15 @@ export class LunarEclipse {
     reset() {
         this.progress = 0.0;
         this.targetProgress = 0.0;
+        this.shadowX = -2.0;
+        this.targetShadowX = -2.0;
         this.animating = false;
         this.eclipseType = 'off';
 
         if (this.material.uniforms.eclipseProgress) {
             this.material.uniforms.eclipseProgress.value = 0.0;
             this.material.uniforms.eclipseIntensity.value = 0.0;
+            this.material.uniforms.eclipseShadowPos.value = [this.shadowX, this.shadowY];
         }
     }
 

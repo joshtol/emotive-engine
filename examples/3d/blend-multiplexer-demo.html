@@ -404,9 +404,27 @@
     <div class="left-menu">
         <div class="section">
             <h2>🩸 Blood Moon Eclipse</h2>
-            <div class="button-grid" style="margin-bottom: 15px;">
-                <button class="phase-btn active" data-eclipse="off" style="background: rgba(100, 100, 100, 0.3);">Off</button>
-                <button class="phase-btn" data-eclipse="total" style="background: rgba(200, 50, 50, 0.3);">🩸 Total</button>
+            <div class="phase-grid" style="margin-bottom: 15px;">
+                <button class="eclipse-btn active" data-eclipse="off" style="background: rgba(100, 100, 100, 0.3);">Off</button>
+                <button class="eclipse-btn" data-eclipse="penumbral" style="background: rgba(120, 80, 80, 0.3);">Penumbral</button>
+                <button class="eclipse-btn" data-eclipse="partial" style="background: rgba(160, 60, 50, 0.3);">Partial</button>
+                <button class="eclipse-btn" data-eclipse="total" style="background: rgba(200, 50, 50, 0.3);">🩸 Total</button>
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Shadow Position X</span>
+                    <span class="slider-value" id="shadow-x-value">-2.0</span>
+                </div>
+                <input type="range" id="shadow-x-slider" min="-2" max="1" step="0.05" value="-2.0">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Shadow Radius</span>
+                    <span class="slider-value" id="shadow-radius-value">1.2</span>
+                </div>
+                <input type="range" id="shadow-radius-slider" min="0.5" max="2.5" step="0.05" value="1.2">
             </div>
 
             <div class="slider-control">
@@ -433,9 +451,41 @@
                 <input type="range" id="emissive-slider" min="0" max="1" step="0.01" value="0.3">
             </div>
 
+            <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 14px;">🎨 Eclipse Color Grading</h3>
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">Shadows (Umbra Core)</label>
+                    <input type="color" id="shadow-color" value="#d91405" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="shadow-color-value">RGB: 0.85, 0.08, 0.02</div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">Midtones (Main Body) - PRIMARY COLOR</label>
+                    <input type="color" id="midtone-color" value="#ff1f08" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="midtone-color-value">RGB: 1.0, 0.12, 0.03</div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">Highlights (Atmospheric Rim)</label>
+                    <input type="color" id="highlight-color" value="#ff5914" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="highlight-color-value">RGB: 1.0, 0.35, 0.08</div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">Glow (Limb Rim) - EDGE BRIGHTNESS</label>
+                    <input type="color" id="glow-color" value="#ff661a" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="glow-color-value">RGB: 1.0, 0.40, 0.10</div>
+                </div>
+
+                <button id="reset-colors-btn" style="width: 100%; padding: 8px; background: rgba(100,100,100,0.5); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; color: white; cursor: pointer; font-size: 12px;">
+                    Reset to Default
+                </button>
+            </div>
+
             <div class="info-box" style="margin-top: 15px;">
-                <strong>Blood Moon Effect</strong><br>
-                Simulates Earth's shadow passing over the moon with Rayleigh scattering creating the characteristic reddish glow.
+                <strong>Shadow Sweep Animation</strong><br>
+                Watch Earth's shadow move across the moon with realistic Rayleigh scattering (blue light removed, red light refracted).
             </div>
         </div>
     </div>
@@ -459,6 +509,7 @@
                 Order matters: Multiply→Dodge ≠ Dodge→Multiply!
             </div>
         </div>
+
 
         <div class="section">
             <div class="info-box">
@@ -534,7 +585,8 @@
 
         console.log('✅ Blend Multiplexer demo initialized');
 
-        // Blood Moon (Lunar Eclipse) controls
+        // Blood Moon (Lunar Eclipse) controls with shadow sweep
+        // All buttons just move the shadow position - shader handles the transition
         document.querySelectorAll('[data-eclipse]').forEach(button => {
             button.addEventListener('click', () => {
                 const eclipseType = button.dataset.eclipse;
@@ -544,14 +596,60 @@
                 button.classList.add('active');
 
                 if (mascot.core3D?.customMaterial?.uniforms) {
-                    // Update eclipse progress
-                    const progress = eclipseType === 'total' ? 1.0 : 0.0;
-                    mascot.core3D.customMaterial.uniforms.eclipseProgress.value = progress;
+                    let shadowX = -2.0;
 
-                    document.getElementById('eclipse-progress-slider').value = progress;
-                    document.getElementById('eclipse-progress-value').textContent = progress.toFixed(2);
+                    switch (eclipseType) {
+                        case 'off':
+                            shadowX = -2.0; // Shadow off-screen
+                            break;
+                        case 'penumbral':
+                            shadowX = -1.0; // Shadow edge touching moon
+                            break;
+                        case 'partial':
+                            shadowX = -0.85; // Shadow partially covering
+                            break;
+                        case 'total':
+                            shadowX = 0.0;  // Shadow centered (full coverage)
+                            break;
+                    }
 
-                    console.log(`🩸 Eclipse: ${eclipseType} (progress: ${progress})`);
+                    // Update shadow position and eclipse progress
+                    mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value = [shadowX, 0.0];
+
+                    // Set eclipse progress based on type
+                    const eclipseProgress = eclipseType === 'off' ? 0.0 : 1.0;
+                    mascot.core3D.customMaterial.uniforms.eclipseProgress.value = eclipseProgress;
+                    mascot.core3D.customMaterial.uniforms.eclipseIntensity.value = eclipseProgress;
+
+                    // Update UI sliders
+                    document.getElementById('shadow-x-slider').value = shadowX;
+                    document.getElementById('shadow-x-value').textContent = shadowX.toFixed(2);
+                    document.getElementById('eclipse-progress-slider').value = eclipseProgress;
+                    document.getElementById('eclipse-progress-value').textContent = eclipseProgress.toFixed(2);
+                    document.getElementById('darkening-slider').value = eclipseProgress;
+                    document.getElementById('darkening-value').textContent = eclipseProgress.toFixed(2);
+
+                    console.log(`🩸 Eclipse: ${eclipseType} (shadowX: ${shadowX})`);
+
+                    // DIAGNOSTIC: Log all relevant uniform values when eclipse is activated
+                    console.log('📊 Eclipse Uniform Values After Button Click:');
+                    console.log('  eclipseProgress:', mascot.core3D.customMaterial.uniforms.eclipseProgress.value);
+                    console.log('  eclipseShadowPos:', mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value);
+                    console.log('  Blend Layer 1:', {
+                        mode: mascot.core3D.customMaterial.uniforms.layer1Mode.value,
+                        strength: mascot.core3D.customMaterial.uniforms.layer1Strength.value,
+                        enabled: mascot.core3D.customMaterial.uniforms.layer1Enabled.value
+                    });
+                    console.log('  Blend Layer 2:', {
+                        mode: mascot.core3D.customMaterial.uniforms.layer2Mode.value,
+                        strength: mascot.core3D.customMaterial.uniforms.layer2Strength.value,
+                        enabled: mascot.core3D.customMaterial.uniforms.layer2Enabled.value
+                    });
+                    console.log('  Blend Layer 3:', {
+                        mode: mascot.core3D.customMaterial.uniforms.layer3Mode.value,
+                        strength: mascot.core3D.customMaterial.uniforms.layer3Strength.value,
+                        enabled: mascot.core3D.customMaterial.uniforms.layer3Enabled.value
+                    });
                 }
             });
         });
@@ -563,6 +661,101 @@
             document.getElementById('eclipse-progress-value').textContent = value.toFixed(2);
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.eclipseProgress.value = value;
+            }
+        });
+
+        // Shadow position X slider
+        const shadowXSlider = document.getElementById('shadow-x-slider');
+        shadowXSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('shadow-x-value').textContent = value.toFixed(2);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value = [value, 0.0];
+            }
+        });
+
+        // Shadow radius slider
+        const shadowRadiusSlider = document.getElementById('shadow-radius-slider');
+        shadowRadiusSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('shadow-radius-value').textContent = value.toFixed(2);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = value;
+            }
+        });
+
+        // Eclipse Color Pickers - Convert hex to RGB array (0-1 range)
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16) / 255,
+                parseInt(result[2], 16) / 255,
+                parseInt(result[3], 16) / 255
+            ] : [1.0, 1.0, 1.0];
+        }
+
+        const shadowColorPicker = document.getElementById('shadow-color');
+        const midtoneColorPicker = document.getElementById('midtone-color');
+        const highlightColorPicker = document.getElementById('highlight-color');
+        const glowColorPicker = document.getElementById('glow-color');
+        const resetColorsBtn = document.getElementById('reset-colors-btn');
+
+        shadowColorPicker.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value = rgb;
+                document.getElementById('shadow-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+                console.log('🎨 Shadow Color:', rgb, 'Applied to uniform:', mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value);
+            }
+        });
+
+        midtoneColorPicker.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseMidtoneColor.value = rgb;
+                document.getElementById('midtone-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+                console.log('🎨 Midtone Color:', rgb, 'Applied to uniform:', mascot.core3D.customMaterial.uniforms.eclipseMidtoneColor.value);
+            }
+        });
+
+        highlightColorPicker.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseHighlightColor.value = rgb;
+                document.getElementById('highlight-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+                console.log('🎨 Highlight Color:', rgb, 'Applied to uniform:', mascot.core3D.customMaterial.uniforms.eclipseHighlightColor.value);
+            }
+        });
+
+        glowColorPicker.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseGlowColor.value = rgb;
+                document.getElementById('glow-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+                console.log('🎨 Glow Color:', rgb, 'Applied to uniform:', mascot.core3D.customMaterial.uniforms.eclipseGlowColor.value);
+            }
+        });
+
+        resetColorsBtn.addEventListener('click', () => {
+            // Reset to default colors (DEEP RED to match reference blood moon photo)
+            shadowColorPicker.value = '#d91405';
+            midtoneColorPicker.value = '#ff1f08';
+            highlightColorPicker.value = '#ff5914';
+            glowColorPicker.value = '#ff661a';
+
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value = [0.85, 0.08, 0.02];
+                mascot.core3D.customMaterial.uniforms.eclipseMidtoneColor.value = [1.0, 0.12, 0.03];
+                mascot.core3D.customMaterial.uniforms.eclipseHighlightColor.value = [1.0, 0.35, 0.08];
+                mascot.core3D.customMaterial.uniforms.eclipseGlowColor.value = [1.0, 0.40, 0.10];
+
+                // Update RGB displays
+                document.getElementById('shadow-color-value').textContent = 'RGB: 0.85, 0.08, 0.02';
+                document.getElementById('midtone-color-value').textContent = 'RGB: 1.0, 0.12, 0.03';
+                document.getElementById('highlight-color-value').textContent = 'RGB: 1.0, 0.35, 0.08';
+                document.getElementById('glow-color-value').textContent = 'RGB: 1.0, 0.40, 0.10';
+
+                console.log('🎨 Colors reset to DEEP RED blood moon defaults');
             }
         });
 
@@ -586,6 +779,8 @@
             }
         });
 
+        // Eclipse Blend Layer controls - REMOVED (now using WYSIWYG UI layer system)
+
         // ═══════════════════════════════════════════════════════════════════════════
         // BLEND LAYER MANAGEMENT SYSTEM
         // ═══════════════════════════════════════════════════════════════════════════
@@ -608,7 +803,11 @@
             'Lighten',        // 14 - Comparison (lighter)
             'Subtract',       // 15 - Deep shadows
             'Divide',         // 16 - Ethereal glow
-            'Pin Light'       // 17 - Posterization
+            'Pin Light',      // 17 - Posterization
+            'Hue',            // 18 - HSL: Hue from blend
+            'Saturation',     // 19 - HSL: Saturation from blend
+            'Color',          // 20 - HSL: Hue+Saturation from blend
+            'Luminosity'      // 21 - HSL: Luminosity from blend
         ];
         const layerStack = document.getElementById('layer-stack');
         const addLayerBtn = document.getElementById('add-layer-btn');
@@ -726,8 +925,12 @@
 
         /**
          * Add a new layer
+         * @param {number} mode - Blend mode index (default: 0 = Multiply)
+         * @param {number} strength - Blend strength (default: 2.0)
+         * @param {boolean} enabled - Layer enabled state (default: false)
+         * @param {boolean} skipShaderUpdate - Skip calling updateShaderLayers (for batch operations)
          */
-        function addLayer() {
+        function addLayer(mode = 0, strength = 2.0, enabled = false, skipShaderUpdate = false) {
             if (layers.length >= 4) {
                 console.warn('⚠️ Maximum 4 layers supported');
                 return;
@@ -736,15 +939,19 @@
             const layer = {
                 id: nextLayerId++,
                 position: layers.length + 1,
-                mode: 0, // Multiply
-                strength: 2.0,
-                enabled: false
+                mode: mode,
+                strength: strength,
+                enabled: enabled
             };
 
             layers.push(layer);
             const card = createLayerCard(layer);
             layerStack.appendChild(card);
-            updateShaderLayers();
+
+            if (!skipShaderUpdate) {
+                updateShaderLayers();
+            }
+
             console.log('✅ Added layer:', layer);
         }
 
@@ -790,30 +997,23 @@
 
             console.group('🎨 Updating Blend Layers');
 
-            // Update each layer (1-4)
-            for (let i = 1; i <= 4; i++) {
-                const layer = layers[i - 1];
-                if (layer) {
-                    console.log(`Layer ${i} → Mode:${layer.mode} Strength:${layer.strength.toFixed(1)} Enabled:${layer.enabled}`);
-                    mascot.core3D.setBlendLayer(i, {
-                        mode: layer.mode,
-                        strength: layer.strength,
-                        enabled: layer.enabled
+            // Route up to 4 UI layers to shader Layers 1, 2, 3, 4
+            // This allows stacking multiple blend modes
+            for (let i = 0; i < 4; i++) {
+                const layerNum = i + 1;
+                const uiLayer = layers[i];
+
+                if (uiLayer) {
+                    console.log(`Layer ${layerNum} (UI) → Mode:${uiLayer.mode} (${blendModeNames[uiLayer.mode]}) Strength:${uiLayer.strength.toFixed(1)} Enabled:${uiLayer.enabled}`);
+                    mascot.core3D.setBlendLayer(layerNum, {
+                        mode: uiLayer.mode,
+                        strength: uiLayer.strength,
+                        enabled: uiLayer.enabled
                     });
-
-                    // Verify it was set
-                    const uniforms = mascot.core3D.customMaterial.uniforms;
-                    const actualMode = uniforms[`layer${i}Mode`]?.value;
-                    const actualStrength = uniforms[`layer${i}Strength`]?.value;
-                    const actualEnabled = uniforms[`layer${i}Enabled`]?.value;
-
-                    if (actualMode !== layer.mode || actualStrength !== layer.strength || actualEnabled !== (layer.enabled ? 1.0 : 0.0)) {
-                        console.error(`❌ Layer ${i} mismatch! Expected: mode=${layer.mode}, strength=${layer.strength}, enabled=${layer.enabled ? 1.0 : 0.0}`);
-                        console.error(`   Actual: mode=${actualMode}, strength=${actualStrength}, enabled=${actualEnabled}`);
-                    }
                 } else {
-                    // Disable unused layers
-                    mascot.core3D.setBlendLayer(i, { enabled: false });
+                    // No UI layer at this position - disable it
+                    mascot.core3D.setBlendLayer(layerNum, { enabled: false });
+                    console.log(`Layer ${layerNum} → Disabled (no UI layer)`);
                 }
             }
 
@@ -930,8 +1130,38 @@
 
                 console.groupEnd();
 
-                addLayer(); // Add default Layer 1
-                console.log('✅ Layer system initialized with 1 layer');
+                // AUTO-POPULATE UI LAYERS FROM SHADER DEFAULTS (WYSIWYG)
+                // Read shader uniforms and create UI layer cards for any enabled layers
+                if (hasLayerUniforms) {
+                    console.group('🎨 Auto-populating UI layers from shader defaults');
+
+                    for (let i = 1; i <= 4; i++) {
+                        const modeKey = `layer${i}Mode`;
+                        const strengthKey = `layer${i}Strength`;
+                        const enabledKey = `layer${i}Enabled`;
+
+                        const enabled = mascot.core3D.customMaterial.uniforms[enabledKey].value > 0.5;
+
+                        if (enabled) {
+                            const mode = Math.round(mascot.core3D.customMaterial.uniforms[modeKey].value);
+                            const strength = mascot.core3D.customMaterial.uniforms[strengthKey].value;
+
+                            console.log(`  Layer ${i}: ${blendModeNames[mode]} @ ${strength.toFixed(2)} strength (enabled)`);
+
+                            // Create UI layer card - skip shader update during batch loading
+                            addLayer(mode, strength, enabled, true);
+                        } else {
+                            console.log(`  Layer ${i}: Disabled (skipping)`);
+                        }
+                    }
+
+                    console.groupEnd();
+                    console.log('✅ WYSIWYG layer system initialized - UI matches shader state');
+
+                    // IMPORTANT: DO NOT call updateShaderLayers() here!
+                    // The shader defaults are already set correctly in Moon.js
+                    // Calling updateShaderLayers() would overwrite them with UI state
+                }
             } else {
                 console.error('❌ Material not ready for layer initialization');
             }

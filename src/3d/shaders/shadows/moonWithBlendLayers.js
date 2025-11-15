@@ -66,6 +66,14 @@ uniform float eclipseProgress;
 uniform float eclipseIntensity;
 uniform vec3 bloodMoonColor;
 uniform float emissiveStrength;
+uniform vec2 eclipseShadowPos;      // Shadow center position (-2 to 1)
+uniform float eclipseShadowRadius;  // Shadow radius
+
+// Eclipse Color Grading (from color pickers)
+uniform vec3 eclipseShadowColor;
+uniform vec3 eclipseMidtoneColor;
+uniform vec3 eclipseHighlightColor;
+uniform vec3 eclipseGlowColor;
 
 // Blend Layer Uniforms (up to 4 layers)
 uniform float layer1Mode;
@@ -143,59 +151,111 @@ void main() {
     vec3 finalColor = shadowedColor + emissive + emotionGlow;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // UNIVERSAL BLEND MODE LAYERS
-    // Apply each enabled layer in order (Layer 1 → Layer 2 → Layer 3 → Layer 4)
-    // These are universal color grading tools - NOT tied to eclipse effects
-    // ═══════════════════════════════════════════════════════════════════════════
-    vec3 result = finalColor;
-
-    // Layer 1
-    if (layer1Enabled > 0.5) {
-        // Use strength as gray blend color (neutral, universal)
-        vec3 blendColor1 = vec3(layer1Strength);
-        int mode1 = int(layer1Mode + 0.5);
-        result = applyBlendMode(result, blendColor1, mode1);
-    }
-
-    // Layer 2
-    if (layer2Enabled > 0.5) {
-        vec3 blendColor2 = vec3(layer2Strength);
-        int mode2 = int(layer2Mode + 0.5);
-        result = applyBlendMode(result, blendColor2, mode2);
-    }
-
-    // Layer 3
-    if (layer3Enabled > 0.5) {
-        vec3 blendColor3 = vec3(layer3Strength);
-        int mode3 = int(layer3Mode + 0.5);
-        result = applyBlendMode(result, blendColor3, mode3);
-    }
-
-    // Layer 4
-    if (layer4Enabled > 0.5) {
-        vec3 blendColor4 = vec3(layer4Strength);
-        int mode4 = int(layer4Mode + 0.5);
-        result = applyBlendMode(result, blendColor4, mode4);
-    }
-
-    finalColor = result;
-
-    // ═══════════════════════════════════════════════════════════════════════════
     // LUNAR ECLIPSE EFFECT (Earth's Shadow Sweep)
-    // Managed by LunarEclipse.js - will animate shadow position across moon
-    // TODO: Add shadow position/sweep uniforms when implementing Earth shadow animation
+    // Shadow position drives everything - automatically transitions from dark sharp shadow to red glow
     // ═══════════════════════════════════════════════════════════════════════════
-    if (eclipseProgress > 0.001) {
-        // Simple darkening for now (placeholder for shadow sweep)
-        // When shadow sweep is implemented, this will darken based on shadow position
-        float darkeningFactor = 1.0 - (eclipseIntensity * eclipseProgress);
-        finalColor *= darkeningFactor;
+    // Only apply eclipse if shadow is actually near the moon (shadowX > -1.5)
+    if (eclipseProgress > 0.001 && eclipseShadowPos.x > -1.5) {
+        // Calculate distance from shadow center in UV space
+        vec2 shadowCenter = vec2(eclipseShadowPos.x, eclipseShadowPos.y);
+        vec2 moonCenter = vUv - vec2(0.5, 0.5); // Center UV coordinates
+        float distFromShadow = length(moonCenter - shadowCenter);
 
-        // Blood moon emissive glow (constant color, not gradient)
-        // This is the reddish glow from Earth's atmosphere scattering
-        vec3 bloodMoonGlow = vec3(0.8, 0.25, 0.15); // Burnt orange-red
-        finalColor += bloodMoonGlow * emissiveStrength * eclipseProgress;
+        // Earth's umbra (full shadow) - Softer edge for smoother transitions
+        float umbraRadius = eclipseShadowRadius * 0.7;
+        float umbraEdge = 0.08; // Softer for smoother shadow transitions
+        float umbra = 1.0 - smoothstep(umbraRadius - umbraEdge, umbraRadius + umbraEdge, distFromShadow);
+
+        // Earth's penumbra (partial shadow) - softer outer edge
+        float penumbraRadius = eclipseShadowRadius * 1.1;
+        float penumbraEdge = 0.15;
+        float penumbra = 1.0 - smoothstep(penumbraRadius - penumbraEdge, penumbraRadius + penumbraEdge, distFromShadow);
+
+        // TOTALITY FACTOR: Based on how centered the shadow is on the moon
+        // When shadowX near 0.0 (centered), we're at totality - brightens and reddens
+        // When shadowX far from 0.0 (off to side), we're partial - stays dark and sharp
+        float shadowCenteredness = 1.0 - smoothstep(0.0, 0.6, abs(eclipseShadowPos.x));
+        float totalityFactor = shadowCenteredness;
+
+        // UMBRA DARKENING: Nearly black during partials, MUCH LIGHTER during totality
+        // Partials (shadow off-center): 95% darkening (nearly black)
+        // Totality (shadow centered): 30% darkening (visible, bright blood moon)
+        float umbraDarkeningAmount = mix(0.95, 0.30, totalityFactor);
+        float umbraDarkening = umbra * eclipseProgress;
+        finalColor *= (1.0 - umbraDarkening * umbraDarkeningAmount);
+
+        // PENUMBRA: Lighter darkening (Earth partially blocks sunlight)
+        float penumbraDarkening = (penumbra - umbra) * eclipseProgress;
+        finalColor *= (1.0 - penumbraDarkening * 0.20);
+
+        // BLOOD MOON COLOR: Only appears when shadow is centered (totality)
+        // Partials (off-center) stay gray/black, totality (centered) becomes red
+        vec3 bloodMoonTint = mix(vec3(1.0), eclipseMidtoneColor, umbra * totalityFactor);
+        finalColor *= bloodMoonTint;
+
+        // EMISSIVE GLOW: Atmospheric scattering only during totality - BOOSTED for brightness
+        vec3 atmosphereGlow = eclipseMidtoneColor * emissiveStrength * 0.8 * umbra * totalityFactor;
+        finalColor += atmosphereGlow;
+
+        // RIM GLOW: Brightest during totality - BOOSTED for visible edge glow
+        float limbGlow = pow(1.0 - rimFactor, 3.0) * umbra * totalityFactor;
+        finalColor += eclipseGlowColor * limbGlow * emissiveStrength * 1.2;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ECLIPSE BLEND LAYERS (Applied AFTER blood moon color)
+        // Blend layers fade in/out based on totality factor (shadow centeredness)
+        // Only fully visible at totality (shadow centered), fade away during partials
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Layer 1: Linear Burn @ 0.9 - strength is blend color, faded by totality
+        if (layer1Enabled > 0.5 && eclipseProgress > 0.1) {
+            vec3 blendColor1 = vec3(layer1Strength); // Strength IS the blend color (0.0-1.0)
+            int mode1 = int(layer1Mode + 0.5);
+            vec3 blended1 = applyBlendMode(finalColor, blendColor1, mode1);
+            // Mix based on totality factor - full blend at totality, none during partials
+            finalColor = mix(finalColor, blended1, totalityFactor);
+        }
+
+        // Layer 2: User calibration layer - strength is blend color, faded by totality
+        if (layer2Enabled > 0.5 && eclipseProgress > 0.1) {
+            vec3 blendColor2 = vec3(layer2Strength); // Strength IS the blend color
+            int mode2 = int(layer2Mode + 0.5);
+            vec3 blended2 = applyBlendMode(finalColor, blendColor2, mode2);
+            finalColor = mix(finalColor, blended2, totalityFactor);
+        }
+
+        // Layer 3: User calibration layer - strength is blend color, faded by totality
+        if (layer3Enabled > 0.5 && eclipseProgress > 0.1) {
+            vec3 blendColor3 = vec3(layer3Strength); // Strength IS the blend color
+            int mode3 = int(layer3Mode + 0.5);
+            vec3 blended3 = applyBlendMode(finalColor, blendColor3, mode3);
+            finalColor = mix(finalColor, blended3, totalityFactor);
+        }
+
+        // Layer 4: Manual UI layer - strength is blend color, faded by totality
+        if (layer4Enabled > 0.5 && eclipseProgress > 0.1) {
+            vec3 blendColor4 = vec3(layer4Strength); // Strength IS the blend color
+            int mode4 = int(layer4Mode + 0.5);
+            vec3 blended4 = applyBlendMode(finalColor, blendColor4, mode4);
+            finalColor = mix(finalColor, blended4, totalityFactor);
+        }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // UNIVERSAL BLEND MODE LAYERS (Only applied when eclipse is OFF)
+    // These are manual UI-driven color grading tools
+    // NOTE: These are DISABLED by default - they're NEVER used since the multiplexer
+    // demo doesn't enable them. This section exists for potential future manual control.
+    // ═══════════════════════════════════════════════════════════════════════════
+    // INTENTIONALLY COMMENTED OUT - these would interfere with eclipse blend layers
+    // if (eclipseProgress < 0.001) {
+    //     // Layer 1 - manual UI control only
+    //     if (layer1Enabled > 0.5) {
+    //         vec3 blendColor1 = vec3(layer1Strength);
+    //         int mode1 = int(layer1Mode + 0.5);
+    //         finalColor = applyBlendMode(finalColor, blendColor1, mode1);
+    //     }
+    // }
 
     gl_FragColor = vec4(finalColor, opacity);
 }

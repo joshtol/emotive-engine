@@ -9,11 +9,12 @@
  * @author Emotive Engine Team
  * @module 3d/shaders/utils/blendModes
  *
- * Provides 18 blend modes compatible with Adobe Photoshop/Affinity Photo:
+ * Provides 22 blend modes compatible with Adobe Photoshop/Affinity Photo:
  * - Darkening: Multiply, Linear Burn, Color Burn, Darken, Subtract
  * - Lightening: Screen, Color Dodge, Add, Lighten, Divide
  * - Contrast: Overlay, Soft Light, Hard Light, Vivid Light, Linear Light, Pin Light
  * - Inversion: Difference, Exclusion
+ * - HSL: Hue, Saturation, Color, Luminosity
  *
  * Usage in any shader:
  * ```glsl
@@ -24,10 +25,78 @@
  */
 
 /**
+ * Convert RGB to HSL
+ * @param rgb - RGB color (0.0-1.0 range)
+ * @return HSL color (H: 0.0-1.0, S: 0.0-1.0, L: 0.0-1.0)
+ */
+vec3 rgbToHsl(vec3 rgb) {
+    float maxC = max(max(rgb.r, rgb.g), rgb.b);
+    float minC = min(min(rgb.r, rgb.g), rgb.b);
+    float delta = maxC - minC;
+
+    float h = 0.0;
+    float s = 0.0;
+    float l = (maxC + minC) / 2.0;
+
+    if (delta > 0.0001) {
+        s = l < 0.5 ? delta / (maxC + minC) : delta / (2.0 - maxC - minC);
+
+        // Use tolerance-based comparison instead of exact equality
+        float eps = 0.0001;
+        if (abs(rgb.r - maxC) < eps) {
+            h = (rgb.g - rgb.b) / delta + (rgb.g < rgb.b ? 6.0 : 0.0);
+        } else if (abs(rgb.g - maxC) < eps) {
+            h = (rgb.b - rgb.r) / delta + 2.0;
+        } else {
+            h = (rgb.r - rgb.g) / delta + 4.0;
+        }
+        h /= 6.0;
+    }
+
+    return vec3(h, s, l);
+}
+
+/**
+ * Convert HSL to RGB
+ * @param hsl - HSL color (H: 0.0-1.0, S: 0.0-1.0, L: 0.0-1.0)
+ * @return RGB color (0.0-1.0 range)
+ */
+vec3 hslToRgb(vec3 hsl) {
+    float h = hsl.x;
+    float s = clamp(hsl.y, 0.0, 1.0);
+    float l = clamp(hsl.z, 0.0, 1.0);
+
+    if (s < 0.0001) {
+        return vec3(l); // Achromatic (gray)
+    }
+
+    float q = l < 0.5 ? l * (1.0 + s) : l + s - l * s;
+    float p = 2.0 * l - q;
+
+    float r = hue2rgb(p, q, h + 1.0/3.0);
+    float g = hue2rgb(p, q, h);
+    float b = hue2rgb(p, q, h - 1.0/3.0);
+
+    return clamp(vec3(r, g, b), 0.0, 1.0);
+}
+
+/**
+ * Helper function for HSL to RGB conversion
+ */
+float hue2rgb(float p, float q, float t) {
+    if (t < 0.0) t += 1.0;
+    if (t > 1.0) t -= 1.0;
+    if (t < 1.0/6.0) return p + (q - p) * 6.0 * t;
+    if (t < 1.0/2.0) return q;
+    if (t < 2.0/3.0) return p + (q - p) * (2.0/3.0 - t) * 6.0;
+    return p;
+}
+
+/**
  * Apply a single blend mode to two colors
  * @param base - Base color (RGB, 0.0-1.0 range)
  * @param blend - Blend color (RGB, 0.0-1.0 range)
- * @param mode - Blend mode index (0-17)
+ * @param mode - Blend mode index (0-21)
  * @return Blended color (RGB, 0.0-1.0 range)
  *
  * Blend Mode Reference:
@@ -49,6 +118,10 @@
  * 15 = Subtract        (darkening, deep shadows)
  * 16 = Divide          (brightening, ethereal glow)
  * 17 = Pin Light       (posterization)
+ * 18 = Hue             (HSL: hue from blend, saturation/luminosity from base)
+ * 19 = Saturation      (HSL: saturation from blend, hue/luminosity from base)
+ * 20 = Color           (HSL: hue/saturation from blend, luminosity from base)
+ * 21 = Luminosity      (HSL: luminosity from blend, hue/saturation from base)
  */
 vec3 applyBlendMode(vec3 base, vec3 blend, int mode) {
     if (mode == 0) {
@@ -147,8 +220,8 @@ vec3 applyBlendMode(vec3 base, vec3 blend, int mode) {
         // DIVIDE: base / (blend + epsilon)
         // Divides base by blend - creates ethereal glow, inverse of Multiply
         return min(base / (blend + vec3(0.001)), vec3(1.0));
-    } else {
-        // PIN LIGHT (mode 17): Replaces colors based on blend brightness
+    } else if (mode == 17) {
+        // PIN LIGHT: Replaces colors based on blend brightness
         // Combines Darken and Lighten based on blend luminance - creates posterization
         float blendLum = (blend.r + blend.g + blend.b) / 3.0;
         if (blendLum > 0.5) {
@@ -158,6 +231,30 @@ vec3 applyBlendMode(vec3 base, vec3 blend, int mode) {
             // Darken: replace pixels lighter than blend
             return min(base, 2.0 * blend);
         }
+    } else if (mode == 18) {
+        // HUE: Hue from blend, Saturation and Luminosity from base
+        // Colorizes while preserving the original tonal values
+        vec3 baseHsl = rgbToHsl(base);
+        vec3 blendHsl = rgbToHsl(blend);
+        return hslToRgb(vec3(blendHsl.x, baseHsl.y, baseHsl.z));
+    } else if (mode == 19) {
+        // SATURATION: Saturation from blend, Hue and Luminosity from base
+        // Adjusts saturation while preserving color and brightness
+        vec3 baseHsl = rgbToHsl(base);
+        vec3 blendHsl = rgbToHsl(blend);
+        return hslToRgb(vec3(baseHsl.x, blendHsl.y, baseHsl.z));
+    } else if (mode == 20) {
+        // COLOR: Hue and Saturation from blend, Luminosity from base
+        // Perfect for coloring monochrome images or tinting color images
+        vec3 baseHsl = rgbToHsl(base);
+        vec3 blendHsl = rgbToHsl(blend);
+        return hslToRgb(vec3(blendHsl.x, blendHsl.y, baseHsl.z));
+    } else {
+        // LUMINOSITY (mode 21): Luminosity from blend, Hue and Saturation from base
+        // Inverse of Color mode - applies brightness while preserving color
+        vec3 baseHsl = rgbToHsl(base);
+        vec3 blendHsl = rgbToHsl(blend);
+        return hslToRgb(vec3(baseHsl.x, baseHsl.y, blendHsl.z));
     }
 }
 

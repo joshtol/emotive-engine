@@ -387,7 +387,14 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
             bloodMoonColor: { value: [0.85, 0.18, 0.08] }, // Deep reddish-orange
             blendMode: { value: 0.0 }, // 0=Multiply, 1=LinearBurn, 2=ColorBurn, 3=ColorDodge, 4=Screen, 5=Overlay
             blendStrength: { value: 2.0 }, // Blend strength multiplier (0-5)
-            emissiveStrength: { value: 0.3 } // Emissive glow strength
+            emissiveStrength: { value: 0.3 }, // Emissive glow strength
+            eclipseShadowPos: { value: [-2.0, 0.0] },
+            eclipseShadowRadius: { value: 1.2 },
+            // Eclipse color grading
+            eclipseShadowColor: { value: [0.85, 0.08, 0.02] },
+            eclipseMidtoneColor: { value: [1.0, 0.12, 0.03] },
+            eclipseHighlightColor: { value: [1.0, 0.35, 0.08] },
+            eclipseGlowColor: { value: [1.0, 0.40, 0.10] }
         },
         vertexShader,
         fragmentShader,
@@ -654,6 +661,22 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
 
     const { vertexShader, fragmentShader } = getMoonWithBlendLayersShaders();
 
+    // DIAGNOSTIC: Check if blend modes are in the fragment shader
+    console.log('🔍 Shader Diagnostics:');
+    console.log('  Fragment shader length:', fragmentShader.length);
+    console.log('  Contains "applyBlendMode":', fragmentShader.includes('applyBlendMode'));
+    console.log('  Contains "vec3 applyBlendMode":', fragmentShader.includes('vec3 applyBlendMode'));
+    console.log('  Fragment shader preview (first 500 chars):', fragmentShader.substring(0, 500));
+
+    // Find where applyBlendMode is defined
+    const blendModeDefIndex = fragmentShader.indexOf('vec3 applyBlendMode');
+    if (blendModeDefIndex !== -1) {
+        console.log('  ✅ applyBlendMode function found at position:', blendModeDefIndex);
+        console.log('  Function definition:', fragmentShader.substring(blendModeDefIndex, blendModeDefIndex + 100));
+    } else {
+        console.error('  ❌ applyBlendMode function NOT FOUND in shader!');
+    }
+
     const material = new THREE.ShaderMaterial({
         uniforms: {
             colorMap: { value: null },
@@ -669,27 +692,34 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
             eclipseProgress: { value: 0.0 },
             eclipseIntensity: { value: 0.0 },
             bloodMoonColor: { value: [0.85, 0.18, 0.08] },
-            emissiveStrength: { value: 0.3 },
+            emissiveStrength: { value: 0.48 },
+            eclipseShadowPos: { value: [-2.0, 0.0] },
+            eclipseShadowRadius: { value: 1.2 },
+            // Eclipse color grading
+            eclipseShadowColor: { value: [0.85, 0.08, 0.02] },
+            eclipseMidtoneColor: { value: [1.0, 0.12, 0.03] },
+            eclipseHighlightColor: { value: [1.0, 0.35, 0.08] },
+            eclipseGlowColor: { value: [1.0, 0.40, 0.10] },
 
-            // Blend Multiplexer Layer 1
-            layer1Mode: { value: 0.0 },  // 0=Multiply
-            layer1Strength: { value: 2.0 },
-            layer1Enabled: { value: 0.0 },  // Disabled by default
+            // Blend Multiplexer Layer 1 - Color Dodge @ 0.7 (calibrated for blood moon)
+            layer1Mode: { value: 3.0 },  // 3 = Color Dodge
+            layer1Strength: { value: 0.7 },  // Calibrated strength
+            layer1Enabled: { value: 1.0 },  // ENABLED
 
-            // Blend Multiplexer Layer 2
-            layer2Mode: { value: 1.0 },  // 1=Linear Burn
-            layer2Strength: { value: 1.5 },
-            layer2Enabled: { value: 0.0 },
+            // Blend Multiplexer Layer 2 - Linear Burn @ 0.8 (calibrated for blood moon)
+            layer2Mode: { value: 1.0 },  // 1 = Linear Burn
+            layer2Strength: { value: 0.8 },  // Calibrated strength
+            layer2Enabled: { value: 1.0 },  // ENABLED
 
-            // Blend Multiplexer Layer 3
-            layer3Mode: { value: 2.0 },  // 2=Color Burn
-            layer3Strength: { value: 1.0 },
-            layer3Enabled: { value: 0.0 },
+            // Blend Multiplexer Layer 3 - Overlay @ 0.8 (calibrated for blood moon)
+            layer3Mode: { value: 5.0 },  // 5 = Overlay
+            layer3Strength: { value: 0.8 },  // Calibrated strength
+            layer3Enabled: { value: 1.0 },  // ENABLED
 
-            // Blend Multiplexer Layer 4
-            layer4Mode: { value: 3.0 },  // 3=Color Dodge
-            layer4Strength: { value: 1.0 },
-            layer4Enabled: { value: 0.0 }
+            // Blend Multiplexer Layer 4 - User customizable (4th layer support)
+            layer4Mode: { value: 0.0 },  // 0 = Multiply (default)
+            layer4Strength: { value: 2.0 },
+            layer4Enabled: { value: 0.0 }  // Disabled by default
         },
         vertexShader,
         fragmentShader,
@@ -697,6 +727,18 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
         depthWrite: true,
         side: THREE.FrontSide
     });
+
+    // DIAGNOSTIC: Log blend layer uniform values
+    console.log('🎨 Blend Layer Uniforms Initialized:');
+    console.log(`  Layer 1: Mode=${material.uniforms.layer1Mode.value 
+    } Strength=${material.uniforms.layer1Strength.value 
+    } Enabled=${material.uniforms.layer1Enabled.value}`);
+    console.log(`  Layer 2: Mode=${material.uniforms.layer2Mode.value 
+    } Strength=${material.uniforms.layer2Strength.value 
+    } Enabled=${material.uniforms.layer2Enabled.value}`);
+    console.log(`  Layer 3: Mode=${material.uniforms.layer3Mode.value 
+    } Strength=${material.uniforms.layer3Strength.value 
+    } Enabled=${material.uniforms.layer3Enabled.value}`);
 
     // Load textures with fade-in (same as standard material)
     const colorPath = `/assets/textures/Moon/moon-color-${resolution}.jpg`;
