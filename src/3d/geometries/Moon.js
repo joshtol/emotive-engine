@@ -701,6 +701,7 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
             eclipseHighlightColor: { value: [1.00, 0.28, 0.10] },   // Bright red-orange atmospheric rim
             eclipseGlowColor: { value: [0.09, 0.09, 0.09] },        // Near-black limb rim (EDGE BRIGHTNESS)
             eclipseBrightnessModel: { value: 0.0 },                 // 0 = centeredness, 1 = edge-based
+            shadowDarkness: { value: 1.0 },                         // 0.0 = no darkening, 1.0 = maximum darkening
 
             // Blend Multiplexer Layer 1 - Vivid Light @ 0.322
             layer1Mode: { value: 9.0 },  // 9 = Vivid Light

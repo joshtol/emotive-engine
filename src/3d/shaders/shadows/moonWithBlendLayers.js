@@ -78,6 +78,9 @@ uniform vec3 eclipseGlowColor;
 // Brightness model toggle (0 = centeredness-based, 1 = edge-based)
 uniform float eclipseBrightnessModel;
 
+// Shadow darkness control (0.0 = no darkening, 1.0 = maximum darkening)
+uniform float shadowDarkness;
+
 // Blend Layer Uniforms (up to 4 layers)
 uniform float layer1Mode;
 uniform float layer1Strength;
@@ -185,11 +188,12 @@ void main() {
         float shadowCenteredness = 1.0 - smoothstep(0.0, 0.6, abs(eclipseShadowPos.x));
         float totalityFactor = shadowCenteredness;
 
-        // UMBRA DARKENING: Less aggressive to prevent total black
-        // Partials (shadow off-center): 70% darkening (visible dark amber glow)
-        // Totality (shadow centered): 30% darkening (bright blood moon)
-        // NEVER goes to total black - amber always visible
-        float umbraDarkeningAmount = mix(0.70, 0.30, totalityFactor);
+        // UMBRA DARKENING: Controlled by shadowDarkness uniform
+        // shadowDarkness = 0.0: No darkening
+        // shadowDarkness = 1.0: Maximum darkening (70% at partials, 30% at totality)
+        // Base darkening varies with totality: more at partials, less at totality
+        float baseDarkening = mix(0.70, 0.30, totalityFactor);
+        float umbraDarkeningAmount = baseDarkening * shadowDarkness;
         float umbraDarkening = umbra * effectiveProgress;
 
         // Apply base darkening first
