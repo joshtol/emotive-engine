@@ -1268,23 +1268,28 @@
                         const strengthKey = `layer${i}Strength`;
                         const enabledKey = `layer${i}Enabled`;
 
-                        const enabled = mascot.core3D.customMaterial.uniforms[enabledKey].value > 0.5;
+                        const enabledValue = mascot.core3D.customMaterial.uniforms[enabledKey].value;
+                        const enabled = enabledValue > 0.5;
+
+                        console.log(`  Checking Layer ${i}: enabledValue=${enabledValue}, enabled=${enabled}`);
 
                         if (enabled) {
                             const mode = Math.round(mascot.core3D.customMaterial.uniforms[modeKey].value);
                             const strength = mascot.core3D.customMaterial.uniforms[strengthKey].value;
 
-                            console.log(`  Layer ${i}: ${blendModeNames[mode]} @ ${strength.toFixed(2)} strength (enabled)`);
+                            console.log(`  Layer ${i}: ${blendModeNames[mode]} @ ${strength.toFixed(2)} strength (enabled) - Creating UI card...`);
 
                             // Create UI layer card - skip shader update during batch loading
-                            addLayer(mode, strength, enabled, true);
+                            // Pass true for enabled state (not the numeric value)
+                            addLayer(mode, strength, true, true);
+                            console.log(`  ✅ Layer ${i} card created`);
                         } else {
                             console.log(`  Layer ${i}: Disabled (skipping)`);
                         }
                     }
 
                     console.groupEnd();
-                    console.log('✅ WYSIWYG layer system initialized - UI matches shader state');
+                    console.log(`✅ WYSIWYG layer system initialized - ${layers.length} layers created`);
 
                     // IMPORTANT: DO NOT call updateShaderLayers() here!
                     // The shader defaults are already set correctly in Moon.js
