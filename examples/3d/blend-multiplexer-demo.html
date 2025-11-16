@@ -306,6 +306,20 @@
             color: white;
         }
 
+        .precision-btn {
+            transition: all 0.15s ease;
+        }
+
+        .precision-btn:hover {
+            background: rgba(255,255,255,0.25) !important;
+            transform: scale(1.05);
+        }
+
+        .precision-btn.active {
+            background: rgba(255,255,255,0.3) !important;
+            font-weight: bold;
+        }
+
         #moon-container {
             width: 100%;
             height: 100%;
@@ -451,31 +465,47 @@
                 <input type="range" id="emissive-slider" min="0" max="1" step="0.01" value="0.3">
             </div>
 
+            <div style="margin-top: 15px; padding: 10px; background: rgba(50,100,200,0.3); border-radius: 5px; border: 1px solid rgba(100,150,255,0.5);">
+                <h3 style="margin: 0 0 10px 0; font-size: 14px;">🔬 Brightness Model Comparison</h3>
+                <div style="display: flex; gap: 8px;">
+                    <button id="brightness-model-0" class="eclipse-btn active" style="flex: 1; background: rgba(100, 100, 200, 0.3);">
+                        Centeredness
+                    </button>
+                    <button id="brightness-model-1" class="eclipse-btn" style="flex: 1; background: rgba(100, 100, 200, 0.3);">
+                        Edge-Based
+                    </button>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: rgba(255,255,255,0.7);">
+                    <strong>Centeredness:</strong> Symmetric brightness based on shadow position<br>
+                    <strong>Edge-Based:</strong> Brightness follows umbra gradient (realistic)
+                </div>
+            </div>
+
             <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
                 <h3 style="margin: 0 0 10px 0; font-size: 14px;">🎨 Eclipse Color Grading</h3>
 
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-size: 12px;">Shadows (Umbra Core)</label>
-                    <input type="color" id="shadow-color" value="#d91405" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="shadow-color-value">RGB: 0.85, 0.08, 0.02</div>
+                    <input type="color" id="shadow-color" value="#ff9400" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="shadow-color-value">RGB: 1.00, 0.58, 0.00</div>
                 </div>
 
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-size: 12px;">Midtones (Main Body) - PRIMARY COLOR</label>
-                    <input type="color" id="midtone-color" value="#ff1f08" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="midtone-color-value">RGB: 1.0, 0.12, 0.03</div>
+                    <input type="color" id="midtone-color" value="#b56e08" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="midtone-color-value">RGB: 0.71, 0.43, 0.03</div>
                 </div>
 
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-size: 12px;">Highlights (Atmospheric Rim)</label>
-                    <input type="color" id="highlight-color" value="#ff5914" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="highlight-color-value">RGB: 1.0, 0.35, 0.08</div>
+                    <input type="color" id="highlight-color" value="#ff471a" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="highlight-color-value">RGB: 1.00, 0.28, 0.10</div>
                 </div>
 
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-size: 12px;">Glow (Limb Rim) - EDGE BRIGHTNESS</label>
-                    <input type="color" id="glow-color" value="#ff661a" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="glow-color-value">RGB: 1.0, 0.40, 0.10</div>
+                    <input type="color" id="glow-color" value="#171717" style="width: 100%; height: 30px; border: none; border-radius: 3px; cursor: pointer;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px;" id="glow-color-value">RGB: 0.09, 0.09, 0.09</div>
                 </div>
 
                 <button id="reset-colors-btn" style="width: 100%; padding: 8px; background: rgba(100,100,100,0.5); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; color: white; cursor: pointer; font-size: 12px;">
@@ -737,25 +767,25 @@
         });
 
         resetColorsBtn.addEventListener('click', () => {
-            // Reset to default colors (DEEP RED to match reference blood moon photo)
-            shadowColorPicker.value = '#d91405';
-            midtoneColorPicker.value = '#ff1f08';
-            highlightColorPicker.value = '#ff5914';
-            glowColorPicker.value = '#ff661a';
+            // Reset to calibrated colors (2025-01-15 v2)
+            shadowColorPicker.value = '#ff9400';
+            midtoneColorPicker.value = '#b56e08';
+            highlightColorPicker.value = '#ff471a';
+            glowColorPicker.value = '#171717';
 
             if (mascot.core3D?.customMaterial?.uniforms) {
-                mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value = [0.85, 0.08, 0.02];
-                mascot.core3D.customMaterial.uniforms.eclipseMidtoneColor.value = [1.0, 0.12, 0.03];
-                mascot.core3D.customMaterial.uniforms.eclipseHighlightColor.value = [1.0, 0.35, 0.08];
-                mascot.core3D.customMaterial.uniforms.eclipseGlowColor.value = [1.0, 0.40, 0.10];
+                mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value = [1.00, 0.58, 0.00];
+                mascot.core3D.customMaterial.uniforms.eclipseMidtoneColor.value = [0.71, 0.43, 0.03];
+                mascot.core3D.customMaterial.uniforms.eclipseHighlightColor.value = [1.00, 0.28, 0.10];
+                mascot.core3D.customMaterial.uniforms.eclipseGlowColor.value = [0.09, 0.09, 0.09];
 
                 // Update RGB displays
-                document.getElementById('shadow-color-value').textContent = 'RGB: 0.85, 0.08, 0.02';
-                document.getElementById('midtone-color-value').textContent = 'RGB: 1.0, 0.12, 0.03';
-                document.getElementById('highlight-color-value').textContent = 'RGB: 1.0, 0.35, 0.08';
-                document.getElementById('glow-color-value').textContent = 'RGB: 1.0, 0.40, 0.10';
+                document.getElementById('shadow-color-value').textContent = 'RGB: 1.00, 0.58, 0.00';
+                document.getElementById('midtone-color-value').textContent = 'RGB: 0.71, 0.43, 0.03';
+                document.getElementById('highlight-color-value').textContent = 'RGB: 1.00, 0.28, 0.10';
+                document.getElementById('glow-color-value').textContent = 'RGB: 0.09, 0.09, 0.09';
 
-                console.log('🎨 Colors reset to DEEP RED blood moon defaults');
+                console.log('🎨 Colors reset to calibrated defaults (2025-01-15 v2)');
             }
         });
 
@@ -776,6 +806,25 @@
             document.getElementById('darkening-value').textContent = value.toFixed(2);
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.eclipseIntensity.value = value;
+            }
+        });
+
+        // Brightness Model Toggle
+        document.getElementById('brightness-model-0').addEventListener('click', () => {
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseBrightnessModel.value = 0.0;
+                document.getElementById('brightness-model-0').classList.add('active');
+                document.getElementById('brightness-model-1').classList.remove('active');
+                console.log('🔬 Brightness Model: Centeredness (shadow position-based)');
+            }
+        });
+
+        document.getElementById('brightness-model-1').addEventListener('click', () => {
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseBrightnessModel.value = 1.0;
+                document.getElementById('brightness-model-1').classList.add('active');
+                document.getElementById('brightness-model-0').classList.remove('active');
+                console.log('🔬 Brightness Model: Edge-Based (umbra gradient)');
             }
         });
 
@@ -846,9 +895,16 @@
                         ).join('')}
                     </select>
                     <div class="slider-control" style="margin: 0;">
-                        <div class="slider-label">
-                            <span style="font-size: 11px;">Strength</span>
-                            <span class="slider-value" style="font-size: 11px;">${layer.strength.toFixed(1)}</span>
+                        <div class="slider-label" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                                <span style="font-size: 11px;">Strength</span>
+                                <div class="precision-toggle" data-action="precision" style="display: flex; gap: 2px; font-size: 9px; opacity: 0.7;">
+                                    <button class="precision-btn active" data-step="0.1" style="padding: 2px 4px; background: rgba(255,255,255,0.2); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.1</button>
+                                    <button class="precision-btn" data-step="0.01" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.01</button>
+                                    <button class="precision-btn" data-step="0.001" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.001</button>
+                                </div>
+                            </div>
+                            <span class="slider-value" style="font-size: 11px; font-family: 'Courier New', monospace; min-width: 45px; text-align: right;">${layer.strength.toFixed(3)}</span>
                         </div>
                         <input type="range" class="layer-strength-slider" data-action="strength"
                                min="0" max="5" step="0.1" value="${layer.strength}">
@@ -899,15 +955,48 @@
                 updateShaderLayers();
             });
 
+            // Precision mode toggle buttons
+            const precisionButtons = card.querySelectorAll('.precision-btn');
+            precisionButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Update button states
+                    precisionButtons.forEach(b => {
+                        b.classList.remove('active');
+                        b.style.background = 'rgba(255,255,255,0.1)';
+                    });
+                    btn.classList.add('active');
+                    btn.style.background = 'rgba(255,255,255,0.2)';
+
+                    // Update slider step
+                    const step = btn.dataset.step;
+                    strengthSlider.step = step;
+
+                    // Update display precision
+                    const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+                    card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
+
+                    console.log(`🎯 Layer ${layer.position} precision: ${step}`);
+                });
+            });
+
             // Strength slider - update in real-time during drag
             const strengthSlider = card.querySelector('[data-action="strength"]');
             strengthSlider.addEventListener('input', (e) => {
                 layer.strength = parseFloat(e.target.value);
-                card.querySelector('.slider-value').textContent = layer.strength.toFixed(1);
+
+                // Get current precision from active button
+                const activeBtn = card.querySelector('.precision-btn.active');
+                const step = activeBtn ? activeBtn.dataset.step : '0.1';
+                const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+
+                card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
                 updateShaderLayers(); // Update shader in real-time
             });
             strengthSlider.addEventListener('change', (e) => {
-                console.log(`🎛️ Layer ${layer.position} strength: ${layer.strength.toFixed(1)}`);
+                console.log(`🎛️ Layer ${layer.position} strength: ${layer.strength.toFixed(3)}`);
             });
 
             return card;

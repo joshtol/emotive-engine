@@ -75,6 +75,9 @@ uniform vec3 eclipseMidtoneColor;
 uniform vec3 eclipseHighlightColor;
 uniform vec3 eclipseGlowColor;
 
+// Brightness model toggle (0 = centeredness-based, 1 = edge-based)
+uniform float eclipseBrightnessModel;
+
 // Blend Layer Uniforms (up to 4 layers)
 uniform float layer1Mode;
 uniform float layer1Strength;
@@ -174,70 +177,119 @@ void main() {
         // TOTALITY FACTOR: Based on how centered the shadow is on the moon
         // When shadowX near 0.0 (centered), we're at totality - brightens and reddens
         // When shadowX far from 0.0 (off to side), we're partial - stays dark and sharp
+        // VERY WIDE RANGE: 0.6 range - blood moon glow visible through most of shadow sweep
         float shadowCenteredness = 1.0 - smoothstep(0.0, 0.6, abs(eclipseShadowPos.x));
         float totalityFactor = shadowCenteredness;
 
-        // UMBRA DARKENING: Nearly black during partials, MUCH LIGHTER during totality
-        // Partials (shadow off-center): 95% darkening (nearly black)
-        // Totality (shadow centered): 30% darkening (visible, bright blood moon)
-        float umbraDarkeningAmount = mix(0.95, 0.30, totalityFactor);
+        // UMBRA DARKENING: Less aggressive to prevent total black
+        // Partials (shadow off-center): 70% darkening (visible dark amber glow)
+        // Totality (shadow centered): 30% darkening (bright blood moon)
+        // NEVER goes to total black - amber always visible
+        float umbraDarkeningAmount = mix(0.70, 0.30, totalityFactor);
         float umbraDarkening = umbra * eclipseProgress;
+
+        // Apply base darkening first
         finalColor *= (1.0 - umbraDarkening * umbraDarkeningAmount);
 
         // PENUMBRA: Lighter darkening (Earth partially blocks sunlight)
         float penumbraDarkening = (penumbra - umbra) * eclipseProgress;
         finalColor *= (1.0 - penumbraDarkening * 0.20);
 
-        // BLOOD MOON COLOR: Only appears when shadow is centered (totality)
-        // Partials (off-center) stay gray/black, totality (centered) becomes red
-        vec3 bloodMoonTint = mix(vec3(1.0), eclipseMidtoneColor, umbra * totalityFactor);
+        // BLOOD MOON COLOR: Applied throughout entire eclipse, not just totality
+        // Matches real lunar eclipse behavior - color present at all phases
+        // Use totality factor to control BRIGHTNESS, not color presence
+        float colorStrength = umbra; // Color appears wherever umbra shadow is present
+        vec3 bloodMoonTint = mix(vec3(1.0), eclipseMidtoneColor, colorStrength);
         finalColor *= bloodMoonTint;
 
-        // EMISSIVE GLOW: Atmospheric scattering only during totality - BOOSTED for brightness
-        vec3 atmosphereGlow = eclipseMidtoneColor * emissiveStrength * 0.8 * umbra * totalityFactor;
+        // REALISTIC ECLIPSE PROGRESSION (corrected):
+        // Shadow sweeps LEFT → RIGHT but NEVER fully covers moon during partials
+        // A bright crescent ALWAYS remains visible (shadow stops before covering moon)
+        // Just before totality: shadow nearly covers moon, blood moon glow appears
+        // The glow spreads FROM the visible bright crescent INTO the shadowed area
+        // During totality: shadow finally covers entire moon, full blood moon
+
+        vec2 pixelPos = vUv - vec2(0.5, 0.5);
+        float pixelX = pixelPos.x;
+
+        // THE LIT CRESCENT: Always visible during partial phases
+        // During partials, the moon is partially lit (outside umbra)
+        // Only during totality does the shadow fully cover the moon
+
+        // Where is the bright crescent? Opposite side from shadow
+        // Approaching (shadowX < 0): crescent on RIGHT (positive X)
+        // Leaving (shadowX > 0): crescent on LEFT (negative X)
+        float crescentSide = -sign(eclipseShadowPos.x);
+
+        // CRESCENT EDGE: Where shadow meets lit surface
+        // This is always VISIBLE during partials - never goes to zero
+        float umbraEdgeX = eclipseShadowPos.x + (umbraRadius * crescentSide);
+
+        // Distance from this pixel to the lit crescent edge
+        // Positive = inside shadow, negative = in lit crescent
+        float distFromLitEdge = (pixelX - umbraEdgeX) * crescentSide;
+
+        // GRADIENT: Blood moon glow spreads from the LIT CRESCENT
+        // Only pixels INSIDE the shadow get the gradient
+        // Gradient is strongest at the umbra edge (where crescent is)
+        float crescentGradient = smoothstep(0.5, 0.0, distFromLitEdge);
+
+        // BRIGHTNESS CONTROL: Glow only appears near totality
+        // When shadow is far from center: stays dark
+        // When shadow approaches center: glow spreads from crescent
+        float brightnessControl = umbra * crescentGradient * totalityFactor;
+
+        // During full totality (shadowX ≈ 0), switch to uniform brightness
+        brightnessControl = mix(brightnessControl, umbra * totalityFactor, totalityFactor);
+
+        // EMISSIVE GLOW: Blood moon color spreading from crescent
+        float glowStrength = mix(0.0, 1.0, brightnessControl);
+        vec3 atmosphereGlow = eclipseMidtoneColor * emissiveStrength * glowStrength * umbra;
         finalColor += atmosphereGlow;
 
-        // RIM GLOW: Brightest during totality - BOOSTED for visible edge glow
-        float limbGlow = pow(1.0 - rimFactor, 3.0) * umbra * totalityFactor;
-        finalColor += eclipseGlowColor * limbGlow * emissiveStrength * 1.2;
+        // RIM GLOW: Atmospheric limb brightening
+        float limbGlowStrength = mix(0.0, 1.5, brightnessControl);
+        float limbGlow = pow(1.0 - rimFactor, 3.0) * umbra;
+        vec3 rimColor = mix(eclipseGlowColor, eclipseHighlightColor, 0.5);
+        finalColor += rimColor * limbGlow * emissiveStrength * limbGlowStrength;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // ECLIPSE BLEND LAYERS (Applied AFTER blood moon color)
-        // Blend layers fade in/out based on totality factor (shadow centeredness)
-        // Only fully visible at totality (shadow centered), fade away during partials
+        // Applied throughout eclipse wherever umbra is present
+        // Strength modulated by totality factor for smooth brightness transitions
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Layer 1: Linear Burn @ 0.9 - strength is blend color, faded by totality
+        // Layer 1: Linear Burn @ 0.634
         if (layer1Enabled > 0.5 && eclipseProgress > 0.1) {
-            vec3 blendColor1 = vec3(layer1Strength); // Strength IS the blend color (0.0-1.0)
+            vec3 blendColor1 = vec3(min(layer1Strength, 1.0));
             int mode1 = int(layer1Mode + 0.5);
-            vec3 blended1 = applyBlendMode(finalColor, blendColor1, mode1);
-            // Mix based on totality factor - full blend at totality, none during partials
-            finalColor = mix(finalColor, blended1, totalityFactor);
+            vec3 blended1 = clamp(applyBlendMode(finalColor, blendColor1, mode1), 0.0, 1.0);
+            // Apply at FULL strength wherever umbra exists
+            finalColor = clamp(mix(finalColor, blended1, umbra), 0.0, 1.0);
         }
 
-        // Layer 2: User calibration layer - strength is blend color, faded by totality
+        // Layer 2: Multiply @ 3.086 - Brightness enhancement
         if (layer2Enabled > 0.5 && eclipseProgress > 0.1) {
-            vec3 blendColor2 = vec3(layer2Strength); // Strength IS the blend color
-            int mode2 = int(layer2Mode + 0.5);
-            vec3 blended2 = applyBlendMode(finalColor, blendColor2, mode2);
-            finalColor = mix(finalColor, blended2, totalityFactor);
+            // Apply full brightness boost wherever umbra exists
+            vec3 brightened = clamp(finalColor * min(layer2Strength, 5.0), 0.0, 1.0);
+            finalColor = mix(finalColor, brightened, umbra);
         }
 
-        // Layer 3: User calibration layer - strength is blend color, faded by totality
+        // Layer 3: Hard Light @ 0.351
         if (layer3Enabled > 0.5 && eclipseProgress > 0.1) {
-            vec3 blendColor3 = vec3(layer3Strength); // Strength IS the blend color
+            vec3 blendColor3 = vec3(min(layer3Strength, 1.0));
             int mode3 = int(layer3Mode + 0.5);
-            vec3 blended3 = applyBlendMode(finalColor, blendColor3, mode3);
-            finalColor = mix(finalColor, blended3, totalityFactor);
+            vec3 blended3 = clamp(applyBlendMode(finalColor, blendColor3, mode3), 0.0, 1.0);
+            // Apply at FULL strength wherever umbra exists
+            finalColor = clamp(mix(finalColor, blended3, umbra), 0.0, 1.0);
         }
 
-        // Layer 4: Manual UI layer - strength is blend color, faded by totality
+        // Layer 4: Manual UI layer
         if (layer4Enabled > 0.5 && eclipseProgress > 0.1) {
-            vec3 blendColor4 = vec3(layer4Strength); // Strength IS the blend color
+            vec3 blendColor4 = vec3(min(layer4Strength, 1.0));
             int mode4 = int(layer4Mode + 0.5);
-            vec3 blended4 = applyBlendMode(finalColor, blendColor4, mode4);
-            finalColor = mix(finalColor, blended4, totalityFactor);
+            vec3 blended4 = clamp(applyBlendMode(finalColor, blendColor4, mode4), 0.0, 1.0);
+            finalColor = clamp(mix(finalColor, blended4, umbra), 0.0, 1.0);
         }
     }
 

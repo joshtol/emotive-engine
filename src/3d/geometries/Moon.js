@@ -695,31 +695,32 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
             emissiveStrength: { value: 0.48 },
             eclipseShadowPos: { value: [-2.0, 0.0] },
             eclipseShadowRadius: { value: 1.2 },
-            // Eclipse color grading
-            eclipseShadowColor: { value: [0.85, 0.08, 0.02] },
-            eclipseMidtoneColor: { value: [1.0, 0.12, 0.03] },
-            eclipseHighlightColor: { value: [1.0, 0.35, 0.08] },
-            eclipseGlowColor: { value: [1.0, 0.40, 0.10] },
+            // Eclipse color grading - CALIBRATED from user screenshot (2025-01-15 v2)
+            eclipseShadowColor: { value: [1.00, 0.58, 0.00] },      // Bright orange umbra core
+            eclipseMidtoneColor: { value: [0.71, 0.43, 0.03] },     // Medium brownish-orange main body (PRIMARY COLOR)
+            eclipseHighlightColor: { value: [1.00, 0.28, 0.10] },   // Bright red-orange atmospheric rim
+            eclipseGlowColor: { value: [0.09, 0.09, 0.09] },        // Near-black limb rim (EDGE BRIGHTNESS)
+            eclipseBrightnessModel: { value: 0.0 },                 // 0 = centeredness, 1 = edge-based
 
-            // Blend Multiplexer Layer 1 - Color Dodge @ 0.7 (calibrated for blood moon)
-            layer1Mode: { value: 3.0 },  // 3 = Color Dodge
-            layer1Strength: { value: 0.7 },  // Calibrated strength
-            layer1Enabled: { value: 1.0 },  // ENABLED
+            // Blend Multiplexer Layer 1 - Vivid Light @ 0.322
+            layer1Mode: { value: 9.0 },  // 9 = Vivid Light
+            layer1Strength: { value: 0.322 },
+            layer1Enabled: { value: 1.0 },
 
-            // Blend Multiplexer Layer 2 - Linear Burn @ 0.8 (calibrated for blood moon)
-            layer2Mode: { value: 1.0 },  // 1 = Linear Burn
-            layer2Strength: { value: 0.8 },  // Calibrated strength
-            layer2Enabled: { value: 1.0 },  // ENABLED
+            // Blend Multiplexer Layer 2 - Multiply @ 2.785
+            layer2Mode: { value: 0.0 },  // 0 = Multiply
+            layer2Strength: { value: 2.785 },
+            layer2Enabled: { value: 1.0 },
 
-            // Blend Multiplexer Layer 3 - Overlay @ 0.8 (calibrated for blood moon)
-            layer3Mode: { value: 5.0 },  // 5 = Overlay
-            layer3Strength: { value: 0.8 },  // Calibrated strength
-            layer3Enabled: { value: 1.0 },  // ENABLED
+            // Blend Multiplexer Layer 3 - Overlay @ 0.199
+            layer3Mode: { value: 7.0 },  // 7 = Overlay
+            layer3Strength: { value: 0.199 },
+            layer3Enabled: { value: 1.0 },
 
-            // Blend Multiplexer Layer 4 - User customizable (4th layer support)
-            layer4Mode: { value: 0.0 },  // 0 = Multiply (default)
-            layer4Strength: { value: 2.0 },
-            layer4Enabled: { value: 0.0 }  // Disabled by default
+            // Blend Multiplexer Layer 4 - DISABLED
+            layer4Mode: { value: 0.0 },
+            layer4Strength: { value: 0.0 },
+            layer4Enabled: { value: 0.0 }
         },
         vertexShader,
         fragmentShader,
