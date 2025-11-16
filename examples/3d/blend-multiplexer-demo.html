@@ -748,6 +748,27 @@
                     document.getElementById('emissive-slider').value = emissiveGlow;
                     document.getElementById('emissive-value').textContent = emissiveGlow.toFixed(2);
                 }
+
+                // SHADOW DARKNESS RAMP: Automatic darkness control during eclipse sweep
+                // -0.70 to -0.50: darkness drops from 1.0 to 0.0 (moon brightens)
+                // -0.50 to 0.0: darkness ramps back up from 0.0 to 1.0 (shadow strengthens)
+                let shadowDarkness = 1.0; // Default full darkness
+
+                if (value >= -0.70 && value <= 0.0) {
+                    if (value >= -0.70 && value <= -0.50) {
+                        // -0.70 to -0.50: Quick drop from 1.0 to 0.0
+                        const dropPos = (value + 0.70) / 0.20; // 0 at -0.70, 1 at -0.50
+                        shadowDarkness = 1.0 - dropPos; // 1.0 → 0.0
+                    } else {
+                        // -0.50 to 0.0: Ramp back up from 0.0 to 1.0
+                        const rampPos = (value + 0.50) / 0.50; // 0 at -0.50, 1 at 0.0
+                        shadowDarkness = rampPos; // 0.0 → 1.0
+                    }
+
+                    mascot.core3D.customMaterial.uniforms.shadowDarkness.value = shadowDarkness;
+                    document.getElementById('shadow-darkness-slider').value = shadowDarkness;
+                    document.getElementById('shadow-darkness-value').textContent = shadowDarkness.toFixed(2);
+                }
             }
         });
 
