@@ -594,6 +594,30 @@
             mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = 0;
         }
 
+        // Initialize blood moon eclipse on load
+        setTimeout(() => {
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                // Start at partial eclipse position (-0.65)
+                const initialShadowX = -0.65;
+                mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value = [initialShadowX, 0.0];
+                mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = 1.2;
+                mascot.core3D.customMaterial.uniforms.eclipseProgress.value = 1.0;
+                mascot.core3D.customMaterial.uniforms.emissiveStrength.value = 0.3;
+
+                // Update UI sliders
+                document.getElementById('shadow-x-slider').value = initialShadowX;
+                document.getElementById('shadow-x-value').textContent = initialShadowX.toFixed(2);
+                document.getElementById('eclipse-progress-slider').value = 1.0;
+                document.getElementById('eclipse-progress-value').textContent = '1.00';
+
+                // Activate partial eclipse button
+                document.querySelectorAll('[data-eclipse]').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('[data-eclipse="partial"]').classList.add('active');
+
+                console.log('🩸 Blood moon initialized at partial eclipse (shadowX: -0.65)');
+            }
+        }, 1200);
+
         // Ensure auto-rotate is OFF for tidal locking (force disable)
         setTimeout(() => {
             console.log('🔍 Checking mascot structure:', {
@@ -758,6 +782,31 @@
                 mascot.core3D.customMaterial.uniforms.eclipseProgress.value = autoProgress;
                 document.getElementById('eclipse-progress-slider').value = autoProgress;
                 document.getElementById('eclipse-progress-value').textContent = autoProgress.toFixed(2);
+
+                // GLOW RAMP: From -0.65 to 0.0, emissive glow ramps up quickly then fades
+                // -0.65: emissive = 0.8 (bright glow as shadow approaches)
+                // -0.3: emissive = 1.0 (peak glow)
+                // 0.0: emissive = 0.3 (normal at totality)
+                let emissiveGlow = 0.3; // Default emissive strength
+
+                if (value >= -0.65 && value <= 0.0) {
+                    // Normalize position from -0.65 to 0.0 → 0 to 1
+                    const normalizedPos = (value + 0.65) / 0.65; // 0 at -0.65, 1 at 0.0
+
+                    if (normalizedPos < 0.4) {
+                        // -0.65 to ~-0.4: Quick ramp up from 0.8 to 1.0
+                        const rampUp = normalizedPos / 0.4; // 0 to 1
+                        emissiveGlow = 0.8 + rampUp * 0.2; // 0.8 → 1.0
+                    } else {
+                        // ~-0.4 to 0.0: Gradual fade from 1.0 to 0.3
+                        const fadeDown = (normalizedPos - 0.4) / 0.6; // 0 to 1
+                        emissiveGlow = 1.0 - fadeDown * 0.7; // 1.0 → 0.3
+                    }
+
+                    mascot.core3D.customMaterial.uniforms.emissiveStrength.value = emissiveGlow;
+                    document.getElementById('emissive-slider').value = emissiveGlow;
+                    document.getElementById('emissive-value').textContent = emissiveGlow.toFixed(2);
+                }
 
                 updateEffectiveProgressDisplay();
             }
