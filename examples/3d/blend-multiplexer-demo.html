@@ -443,28 +443,10 @@
 
             <div class="slider-control">
                 <div class="slider-label">
-                    <span>Eclipse Progress (Input)</span>
+                    <span>Eclipse Progress</span>
                     <span class="slider-value" id="eclipse-progress-value">0.0</span>
                 </div>
                 <input type="range" id="eclipse-progress-slider" min="0" max="1" step="0.01" value="0.0">
-            </div>
-
-            <div style="padding: 10px; background: rgba(200,100,50,0.2); border-radius: 5px; border: 1px solid rgba(255,150,100,0.4); margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <span style="font-size: 12px; font-weight: bold;">Effective Progress (Modulated)</span>
-                    <span style="font-size: 14px; font-family: 'Courier New', monospace; color: #ffaa66;" id="effective-progress-value">0.00</span>
-                </div>
-                <div style="font-size: 10px; color: rgba(255,255,255,0.7);">
-                    Logarithmically fades outside ±0.55 range (1.0 → 0.11)
-                </div>
-            </div>
-
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Darkening Intensity</span>
-                    <span class="slider-value" id="darkening-value">0.0</span>
-                </div>
-                <input type="range" id="darkening-slider" min="0" max="1" step="0.01" value="0.0">
             </div>
 
             <div class="slider-control">
@@ -625,23 +607,6 @@
 
         console.log('✅ Blend Multiplexer demo initialized');
 
-        // Calculate effective eclipse progress (just returns base progress now)
-        function calculateEffectiveProgress(shadowX, baseProgress) {
-            // Progress is now pre-modulated by shadow position slider
-            return baseProgress;
-        }
-
-        // Update effective progress display
-        function updateEffectiveProgressDisplay() {
-            if (mascot.core3D?.customMaterial?.uniforms) {
-                const shadowX = mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value[0];
-                const baseProgress = mascot.core3D.customMaterial.uniforms.eclipseProgress.value;
-                const effective = calculateEffectiveProgress(shadowX, baseProgress);
-
-                document.getElementById('effective-progress-value').textContent = effective.toFixed(3);
-            }
-        }
-
         // Blood Moon (Lunar Eclipse) controls with shadow sweep
         // All buttons just move the shadow position - shader handles the transition
         document.querySelectorAll('[data-eclipse]').forEach(button => {
@@ -683,11 +648,6 @@
                     document.getElementById('shadow-x-value').textContent = shadowX.toFixed(2);
                     document.getElementById('eclipse-progress-slider').value = eclipseProgress;
                     document.getElementById('eclipse-progress-value').textContent = eclipseProgress.toFixed(2);
-                    document.getElementById('darkening-slider').value = eclipseProgress;
-                    document.getElementById('darkening-value').textContent = eclipseProgress.toFixed(2);
-
-                    // Update effective progress display
-                    updateEffectiveProgressDisplay();
 
                     console.log(`🩸 Eclipse: ${eclipseType} (shadowX: ${shadowX})`);
 
@@ -721,7 +681,6 @@
             document.getElementById('eclipse-progress-value').textContent = value.toFixed(2);
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.eclipseProgress.value = value;
-                updateEffectiveProgressDisplay();
             }
         });
 
@@ -757,23 +716,23 @@
                 document.getElementById('eclipse-progress-slider').value = autoProgress;
                 document.getElementById('eclipse-progress-value').textContent = autoProgress.toFixed(2);
 
-                // GLOW RAMP: From -0.65 to 0.0, emissive glow ramps up quickly then fades
-                // -0.65: emissive = 0.8 (bright glow as shadow approaches)
-                // -0.3: emissive = 1.0 (peak glow)
-                // 0.0: emissive = 0.3 (normal at totality)
+                // GLOW RAMP: From -0.65 to 0.0, emissive glow ramps up VERY quickly then fades
+                // -0.65: emissive = 0.9 (instant bright glow as shadow approaches)
+                // -0.5: emissive = 1.0 (peak glow - very fast ramp)
+                // 0.0: emissive = 0.3 (gradual fade to normal at totality)
                 let emissiveGlow = 0.3; // Default emissive strength
 
                 if (value >= -0.65 && value <= 0.0) {
                     // Normalize position from -0.65 to 0.0 → 0 to 1
                     const normalizedPos = (value + 0.65) / 0.65; // 0 at -0.65, 1 at 0.0
 
-                    if (normalizedPos < 0.4) {
-                        // -0.65 to ~-0.4: Quick ramp up from 0.8 to 1.0
-                        const rampUp = normalizedPos / 0.4; // 0 to 1
-                        emissiveGlow = 0.8 + rampUp * 0.2; // 0.8 → 1.0
+                    if (normalizedPos < 0.23) {
+                        // -0.65 to ~-0.5: VERY quick ramp up from 0.9 to 1.0 (15% of range)
+                        const rampUp = normalizedPos / 0.23; // 0 to 1
+                        emissiveGlow = 0.9 + rampUp * 0.1; // 0.9 → 1.0
                     } else {
-                        // ~-0.4 to 0.0: Gradual fade from 1.0 to 0.3
-                        const fadeDown = (normalizedPos - 0.4) / 0.6; // 0 to 1
+                        // ~-0.5 to 0.0: Gradual fade from 1.0 to 0.3 (85% of range)
+                        const fadeDown = (normalizedPos - 0.23) / 0.77; // 0 to 1
                         emissiveGlow = 1.0 - fadeDown * 0.7; // 1.0 → 0.3
                     }
 
@@ -781,8 +740,6 @@
                     document.getElementById('emissive-slider').value = emissiveGlow;
                     document.getElementById('emissive-value').textContent = emissiveGlow.toFixed(2);
                 }
-
-                updateEffectiveProgressDisplay();
             }
         });
 
