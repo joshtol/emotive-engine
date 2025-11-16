@@ -159,6 +159,10 @@ void main() {
     // ═══════════════════════════════════════════════════════════════════════════
     // Only apply eclipse if shadow is actually near the moon (shadowX > -1.5)
     if (eclipseProgress > 0.001 && eclipseShadowPos.x > -1.5) {
+        // Eclipse progress is now pre-modulated by UI based on shadow position
+        // No need for shader-side modulation
+        float effectiveProgress = eclipseProgress;
+
         // Calculate distance from shadow center in UV space
         vec2 shadowCenter = vec2(eclipseShadowPos.x, eclipseShadowPos.y);
         vec2 moonCenter = vUv - vec2(0.5, 0.5); // Center UV coordinates
@@ -186,13 +190,13 @@ void main() {
         // Totality (shadow centered): 30% darkening (bright blood moon)
         // NEVER goes to total black - amber always visible
         float umbraDarkeningAmount = mix(0.70, 0.30, totalityFactor);
-        float umbraDarkening = umbra * eclipseProgress;
+        float umbraDarkening = umbra * effectiveProgress;
 
         // Apply base darkening first
         finalColor *= (1.0 - umbraDarkening * umbraDarkeningAmount);
 
         // PENUMBRA: Lighter darkening (Earth partially blocks sunlight)
-        float penumbraDarkening = (penumbra - umbra) * eclipseProgress;
+        float penumbraDarkening = (penumbra - umbra) * effectiveProgress;
         finalColor *= (1.0 - penumbraDarkening * 0.20);
 
         // BLOOD MOON COLOR: Applied throughout entire eclipse, not just totality
@@ -260,7 +264,7 @@ void main() {
         // ═══════════════════════════════════════════════════════════════════════════
 
         // Layer 1: Linear Burn @ 0.634
-        if (layer1Enabled > 0.5 && eclipseProgress > 0.1) {
+        if (layer1Enabled > 0.5 && effectiveProgress > 0.1) {
             vec3 blendColor1 = vec3(min(layer1Strength, 1.0));
             int mode1 = int(layer1Mode + 0.5);
             vec3 blended1 = clamp(applyBlendMode(finalColor, blendColor1, mode1), 0.0, 1.0);
@@ -269,14 +273,14 @@ void main() {
         }
 
         // Layer 2: Multiply @ 3.086 - Brightness enhancement
-        if (layer2Enabled > 0.5 && eclipseProgress > 0.1) {
+        if (layer2Enabled > 0.5 && effectiveProgress > 0.1) {
             // Apply full brightness boost wherever umbra exists
             vec3 brightened = clamp(finalColor * min(layer2Strength, 5.0), 0.0, 1.0);
             finalColor = mix(finalColor, brightened, umbra);
         }
 
         // Layer 3: Hard Light @ 0.351
-        if (layer3Enabled > 0.5 && eclipseProgress > 0.1) {
+        if (layer3Enabled > 0.5 && effectiveProgress > 0.1) {
             vec3 blendColor3 = vec3(min(layer3Strength, 1.0));
             int mode3 = int(layer3Mode + 0.5);
             vec3 blended3 = clamp(applyBlendMode(finalColor, blendColor3, mode3), 0.0, 1.0);
@@ -285,7 +289,7 @@ void main() {
         }
 
         // Layer 4: Manual UI layer
-        if (layer4Enabled > 0.5 && eclipseProgress > 0.1) {
+        if (layer4Enabled > 0.5 && effectiveProgress > 0.1) {
             vec3 blendColor4 = vec3(min(layer4Strength, 1.0));
             int mode4 = int(layer4Mode + 0.5);
             vec3 blended4 = clamp(applyBlendMode(finalColor, blendColor4, mode4), 0.0, 1.0);
