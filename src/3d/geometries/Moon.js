@@ -387,7 +387,7 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
             bloodMoonColor: { value: [0.85, 0.18, 0.08] }, // Deep reddish-orange
             blendMode: { value: 0.0 }, // 0=Multiply, 1=LinearBurn, 2=ColorBurn, 3=ColorDodge, 4=Screen, 5=Overlay
             blendStrength: { value: 2.0 }, // Blend strength multiplier (0-5)
-            emissiveStrength: { value: 0.3 }, // Emissive glow strength
+            emissiveStrength: { value: 0.39 }, // Emissive glow strength (peak at total eclipse)
             eclipseShadowPos: { value: [-2.0, 0.0] },
             eclipseShadowRadius: { value: 1.2 },
             // Eclipse color grading
@@ -692,7 +692,7 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
             eclipseProgress: { value: 0.0 },
             eclipseIntensity: { value: 0.0 },
             bloodMoonColor: { value: [0.85, 0.18, 0.08] },
-            emissiveStrength: { value: 0.48 },
+            emissiveStrength: { value: 0.39 }, // Peak emissive glow at total eclipse
             eclipseShadowPos: { value: [-2.0, 0.0] },
             eclipseShadowRadius: { value: 1.2 },
             // Eclipse color grading - CALIBRATED from user screenshot (2025-01-15 v2)
@@ -701,7 +701,7 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
             eclipseHighlightColor: { value: [1.00, 0.28, 0.10] },   // Bright red-orange atmospheric rim
             eclipseGlowColor: { value: [0.09, 0.09, 0.09] },        // Near-black limb rim (EDGE BRIGHTNESS)
             eclipseBrightnessModel: { value: 0.0 },                 // 0 = centeredness, 1 = edge-based
-            shadowDarkness: { value: 1.0 },                         // 0.0 = no darkening, 1.0 = maximum darkening
+            shadowDarkness: { value: 0.53 },                        // Peak shadow darkness at total eclipse (0.0 = no darkening, 1.0 = maximum)
 
             // Blend Multiplexer Layer 1 - Vivid Light @ 0.322
             layer1Mode: { value: 9.0 },  // 9 = Vivid Light
