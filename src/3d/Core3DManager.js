@@ -60,13 +60,16 @@ export class Core3DManager {
 
         this.geometry = this.geometryConfig.geometry;
 
+        // Store materialVariant for use when morphing geometries
+        this.materialVariant = options.materialVariant || null;
+
         // Check if this geometry requires custom material (e.g., moon with textures, sun with emissive)
         // Use MaterialFactory for centralized material creation
         let customMaterial = null;
         const materialResult = createCustomMaterial(this.geometryType, this.geometryConfig, {
             glowColor: this.glowColor || [1.0, 1.0, 0.95],
             glowIntensity: this.glowIntensity || 1.0,
-            materialVariant: options.materialVariant || null
+            materialVariant: this.materialVariant
         });
 
         if (materialResult) {
@@ -763,7 +766,8 @@ export class Core3DManager {
             let customMaterial = null;
             const materialResult = createCustomMaterial(this._targetGeometryType, this._targetGeometryConfig, {
                 glowColor: this.glowColor || [1.0, 1.0, 0.95],
-                glowIntensity: this.glowIntensity || 1.0
+                glowIntensity: this.glowIntensity || 1.0,
+                materialVariant: this.materialVariant
             });
 
             if (materialResult) {
