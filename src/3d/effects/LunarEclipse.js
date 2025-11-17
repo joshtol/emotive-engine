@@ -81,11 +81,11 @@ export class LunarEclipse {
             break;
         case 'penumbral':
             this.targetProgress = 0.3; // 30% coverage (subtle darkening)
-            this.targetShadowX = -0.65; // Shadow edge just touching moon
+            this.targetShadowX = -1.0; // Shadow edge just touching moon
             break;
         case 'partial':
             this.targetProgress = 0.65; // 65% coverage (edge of umbra)
-            this.targetShadowX = -0.40; // Shadow partially covering moon
+            this.targetShadowX = -0.85; // Shadow partially covering moon
             break;
         case 'total':
             this.targetProgress = 1.0; // 100% coverage (full blood moon)
