@@ -576,19 +576,24 @@
                 mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value = [initialShadowX, 0.0];
                 mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = 1.2;
                 mascot.core3D.customMaterial.uniforms.eclipseProgress.value = 1.0;
-                mascot.core3D.customMaterial.uniforms.emissiveStrength.value = 0.3;
+                mascot.core3D.customMaterial.uniforms.emissiveStrength.value = 0.46; // Peak at totality
+                mascot.core3D.customMaterial.uniforms.shadowDarkness.value = 0.48; // Peak at totality
 
                 // Update UI sliders
                 document.getElementById('shadow-x-slider').value = initialShadowX;
                 document.getElementById('shadow-x-value').textContent = initialShadowX.toFixed(2);
                 document.getElementById('eclipse-progress-slider').value = 1.0;
                 document.getElementById('eclipse-progress-value').textContent = '1.00';
+                document.getElementById('emissive-slider').value = 0.46;
+                document.getElementById('emissive-value').textContent = '0.46';
+                document.getElementById('shadow-darkness-slider').value = 0.48;
+                document.getElementById('shadow-darkness-value').textContent = '0.48';
 
                 // Activate total eclipse button
                 document.querySelectorAll('[data-eclipse]').forEach(btn => btn.classList.remove('active'));
                 document.querySelector('[data-eclipse="total"]').classList.add('active');
 
-                console.log('🩸 Blood moon initialized at total eclipse (shadowX: 0.0)');
+                console.log('🩸 Blood moon initialized at total eclipse (shadowX: 0.0, emissive: 0.46, darkness: 0.48)');
             }
         }, 1200);
 
@@ -734,24 +739,19 @@
                 document.getElementById('eclipse-progress-slider').value = autoProgress;
                 document.getElementById('eclipse-progress-value').textContent = autoProgress.toFixed(2);
 
-                // GLOW RAMP: From -0.65 to 0.0, emissive glow ramps up VERY quickly then fades
-                // -0.65: emissive = 0.9 (instant bright glow as shadow approaches)
-                // -0.5: emissive = 1.0 (peak glow - very fast ramp)
-                // 0.0: emissive = 0.3 (gradual fade to normal at totality)
+                // EMISSIVE GLOW RAMP: Peaks at 0.46 at total eclipse (shadowX = 0.0)
+                // Gradient before and after totality
                 let emissiveGlow = 0.3; // Default emissive strength
 
-                if (value >= -0.65 && value <= 0.0) {
-                    // Normalize position from -0.65 to 0.0 → 0 to 1
-                    const normalizedPos = (value + 0.65) / 0.65; // 0 at -0.65, 1 at 0.0
-
-                    if (normalizedPos < 0.23) {
-                        // -0.65 to ~-0.5: VERY quick ramp up from 0.9 to 1.0 (15% of range)
-                        const rampUp = normalizedPos / 0.23; // 0 to 1
-                        emissiveGlow = 0.9 + rampUp * 0.1; // 0.9 → 1.0
+                if (value >= -0.70 && value <= 0.5) {
+                    if (value >= -0.70 && value < 0.0) {
+                        // Before totality: ramp up from 0.3 to 0.46
+                        const rampPos = (value + 0.70) / 0.70; // 0 at -0.70, 1 at 0.0
+                        emissiveGlow = 0.3 + rampPos * 0.16; // 0.3 → 0.46
                     } else {
-                        // ~-0.5 to 0.0: Gradual fade from 1.0 to 0.3 (85% of range)
-                        const fadeDown = (normalizedPos - 0.23) / 0.77; // 0 to 1
-                        emissiveGlow = 1.0 - fadeDown * 0.7; // 1.0 → 0.3
+                        // After totality: ramp down from 0.46 to 0.3
+                        const fadePos = value / 0.5; // 0 at 0.0, 1 at 0.5
+                        emissiveGlow = 0.46 - fadePos * 0.16; // 0.46 → 0.3
                     }
 
                     mascot.core3D.customMaterial.uniforms.emissiveStrength.value = emissiveGlow;
@@ -759,20 +759,19 @@
                     document.getElementById('emissive-value').textContent = emissiveGlow.toFixed(2);
                 }
 
-                // SHADOW DARKNESS RAMP: Automatic darkness control during eclipse sweep
-                // -0.70 to -0.50: darkness drops from 1.0 to 0.0 (moon brightens)
-                // -0.50 to 0.0: darkness ramps back up from 0.0 to 1.0 (shadow strengthens)
+                // SHADOW DARKNESS RAMP: Peaks at 0.48 at total eclipse (shadowX = 0.0)
+                // Gradient before and after totality
                 let shadowDarkness = 1.0; // Default full darkness
 
-                if (value >= -0.70 && value <= 0.0) {
-                    if (value >= -0.70 && value <= -0.50) {
-                        // -0.70 to -0.50: Quick drop from 1.0 to 0.0
-                        const dropPos = (value + 0.70) / 0.20; // 0 at -0.70, 1 at -0.50
-                        shadowDarkness = 1.0 - dropPos; // 1.0 → 0.0
+                if (value >= -0.70 && value <= 0.5) {
+                    if (value >= -0.70 && value < 0.0) {
+                        // Before totality: ramp down from 1.0 to 0.48
+                        const rampPos = (value + 0.70) / 0.70; // 0 at -0.70, 1 at 0.0
+                        shadowDarkness = 1.0 - rampPos * 0.52; // 1.0 → 0.48
                     } else {
-                        // -0.50 to 0.0: Ramp back up from 0.0 to 1.0
-                        const rampPos = (value + 0.50) / 0.50; // 0 at -0.50, 1 at 0.0
-                        shadowDarkness = rampPos; // 0.0 → 1.0
+                        // After totality: ramp up from 0.48 to 1.0
+                        const rampPos = value / 0.5; // 0 at 0.0, 1 at 0.5
+                        shadowDarkness = 0.48 + rampPos * 0.52; // 0.48 → 1.0
                     }
 
                     mascot.core3D.customMaterial.uniforms.shadowDarkness.value = shadowDarkness;
