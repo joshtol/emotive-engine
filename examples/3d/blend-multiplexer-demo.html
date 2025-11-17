@@ -730,29 +730,40 @@
 
                 // SHADOW DARKNESS RAMP: Peaks at 0.53 at total eclipse (shadowX = 0.0)
                 // Before -0.70: darkness = 1.0 (full darkness)
-                // From -0.70 to -0.55: ramp down from 1.0 to 0.0
+                // From -0.70 to -0.55: ramp down from 1.0 to 0.0 (transition in)
                 // From -0.55 to 0.0: ramp up from 0.0 to 0.53
                 // From 0.0 to 0.5: ramp up from 0.53 to 1.0
+                // From 0.5 to 0.65: ramp down from 1.0 to 0.0 (transition out)
+                // After 0.65: darkness = 0.0 (no darkening)
                 let shadowDarkness = 1.0; // Default full darkness
 
-                if (value >= -0.70 && value <= 0.5) {
+                if (value >= -0.70 && value <= 0.65) {
                     if (value >= -0.70 && value < -0.55) {
-                        // Transition zone: ramp down from 1.0 to 0.0
+                        // Transition in: ramp down from 1.0 to 0.0
                         const rampPos = (value + 0.70) / 0.15; // 0 at -0.70, 1 at -0.55
                         shadowDarkness = 1.0 - rampPos * 1.0; // 1.0 → 0.0
                     } else if (value >= -0.55 && value < 0.0) {
                         // Before totality: ramp up from 0.0 to 0.53
                         const rampPos = (value + 0.55) / 0.55; // 0 at -0.55, 1 at 0.0
                         shadowDarkness = 0.0 + rampPos * 0.53; // 0.0 → 0.53
-                    } else {
+                    } else if (value >= 0.0 && value < 0.5) {
                         // After totality: ramp up from 0.53 to 1.0
                         const rampPos = value / 0.5; // 0 at 0.0, 1 at 0.5
                         shadowDarkness = 0.53 + rampPos * 0.47; // 0.53 → 1.0
+                    } else {
+                        // Transition out: ramp down from 1.0 to 0.0
+                        const rampPos = (value - 0.5) / 0.15; // 0 at 0.5, 1 at 0.65
+                        shadowDarkness = 1.0 - rampPos * 1.0; // 1.0 → 0.0
                     }
 
                     mascot.core3D.customMaterial.uniforms.shadowDarkness.value = shadowDarkness;
                     document.getElementById('shadow-darkness-slider').value = shadowDarkness;
                     document.getElementById('shadow-darkness-value').textContent = shadowDarkness.toFixed(2);
+                } else if (value > 0.65) {
+                    // After transition out: no darkening
+                    mascot.core3D.customMaterial.uniforms.shadowDarkness.value = 0.0;
+                    document.getElementById('shadow-darkness-slider').value = 0.0;
+                    document.getElementById('shadow-darkness-value').textContent = '0.00';
                 }
             }
         });
