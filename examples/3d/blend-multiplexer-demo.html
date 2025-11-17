@@ -729,14 +729,16 @@
                 }
 
                 // SHADOW DARKNESS RAMP: Peaks at 0.53 at total eclipse (shadowX = 0.0)
-                // Gradient before and after totality
-                let shadowDarkness = 1.0; // Default full darkness
+                // At -0.55: darkness = 0.0 (no darkening)
+                // From -0.55 to 0.0: ramp up from 0.0 to 0.53
+                // From 0.0 to 0.5: ramp up from 0.53 to 1.0
+                let shadowDarkness = 1.0; // Default full darkness outside range
 
-                if (value >= -0.70 && value <= 0.5) {
-                    if (value >= -0.70 && value < 0.0) {
-                        // Before totality: ramp down from 1.0 to 0.53
-                        const rampPos = (value + 0.70) / 0.70; // 0 at -0.70, 1 at 0.0
-                        shadowDarkness = 1.0 - rampPos * 0.47; // 1.0 → 0.53
+                if (value >= -0.55 && value <= 0.5) {
+                    if (value >= -0.55 && value < 0.0) {
+                        // Before totality: ramp up from 0.0 to 0.53
+                        const rampPos = (value + 0.55) / 0.55; // 0 at -0.55, 1 at 0.0
+                        shadowDarkness = 0.0 + rampPos * 0.53; // 0.0 → 0.53
                     } else {
                         // After totality: ramp up from 0.53 to 1.0
                         const rampPos = value / 0.5; // 0 at 0.0, 1 at 0.5
@@ -746,6 +748,11 @@
                     mascot.core3D.customMaterial.uniforms.shadowDarkness.value = shadowDarkness;
                     document.getElementById('shadow-darkness-slider').value = shadowDarkness;
                     document.getElementById('shadow-darkness-value').textContent = shadowDarkness.toFixed(2);
+                } else if (value < -0.55) {
+                    // Before the ramp zone: no darkening
+                    mascot.core3D.customMaterial.uniforms.shadowDarkness.value = 0.0;
+                    document.getElementById('shadow-darkness-slider').value = 0.0;
+                    document.getElementById('shadow-darkness-value').textContent = '0.00';
                 }
             }
         });
