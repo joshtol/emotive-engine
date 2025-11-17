@@ -465,23 +465,7 @@
                 <input type="range" id="shadow-darkness-slider" min="0" max="1" step="0.01" value="1.0">
             </div>
 
-            <div style="margin-top: 15px; padding: 10px; background: rgba(50,100,200,0.3); border-radius: 5px; border: 1px solid rgba(100,150,255,0.5);">
-                <h3 style="margin: 0 0 10px 0; font-size: 14px;">🔬 Brightness Model Comparison</h3>
-                <div style="display: flex; gap: 8px;">
-                    <button id="brightness-model-0" class="eclipse-btn active" style="flex: 1; background: rgba(100, 100, 200, 0.3);">
-                        Centeredness
-                    </button>
-                    <button id="brightness-model-1" class="eclipse-btn" style="flex: 1; background: rgba(100, 100, 200, 0.3);">
-                        Edge-Based
-                    </button>
-                </div>
-                <div style="margin-top: 8px; font-size: 11px; color: rgba(255,255,255,0.7);">
-                    <strong>Centeredness:</strong> Symmetric brightness based on shadow position<br>
-                    <strong>Edge-Based:</strong> Brightness follows umbra gradient (realistic)
-                </div>
-            </div>
-
-            <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
+            <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
                 <h3 style="margin: 0 0 10px 0; font-size: 14px;">🎨 Eclipse Color Grading</h3>
 
                 <div style="margin-bottom: 10px;">
@@ -874,25 +858,6 @@
             document.getElementById('shadow-darkness-value').textContent = value.toFixed(2);
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.shadowDarkness.value = value;
-            }
-        });
-
-        // Brightness Model Toggle
-        document.getElementById('brightness-model-0').addEventListener('click', () => {
-            if (mascot.core3D?.customMaterial?.uniforms) {
-                mascot.core3D.customMaterial.uniforms.eclipseBrightnessModel.value = 0.0;
-                document.getElementById('brightness-model-0').classList.add('active');
-                document.getElementById('brightness-model-1').classList.remove('active');
-                console.log('🔬 Brightness Model: Centeredness (shadow position-based)');
-            }
-        });
-
-        document.getElementById('brightness-model-1').addEventListener('click', () => {
-            if (mascot.core3D?.customMaterial?.uniforms) {
-                mascot.core3D.customMaterial.uniforms.eclipseBrightnessModel.value = 1.0;
-                document.getElementById('brightness-model-1').classList.add('active');
-                document.getElementById('brightness-model-0').classList.remove('active');
-                console.log('🔬 Brightness Model: Edge-Based (umbra gradient)');
             }
         });
 
