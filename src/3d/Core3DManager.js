@@ -658,8 +658,8 @@ export class Core3DManager {
      * @param {Object} params - { mode, strength, enabled }
      */
     setBlendLayer(layerIndex, params = {}) {
-        if (this.geometryType !== 'moon' || !this.customMaterial) {
-            console.warn('⚠️ Blend layers only available for moon geometry');
+        if ((this.geometryType !== 'moon' && this.geometryType !== 'sun') || !this.customMaterial) {
+            console.warn('⚠️ Blend layers only available for moon and sun geometry');
             return;
         }
 
@@ -681,8 +681,8 @@ export class Core3DManager {
      * @param {Array} layers - Array of layer configs [{mode, strength, enabled}, ...]
      */
     setAllBlendLayers(layers) {
-        if (this.geometryType !== 'moon' || !this.customMaterial) {
-            console.warn('⚠️ Blend layers only available for moon geometry');
+        if ((this.geometryType !== 'moon' && this.geometryType !== 'sun') || !this.customMaterial) {
+            console.warn('⚠️ Blend layers only available for moon and sun geometry');
             return;
         }
 

@@ -188,101 +188,76 @@
         }
 
         .layer-title {
-            flex: 1;
-            font-size: clamp(10px, 0.9vw, 11px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
+            color: #ff9500;
+        }
+
+        .layer-controls-header {
+            display: flex;
+            gap: 6px;
+        }
+
+        .toggle-btn, .delete-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .toggle-btn {
+            background: rgba(100, 200, 100, 0.3);
+            border: 1px solid rgba(100, 200, 100, 0.5);
+            color: white;
+        }
+
+        .toggle-btn.disabled {
+            background: rgba(200, 100, 100, 0.3);
+            border-color: rgba(200, 100, 100, 0.5);
+            opacity: 0.6;
+        }
+
+        .delete-btn {
+            background: rgba(200, 100, 100, 0.3);
+            border: 1px solid rgba(200, 100, 100, 0.5);
+            color: white;
         }
 
         .layer-controls {
             display: flex;
-            gap: clamp(4px, 0.4vw, 6px);
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .icon-button {
-            padding: clamp(4px, 0.4vw, 6px);
-            min-width: clamp(24px, 2vw, 28px);
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.7);
-            border-radius: clamp(4px, 0.4vw, 5px);
-            cursor: pointer;
-            font-size: clamp(10px, 0.85vw, 11px);
-            transition: all 0.2s;
-        }
-
-        .icon-button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .icon-button.active {
-            background: rgba(100, 200, 255, 0.2);
-            border-color: rgba(100, 200, 255, 0.4);
-            color: #64c8ff;
-        }
-
-        .icon-button.delete {
-            color: rgba(255, 100, 100, 0.7);
-        }
-
-        .icon-button.delete:hover {
-            background: rgba(255, 100, 100, 0.2);
-            border-color: rgba(255, 100, 100, 0.4);
-            color: #ff6464;
-        }
-
-        .mode-select {
+        .layer-select {
             width: 100%;
-            padding: clamp(5px, 0.5vw, 7px);
+            padding: 6px;
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
             color: white;
-            border-radius: clamp(4px, 0.4vw, 5px);
-            font-size: clamp(9px, 0.8vw, 10px);
-            margin-bottom: clamp(6px, 0.6vw, 8px);
-            cursor: pointer;
+            font-size: 12px;
         }
 
-        .strength-control {
-            display: flex;
-            align-items: center;
-            gap: clamp(6px, 0.6vw, 8px);
-        }
-
-        .strength-label {
-            font-size: clamp(9px, 0.8vw, 10px);
-            color: rgba(255, 255, 255, 0.6);
-            min-width: clamp(50px, 5vw, 60px);
-        }
-
-        .strength-slider {
-            flex: 1;
-            height: clamp(18px, 1.5vw, 20px);
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: clamp(4px, 0.4vw, 5px);
-            cursor: pointer;
-            appearance: none;
-        }
-
-        .strength-slider::-webkit-slider-thumb {
-            appearance: none;
-            width: clamp(12px, 1vw, 14px);
-            height: clamp(12px, 1vw, 14px);
-            background: #64c8ff;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .precision-buttons {
-            display: flex;
-            gap: clamp(2px, 0.2vw, 3px);
+        .layer-select option {
+            background: #1a1a2e;
+            color: white;
         }
 
         .precision-btn {
-            padding: clamp(2px, 0.2vw, 3px) clamp(4px, 0.4vw, 5px);
-            font-size: clamp(8px, 0.7vw, 9px);
-            min-width: clamp(30px, 2.5vw, 35px);
+            transition: all 0.15s ease;
+        }
+
+        .precision-btn:hover {
+            background: rgba(255,255,255,0.25) !important;
+            transform: scale(1.05);
+        }
+
+        .precision-btn.active {
+            background: rgba(255,255,255,0.3) !important;
+            font-weight: bold;
         }
 
         .add-layer-btn {
@@ -779,40 +754,192 @@
 
         // Create layer card HTML
         function createLayerCard(layer) {
-            const div = document.createElement('div');
-            div.className = 'layer-card';
-            div.draggable = true;
-            div.dataset.layerId = layer.id;
+            const card = document.createElement('div');
+            card.className = 'layer-card';
+            card.dataset.layerId = layer.id;
+            card.draggable = true;
 
-            div.innerHTML = `
+            card.innerHTML = `
                 <div class="layer-header">
-                    <span class="drag-handle">⋮⋮</span>
-                    <span class="layer-title">Layer ${layer.id}</span>
-                    <div class="layer-controls">
-                        <button class="icon-button toggle-btn ${layer.enabled ? 'active' : ''}" data-layer-id="${layer.id}">
+                    <div class="layer-title">
+                        <span class="drag-handle">⋮⋮</span>
+                        <span>Layer ${layer.id}</span>
+                    </div>
+                    <div class="layer-controls-header">
+                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="toggle">
                             ${layer.enabled ? 'ON' : 'OFF'}
                         </button>
-                        <button class="icon-button delete" data-layer-id="${layer.id}">🗑</button>
+                        <button class="delete-btn" data-action="delete">✕</button>
                     </div>
                 </div>
-                <select class="mode-select" data-layer-id="${layer.id}">
-                    ${blendModeNames.map((name, i) =>
-                        `<option value="${i}" ${i === layer.mode ? 'selected' : ''}>${name}</option>`
-                    ).join('')}
-                </select>
-                <div class="strength-control">
-                    <span class="strength-label">Strength: ${layer.strength.toFixed(3)}</span>
-                    <input type="range" class="strength-slider" data-layer-id="${layer.id}"
-                           min="0" max="5" step="0.001" value="${layer.strength}">
-                    <div class="precision-buttons">
-                        <button class="icon-button precision-btn" data-layer-id="${layer.id}" data-delta="0.1">0.1</button>
-                        <button class="icon-button precision-btn" data-layer-id="${layer.id}" data-delta="0.01">0.01</button>
-                        <button class="icon-button precision-btn" data-layer-id="${layer.id}" data-delta="0.001">0.001</button>
+                <div class="layer-controls">
+                    <select class="layer-select" data-action="mode">
+                        ${blendModeNames.map((name, idx) =>
+                            `<option value="${idx}" ${layer.mode === idx ? 'selected' : ''}>${name}</option>`
+                        ).join('')}
+                    </select>
+                    <div class="slider-control" style="margin: 0;">
+                        <div class="slider-label" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                                <span style="font-size: 11px;">Strength</span>
+                                <div class="precision-toggle" data-action="precision" style="display: flex; gap: 2px; font-size: 9px; opacity: 0.7;">
+                                    <button class="precision-btn active" data-step="0.1" style="padding: 2px 4px; background: rgba(255,255,255,0.2); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.1</button>
+                                    <button class="precision-btn" data-step="0.01" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.01</button>
+                                    <button class="precision-btn" data-step="0.001" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.001</button>
+                                </div>
+                            </div>
+                            <span class="slider-value" style="font-size: 11px; font-family: 'Courier New', monospace; min-width: 45px; text-align: right;">${layer.strength.toFixed(3)}</span>
+                        </div>
+                        <input type="range" class="layer-strength-slider" data-action="strength"
+                               min="0" max="5" step="0.1" value="${layer.strength}">
                     </div>
                 </div>
             `;
 
-            return div;
+            // Drag handle only
+            const dragHandle = card.querySelector('.drag-handle');
+            dragHandle.addEventListener('mousedown', () => {
+                card.draggable = true;
+            });
+
+            // Drag and drop event handlers (from blood-moon-demo)
+            card.addEventListener('dragstart', (e) => {
+                draggedLayer = e.currentTarget;
+                e.currentTarget.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            card.addEventListener('dragend', (e) => {
+                e.currentTarget.classList.remove('dragging');
+                draggedLayer = null;
+
+                // Remove all drag-over states
+                document.querySelectorAll('.layer-card').forEach(card => {
+                    card.classList.remove('drag-over');
+                });
+            });
+
+            card.addEventListener('dragover', (e) => {
+                if (e.preventDefault) {
+                    e.preventDefault();
+                }
+                e.dataTransfer.dropEffect = 'move';
+
+                const afterElement = getDragAfterElement(document.getElementById('layers-container'), e.clientY);
+                const draggable = document.querySelector('.dragging');
+
+                if (afterElement == null) {
+                    document.getElementById('layers-container').appendChild(draggable);
+                } else {
+                    document.getElementById('layers-container').insertBefore(draggable, afterElement);
+                }
+
+                return false;
+            });
+
+            card.addEventListener('drop', (e) => {
+                if (e.stopPropagation) {
+                    e.stopPropagation();
+                }
+
+                // Rebuild layer positions based on DOM order
+                const cards = Array.from(document.getElementById('layers-container').querySelectorAll('.layer-card'));
+                const newOrder = [];
+
+                cards.forEach((card, index) => {
+                    const layerId = parseInt(card.dataset.layerId);
+                    const layer = layers.find(l => l.id === layerId);
+                    if (layer) {
+                        newOrder.push(layer);
+                    }
+                });
+
+                layers = newOrder;
+                updateShaderLayers();
+                console.log('🔄 Reordered layers:', layers);
+
+                return false;
+            });
+
+            // Prevent dragging when interacting with controls
+            const interactiveElements = card.querySelectorAll('select, input, button:not(.drag-handle)');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mousedown', (e) => {
+                    card.draggable = false;
+                    e.stopPropagation();
+                });
+                el.addEventListener('mouseup', () => {
+                    card.draggable = true;
+                });
+            });
+
+            // Toggle button
+            card.querySelector('[data-action="toggle"]').addEventListener('click', () => {
+                layer.enabled = !layer.enabled;
+                const toggleBtn = card.querySelector('[data-action="toggle"]');
+                toggleBtn.textContent = layer.enabled ? 'ON' : 'OFF';
+                toggleBtn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
+                updateShaderLayers();
+            });
+
+            // Delete button
+            card.querySelector('[data-action="delete"]').addEventListener('click', () => {
+                removeLayer(layer.id);
+            });
+
+            // Mode select
+            card.querySelector('[data-action="mode"]').addEventListener('change', (e) => {
+                const oldMode = layer.mode;
+                layer.mode = parseInt(e.target.value);
+                console.log(`🎛️ Layer ${layer.id} mode changed: ${oldMode} → ${layer.mode}`);
+                updateShaderLayers();
+            });
+
+            // Precision mode toggle buttons
+            const precisionButtons = card.querySelectorAll('.precision-btn');
+            const strengthSlider = card.querySelector('[data-action="strength"]');
+            precisionButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Update button states
+                    precisionButtons.forEach(b => {
+                        b.classList.remove('active');
+                        b.style.background = 'rgba(255,255,255,0.1)';
+                    });
+                    btn.classList.add('active');
+                    btn.style.background = 'rgba(255,255,255,0.2)';
+
+                    // Update slider step
+                    const step = btn.dataset.step;
+                    strengthSlider.step = step;
+
+                    // Update display precision
+                    const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+                    card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
+
+                    console.log(`🎯 Layer ${layer.id} precision: ${step}`);
+                });
+            });
+
+            // Strength slider - update in real-time during drag
+            strengthSlider.addEventListener('input', (e) => {
+                layer.strength = parseFloat(e.target.value);
+
+                // Get current precision from active button
+                const activeBtn = card.querySelector('.precision-btn.active');
+                const step = activeBtn ? activeBtn.dataset.step : '0.1';
+                const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+
+                card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
+                updateShaderLayers(); // Update shader in real-time
+            });
+            strengthSlider.addEventListener('change', (e) => {
+                console.log(`🎛️ Layer ${layer.id} strength: ${layer.strength.toFixed(3)}`);
+            });
+
+            return card;
         }
 
         // Add a new layer
@@ -888,42 +1015,6 @@
                 return;
             }
 
-            // Toggle layer on/off
-            if (e.target.classList.contains('toggle-btn')) {
-                const layerId = parseInt(e.target.dataset.layerId);
-                const layer = layers.find(l => l.id === layerId);
-                if (layer) {
-                    layer.enabled = !layer.enabled;
-                    e.target.textContent = layer.enabled ? 'ON' : 'OFF';
-                    e.target.classList.toggle('active');
-                    updateShaderLayers();
-                }
-                return;
-            }
-
-            // Delete layer
-            if (e.target.classList.contains('delete')) {
-                const layerId = parseInt(e.target.dataset.layerId);
-                removeLayer(layerId);
-                return;
-            }
-
-            // Precision buttons
-            if (e.target.classList.contains('precision-btn')) {
-                const layerId = parseInt(e.target.dataset.layerId);
-                const delta = parseFloat(e.target.dataset.delta);
-                const layer = layers.find(l => l.id === layerId);
-                if (layer) {
-                    layer.strength = Math.max(0, Math.min(5, layer.strength + delta));
-                    const slider = document.querySelector(`.strength-slider[data-layer-id="${layerId}"]`);
-                    const label = slider.closest('.strength-control').querySelector('.strength-label');
-                    slider.value = layer.strength;
-                    label.textContent = `Strength: ${layer.strength.toFixed(3)}`;
-                    updateShaderLayers();
-                }
-                return;
-            }
-
             // Eclipse controls
             if (e.target.dataset.action === 'eclipse') {
                 const eclipseType = e.target.dataset.value;
@@ -981,82 +1072,6 @@
                 }
                 return;
             }
-        });
-
-        // Event delegation for selects and sliders
-        document.addEventListener('change', (e) => {
-            // Mode select
-            if (e.target.classList.contains('mode-select')) {
-                const layerId = parseInt(e.target.dataset.layerId);
-                const layer = layers.find(l => l.id === layerId);
-                if (layer) {
-                    layer.mode = parseInt(e.target.value);
-                    console.log(`🎨 Layer ${layerId} mode: ${blendModeNames[layer.mode]}`);
-                    updateShaderLayers();
-                }
-                return;
-            }
-        });
-
-        document.addEventListener('input', (e) => {
-            // Strength slider
-            if (e.target.classList.contains('strength-slider')) {
-                const layerId = parseInt(e.target.dataset.layerId);
-                const layer = layers.find(l => l.id === layerId);
-                if (layer) {
-                    layer.strength = parseFloat(e.target.value);
-                    const label = e.target.closest('.strength-control').querySelector('.strength-label');
-                    label.textContent = `Strength: ${layer.strength.toFixed(3)}`;
-                    updateShaderLayers();
-                }
-                return;
-            }
-
-        });
-
-        // Drag and drop for layer reordering
-        document.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('layer-card')) {
-                draggedLayer = e.target;
-                e.target.classList.add('dragging');
-            }
-        });
-
-        document.addEventListener('dragend', (e) => {
-            if (e.target.classList.contains('layer-card')) {
-                e.target.classList.remove('dragging');
-                draggedLayer = null;
-            }
-        });
-
-        document.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            const afterElement = getDragAfterElement(document.getElementById('layers-container'), e.clientY);
-            const container = document.getElementById('layers-container');
-
-            if (afterElement == null) {
-                container.appendChild(draggedLayer);
-            } else {
-                container.insertBefore(draggedLayer, afterElement);
-            }
-        });
-
-        document.addEventListener('drop', (e) => {
-            e.preventDefault();
-            // Update layers array to match new DOM order
-            const container = document.getElementById('layers-container');
-            const cards = Array.from(container.querySelectorAll('.layer-card'));
-            const newLayers = [];
-
-            cards.forEach(card => {
-                const layerId = parseInt(card.dataset.layerId);
-                const layer = layers.find(l => l.id === layerId);
-                if (layer) newLayers.push(layer);
-            });
-
-            layers = newLayers;
-            updateShaderLayers();
-            console.log('🔄 Layers reordered');
         });
 
         function getDragAfterElement(container, y) {

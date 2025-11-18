@@ -227,55 +227,54 @@ void main() {
 
             // Only apply if moon is actually occluding something
             if (moonOcclusion > 0.001) {
-        // Moon completely blocks sun where it overlaps (no light gets through)
-        finalColor *= (1.0 - moonOcclusion);
+                // Moon completely blocks sun where it overlaps (no light gets through)
+                finalColor *= (1.0 - moonOcclusion);
 
-        // Subtle penumbra around moon edge (diffraction)
-        float penumbraRadius = moonRadius * 1.02;
-        float penumbraEdge = 0.03;
-        float penumbra = 1.0 - smoothstep(penumbraRadius - penumbraEdge, penumbraRadius + penumbraEdge, distToMoon);
-        float penumbraBlocking = (penumbra - moonOcclusion) * 0.2;
-        finalColor *= (1.0 - penumbraBlocking);
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // ECLIPSE BLEND LAYERS (Applied in occluded regions only)
-        // These allow adjusting the appearance of the eclipsed sun
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        // Layer 1
-        if (layer1Enabled > 0.5) {
-            vec3 blendColor1 = vec3(min(layer1Strength, 1.0));
-            int mode1 = int(layer1Mode + 0.5);
-            vec3 blended1 = clamp(applyBlendMode(finalColor, blendColor1, mode1), 0.0, 1.0);
-            // Apply at FULL strength wherever moon occludes
-            finalColor = clamp(mix(finalColor, blended1, moonOcclusion), 0.0, 1.0);
-        }
-
-        // Layer 2
-        if (layer2Enabled > 0.5) {
-            vec3 blendColor2 = vec3(min(layer2Strength, 1.0));
-            int mode2 = int(layer2Mode + 0.5);
-            vec3 blended2 = clamp(applyBlendMode(finalColor, blendColor2, mode2), 0.0, 1.0);
-            finalColor = clamp(mix(finalColor, blended2, moonOcclusion), 0.0, 1.0);
-        }
-
-        // Layer 3
-        if (layer3Enabled > 0.5) {
-            vec3 blendColor3 = vec3(min(layer3Strength, 1.0));
-            int mode3 = int(layer3Mode + 0.5);
-            vec3 blended3 = clamp(applyBlendMode(finalColor, blendColor3, mode3), 0.0, 1.0);
-            finalColor = clamp(mix(finalColor, blended3, moonOcclusion), 0.0, 1.0);
-        }
-
-        // Layer 4
-        if (layer4Enabled > 0.5) {
-            vec3 blendColor4 = vec3(min(layer4Strength, 1.0));
-            int mode4 = int(layer4Mode + 0.5);
-            vec3 blended4 = clamp(applyBlendMode(finalColor, blendColor4, mode4), 0.0, 1.0);
-            finalColor = clamp(mix(finalColor, blended4, moonOcclusion), 0.0, 1.0);
-        }
+                // Subtle penumbra around moon edge (diffraction)
+                float penumbraRadius = moonRadius * 1.02;
+                float penumbraEdge = 0.03;
+                float penumbra = 1.0 - smoothstep(penumbraRadius - penumbraEdge, penumbraRadius + penumbraEdge, distToMoon);
+                float penumbraBlocking = (penumbra - moonOcclusion) * 0.2;
+                finalColor *= (1.0 - penumbraBlocking);
             }
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // BLEND LAYERS (Applied globally to entire sun)
+    // These allow adjusting the appearance of the sun
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Layer 1
+    if (layer1Enabled > 0.5) {
+        vec3 blendColor1 = vec3(min(layer1Strength, 1.0));
+        int mode1 = int(layer1Mode + 0.5);
+        vec3 blended1 = clamp(applyBlendMode(finalColor, blendColor1, mode1), 0.0, 1.0);
+        finalColor = clamp(blended1, 0.0, 1.0);
+    }
+
+    // Layer 2
+    if (layer2Enabled > 0.5) {
+        vec3 blendColor2 = vec3(min(layer2Strength, 1.0));
+        int mode2 = int(layer2Mode + 0.5);
+        vec3 blended2 = clamp(applyBlendMode(finalColor, blendColor2, mode2), 0.0, 1.0);
+        finalColor = clamp(blended2, 0.0, 1.0);
+    }
+
+    // Layer 3
+    if (layer3Enabled > 0.5) {
+        vec3 blendColor3 = vec3(min(layer3Strength, 1.0));
+        int mode3 = int(layer3Mode + 0.5);
+        vec3 blended3 = clamp(applyBlendMode(finalColor, blendColor3, mode3), 0.0, 1.0);
+        finalColor = clamp(blended3, 0.0, 1.0);
+    }
+
+    // Layer 4
+    if (layer4Enabled > 0.5) {
+        vec3 blendColor4 = vec3(min(layer4Strength, 1.0));
+        int mode4 = int(layer4Mode + 0.5);
+        vec3 blended4 = clamp(applyBlendMode(finalColor, blendColor4, mode4), 0.0, 1.0);
+        finalColor = clamp(blended4, 0.0, 1.0);
     }
 
     // Apply fade-in opacity to prevent texture flash during load

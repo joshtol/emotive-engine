@@ -383,7 +383,7 @@ export const THREE_GEOMETRIES = {
     },
 
     sun: {
-        geometry: createSphere(64, 64), // Use smooth sphere for sun
+        geometry: new THREE.SphereGeometry(0.9, 64, 64), // radius 0.9 matches moon
         material: 'emissive', // Signal to use emissive self-luminous material
         blink: {
             type: 'radial-pulse',

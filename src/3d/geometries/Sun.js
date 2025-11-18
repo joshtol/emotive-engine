@@ -156,22 +156,22 @@ export function createSunMaterial(textureLoader, options = {}) {
             eclipseShadowRadius: { value: 0.084 },  // User-calibrated: Total eclipse size (Annular: 0.075)
             shadowDarkness: { value: 1.00 },  // Always 1.0 - moon blocks 100% of sun's light
 
-            // Blend Multiplexer Layer 1 (disabled by default - user configures in demo)
-            layer1Mode: { value: 0.0 },
-            layer1Strength: { value: 0.0 },
-            layer1Enabled: { value: 0.0 },
+            // Blend Multiplexer Layer 1 - Linear Burn @ 0.948
+            layer1Mode: { value: 1.0 },  // 1 = Linear Burn
+            layer1Strength: { value: 0.948 },
+            layer1Enabled: { value: 1.0 },
 
-            // Blend Multiplexer Layer 2
+            // Blend Multiplexer Layer 2 - DISABLED
             layer2Mode: { value: 0.0 },
             layer2Strength: { value: 0.0 },
             layer2Enabled: { value: 0.0 },
 
-            // Blend Multiplexer Layer 3
+            // Blend Multiplexer Layer 3 - DISABLED
             layer3Mode: { value: 0.0 },
             layer3Strength: { value: 0.0 },
             layer3Enabled: { value: 0.0 },
 
-            // Blend Multiplexer Layer 4
+            // Blend Multiplexer Layer 4 - DISABLED
             layer4Mode: { value: 0.0 },
             layer4Strength: { value: 0.0 },
             layer4Enabled: { value: 0.0 }
@@ -376,8 +376,8 @@ export function createSunMaterial(textureLoader, options = {}) {
             opacity: { value: 0.0 },  // Start invisible, fade in when texture loads
             ...additionalUniforms  // Add eclipse/blend layer uniforms if using multiplexer variant
         },
-        vertexShader: vertexShader,
-        fragmentShader: fragmentShader,
+        vertexShader,
+        fragmentShader,
         transparent: true,  // Enable opacity/alpha blending for fade-in
         toneMapped: false
     });
@@ -394,7 +394,7 @@ export function createSunMaterial(textureLoader, options = {}) {
         hasEclipseShadowPos: !!material.uniforms.eclipseShadowPos,
         hasShadowDarkness: !!material.uniforms.shadowDarkness,
         hasLayer1: !!material.uniforms.layer1Enabled,
-        materialVariant: materialVariant
+        materialVariant
     });
 
     return material;
@@ -424,7 +424,7 @@ export function createSunGeometry(textureLoader = null, options = {}) {
     // Create optimized sphere geometry (reduced from 64x64 for performance)
     // 32x32 = 1,024 quads = 2,048 triangles (4x fewer than 64x64)
     const geometry = new THREE.SphereGeometry(
-        0.5,  // radius (normalized)
+        0.9,  // radius (matches moon radius of 0.9)
         32,   // width segments (still smooth, but performant)
         32    // height segments
     );
