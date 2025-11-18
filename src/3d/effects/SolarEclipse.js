@@ -51,8 +51,9 @@ export class SolarEclipse {
         // Create shadow disk
         this.createShadowDisk();
 
-        // Create corona disk
+        // Create corona disks (two counter-rotating for dynamic effect)
         this.createCoronaDisk();
+        this.createCounterCoronaDisk();
 
         // Create Bailey's Beads effect
         this.baileysBeads = new BaileysBeads(scene, sunRadius);
@@ -68,15 +69,17 @@ export class SolarEclipse {
         const shadowGeometry = new THREE.CircleGeometry(initialShadowRadius, 64);
         const shadowMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000,
-            transparent: false,
+            transparent: true,  // Enable transparency for multiply blending
+            opacity: 1.0,
+            blending: THREE.MultiplyBlending,  // Black (0,0,0) * CoronaColor = Black (complete occlusion)
             side: THREE.DoubleSide,
-            depthWrite: false,
-            depthTest: false,
+            depthWrite: false,   // Don't write to depth buffer (like coronas)
+            depthTest: false,    // Don't test depth - always render on top
             fog: false
         });
 
         this.shadowDisk = new THREE.Mesh(shadowGeometry, shadowMaterial);
-        this.shadowDisk.renderOrder = 10000;
+        this.shadowDisk.renderOrder = 10000;  // Render AFTER coronas to occlude them
 
         // Always add to scene, never as child
         this.shadowDisk.position.set(200, 0, 0); // Start off-screen
@@ -97,13 +100,22 @@ export class SolarEclipse {
                 time: { value: 0 },
                 glowColor: { value: new THREE.Color(0.9, 0.95, 1.0) }, // Cool white/blue-white
                 intensity: { value: 1.2 },
-                randomSeed: { value: this.randomSeed }
+                randomSeed: { value: this.randomSeed },
+                uvRotation: { value: 0.0 }  // UV rotation angle in radians
             },
             vertexShader: `
+                uniform float uvRotation;
                 varying vec2 vUv;
 
                 void main() {
-                    vUv = uv;
+                    // Rotate UVs around center (0.5, 0.5)
+                    vec2 centeredUV = uv - 0.5;
+                    float cosRot = cos(uvRotation);
+                    float sinRot = sin(uvRotation);
+                    mat2 rotMatrix = mat2(cosRot, -sinRot, sinRot, cosRot);
+                    vec2 rotatedUV = rotMatrix * centeredUV;
+                    vUv = rotatedUV + 0.5;
+
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
                 }
             `,
@@ -130,7 +142,7 @@ export class SolarEclipse {
                     vec2 center = vec2(0.5, 0.5);
                     vec2 toCenter = vUv - center;
                     float dist = length(toCenter) * 2.0; // Normalize to 0-1 range
-                    float angle = atan(toCenter.y, toCenter.x);
+                    float angle = atan(toCenter.y, toCenter.x);  // UVs are already rotated in vertex shader
 
                     // Shadow edge - where corona starts
                     float shadowEdge = 0.465;
@@ -268,15 +280,47 @@ export class SolarEclipse {
                 }
             `,
             transparent: true,
-            blending: THREE.AdditiveBlending,
+            blending: THREE.NormalBlending,  // Use alpha blending instead of additive
             depthWrite: false,
             side: THREE.DoubleSide
         });
 
         this.coronaDisk = new THREE.Mesh(coronaGeometry, coronaMaterial);
         this.coronaDisk.position.set(200, 0, 0); // Start off-screen
-        this.coronaDisk.renderOrder = -5; // Render behind sun and shadow
+        this.coronaDisk.renderOrder = 9998; // Render before shadow (shadow renders at 9990, then coronas on top)
         this.scene.add(this.coronaDisk);
+    }
+
+    /**
+     * Create counter-rotating corona disk (second layer for moiré effect)
+     * @private
+     */
+    createCounterCoronaDisk() {
+        // Reuse geometry from main corona (efficient - shared geometry)
+        const coronaGeometry = this.coronaDisk.geometry;
+
+        // Clone material with different random seed for variation
+        const counterSeed = this.randomSeed + 5000; // Large offset for visibly different pattern
+        const counterMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                glowColor: { value: new THREE.Color(0.9, 0.95, 1.0) },
+                intensity: { value: 1.2 },
+                randomSeed: { value: counterSeed },
+                uvRotation: { value: 0.0 }  // UV rotation angle in radians
+            },
+            vertexShader: this.coronaDisk.material.vertexShader,
+            fragmentShader: this.coronaDisk.material.fragmentShader,
+            transparent: true,
+            blending: THREE.NormalBlending,  // Use alpha blending instead of additive
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+
+        this.counterCoronaDisk = new THREE.Mesh(coronaGeometry, counterMaterial);
+        this.counterCoronaDisk.position.set(200, 0, 0); // Start off-screen
+        this.counterCoronaDisk.renderOrder = 9997; // Render before main corona and shadow
+        this.scene.add(this.counterCoronaDisk);
     }
 
     /**
@@ -331,6 +375,7 @@ export class SolarEclipse {
             console.log(`🌟 Regenerating corona seed from ${this.randomSeed}`);
             this.randomSeed = Math.random() * 1000;
             this.coronaDisk.material.uniforms.randomSeed.value = this.randomSeed;
+            this.counterCoronaDisk.material.uniforms.randomSeed.value = this.randomSeed + 5000;
             console.log(`🌟 New corona seed: ${this.randomSeed}`);
         } else {
             console.log(`🌟 Keeping existing corona seed: ${this.randomSeed}`);
@@ -389,7 +434,9 @@ export class SolarEclipse {
         const worldScale = sunScale.x; // World scale for consistent sizing
 
         // Update time for corona animation
-        this.time += deltaTime;
+        // Accelerate time 3x for normal sun (more visible undulation), normal speed for eclipses
+        const timeMultiplier = (this.eclipseType === ECLIPSE_TYPES.OFF) ? 3.0 : 1.0;
+        this.time += deltaTime * timeMultiplier;
 
         // Update transition animation (skip if in manual control mode)
         if (this.isTransitioning && !this.manualControl) {
@@ -403,6 +450,10 @@ export class SolarEclipse {
         }
 
         // Update shadow disk if eclipse is active or transitioning out
+        if (!this._pathLogged) {
+            console.log(`🔍 Update path: enabled=${this.enabled}, eclipseType=${this.eclipseType}, isTransitioning=${this.isTransitioning}, transitionDirection=${this.transitionDirection}`);
+            this._pathLogged = true;
+        }
         if (this.enabled || (this.transitionDirection === 'out' && this.isTransitioning)) {
             // Use previous eclipse type during exit animation (since eclipseType is now OFF)
             const activeEclipseType = (this.transitionDirection === 'out' && this.isTransitioning)
@@ -414,51 +465,18 @@ export class SolarEclipse {
             // Use linear progress for constant speed (no easing - prevents jerkiness)
             const easedProgress = this.transitionProgress;
 
-            // Calculate shadow size based on eclipse type
+            // Calculate shadow size based on eclipse type (restore original logic)
             const shadowRadius = scaledSunRadius * config.shadowCoverage;
             const baseShadowScale = shadowRadius / this.sunRadius;
 
             // Keep shadow at full size throughout transition (no scale animation)
-            // The moon-like eclipse entrance is achieved purely through horizontal slide
             this.shadowDisk.scale.setScalar(baseShadowScale);
 
             // Position shadow disk between camera and sun - REUSE temp vector
             this._directionToCamera.subVectors(cameraPosition, sunPosition).normalize();
 
-            // Calculate arc path offset for realistic eclipse motion
-            // Arc geometry: Downward-facing arc (inverted parabola) passing through sun center
-            // Entry: lower-left → center (apex at top)
-            // Exit: center (apex at top) → lower-right
-            let horizontalOffset = 0;
-            let verticalOffset = 0;
-
-            if (this.isTransitioning) {
-                const arcRadius = scaledSunRadius * 2.5; // Larger radius for extended arc path
-
-                if (this.transitionDirection === 'in') {
-                    // Arc in from lower-left to center (apex)
-                    const arcProgress = easedProgress; // 0 → 1
-                    // Progress from -1.5 (far left) to 0 (center) - extended range
-                    const arcT = -1.5 + (arcProgress * 1.5);
-
-                    horizontalOffset = arcT * arcRadius;
-                    // Downward arc: y = -x² (negative parabola)
-                    verticalOffset = -(arcT * arcT) * arcRadius;
-                } else if (this.transitionDirection === 'out') {
-                    // Arc out from center (apex) to lower-right
-                    const arcProgress = easedProgress; // 0 → 1
-                    // Progress from 0 (center) to 1.5 (far right) - extended range
-                    const arcT = arcProgress * 1.5;
-
-                    horizontalOffset = arcT * arcRadius;
-                    // Downward arc: y = -x² (negative parabola)
-                    verticalOffset = -(arcT * arcT) * arcRadius;
-                }
-            }
-
-            // Calculate shadow position in UV space based on transition
-            // Map animation progress to shadow position (-2.0 to 2.0 range for full cycle)
-            // Store as instance variable so corona and Bailey's Beads can access it
+            // Calculate shadow position
+            // shadowPosX range: -2.0 to +2.0
             this.currentShadowPosX = -2.0; // Start off-screen
 
             if (this.transitionDirection === 'manual' && this.manualShadowPosition !== undefined) {
@@ -477,124 +495,172 @@ export class SolarEclipse {
                 this.currentShadowPosX = 0.0;
             }
 
-            const shadowPosX = this.currentShadowPosX; // Local variable for compatibility
+            const shadowPosX = this.currentShadowPosX;
 
-            // Check if sun material has eclipse shader (multiplexer material variant)
-            const hasEclipseShader = sunMesh && sunMesh.material && sunMesh.material.uniforms && sunMesh.material.uniforms.eclipseProgress;
+            // Calculate parabolic arc motion (like real eclipse)
+            // Horizontal: linear movement from -2.0 to +2.0
+            // Vertical: downward parabola y = -x²
+            const arcRadius = scaledSunRadius * 2.5; // Arc depth
+            const arcT = shadowPosX; // Use shadowPosX directly as arc parameter (-2.0 to +2.0)
 
-            // Log once per eclipse transition (not every frame)
-            if (this.isTransitioning && !this._loggedShaderCheck) {
-                const eclipseUniforms = sunMesh && sunMesh.material && sunMesh.material.uniforms ? Object.keys(sunMesh.material.uniforms).filter(k => k.includes('eclipse')).join(', ') : 'none';
-                console.log(`🌑 SolarEclipse: Shader check - hasSunMesh=${!!sunMesh}, hasMaterial=${!!(sunMesh && sunMesh.material)}, hasUniforms=${!!(sunMesh && sunMesh.material && sunMesh.material.uniforms)}, hasEclipseProgress=${hasEclipseShader}, eclipseUniforms=[${eclipseUniforms}]`);
-                this._loggedShaderCheck = true;
+            const horizontalOffset = arcT * arcRadius * 0.5; // Horizontal position
+            const verticalOffset = -(arcT * arcT) * arcRadius * 0.25; // Downward parabola: y = -x²
+
+            // BILLBOARD SHADOW DISK: Position shadow disk to occlude corona
+            // Get perpendicular vectors for positioning - REUSE temp vectors
+            this._right.crossVectors(this._directionToCamera, this._up).normalize();
+            this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
+
+            const shadowOffset = scaledSunRadius * 1.01;
+            // Build position using temp vector to avoid allocations
+            this._tempOffset.copy(this._directionToCamera).multiplyScalar(shadowOffset);
+            this.shadowDisk.position.copy(sunPosition).add(this._tempOffset);
+
+            // Add horizontal offset
+            this._tempOffset.copy(this._right).multiplyScalar(horizontalOffset);
+            this.shadowDisk.position.add(this._tempOffset);
+
+            // Add vertical offset (parabolic arc)
+            this._tempOffset.copy(this._upVector).multiplyScalar(verticalOffset);
+            this.shadowDisk.position.add(this._tempOffset);
+
+            // Make shadow face camera (billboard effect)
+            this.shadowDisk.lookAt(cameraPosition);
+
+            // ALWAYS log in manual mode to debug shadow movement
+            if (this.transitionDirection === 'manual') {
+                console.log(`🌑 MANUAL MODE: shadowPosX=${shadowPosX.toFixed(3)}, arcT=${arcT.toFixed(3)}, horizontal=${horizontalOffset.toFixed(3)}, vertical=${verticalOffset.toFixed(3)}`);
             }
 
-            if (hasEclipseShader) {
-                // SHADER-BASED ECLIPSE: Hide shadow disk, use shader uniforms instead
-                this.shadowDisk.position.set(200, 0, 0); // Move shadow disk off-screen
+            // Update corona disks - ALWAYS VISIBLE (intensity varies by eclipse state)
+            // Position both coronas at sun center
+            this.coronaDisk.position.copy(sunPosition);
+            this.counterCoronaDisk.position.copy(sunPosition);
 
-                const uniforms = sunMesh.material.uniforms;
+            // Scale both coronas with sun
+            this.coronaDisk.scale.setScalar(worldScale);
+            this.counterCoronaDisk.scale.setScalar(worldScale);
 
-                const shadowPosY = 0.0; // Centered vertically
+            // Billboard both coronas to camera (must happen BEFORE rotation)
+            this.coronaDisk.lookAt(cameraPosition);
+            this.counterCoronaDisk.lookAt(cameraPosition);
 
-                // Determine moon shadow radius based on eclipse type
-                // User-calibrated values from visual feedback
-                // TOTAL: Moon covers entire sun disk (radius = 0.084)
-                // ANNULAR: Moon smaller, leaves ring (radius = 0.075)
-                const moonRadius = activeEclipseType === ECLIPSE_TYPES.ANNULAR ? 0.075 : 0.084;
+            // Calculate proximity to totality for dynamic rotation speed and intensity
+            // proximity = 0 at edges (shadow far away), 1 at totality (shadow centered)
+            const distanceFromCenter = Math.abs(this.currentShadowPosX || 0);
+            const maxDistance = 2.0;
+            const proximity = Math.max(0, 1 - (distanceFromCenter / maxDistance));
 
-                // Scale shadow position to match view-space coordinates
-                // The shader uses vViewPosition.xy (approximately -0.5 to 0.5 for the sun)
-                // Our shadow position range is -2.0 to +2.0, so we scale by 0.25
-                const viewSpaceScale = 0.25;
-                const scaledShadowPosX = shadowPosX * viewSpaceScale;
-                const scaledShadowPosY = shadowPosY * viewSpaceScale;
-
-                // Update eclipse shader uniforms
-                uniforms.eclipseProgress.value = easedProgress; // Eclipse progress (0-1)
-                uniforms.eclipseShadowPos.value = [scaledShadowPosX, scaledShadowPosY]; // Shadow position in view space
-                uniforms.eclipseShadowRadius.value = moonRadius; // Moon's apparent size
-                // shadowDarkness always 1.0 (complete occlusion) - set in Sun.js
-
-                // ALWAYS log in manual mode to debug shadow movement
-                if (this.transitionDirection === 'manual') {
-                    console.log(`🌑 MANUAL MODE: shadowPos=[${shadowPosX.toFixed(3)}, ${shadowPosY.toFixed(3)}] → scaled=[${scaledShadowPosX.toFixed(3)}, ${scaledShadowPosY.toFixed(3)}], radius=${moonRadius.toFixed(3)}`);
-                }
-
-                // Log once at start and every 20% progress
-                const logThreshold = Math.floor(easedProgress * 5);
-                if (!this._lastLogThreshold || this._lastLogThreshold !== logThreshold) {
-                    console.log(`🌑 Shader eclipse update: progress=${easedProgress.toFixed(2)}, shadowPos=[${shadowPosX.toFixed(2)}, ${shadowPosY.toFixed(2)}] → scaled=[${scaledShadowPosX.toFixed(2)}, ${scaledShadowPosY.toFixed(2)}], shadowDarkness=${uniforms.shadowDarkness.value.toFixed(2)}, transitioning=${this.isTransitioning}, direction=${this.transitionDirection}`);
-                    this._lastLogThreshold = logThreshold;
-                }
-            } else {
-                // GEOMETRIC SHADOW DISK: Position shadow disk (legacy behavior)
-                // Get perpendicular vectors for arc motion - REUSE temp vectors
-                this._right.crossVectors(this._directionToCamera, this._up).normalize();
-                this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
-
-                const shadowOffset = scaledSunRadius * 1.01;
-                // Build position using temp vector to avoid allocations
-                this._tempOffset.copy(this._directionToCamera).multiplyScalar(shadowOffset);
-                this.shadowDisk.position.copy(sunPosition).add(this._tempOffset);
-
-                // Add horizontal offset
-                this._tempOffset.copy(this._right).multiplyScalar(horizontalOffset);
-                this.shadowDisk.position.add(this._tempOffset);
-
-                // Add vertical offset
-                this._tempOffset.copy(this._upVector).multiplyScalar(verticalOffset);
-                this.shadowDisk.position.add(this._tempOffset);
-
-                // Make shadow face camera (billboard effect)
-                this.shadowDisk.lookAt(cameraPosition);
+            // Rotation: dynamic speed based on eclipse state and proximity to totality
+            // Use vertex shader UV rotation (mesh stays billboarded to camera)
+            let rotationSpeed = 0;
+            if (activeEclipseType === ECLIPSE_TYPES.OFF) {
+                // NORMAL SUN: Full rotation speed
+                rotationSpeed = (deltaTime / 1000) * 0.075; // radians per second (~84 seconds per rotation)
+            } else if (activeEclipseType === ECLIPSE_TYPES.ANNULAR) {
+                // ANNULAR ECLIPSE: Slow down rotation at totality (75% reduction)
+                const baseSpeed = 0.075;
+                const minSpeed = baseSpeed * 0.25; // 25% of normal = 75% reduction
+                rotationSpeed = (deltaTime / 1000) * (baseSpeed - (baseSpeed - minSpeed) * proximity);
+            } else if (activeEclipseType === ECLIPSE_TYPES.TOTAL) {
+                // TOTAL ECLIPSE: Nearly freeze rotation at totality (95% reduction)
+                const baseSpeed = 0.075;
+                const minSpeed = baseSpeed * 0.05; // 5% of normal = 95% reduction
+                rotationSpeed = (deltaTime / 1000) * (baseSpeed - (baseSpeed - minSpeed) * proximity);
             }
 
-            // Update corona disk for TOTAL eclipse only
-            if (activeEclipseType === ECLIPSE_TYPES.TOTAL) {
-                // Position corona at sun center
-                this.coronaDisk.position.copy(sunPosition);
+            // Apply rotation to both coronas
+            this.coronaDisk.material.uniforms.uvRotation.value += rotationSpeed; // Clockwise
+            this.counterCoronaDisk.material.uniforms.uvRotation.value -= rotationSpeed; // Counter-clockwise
 
-                // Scale corona with sun
-                this.coronaDisk.scale.setScalar(worldScale);
+            // Determine corona intensity based on eclipse state and proximity to totality
+            let coronaIntensity = 1.2;
 
-                // Billboard corona to camera
-                this.coronaDisk.lookAt(cameraPosition);
-
-                // Apply fade-in animation to corona intensity
-                let coronaIntensity = 1.2;
-
+            if (activeEclipseType === ECLIPSE_TYPES.OFF) {
+                // NORMAL SUN: Bright corona (solar atmosphere always visible)
+                coronaIntensity = 1.8;
+            } else if (activeEclipseType === ECLIPSE_TYPES.ANNULAR) {
+                // ANNULAR ECLIPSE: Dim corona at totality (92% reduction - more dramatic than total)
                 if (this.transitionDirection === 'manual') {
-                    // MANUAL MODE: Calculate intensity based on shadow proximity to center
-                    // Shadow at -2.0 or +2.0 = 0 intensity (far away)
-                    // Shadow at 0.0 = full intensity (totality)
-                    const distanceFromCenter = Math.abs(this.currentShadowPosX);
-                    const maxDistance = 2.0;
-                    const proximity = Math.max(0, 1 - (distanceFromCenter / maxDistance));
-                    coronaIntensity = 1.2 * proximity;
+                    // MANUAL MODE: Gradient from full brightness to 8% at totality
+                    const maxIntensity = 1.8; // Normal sun brightness
+                    const minIntensity = maxIntensity * 0.08; // 8% = 92% reduction
+                    coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * proximity;
                 } else if (this.isTransitioning && this.transitionDirection === 'in') {
-                    // Fade in corona after shadow is mostly visible (starts at 70% shadow progress)
-                    const coronaFadeStart = 0.7;
-                    const coronaFadeProgress = Math.max(0, (easedProgress - coronaFadeStart) / (1.0 - coronaFadeStart));
-                    coronaIntensity = 1.2 * coronaFadeProgress;
+                    // TRANSITION IN: Fade from full brightness to dimmed
+                    const maxIntensity = 1.8;
+                    const minIntensity = maxIntensity * 0.08;
+                    coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * easedProgress;
                 } else if (this.isTransitioning && this.transitionDirection === 'out') {
-                    // Fade out corona quickly (finishes at 30% progress)
-                    const coronaFadeEnd = 0.3;
-                    const coronaFadeProgress = Math.min(1.0, easedProgress / coronaFadeEnd);
-                    coronaIntensity = 1.2 * (1.0 - coronaFadeProgress);
+                    // TRANSITION OUT: Fade from dimmed to full brightness
+                    const maxIntensity = 1.8;
+                    const minIntensity = maxIntensity * 0.08;
+                    coronaIntensity = minIntensity + (maxIntensity - minIntensity) * easedProgress;
+                } else {
+                    // STEADY STATE: Dimmed (8% of normal)
+                    coronaIntensity = 1.8 * 0.08;
                 }
-                this.coronaDisk.material.uniforms.intensity.value = coronaIntensity;
-
-                // Update shader time uniform
-                this.coronaDisk.material.uniforms.time.value = this.time;
-            } else {
-                // Hide corona for annular eclipse
-                this.coronaDisk.position.set(200, 0, 0);
+            } else if (activeEclipseType === ECLIPSE_TYPES.TOTAL) {
+                // TOTAL ECLIPSE: Slightly dim corona at totality (25% reduction)
+                if (this.transitionDirection === 'manual') {
+                    // MANUAL MODE: Gradient from full brightness to 75% at totality
+                    const maxIntensity = 1.8; // Normal sun brightness
+                    const minIntensity = maxIntensity * 0.75; // 75% = 25% reduction
+                    coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * proximity;
+                } else if (this.isTransitioning && this.transitionDirection === 'in') {
+                    // TRANSITION IN: Fade from full brightness to slightly dimmed
+                    const maxIntensity = 1.8;
+                    const minIntensity = maxIntensity * 0.75;
+                    coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * easedProgress;
+                } else if (this.isTransitioning && this.transitionDirection === 'out') {
+                    // TRANSITION OUT: Fade from slightly dimmed to full brightness
+                    const maxIntensity = 1.8;
+                    const minIntensity = maxIntensity * 0.75;
+                    coronaIntensity = minIntensity + (maxIntensity - minIntensity) * easedProgress;
+                } else {
+                    // STEADY STATE: Slightly dimmed (75% of normal)
+                    coronaIntensity = 1.8 * 0.75;
+                }
             }
+
+            // Apply intensity to both coronas
+            this.coronaDisk.material.uniforms.intensity.value = coronaIntensity;
+            this.counterCoronaDisk.material.uniforms.intensity.value = coronaIntensity;
+
+            // Update shader time uniform for both
+            this.coronaDisk.material.uniforms.time.value = this.time;
+            this.counterCoronaDisk.material.uniforms.time.value = this.time;
         } else {
-            // Move shadow and corona off-screen when disabled
+            // Eclipse disabled: hide shadow disk, but keep coronas visible for normal sun
+            if (!this._elsePathLogged) {
+                console.log('🔍 ELSE path executing (eclipse OFF, normal sun)');
+                this._elsePathLogged = true;
+            }
             this.shadowDisk.position.set(200, 0, 0);
-            this.coronaDisk.position.set(200, 0, 0);
+
+            // Position both coronas at sun center for normal sun mode
+            this.coronaDisk.position.copy(sunPosition);
+            this.counterCoronaDisk.position.copy(sunPosition);
+            this.coronaDisk.scale.setScalar(worldScale);
+            this.counterCoronaDisk.scale.setScalar(worldScale);
+
+            // Billboard both coronas to camera (must happen BEFORE rotation)
+            this.coronaDisk.lookAt(cameraPosition);
+            this.counterCoronaDisk.lookAt(cameraPosition);
+
+            // Rotate coronas in opposite directions (living sun effect)
+            // Use vertex shader UV rotation (mesh stays billboarded to camera)
+            const rotationSpeed = (deltaTime / 1000) * 0.075; // radians per second (~84 seconds per rotation)
+            this.coronaDisk.material.uniforms.uvRotation.value += rotationSpeed; // Clockwise
+            this.counterCoronaDisk.material.uniforms.uvRotation.value -= rotationSpeed; // Counter-clockwise
+
+            // Bright corona for normal sun (no eclipse)
+            this.coronaDisk.material.uniforms.intensity.value = 1.8;
+            this.counterCoronaDisk.material.uniforms.intensity.value = 1.8;
+
+            // Update shader time uniform for both
+            this.coronaDisk.material.uniforms.time.value = this.time;
+            this.counterCoronaDisk.material.uniforms.time.value = this.time;
         }
 
         // Update Bailey's Beads effect
@@ -612,7 +678,7 @@ export class SolarEclipse {
                 const maxDistance = 2.0;
                 coverage = Math.max(0, Math.min(1, 1 - (distanceFromCenter / maxDistance)));
 
-                // Beads visible when coverage is between 90% and 100%
+                // Beads visible when coverage is between 90% and 100% (INCLUDING totality)
                 if (coverage >= 0.90 && coverage <= 1.0) {
                     beadsVisible = true;
                 }
@@ -635,9 +701,9 @@ export class SolarEclipse {
                     coverage = 1.0 - (normalizedProgress * 0.1);
                 }
             } else if (!this.isTransitioning) {
-                // At totality: coverage = 1.0 (beads hidden)
+                // At totality: coverage = 1.0, beads VISIBLE (most dramatic moment)
                 coverage = 1.0;
-                beadsVisible = false;
+                beadsVisible = true;
             }
 
             this.baileysBeads.setVisible(beadsVisible);
@@ -660,13 +726,20 @@ export class SolarEclipse {
             this.shadowDisk = null;
         }
 
-        // Dispose corona disk
+        // Dispose corona disks
         if (this.coronaDisk) {
             this.scene.remove(this.coronaDisk);
             this.coronaDisk.geometry.dispose();
             // Dispose shader material uniforms - no need to null, just dispose material
             this.coronaDisk.material.dispose();
             this.coronaDisk = null;
+        }
+
+        if (this.counterCoronaDisk) {
+            this.scene.remove(this.counterCoronaDisk);
+            // Geometry is shared with main corona, already disposed above
+            this.counterCoronaDisk.material.dispose();
+            this.counterCoronaDisk = null;
         }
 
         // Dispose Bailey's Beads

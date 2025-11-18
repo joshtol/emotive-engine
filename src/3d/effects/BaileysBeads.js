@@ -296,8 +296,8 @@ export class BaileysBeads {
                     targetOpacity = angularProximity * bead.userData.baseIntensity * intensityMultiplier * bead.userData.depth;
 
                     // Multiply by brightness multiplier to make beads much more visible
-                    // Increased from 5.0 → 15.0 → 30.0 → 50.0 for maximum brilliance
-                    targetOpacity *= 50.0;
+                    // Increased from 5.0 → 15.0 → 30.0 → 50.0 → 100.0 → 200.0 for maximum brilliance
+                    targetOpacity *= 200.0;
                 }
 
                 bead.userData.targetOpacity = targetOpacity;
