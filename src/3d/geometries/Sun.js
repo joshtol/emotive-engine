@@ -42,6 +42,15 @@ import { getSunWithBlendLayersShaders } from '../shaders/sunWithBlendLayers.js';
 export const SUN_PHOTOSPHERE_TEMP_K = 5772;
 
 /**
+ * Sun rotation configuration
+ * Defines base rotation speed that gets multiplied by emotional state modifiers
+ */
+export const SUN_ROTATION_CONFIG = {
+    baseSpeed: 0.01,    // Base rotation speed (rad/sec) - very slow like real sun
+    axes: [0, 1.0, 0]   // Y-axis only rotation (normalized, scaled by baseSpeed)
+};
+
+/**
  * Create sun material with NASA photosphere texture and surface fire animation
  *
  * Loads NASA-based photosphere texture and creates self-luminous material with
@@ -153,7 +162,7 @@ export function createSunMaterial(textureLoader, options = {}) {
             // Solar Eclipse (moon's shadow covering sun - complete occlusion)
             eclipseProgress: { value: 0.0 },
             eclipseShadowPos: { value: [-2.0, 0.0] },  // Start off-screen
-            eclipseShadowRadius: { value: 0.084 },  // User-calibrated: Total eclipse size (Annular: 0.075)
+            eclipseShadowRadius: { value: 0.072 },  // User-calibrated: Total eclipse size (Annular: 0.042)
             shadowDarkness: { value: 1.00 },  // Always 1.0 - moon blocks 100% of sun's light
 
             // Blend Multiplexer Layer 1 - Linear Burn @ 0.948

@@ -18,7 +18,7 @@ import { BlinkAnimator } from './animation/BlinkAnimator.js';
 import { GeometryMorpher } from './utils/GeometryMorpher.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
-import { updateSunMaterial } from './geometries/Sun.js';
+import { updateSunMaterial, SUN_ROTATION_CONFIG } from './geometries/Sun.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
@@ -44,6 +44,7 @@ export class Core3DManager {
             enableShadows: options.enableShadows || false,
             enableControls: options.enableControls !== false, // Camera controls (mouse/touch)
             autoRotate: options.autoRotate !== false, // Auto-rotate enabled by default
+            autoRotateSpeed: options.autoRotateSpeed, // Auto-rotate speed (undefined = default 0.5)
             cameraDistance: options.cameraDistance // Camera Z distance (undefined = default 3)
         });
 
@@ -326,6 +327,9 @@ export class Core3DManager {
         // Initialize or update rotation behavior from 3d config
         // EXCEPTION: Moon is tidally locked - no rotation behavior
         // EXCEPTION: If rotation was manually disabled, respect that
+        // Get geometry-specific rotation config if available
+        const geometryRotation = this.geometryType === 'sun' ? SUN_ROTATION_CONFIG : null;
+
         if (this.rotationDisabled) {
             this.rotationBehavior = null; // Keep rotation disabled
         } else if (this.geometryType === 'moon') {
@@ -335,10 +339,11 @@ export class Core3DManager {
                 // Update existing behavior
                 this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
             } else {
-                // Create new rotation behavior
+                // Create new rotation behavior with geometry-specific base rotation
                 this.rotationBehavior = new RotationBehavior(
                     emotionData['3d'].rotation,
-                    this.rhythmEngine
+                    this.rhythmEngine,
+                    geometryRotation
                 );
             }
         } else {
@@ -347,7 +352,8 @@ export class Core3DManager {
             if (!this.rotationBehavior && !this.rotationDisabled) {
                 this.rotationBehavior = new RotationBehavior(
                     { type: 'gentle', speed: 1.0, axes: [0, 0.01, 0] },
-                    this.rhythmEngine
+                    this.rhythmEngine,
+                    geometryRotation
                 );
             }
         }

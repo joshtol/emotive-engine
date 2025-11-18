@@ -25,10 +25,12 @@ export default class RotationBehavior {
      * Create rotation behavior evaluator
      * @param {object} config - Rotation config from emotional state's 3d section
      * @param {object} rhythmEngine - Optional rhythm engine for BPM sync
+     * @param {object} geometryRotation - Optional geometry-specific rotation base (from geometry config)
      */
-    constructor(config = {}, rhythmEngine = null) {
+    constructor(config = {}, rhythmEngine = null, geometryRotation = null) {
         this.config = config;
         this.rhythmEngine = rhythmEngine;
+        this.geometryRotation = geometryRotation;
 
         // Rotation type (gentle, unstable, rhythmic, orbital, still)
         this.type = config.type || 'gentle';
@@ -37,7 +39,20 @@ export default class RotationBehavior {
         this.speed = config.speed || 1.0;
 
         // Rotation axes rates [X, Y, Z] in radians per second
-        this.axes = config.axes || [0, 0.01, 0]; // Default: gentle Y-axis spin
+        // If geometry has base rotation, use it as the foundation and apply emotion multiplier
+        if (geometryRotation && geometryRotation.baseSpeed !== undefined) {
+            const geoSpeed = geometryRotation.baseSpeed;
+            const geoAxes = geometryRotation.axes || [0, 1.0, 0];
+            // Scale geometry's normalized axes by its baseSpeed, then multiply by emotion's speed
+            this.axes = [
+                geoAxes[0] * geoSpeed * this.speed,
+                geoAxes[1] * geoSpeed * this.speed,
+                geoAxes[2] * geoSpeed * this.speed
+            ];
+        } else {
+            // Fall back to emotion's axes if no geometry rotation defined
+            this.axes = config.axes || [0, 0.01, 0]; // Default: gentle Y-axis spin
+        }
 
         // Shake/wobble config (for unstable type)
         this.shake = config.shake || { amplitude: 0, frequency: 0 };
@@ -352,7 +367,22 @@ export default class RotationBehavior {
         this.config = config;
         this.type = config.type || 'gentle';
         this.speed = config.speed || 1.0;
-        this.axes = config.axes || [0, 0.01, 0];
+
+        // Recalculate axes using geometry rotation if available
+        if (this.geometryRotation && this.geometryRotation.baseSpeed !== undefined) {
+            const geoSpeed = this.geometryRotation.baseSpeed;
+            const geoAxes = this.geometryRotation.axes || [0, 1.0, 0];
+            // Scale geometry's normalized axes by its baseSpeed, then multiply by emotion's speed
+            this.axes = [
+                geoAxes[0] * geoSpeed * this.speed,
+                geoAxes[1] * geoSpeed * this.speed,
+                geoAxes[2] * geoSpeed * this.speed
+            ];
+        } else {
+            // Fall back to emotion's axes if no geometry rotation defined
+            this.axes = config.axes || [0, 0.01, 0];
+        }
+
         this.shake = config.shake || { amplitude: 0, frequency: 0 };
         this.musicSync = config.musicSync !== undefined ? config.musicSync : false;
     }

@@ -40,6 +40,7 @@ export class SolarEclipse {
         this.transitionDirection = 'in'; // 'in' or 'out'
         this.manualControl = false; // Flag to disable automatic animation when using sliders
 
+        this.customShadowCoverage = undefined; // Override for shadow disk size from sliders
         // Reusable temp objects to avoid per-frame allocations (performance optimization)
         this._directionToCamera = new THREE.Vector3();
         this._up = new THREE.Vector3(0, 1, 0);
@@ -72,6 +73,7 @@ export class SolarEclipse {
             transparent: true,  // Enable transparency for multiply blending
             opacity: 1.0,
             blending: THREE.MultiplyBlending,  // Black (0,0,0) * CoronaColor = Black (complete occlusion)
+            premultipliedAlpha: true,  // Required for MultiplyBlending
             side: THREE.DoubleSide,
             depthWrite: false,   // Don't write to depth buffer (like coronas)
             depthTest: false,    // Don't test depth - always render on top
@@ -322,6 +324,15 @@ export class SolarEclipse {
         this.counterCoronaDisk.renderOrder = 9997; // Render before main corona and shadow
         this.scene.add(this.counterCoronaDisk);
     }
+    /**
+     * Set shadow coverage (billboard disk size)
+     * @param {number} coverage - Shadow coverage multiplier (0-1+)
+     */
+    setShadowCoverage(coverage) {
+        this.customShadowCoverage = coverage;
+        console.log(`🌑 Shadow coverage set to: ${coverage.toFixed(3)}`);
+    }
+
 
     /**
      * Set eclipse type (annular, total, or off)
@@ -466,7 +477,10 @@ export class SolarEclipse {
             const easedProgress = this.transitionProgress;
 
             // Calculate shadow size based on eclipse type (restore original logic)
-            const shadowRadius = scaledSunRadius * config.shadowCoverage;
+            const shadowCoverage = this.customShadowCoverage !== undefined
+                ? this.customShadowCoverage
+                : config.shadowCoverage;
+            const shadowRadius = scaledSunRadius * shadowCoverage;
             const baseShadowScale = shadowRadius / this.sunRadius;
 
             // Keep shadow at full size throughout transition (no scale animation)

@@ -23,7 +23,7 @@ export const ECLIPSE_CONFIG = {
     },
 
     [ECLIPSE_TYPES.ANNULAR]: {
-        shadowCoverage: 0.87,        // Smaller shadow - leaves prominent "ring of fire"
+        shadowCoverage: 0.789,       // Smaller shadow - leaves prominent "ring of fire"
         coronaIntensity: 0.8,        // Slightly reduced corona (moon blocks some)
         coronaRaysEnabled: false,     // No dramatic rays for annular
         baileyBeadsEnabled: true,
@@ -32,7 +32,7 @@ export const ECLIPSE_CONFIG = {
     },
 
     [ECLIPSE_TYPES.TOTAL]: {
-        shadowCoverage: 0.99,        // Larger shadow - nearly complete coverage
+        shadowCoverage: 0.895,       // Larger shadow - nearly complete coverage
         coronaIntensity: 4.0,        // Dramatic corona effect visible
         coronaRaysEnabled: true,      // Enable dramatic rays for total eclipse
         baileyBeadsEnabled: true,

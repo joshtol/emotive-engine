@@ -142,7 +142,7 @@ export class ThreeRenderer {
 
         // Enable auto-rotate for gentle spinning (can be toggled)
         this.controls.autoRotate = this.options.autoRotate === true; // default false
-        this.controls.autoRotateSpeed = 0.5; // slow, subtle rotation
+        this.controls.autoRotateSpeed = this.options.autoRotateSpeed !== undefined ? this.options.autoRotateSpeed : 0.5; // slow, subtle rotation
 
         // Limit vertical rotation to prevent upside-down views
         this.controls.minPolarAngle = Math.PI * 0.2; // 36 degrees from top

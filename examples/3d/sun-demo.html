@@ -473,6 +473,23 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Shadow Size Controls -->
+            <div class="slider-control" id="total-shadow-control" style="margin-top: 12px; display: none;">
+                <div class="slider-label">
+                    <span>Total Eclipse Shadow Size</span>
+                    <span class="slider-value" id="total-shadow-value">0.990</span>
+                </div>
+                <input type="range" id="total-shadow-slider" min="0.85" max="1.05" step="0.001" value="0.990">
+            </div>
+
+            <div class="slider-control" id="annular-shadow-control" style="margin-top: 12px; display: none;">
+                <div class="slider-label">
+                    <span>Annular Eclipse Shadow Size</span>
+                    <span class="slider-value" id="annular-shadow-value">0.870</span>
+                </div>
+                <input type="range" id="annular-shadow-slider" min="0.70" max="0.95" step="0.001" value="0.870">
+            </div>
         </div>
 
         <div class="section">
@@ -507,7 +524,7 @@
         <div class="section">
             <div class="info-box">
                 <strong>Blend Modes:</strong><br>
-                Drag layers to reorder. Layers are applied sequentially in eclipsed regions only. Maximum 4 layers.
+                Drag layers to reorder. Layers are applied sequentially to the entire sun surface. Maximum 4 layers.
             </div>
         </div>
     </div>
@@ -542,7 +559,7 @@
                     enablePostProcessing: true,
                     enableShadows: false,
                     enableControls: true,
-                    autoRotate: false,
+                    autoRotate: true,
                     enableBlinking: false,
                     enableBreathing: false,
                     cameraDistance: 1.2
@@ -1027,11 +1044,40 @@
                 if (eclipseType === 'off') {
                     // Hide controls when eclipse is off
                     controlsSection.style.display = 'none';
+                    document.getElementById('total-shadow-control').style.display = 'none';
+                    document.getElementById('annular-shadow-control').style.display = 'none';
                     mascot.core3D.setSunShadow('off');
                     console.log('☀️ Eclipse OFF');
                 } else {
                     // Show controls when eclipse is active
                     controlsSection.style.display = 'block';
+
+                    // Show appropriate shadow size control and set initial radius
+                    if (eclipseType === 'total') {
+                        document.getElementById('total-shadow-control').style.display = 'block';
+                        document.getElementById('annular-shadow-control').style.display = 'none';
+
+                        // Set initial shadow radius for total eclipse
+                        setTimeout(() => {
+                            if (mascot.core3D?.customMaterial?.uniforms) {
+                                const totalRadius = parseFloat(document.getElementById('total-shadow-slider').value);
+                                mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = totalRadius;
+                                console.log(`🌑 Total eclipse initialized with shadow size: ${totalRadius.toFixed(3)}`);
+                            }
+                        }, 100);
+                    } else if (eclipseType === 'annular') {
+                        document.getElementById('total-shadow-control').style.display = 'none';
+                        document.getElementById('annular-shadow-control').style.display = 'block';
+
+                        // Set initial shadow radius for annular eclipse
+                        setTimeout(() => {
+                            if (mascot.core3D?.customMaterial?.uniforms) {
+                                const annularRadius = parseFloat(document.getElementById('annular-shadow-slider').value);
+                                mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = annularRadius;
+                                console.log(`🌑 Annular eclipse initialized with shadow size: ${annularRadius.toFixed(3)}`);
+                            }
+                        }, 100);
+                    }
 
                     mascot.core3D.setSunShadow(eclipseType);
                     console.log(`🌑 ${eclipseType.toUpperCase()} Eclipse ON`);
@@ -1071,6 +1117,25 @@
                     console.log('▶️ Auto-rotate ON');
                 }
                 return;
+            }
+        });
+
+        // Shadow size sliders
+        const totalShadowSlider = document.getElementById('total-shadow-slider');
+        totalShadowSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('total-shadow-value').textContent = value.toFixed(3);
+            if (mascot.core3D?.solarEclipse) {
+                mascot.core3D.solarEclipse.setShadowCoverage(value);
+            }
+        });
+
+        const annularShadowSlider = document.getElementById('annular-shadow-slider');
+        annularShadowSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('annular-shadow-value').textContent = value.toFixed(3);
+            if (mascot.core3D?.solarEclipse) {
+                mascot.core3D.solarEclipse.setShadowCoverage(value);
             }
         });
 
