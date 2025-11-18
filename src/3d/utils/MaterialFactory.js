@@ -37,7 +37,7 @@ export function createCustomMaterial(geometryType, geometryConfig, options = {})
 
     // Check if geometry requires emissive material
     if (geometryConfig.material === 'emissive') {
-        return createEmissiveMaterial(geometryType, glowColor, glowIntensity);
+        return createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant);
     }
 
     // No custom material needed
@@ -69,12 +69,12 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
  * Create emissive-type materials (sun, etc.)
  * @private
  */
-function createEmissiveMaterial(geometryType, glowColor, glowIntensity) {
+function createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
     case 'sun':
-        return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity);
+        return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant);
 
         // Future: Add more emissive materials here
         // case 'star':
@@ -131,13 +131,14 @@ function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVar
  * Create sun material with NASA photosphere texture
  * @private
  */
-function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity) {
-    console.log('☀️ Creating sun material (NASA photosphere: 5,772K)...');
+function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null) {
+    console.log('☀️ Creating sun material (NASA photosphere: 5,772K)...', materialVariant ? `[${materialVariant}]` : '[standard]');
 
     const material = createSunMaterial(textureLoader, {
         glowColor,
         glowIntensity,
-        resolution: '4k'
+        resolution: '4k',
+        materialVariant
     });
 
     console.log('🔥 Sun material created with surface-mapped fire animation');

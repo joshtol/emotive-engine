@@ -38,6 +38,7 @@ export class SolarEclipse {
         this.transitionProgress = 0;
         this.transitionDuration = 400; // 400ms for quick, snappy eclipse transition
         this.transitionDirection = 'in'; // 'in' or 'out'
+        this.manualControl = false; // Flag to disable automatic animation when using sliders
 
         // Reusable temp objects to avoid per-frame allocations (performance optimization)
         this._directionToCamera = new THREE.Vector3();
@@ -284,6 +285,10 @@ export class SolarEclipse {
      * @param {string} eclipseType - Eclipse type from ECLIPSE_TYPES
      */
     setEclipseType(eclipseType) {
+        // Reset logging flags
+        this._loggedShaderCheck = false;
+        this._lastLogThreshold = null;
+
         // Only trigger transition if type actually changed
         if (eclipseType === this.eclipseType) {
             console.log(`🌑 Eclipse type unchanged: ${eclipseType}`);
@@ -296,6 +301,7 @@ export class SolarEclipse {
         this.previousEclipseType = this.eclipseType; // Store previous type before changing
         this.eclipseType = eclipseType;
         this.enabled = (eclipseType !== ECLIPSE_TYPES.OFF);
+        this.manualControl = false; // Reset manual control when eclipse type changes
 
         // Determine transition direction
         if (!wasEnabled && this.enabled) {
@@ -344,6 +350,28 @@ export class SolarEclipse {
     }
 
     /**
+     * Manually set transition progress (for manual control via sliders)
+     * @param {number} progress - Progress value (0-1, where 0 is start, 1 is totality)
+     */
+    setManualProgress(progress) {
+        this.manualControl = true; // Enable manual control mode
+        this.transitionProgress = Math.max(0, Math.min(1, progress));
+        this.isTransitioning = true; // Keep transitioning active for effects
+        this.transitionDirection = 'in'; // Always use 'in' direction for manual control
+    }
+
+    /**
+     * Manually set shadow position (for full eclipse cycle control)
+     * @param {number} shadowPosition - Shadow X position (-2.0 = left, 0.0 = center/totality, +2.0 = right)
+     */
+    setManualShadowPosition(shadowPosition) {
+        this.manualControl = true; // Enable manual control mode
+        this.manualShadowPosition = Math.max(-2.0, Math.min(2.0, shadowPosition)); // Clamp to valid range
+        this.isTransitioning = true; // Keep effects active
+        this.transitionDirection = 'manual'; // Special mode for direct position control
+    }
+
+    /**
      * Update eclipse effects (call every frame)
      *
      * IMPORTANT: This method must be called AFTER the sun mesh's position, rotation,
@@ -363,8 +391,8 @@ export class SolarEclipse {
         // Update time for corona animation
         this.time += deltaTime;
 
-        // Update transition animation
-        if (this.isTransitioning) {
+        // Update transition animation (skip if in manual control mode)
+        if (this.isTransitioning && !this.manualControl) {
             const progressDelta = deltaTime / this.transitionDuration;
             this.transitionProgress += progressDelta;
 
@@ -428,25 +456,99 @@ export class SolarEclipse {
                 }
             }
 
-            // Get perpendicular vectors for arc motion - REUSE temp vectors
-            this._right.crossVectors(this._directionToCamera, this._up).normalize();
-            this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
+            // Calculate shadow position in UV space based on transition
+            // Map animation progress to shadow position (-2.0 to 2.0 range for full cycle)
+            // Store as instance variable so corona and Bailey's Beads can access it
+            this.currentShadowPosX = -2.0; // Start off-screen
 
-            const shadowOffset = scaledSunRadius * 1.01;
-            // Build position using temp vector to avoid allocations
-            this._tempOffset.copy(this._directionToCamera).multiplyScalar(shadowOffset);
-            this.shadowDisk.position.copy(sunPosition).add(this._tempOffset);
+            if (this.transitionDirection === 'manual' && this.manualShadowPosition !== undefined) {
+                // MANUAL CONTROL MODE: Use direct shadow position from dial
+                this.currentShadowPosX = this.manualShadowPosition;
+            } else if (this.isTransitioning) {
+                if (this.transitionDirection === 'in') {
+                    // Arc in from -2.0 to 0.0
+                    this.currentShadowPosX = -2.0 + (easedProgress * 2.0); // -2.0 → 0.0
+                } else if (this.transitionDirection === 'out') {
+                    // Arc out from 0.0 to 1.0
+                    this.currentShadowPosX = 0.0 + (easedProgress * 1.0); // 0.0 → 1.0
+                }
+            } else {
+                // At rest: centered
+                this.currentShadowPosX = 0.0;
+            }
 
-            // Add horizontal offset
-            this._tempOffset.copy(this._right).multiplyScalar(horizontalOffset);
-            this.shadowDisk.position.add(this._tempOffset);
+            const shadowPosX = this.currentShadowPosX; // Local variable for compatibility
 
-            // Add vertical offset
-            this._tempOffset.copy(this._upVector).multiplyScalar(verticalOffset);
-            this.shadowDisk.position.add(this._tempOffset);
+            // Check if sun material has eclipse shader (multiplexer material variant)
+            const hasEclipseShader = sunMesh && sunMesh.material && sunMesh.material.uniforms && sunMesh.material.uniforms.eclipseProgress;
 
-            // Make shadow face camera (billboard effect)
-            this.shadowDisk.lookAt(cameraPosition);
+            // Log once per eclipse transition (not every frame)
+            if (this.isTransitioning && !this._loggedShaderCheck) {
+                const eclipseUniforms = sunMesh && sunMesh.material && sunMesh.material.uniforms ? Object.keys(sunMesh.material.uniforms).filter(k => k.includes('eclipse')).join(', ') : 'none';
+                console.log(`🌑 SolarEclipse: Shader check - hasSunMesh=${!!sunMesh}, hasMaterial=${!!(sunMesh && sunMesh.material)}, hasUniforms=${!!(sunMesh && sunMesh.material && sunMesh.material.uniforms)}, hasEclipseProgress=${hasEclipseShader}, eclipseUniforms=[${eclipseUniforms}]`);
+                this._loggedShaderCheck = true;
+            }
+
+            if (hasEclipseShader) {
+                // SHADER-BASED ECLIPSE: Hide shadow disk, use shader uniforms instead
+                this.shadowDisk.position.set(200, 0, 0); // Move shadow disk off-screen
+
+                const uniforms = sunMesh.material.uniforms;
+
+                const shadowPosY = 0.0; // Centered vertically
+
+                // Determine moon shadow radius based on eclipse type
+                // User-calibrated values from visual feedback
+                // TOTAL: Moon covers entire sun disk (radius = 0.084)
+                // ANNULAR: Moon smaller, leaves ring (radius = 0.075)
+                const moonRadius = activeEclipseType === ECLIPSE_TYPES.ANNULAR ? 0.075 : 0.084;
+
+                // Scale shadow position to match view-space coordinates
+                // The shader uses vViewPosition.xy (approximately -0.5 to 0.5 for the sun)
+                // Our shadow position range is -2.0 to +2.0, so we scale by 0.25
+                const viewSpaceScale = 0.25;
+                const scaledShadowPosX = shadowPosX * viewSpaceScale;
+                const scaledShadowPosY = shadowPosY * viewSpaceScale;
+
+                // Update eclipse shader uniforms
+                uniforms.eclipseProgress.value = easedProgress; // Eclipse progress (0-1)
+                uniforms.eclipseShadowPos.value = [scaledShadowPosX, scaledShadowPosY]; // Shadow position in view space
+                uniforms.eclipseShadowRadius.value = moonRadius; // Moon's apparent size
+                // shadowDarkness always 1.0 (complete occlusion) - set in Sun.js
+
+                // ALWAYS log in manual mode to debug shadow movement
+                if (this.transitionDirection === 'manual') {
+                    console.log(`🌑 MANUAL MODE: shadowPos=[${shadowPosX.toFixed(3)}, ${shadowPosY.toFixed(3)}] → scaled=[${scaledShadowPosX.toFixed(3)}, ${scaledShadowPosY.toFixed(3)}], radius=${moonRadius.toFixed(3)}`);
+                }
+
+                // Log once at start and every 20% progress
+                const logThreshold = Math.floor(easedProgress * 5);
+                if (!this._lastLogThreshold || this._lastLogThreshold !== logThreshold) {
+                    console.log(`🌑 Shader eclipse update: progress=${easedProgress.toFixed(2)}, shadowPos=[${shadowPosX.toFixed(2)}, ${shadowPosY.toFixed(2)}] → scaled=[${scaledShadowPosX.toFixed(2)}, ${scaledShadowPosY.toFixed(2)}], shadowDarkness=${uniforms.shadowDarkness.value.toFixed(2)}, transitioning=${this.isTransitioning}, direction=${this.transitionDirection}`);
+                    this._lastLogThreshold = logThreshold;
+                }
+            } else {
+                // GEOMETRIC SHADOW DISK: Position shadow disk (legacy behavior)
+                // Get perpendicular vectors for arc motion - REUSE temp vectors
+                this._right.crossVectors(this._directionToCamera, this._up).normalize();
+                this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
+
+                const shadowOffset = scaledSunRadius * 1.01;
+                // Build position using temp vector to avoid allocations
+                this._tempOffset.copy(this._directionToCamera).multiplyScalar(shadowOffset);
+                this.shadowDisk.position.copy(sunPosition).add(this._tempOffset);
+
+                // Add horizontal offset
+                this._tempOffset.copy(this._right).multiplyScalar(horizontalOffset);
+                this.shadowDisk.position.add(this._tempOffset);
+
+                // Add vertical offset
+                this._tempOffset.copy(this._upVector).multiplyScalar(verticalOffset);
+                this.shadowDisk.position.add(this._tempOffset);
+
+                // Make shadow face camera (billboard effect)
+                this.shadowDisk.lookAt(cameraPosition);
+            }
 
             // Update corona disk for TOTAL eclipse only
             if (activeEclipseType === ECLIPSE_TYPES.TOTAL) {
@@ -461,7 +563,16 @@ export class SolarEclipse {
 
                 // Apply fade-in animation to corona intensity
                 let coronaIntensity = 1.2;
-                if (this.isTransitioning && this.transitionDirection === 'in') {
+
+                if (this.transitionDirection === 'manual') {
+                    // MANUAL MODE: Calculate intensity based on shadow proximity to center
+                    // Shadow at -2.0 or +2.0 = 0 intensity (far away)
+                    // Shadow at 0.0 = full intensity (totality)
+                    const distanceFromCenter = Math.abs(this.currentShadowPosX);
+                    const maxDistance = 2.0;
+                    const proximity = Math.max(0, 1 - (distanceFromCenter / maxDistance));
+                    coronaIntensity = 1.2 * proximity;
+                } else if (this.isTransitioning && this.transitionDirection === 'in') {
                     // Fade in corona after shadow is mostly visible (starts at 70% shadow progress)
                     const coronaFadeStart = 0.7;
                     const coronaFadeProgress = Math.max(0, (easedProgress - coronaFadeStart) / (1.0 - coronaFadeStart));
@@ -489,11 +600,23 @@ export class SolarEclipse {
         // Update Bailey's Beads effect
         // Beads are ONLY visible when shadow is near the sun's rim (final 20% of transition)
         if (this.eclipseType === ECLIPSE_TYPES.TOTAL) {
-            // Calculate coverage based on transition progress
+            // Calculate coverage based on transition progress or shadow position
             let coverage = 0;
             let beadsVisible = false;
 
-            if (this.transitionDirection === 'in' && this.isTransitioning) {
+            if (this.transitionDirection === 'manual') {
+                // MANUAL MODE: Calculate coverage from shadow position
+                // Shadow at -2.0 or +2.0 = 0% coverage (no eclipse)
+                // Shadow at 0.0 = 100% coverage (totality)
+                const distanceFromCenter = Math.abs(this.currentShadowPosX);
+                const maxDistance = 2.0;
+                coverage = Math.max(0, Math.min(1, 1 - (distanceFromCenter / maxDistance)));
+
+                // Beads visible when coverage is between 90% and 100%
+                if (coverage >= 0.90 && coverage <= 1.0) {
+                    beadsVisible = true;
+                }
+            } else if (this.transitionDirection === 'in' && this.isTransitioning) {
                 // Beads only appear in final 20% of transition (when shadow is nearly covering sun)
                 const beadsStartProgress = 0.8; // Start showing beads at 80% of transition
                 if (this.transitionProgress >= beadsStartProgress) {

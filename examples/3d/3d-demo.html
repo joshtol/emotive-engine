@@ -619,12 +619,16 @@
                             // Turn OFF eclipse
                             mascot.core3D.setMoonEclipse('off');
                             e.target.classList.remove('active');
+                            // Show moon phases when eclipse is off
+                            document.getElementById('moon-phase-section').style.display = 'block';
                             console.log('🌕 Lunar eclipse OFF');
                         } else {
                             // Turn ON this eclipse type and turn off others
                             lunarEclipseButtons.forEach(btn => btn.classList.remove('active'));
                             mascot.core3D.setMoonEclipse(lunarEclipseType);
                             e.target.classList.add('active');
+                            // Hide moon phases when eclipse is active
+                            document.getElementById('moon-phase-section').style.display = 'none';
                             console.log(`🩸 ${lunarEclipseType.toUpperCase()} Lunar Eclipse ON`);
                         }
                         break;

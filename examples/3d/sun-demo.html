@@ -1,24 +1,25 @@
 <!DOCTYPE html>
 <!--
-  SUN SHOWCASE - Emotive Engine 3D Demo
+  SOLAR ECLIPSE SHOWCASE - Emotive Engine 3D Demo
 
-  A demonstration of the self-luminous sun geometry with emotional expression.
+  A demonstration of shader-based solar eclipse effects with blend layer controls.
 
   What you'll learn:
-  - 3D sun rendering with emissive material
-  - Emotion-driven color changes
-  - Self-illuminating geometry
-  - Radial glow effects
+  - Solar eclipse rendering with shader effects
+  - Annular and total eclipse types
+  - Umbral and penumbral shadow phases
+  - Blend mode layer system for eclipse appearance
+  - Corona and Bailey's Beads effects
 
-  Complexity: ⭐⭐ Intermediate 3D
-  Features: Sun geometry, emotions, emissive material, auto-glow
+  Complexity: ⭐⭐⭐ Advanced 3D + Shaders
+  Features: Sun geometry, solar eclipse, blend layers, shader effects
 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sun Showcase - Emotive Engine 3D</title>
-    <meta name="description" content="3D sun demo with emissive self-luminous material and emotions">
+    <title>Solar Eclipse Showcase - Emotive Engine 3D</title>
+    <meta name="description" content="Solar eclipse demo with shader-based eclipse effects and blend layers">
     <style>
         * {
             margin: 0;
@@ -28,7 +29,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a0a00 0%, #3d1f00 50%, #2a1500 100%);
+            background: linear-gradient(135deg, #0a0010 0%, #1a0a20 50%, #0f0518 100%);
             color: white;
             width: 100vw;
             height: 100vh;
@@ -39,8 +40,8 @@
         .left-menu,
         .right-menu {
             width: 18vw;
-            min-width: 200px;
-            max-width: 280px;
+            min-width: 240px;
+            max-width: 300px;
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
             padding: 1.5vw;
@@ -150,56 +151,301 @@
             color: #ff9500;
         }
 
-        .visual-controls button {
-            grid-column: span 2;
+        /* Blend Layer Styles */
+        #layers-container {
+            min-height: 60px;
         }
 
-        @media (max-width: 1000px) {
-            body {
-                flex-direction: column;
-            }
-
-            .left-menu,
-            .right-menu {
-                width: 100%;
-                min-width: unset;
-                max-width: unset;
-                max-height: 35vh;
-                border: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 15px;
-            }
-
-            .left-menu {
-                order: 1;
-            }
-
-            .center-content {
-                order: 2;
-                flex: 1;
-                min-height: 30vh;
-            }
-
-            .right-menu {
-                order: 3;
-                border-bottom: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .button-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
+        .layer-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: clamp(6px, 0.6vw, 8px);
+            padding: clamp(8px, 0.8vw, 10px);
+            margin-bottom: clamp(6px, 0.6vw, 8px);
+            cursor: grab;
         }
 
-        @media (max-width: 600px) {
-            .button-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .layer-card:active {
+            cursor: grabbing;
+        }
 
-            .left-menu,
-            .right-menu {
-                padding: 12px;
-            }
+        .layer-card.dragging {
+            opacity: 0.5;
+        }
+
+        .layer-header {
+            display: flex;
+            align-items: center;
+            gap: clamp(6px, 0.6vw, 8px);
+            margin-bottom: clamp(6px, 0.6vw, 8px);
+        }
+
+        .drag-handle {
+            cursor: grab;
+            user-select: none;
+            font-size: clamp(12px, 1vw, 14px);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .layer-title {
+            flex: 1;
+            font-size: clamp(10px, 0.9vw, 11px);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: clamp(4px, 0.4vw, 6px);
+        }
+
+        .icon-button {
+            padding: clamp(4px, 0.4vw, 6px);
+            min-width: clamp(24px, 2vw, 28px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: clamp(4px, 0.4vw, 5px);
+            cursor: pointer;
+            font-size: clamp(10px, 0.85vw, 11px);
+            transition: all 0.2s;
+        }
+
+        .icon-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .icon-button.active {
+            background: rgba(100, 200, 255, 0.2);
+            border-color: rgba(100, 200, 255, 0.4);
+            color: #64c8ff;
+        }
+
+        .icon-button.delete {
+            color: rgba(255, 100, 100, 0.7);
+        }
+
+        .icon-button.delete:hover {
+            background: rgba(255, 100, 100, 0.2);
+            border-color: rgba(255, 100, 100, 0.4);
+            color: #ff6464;
+        }
+
+        .mode-select {
+            width: 100%;
+            padding: clamp(5px, 0.5vw, 7px);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: clamp(4px, 0.4vw, 5px);
+            font-size: clamp(9px, 0.8vw, 10px);
+            margin-bottom: clamp(6px, 0.6vw, 8px);
+            cursor: pointer;
+        }
+
+        .strength-control {
+            display: flex;
+            align-items: center;
+            gap: clamp(6px, 0.6vw, 8px);
+        }
+
+        .strength-label {
+            font-size: clamp(9px, 0.8vw, 10px);
+            color: rgba(255, 255, 255, 0.6);
+            min-width: clamp(50px, 5vw, 60px);
+        }
+
+        .strength-slider {
+            flex: 1;
+            height: clamp(18px, 1.5vw, 20px);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: clamp(4px, 0.4vw, 5px);
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .strength-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: clamp(12px, 1vw, 14px);
+            height: clamp(12px, 1vw, 14px);
+            background: #64c8ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .precision-buttons {
+            display: flex;
+            gap: clamp(2px, 0.2vw, 3px);
+        }
+
+        .precision-btn {
+            padding: clamp(2px, 0.2vw, 3px) clamp(4px, 0.4vw, 5px);
+            font-size: clamp(8px, 0.7vw, 9px);
+            min-width: clamp(30px, 2.5vw, 35px);
+        }
+
+        .add-layer-btn {
+            width: 100%;
+            padding: clamp(8px, 0.8vw, 10px);
+            background: rgba(100, 200, 255, 0.1);
+            border: 1px dashed rgba(100, 200, 255, 0.3);
+            color: #64c8ff;
+            margin-top: clamp(8px, 0.8vw, 10px);
+        }
+
+        .add-layer-btn:hover {
+            background: rgba(100, 200, 255, 0.2);
+            border-color: rgba(100, 200, 255, 0.5);
+        }
+
+        /* Rotary Dial Styling */
+        .dial-container {
+            margin-bottom: clamp(15px, 1.5vw, 20px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(8px, 0.8vw, 10px);
+        }
+
+        .dial-label {
+            font-size: clamp(9px, 0.8vw, 10px);
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+        }
+
+        .dial-wrapper {
+            position: relative;
+            width: clamp(120px, 12vw, 140px);
+            height: clamp(120px, 12vw, 140px);
+        }
+
+        .dial-track {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+            border: 2px solid rgba(255, 149, 0, 0.3);
+            position: relative;
+            box-shadow:
+                inset 0 0 20px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(255, 149, 0, 0.2);
+        }
+
+        .dial-marker {
+            position: absolute;
+            width: 3px;
+            height: 10px;
+            background: rgba(255, 149, 0, 0.4);
+            top: 5px;
+            left: 50%;
+            transform-origin: center calc(50% + 55px);
+            margin-left: -1.5px;
+        }
+
+        .dial-marker.major {
+            width: 4px;
+            height: 15px;
+            background: rgba(255, 149, 0, 0.8);
+            margin-left: -2px;
+        }
+
+        .dial-marker-label {
+            position: absolute;
+            font-size: clamp(8px, 0.7vw, 9px);
+            color: rgba(255, 149, 0, 0.9);
+            font-weight: 600;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .dial-knob {
+            position: absolute;
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 149, 0, 0.4), rgba(0, 0, 0, 0.6));
+            border: 3px solid rgba(255, 149, 0, 0.6);
+            cursor: grab;
+            box-shadow:
+                0 4px 10px rgba(0, 0, 0, 0.5),
+                inset 0 -2px 5px rgba(0, 0, 0, 0.5),
+                inset 0 2px 5px rgba(255, 149, 0, 0.3);
+            transition: transform 0.1s ease-out;
+        }
+
+        .dial-knob:active {
+            cursor: grabbing;
+        }
+
+        .dial-pointer {
+            position: absolute;
+            width: 4px;
+            height: 45%;
+            background: linear-gradient(to bottom, #ff9500, rgba(255, 149, 0, 0.3));
+            top: 5%;
+            left: 50%;
+            margin-left: -2px;
+            border-radius: 2px 2px 0 0;
+            box-shadow: 0 0 8px rgba(255, 149, 0, 0.9);
+            pointer-events: none;
+        }
+
+        .dial-pointer::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: #ff9500;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 149, 0, 1);
+        }
+
+        .dial-value {
+            position: absolute;
+            bottom: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(11px, 1vw, 13px);
+            font-weight: 600;
+            color: #ff9500;
+            text-shadow: 0 0 5px rgba(255, 149, 0, 0.5);
+        }
+
+        /* Standard Slider styling */
+        .slider-container {
+            margin-bottom: clamp(10px, 1vw, 12px);
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: clamp(9px, 0.8vw, 10px);
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: clamp(4px, 0.4vw, 5px);
+        }
+
+        .slider {
+            width: 100%;
+            height: clamp(20px, 1.5vw, 22px);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: clamp(4px, 0.4vw, 5px);
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: clamp(14px, 1.2vw, 16px);
+            height: clamp(14px, 1.2vw, 16px);
+            background: #ff9500;
+            border-radius: 50%;
+            cursor: pointer;
         }
 
         .left-menu::-webkit-scrollbar,
@@ -225,45 +471,45 @@
     </style>
 </head>
 <body>
-    <!-- LEFT MENU: Emotions -->
+    <!-- LEFT MENU: Eclipse Controls -->
     <div class="left-menu">
         <div class="section">
-            <h2>Emotions</h2>
+            <h2>Eclipse Type</h2>
             <div class="button-grid">
-                <button data-action="emotion" data-value="joy">😊 Joy</button>
-                <button data-action="emotion" data-value="love">❤️ Love</button>
-                <button data-action="emotion" data-value="excited">🎉 Excited</button>
-                <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
-                <button data-action="emotion" data-value="calm">😌 Calm</button>
-                <button data-action="emotion" data-value="focused">🎯 Focused</button>
-                <button data-action="emotion" data-value="resting">😴 Resting</button>
-                <button data-action="emotion" data-value="sadness">😢 Sadness</button>
-                <button data-action="emotion" data-value="anger">😠 Anger</button>
-                <button data-action="emotion" data-value="fear">😰 Fear</button>
-                <button data-action="emotion" data-value="surprise">😲 Surprise</button>
-                <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
-                <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
-                <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+                <button data-action="eclipse" data-value="off" class="active">☀️ Off</button>
+                <button data-action="eclipse" data-value="annular">🌑 Annular</button>
+                <button data-action="eclipse" data-value="total">🌚 Total</button>
+            </div>
+        </div>
+
+        <div class="section" id="eclipse-controls-section" style="display: none;">
+            <h2>Eclipse Animation Controls</h2>
+
+            <!-- Circular Eclipse Dial -->
+            <div class="dial-container">
+                <div class="dial-label">Eclipse Phase</div>
+                <div class="dial-wrapper">
+                    <div class="dial-track" id="eclipse-dial-track">
+                        <!-- Markers will be dynamically added -->
+                    </div>
+                    <div class="dial-knob" id="eclipse-dial-knob">
+                        <div class="dial-pointer"></div>
+                        <div class="dial-value" id="eclipse-dial-value">0%</div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>Undertones</h2>
-            <div class="button-grid">
-                <button data-action="undertone" data-value="null">Clear</button>
-                <button data-action="undertone" data-value="subdued">Subdued</button>
-                <button data-action="undertone" data-value="tired">Tired</button>
-                <button data-action="undertone" data-value="nervous">Nervous</button>
-                <button data-action="undertone" data-value="confident">Confident</button>
-                <button data-action="undertone" data-value="intense">Intense</button>
-                <button data-action="undertone" data-value="energetic">Energetic</button>
-            </div>
+            <h2>Visual Controls</h2>
+            <button data-action="toggle-glow" class="active" style="width: 100%">💫 Core Glow</button>
+            <button data-action="toggle-auto-rotate" style="width: 100%; margin-top: 6px">🔄 Auto-Rotate</button>
         </div>
 
         <div class="section">
             <div class="info-box">
-                <strong>About the Sun:</strong><br>
-                The sun is rendered with an emissive material, meaning it glows from within and lights up its surroundings. Watch how emotions change the sun's color and intensity!
+                <strong>Solar Eclipse:</strong><br>
+                Shader-based eclipse effects darken the sun where the moon's shadow covers it. Use blend layers to adjust the eclipse appearance.
             </div>
         </div>
     </div>
@@ -273,70 +519,20 @@
         <div id="sun-container"></div>
     </div>
 
-    <!-- RIGHT MENU: Controls & Gestures -->
+    <!-- RIGHT MENU: Blend Layers -->
     <div class="right-menu">
-        <div class="section visual-controls">
-            <h2>Visual Controls</h2>
-            <button data-action="toggle-particles">✨ Particles</button>
-            <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-            <button data-action="toggle-blink">👁️ Blinking</button>
-            <button data-action="toggle-breathing">🫁 Breathing</button>
-            <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
-        </div>
-
         <div class="section">
-            <h2>Core Geometry</h2>
-            <div class="button-grid">
-                <button data-action="geometry" data-value="sun" class="active">☀️ Sun</button>
-                <button data-action="geometry" data-value="crystal">💎 Crystal</button>
+            <h2>Blend Layers</h2>
+            <div id="layers-container">
+                <!-- Layers will be added here dynamically -->
             </div>
-        </div>
-
-
-        <div class="section">
-            <h2>Eclipse</h2>
-            <div class="button-grid">
-                <button data-action="eclipse" data-value="annular">🌑 Annular Eclipse</button>
-                <button data-action="eclipse" data-value="total">🌚 Total Eclipse</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Motion Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="bounce">Bounce</button>
-                <button data-action="gesture" data-value="pulse">Pulse</button>
-                <button data-action="gesture" data-value="float">Float</button>
-                <button data-action="gesture" data-value="shake">Shake</button>
-                <button data-action="gesture" data-value="sway">Sway</button>
-                <button data-action="gesture" data-value="wiggle">Wiggle</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Transform Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="spin">Spin</button>
-                <button data-action="gesture" data-value="jump">Jump</button>
-                <button data-action="gesture" data-value="twist">Twist</button>
-                <button data-action="gesture" data-value="stretch">Stretch</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Effect Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="flash">Flash</button>
-                <button data-action="gesture" data-value="glow">Glow</button>
-                <button data-action="gesture" data-value="breathe">Breathe</button>
-                <button data-action="gesture" data-value="flicker">Flicker</button>
-            </div>
+            <button class="add-layer-btn" id="add-layer-btn">+ Add Layer</button>
         </div>
 
         <div class="section">
             <div class="info-box">
-                <strong>Solar Power:</strong><br>
-                The sun's emissive material creates a natural bloom effect that responds to emotions and gestures.
+                <strong>Blend Modes:</strong><br>
+                Drag layers to reorder. Layers are applied sequentially in eclipsed regions only. Maximum 4 layers.
             </div>
         </div>
     </div>
@@ -346,13 +542,28 @@
 
         let mascot = null;
 
-        // Initialize sun
+        // Blend mode names (22 total modes)
+        const blendModeNames = [
+            'Multiply', 'Linear Burn', 'Color Burn', 'Darken', 'Darker Color',
+            'Screen', 'Linear Dodge', 'Color Dodge', 'Lighten', 'Lighter Color',
+            'Overlay', 'Soft Light', 'Hard Light', 'Vivid Light', 'Linear Light', 'Pin Light',
+            'Difference', 'Exclusion', 'Subtract', 'Divide',
+            'Hue', 'Saturation'
+        ];
+
+        // Layer management
+        let layers = [];
+        let nextLayerId = 1;
+        let draggedLayer = null;
+
+        // Initialize sun with multiplexer material
         (async () => {
             try {
                 const container = document.getElementById('sun-container');
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'sun',
-                    enableParticles: true, // Enable particle system (but start hidden)
+                    materialVariant: 'multiplexer', // Use multiplexer shader with blend layers
+                    enableParticles: false,
                     enablePostProcessing: true,
                     enableShadows: false,
                     enableControls: true,
@@ -366,144 +577,502 @@
                 mascot.start();
                 mascot.setEmotion('joy');
 
-                // Start with particles disabled (system exists but hidden)
-                mascot.disableParticles();
+                console.log('☀️ EmotiveMascot3D Sun initialized with multiplexer material');
 
-                console.log('☀️ EmotiveMascot3D Sun initialized');
+                // Log sun material state
+                if (mascot.core3D && mascot.core3D.coreMesh) {
+                    console.log('☀️ Sun mesh state:', {
+                        hasCoreMesh: !!mascot.core3D.coreMesh,
+                        hasMaterial: !!mascot.core3D.coreMesh.material,
+                        hasUniforms: !!mascot.core3D.coreMesh.material.uniforms,
+                        uniformKeys: mascot.core3D.coreMesh.material.uniforms ? Object.keys(mascot.core3D.coreMesh.material.uniforms) : []
+                    });
+                }
+
+                // Auto-populate UI from shader defaults (WYSIWYG)
+                // Check if any blend layers are enabled by default in the shader
+                if (mascot.core3D && mascot.core3D.coreMesh && mascot.core3D.coreMesh.material.uniforms) {
+                    for (let i = 1; i <= 4; i++) {
+                        const enabled = mascot.core3D.coreMesh.material.uniforms[`layer${i}Enabled`].value > 0.5;
+                        if (enabled) {
+                            const mode = Math.round(mascot.core3D.coreMesh.material.uniforms[`layer${i}Mode`].value);
+                            const strength = mascot.core3D.coreMesh.material.uniforms[`layer${i}Strength`].value;
+                            addLayer(mode, strength, true, true); // skip shader update during batch load
+                        }
+                    }
+                    console.log(`📋 Loaded ${layers.length} blend layers from shader defaults`);
+                }
             } catch (error) {
                 console.error('❌ Failed to initialize:', error);
             }
         })();
 
-        // Event delegation for all buttons
-        document.addEventListener('click', (e) => {
-            if (!e.target.matches('button[data-action]') || !mascot) return;
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ECLIPSE DIAL CONTROL
+        // ═══════════════════════════════════════════════════════════════════════════
 
-            const action = e.target.dataset.action;
-            const value = e.target.dataset.value;
+        let dialState = {
+            isDragging: false,
+            currentAngle: 0, // Start at totality (0° = shadow centered)
+            currentShadowPos: 0.0,
+            snapThreshold: 10 // degrees
+        };
 
-            try {
-                switch (action) {
-                    case 'emotion':
-                        console.log('Setting emotion:', value);
-                        mascot.setEmotion(value);
-                        // Update active state
-                        document.querySelectorAll('[data-action="emotion"]').forEach(btn => btn.classList.remove('active'));
-                        e.target.classList.add('active');
-                        break;
+        // Eclipse stage definitions with magnetic snap points
+        // FULL 360° rotation maps to complete eclipse cycle:
+        // -180° (left) = shadow at -2.0 → 0° (top) = shadow at 0.0 (totality) → 180° (right) = shadow at +2.0
+        const ECLIPSE_STAGES = [
+            { angle: -180, shadowPos: -2.0, label: 'Start', snap: true },     // Shadow far left (start of cycle)
+            { angle: 0, shadowPos: 0.0, label: 'Totality', snap: true }       // Shadow centered (total eclipse)
+        ];
 
-                    case 'undertone':
-                        console.log('Setting undertone:', value);
-                        mascot.setUndertone(value === 'null' ? null : value);
-                        // Update active state
-                        document.querySelectorAll('[data-action="undertone"]').forEach(btn => btn.classList.remove('active'));
-                        e.target.classList.add('active');
-                        break;
+        function initializeEclipseDial() {
+            const dialTrack = document.getElementById('eclipse-dial-track');
+            const dialKnob = document.getElementById('eclipse-dial-knob');
+            const dialValue = document.getElementById('eclipse-dial-value');
 
-                    case 'gesture':
-                        console.log('Playing gesture:', value);
-                        mascot.express(value);
-                        break;
+            if (!dialTrack || !dialKnob || !dialValue) {
+                console.error('❌ Dial elements not found');
+                return;
+            }
 
-                    case 'toggle-particles':
-                        // Check 3D particle visibility (sun demo uses 3D particles, not 2D)
-                        const particlesVisible = mascot.core3D?.particleVisibility || false;
-                        if (particlesVisible) {
-                            mascot.disableParticles();
-                            e.target.classList.remove('active');
-                            console.log('💨 Particles disabled');
-                        } else {
-                            mascot.enableParticles();
-                            e.target.classList.add('active');
-                            console.log('✨ Particles enabled');
-                        }
-                        break;
+            // Clear any existing markers
+            dialTrack.innerHTML = '';
 
-                    case 'toggle-glow':
-                        if (mascot.core3D?.coreGlowEnabled !== false) {
-                            mascot.core3D.setCoreGlowEnabled(false);
-                            e.target.classList.remove('active');
-                            console.log('💫 Core glow disabled');
-                        } else {
-                            mascot.core3D.setCoreGlowEnabled(true);
-                            e.target.classList.add('active');
-                            console.log('💫 Core glow enabled');
-                        }
-                        break;
+            // Create dial markers
+            ECLIPSE_STAGES.forEach((stage, index) => {
+                const marker = document.createElement('div');
+                marker.className = `dial-marker ${stage.snap ? 'major' : ''}`;
+                marker.style.transform = `rotate(${stage.angle}deg)`;
+                dialTrack.appendChild(marker);
 
-                    case 'toggle-blink':
-                        if (mascot.blinkingEnabled) {
-                            mascot.disableBlinking();
-                            e.target.classList.remove('active');
-                            console.log('👁️ Blinking disabled');
-                        } else {
-                            mascot.enableBlinking();
-                            e.target.classList.add('active');
-                            console.log('👁️ Blinking enabled');
-                        }
-                        break;
+                // Add labels for major stages
+                if (stage.snap && stage.label !== 'No Eclipse') {
+                    const label = document.createElement('div');
+                    label.className = 'dial-marker-label';
+                    label.textContent = stage.label;
 
-                    case 'toggle-breathing':
-                        if (mascot.breathingEnabled) {
-                            mascot.disableBreathing();
-                            e.target.classList.remove('active');
-                            console.log('🫁 Breathing disabled');
-                        } else {
-                            mascot.enableBreathing();
-                            e.target.classList.add('active');
-                            console.log('🫁 Breathing enabled');
-                        }
-                        break;
+                    // Position label outside the dial
+                    const radius = 75; // px from center
+                    const angleRad = (stage.angle - 90) * Math.PI / 180; // -90 offset for top = 0°
+                    const x = Math.cos(angleRad) * radius;
+                    const y = Math.sin(angleRad) * radius;
 
-                    case 'toggle-auto-rotate':
-                        if (mascot.autoRotateEnabled) {
-                            mascot.disableAutoRotate();
-                            console.log('🛑 Auto-rotate OFF');
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.enableAutoRotate();
-                            console.log('▶️ Auto-rotate ON');
-                            e.target.classList.add('active');
-                        }
-                        break;
+                    label.style.left = `calc(50% + ${x}px)`;
+                    label.style.top = `calc(50% + ${y}px)`;
+                    label.style.transform = 'translate(-50%, -50%)';
 
-                    case 'geometry':
-                        // Switch geometry using built-in morph system
-                        // Glass material is automatically enabled/disabled based on geometry type
-                        console.log(`🔄 Morphing to ${value} geometry...`);
-                        mascot.morphTo(value);
-
-                        // Update button states
-                        document.querySelectorAll('[data-action="geometry"]').forEach(btn => btn.classList.remove('active'));
-                        e.target.classList.add('active');
-                        break;
-
-                    case 'eclipse':
-                        // Toggle between eclipse types
-                        const eclipseType = e.target.dataset.value;
-                        const eclipseButtons = document.querySelectorAll('[data-action="eclipse"]');
-
-                        if (e.target.classList.contains('active')) {
-                            // Turn OFF eclipse
-                            mascot.core3D.setSunShadow('off');
-                            e.target.classList.remove('active');
-                            console.log('☀️ Eclipse OFF');
-                        } else {
-                            // Turn ON this eclipse type and turn off others
-                            eclipseButtons.forEach(btn => btn.classList.remove('active'));
-                            mascot.core3D.setSunShadow(eclipseType);
-                            e.target.classList.add('active');
-                            console.log(`🌑 ${eclipseType.toUpperCase()} Eclipse ON`);
-                        }
-                        break;
+                    dialTrack.appendChild(label);
                 }
-            } catch (error) {
-                console.error('Action failed:', error);
+            });
+
+            // Mouse/touch interaction
+            let startAngle = 0;
+            let centerX, centerY;
+
+            function getAngleFromPoint(clientX, clientY) {
+                const rect = dialKnob.getBoundingClientRect();
+                centerX = rect.left + rect.width / 2;
+                centerY = rect.top + rect.height / 2;
+
+                const dx = clientX - centerX;
+                const dy = clientY - centerY;
+                let angle = Math.atan2(dy, dx) * 180 / Math.PI + 90; // +90 to make top = 0°
+
+                // Normalize to -180 to 180 range
+                if (angle > 180) angle -= 360;
+                if (angle < -180) angle += 360;
+
+                return angle;
+            }
+
+            function updateDial(angle) {
+                // NO CLAMPING - allow full 360° rotation
+                // Normalize angle to -180° to 180° range
+                while (angle > 180) angle -= 360;
+                while (angle < -180) angle += 360;
+
+                // Check for magnetic snapping
+                for (const stage of ECLIPSE_STAGES) {
+                    if (stage.snap && Math.abs(angle - stage.angle) < dialState.snapThreshold) {
+                        angle = stage.angle;
+                        break;
+                    }
+                }
+
+                dialState.currentAngle = angle;
+
+                // Linear mapping: angle (-180° to 180°) → shadow position (-2.0 to +2.0)
+                // -180° = -2.0 (shadow far left)
+                //    0° =  0.0 (shadow centered - totality)
+                // +180° = +2.0 (shadow far right)
+                const shadowPos = (angle / 180.0) * 2.0;
+                dialState.currentShadowPos = shadowPos;
+
+                // Update visual rotation
+                dialKnob.style.transform = `rotate(${angle}deg)`;
+
+                // Display eclipse coverage percentage
+                // Shadow at -2.0 or +2.0 = 0% coverage (no eclipse)
+                // Shadow at 0.0 = 100% coverage (totality)
+                // Calculate coverage based on how close shadow is to center
+                const distanceFromCenter = Math.abs(shadowPos);
+                const maxDistance = 2.0;
+                // Coverage is highest (100%) at center, drops to 0% at edges
+                const coverage = Math.max(0, Math.min(100, Math.round((1 - (distanceFromCenter / maxDistance)) * 100)));
+                dialValue.textContent = `${coverage}%`;
+
+                // Update eclipse with direct shadow position
+                if (mascot && mascot.core3D && mascot.core3D.solarEclipse) {
+                    mascot.core3D.solarEclipse.setManualShadowPosition(shadowPos);
+                }
+            }
+
+            function onPointerDown(e) {
+                console.log('🎛️ Dial pointer down');
+                dialState.isDragging = true;
+                dialKnob.style.transition = 'none';
+                startAngle = getAngleFromPoint(e.clientX, e.clientY);
+                e.preventDefault();
+            }
+
+            function onPointerMove(e) {
+                if (!dialState.isDragging) return;
+                const angle = getAngleFromPoint(e.clientX, e.clientY);
+                updateDial(angle);
+                e.preventDefault();
+            }
+
+            function onPointerUp(e) {
+                if (!dialState.isDragging) return;
+                console.log('🎛️ Dial pointer up');
+                dialState.isDragging = false;
+                dialKnob.style.transition = 'transform 0.1s ease-out';
+                e.preventDefault();
+            }
+
+            // Mouse events
+            console.log('🎛️ Adding event listeners to dial knob:', dialKnob);
+            dialKnob.addEventListener('mousedown', onPointerDown);
+            document.addEventListener('mousemove', onPointerMove);
+            document.addEventListener('mouseup', onPointerUp);
+
+            // Touch events
+            dialKnob.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                onPointerDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => e.preventDefault() });
+            });
+            document.addEventListener('touchmove', (e) => {
+                if (!dialState.isDragging) return;
+                const touch = e.touches[0];
+                onPointerMove({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => e.preventDefault() });
+            });
+            document.addEventListener('touchend', onPointerUp);
+
+            // Initialize dial to totality (shadow centered)
+            updateDial(0);
+
+            console.log('🎛️ Eclipse dial initialized with full 360° eclipse cycle');
+            console.log('   Dial knob element:', dialKnob);
+            console.log('   Initial rotation:', dialKnob.style.transform);
+        }
+
+        // Create layer card HTML
+        function createLayerCard(layer) {
+            const div = document.createElement('div');
+            div.className = 'layer-card';
+            div.draggable = true;
+            div.dataset.layerId = layer.id;
+
+            div.innerHTML = `
+                <div class="layer-header">
+                    <span class="drag-handle">⋮⋮</span>
+                    <span class="layer-title">Layer ${layer.id}</span>
+                    <div class="layer-controls">
+                        <button class="icon-button toggle-btn ${layer.enabled ? 'active' : ''}" data-layer-id="${layer.id}">
+                            ${layer.enabled ? 'ON' : 'OFF'}
+                        </button>
+                        <button class="icon-button delete" data-layer-id="${layer.id}">🗑</button>
+                    </div>
+                </div>
+                <select class="mode-select" data-layer-id="${layer.id}">
+                    ${blendModeNames.map((name, i) =>
+                        `<option value="${i}" ${i === layer.mode ? 'selected' : ''}>${name}</option>`
+                    ).join('')}
+                </select>
+                <div class="strength-control">
+                    <span class="strength-label">Strength: ${layer.strength.toFixed(3)}</span>
+                    <input type="range" class="strength-slider" data-layer-id="${layer.id}"
+                           min="0" max="5" step="0.001" value="${layer.strength}">
+                    <div class="precision-buttons">
+                        <button class="icon-button precision-btn" data-layer-id="${layer.id}" data-delta="0.1">0.1</button>
+                        <button class="icon-button precision-btn" data-layer-id="${layer.id}" data-delta="0.01">0.01</button>
+                        <button class="icon-button precision-btn" data-layer-id="${layer.id}" data-delta="0.001">0.001</button>
+                    </div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        // Add a new layer
+        function addLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (layers.length >= 4) {
+                console.warn('⚠️ Maximum 4 layers reached');
+                return;
+            }
+
+            const layer = {
+                id: nextLayerId++,
+                mode: mode,
+                strength: strength,
+                enabled: enabled
+            };
+
+            layers.push(layer);
+            const card = createLayerCard(layer);
+            document.getElementById('layers-container').appendChild(card);
+
+            if (!skipUpdate) {
+                updateShaderLayers();
+            }
+
+            console.log(`➕ Added layer ${layer.id}: ${blendModeNames[mode]} @ ${strength.toFixed(3)}`);
+        }
+
+        // Remove a layer
+        function removeLayer(layerId) {
+            const index = layers.findIndex(l => l.id === layerId);
+            if (index === -1) return;
+
+            layers.splice(index, 1);
+            const card = document.querySelector(`[data-layer-id="${layerId}"].layer-card`);
+            if (card) card.remove();
+
+            updateShaderLayers();
+            console.log(`➖ Removed layer ${layerId}`);
+        }
+
+        // Update shader uniforms with current layer state
+        function updateShaderLayers() {
+            if (!mascot || !mascot.core3D) return;
+
+            // Update first 4 layers
+            for (let i = 0; i < 4; i++) {
+                const layerNum = i + 1;
+                const uiLayer = layers[i];
+
+                if (uiLayer) {
+                    mascot.core3D.setBlendLayer(layerNum, {
+                        mode: uiLayer.mode,
+                        strength: uiLayer.strength,
+                        enabled: uiLayer.enabled
+                    });
+                    console.log(`🎨 Layer ${layerNum}: ${blendModeNames[uiLayer.mode]} @ ${uiLayer.strength.toFixed(3)} [${uiLayer.enabled ? 'ON' : 'OFF'}]`);
+                } else {
+                    // Disable unused layers
+                    mascot.core3D.setBlendLayer(layerNum, {
+                        mode: 0,
+                        strength: 0,
+                        enabled: false
+                    });
+                }
+            }
+        }
+
+        // Event delegation for layer controls
+        document.addEventListener('click', (e) => {
+            // Add layer button
+            if (e.target.id === 'add-layer-btn') {
+                addLayer();
+                return;
+            }
+
+            // Toggle layer on/off
+            if (e.target.classList.contains('toggle-btn')) {
+                const layerId = parseInt(e.target.dataset.layerId);
+                const layer = layers.find(l => l.id === layerId);
+                if (layer) {
+                    layer.enabled = !layer.enabled;
+                    e.target.textContent = layer.enabled ? 'ON' : 'OFF';
+                    e.target.classList.toggle('active');
+                    updateShaderLayers();
+                }
+                return;
+            }
+
+            // Delete layer
+            if (e.target.classList.contains('delete')) {
+                const layerId = parseInt(e.target.dataset.layerId);
+                removeLayer(layerId);
+                return;
+            }
+
+            // Precision buttons
+            if (e.target.classList.contains('precision-btn')) {
+                const layerId = parseInt(e.target.dataset.layerId);
+                const delta = parseFloat(e.target.dataset.delta);
+                const layer = layers.find(l => l.id === layerId);
+                if (layer) {
+                    layer.strength = Math.max(0, Math.min(5, layer.strength + delta));
+                    const slider = document.querySelector(`.strength-slider[data-layer-id="${layerId}"]`);
+                    const label = slider.closest('.strength-control').querySelector('.strength-label');
+                    slider.value = layer.strength;
+                    label.textContent = `Strength: ${layer.strength.toFixed(3)}`;
+                    updateShaderLayers();
+                }
+                return;
+            }
+
+            // Eclipse controls
+            if (e.target.dataset.action === 'eclipse') {
+                const eclipseType = e.target.dataset.value;
+                document.querySelectorAll('[data-action="eclipse"]').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+
+                // Show/hide eclipse controls section
+                const controlsSection = document.getElementById('eclipse-controls-section');
+
+                if (eclipseType === 'off') {
+                    // Hide controls when eclipse is off
+                    controlsSection.style.display = 'none';
+                    mascot.core3D.setSunShadow('off');
+                    console.log('☀️ Eclipse OFF');
+                } else {
+                    // Show controls when eclipse is active
+                    controlsSection.style.display = 'block';
+
+                    mascot.core3D.setSunShadow(eclipseType);
+                    console.log(`🌑 ${eclipseType.toUpperCase()} Eclipse ON`);
+
+                    // Initialize dial when controls become visible (if not already initialized)
+                    if (!dialState.initialized) {
+                        initializeEclipseDial();
+                        dialState.initialized = true;
+                    }
+                }
+                return;
+            }
+
+            // Toggle core glow
+            if (e.target.dataset.action === 'toggle-glow') {
+                if (mascot.core3D?.coreGlowEnabled !== false) {
+                    mascot.core3D.setCoreGlowEnabled(false);
+                    e.target.classList.remove('active');
+                    console.log('💫 Core glow disabled');
+                } else {
+                    mascot.core3D.setCoreGlowEnabled(true);
+                    e.target.classList.add('active');
+                    console.log('💫 Core glow enabled');
+                }
+                return;
+            }
+
+            // Toggle auto-rotate
+            if (e.target.dataset.action === 'toggle-auto-rotate') {
+                if (mascot.autoRotateEnabled) {
+                    mascot.disableAutoRotate();
+                    e.target.classList.remove('active');
+                    console.log('🛑 Auto-rotate OFF');
+                } else {
+                    mascot.enableAutoRotate();
+                    e.target.classList.add('active');
+                    console.log('▶️ Auto-rotate ON');
+                }
+                return;
             }
         });
 
-        // Set initial active button
-        document.querySelector('[data-value="joy"]').classList.add('active');
+        // Event delegation for selects and sliders
+        document.addEventListener('change', (e) => {
+            // Mode select
+            if (e.target.classList.contains('mode-select')) {
+                const layerId = parseInt(e.target.dataset.layerId);
+                const layer = layers.find(l => l.id === layerId);
+                if (layer) {
+                    layer.mode = parseInt(e.target.value);
+                    console.log(`🎨 Layer ${layerId} mode: ${blendModeNames[layer.mode]}`);
+                    updateShaderLayers();
+                }
+                return;
+            }
+        });
+
+        document.addEventListener('input', (e) => {
+            // Strength slider
+            if (e.target.classList.contains('strength-slider')) {
+                const layerId = parseInt(e.target.dataset.layerId);
+                const layer = layers.find(l => l.id === layerId);
+                if (layer) {
+                    layer.strength = parseFloat(e.target.value);
+                    const label = e.target.closest('.strength-control').querySelector('.strength-label');
+                    label.textContent = `Strength: ${layer.strength.toFixed(3)}`;
+                    updateShaderLayers();
+                }
+                return;
+            }
+
+        });
+
+        // Drag and drop for layer reordering
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('layer-card')) {
+                draggedLayer = e.target;
+                e.target.classList.add('dragging');
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('layer-card')) {
+                e.target.classList.remove('dragging');
+                draggedLayer = null;
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(document.getElementById('layers-container'), e.clientY);
+            const container = document.getElementById('layers-container');
+
+            if (afterElement == null) {
+                container.appendChild(draggedLayer);
+            } else {
+                container.insertBefore(draggedLayer, afterElement);
+            }
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            // Update layers array to match new DOM order
+            const container = document.getElementById('layers-container');
+            const cards = Array.from(container.querySelectorAll('.layer-card'));
+            const newLayers = [];
+
+            cards.forEach(card => {
+                const layerId = parseInt(card.dataset.layerId);
+                const layer = layers.find(l => l.id === layerId);
+                if (layer) newLayers.push(layer);
+            });
+
+            layers = newLayers;
+            updateShaderLayers();
+            console.log('🔄 Layers reordered');
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.layer-card:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
     </script>
 </body>
 </html>

@@ -33,6 +33,7 @@
  */
 
 import * as THREE from 'three';
+import { getSunWithBlendLayersShaders } from '../shaders/sunWithBlendLayers.js';
 
 /**
  * NASA-accurate photosphere effective temperature in Kelvin
@@ -51,12 +52,14 @@ export const SUN_PHOTOSPHERE_TEMP_K = 5772;
  * @param {string} options.resolution - Texture resolution ('2k' or '4k', default: '4k')
  * @param {Array<number>} options.glowColor - RGB color array [r, g, b] for emotion tinting
  * @param {number} options.glowIntensity - Glow intensity multiplier (scales HDR brightness)
+ * @param {string} options.materialVariant - Material variant ('multiplexer' for blend layers, default: standard)
  * @returns {THREE.ShaderMaterial}
  */
 export function createSunMaterial(textureLoader, options = {}) {
     const resolution = options.resolution || '4k';
     const glowColor = options.glowColor || [1, 1, 1];
     const glowIntensity = options.glowIntensity || 1.0;
+    const materialVariant = options.materialVariant || null;
 
     // Determine texture paths based on resolution
     const colorPath = `/assets/textures/Sun/sun-photosphere-${resolution}.jpg`;
@@ -133,23 +136,55 @@ export function createSunMaterial(textureLoader, options = {}) {
     colorMap.anisotropy = 16;
     normalMap.anisotropy = 16;
 
-    // Custom ShaderMaterial with surface-mapped fire animation
-    const material = new THREE.ShaderMaterial({
-        uniforms: {
-            time: { value: 0 },
-            colorMap: { value: colorMap },
-            normalMap: { value: normalMap },
-            baseColor: { value: baseColor },
-            emissiveIntensity: { value: 2.0 },  // Reduced from 6.0 to prevent core blowout
-            glowColor: { value: new THREE.Color(1, 1, 1) },  // For ThreeRenderer compatibility
-            glowIntensity: { value: 1.0 },  // For ThreeRenderer compatibility
-            // Shadow uniforms (same as moon crescent shader)
-            shadowOffset: { value: new THREE.Vector2(200.0, 0.0) },  // Start far away (no shadow)
-            shadowCoverage: { value: 0.5 },  // Shadow coverage (0.5 = half the sun radius)
-            shadowSoftness: { value: 0.1 },   // Edge softness for anti-aliasing
-            opacity: { value: 0.0 }  // Start invisible, fade in when texture loads
-        },
-        vertexShader: `
+    // Determine which shaders to use based on materialVariant
+    let vertexShader, fragmentShader;
+    let additionalUniforms = {};
+
+    if (materialVariant === 'multiplexer') {
+        // Use blend layers shader for solar eclipse effects
+        console.log('☀️ Sun.js: Creating MULTIPLEXER material variant with eclipse shader');
+        const { vertexShader: vs, fragmentShader: fs } = getSunWithBlendLayersShaders();
+        vertexShader = vs;
+        fragmentShader = fs;
+        console.log('☀️ Sun.js: Loaded sunWithBlendLayers shaders');
+
+        // Add solar eclipse uniforms
+        additionalUniforms = {
+            // Solar Eclipse (moon's shadow covering sun - complete occlusion)
+            eclipseProgress: { value: 0.0 },
+            eclipseShadowPos: { value: [-2.0, 0.0] },  // Start off-screen
+            eclipseShadowRadius: { value: 0.084 },  // User-calibrated: Total eclipse size (Annular: 0.075)
+            shadowDarkness: { value: 1.00 },  // Always 1.0 - moon blocks 100% of sun's light
+
+            // Blend Multiplexer Layer 1 (disabled by default - user configures in demo)
+            layer1Mode: { value: 0.0 },
+            layer1Strength: { value: 0.0 },
+            layer1Enabled: { value: 0.0 },
+
+            // Blend Multiplexer Layer 2
+            layer2Mode: { value: 0.0 },
+            layer2Strength: { value: 0.0 },
+            layer2Enabled: { value: 0.0 },
+
+            // Blend Multiplexer Layer 3
+            layer3Mode: { value: 0.0 },
+            layer3Strength: { value: 0.0 },
+            layer3Enabled: { value: 0.0 },
+
+            // Blend Multiplexer Layer 4
+            layer4Mode: { value: 0.0 },
+            layer4Strength: { value: 0.0 },
+            layer4Enabled: { value: 0.0 }
+        };
+        console.log('☀️ Sun.js: Added eclipse uniforms:', {
+            eclipseProgress: additionalUniforms.eclipseProgress.value,
+            eclipseShadowPos: additionalUniforms.eclipseShadowPos.value,
+            shadowDarkness: additionalUniforms.shadowDarkness.value
+        });
+    } else {
+        // Use standard sun shader (no eclipse support)
+        console.log('☀️ Sun.js: Using STANDARD shader (no eclipse support)');
+        vertexShader = `
             varying vec2 vUv;
             varying vec3 vNormal;
             varying vec3 vPosition;
@@ -162,8 +197,8 @@ export function createSunMaterial(textureLoader, options = {}) {
                 vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
-        `,
-        fragmentShader: `
+        `;
+        fragmentShader = `
             uniform float time;
             uniform sampler2D colorMap;
             uniform sampler2D normalMap;
@@ -321,7 +356,28 @@ export function createSunMaterial(textureLoader, options = {}) {
                 // Apply fade-in opacity to prevent texture flash during load
                 gl_FragColor = vec4(finalColor, opacity);
             }
-        `,
+        `;
+    }
+
+    // Custom ShaderMaterial with surface-mapped fire animation
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0 },
+            colorMap: { value: colorMap },
+            normalMap: { value: normalMap },
+            baseColor: { value: baseColor },
+            emissiveIntensity: { value: 2.0 },  // Reduced from 6.0 to prevent core blowout
+            glowColor: { value: new THREE.Color(1, 1, 1) },  // For ThreeRenderer compatibility
+            glowIntensity: { value: 1.0 },  // For ThreeRenderer compatibility
+            // Shadow uniforms (same as moon crescent shader)
+            shadowOffset: { value: new THREE.Vector2(200.0, 0.0) },  // Start far away (no shadow)
+            shadowCoverage: { value: 0.5 },  // Shadow coverage (0.5 = half the sun radius)
+            shadowSoftness: { value: 0.1 },   // Edge softness for anti-aliasing
+            opacity: { value: 0.0 },  // Start invisible, fade in when texture loads
+            ...additionalUniforms  // Add eclipse/blend layer uniforms if using multiplexer variant
+        },
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
         transparent: true,  // Enable opacity/alpha blending for fade-in
         toneMapped: false
     });
@@ -331,6 +387,15 @@ export function createSunMaterial(textureLoader, options = {}) {
 
     // Store pending textures for disposal
     material.userData.pendingTextures = pendingTextures;
+
+    // Log final material state
+    console.log('☀️ Sun.js: Material created with uniforms:', {
+        hasEclipseProgress: !!material.uniforms.eclipseProgress,
+        hasEclipseShadowPos: !!material.uniforms.eclipseShadowPos,
+        hasShadowDarkness: !!material.uniforms.shadowDarkness,
+        hasLayer1: !!material.uniforms.layer1Enabled,
+        materialVariant: materialVariant
+    });
 
     return material;
 }
@@ -347,12 +412,14 @@ export function createSunMaterial(textureLoader, options = {}) {
  * @param {Array<number>} options.glowColor - RGB color array [r, g, b] for emotion tinting
  * @param {number} options.glowIntensity - Glow intensity multiplier (scales HDR brightness)
  * @param {string} options.resolution - Texture resolution ('2k' or '4k', default: '4k')
+ * @param {string} options.materialVariant - Material variant ('multiplexer' for blend layers, default: standard)
  * @returns {THREE.Mesh} Sun mesh with self-luminous material
  */
 export function createSunGeometry(textureLoader = null, options = {}) {
     const glowColor = options.glowColor || [1, 1, 1];
     const glowIntensity = options.glowIntensity || 1.0;
     const resolution = options.resolution || '4k';
+    const materialVariant = options.materialVariant || null;
 
     // Create optimized sphere geometry (reduced from 64x64 for performance)
     // 32x32 = 1,024 quads = 2,048 triangles (4x fewer than 64x64)
@@ -369,7 +436,7 @@ export function createSunGeometry(textureLoader = null, options = {}) {
 
     // Use textured material if loader provided, otherwise fallback to color-only
     if (textureLoader) {
-        material = createSunMaterial(textureLoader, { glowColor, glowIntensity, resolution });
+        material = createSunMaterial(textureLoader, { glowColor, glowIntensity, resolution, materialVariant });
     } else {
         // Fallback: color-only material (no texture)
         const brightness = 1.0 + (glowIntensity * 2.0);
