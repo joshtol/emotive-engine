@@ -370,6 +370,14 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Set the undertone (alias for updateUndertone)
+     * @param {string|null} undertone - The undertone to apply
+     */
+    setUndertone(undertone) {
+        this.updateUndertone(undertone);
+    }
+
+    /**
      * Express a gesture (same API as 2D version)
      * @param {string} gestureName - Gesture name
      */

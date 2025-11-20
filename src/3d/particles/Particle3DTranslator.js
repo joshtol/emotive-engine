@@ -429,8 +429,8 @@ export class Particle3DTranslator {
             // Get or generate the direction the particle will travel when it pops
             const dir = this._getUniformDirection3D(particle);
 
-            // Position slightly away from center (0.05 world units) so particles are visible while waiting
-            const waitDistance = this.baseRadius * 0.05;
+            // Position farther away from center (0.15 world units) so particles don't appear huge
+            const waitDistance = this.baseRadius * 0.15;
             return this.tempVec3.set(
                 corePosition.x + dir.x * waitDistance,
                 corePosition.y + dir.y * waitDistance * this.verticalScale,
@@ -446,8 +446,8 @@ export class Particle3DTranslator {
         const dy = particle.y - centerY;
         const distance2D = Math.sqrt(dx * dx + dy * dy);
 
-        // Convert 2D distance to world units (scale down for less chaos)
-        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.5;
+        // Convert 2D distance to world units (scale down more to reduce initial size)
+        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.35;
 
         // Position particle along its 3D direction
         return this.tempVec3.set(
@@ -666,46 +666,41 @@ export class Particle3DTranslator {
     /**
      * SURVEILLANCE: Tracking/scanning motion in full 3D sphere
      * Particles orbit and scan like searchlights covering all angles
+     * Uses same technique as zen/ambient for consistent 3D distribution
      */
     _translateSurveillance(particle, corePosition, canvasSize) {
-        const behaviorData = particle.behaviorData || {};
+        // Get uniform 3D direction (uses x,y as seeds but results in sphere distribution)
+        const dir = this._getUniformDirection3D(particle);
 
-        // Get or generate unique orbital path for this particle
-        if (!behaviorData.orbitPath) {
-            // Each particle gets a unique orbital plane using its properties as seeds
-            const seed1 = particle.x + particle.y * 0.7;
-            const seed2 = particle.x * 0.3 + particle.y;
+        // Surveillance particles orbit slowly in their own tilted plane
+        const orbitAngle = particle.age * 0.5;
+        const radius = this.baseRadius * 0.6;
 
-            // Generate inclination and orientation for orbital plane
-            behaviorData.orbitPath = {
-                inclination: ((Math.sin(seed1 * 0.1) + 1) * 0.5) * Math.PI, // 0 to PI
-                orientation: ((Math.sin(seed2 * 0.1) + 1) * 0.5) * Math.PI * 2  // 0 to 2PI
-            };
+        // Create perpendicular vector for rotation plane (same as zen)
+        const up = { x: 0, y: 1, z: 0 };
+        const perp = {
+            x: dir.y * up.z - dir.z * up.y,
+            y: dir.z * up.x - dir.x * up.z,
+            z: dir.x * up.y - dir.y * up.x
+        };
+
+        // Normalize perpendicular vector
+        const perpMag = Math.sqrt(perp.x * perp.x + perp.y * perp.y + perp.z * perp.z);
+        if (perpMag > 0) {
+            perp.x /= perpMag;
+            perp.y /= perpMag;
+            perp.z /= perpMag;
         }
 
-        const { inclination, orientation } = behaviorData.orbitPath;
-        const radius = this.baseRadius * 1.2;
-
-        // Orbit angle progresses with particle age
-        const orbitAngle = particle.age * 0.5 + orientation;
-
-        // Calculate position on tilted orbital plane
-        // First, position in XZ plane
-        const x = Math.cos(orbitAngle) * radius;
-        const z = Math.sin(orbitAngle) * radius;
-
-        // Then rotate by inclination to create 3D orbital paths
-        const cosIncl = Math.cos(inclination);
-        const sinIncl = Math.sin(inclination);
-
-        const x3d = x;
-        const y3d = z * sinIncl;  // Vertical component from tilt
-        const z3d = z * cosIncl;  // Depth component from tilt
+        // Orbit in 3D plane defined by dir and perp
+        const orbitX = Math.cos(orbitAngle) * dir.x + Math.sin(orbitAngle) * perp.x;
+        const orbitY = Math.cos(orbitAngle) * dir.y + Math.sin(orbitAngle) * perp.y;
+        const orbitZ = Math.cos(orbitAngle) * dir.z + Math.sin(orbitAngle) * perp.z;
 
         return this.tempVec3.set(
-            corePosition.x + x3d,
-            corePosition.y + y3d * this.verticalScale,
-            corePosition.z + z3d
+            corePosition.x + orbitX * radius,
+            corePosition.y + orbitY * radius * this.verticalScale,
+            corePosition.z + orbitZ * radius
         );
     }
 

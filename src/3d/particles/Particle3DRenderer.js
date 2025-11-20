@@ -396,7 +396,9 @@ export class Particle3DRenderer {
 
             // PRIORITY 5: Size variety - use particle's stable baseSize (already has variation)
             const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
-            this.sizes[i] = depthSize * 0.85; // Scale for point sprite size (particle.size already varies 4-10px) - increased for better visibility
+            // Scale down popcorn particles more aggressively (joy emotion)
+            const sizeMultiplier = particle.behavior === 'popcorn' ? 0.28 : 0.85;
+            this.sizes[i] = depthSize * sizeMultiplier; // Scale for point sprite size (particle.size already varies 4-10px)
 
             // Update color
             const color = this._parseColor(particle.color || '#ffffff');

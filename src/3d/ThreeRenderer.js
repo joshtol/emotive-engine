@@ -244,7 +244,7 @@ export class ThreeRenderer {
             // Try EXR first
             try {
                 const exrLoader = new EXRLoader();
-                const texture = await exrLoader.loadAsync('/hdri/studio_01.exr');
+                const texture = await exrLoader.loadAsync('/public/hdri/studio_01.exr');
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 this.envMap = pmremGenerator.fromEquirectangular(texture).texture;
                 texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (10-22MB GPU memory leak fix)
