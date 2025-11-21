@@ -226,7 +226,7 @@
 
         <div class="section">
             <h2>Particles</h2>
-            <button data-action="toggle-particles" class="active">✨ Show Particles</button>
+            <button data-action="toggle-particles">✨ Show Particles</button>
         </div>
 
         <div class="section">
@@ -385,7 +385,7 @@
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'blackHole',
                     materialVariant: 'multiplexer', // Use multiplexer shader with blend layers
-                    enableParticles: true,
+                    enableParticles: false, // Start with particles OFF for comparison
                     enablePostProcessing: true,
                     enableShadows: false,
                     enableControls: false, // Start with controls off

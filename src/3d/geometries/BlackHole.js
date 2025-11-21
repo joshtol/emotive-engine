@@ -151,7 +151,86 @@ export function createBlackHoleGroup() {
     photonRingMesh.rotation.x = THREE.MathUtils.degToRad(17);
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // RELATIVISTIC JETS (Mesh 4 & 5)
+    // FAR-SIDE DISK (Mesh 4) - GRAVITATIONALLY LENSED
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Simulates light from far side of disk bending around black hole
+    // This creates the characteristic "disk underside" image visible in M87*
+    // Uses same radii as main disk but positioned above, with UV distortion shader
+
+    const farSideDiskGeometry = new THREE.RingGeometry(
+        diskInnerRadius,
+        diskOuterRadius,
+        diskSegments,
+        16
+    );
+    farSideDiskGeometry.rotateX(-Math.PI / 2);
+
+    // Create a simplified shader that mimics the main disk but with lensing distortion
+    const farSideDiskMaterial = new THREE.ShaderMaterial({
+        vertexShader: `
+            varying vec2 vUv;
+            varying vec3 vPosition;
+
+            void main() {
+                vUv = uv;
+                vPosition = position;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 baseColor;
+            uniform float opacity;
+            uniform float distortionStrength;
+
+            varying vec2 vUv;
+            varying vec3 vPosition;
+
+            void main() {
+                // Calculate distance from center (normalized 0-1)
+                float dist = length(vPosition.xy) / ${diskOuterRadius.toFixed(2)};
+
+                // Gravitational lensing distortion: stronger near inner edge
+                // This simulates light bending around the black hole
+                float lensing = (1.0 - dist) * distortionStrength;
+
+                // Create dimmer version of main disk (far side receives less direct light)
+                // Use radial gradient similar to main disk
+                float brightness = smoothstep(0.3, 1.0, dist) * (1.0 - lensing * 0.5);
+
+                // Color gradient: cooler on outside, warmer inside (like main disk)
+                vec3 innerColor = vec3(1.0, 0.6, 0.3);  // Orange-yellow
+                vec3 outerColor = vec3(0.8, 0.4, 0.2);  // Reddish
+                vec3 color = mix(innerColor, outerColor, dist);
+
+                // Apply dimming (far side is less bright)
+                color *= brightness * 0.6;  // 60% of main disk brightness
+
+                gl_FragColor = vec4(color * baseColor, opacity * brightness);
+            }
+        `,
+        uniforms: {
+            baseColor: { value: new THREE.Color(1.0, 1.0, 1.0) },
+            opacity: { value: 0.7 },  // Semi-transparent to blend with main disk
+            distortionStrength: { value: 0.3 }  // Lensing distortion amount
+        },
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false
+    });
+
+    const farSideDiskMesh = new THREE.Mesh(farSideDiskGeometry, farSideDiskMaterial);
+    farSideDiskMesh.name = 'FarSideDisk';
+    farSideDiskMesh.renderOrder = 4; // Render after photon ring but before jets
+
+    // Position above main disk to create lensed appearance
+    farSideDiskMesh.position.y = SCHWARZSCHILD_RADIUS * 0.3;  // Offset vertically
+
+    // Match main disk tilt
+    farSideDiskMesh.rotation.x = THREE.MathUtils.degToRad(17);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RELATIVISTIC JETS (Mesh 5 & 6)
     // Blue/white particle streams from black hole poles (synchrotron radiation)
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -366,6 +445,7 @@ export function createBlackHoleGroup() {
     group.add(shadowMesh);
     group.add(diskMesh);
     group.add(photonRingMesh);
+    group.add(farSideDiskMesh);
     group.add(topJetMesh);
     group.add(bottomJetMesh);
     group.add(hawkingParticles);
@@ -382,6 +462,7 @@ export function createBlackHoleGroup() {
     group.userData.shadowMesh = shadowMesh;
     group.userData.diskMesh = diskMesh;
     group.userData.photonRingMesh = photonRingMesh;
+    group.userData.farSideDiskMesh = farSideDiskMesh;
     group.userData.topJetMesh = topJetMesh;
     group.userData.bottomJetMesh = bottomJetMesh;
     group.userData.hawkingParticles = hawkingParticles;
