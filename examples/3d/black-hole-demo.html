@@ -237,14 +237,14 @@
 
         <div class="section">
             <h2>Relativistic Jets</h2>
-            <button data-action="toggle-jets" style="width: 100%; margin-bottom: 10px">🚀 Show Jets</button>
+            <button data-action="toggle-jets" class="active" style="width: 100%; margin-bottom: 10px">🚀 Show Jets</button>
             <div class="slider-container">
                 <div class="slider-label">
                     <span>Jet Intensity</span>
-                    <span id="jet-intensity-value">0%</span>
+                    <span id="jet-intensity-value">80%</span>
                 </div>
                 <input type="range" id="jet-intensity-slider" class="slider"
-                       min="0" max="1" step="0.01" value="0">
+                       min="0" max="1" step="0.01" value="0.8">
             </div>
         </div>
 
@@ -481,7 +481,7 @@
                 const topJetMesh = mascot?.core3D?.coreMesh?.userData?.topJetMesh;
                 const bottomJetMesh = mascot?.core3D?.coreMesh?.userData?.bottomJetMesh;
 
-                if (topJetMesh && bottomJetMesh) {
+                if (topJetMesh && bottomJetMesh && topJetMesh.material?.uniforms && bottomJetMesh.material?.uniforms) {
                     const currentIntensity = topJetMesh.material.uniforms.jetIntensity.value;
                     const newIntensity = currentIntensity > 0 ? 0 : 0.8;
 
@@ -593,7 +593,7 @@
             const intensity = parseFloat(e.target.value);
             document.getElementById('jet-intensity-value').textContent = `${Math.round(intensity * 100)}%`;
 
-            // Update jet intensity in shader
+            // Update jet intensity in shader uniforms
             const topJetMesh = mascot?.core3D?.coreMesh?.userData?.topJetMesh;
             const bottomJetMesh = mascot?.core3D?.coreMesh?.userData?.bottomJetMesh;
 

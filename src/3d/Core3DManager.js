@@ -93,12 +93,12 @@ export class Core3DManager {
             const { diskMaterial, shadowMaterial } = customMaterial;
 
             // Apply materials to the meshes in the Group
-            const {diskMesh} = this.geometry.userData;
-            const {shadowMesh} = this.geometry.userData;
+            const {diskMesh, shadowMesh} = this.geometry.userData;
 
             if (diskMesh && diskMaterial) {
                 diskMesh.material = diskMaterial;
             }
+
             if (shadowMesh && shadowMaterial) {
                 shadowMesh.material = shadowMaterial;
             }

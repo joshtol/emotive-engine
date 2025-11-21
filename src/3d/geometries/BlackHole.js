@@ -84,37 +84,11 @@ export function createBlackHoleGroup() {
     shadowMesh.renderOrder = 1; // Render first (behind everything)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // ACCRETION DISK (Mesh 2)
-    // Hot plasma disk with differential rotation (inner fast, outer slow)
+    // ACCRETION DISK - REMOVED
+    // Disk with gravitational lensing CANNOT be done with flat geometry
+    // Must use fullscreen raymarching shader (see threejs-blackhole reference)
     // ═══════════════════════════════════════════════════════════════════════════
-
-    const diskInnerRadius = SCHWARZSCHILD_RADIUS * 2.5;  // ISCO (innermost stable orbit)
-    const diskOuterRadius = SCHWARZSCHILD_RADIUS * 8.0;  // Outer edge
-    const diskSegments = 128;  // High detail for smooth rotation
-
-    const diskGeometry = new THREE.RingGeometry(
-        diskInnerRadius,
-        diskOuterRadius,
-        diskSegments,
-        16  // Radial segments
-    );
-
-    // Rotate disk to be horizontal (RingGeometry defaults to vertical)
-    diskGeometry.rotateX(-Math.PI / 2);
-
-    // Default material (will be replaced by shader material in createBlackHoleMaterial)
-    const diskMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        side: THREE.DoubleSide, // Visible from both sides
-        transparent: true
-    });
-
-    const diskMesh = new THREE.Mesh(diskGeometry, diskMaterial);
-    diskMesh.name = 'AccretionDisk';
-    diskMesh.renderOrder = 2; // Render after shadow
-
-    // Tilt disk to match M87* observation (~17° from face-on)
-    diskMesh.rotation.x = THREE.MathUtils.degToRad(17);
+    // TODO: Implement fullscreen quad with raymarching shader
 
     // ═══════════════════════════════════════════════════════════════════════════
     // PHOTON RING (Mesh 3)
@@ -122,7 +96,7 @@ export function createBlackHoleGroup() {
     // ═══════════════════════════════════════════════════════════════════════════
 
     const photonRingRadius = SCHWARZSCHILD_RADIUS * 1.5;  // Photon sphere
-    const photonRingThickness = SCHWARZSCHILD_RADIUS * 0.05;  // Very thin
+    const photonRingThickness = SCHWARZSCHILD_RADIUS * 0.08;  // Thin but visible
 
     const photonRingGeometry = new THREE.TorusGeometry(
         photonRingRadius,
@@ -135,12 +109,12 @@ export function createBlackHoleGroup() {
     photonRingGeometry.rotateX(Math.PI / 2);
 
     const photonRingMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
+        color: 0x000000,  // DISABLED - no light from black hole
         transparent: true,
-        opacity: 0.9,
-        blending: THREE.AdditiveBlending,  // Brightest on top
+        opacity: 0.0,  // Completely invisible
+        blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide,
-        toneMapped: false  // HDR glow - MeshBasicMaterial is already unlit and bright
+        toneMapped: false
     });
 
     const photonRingMesh = new THREE.Mesh(photonRingGeometry, photonRingMaterial);
@@ -151,139 +125,94 @@ export function createBlackHoleGroup() {
     photonRingMesh.rotation.x = THREE.MathUtils.degToRad(17);
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // FAR-SIDE DISK (Mesh 4) - GRAVITATIONALLY LENSED
+    // GRAVITATIONAL LENSING
+    // Implemented entirely in shader via raymarching (see blackHoleWithBlendLayers.js)
+    // NO separate geometry needed - lensing is camera-dependent light bending
     // ═══════════════════════════════════════════════════════════════════════════
-    // Simulates light from far side of disk bending around black hole
-    // This creates the characteristic "disk underside" image visible in M87*
-    // Uses same radii as main disk but positioned above, with UV distortion shader
-
-    const farSideDiskGeometry = new THREE.RingGeometry(
-        diskInnerRadius,
-        diskOuterRadius,
-        diskSegments,
-        16
-    );
-    farSideDiskGeometry.rotateX(-Math.PI / 2);
-
-    // Create a simplified shader that mimics the main disk but with lensing distortion
-    const farSideDiskMaterial = new THREE.ShaderMaterial({
-        vertexShader: `
-            varying vec2 vUv;
-            varying vec3 vPosition;
-
-            void main() {
-                vUv = uv;
-                vPosition = position;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform vec3 baseColor;
-            uniform float opacity;
-            uniform float distortionStrength;
-
-            varying vec2 vUv;
-            varying vec3 vPosition;
-
-            void main() {
-                // Calculate distance from center (normalized 0-1)
-                float dist = length(vPosition.xy) / ${diskOuterRadius.toFixed(2)};
-
-                // Gravitational lensing distortion: stronger near inner edge
-                // This simulates light bending around the black hole
-                float lensing = (1.0 - dist) * distortionStrength;
-
-                // Create dimmer version of main disk (far side receives less direct light)
-                // Use radial gradient similar to main disk
-                float brightness = smoothstep(0.3, 1.0, dist) * (1.0 - lensing * 0.5);
-
-                // Color gradient: cooler on outside, warmer inside (like main disk)
-                vec3 innerColor = vec3(1.0, 0.6, 0.3);  // Orange-yellow
-                vec3 outerColor = vec3(0.8, 0.4, 0.2);  // Reddish
-                vec3 color = mix(innerColor, outerColor, dist);
-
-                // Apply dimming (far side is less bright)
-                color *= brightness * 0.6;  // 60% of main disk brightness
-
-                gl_FragColor = vec4(color * baseColor, opacity * brightness);
-            }
-        `,
-        uniforms: {
-            baseColor: { value: new THREE.Color(1.0, 1.0, 1.0) },
-            opacity: { value: 0.7 },  // Semi-transparent to blend with main disk
-            distortionStrength: { value: 0.3 }  // Lensing distortion amount
-        },
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide,
-        depthWrite: false
-    });
-
-    const farSideDiskMesh = new THREE.Mesh(farSideDiskGeometry, farSideDiskMaterial);
-    farSideDiskMesh.name = 'FarSideDisk';
-    farSideDiskMesh.renderOrder = 4; // Render after photon ring but before jets
-
-    // Position above main disk to create lensed appearance
-    farSideDiskMesh.position.y = SCHWARZSCHILD_RADIUS * 0.3;  // Offset vertically
-
-    // Match main disk tilt
-    farSideDiskMesh.rotation.x = THREE.MathUtils.degToRad(17);
+    // Lensing creates the characteristic "photon ring" and far-side disk visibility
+    // This is handled by the fragment shader detecting multiple disk plane intersections
 
     // ═══════════════════════════════════════════════════════════════════════════
     // RELATIVISTIC JETS (Mesh 5 & 6)
-    // Blue/white particle streams from black hole poles (synchrotron radiation)
+    // Volumetric cone meshes with shader-based glow (synchrotron radiation)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    const jetLength = SCHWARZSCHILD_RADIUS * 10.0;  // 10× Schwarzschild radius
-    const jetBaseRadius = SCHWARZSCHILD_RADIUS * 0.3;  // Narrow at base
-    const jetTopRadius = SCHWARZSCHILD_RADIUS * 0.8;   // Widens at tip
+    // Jets are scaled 8x larger to compensate for 0.25x group scaling that happens later
+    const jetLength = SCHWARZSCHILD_RADIUS * 128.0;    // 32x final size after 0.25x group scale
+    const jetBaseRadius = SCHWARZSCHILD_RADIUS * 1.2;  // 0.3x final size after 0.25x group scale
+    const jetTopRadius = SCHWARZSCHILD_RADIUS * 9.6;   // 2.4x final size after 0.25x group scale
 
-    // Top jet (positive Y direction)
-    const topJetGeometry = new THREE.ConeGeometry(jetTopRadius, jetLength, 16, 8, true);
+    // Use ConeGeometry - it's a solid volumetric shape
+    // THREE.ConeGeometry(radiusTop, height, ...) - so we swap base/top to get correct direction
+    const topJetGeometry = new THREE.ConeGeometry(jetTopRadius, jetLength, 32, 32, true);
+
+    // Custom shader for volumetric glow with emotion-controlled color gradient
     const topJetMaterial = new THREE.ShaderMaterial({
         vertexShader: `
+            varying vec3 vPosition;
+            varying vec3 vNormal;
             varying vec2 vUv;
-            varying float vDistance;
 
             void main() {
+                vPosition = position;
+                vNormal = normalize(normalMatrix * normal);
                 vUv = uv;
-                vDistance = position.y / ${jetLength.toFixed(4)};  // 0.0 at base, 1.0 at tip
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
         `,
         fragmentShader: `
-            uniform float time;
             uniform float jetIntensity;
-            uniform vec3 jetColor;
+            uniform vec3 jetBaseColor;      // Color at base (near black hole)
+            uniform vec3 jetTipColor;       // Color at tip (far from black hole)
+            uniform vec3 emotionColorTint;  // Emotion-based color tint
+            uniform float time;
 
+            varying vec3 vPosition;
+            varying vec3 vNormal;
             varying vec2 vUv;
-            varying float vDistance;
 
             void main() {
-                // Opacity gradient: bright at base, fade at tip
-                float baseOpacity = 1.0 - vDistance;
+                // Height along jet (0 at base, 1 at tip)
+                float heightNorm = (vPosition.y + ${(jetLength / 2).toFixed(4)}) / ${jetLength.toFixed(4)};
 
-                // Animated flow effect (particles streaming upward)
-                float flow = fract(vDistance * 3.0 - time * 0.5);
-                float flowBrightness = smoothstep(0.0, 0.1, flow) * smoothstep(0.3, 0.2, flow);
+                // Radial distance from center axis
+                float radialDist = length(vPosition.xz) / ${jetTopRadius.toFixed(4)};
 
-                // Flickering turbulence
-                float flicker = 0.8 + 0.2 * sin(time * 8.0 + vDistance * 20.0);
+                // Bright core that fades outward radially
+                float coreBrightness = 1.0 - smoothstep(0.0, 0.7, radialDist);
+                coreBrightness = pow(coreBrightness, 0.3);
 
-                // Radial fade from center
-                float radialDist = length(vUv - vec2(0.5, 0.5)) * 2.0;
-                float radialFade = 1.0 - smoothstep(0.3, 1.0, radialDist);
+                // SHORT glowing section - bright at base, fade to nothing quickly
+                // heightNorm = 1.0 is AT THE BLACK HOLE (narrow end, should be BRIGHTEST)
+                // heightNorm = 0.0 is FAR AWAY (wide end, should be TRANSPARENT)
+                // Only keep last ~11% bright (0.89 to 1.0)
+                float heightFade = smoothstep(0.89, 1.0, heightNorm);  // Fade in from 0.89 to 1.0
+                heightFade = pow(heightFade, 2.0);  // Sharpen the concentration at base
 
-                // Combine effects
-                float alpha = baseOpacity * flowBrightness * flicker * radialFade * jetIntensity;
+                // Animated streaming effect (much slower)
+                float stream = fract(heightNorm * 3.0 - time * 0.3);
+                stream = smoothstep(0.0, 0.1, stream) * smoothstep(0.3, 0.2, stream);
 
-                gl_FragColor = vec4(jetColor, alpha);
+                // STRONG color gradient from base to tip
+                vec3 gradientColor = mix(jetBaseColor, jetTipColor, pow(heightNorm, 0.7));
+
+                // Apply emotion tint
+                vec3 finalColorBase = gradientColor * emotionColorTint;
+
+                // Calculate brightness
+                float brightness = (coreBrightness * 4.0 + stream * 1.5) * heightFade * jetIntensity;
+                vec3 finalColor = finalColorBase * brightness;
+
+                // For additive blending, RGB values ARE the brightness
+                gl_FragColor = vec4(finalColor, 1.0);
             }
         `,
         uniforms: {
             time: { value: 0.0 },
-            jetIntensity: { value: 0.0 },  // Start hidden, controlled by emotion
-            jetColor: { value: new THREE.Color(0.7, 0.85, 1.0) }  // Blue-white synchrotron
+            jetIntensity: { value: 0.8 },
+            jetBaseColor: { value: new THREE.Color(1.0, 0.4, 0.9) },      // Bright magenta/purple at base
+            jetTipColor: { value: new THREE.Color(0.3, 0.5, 1.0) },       // Blue at tip
+            emotionColorTint: { value: new THREE.Color(1.0, 1.0, 1.0) }   // Default white (no tint)
         },
         transparent: true,
         blending: THREE.AdditiveBlending,
@@ -294,22 +223,26 @@ export function createBlackHoleGroup() {
 
     const topJetMesh = new THREE.Mesh(topJetGeometry, topJetMaterial);
     topJetMesh.name = 'TopJet';
-    topJetMesh.position.y = jetLength / 2;  // Position so base is at origin
+    // Rotate 180° so narrow end points at black hole
+    topJetMesh.rotation.z = Math.PI;
+    topJetMesh.position.y = shadowRadius + (jetLength / 2);
     topJetMesh.renderOrder = 4;
 
-    // Bottom jet (negative Y direction) - same geometry, flipped
+    // Bottom jet
     const bottomJetGeometry = topJetGeometry.clone();
     const bottomJetMaterial = topJetMaterial.clone();
     bottomJetMaterial.uniforms = {
         time: { value: 0.0 },
-        jetIntensity: { value: 0.0 },
-        jetColor: { value: new THREE.Color(0.7, 0.85, 1.0) }
+        jetIntensity: { value: 0.8 },
+        jetBaseColor: { value: new THREE.Color(1.0, 0.4, 0.9) },      // Bright magenta/purple at base
+        jetTipColor: { value: new THREE.Color(0.3, 0.5, 1.0) },       // Blue at tip
+        emotionColorTint: { value: new THREE.Color(1.0, 1.0, 1.0) }   // Default white (no tint)
     };
 
     const bottomJetMesh = new THREE.Mesh(bottomJetGeometry, bottomJetMaterial);
     bottomJetMesh.name = 'BottomJet';
-    bottomJetMesh.position.y = -jetLength / 2;
-    bottomJetMesh.rotation.x = Math.PI;  // Flip upside down
+    // No rotation needed - default cone orientation is correct for downward jet
+    bottomJetMesh.position.y = -(shadowRadius + (jetLength / 2));
     bottomJetMesh.renderOrder = 4;
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -335,14 +268,49 @@ export function createBlackHoleGroup() {
     hawkingGeometry.setAttribute('velocity', new THREE.BufferAttribute(hawkingVelocities, 3));
     hawkingGeometry.setAttribute('lifetime', new THREE.BufferAttribute(hawkingLifetimes, 1));
 
-    const hawkingMaterial = new THREE.PointsMaterial({
-        color: 0xCCEEFF,           // Soft blue-white
-        size: 0.03,                // Tiny particles
+    // Use custom shader to render circular particles (not squares)
+    const hawkingMaterial = new THREE.ShaderMaterial({
+        vertexShader: `
+            attribute float lifetime;
+            uniform float maxLifetime;
+            varying float vAlpha;
+
+            void main() {
+                // Fade out as lifetime approaches 0
+                vAlpha = lifetime / maxLifetime;
+
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_PointSize = 0.08 * (300.0 / -mvPosition.z); // Size attenuation
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `,
+        fragmentShader: `
+            varying float vAlpha;
+
+            void main() {
+                // Create circular particle using gl_PointCoord
+                vec2 center = gl_PointCoord - vec2(0.5);
+                float dist = length(center);
+
+                // Discard fragments outside circle
+                if (dist > 0.5) discard;
+
+                // Soft edge falloff
+                float alpha = smoothstep(0.5, 0.0, dist) * vAlpha;
+
+                // Bright white HDR glow
+                vec3 color = vec3(1.0, 1.0, 1.0) * 2.0; // HDR brightness
+
+                gl_FragColor = vec4(color, alpha);
+            }
+        `,
+        uniforms: {
+            maxLifetime: { value: hawkingMaxLifetime }
+        },
         transparent: true,
-        opacity: 0.6,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        sizeAttenuation: true
+        toneMapped: false
     });
 
     const hawkingParticles = new THREE.Points(hawkingGeometry, hawkingMaterial);
@@ -351,10 +319,10 @@ export function createBlackHoleGroup() {
 
     // Store particle system metadata
     hawkingParticles.userData = {
-        spawnRate: 0.0,            // Particles per second (0 = disabled by default)
+        spawnRate: 0.0,            // Disabled by default (enable via UI slider)
         timeSinceLastSpawn: 0.0,
         maxLifetime: hawkingMaxLifetime,
-        eventHorizonRadius: SCHWARZSCHILD_RADIUS * 1.05 // Spawn just outside event horizon
+        eventHorizonRadius: SCHWARZSCHILD_RADIUS * 2.05 // Spawn just outside shadow
     };
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -364,8 +332,8 @@ export function createBlackHoleGroup() {
     // Glowing, shimmering ring just outside event horizon shadow
     // Creates illusion of light bending around black hole
 
-    const lensingRingRadius = shadowRadius * 1.02; // Just outside shadow
-    const lensingRingThickness = SCHWARZSCHILD_RADIUS * 0.15;
+    const lensingRingRadius = shadowRadius * 1.05; // Just outside shadow
+    const lensingRingThickness = SCHWARZSCHILD_RADIUS * 0.25; // Thicker for visibility
 
     const lensingRingGeometry = new THREE.TorusGeometry(
         lensingRingRadius,
@@ -403,20 +371,24 @@ export function createBlackHoleGroup() {
             void main() {
                 // Fresnel effect for edge brightness
                 vec3 viewDir = normalize(vViewPosition);
-                float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 2.0);
+                float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 1.5);
 
                 // Shimmering wave effect (rotating distortion)
                 float wave1 = sin(vUv.x * 20.0 + time * 2.0) * 0.5 + 0.5;
                 float wave2 = sin(vUv.y * 15.0 - time * 3.0) * 0.5 + 0.5;
-                float shimmer = wave1 * wave2;
+                float shimmer = wave1 * wave2 * 0.5 + 0.5; // Less extreme variation
 
                 // Radial brightness gradient (brighter in center of ring cross-section)
                 float radialGradient = 1.0 - abs(vUv.x - 0.5) * 2.0;
+                radialGradient = smoothstep(0.0, 1.0, radialGradient);
+
+                // Base brightness (always visible)
+                float baseBrightness = 0.7;
 
                 // Combine effects
-                float brightness = fresnel * shimmer * radialGradient * lensingStrength;
+                float brightness = (baseBrightness + fresnel * shimmer * radialGradient * 0.3) * lensingStrength;
 
-                // Einstein ring glow (soft white-blue)
+                // Einstein ring glow (warm lensed starlight)
                 vec3 finalColor = lensingColor * brightness;
                 float alpha = brightness;
 
@@ -425,8 +397,8 @@ export function createBlackHoleGroup() {
         `,
         uniforms: {
             time: { value: 0.0 },
-            lensingStrength: { value: 0.0 },  // Hidden by default
-            lensingColor: { value: new THREE.Color(0.9, 0.95, 1.0) }  // Soft white-blue
+            lensingStrength: { value: 0.0 },  // DISABLED - no light from black hole
+            lensingColor: { value: new THREE.Color(0.0, 0.0, 0.0) }  // Black
         },
         transparent: true,
         blending: THREE.AdditiveBlending,
@@ -443,9 +415,8 @@ export function createBlackHoleGroup() {
     // ═══════════════════════════════════════════════════════════════════════════
 
     group.add(shadowMesh);
-    group.add(diskMesh);
+    // diskMesh REMOVED - lensing requires fullscreen raymarching
     group.add(photonRingMesh);
-    group.add(farSideDiskMesh);
     group.add(topJetMesh);
     group.add(bottomJetMesh);
     group.add(hawkingParticles);
@@ -454,15 +425,14 @@ export function createBlackHoleGroup() {
     // Scale entire group to match other geometries (radius ~0.5 default scale)
     // This makes the black hole similar size to sphere, moon, sun, etc.
     const targetRadius = 0.5;
-    const currentRadius = diskOuterRadius;
+    const currentRadius = SCHWARZSCHILD_RADIUS * 8.0; // Use disk outer radius constant
     const scaleFactor = targetRadius / currentRadius;
     group.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
     // Store references for material updates
     group.userData.shadowMesh = shadowMesh;
-    group.userData.diskMesh = diskMesh;
+    // group.userData.diskMesh = diskMesh; // REMOVED
     group.userData.photonRingMesh = photonRingMesh;
-    group.userData.farSideDiskMesh = farSideDiskMesh;
     group.userData.topJetMesh = topJetMesh;
     group.userData.bottomJetMesh = bottomJetMesh;
     group.userData.hawkingParticles = hawkingParticles;
@@ -573,6 +543,11 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
             dopplerIntensity: { value: emotionParams.dopplerIntensity },
             turbulenceStrength: { value: emotionParams.turbulence },
 
+            // Gravitational lensing (far-side disk visibility)
+            lensingEnabled: { value: 1.0 },              // 1.0 = enabled by default
+            schwarzschildRadius: { value: SCHWARZSCHILD_RADIUS },
+            diskNormal: { value: new THREE.Vector3(Math.sin(THREE.MathUtils.degToRad(17)), Math.cos(THREE.MathUtils.degToRad(17)), 0) }, // Tilted disk normal
+
             // Blend layers (4 layers × 3 properties = 12 uniforms)
             layer1Mode: { value: 0.0 },      // 0 = Normal
             layer1Strength: { value: 1.0 },
@@ -652,6 +627,7 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
         shadowMaterial
     };
 }
+
 
 /**
  * Update Hawking radiation particle system
@@ -760,18 +736,32 @@ function updateHawkingRadiation(hawkingParticles, deltaTime) {
  * @param {number} options.emotionColorStrength - Tint strength (0-1)
  */
 export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {}) {
-    if (!blackHoleGroup || !blackHoleGroup.userData.diskMesh) return;
+    if (!blackHoleGroup) return;
 
     const {diskMesh, topJetMesh, bottomJetMesh, hawkingParticles, lensingRingMesh} = blackHoleGroup.userData;
-    const diskMaterial = diskMesh.material;
 
     // Update time for shader animation (convert ms to seconds)
     const timeInSeconds = deltaTime * 0.001;
-    if (diskMaterial.uniforms && diskMaterial.uniforms.time) {
-        diskMaterial.uniforms.time.value += timeInSeconds;
+
+    // Update disk material if it exists
+    if (diskMesh && diskMesh.material.uniforms && diskMesh.material.uniforms.time) {
+        diskMesh.material.uniforms.time.value += timeInSeconds;
+
+        // Update emotion color tint if provided
+        if (options.emotionColorTint && diskMesh.material.uniforms.emotionColorTint) {
+            diskMesh.material.uniforms.emotionColorTint.value.set(
+                options.emotionColorTint[0],
+                options.emotionColorTint[1],
+                options.emotionColorTint[2]
+            );
+        }
+
+        if (options.emotionColorStrength !== undefined && diskMesh.material.uniforms.emotionColorStrength) {
+            diskMesh.material.uniforms.emotionColorStrength.value = options.emotionColorStrength;
+        }
     }
 
-    // Update jet animations
+    // Update jet shader animations
     if (topJetMesh && topJetMesh.material.uniforms) {
         topJetMesh.material.uniforms.time.value += timeInSeconds;
     }
@@ -787,18 +777,5 @@ export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {})
     // Update gravitational lensing ring animation
     if (lensingRingMesh && lensingRingMesh.material.uniforms) {
         lensingRingMesh.material.uniforms.time.value += timeInSeconds;
-    }
-
-    // Update emotion color tint if provided
-    if (options.emotionColorTint && diskMaterial.uniforms.emotionColorTint) {
-        diskMaterial.uniforms.emotionColorTint.value.set(
-            options.emotionColorTint[0],
-            options.emotionColorTint[1],
-            options.emotionColorTint[2]
-        );
-    }
-
-    if (options.emotionColorStrength !== undefined && diskMaterial.uniforms.emotionColorStrength) {
-        diskMaterial.uniforms.emotionColorStrength.value = options.emotionColorStrength;
     }
 }

@@ -32,6 +32,8 @@ varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
 varying vec3 vViewPosition;  // View-space position (camera-relative)
+varying vec3 vRayOrigin;     // Camera position in world space
+varying vec3 vRayDirection;  // Ray direction from camera through this fragment
 
 void main() {
     vUv = uv;
@@ -42,6 +44,12 @@ void main() {
     // Calculate view-space position for Doppler beaming
     vec4 viewPos = modelViewMatrix * vec4(position, 1.0);
     vViewPosition = viewPos.xyz;
+
+    // Calculate ray origin (camera position in world space)
+    vRayOrigin = cameraPosition;
+
+    // Calculate ray direction from camera through this fragment
+    vRayDirection = normalize(vWorldPosition - cameraPosition);
 
     gl_Position = projectionMatrix * viewPos;
 }
@@ -56,6 +64,7 @@ export const blackHoleWithBlendLayersFragmentShader = `
  * - Doppler beaming (approaching side brighter)
  * - Temperature gradient (inner hot white/blue, outer cool red/orange)
  * - Turbulent striations (noise texture sampling)
+ * - Gravitational lensing (ray marching for far-side disk visibility)
  * - 4 blend layers for visual control
  */
 
@@ -66,6 +75,11 @@ uniform sampler2D noiseTexture;
 // Visual effects
 uniform float dopplerIntensity;
 uniform float turbulenceStrength;
+
+// Gravitational lensing
+uniform float lensingEnabled;       // 0.0 = disabled, 1.0 = enabled
+uniform float schwarzschildRadius;  // Event horizon radius (base unit)
+uniform vec3 diskNormal;            // Disk plane normal (tilted 17°)
 
 // Blend layer uniforms (4 layers)
 uniform float layer1Mode;
@@ -97,6 +111,8 @@ varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
 varying vec3 vViewPosition;
+varying vec3 vRayOrigin;
+varying vec3 vRayDirection;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UNIVERSAL BLEND MODES (injected from utils/blendModes.js)
@@ -193,11 +209,192 @@ void main() {
     diskColor *= dopplerBrightness;
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // GRAVITATIONAL LENSING - RAYMARCHING WITH SCHWARZSCHILD GEODESICS
+    // Marches light rays through curved spacetime, detecting multiple disk hits
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    vec3 farSideContribution = vec3(0.0);
+    vec3 debugVisualization = vec3(0.0);
+
+    if (lensingEnabled > 0.5) {
+        // CONSTANTS (World-space coordinates after 0.25 scaling)
+        const float DISK_INNER_RADIUS = 0.15625;  // 2.5× Schwarzschild × 0.25 scale
+        const float DISK_OUTER_RADIUS = 0.5;      // 8× Schwarzschild × 0.25 scale
+        const float EVENT_HORIZON = 0.125;        // 2× Schwarzschild × 0.25 scale
+
+        // Raymarching parameters
+        const int MAX_STEPS = 128;      // Maximum raymarch iterations (increased for far-side detection)
+        const float STEP_SIZE = 0.01;   // Step distance (world units) - smaller for accuracy
+        const float MAX_DISTANCE = 4.0; // Maximum trace distance
+
+        // Start raymarching from CAMERA position (not disk surface!)
+        // This allows us to trace the light path and detect multiple disk crossings
+        vec3 point = vRayOrigin;      // Current position (starts at camera)
+        vec3 velocity = normalize(vRayDirection);  // Current direction (starts at ray direction)
+
+        // LEAPFROG INTEGRATION: Conservation of angular momentum
+        // Angular momentum vector: L = r × v (conserved in Schwarzschild metric)
+        vec3 angularMomentum = cross(point, velocity);
+        float h2 = dot(angularMomentum, angularMomentum);  // |L|² (constant of motion)
+
+        // Track disk intersections
+        int diskHits = 0;
+        vec3 firstHitColor = vec3(0.0);
+        vec3 secondHitColor = vec3(0.0);
+        float totalDistance = 0.0;
+
+        // DEBUG: Track raymarch execution
+        bool raymarchExecuted = false;
+        float minDistToCenter = 999.0;
+        int stepsExecuted = 0;
+
+        // Leapfrog integration through curved spacetime
+        for (int i = 0; i < MAX_STEPS; i++) {
+            stepsExecuted = i + 1;
+            raymarchExecuted = true;
+
+            // Store previous position for plane crossing detection
+            vec3 prevPos = point;
+
+            // ═══════════════════════════════════════════════════════════════
+            // LEAPFROG INTEGRATION - SCHWARZSCHILD GEODESIC
+            // Conserves angular momentum via symplectic integration
+            // Geodesic equation: d²x/dλ² = -1.5 * h² * x / |x|^5
+            // ═══════════════════════════════════════════════════════════════
+
+            // Step 1: Advance position (half-step)
+            point += velocity * STEP_SIZE;
+
+            // Step 2: Calculate acceleration from geodesic equation
+            // For Schwarzschild metric with conserved angular momentum h²
+            float r2 = dot(point, point);  // |r|²
+            float r5 = r2 * r2 * sqrt(r2);  // |r|^5
+            vec3 accel = -1.5 * h2 * point / r5;
+
+            // Step 3: Update velocity
+            velocity += accel * STEP_SIZE;
+
+            // Track distance
+            float distToCenter = sqrt(r2);
+            minDistToCenter = min(minDistToCenter, distToCenter);
+            totalDistance += STEP_SIZE;
+
+            // Stop if we hit the event horizon (light cannot escape)
+            if (distToCenter < EVENT_HORIZON) {
+                break;
+            }
+
+            // Stop if ray escapes to infinity
+            if (totalDistance > MAX_DISTANCE) {
+                break;
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // TILTED DISK PLANE INTERSECTION
+            // Check if ray crossed the disk plane (17° tilt)
+            // ═══════════════════════════════════════════════════════════════
+
+            // Distance from plane: dot(point, normal) = 0 for points on plane
+            float prevDist = dot(prevPos, diskNormal);
+            float currDist = dot(point, diskNormal);
+
+            // Did we cross the disk plane?
+            if (prevDist * currDist < 0.0) {
+                // Calculate exact intersection point (linear interpolation)
+                float t = abs(prevDist) / (abs(prevDist) + abs(currDist));
+                vec3 intersect = prevPos + (point - prevPos) * t;
+
+                // Project intersection onto disk plane and measure radial distance
+                // Distance from center within the plane
+                vec3 inPlanePos = intersect - dot(intersect, diskNormal) * diskNormal;
+                float radialDist = length(inPlanePos);
+
+                // Is intersection within disk radius?
+                if (radialDist >= DISK_INNER_RADIUS && radialDist <= DISK_OUTER_RADIUS) {
+                    diskHits++;
+
+                    // ═══════════════════════════════════════════════════════════
+                    // SAMPLE DISK COLOR AT INTERSECTION POINT
+                    // Convert world-space intersection to UV coordinates
+                    // ═══════════════════════════════════════════════════════════
+
+                    // Calculate UV coordinates from world position
+                    // Account for disk tilt and rotation
+                    vec2 diskUV = vec2(
+                        atan(inPlanePos.x, inPlanePos.z) / (2.0 * 3.14159265) + 0.5,
+                        (radialDist - DISK_INNER_RADIUS) / (DISK_OUTER_RADIUS - DISK_INNER_RADIUS)
+                    );
+
+                    // Calculate radial temperature gradient
+                    float hitNormalizedRadius = (radialDist - DISK_INNER_RADIUS) / (DISK_OUTER_RADIUS - DISK_INNER_RADIUS);
+                    float hitTempGradient = smoothstep(0.0, 1.0, hitNormalizedRadius);
+
+                    vec3 hitColor;
+                    if (hitTempGradient < 0.5) {
+                        hitColor = mix(hotColor, warmColor, hitTempGradient * 2.0);
+                    } else {
+                        hitColor = mix(warmColor, coolColor, (hitTempGradient - 0.5) * 2.0);
+                    }
+
+                    // Apply turbulence
+                    vec2 hitNoiseUV = diskUV + vec2(time * 0.02, 0.0);
+                    float hitNoise = texture2D(noiseTexture, hitNoiseUV).r;
+                    hitColor *= mix(1.0, hitNoise, turbulenceStrength);
+
+                    // Apply base color
+                    hitColor *= baseColor;
+
+                    // Store hit colors
+                    if (diskHits == 1) {
+                        firstHitColor = hitColor;
+                    } else if (diskHits == 2) {
+                        secondHitColor = hitColor;
+                        break;  // Found far-side, stop raymarching
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // EXTENSIVE DEBUG VISUALIZATION
+        // Color-coded debugging to diagnose raymarching behavior
+        // ═══════════════════════════════════════════════════════════════════
+
+        if (!raymarchExecuted) {
+            // RED = Raymarching never executed
+            debugVisualization = vec3(1.0, 0.0, 0.0);
+        } else if (diskHits == 0) {
+            // ORANGE = Raymarching executed but no disk hits
+            // Brightness indicates how close ray got to center
+            float closeness = 1.0 - clamp(minDistToCenter / DISK_OUTER_RADIUS, 0.0, 1.0);
+            debugVisualization = vec3(1.0, 0.3, 0.0) * (0.5 + closeness * 0.5);
+        } else if (diskHits == 1) {
+            // GREEN = Only front-side hit (normal case)
+            debugVisualization = vec3(0.0, 0.5, 0.0);
+        } else if (diskHits >= 2) {
+            // CYAN = Multiple hits detected (LENSING WORKING!)
+            // Use the far-side color
+            farSideContribution = secondHitColor * 0.8;
+            debugVisualization = vec3(0.0, 1.0, 1.0);
+        }
+
+        // Add step count visualization (blue channel)
+        float stepRatio = float(stepsExecuted) / float(MAX_STEPS);
+        debugVisualization.b += stepRatio * 0.3;
+
+        // ALWAYS show debug colors for now
+        farSideContribution += debugVisualization * lensingEnabled;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // EMOTION-BASED COLOR TINTING
     // Shifts color spectrum based on emotional state
     // ═══════════════════════════════════════════════════════════════════════════
 
     diskColor = mix(diskColor, diskColor * emotionColorTint, emotionColorStrength);
+
+    // Add far-side lensing contribution (additive blending)
+    diskColor += farSideContribution;
 
     // Set final color before blend layers
     vec3 finalColor = clamp(diskColor, 0.0, 1.0);
