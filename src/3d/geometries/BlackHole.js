@@ -151,12 +151,97 @@ export function createBlackHoleGroup() {
     photonRingMesh.rotation.x = THREE.MathUtils.degToRad(17);
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // RELATIVISTIC JETS (Mesh 4 & 5)
+    // Blue/white particle streams from black hole poles (synchrotron radiation)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const jetLength = SCHWARZSCHILD_RADIUS * 10.0;  // 10× Schwarzschild radius
+    const jetBaseRadius = SCHWARZSCHILD_RADIUS * 0.3;  // Narrow at base
+    const jetTopRadius = SCHWARZSCHILD_RADIUS * 0.8;   // Widens at tip
+
+    // Top jet (positive Y direction)
+    const topJetGeometry = new THREE.ConeGeometry(jetTopRadius, jetLength, 16, 8, true);
+    const topJetMaterial = new THREE.ShaderMaterial({
+        vertexShader: `
+            varying vec2 vUv;
+            varying float vDistance;
+
+            void main() {
+                vUv = uv;
+                vDistance = position.y / ${jetLength.toFixed(4)};  // 0.0 at base, 1.0 at tip
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform float time;
+            uniform float jetIntensity;
+            uniform vec3 jetColor;
+
+            varying vec2 vUv;
+            varying float vDistance;
+
+            void main() {
+                // Opacity gradient: bright at base, fade at tip
+                float baseOpacity = 1.0 - vDistance;
+
+                // Animated flow effect (particles streaming upward)
+                float flow = fract(vDistance * 3.0 - time * 0.5);
+                float flowBrightness = smoothstep(0.0, 0.1, flow) * smoothstep(0.3, 0.2, flow);
+
+                // Flickering turbulence
+                float flicker = 0.8 + 0.2 * sin(time * 8.0 + vDistance * 20.0);
+
+                // Radial fade from center
+                float radialDist = length(vUv - vec2(0.5, 0.5)) * 2.0;
+                float radialFade = 1.0 - smoothstep(0.3, 1.0, radialDist);
+
+                // Combine effects
+                float alpha = baseOpacity * flowBrightness * flicker * radialFade * jetIntensity;
+
+                gl_FragColor = vec4(jetColor, alpha);
+            }
+        `,
+        uniforms: {
+            time: { value: 0.0 },
+            jetIntensity: { value: 0.0 },  // Start hidden, controlled by emotion
+            jetColor: { value: new THREE.Color(0.7, 0.85, 1.0) }  // Blue-white synchrotron
+        },
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        toneMapped: false
+    });
+
+    const topJetMesh = new THREE.Mesh(topJetGeometry, topJetMaterial);
+    topJetMesh.name = 'TopJet';
+    topJetMesh.position.y = jetLength / 2;  // Position so base is at origin
+    topJetMesh.renderOrder = 4;
+
+    // Bottom jet (negative Y direction) - same geometry, flipped
+    const bottomJetGeometry = topJetGeometry.clone();
+    const bottomJetMaterial = topJetMaterial.clone();
+    bottomJetMaterial.uniforms = {
+        time: { value: 0.0 },
+        jetIntensity: { value: 0.0 },
+        jetColor: { value: new THREE.Color(0.7, 0.85, 1.0) }
+    };
+
+    const bottomJetMesh = new THREE.Mesh(bottomJetGeometry, bottomJetMaterial);
+    bottomJetMesh.name = 'BottomJet';
+    bottomJetMesh.position.y = -jetLength / 2;
+    bottomJetMesh.rotation.x = Math.PI;  // Flip upside down
+    bottomJetMesh.renderOrder = 4;
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // GROUP ASSEMBLY
     // ═══════════════════════════════════════════════════════════════════════════
 
     group.add(shadowMesh);
     group.add(diskMesh);
     group.add(photonRingMesh);
+    group.add(topJetMesh);
+    group.add(bottomJetMesh);
 
     // Scale entire group to match other geometries (radius ~0.5 default scale)
     // This makes the black hole similar size to sphere, moon, sun, etc.
@@ -169,6 +254,8 @@ export function createBlackHoleGroup() {
     group.userData.shadowMesh = shadowMesh;
     group.userData.diskMesh = diskMesh;
     group.userData.photonRingMesh = photonRingMesh;
+    group.userData.topJetMesh = topJetMesh;
+    group.userData.bottomJetMesh = bottomJetMesh;
 
     return group;
 }
@@ -369,12 +456,21 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
 export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {}) {
     if (!blackHoleGroup || !blackHoleGroup.userData.diskMesh) return;
 
-    const {diskMesh} = blackHoleGroup.userData;
+    const {diskMesh, topJetMesh, bottomJetMesh} = blackHoleGroup.userData;
     const diskMaterial = diskMesh.material;
 
     // Update time for shader animation (convert ms to seconds)
+    const timeInSeconds = deltaTime * 0.001;
     if (diskMaterial.uniforms && diskMaterial.uniforms.time) {
-        diskMaterial.uniforms.time.value += deltaTime * 0.001;
+        diskMaterial.uniforms.time.value += timeInSeconds;
+    }
+
+    // Update jet animations
+    if (topJetMesh && topJetMesh.material.uniforms) {
+        topJetMesh.material.uniforms.time.value += timeInSeconds;
+    }
+    if (bottomJetMesh && bottomJetMesh.material.uniforms) {
+        bottomJetMesh.material.uniforms.time.value += timeInSeconds;
     }
 
     // Update emotion color tint if provided

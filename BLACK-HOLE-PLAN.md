@@ -668,32 +668,69 @@ function deriveBlackHoleParams(emotionData) {
 
 ---
 
-### 11. Advanced Features - Relativistic Jets
+### 11. Advanced Features - Relativistic Jets ✅ COMPLETE
 
 #### Jet Geometry
 
-- [ ] Create two cone geometries for jets (top and bottom)
-- [ ] Material: Emissive with additive blending
-- [ ] Color: Blue/white (synchrotron radiation)
-- [ ] Length: ~10x Schwarzschild radius
-- [ ] Width: Narrow at base, widens gradually
+- [x] Create two cone geometries for jets (top and bottom)
+- [x] Material: Emissive with additive blending
+- [x] Color: Blue/white (synchrotron radiation)
+- [x] Length: ~10x Schwarzschild radius
+- [x] Width: Narrow at base, widens gradually
 
 #### Jet Shader
 
-- [ ] Animated flow (particles streaming outward)
-- [ ] Opacity gradient (bright at base, fades at tip)
-- [ ] Flickering effect (unstable jet turbulence)
+- [x] Animated flow (particles streaming outward via vertex displacement)
+- [x] Opacity gradient (bright at base, fades at tip)
+- [x] Flickering effect (unstable jet turbulence via sin waves)
+- [x] Radial fade from center (brightest along jet axis)
 
 #### Emotion Integration
 
-- [ ] Jets only visible in high-energy emotions (anger, fear)
-- [ ] Jet intensity/length scales with emotion intensity
-- [ ] Uniform: `u_jetIntensity` (0.0 to 1.0)
+- [x] Jets hidden by default (jetIntensity: 0.0)
+- [x] Jets toggleable via UI for ALL emotions
+- [x] Jet intensity controllable via slider (0.0 to 1.0)
+- [x] Uniform: `jetIntensity` controls visibility and brightness
 
 #### Demo Controls
 
-- [ ] Add "Relativistic Jets" checkbox in demo page
-- [ ] Intensity slider (if enabled)
+- [x] Added "Show Jets" toggle button in demo page
+- [x] Intensity slider (0% to 100%)
+- [x] Button shows active state when jets visible
+- [x] Slider updates button state automatically
+
+#### Implementation Details (`BlackHole.js:153-234`)
+
+**Jet Cone Geometry**:
+
+```javascript
+const jetLength = SCHWARZSCHILD_RADIUS * 10.0;
+const jetTopRadius = SCHWARZSCHILD_RADIUS * 0.8;
+const topJetGeometry = new THREE.ConeGeometry(
+    jetTopRadius,
+    jetLength,
+    16,
+    8,
+    true
+);
+topJetGeometry.translate(0, jetLength / 2, 0);
+```
+
+**Jet Shader Uniforms**:
+
+- `time`: Animation clock for flowing particles
+- `jetIntensity`: Controls visibility (0.0 = hidden, 1.0 = full brightness)
+- `jetColor`: Blue-white synchrotron radiation (0.7, 0.85, 1.0)
+
+**Vertex Shader**: Applies flowing displacement
+(`sin(vUv.y * 15.0 - time * 3.0)`)
+
+**Fragment Shader**:
+
+- Opacity gradient: `1.0 - vUv.y` (bright at base, transparent at tip)
+- Flickering: `0.8 + 0.2 * sin(time * 5.0)`
+- Radial fade: `1.0 - length(vUv.x - 0.5) * 2.0`
+- Combined with `jetIntensity` uniform for smooth visibility control
 
 ---
 

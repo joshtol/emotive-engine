@@ -236,6 +236,19 @@
         </div>
 
         <div class="section">
+            <h2>Relativistic Jets</h2>
+            <button data-action="toggle-jets" style="width: 100%; margin-bottom: 10px">🚀 Show Jets</button>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Jet Intensity</span>
+                    <span id="jet-intensity-value">0%</span>
+                </div>
+                <input type="range" id="jet-intensity-slider" class="slider"
+                       min="0" max="1" step="0.01" value="0">
+            </div>
+        </div>
+
+        <div class="section">
             <h2>Disk Rotation Speed</h2>
             <div class="slider-container">
                 <div class="slider-label">
@@ -436,6 +449,32 @@
                 }
                 return;
             }
+
+            // Toggle jets
+            if (e.target.dataset.action === 'toggle-jets') {
+                const topJetMesh = mascot?.core3D?.coreMesh?.userData?.topJetMesh;
+                const bottomJetMesh = mascot?.core3D?.coreMesh?.userData?.bottomJetMesh;
+
+                if (topJetMesh && bottomJetMesh) {
+                    const currentIntensity = topJetMesh.material.uniforms.jetIntensity.value;
+                    const newIntensity = currentIntensity > 0 ? 0 : 0.8;
+
+                    topJetMesh.material.uniforms.jetIntensity.value = newIntensity;
+                    bottomJetMesh.material.uniforms.jetIntensity.value = newIntensity;
+
+                    document.getElementById('jet-intensity-slider').value = newIntensity;
+                    document.getElementById('jet-intensity-value').textContent = `${Math.round(newIntensity * 100)}%`;
+
+                    if (newIntensity > 0) {
+                        e.target.classList.add('active');
+                        console.log('🚀 Relativistic jets ON');
+                    } else {
+                        e.target.classList.remove('active');
+                        console.log('🚀 Relativistic jets OFF');
+                    }
+                }
+                return;
+            }
         });
 
         // Disk rotation speed slider
@@ -472,6 +511,34 @@
                     console.log(`🎨 Layer ${layer.num} (${layer.name}): ${Math.round(strength * 100)}%`);
                 }
             });
+        });
+
+        // Jet intensity slider
+        const jetIntensitySlider = document.getElementById('jet-intensity-slider');
+        jetIntensitySlider.addEventListener('input', (e) => {
+            const intensity = parseFloat(e.target.value);
+            document.getElementById('jet-intensity-value').textContent = `${Math.round(intensity * 100)}%`;
+
+            // Update jet intensity in shader
+            const topJetMesh = mascot?.core3D?.coreMesh?.userData?.topJetMesh;
+            const bottomJetMesh = mascot?.core3D?.coreMesh?.userData?.bottomJetMesh;
+
+            if (topJetMesh?.material?.uniforms?.jetIntensity) {
+                topJetMesh.material.uniforms.jetIntensity.value = intensity;
+            }
+            if (bottomJetMesh?.material?.uniforms?.jetIntensity) {
+                bottomJetMesh.material.uniforms.jetIntensity.value = intensity;
+            }
+
+            // Update button active state
+            const jetButton = document.querySelector('[data-action="toggle-jets"]');
+            if (intensity > 0) {
+                jetButton.classList.add('active');
+            } else {
+                jetButton.classList.remove('active');
+            }
+
+            console.log(`🚀 Jet intensity: ${Math.round(intensity * 100)}%`);
         });
     </script>
 </body>
