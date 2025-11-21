@@ -279,6 +279,87 @@ export function createBlackHoleGroup() {
     };
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // GRAVITATIONAL LENSING RING (Mesh 7)
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Visual simulation of gravitational lensing - Einstein ring effect
+    // Glowing, shimmering ring just outside event horizon shadow
+    // Creates illusion of light bending around black hole
+
+    const lensingRingRadius = shadowRadius * 1.02; // Just outside shadow
+    const lensingRingThickness = SCHWARZSCHILD_RADIUS * 0.15;
+
+    const lensingRingGeometry = new THREE.TorusGeometry(
+        lensingRingRadius,
+        lensingRingThickness,
+        32,  // Tubular segments
+        128  // Radial segments (high detail for smooth animation)
+    );
+
+    // Rotate to face camera
+    lensingRingGeometry.rotateX(Math.PI / 2);
+
+    const lensingRingMaterial = new THREE.ShaderMaterial({
+        vertexShader: `
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying vec3 vViewPosition;
+
+            void main() {
+                vUv = uv;
+                vNormal = normalize(normalMatrix * normal);
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                vViewPosition = -mvPosition.xyz;
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `,
+        fragmentShader: `
+            uniform float time;
+            uniform float lensingStrength;
+            uniform vec3 lensingColor;
+
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            varying vec3 vViewPosition;
+
+            void main() {
+                // Fresnel effect for edge brightness
+                vec3 viewDir = normalize(vViewPosition);
+                float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 2.0);
+
+                // Shimmering wave effect (rotating distortion)
+                float wave1 = sin(vUv.x * 20.0 + time * 2.0) * 0.5 + 0.5;
+                float wave2 = sin(vUv.y * 15.0 - time * 3.0) * 0.5 + 0.5;
+                float shimmer = wave1 * wave2;
+
+                // Radial brightness gradient (brighter in center of ring cross-section)
+                float radialGradient = 1.0 - abs(vUv.x - 0.5) * 2.0;
+
+                // Combine effects
+                float brightness = fresnel * shimmer * radialGradient * lensingStrength;
+
+                // Einstein ring glow (soft white-blue)
+                vec3 finalColor = lensingColor * brightness;
+                float alpha = brightness;
+
+                gl_FragColor = vec4(finalColor, alpha);
+            }
+        `,
+        uniforms: {
+            time: { value: 0.0 },
+            lensingStrength: { value: 0.0 },  // Hidden by default
+            lensingColor: { value: new THREE.Color(0.9, 0.95, 1.0) }  // Soft white-blue
+        },
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+
+    const lensingRingMesh = new THREE.Mesh(lensingRingGeometry, lensingRingMaterial);
+    lensingRingMesh.name = 'GravitationalLensingRing';
+    lensingRingMesh.renderOrder = 6;
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // GROUP ASSEMBLY
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -288,6 +369,7 @@ export function createBlackHoleGroup() {
     group.add(topJetMesh);
     group.add(bottomJetMesh);
     group.add(hawkingParticles);
+    group.add(lensingRingMesh);
 
     // Scale entire group to match other geometries (radius ~0.5 default scale)
     // This makes the black hole similar size to sphere, moon, sun, etc.
@@ -303,6 +385,7 @@ export function createBlackHoleGroup() {
     group.userData.topJetMesh = topJetMesh;
     group.userData.bottomJetMesh = bottomJetMesh;
     group.userData.hawkingParticles = hawkingParticles;
+    group.userData.lensingRingMesh = lensingRingMesh;
 
     return group;
 }
@@ -598,7 +681,7 @@ function updateHawkingRadiation(hawkingParticles, deltaTime) {
 export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {}) {
     if (!blackHoleGroup || !blackHoleGroup.userData.diskMesh) return;
 
-    const {diskMesh, topJetMesh, bottomJetMesh, hawkingParticles} = blackHoleGroup.userData;
+    const {diskMesh, topJetMesh, bottomJetMesh, hawkingParticles, lensingRingMesh} = blackHoleGroup.userData;
     const diskMaterial = diskMesh.material;
 
     // Update time for shader animation (convert ms to seconds)
@@ -618,6 +701,11 @@ export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {})
     // Update Hawking radiation particle system
     if (hawkingParticles) {
         updateHawkingRadiation(hawkingParticles, timeInSeconds);
+    }
+
+    // Update gravitational lensing ring animation
+    if (lensingRingMesh && lensingRingMesh.material.uniforms) {
+        lensingRingMesh.material.uniforms.time.value += timeInSeconds;
     }
 
     // Update emotion color tint if provided
