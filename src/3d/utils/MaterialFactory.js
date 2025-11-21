@@ -16,6 +16,7 @@
 import * as THREE from 'three';
 import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geometries/Moon.js';
 import { createSunMaterial } from '../geometries/Sun.js';
+import { createBlackHoleMaterial } from '../geometries/BlackHole.js';
 
 /**
  * Create custom material for a geometry type
@@ -75,6 +76,9 @@ function createEmissiveMaterial(geometryType, glowColor, glowIntensity, material
     switch (geometryType) {
     case 'sun':
         return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant);
+
+    case 'blackHole':
+        return createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant);
 
         // Future: Add more emissive materials here
         // case 'star':
@@ -146,6 +150,32 @@ function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, mater
     return {
         material,
         type: 'sun'
+    };
+}
+
+/**
+ * Create black hole material with NASA M87* EHT accuracy
+ * @private
+ */
+function createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null) {
+    console.log('🕳️ Creating black hole material (M87* supermassive)...', materialVariant ? `[${materialVariant}]` : '[standard]');
+
+    const { diskMaterial, shadowMaterial } = createBlackHoleMaterial(textureLoader, {
+        glowColor,
+        glowIntensity,
+        materialVariant
+    });
+
+    console.log('🌀 Black hole materials created: accretion disk + event horizon shadow');
+
+    // Return materials object for Core3DManager to apply to Group meshes
+    // Core3DManager will handle applying these to the Group's child meshes
+    return {
+        material: {
+            diskMaterial,
+            shadowMaterial
+        },
+        type: 'blackHole'
     };
 }
 

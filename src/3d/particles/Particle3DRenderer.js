@@ -388,6 +388,14 @@ export class Particle3DRenderer {
             // Translate 2D position to 3D (with orbital physics if enabled)
             const pos3D = translator.translate2DTo3D(particle, corePosition, canvasSize);
 
+            // CULLING: Skip particles in front of black hole (positive Z = between BH and camera)
+            // Camera is at (0, 0, +Z), black hole at origin, so particles with Z > 0 are in front
+            if (pos3D.z > 0) {
+                // Hide particle by setting alpha to 0
+                this.alphas[i] = 0;
+                continue;
+            }
+
             // Update position
             const posIndex = i * 3;
             this.positions[posIndex + 0] = pos3D.x;

@@ -24,6 +24,17 @@ export const MOON_CALIBRATION_ROTATION = {
 };
 
 /**
+ * Moon Tidal Lock Configuration
+ * Moon is tidally locked to always show the same face (like Earth's moon)
+ */
+export const MOON_FACING_CONFIG = {
+    enabled: true,
+    strength: 1.0,        // Full tidal lock
+    lockedFace: [0, 0, 1], // +Z axis faces camera
+    lerpSpeed: 10.0        // Fast snap to correct orientation
+};
+
+/**
  * Moon Phase Definitions
  * Maps phase names to light direction vectors in view space
  *

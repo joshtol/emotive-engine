@@ -105,7 +105,8 @@ export class Particle3DTranslator {
             spaz: this._translateSpaz.bind(this),
             directed: this._translateDirected.bind(this),
             fizzy: this._translateFizzy.bind(this),
-            zen: this._translateZen.bind(this)
+            zen: this._translateZen.bind(this),
+            gravitationalAccretion: this._translateGravitationalAccretion.bind(this)
         };
     }
 
@@ -856,6 +857,119 @@ export class Particle3DTranslator {
     }
 
     /**
+     * GRAVITATIONAL ACCRETION: Black hole accretion disk with spaghettification
+     *
+     * NASA M87* Supermassive Black Hole Physics:
+     * - Keplerian orbits: tangential velocity increases as radius decreases
+     * - Orbital decay: friction dissipates angular momentum, particles spiral inward
+     * - Tidal stretching (spaghettification): starts at 2.5x, dramatic at 1.5x, death at 1.0x
+     * - Accretion disk: particles orbit in equatorial plane with small vertical wobble
+     *
+     * @param {Object} particle - 2D particle with physics state
+     * @param {Object} corePosition - Black hole center position
+     * @param {Object} canvasSize - Canvas dimensions (unused for black hole)
+     * @returns {THREE.Vector3} 3D position in accretion disk
+     */
+    _translateGravitationalAccretion(particle, corePosition, canvasSize) {
+        const behaviorData = particle.behaviorData || {};
+        const SCHWARZSCHILD_RADIUS = 0.25; // Base radius from BlackHole.js
+
+        // Initialize orbital parameters on first call
+        if (!behaviorData.orbitRadius) {
+            // Spawn particles between ISCO (2.5x) and outer disk (8x)
+            const seed = particle.x * 0.1 + particle.y * 0.2;
+            behaviorData.orbitRadius = SCHWARZSCHILD_RADIUS * (2.5 + Math.random() * 5.5);
+
+            // Only spawn particles in back hemisphere (away from camera on +Z axis)
+            // Camera is at (0, 0, +Z) looking at origin, so particles should have negative Z
+            // z = sin(angle) * radius, so negative Z means: π < angle < 2π
+            // Angle range: π to 2π (180° to 360°, back half of orbit)
+            behaviorData.orbitAngle = Math.PI + Math.random() * Math.PI;
+
+            // Each particle gets slight inclination offset (thin disk, not perfectly flat)
+            behaviorData.diskInclination = (Math.random() - 0.5) * 0.1; // ±5.7 degrees
+
+            // Keplerian velocity: v ∝ 1/sqrt(r)
+            behaviorData.angularVelocity = 0.5 / Math.sqrt(behaviorData.orbitRadius / SCHWARZSCHILD_RADIUS);
+
+            // Tidal stretching factor (increases as radius decreases)
+            behaviorData.tidalStretch = { x: 1.0, y: 1.0, z: 1.0 };
+        }
+
+        // Orbital decay: friction reduces angular momentum
+        const decayRate = 0.0001; // Slow inward spiral
+        behaviorData.orbitRadius -= decayRate * this.baseRadius;
+
+        // Update angular velocity as radius changes (Kepler's 3rd law)
+        behaviorData.angularVelocity = 0.5 / Math.sqrt(behaviorData.orbitRadius / SCHWARZSCHILD_RADIUS);
+
+        // Advance orbital angle
+        behaviorData.orbitAngle += behaviorData.angularVelocity * (this.deltaTime || 16) * 0.001;
+
+        // Normalize angle to 0-2π range
+        behaviorData.orbitAngle = behaviorData.orbitAngle % (Math.PI * 2);
+        if (behaviorData.orbitAngle < 0) behaviorData.orbitAngle += Math.PI * 2;
+
+        // Kill particles that orbit into front hemisphere (in front of black hole)
+        // Camera is at +Z, so front hemisphere is when z = sin(angle) * radius > 0
+        // This occurs when 0 < angle < π (0° to 180°)
+        // Keep particles only in back hemisphere: π < angle < 2π (180° to 360°)
+        if (behaviorData.orbitAngle < Math.PI) {
+            // Particle orbited into front hemisphere - fade out and respawn
+            particle.isAlive = false;
+            particle.life = 0;
+            return this.tempVec3.set(corePosition.x, corePosition.y, corePosition.z);
+        }
+
+        // Calculate tidal stretching (spaghettification)
+        const radiusRatio = behaviorData.orbitRadius / SCHWARZSCHILD_RADIUS;
+
+        if (radiusRatio <= 1.0) {
+            // Particle crossed event horizon - mark for death
+            particle.isAlive = false;
+            particle.life = 0;
+        } else if (radiusRatio <= 1.5) {
+            // Dramatic stretching at photon sphere (1.5x)
+            behaviorData.tidalStretch.x = 0.3; // Compressed horizontally
+            behaviorData.tidalStretch.y = 3.0; // Stretched radially (toward black hole)
+            behaviorData.tidalStretch.z = 0.3; // Compressed horizontally
+        } else if (radiusRatio <= 2.5) {
+            // Start stretching at ISCO (2.5x)
+            const stretchFactor = (2.5 - radiusRatio) / 1.0; // 0 to 1 as we approach photon sphere
+            behaviorData.tidalStretch.x = 1.0 - stretchFactor * 0.7; // Compress to 0.3
+            behaviorData.tidalStretch.y = 1.0 + stretchFactor * 2.0; // Stretch to 3.0
+            behaviorData.tidalStretch.z = 1.0 - stretchFactor * 0.7; // Compress to 0.3
+        } else {
+            // Outer disk - minimal tidal forces
+            behaviorData.tidalStretch.x = 1.0;
+            behaviorData.tidalStretch.y = 1.0;
+            behaviorData.tidalStretch.z = 1.0;
+        }
+
+        // Position in accretion disk (equatorial plane)
+        const x = Math.cos(behaviorData.orbitAngle) * behaviorData.orbitRadius;
+        const z = Math.sin(behaviorData.orbitAngle) * behaviorData.orbitRadius;
+
+        // Small vertical wobble (thin disk, not perfectly flat)
+        const diskThickness = SCHWARZSCHILD_RADIUS * 0.1;
+        const y = Math.sin(behaviorData.orbitAngle * 3 + particle.x) * diskThickness * Math.sin(behaviorData.diskInclination);
+
+        // Apply tidal stretching to position (visual spaghettification effect)
+        const stretchedX = x * behaviorData.tidalStretch.x;
+        const stretchedY = y * behaviorData.tidalStretch.y;
+        const stretchedZ = z * behaviorData.tidalStretch.z;
+
+        // Scale to match black hole group scale (0.5 / (8 * SCHWARZSCHILD_RADIUS))
+        const blackHoleScale = 0.5 / (SCHWARZSCHILD_RADIUS * 8.0);
+
+        return this.tempVec3.set(
+            corePosition.x + stretchedX * blackHoleScale,
+            corePosition.y + stretchedY * blackHoleScale,
+            corePosition.z + stretchedZ * blackHoleScale
+        );
+    }
+
+    /**
      * Update world scale (for responsive sizing)
      * @param {number} scale - New world scale
      */
@@ -890,6 +1004,14 @@ export class Particle3DTranslator {
                 // Clear orbital path data
                 if (particle.behaviorData.orbitPath) {
                     particle.behaviorData.orbitPath = null;
+                }
+                // Clear black hole accretion data
+                if (particle.behaviorData.orbitRadius) {
+                    particle.behaviorData.orbitRadius = null;
+                    particle.behaviorData.orbitAngle = null;
+                    particle.behaviorData.diskInclination = null;
+                    particle.behaviorData.angularVelocity = null;
+                    particle.behaviorData.tidalStretch = null;
                 }
             }
         }

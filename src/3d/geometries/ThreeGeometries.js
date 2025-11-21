@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { createMoon } from './Moon.js';
 import { createSunGeometry } from './Sun.js';
+import { createBlackHoleGroup } from './BlackHole.js';
 
 /**
  * Create smooth sphere geometry
@@ -390,6 +391,19 @@ export const THREE_GEOMETRIES = {
             duration: 200,                   // Slow, powerful pulse
             scaleAxis: [1.05, 1.05, 1.05],  // Slight expansion
             glowBoost: 0.5,                 // Strong glow increase
+            curve: 'sine'
+        }
+    },
+
+    blackHole: {
+        geometry: createBlackHoleGroup(), // THREE.Group with shadow + disk + photon ring
+        material: 'emissive', // Signal to use createBlackHoleMaterial()
+        blink: {
+            type: 'accretion-flare',
+            duration: 250,                   // Slow, dramatic flare
+            scaleAxis: [1.1, 1.1, 1.1],     // Disk expansion
+            glowBoost: 0.7,                 // Intense brightness spike
+            rotation: [0, Math.PI / 8, 0],  // Slight disk wobble
             curve: 'sine'
         }
     }

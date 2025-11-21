@@ -391,19 +391,50 @@ export class ThreeRenderer {
 
     /**
      * Create core mascot mesh with custom glow material
-     * @param {THREE.BufferGeometry} geometry - Three.js geometry
+     * @param {THREE.BufferGeometry|THREE.Group} geometry - Three.js geometry or Group (e.g., black hole)
      * @param {THREE.Material} customMaterial - Optional custom material (e.g., moon textures)
-     * @returns {THREE.Mesh}
+     * @returns {THREE.Mesh|THREE.Group}
      */
     createCoreMesh(geometry, customMaterial = null) {
         // Remove existing mesh if present
         if (this.coreMesh) {
             this.scene.remove(this.coreMesh);
-            this.coreMesh.geometry.dispose();
-            this.disposeMaterial(this.coreMesh.material);
+
+            // Handle Group disposal differently
+            if (this.coreMesh.isGroup) {
+                this.coreMesh.traverse(child => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) this.disposeMaterial(child.material);
+                });
+            } else {
+                if (this.coreMesh.geometry) this.coreMesh.geometry.dispose();
+                if (this.coreMesh.material) this.disposeMaterial(this.coreMesh.material);
+            }
+
             this.coreMesh = null;
         }
 
+        // Check if geometry is a THREE.Group (e.g., black hole with multiple meshes)
+        if (geometry.isGroup) {
+            // For Groups, materials are already applied to child meshes
+            this.coreMesh = geometry;
+            this.coreMesh.name = 'coreMascot';
+
+            // Apply shadows to all meshes in group
+            if (this.options.enableShadows) {
+                this.coreMesh.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+            }
+
+            this.scene.add(this.coreMesh);
+            return this.coreMesh;
+        }
+
+        // Standard BufferGeometry path (sphere, moon, sun, etc.)
         // Determine which material to use
         let material;
 
@@ -1008,7 +1039,8 @@ export class ThreeRenderer {
             }
 
             // Update material properties based on material type
-            if (this.coreMesh.material.uniforms) {
+            // Skip for THREE.Group (like black hole) - materials are on child meshes
+            if (this.coreMesh.material && this.coreMesh.material.uniforms) {
                 // ShaderMaterial (glow material) - update uniforms
                 this._tempColor.setRGB(...glowColor);
                 this.coreMesh.material.uniforms.glowColor.value.lerp(this._tempColor, 0.15);
@@ -1033,7 +1065,7 @@ export class ThreeRenderer {
                 // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
                 const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
                 this.coreMesh.material.uniforms.glowIntensity.value += (targetIntensity - currentIntensity) * lerpSpeed;
-            } else if (this.coreMesh.material.emissive) {
+            } else if (this.coreMesh.material && this.coreMesh.material.emissive) {
                 // MeshPhysicalMaterial (glass material) - update emissive properties
                 // BLOOM + COLOR SOLUTION:
                 // User wants BOTH uniform bloom AND visible emotion colors

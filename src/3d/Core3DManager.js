@@ -18,7 +18,9 @@ import { BlinkAnimator } from './animation/BlinkAnimator.js';
 import { GeometryMorpher } from './utils/GeometryMorpher.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
+import FacingBehavior from './behaviors/FacingBehavior.js';
 import { updateSunMaterial, SUN_ROTATION_CONFIG } from './geometries/Sun.js';
+import { updateBlackHoleMaterial, BLACK_HOLE_ROTATION_CONFIG } from './geometries/BlackHole.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
@@ -30,7 +32,7 @@ import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
 import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
 import { SolarEclipse } from './effects/SolarEclipse.js';
 import { LunarEclipse } from './effects/LunarEclipse.js';
-import { updateMoonGlow, MOON_CALIBRATION_ROTATION } from './geometries/Moon.js';
+import { updateMoonGlow, MOON_CALIBRATION_ROTATION, MOON_FACING_CONFIG } from './geometries/Moon.js';
 import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
 
 export class Core3DManager {
@@ -38,18 +40,20 @@ export class Core3DManager {
         this.canvas = canvas;
         this.options = options;
 
+        // Load geometry type first (needed to determine if moon = tidally locked)
+        this.geometryType = options.geometry || 'sphere';
+
         // Initialize Three.js renderer
+        // Moon is tidally locked - disable auto-rotate for moon regardless of options
+        const isMoon = this.geometryType === 'moon';
         this.renderer = new ThreeRenderer(canvas, {
             enablePostProcessing: options.enablePostProcessing !== false,
             enableShadows: options.enableShadows || false,
             enableControls: options.enableControls !== false, // Camera controls (mouse/touch)
-            autoRotate: options.autoRotate !== false, // Auto-rotate enabled by default
+            autoRotate: isMoon ? false : (options.autoRotate !== false), // Moon is tidally locked
             autoRotateSpeed: options.autoRotateSpeed, // Auto-rotate speed (undefined = default 0.5)
             cameraDistance: options.cameraDistance // Camera Z distance (undefined = default 3)
         });
-
-        // Load geometry
-        this.geometryType = options.geometry || 'sphere';
         const geometryConfig = THREE_GEOMETRIES[this.geometryType];
 
         if (!geometryConfig) {
@@ -81,6 +85,27 @@ export class Core3DManager {
 
         // Create core mesh with geometry (and optional custom material)
         this.coreMesh = this.renderer.createCoreMesh(this.geometry, customMaterial);
+
+        // For black hole Groups, apply materials to child meshes
+        if (this.customMaterialType === 'blackHole' && this.geometry.isGroup) {
+            const { diskMaterial, shadowMaterial } = customMaterial;
+
+            // Apply materials to the meshes in the Group
+            const {diskMesh} = this.geometry.userData;
+            const {shadowMesh} = this.geometry.userData;
+
+            if (diskMesh && diskMaterial) {
+                diskMesh.material = diskMaterial;
+            }
+            if (shadowMesh && shadowMaterial) {
+                shadowMesh.material = shadowMaterial;
+            }
+
+            // Store disk material as primary custom material for updates
+            this.customMaterial = diskMaterial;
+
+            console.log('🕳️ Applied black hole materials to Group meshes');
+        }
 
         // Calibration rotation offset (applied on top of all animations)
         // Used for moon orientation calibration
@@ -137,6 +162,23 @@ export class Core3DManager {
             centerOfMass: [0, -0.3, 0], // Bottom-heavy
             axes: { pitch: true, roll: true, yaw: false }
         });
+
+        // Facing behavior (tidal lock - keeps one face toward camera)
+        // Initialized for moon geometry, null for others
+        this.facingBehavior = null;
+        if (isMoon && MOON_FACING_CONFIG.enabled) {
+            const degToRad = Math.PI / 180;
+            this.facingBehavior = new FacingBehavior({
+                strength: MOON_FACING_CONFIG.strength,
+                lockedFace: MOON_FACING_CONFIG.lockedFace,
+                lerpSpeed: MOON_FACING_CONFIG.lerpSpeed,
+                calibrationRotation: [
+                    MOON_CALIBRATION_ROTATION.x * degToRad,
+                    MOON_CALIBRATION_ROTATION.y * degToRad,
+                    MOON_CALIBRATION_ROTATION.z * degToRad
+                ]
+            }, this.renderer.camera);
+        }
 
         // Current state
         this.emotion = options.emotion || 'neutral';
@@ -319,6 +361,12 @@ export class Core3DManager {
             } else if (this.customMaterial && this.customMaterialType === 'sun') {
                 // Update sun material colors (no time delta needed here - just color update)
                 updateSunMaterial(this.coreMesh, this.glowColor, this.glowIntensity, 0);
+            } else if (this.customMaterial && this.customMaterialType === 'blackHole') {
+                // Update black hole material colors (no time delta needed here - just color update)
+                updateBlackHoleMaterial(this.coreMesh, 0, {
+                    emotionColorTint: this.glowColor,
+                    emotionColorStrength: 0.3
+                });
             }
 
             // Note: Bloom is updated every frame in render() for smooth transitions
@@ -326,14 +374,19 @@ export class Core3DManager {
 
         // Initialize or update rotation behavior from 3d config
         // EXCEPTION: Moon is tidally locked - no rotation behavior
+        // EXCEPTION: Black hole disk rotates in shader - no mesh rotation
         // EXCEPTION: If rotation was manually disabled, respect that
         // Get geometry-specific rotation config if available
-        const geometryRotation = this.geometryType === 'sun' ? SUN_ROTATION_CONFIG : null;
+        const geometryRotation = this.geometryType === 'sun' ? SUN_ROTATION_CONFIG
+            : this.geometryType === 'blackHole' ? BLACK_HOLE_ROTATION_CONFIG
+                : null;
 
         if (this.rotationDisabled) {
             this.rotationBehavior = null; // Keep rotation disabled
         } else if (this.geometryType === 'moon') {
             this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
+        } else if (this.geometryType === 'blackHole') {
+            this.rotationBehavior = null; // Disable rotation for black hole (disk rotates in shader)
         } else if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
             if (this.rotationBehavior) {
                 // Update existing behavior
@@ -357,6 +410,17 @@ export class Core3DManager {
                 );
             }
         }
+
+        // Reset orientation when changing emotions to prevent stuck angles
+        // (e.g., anger's shake can push to max tilt, needs reset when switching to calm emotion)
+        if (this.rightingBehavior) {
+            this.rightingBehavior.reset();
+        }
+        // Reset Euler angles to upright [pitch=0, yaw=current, roll=0]
+        // Preserve yaw to maintain current spin direction, but reset pitch/roll
+        this.baseEuler[0] = 0; // Reset pitch
+        this.baseEuler[2] = 0; // Reset roll
+        // Keep baseEuler[1] (yaw) to preserve rotation continuity
 
         // Apply undertone multipliers if present
         const undertoneModifier = getUndertoneModifier(undertone);
@@ -798,6 +862,15 @@ export class Core3DManager {
             // Update blink animator with new geometry's blink config
             this.blinkAnimator.setGeometry(this._targetGeometryConfig);
 
+            // Reset righting behavior and orientation during morph transition
+            // This fixes issue where anger/unstable rotations get stuck at bad angles
+            // Reset angular velocity
+            if (this.rightingBehavior) {
+                this.rightingBehavior.reset();
+            }
+            // Reset Euler angles to upright [pitch=0, yaw=0, roll=0]
+            this.rotation = [0, 0, 0];
+
             // Dispose or create solar eclipse for sun geometry
             if (this._targetGeometryType === 'sun') {
                 // Create solar eclipse if morphing to sun
@@ -852,11 +925,38 @@ export class Core3DManager {
                 this.calibrationRotation[1] = MOON_CALIBRATION_ROTATION.y * degToRad;
                 this.calibrationRotation[2] = MOON_CALIBRATION_ROTATION.z * degToRad;
                 console.log('🌙 Applied moon calibration rotation (Earth-facing view)');
+
+                // Create facing behavior for tidal lock
+                if (!this.facingBehavior && MOON_FACING_CONFIG.enabled) {
+                    this.facingBehavior = new FacingBehavior({
+                        strength: MOON_FACING_CONFIG.strength,
+                        lockedFace: MOON_FACING_CONFIG.lockedFace,
+                        lerpSpeed: MOON_FACING_CONFIG.lerpSpeed,
+                        calibrationRotation: [
+                            MOON_CALIBRATION_ROTATION.x * degToRad,
+                            MOON_CALIBRATION_ROTATION.y * degToRad,
+                            MOON_CALIBRATION_ROTATION.z * degToRad
+                        ]
+                    }, this.renderer.camera);
+                    console.log('🌙 Tidal lock enabled (facing behavior active)');
+                }
             } else {
                 // Clear calibration rotation for non-moon geometries
                 this.calibrationRotation[0] = 0;
                 this.calibrationRotation[1] = 0;
                 this.calibrationRotation[2] = 0;
+
+                // Dispose facing behavior when morphing away from moon
+                if (this.facingBehavior) {
+                    this.facingBehavior.dispose();
+                    this.facingBehavior = null;
+                    console.log('🌍 Tidal lock disabled (facing behavior disposed)');
+                }
+
+                // Re-enable auto-rotate when morphing away from moon (if it was originally enabled)
+                if (this.renderer?.controls && this.options.autoRotate !== false) {
+                    this.renderer.controls.autoRotate = true;
+                }
 
                 if (this.rotationDisabled) {
                     this.rotationBehavior = null; // Keep rotation disabled if user disabled it
@@ -925,6 +1025,17 @@ export class Core3DManager {
         // This pulls tilted models back to upright while preserving yaw spin
         if (this.rightingBehavior) {
             this.rightingBehavior.update(deltaTime, this.baseEuler);
+        }
+
+        // Apply facing behavior (tidal lock) after righting
+        // This overrides rotation to keep object stationary (no rotation)
+        // Tidal lock is achieved by keeping baseEuler at [0,0,0] and using calibrationRotation
+        if (this.facingBehavior) {
+            // Simply reset baseEuler to zero - moon doesn't rotate at all
+            this.baseEuler[0] = 0; // No pitch
+            this.baseEuler[1] = 0; // No yaw
+            this.baseEuler[2] = 0; // No roll
+            // calibrationRotation is already applied in renderer to show correct face
         }
 
         // HARD LIMIT: Clamp pitch and roll to prevent lateral/dolphin tipping
@@ -1021,6 +1132,14 @@ export class Core3DManager {
             updateSunMaterial(this.coreMesh, this.glowColor, effectiveGlowIntensity, deltaTime);
         }
 
+        // Update black hole material animation if using black hole geometry
+        if (this.customMaterialType === 'blackHole') {
+            updateBlackHoleMaterial(this.coreMesh, deltaTime, {
+                emotionColorTint: this.glowColor,
+                emotionColorStrength: 0.3
+            });
+        }
+
         // Render with Three.js
         this.renderer.render({
             position: this.position,
@@ -1050,6 +1169,12 @@ export class Core3DManager {
             this.renderer.disposeMaterial(this.customMaterial);
             this.customMaterial = null;
             this.customMaterialType = null;
+        }
+
+        // Dispose facing behavior
+        if (this.facingBehavior) {
+            this.facingBehavior.dispose();
+            this.facingBehavior = null;
         }
 
         this.renderer.destroy();

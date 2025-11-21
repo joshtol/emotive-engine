@@ -274,7 +274,11 @@ export class EmotiveMascot3D {
                 const glowColor = this.core3D ? this.rgbToHex(this.core3D.glowColor) : '#FFFFFF';
 
                 // Extract emotion-specific particle parameters
-                const particleBehavior = emotionData?.visual?.particleBehavior || 'ambient';
+                // Override particle behavior for geometry-specific effects
+                let particleBehavior = emotionData?.visual?.particleBehavior || 'ambient';
+                if (this.core3D && this.core3D.geometryType === 'blackHole') {
+                    particleBehavior = 'gravitationalAccretion'; // Black hole uses accretion physics
+                }
                 const particleRate = emotionData?.visual?.particleRate || 15;
                 const minParticles = emotionData?.visual?.minParticles || 5;
                 const maxParticles = emotionData?.visual?.maxParticles || 30;

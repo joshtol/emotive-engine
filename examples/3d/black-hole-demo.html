@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<!--
+  BLACK HOLE SHOWCASE - Emotive Engine 3D Demo
+
+  A demonstration of NASA M87* Event Horizon Telescope black hole rendering.
+
+  What you'll learn:
+  - Black hole accretion disk with differential rotation
+  - Gravitational particle accretion with spaghettification
+  - Event horizon, photon ring, and ISCO physics
+  - Doppler beaming and relativistic effects
+  - Blend mode layer system for accretion disk appearance
+
+  Complexity: ⭐⭐⭐ Advanced 3D + Physics + Shaders
+  Features: Black hole geometry, gravitational accretion, blend layers, shader effects
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Hole Showcase - Emotive Engine 3D</title>
+    <meta name="description" content="NASA M87* black hole demo with accretion disk and gravitational physics">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #0a0010 50%, #000008 100%);
+            color: white;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .left-menu,
+        .right-menu {
+            width: 18vw;
+            min-width: 240px;
+            max-width: 300px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 1.5vw;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .left-menu {
+            border-right: 1px solid rgba(255, 100, 0, 0.2);
+        }
+
+        .right-menu {
+            border-left: 1px solid rgba(255, 100, 0, 0.2);
+        }
+
+        .center-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: 2vmin;
+        }
+
+        .section {
+            margin-bottom: clamp(15px, 2vw, 25px);
+            padding-bottom: clamp(12px, 1.5vw, 20px);
+            border-bottom: 1px solid rgba(255, 100, 0, 0.1);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: clamp(11px, 1vw, 13px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+            color: rgba(255, 150, 50, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(5px, 0.6vw, 8px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+        }
+
+        button {
+            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
+            background: rgba(255, 100, 0, 0.1);
+            border: 1px solid rgba(255, 100, 0, 0.2);
+            color: #fff;
+            border-radius: clamp(6px, 0.6vw, 8px);
+            cursor: pointer;
+            font-size: clamp(9px, 0.8vw, 11px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(2px, 0.3vw, 4px);
+            min-width: 0;
+            width: 100%;
+        }
+
+        button:hover {
+            background: rgba(255, 100, 0, 0.2);
+            border-color: rgba(255, 100, 0, 0.4);
+            transform: translateY(-1px);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #ff5500 0%, #ff3300 100%);
+            border-color: #ff5500;
+        }
+
+        #blackhole-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            background: radial-gradient(circle at center, rgba(255, 100, 0, 0.1), transparent);
+            box-shadow: 0 0 150px rgba(255, 100, 0, 0.3);
+            touch-action: none;
+        }
+
+        #blackhole-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .info-box {
+            background: rgba(255, 100, 0, 0.1);
+            border: 1px solid rgba(255, 100, 0, 0.3);
+            border-radius: clamp(6px, 0.6vw, 8px);
+            padding: clamp(10px, 1vw, 12px);
+            font-size: clamp(10px, 0.85vw, 11px);
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            color: #ff7733;
+        }
+
+        .slider-container {
+            margin-bottom: clamp(10px, 1vw, 12px);
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: clamp(9px, 0.8vw, 10px);
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: clamp(4px, 0.4vw, 5px);
+        }
+
+        .slider {
+            width: 100%;
+            height: clamp(20px, 1.5vw, 22px);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: clamp(4px, 0.4vw, 5px);
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: clamp(14px, 1.2vw, 16px);
+            height: clamp(14px, 1.2vw, 16px);
+            background: #ff5500;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .left-menu::-webkit-scrollbar,
+        .right-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .left-menu::-webkit-scrollbar-track,
+        .right-menu::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .left-menu::-webkit-scrollbar-thumb,
+        .right-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 100, 0, 0.3);
+            border-radius: 3px;
+        }
+
+        .left-menu::-webkit-scrollbar-thumb:hover,
+        .right-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 100, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU: Black Hole Controls -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Particles</h2>
+            <button data-action="toggle-particles" class="active">✨ Show Particles</button>
+        </div>
+
+        <div class="section">
+            <h2>Visual Controls</h2>
+            <button data-action="toggle-glow" class="active" style="width: 100%">💫 Disk Glow</button>
+            <button data-action="toggle-controls" style="width: 100%; margin-top: 6px">🎮 Camera Controls</button>
+        </div>
+
+        <div class="section">
+            <h2>Disk Rotation Speed</h2>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Speed</span>
+                    <span id="rotation-speed-value">1.00x</span>
+                </div>
+                <input type="range" id="rotation-speed-slider" class="slider"
+                       min="0" max="3" step="0.1" value="1.0">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>M87* Black Hole:</strong><br>
+                6.5 billion solar masses. Event horizon (black), accretion disk (orbiting plasma), photon ring (bright inner ring). Particles spiral inward and experience spaghettification near the event horizon.
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: Black Hole Animation -->
+    <div class="center-content">
+        <div id="blackhole-container"></div>
+    </div>
+
+    <!-- RIGHT MENU: Physics Info -->
+    <div class="right-menu">
+        <div class="section">
+            <h2>NASA M87* Physics</h2>
+            <div class="info-box">
+                <strong>Event Horizon:</strong> 2.0× Schwarzschild radius<br>
+                Nothing escapes, pure black sphere<br><br>
+
+                <strong>Photon Ring:</strong> 1.5× Schwarzschild radius<br>
+                Bright ring where light orbits<br><br>
+
+                <strong>ISCO:</strong> 2.5× Schwarzschild radius<br>
+                Innermost Stable Circular Orbit<br>
+                Particles begin tidal stretching<br><br>
+
+                <strong>Accretion Disk:</strong> 2.5-8× Schwarzschild<br>
+                Hot plasma (white/blue → orange/red)<br>
+                Differential Keplerian rotation<br><br>
+
+                <strong>Doppler Beaming:</strong><br>
+                Approaching side brighter (relativistic)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Particle Physics</h2>
+            <div class="info-box">
+                <strong>Orbital Decay:</strong><br>
+                Friction dissipates angular momentum<br>
+                Particles spiral inward slowly<br><br>
+
+                <strong>Spaghettification:</strong><br>
+                • 2.5-1.5× radius: Stretching begins<br>
+                • 1.5-1.0× radius: Dramatic stretching<br>
+                • &lt;1.0× radius: Particle death (horizon)<br><br>
+
+                <strong>Velocity:</strong><br>
+                Tangential speed increases as radius decreases (Kepler's 3rd law)
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>References:</strong><br>
+                • NASA EHT M87* Image (2019)<br>
+                • Event Horizon Telescope<br>
+                • Schwarzschild Metric
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
+
+        let mascot = null;
+
+        // Initialize black hole
+        (async () => {
+            try {
+                const container = document.getElementById('blackhole-container');
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'blackHole',
+                    materialVariant: 'multiplexer', // Use multiplexer shader with blend layers
+                    enableParticles: true,
+                    enablePostProcessing: true,
+                    enableShadows: false,
+                    enableControls: false, // Start with controls off
+                    autoRotate: false, // Black hole doesn't rotate
+                    enableBlinking: false,
+                    enableBreathing: false,
+                    cameraDistance: 2.0
+                });
+
+                mascot.init(container);
+                mascot.start();
+
+                // Set to a dark emotion to match black hole theme
+                mascot.setEmotion('fear'); // Dark purple/black theme
+
+                console.log('🕳️ EmotiveMascot3D Black Hole initialized');
+
+                // Log black hole material state
+                if (mascot.core3D && mascot.core3D.coreMesh) {
+                    console.log('🕳️ Black hole mesh state:', {
+                        hasCoreMesh: !!mascot.core3D.coreMesh,
+                        isGroup: !!mascot.core3D.coreMesh.isGroup,
+                        childCount: mascot.core3D.coreMesh.children ? mascot.core3D.coreMesh.children.length : 0,
+                        hasDiskMaterial: !!(mascot.core3D.coreMesh.userData && mascot.core3D.coreMesh.userData.diskMesh && mascot.core3D.coreMesh.userData.diskMesh.material)
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Failed to initialize:', error);
+            }
+        })();
+
+        // Event delegation for controls
+        document.addEventListener('click', (e) => {
+            // Toggle particles
+            if (e.target.dataset.action === 'toggle-particles') {
+                if (mascot.particlesEnabled) {
+                    mascot.disableParticles();
+                    e.target.classList.remove('active');
+                    console.log('🚫 Particles OFF');
+                } else {
+                    mascot.enableParticles();
+                    e.target.classList.add('active');
+                    console.log('✨ Particles ON');
+                }
+                return;
+            }
+
+            // Toggle disk glow
+            if (e.target.dataset.action === 'toggle-glow') {
+                if (mascot.core3D?.coreGlowEnabled !== false) {
+                    mascot.core3D.setCoreGlowEnabled(false);
+                    e.target.classList.remove('active');
+                    console.log('💫 Disk glow disabled');
+                } else {
+                    mascot.core3D.setCoreGlowEnabled(true);
+                    e.target.classList.add('active');
+                    console.log('💫 Disk glow enabled');
+                }
+                return;
+            }
+
+            // Toggle camera controls
+            if (e.target.dataset.action === 'toggle-controls') {
+                if (mascot.controlsEnabled) {
+                    mascot.disableControls();
+                    e.target.classList.remove('active');
+                    console.log('🛑 Camera controls OFF');
+                } else {
+                    mascot.enableControls();
+                    e.target.classList.add('active');
+                    console.log('▶️ Camera controls ON');
+                }
+                return;
+            }
+        });
+
+        // Disk rotation speed slider
+        const rotationSpeedSlider = document.getElementById('rotation-speed-slider');
+        rotationSpeedSlider.addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            document.getElementById('rotation-speed-value').textContent = `${speed.toFixed(2)}x`;
+
+            // Update disk rotation speed in shader
+            if (mascot?.core3D?.coreMesh?.material?.uniforms?.diskRotationSpeed) {
+                mascot.core3D.coreMesh.material.uniforms.diskRotationSpeed.value = speed;
+                console.log(`🌀 Disk rotation speed: ${speed.toFixed(2)}x`);
+            }
+        });
+    </script>
+</body>
+</html>
