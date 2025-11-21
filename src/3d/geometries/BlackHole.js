@@ -645,10 +645,14 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
  * Very sparse emission (controlled by spawnRate), slow outward drift,
  * fade out after ~3 seconds.
  *
+ * Only spawns particles on the back hemisphere (away from camera) to prevent
+ * particles appearing in front of the black hole.
+ *
  * @param {THREE.Points} hawkingParticles - Hawking radiation particle system
  * @param {number} deltaTime - Time since last frame (seconds)
+ * @param {THREE.Vector3} cameraPosition - Camera position in world space (optional)
  */
-function updateHawkingRadiation(hawkingParticles, deltaTime) {
+function updateHawkingRadiation(hawkingParticles, deltaTime, cameraPosition = null) {
     const {geometry} = hawkingParticles;
     const positions = geometry.attributes.position.array;
     const velocities = geometry.attributes.velocity.array;
@@ -689,12 +693,36 @@ function updateHawkingRadiation(hawkingParticles, deltaTime) {
             for (let i = 0; i < lifetimes.length; i++) {
                 if (lifetimes[i] <= 0) {
                     // Spawn on random point on event horizon surface
-                    const theta = Math.random() * Math.PI * 2; // Azimuthal angle
-                    const phi = Math.acos(2 * Math.random() - 1); // Polar angle (uniform distribution)
+                    // ONLY on back hemisphere (away from camera) to prevent particles in front of black hole
+                    let x, y, z, attempts = 0;
+                    const maxAttempts = 100; // Prevent infinite loop
 
-                    const x = eventHorizonRadius * Math.sin(phi) * Math.cos(theta);
-                    const y = eventHorizonRadius * Math.sin(phi) * Math.sin(theta);
-                    const z = eventHorizonRadius * Math.cos(phi);
+                    do {
+                        const theta = Math.random() * Math.PI * 2; // Azimuthal angle
+                        const phi = Math.acos(2 * Math.random() - 1); // Polar angle (uniform distribution)
+
+                        x = eventHorizonRadius * Math.sin(phi) * Math.cos(theta);
+                        y = eventHorizonRadius * Math.sin(phi) * Math.sin(theta);
+                        z = eventHorizonRadius * Math.cos(phi);
+
+                        attempts++;
+
+                        // If no camera position, spawn anywhere (backwards compatibility)
+                        if (!cameraPosition) break;
+
+                        // Check if point is on back hemisphere (dot product with camera direction < 0)
+                        // Camera direction from black hole center (0,0,0) to camera
+                        const toCameraDotProduct = x * cameraPosition.x + y * cameraPosition.y + z * cameraPosition.z;
+
+                        // If dot product is negative, point faces away from camera (back hemisphere)
+                        if (toCameraDotProduct < 0) break;
+
+                    } while (attempts < maxAttempts);
+
+                    // If we failed to find a back-hemisphere point, skip this spawn
+                    if (cameraPosition && attempts >= maxAttempts) {
+                        break;
+                    }
 
                     positions[i * 3] = x;
                     positions[i * 3 + 1] = y;
@@ -743,6 +771,7 @@ function updateHawkingRadiation(hawkingParticles, deltaTime) {
  * @param {Object} options - Update options
  * @param {Array<number>} options.emotionColorTint - RGB color tint [r, g, b]
  * @param {number} options.emotionColorStrength - Tint strength (0-1)
+ * @param {THREE.Vector3} options.cameraPosition - Camera position for Hawking radiation back-hemisphere spawning
  */
 export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {}) {
     if (!blackHoleGroup) return;
@@ -798,7 +827,7 @@ export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {})
 
     // Update Hawking radiation particle system
     if (hawkingParticles) {
-        updateHawkingRadiation(hawkingParticles, timeInSeconds);
+        updateHawkingRadiation(hawkingParticles, timeInSeconds, options.cameraPosition);
     }
 
     // Update gravitational lensing ring animation

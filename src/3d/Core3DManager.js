@@ -1140,7 +1140,8 @@ export class Core3DManager {
         if (this.customMaterialType === 'blackHole') {
             updateBlackHoleMaterial(this.coreMesh, deltaTime, {
                 emotionColorTint: this.glowColor,
-                emotionColorStrength: 0.3
+                emotionColorStrength: 0.3,
+                cameraPosition: this.renderer.camera.position
             });
         }
 
