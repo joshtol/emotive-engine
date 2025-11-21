@@ -138,9 +138,9 @@ export function createBlackHoleGroup() {
     // ═══════════════════════════════════════════════════════════════════════════
 
     // Jets are scaled 8x larger to compensate for 0.25x group scaling that happens later
-    const jetLength = SCHWARZSCHILD_RADIUS * 128.0;    // 32x final size after 0.25x group scale
+    const jetLength = SCHWARZSCHILD_RADIUS * 16.0;    // 4x final size after 0.25x group scale
     const jetBaseRadius = SCHWARZSCHILD_RADIUS * 1.2;  // 0.3x final size after 0.25x group scale
-    const jetTopRadius = SCHWARZSCHILD_RADIUS * 9.6;   // 2.4x final size after 0.25x group scale
+    const jetTopRadius = SCHWARZSCHILD_RADIUS * 3.2;   // 0.8x final size after 0.25x group scale
 
     // Use ConeGeometry - it's a solid volumetric shape
     // THREE.ConeGeometry(radiusTop, height, ...) - so we swap base/top to get correct direction
@@ -182,16 +182,23 @@ export function createBlackHoleGroup() {
                 float coreBrightness = 1.0 - smoothstep(0.0, 0.7, radialDist);
                 coreBrightness = pow(coreBrightness, 0.3);
 
-                // SHORT glowing section - bright at base, fade to nothing quickly
-                // heightNorm = 1.0 is AT THE BLACK HOLE (narrow end, should be BRIGHTEST)
-                // heightNorm = 0.0 is FAR AWAY (wide end, should be TRANSPARENT)
-                // Only keep last ~11% bright (0.89 to 1.0)
-                float heightFade = smoothstep(0.89, 1.0, heightNorm);  // Fade in from 0.89 to 1.0
-                heightFade = pow(heightFade, 2.0);  // Sharpen the concentration at base
+                // Full ray visibility - fade to transparent at far ends
+                // heightNorm = 1.0 is AT THE BLACK HOLE (narrow end)
+                // heightNorm = 0.0 is FAR AWAY (wide end, should fade to TRANSPARENT)
+                float rayVisibility = smoothstep(0.0, 0.2, heightNorm);  // Fade out at far end faster
+                rayVisibility = pow(rayVisibility, 3.0);  // Even sharper fade to nothing
 
-                // Animated streaming effect (much slower)
-                float stream = fract(heightNorm * 3.0 - time * 0.3);
-                stream = smoothstep(0.0, 0.1, stream) * smoothstep(0.3, 0.2, stream);
+                // Smooth brightness gradient from black hole to tip
+                // Create smooth exponential falloff from bright at black hole to dim at tip
+                float brightnessGradient = pow(heightNorm, 1.5);  // Smooth gradient along length
+
+                // BRIGHT glowing section near black hole (extra brightness boost)
+                float brightGlow = smoothstep(0.85, 1.0, heightNorm);  // Bright in last 15% near black hole
+                brightGlow = pow(brightGlow, 2.0);  // Concentrated glow
+
+                // Animated streaming effect (MUCH slower for space-like motion)
+                float stream = fract(heightNorm * 2.0 - time * 0.05);  // Dramatically slower (was 0.3)
+                stream = smoothstep(0.0, 0.15, stream) * smoothstep(0.4, 0.25, stream);
 
                 // STRONG color gradient from base to tip
                 vec3 gradientColor = mix(jetBaseColor, jetTipColor, pow(heightNorm, 0.7));
@@ -199,8 +206,10 @@ export function createBlackHoleGroup() {
                 // Apply emotion tint
                 vec3 finalColorBase = gradientColor * emotionColorTint;
 
-                // Calculate brightness
-                float brightness = (coreBrightness * 4.0 + stream * 1.5) * heightFade * jetIntensity;
+                // Calculate brightness: smooth gradient + bright glow near black hole + subtle streaming
+                float baseBrightness = (coreBrightness * brightnessGradient * 0.5 + stream * 0.1) * rayVisibility;
+                float glowBrightness = coreBrightness * brightGlow * 2.5;  // Extra bright near black hole (reduced from 4.0)
+                float brightness = (baseBrightness + glowBrightness) * jetIntensity;
                 vec3 finalColor = finalColorBase * brightness;
 
                 // For additive blending, RGB values ARE the brightness
@@ -761,12 +770,30 @@ export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {})
         }
     }
 
-    // Update jet shader animations
+    // Update jet shader animations and emotion color tint
     if (topJetMesh && topJetMesh.material.uniforms) {
         topJetMesh.material.uniforms.time.value += timeInSeconds;
+
+        // Apply emotion color tint to jets
+        if (options.emotionColorTint && topJetMesh.material.uniforms.emotionColorTint) {
+            topJetMesh.material.uniforms.emotionColorTint.value.set(
+                options.emotionColorTint[0],
+                options.emotionColorTint[1],
+                options.emotionColorTint[2]
+            );
+        }
     }
     if (bottomJetMesh && bottomJetMesh.material.uniforms) {
         bottomJetMesh.material.uniforms.time.value += timeInSeconds;
+
+        // Apply emotion color tint to jets
+        if (options.emotionColorTint && bottomJetMesh.material.uniforms.emotionColorTint) {
+            bottomJetMesh.material.uniforms.emotionColorTint.value.set(
+                options.emotionColorTint[0],
+                options.emotionColorTint[1],
+                options.emotionColorTint[2]
+            );
+        }
     }
 
     // Update Hawking radiation particle system
