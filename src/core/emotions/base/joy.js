@@ -111,4 +111,7 @@ export default {
             }
         }
     }
+
+    // Note: Black hole behavior auto-derives from modifiers (speed: 1.8, intensity: 1.1, smoothness: 1.0)
+    // Results in: fast disk rotation, high turbulence, enhanced doppler effect, bright shadow glow
 };

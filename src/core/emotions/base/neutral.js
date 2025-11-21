@@ -121,4 +121,7 @@ export default {
             }
         }
     }
+
+    // Note: Black hole behavior auto-derives from modifiers (speed: 1.0, intensity: 1.0, smoothness: 1.0)
+    // Results in: baseline disk rotation, balanced turbulence, moderate doppler, neutral shadow glow
 };

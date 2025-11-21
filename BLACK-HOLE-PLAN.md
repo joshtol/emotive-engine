@@ -15,7 +15,7 @@ time.
 
 ---
 
-## 🎯 Implementation Status
+## 🎯 Implementation Status: PRODUCTION READY ✅
 
 ### ✅ Phase 1: Core Implementation (COMPLETED)
 
@@ -39,9 +39,18 @@ All core black hole functionality has been implemented and integrated:
 - ✅ `src/3d/Core3DManager.js` - Added material updates, rotation config
   handling, autoRotate immunity, Group mesh material application
 - ✅ `src/3d/particles/Particle3DTranslator.js` - Added
-  `_translateGravitationalAccretion()` (~95 lines) with M87\* physics
+  `_translateGravitationalAccretion()` (~95 lines) with M87\* physics,
+  hemisphere spawn constraints
+- ✅ `src/3d/particles/Particle3DRenderer.js` - Added Z-axis culling to hide
+  particles in front of black hole
+- ✅ `src/3d/index.js` - Added geometry-specific particle behavior override for
+  black hole
 - ✅ `src/3d/ThreeRenderer.js` - Added THREE.Group detection and handling,
   material safety checks for Groups
+- ✅ `src/core/particles/behaviors/gravitational-accretion.js` - Created core
+  behavior for particle system registration
+- ✅ `src/core/particles/behaviors/index.js` - Registered gravitationalAccretion
+  behavior
 - ✅ `scripts/generate-perlin-noise.cjs` - Node.js script for programmatic
   Perlin noise generation
 
@@ -64,14 +73,46 @@ All core black hole functionality has been implemented and integrated:
 - ✅ Render loop material updates for Groups (skip coreMesh.material checks)
 - ✅ Perlin noise texture generation with seamless tiling
 
+**Phase 2: Emotion System Integration (COMPLETED)**
+
+✅ Auto-Derived Black Hole Behavior:
+
+- Added `deriveBlackHoleParams()` function in `BlackHole.js`
+- Black hole properties automatically calculated from emotion modifiers:
+    - `diskRotationSpeed` = emotion speed modifier
+    - `turbulence` = intensity × (2 - smoothness) ← chaotic when high
+      intensity + low smoothness
+    - `dopplerIntensity` = 0.4 + (intensity × 0.3)
+    - `shadowGlow` = max(0.2, intensity × 0.4)
+- Passed `emotionData` through material creation pipeline (Core3DManager →
+  MaterialFactory → BlackHole)
+- Removed 26-line `geometries` sections from emotion files, replaced with 2-line
+  comments
+- Added emotion selector to `black-hole-demo.html` (fear, joy, neutral, anger,
+  sadness, surprise)
+
+**Architecture Benefits:**
+
+- ✅ DRY principle - no config duplication
+- ✅ Works for ALL emotions without custom config
+- ✅ Emotion modifiers have natural meaning (speed → rotation, intensity →
+  chaos)
+- ✅ Easy to tune by adjusting emotion modifiers
+
+**Advanced Features Implemented:**
+
+✅ Blend Layer Controls:
+
+- Added 4 blend layer sliders to black hole demo (right menu)
+- Real-time adjustment of layer strengths (Base, Overlay, Additive, Screen)
+- Proper shader uniform access through Group userData (diskMesh)
+- Fixed disk rotation speed slider to use correct THREE.Group structure
+
 **Next Steps:**
 
-- ⏳ Phase 2: Emotion Configs - Add `blackHole` configs to base emotion files
-  (optional)
-- ⏳ Optional: Advanced UI features (Schwarzschild slider, blend layer controls,
-  tilt angle, etc.)
-- ⏳ Optional: Additional visual effects (lens flare, gravitational lensing
-  shader)
+- ⏳ Optional: Additional UI features (Schwarzschild radius slider, disk tilt
+  angle)
+- ⏳ Optional: Visual effects (lens flare, gravitational lensing shader)
 
 ---
 
@@ -551,51 +592,56 @@ particle system.
 
 ---
 
-### 9. Emotion Configurations - `src/core/emotions/base/*.js`
+### 9. Emotion Configurations - `src/core/emotions/base/*.js` ✅ COMPLETED
 
-#### Update Emotion Files
+#### ✅ Auto-Derivation System (Implemented Instead of Per-Emotion Configs)
 
-For each emotion (anger, joy, calm, sadness, fear):
+**Architecture Decision**: Instead of adding verbose `blackHole:` configs to
+each emotion file, we implemented an auto-derivation system that calculates
+black hole behavior from existing emotion modifiers.
 
-- [ ] Add `'3d'.rotation` config for black hole behavior
-- [ ] Define tilt angles (pitch/roll for disk orientation)
-- [ ] Define color tint strength
-- [ ] Define particle accretion rate (if applicable)
+**Implementation**:
 
-#### Example: Anger with Black Hole
+- [x] Added `deriveBlackHoleParams(emotionData)` function in `BlackHole.js`
+- [x] Passed `emotionData` through material creation pipeline
+- [x] Updated emotion files with 2-line explanatory comments (replaced 26-line
+      configs)
+
+**Auto-Derivation Formula** (`BlackHole.js:188-199`):
 
 ```javascript
-'3d': {
-    rotation: {
-        type: 'unstable', // Trembling disk
-        speed: 1.5,
-        axes: [0.1, 0, 0.1], // Tilt wobble (pitch/roll only)
-        shake: {
-            amplitude: 0.03,
-            frequency: 7.0
-        }
-    },
-    blackHole: {
-        diskRotationSpeed: 2.0, // Faster rotation
-        tiltAngle: 35, // More dramatic tilt
-        dopplerIntensity: 0.8, // Stronger asymmetry
-        turbulenceStrength: 0.7, // More chaos
-        colorTintStrength: 0.9, // Strong red tint
-        particleAccretionRate: 2.0 // Aggressive particle influx
-    }
+function deriveBlackHoleParams(emotionData) {
+    const speed = emotionData?.modifiers?.speed || 1.0;
+    const intensity = emotionData?.modifiers?.intensity || 1.0;
+    const smoothness = emotionData?.modifiers?.smoothness || 1.0;
+
+    return {
+        diskRotationSpeed: speed, // Faster emotion = faster disk
+        turbulence: intensity * (2.0 - smoothness), // High intensity + low smoothness = chaotic
+        dopplerIntensity: 0.4 + intensity * 0.3, // More intense = stronger doppler
+        shadowGlow: Math.max(0.2, intensity * 0.4), // Brighter emotions = more edge glow
+    };
 }
 ```
 
-#### Emotion-Specific Behaviors
+**Results by Emotion**:
 
-- [ ] **Anger**: Fast rotation, high turbulence, red tint, aggressive particles
-- [ ] **Joy**: Moderate rotation, bright yellow tint, playful particle motion
-- [ ] **Calm**: Slow rotation, minimal turbulence, cool blue tint, gentle
-      particles
-- [ ] **Sadness**: Very slow rotation, dim colors, deep blue tint, sparse
-      particles
-- [ ] **Fear**: Erratic rotation, high Doppler asymmetry, purple tint, chaotic
-      particles
+- [x] **Fear** (speed: 1.4, intensity: 1.2, smoothness: 0.5): Fast rotation,
+      high turbulence (1.8), strong effects
+- [x] **Joy** (speed: 1.8, intensity: 1.1, smoothness: 1.0): Very fast rotation,
+      moderate turbulence (1.1), bright
+- [x] **Neutral** (speed: 1.0, intensity: 1.0, smoothness: 1.0): Baseline
+      rotation, balanced turbulence (1.0)
+- [x] **Anger**: Auto-derives from modifiers (typically high speed + intensity)
+- [x] **Sadness**: Auto-derives from modifiers (typically low speed + intensity)
+- [x] **Surprise**: Auto-derives from modifiers
+
+**Benefits**:
+
+- ✅ DRY principle - no config duplication across 20+ emotion files
+- ✅ Works for ALL emotions automatically (including custom user emotions)
+- ✅ Semantic meaning - emotion modifiers naturally map to black hole physics
+- ✅ Easy to tune - adjust emotion modifiers, not geometry-specific configs
 
 ---
 

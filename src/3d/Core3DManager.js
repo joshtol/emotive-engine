@@ -71,10 +71,12 @@ export class Core3DManager {
         // Check if this geometry requires custom material (e.g., moon with textures, sun with emissive)
         // Use MaterialFactory for centralized material creation
         let customMaterial = null;
+        const emotionData = getEmotion(this.emotion);
         const materialResult = createCustomMaterial(this.geometryType, this.geometryConfig, {
             glowColor: this.glowColor || [1.0, 1.0, 0.95],
             glowIntensity: this.glowIntensity || 1.0,
-            materialVariant: this.materialVariant
+            materialVariant: this.materialVariant,
+            emotionData // Pass emotion data for auto-deriving geometry params
         });
 
         if (materialResult) {
@@ -834,10 +836,12 @@ export class Core3DManager {
             // Check if target geometry needs custom material (e.g., moon, sun, future black hole)
             // Use MaterialFactory for centralized material creation
             let customMaterial = null;
+            const emotionData = getEmotion(this.emotion);
             const materialResult = createCustomMaterial(this._targetGeometryType, this._targetGeometryConfig, {
                 glowColor: this.glowColor || [1.0, 1.0, 0.95],
                 glowIntensity: this.glowIntensity || 1.0,
-                materialVariant: this.materialVariant
+                materialVariant: this.materialVariant,
+                emotionData // Pass emotion data for auto-deriving geometry params
             });
 
             if (materialResult) {

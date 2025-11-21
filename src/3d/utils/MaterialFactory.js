@@ -26,19 +26,20 @@ import { createBlackHoleMaterial } from '../geometries/BlackHole.js';
  * @param {Array<number>} options.glowColor - RGB color array [r, g, b] (0-1 range)
  * @param {number} options.glowIntensity - Glow intensity (default: 1.0)
  * @param {string} options.materialVariant - Material variant (e.g., 'multiplexer' for moon)
+ * @param {Object} options.emotionData - Emotion data for auto-deriving geometry params
  * @returns {Object|null} Material object with { material, type } or null if no custom material
  */
 export function createCustomMaterial(geometryType, geometryConfig, options = {}) {
-    const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null } = options;
+    const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null } = options;
 
     // Check if geometry requires custom material
     if (geometryConfig.material === 'custom') {
-        return createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant);
+        return createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData);
     }
 
     // Check if geometry requires emissive material
     if (geometryConfig.material === 'emissive') {
-        return createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant);
+        return createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData);
     }
 
     // No custom material needed
@@ -49,7 +50,7 @@ export function createCustomMaterial(geometryType, geometryConfig, options = {})
  * Create custom-type materials (moon, etc.)
  * @private
  */
-function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant) {
+function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
@@ -70,15 +71,15 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
  * Create emissive-type materials (sun, etc.)
  * @private
  */
-function createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant) {
+function createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
     case 'sun':
-        return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant);
+        return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant, emotionData);
 
     case 'blackHole':
-        return createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant);
+        return createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant, emotionData);
 
         // Future: Add more emissive materials here
         // case 'star':
@@ -135,7 +136,7 @@ function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVar
  * Create sun material with NASA photosphere texture
  * @private
  */
-function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null) {
+function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null, emotionData = null) {
     console.log('☀️ Creating sun material (NASA photosphere: 5,772K)...', materialVariant ? `[${materialVariant}]` : '[standard]');
 
     const material = createSunMaterial(textureLoader, {
@@ -157,13 +158,14 @@ function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, mater
  * Create black hole material with NASA M87* EHT accuracy
  * @private
  */
-function createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null) {
+function createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null, emotionData = null) {
     console.log('🕳️ Creating black hole material (M87* supermassive)...', materialVariant ? `[${materialVariant}]` : '[standard]');
 
     const { diskMaterial, shadowMaterial } = createBlackHoleMaterial(textureLoader, {
         glowColor,
         glowIntensity,
-        materialVariant
+        materialVariant,
+        emotionData  // Pass emotion data for auto-deriving params
     });
 
     console.log('🌀 Black hole materials created: accretion disk + event horizon shadow');

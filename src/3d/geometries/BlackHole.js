@@ -174,6 +174,32 @@ export function createBlackHoleGroup() {
 }
 
 /**
+ * Derive black hole parameters from emotion modifiers
+ *
+ * Automatically calculates black hole behavior from emotion data, eliminating
+ * need for emotion-specific config duplication. Uses emotion modifiers:
+ * - speed: Affects disk rotation speed, precession
+ * - intensity: Affects turbulence, doppler beaming
+ * - smoothness: Affects turbulence (inverse)
+ *
+ * @param {Object} emotionData - Emotion configuration object
+ * @returns {Object} Black hole parameters derived from emotion
+ */
+function deriveBlackHoleParams(emotionData) {
+    // Extract emotion modifiers (with neutral defaults)
+    const speed = emotionData?.modifiers?.speed || 1.0;
+    const intensity = emotionData?.modifiers?.intensity || 1.0;
+    const smoothness = emotionData?.modifiers?.smoothness || 1.0;
+
+    return {
+        diskRotationSpeed: speed,                    // Faster emotion = faster disk
+        turbulence: intensity * (2.0 - smoothness), // High intensity + low smoothness = chaotic
+        dopplerIntensity: 0.4 + (intensity * 0.3),  // More intense emotion = stronger doppler
+        shadowGlow: Math.max(0.2, intensity * 0.4)  // Brighter emotions = more edge glow
+    };
+}
+
+/**
  * Create black hole materials (disk shader + shadow shader)
  *
  * Creates custom shader materials for the accretion disk with:
@@ -188,12 +214,21 @@ export function createBlackHoleGroup() {
  * @param {Array<number>} options.glowColor - RGB color array [r, g, b]
  * @param {number} options.glowIntensity - Glow intensity multiplier
  * @param {string} options.materialVariant - 'multiplexer' for blend layers
+ * @param {Object} options.emotionData - Optional emotion data for auto-deriving params
  * @returns {Object} Object with diskMaterial and shadowMaterial
  */
 export function createBlackHoleMaterial(textureLoader, options = {}) {
     const glowColor = options.glowColor || [1.0, 1.0, 1.0];
     const glowIntensity = options.glowIntensity || 1.0;
     const materialVariant = options.materialVariant || null;
+
+    // Auto-derive black hole params from emotion modifiers
+    const emotionParams = options.emotionData ? deriveBlackHoleParams(options.emotionData) : {
+        diskRotationSpeed: 1.0,
+        turbulence: 0.4,
+        dopplerIntensity: 0.6,
+        shadowGlow: 0.3
+    };
 
     console.log('🕳️ BlackHole.js: Creating black hole material...', materialVariant ? `[${materialVariant}]` : '[standard]');
 
@@ -224,21 +259,21 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
     // Get shaders for disk
     const { vertexShader, fragmentShader } = getBlackHoleWithBlendLayersShaders();
 
-    // Create disk material with full shader uniforms
+    // Create disk material with full shader uniforms (using derived emotion params)
     const diskMaterial = new THREE.ShaderMaterial({
         vertexShader,
         fragmentShader,
         uniforms: {
             // Animation
             time: { value: 0.0 },
-            diskRotationSpeed: { value: 1.0 },
+            diskRotationSpeed: { value: emotionParams.diskRotationSpeed },
 
             // Textures
             noiseTexture: { value: noiseTexture },
 
-            // Visual effects
-            dopplerIntensity: { value: 0.6 },
-            turbulenceStrength: { value: 0.4 },
+            // Visual effects (auto-derived from emotion)
+            dopplerIntensity: { value: emotionParams.dopplerIntensity },
+            turbulenceStrength: { value: emotionParams.turbulence },
 
             // Blend layers (4 layers × 3 properties = 12 uniforms)
             layer1Mode: { value: 0.0 },      // 0 = Normal
@@ -305,7 +340,7 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
             }
         `,
         uniforms: {
-            shadowGlowIntensity: { value: 0.3 },
+            shadowGlowIntensity: { value: emotionParams.shadowGlow },
             shadowGlowColor: { value: new THREE.Color(1.0, 0.5, 0.1) }  // Orange glow
         },
         transparent: false,

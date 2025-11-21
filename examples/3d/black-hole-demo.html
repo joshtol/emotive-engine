@@ -207,6 +207,24 @@
     <!-- LEFT MENU: Black Hole Controls -->
     <div class="left-menu">
         <div class="section">
+            <h2>Emotions (Auto-Derived Behavior)</h2>
+            <div class="button-grid">
+                <button data-emotion="neutral">😐 Neutral</button>
+                <button data-emotion="joy">😊 Joy</button>
+                <button data-emotion="fear" class="active">😨 Fear</button>
+                <button data-emotion="anger">😠 Anger</button>
+                <button data-emotion="sadness">😢 Sad</button>
+                <button data-emotion="surprise">😲 Surprise</button>
+            </div>
+            <div class="info-box" style="margin-top: 8px; font-size: clamp(8px, 0.75vw, 9px);">
+                Black hole adapts to emotion modifiers:<br>
+                • <strong>Speed</strong> → disk rotation<br>
+                • <strong>Intensity</strong> → turbulence<br>
+                • <strong>Smoothness</strong> → chaos (inverse)
+            </div>
+        </div>
+
+        <div class="section">
             <h2>Particles</h2>
             <button data-action="toggle-particles" class="active">✨ Show Particles</button>
         </div>
@@ -242,53 +260,76 @@
         <div id="blackhole-container"></div>
     </div>
 
-    <!-- RIGHT MENU: Physics Info -->
+    <!-- RIGHT MENU: Blend Layers & Physics -->
     <div class="right-menu">
+        <div class="section">
+            <h2>Disk Blend Layers</h2>
+            <div id="blend-layers-container">
+                <!-- Layer 1: Base -->
+                <div class="slider-container" style="margin-bottom: 12px;">
+                    <div class="slider-label">
+                        <span>Layer 1: Base</span>
+                        <span id="layer1-value">100%</span>
+                    </div>
+                    <input type="range" id="layer1-slider" class="slider"
+                           min="0" max="1" step="0.01" value="1.0">
+                </div>
+
+                <!-- Layer 2: Overlay -->
+                <div class="slider-container" style="margin-bottom: 12px;">
+                    <div class="slider-label">
+                        <span>Layer 2: Overlay</span>
+                        <span id="layer2-value">40%</span>
+                    </div>
+                    <input type="range" id="layer2-slider" class="slider"
+                           min="0" max="1" step="0.01" value="0.4">
+                </div>
+
+                <!-- Layer 3: Additive -->
+                <div class="slider-container" style="margin-bottom: 12px;">
+                    <div class="slider-label">
+                        <span>Layer 3: Additive</span>
+                        <span id="layer3-value">60%</span>
+                    </div>
+                    <input type="range" id="layer3-slider" class="slider"
+                           min="0" max="1" step="0.01" value="0.6">
+                </div>
+
+                <!-- Layer 4: Screen -->
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Layer 4: Screen</span>
+                        <span id="layer4-value">30%</span>
+                    </div>
+                    <input type="range" id="layer4-slider" class="slider"
+                           min="0" max="1" step="0.01" value="0.3">
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>NASA M87* Physics</h2>
             <div class="info-box">
-                <strong>Event Horizon:</strong> 2.0× Schwarzschild radius<br>
-                Nothing escapes, pure black sphere<br><br>
+                <strong>Event Horizon:</strong> 2.0× Schwarzschild<br>
+                Pure black sphere<br><br>
 
-                <strong>Photon Ring:</strong> 1.5× Schwarzschild radius<br>
-                Bright ring where light orbits<br><br>
+                <strong>Photon Ring:</strong> 1.5× Schwarzschild<br>
+                Light orbits here<br><br>
 
-                <strong>ISCO:</strong> 2.5× Schwarzschild radius<br>
-                Innermost Stable Circular Orbit<br>
-                Particles begin tidal stretching<br><br>
+                <strong>ISCO:</strong> 2.5× Schwarzschild<br>
+                Inner edge of disk<br><br>
 
-                <strong>Accretion Disk:</strong> 2.5-8× Schwarzschild<br>
-                Hot plasma (white/blue → orange/red)<br>
-                Differential Keplerian rotation<br><br>
-
-                <strong>Doppler Beaming:</strong><br>
-                Approaching side brighter (relativistic)
+                <strong>Disk:</strong> 2.5-8× Schwarzschild<br>
+                Hot plasma, differential rotation
             </div>
         </div>
 
         <div class="section">
             <h2>Particle Physics</h2>
             <div class="info-box">
-                <strong>Orbital Decay:</strong><br>
-                Friction dissipates angular momentum<br>
-                Particles spiral inward slowly<br><br>
-
-                <strong>Spaghettification:</strong><br>
-                • 2.5-1.5× radius: Stretching begins<br>
-                • 1.5-1.0× radius: Dramatic stretching<br>
-                • &lt;1.0× radius: Particle death (horizon)<br><br>
-
-                <strong>Velocity:</strong><br>
-                Tangential speed increases as radius decreases (Kepler's 3rd law)
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="info-box">
-                <strong>References:</strong><br>
-                • NASA EHT M87* Image (2019)<br>
-                • Event Horizon Telescope<br>
-                • Schwarzschild Metric
+                <strong>Orbital Decay:</strong> Angular momentum loss<br><br>
+                <strong>Spaghettification:</strong> Tidal stretching near horizon<br><br>
+                <strong>Velocity:</strong> Increases as radius decreases
             </div>
         </div>
     </div>
@@ -339,6 +380,21 @@
 
         // Event delegation for controls
         document.addEventListener('click', (e) => {
+            // Emotion selector
+            if (e.target.dataset.emotion) {
+                const emotion = e.target.dataset.emotion;
+                mascot.setEmotion(emotion);
+
+                // Update active state
+                document.querySelectorAll('[data-emotion]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+
+                console.log(`🎭 Emotion changed to: ${emotion}`);
+                return;
+            }
+
             // Toggle particles
             if (e.target.dataset.action === 'toggle-particles') {
                 if (mascot.particlesEnabled) {
@@ -389,10 +445,33 @@
             document.getElementById('rotation-speed-value').textContent = `${speed.toFixed(2)}x`;
 
             // Update disk rotation speed in shader
-            if (mascot?.core3D?.coreMesh?.material?.uniforms?.diskRotationSpeed) {
-                mascot.core3D.coreMesh.material.uniforms.diskRotationSpeed.value = speed;
+            if (mascot?.core3D?.coreMesh?.userData?.diskMesh?.material?.uniforms?.diskRotationSpeed) {
+                mascot.core3D.coreMesh.userData.diskMesh.material.uniforms.diskRotationSpeed.value = speed;
                 console.log(`🌀 Disk rotation speed: ${speed.toFixed(2)}x`);
             }
+        });
+
+        // Blend layer sliders
+        const blendLayers = [
+            { id: 'layer1', num: 1, name: 'Base' },
+            { id: 'layer2', num: 2, name: 'Overlay' },
+            { id: 'layer3', num: 3, name: 'Additive' },
+            { id: 'layer4', num: 4, name: 'Screen' }
+        ];
+
+        blendLayers.forEach(layer => {
+            const slider = document.getElementById(`${layer.id}-slider`);
+            slider.addEventListener('input', (e) => {
+                const strength = parseFloat(e.target.value);
+                document.getElementById(`${layer.id}-value`).textContent = `${Math.round(strength * 100)}%`;
+
+                // Update blend layer strength in shader
+                const diskMesh = mascot?.core3D?.coreMesh?.userData?.diskMesh;
+                if (diskMesh?.material?.uniforms?.[`layer${layer.num}Strength`]) {
+                    diskMesh.material.uniforms[`layer${layer.num}Strength`].value = strength;
+                    console.log(`🎨 Layer ${layer.num} (${layer.name}): ${Math.round(strength * 100)}%`);
+                }
+            });
         });
     </script>
 </body>
