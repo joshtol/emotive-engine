@@ -234,6 +234,51 @@ export function createBlackHoleGroup() {
     bottomJetMesh.renderOrder = 4;
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // HAWKING RADIATION PARTICLE SYSTEM (Mesh 6)
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Quantum tunneling particles escaping from just outside event horizon
+    // Very sparse, faint glow representing information paradox
+    // Only visible when enabled via UI (hidden by default)
+
+    const maxHawkingParticles = 50;
+    const hawkingGeometry = new THREE.BufferGeometry();
+    const hawkingPositions = new Float32Array(maxHawkingParticles * 3);
+    const hawkingVelocities = new Float32Array(maxHawkingParticles * 3);
+    const hawkingLifetimes = new Float32Array(maxHawkingParticles); // Remaining life (0 = dead)
+    const hawkingMaxLifetime = 3.0; // Fade out after 3 seconds
+
+    // Initialize all particles as "dead" (lifetime = 0)
+    for (let i = 0; i < maxHawkingParticles; i++) {
+        hawkingLifetimes[i] = 0.0;
+    }
+
+    hawkingGeometry.setAttribute('position', new THREE.BufferAttribute(hawkingPositions, 3));
+    hawkingGeometry.setAttribute('velocity', new THREE.BufferAttribute(hawkingVelocities, 3));
+    hawkingGeometry.setAttribute('lifetime', new THREE.BufferAttribute(hawkingLifetimes, 1));
+
+    const hawkingMaterial = new THREE.PointsMaterial({
+        color: 0xCCEEFF,           // Soft blue-white
+        size: 0.03,                // Tiny particles
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true
+    });
+
+    const hawkingParticles = new THREE.Points(hawkingGeometry, hawkingMaterial);
+    hawkingParticles.name = 'HawkingRadiation';
+    hawkingParticles.renderOrder = 5;
+
+    // Store particle system metadata
+    hawkingParticles.userData = {
+        spawnRate: 0.0,            // Particles per second (0 = disabled by default)
+        timeSinceLastSpawn: 0.0,
+        maxLifetime: hawkingMaxLifetime,
+        eventHorizonRadius: SCHWARZSCHILD_RADIUS * 1.05 // Spawn just outside event horizon
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // GROUP ASSEMBLY
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -242,6 +287,7 @@ export function createBlackHoleGroup() {
     group.add(photonRingMesh);
     group.add(topJetMesh);
     group.add(bottomJetMesh);
+    group.add(hawkingParticles);
 
     // Scale entire group to match other geometries (radius ~0.5 default scale)
     // This makes the black hole similar size to sphere, moon, sun, etc.
@@ -256,6 +302,7 @@ export function createBlackHoleGroup() {
     group.userData.photonRingMesh = photonRingMesh;
     group.userData.topJetMesh = topJetMesh;
     group.userData.bottomJetMesh = bottomJetMesh;
+    group.userData.hawkingParticles = hawkingParticles;
 
     return group;
 }
@@ -443,6 +490,101 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
 }
 
 /**
+ * Update Hawking radiation particle system
+ *
+ * Simulates quantum tunneling particles escaping from event horizon.
+ * Very sparse emission (controlled by spawnRate), slow outward drift,
+ * fade out after ~3 seconds.
+ *
+ * @param {THREE.Points} hawkingParticles - Hawking radiation particle system
+ * @param {number} deltaTime - Time since last frame (seconds)
+ */
+function updateHawkingRadiation(hawkingParticles, deltaTime) {
+    const {geometry} = hawkingParticles;
+    const positions = geometry.attributes.position.array;
+    const velocities = geometry.attributes.velocity.array;
+    const lifetimes = geometry.attributes.lifetime.array;
+
+    const {spawnRate, maxLifetime, eventHorizonRadius} = hawkingParticles.userData;
+
+    // Update existing particles
+    for (let i = 0; i < lifetimes.length; i++) {
+        if (lifetimes[i] > 0) {
+            // Update position based on velocity
+            positions[i * 3] += velocities[i * 3] * deltaTime;
+            positions[i * 3 + 1] += velocities[i * 3 + 1] * deltaTime;
+            positions[i * 3 + 2] += velocities[i * 3 + 2] * deltaTime;
+
+            // Decrease lifetime
+            lifetimes[i] -= deltaTime;
+
+            // Fade out particles based on remaining lifetime
+            const lifeFraction = lifetimes[i] / maxLifetime;
+            // Particles get dimmer as they age (opacity based on lifetime)
+            // This is handled via material opacity, but we kill particles at lifetime <= 0
+            if (lifetimes[i] <= 0) {
+                lifetimes[i] = 0;
+            }
+        }
+    }
+
+    // Spawn new particles (if enabled)
+    if (spawnRate > 0) {
+        hawkingParticles.userData.timeSinceLastSpawn += deltaTime;
+        const spawnInterval = 1.0 / spawnRate; // Time between spawns
+
+        while (hawkingParticles.userData.timeSinceLastSpawn >= spawnInterval) {
+            hawkingParticles.userData.timeSinceLastSpawn -= spawnInterval;
+
+            // Find a dead particle to reuse
+            for (let i = 0; i < lifetimes.length; i++) {
+                if (lifetimes[i] <= 0) {
+                    // Spawn on random point on event horizon surface
+                    const theta = Math.random() * Math.PI * 2; // Azimuthal angle
+                    const phi = Math.acos(2 * Math.random() - 1); // Polar angle (uniform distribution)
+
+                    const x = eventHorizonRadius * Math.sin(phi) * Math.cos(theta);
+                    const y = eventHorizonRadius * Math.sin(phi) * Math.sin(theta);
+                    const z = eventHorizonRadius * Math.cos(phi);
+
+                    positions[i * 3] = x;
+                    positions[i * 3 + 1] = y;
+                    positions[i * 3 + 2] = z;
+
+                    // Slow outward velocity (escape velocity from event horizon)
+                    const escapeSpeed = 0.05; // Very slow drift
+                    const nx = x / eventHorizonRadius;
+                    const ny = y / eventHorizonRadius;
+                    const nz = z / eventHorizonRadius;
+
+                    velocities[i * 3] = nx * escapeSpeed;
+                    velocities[i * 3 + 1] = ny * escapeSpeed;
+                    velocities[i * 3 + 2] = nz * escapeSpeed;
+
+                    // Reset lifetime
+                    lifetimes[i] = maxLifetime;
+
+                    break; // Only spawn one particle per interval
+                }
+            }
+        }
+    }
+
+    // Mark attributes as needing update
+    geometry.attributes.position.needsUpdate = true;
+    geometry.attributes.lifetime.needsUpdate = true;
+
+    // Update material opacity based on average lifetime (fade out entire system)
+    const activeParticles = lifetimes.filter(life => life > 0).length;
+    if (activeParticles > 0) {
+        const avgLifeFraction = lifetimes.reduce((sum, life) => sum + (life > 0 ? life / maxLifetime : 0), 0) / activeParticles;
+        hawkingParticles.material.opacity = Math.min(0.6, avgLifeFraction * 0.6);
+    } else {
+        hawkingParticles.material.opacity = 0.0;
+    }
+}
+
+/**
  * Update black hole material uniforms (called from render loop)
  *
  * Updates time-based animation and emotion-based color tinting
@@ -456,7 +598,7 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
 export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {}) {
     if (!blackHoleGroup || !blackHoleGroup.userData.diskMesh) return;
 
-    const {diskMesh, topJetMesh, bottomJetMesh} = blackHoleGroup.userData;
+    const {diskMesh, topJetMesh, bottomJetMesh, hawkingParticles} = blackHoleGroup.userData;
     const diskMaterial = diskMesh.material;
 
     // Update time for shader animation (convert ms to seconds)
@@ -471,6 +613,11 @@ export function updateBlackHoleMaterial(blackHoleGroup, deltaTime, options = {})
     }
     if (bottomJetMesh && bottomJetMesh.material.uniforms) {
         bottomJetMesh.material.uniforms.time.value += timeInSeconds;
+    }
+
+    // Update Hawking radiation particle system
+    if (hawkingParticles) {
+        updateHawkingRadiation(hawkingParticles, timeInSeconds);
     }
 
     // Update emotion color tint if provided

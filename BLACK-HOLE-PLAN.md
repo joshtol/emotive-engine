@@ -734,31 +734,71 @@ topJetGeometry.translate(0, jetLength / 2, 0);
 
 ---
 
-### 12. Advanced Features - Hawking Radiation
+### 12. Advanced Features - Hawking Radiation ✅ COMPLETE
 
 #### Particle Effect
 
-- [ ] Spawn tiny particles just outside event horizon
-- [ ] Particles drift outward slowly (quantum tunneling simulation)
-- [ ] Very faint glow (barely visible)
-- [ ] Color: Soft white/blue
+- [x] Spawn tiny particles just outside event horizon (1.05x Schwarzschild
+      radius)
+- [x] Particles drift outward slowly (quantum tunneling simulation)
+- [x] Very faint glow (soft blue-white, opacity 0.6)
+- [x] Color: Soft blue-white (#CCEEFF)
 
 #### Physics Simulation
 
-- [ ] Random spawn locations on event horizon surface
-- [ ] Small outward velocity (escape velocity)
-- [ ] Fade out after ~2-3 seconds
-- [ ] Very sparse (1-2 particles per second)
+- [x] Random spawn locations on event horizon surface (uniform sphere
+      distribution)
+- [x] Small outward velocity (escape speed: 0.05 units/sec)
+- [x] Fade out after 3 seconds (lifetime tracked per particle)
+- [x] Configurable spawn rate (0-5 particles per second)
 
 #### Emotion Integration
 
-- [ ] Hawking radiation only visible in "calm" emotion (subtle, contemplative)
-- [ ] Represents quantum uncertainty and information paradox
+- [x] Hawking radiation disabled by default (spawnRate: 0)
+- [x] Toggleable for ALL emotions via UI
+- [x] Spawn rate controllable via slider (0-5 particles/sec)
+- [x] Represents quantum uncertainty and information paradox
 
 #### Demo Controls
 
-- [ ] Add "Hawking Radiation" checkbox in demo page
-- [ ] Intensity slider (particle spawn rate)
+- [x] Added "Show Hawking Radiation" toggle button
+- [x] Spawn rate slider (0.0 to 5.0 particles/sec)
+- [x] Button shows active state when enabled
+- [x] Slider updates button state automatically
+
+#### Implementation Details (`BlackHole.js:236-279, 492-585`)
+
+**Particle System Setup**:
+
+```javascript
+const maxHawkingParticles = 50;
+const hawkingGeometry = new THREE.BufferGeometry();
+const hawkingPositions = new Float32Array(maxHawkingParticles * 3);
+const hawkingVelocities = new Float32Array(maxHawkingParticles * 3);
+const hawkingLifetimes = new Float32Array(maxHawkingParticles);
+
+hawkingParticles.userData = {
+    spawnRate: 0.0, // Disabled by default
+    timeSinceLastSpawn: 0.0,
+    maxLifetime: 3.0, // 3 second fade
+    eventHorizonRadius: SCHWARZSCHILD_RADIUS * 1.05,
+};
+```
+
+**Particle Spawn Algorithm**:
+
+- Uniform sphere distribution using spherical coordinates (theta, phi)
+- Spawns on event horizon surface:
+  `pos = radius * [sin(phi)*cos(theta), sin(phi)*sin(theta), cos(phi)]`
+- Outward velocity: `vel = normalize(pos) * 0.05` (radial escape)
+- Particle pooling: reuses "dead" particles (lifetime <= 0)
+
+**Simulation Loop** (`updateHawkingRadiation()`):
+
+1. Update existing particles: position += velocity \* deltaTime
+2. Decrease lifetime each frame
+3. Spawn new particles based on spawnRate (time-based intervals)
+4. Update material opacity based on average particle lifetime
 
 ---
 

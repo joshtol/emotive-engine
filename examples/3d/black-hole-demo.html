@@ -249,6 +249,19 @@
         </div>
 
         <div class="section">
+            <h2>Hawking Radiation</h2>
+            <button data-action="toggle-hawking" style="width: 100%; margin-bottom: 10px">✨ Show Hawking Radiation</button>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Spawn Rate</span>
+                    <span id="hawking-rate-value">0.0/sec</span>
+                </div>
+                <input type="range" id="hawking-rate-slider" class="slider"
+                       min="0" max="5" step="0.1" value="0">
+            </div>
+        </div>
+
+        <div class="section">
             <h2>Disk Rotation Speed</h2>
             <div class="slider-container">
                 <div class="slider-label">
@@ -475,6 +488,30 @@
                 }
                 return;
             }
+
+            // Toggle Hawking radiation
+            if (e.target.dataset.action === 'toggle-hawking') {
+                const hawkingParticles = mascot?.core3D?.coreMesh?.userData?.hawkingParticles;
+
+                if (hawkingParticles) {
+                    const currentRate = hawkingParticles.userData.spawnRate;
+                    const newRate = currentRate > 0 ? 0 : 2.0; // 2 particles/sec default
+
+                    hawkingParticles.userData.spawnRate = newRate;
+
+                    document.getElementById('hawking-rate-slider').value = newRate;
+                    document.getElementById('hawking-rate-value').textContent = `${newRate.toFixed(1)}/sec`;
+
+                    if (newRate > 0) {
+                        e.target.classList.add('active');
+                        console.log('✨ Hawking radiation ON (quantum tunneling particles)');
+                    } else {
+                        e.target.classList.remove('active');
+                        console.log('✨ Hawking radiation OFF');
+                    }
+                }
+                return;
+            }
         });
 
         // Disk rotation speed slider
@@ -539,6 +576,30 @@
             }
 
             console.log(`🚀 Jet intensity: ${Math.round(intensity * 100)}%`);
+        });
+
+        // Hawking radiation spawn rate slider
+        const hawkingRateSlider = document.getElementById('hawking-rate-slider');
+        hawkingRateSlider.addEventListener('input', (e) => {
+            const rate = parseFloat(e.target.value);
+            document.getElementById('hawking-rate-value').textContent = `${rate.toFixed(1)}/sec`;
+
+            // Update Hawking radiation spawn rate
+            const hawkingParticles = mascot?.core3D?.coreMesh?.userData?.hawkingParticles;
+
+            if (hawkingParticles) {
+                hawkingParticles.userData.spawnRate = rate;
+            }
+
+            // Update button active state
+            const hawkingButton = document.querySelector('[data-action="toggle-hawking"]');
+            if (rate > 0) {
+                hawkingButton.classList.add('active');
+            } else {
+                hawkingButton.classList.remove('active');
+            }
+
+            console.log(`✨ Hawking radiation: ${rate.toFixed(1)} particles/sec`);
         });
     </script>
 </body>
