@@ -15,7 +15,7 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
 
@@ -32,6 +32,7 @@ export class ThreeRenderer {
         this.renderer = new THREE.WebGLRenderer({
             canvas,
             alpha: true, // Transparent background
+            premultipliedAlpha: false, // Required for CSS backgrounds to blend correctly
             antialias: true,
             powerPreference: 'high-performance',
             preserveDrawingBuffer: false,
@@ -44,6 +45,12 @@ export class ThreeRenderer {
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         this.renderer.toneMapping = THREE.NoToneMapping;
         this.renderer.toneMappingExposure = 1.0;
+
+        // Set clear color with full alpha transparency for CSS backgrounds
+        this.renderer.setClearColor(0x000000, 0);
+
+        // CRITICAL: Disable autoClear for transparency to work in newer Three.js versions
+        this.renderer.autoClear = false;
 
         // PERFORMANCE: Limit pixel ratio to 1.5 for desktop (35% performance gain, no visible difference)
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -173,8 +180,8 @@ export class ThreeRenderer {
      * Creates ambient, key, fill, and rim lights for professional look
      */
     setupLights() {
-        // Scene background - dark gradient instead of pure black
-        this.scene.background = new THREE.Color(0x0a0a0f); // Very dark blue-gray
+        // Scene background - keep transparent for CSS background to show through
+        // this.scene.background = new THREE.Color(0x0a0a0f); // Commented out to maintain alpha transparency
 
         // Ambient light - moderate for balanced visibility
         this.ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
@@ -303,7 +310,16 @@ export class ThreeRenderer {
      */
     setupPostProcessing() {
         // Effect composer for post-processing chain
-        this.composer = new EffectComposer(this.renderer);
+        // Create with alpha-enabled render target for transparent backgrounds
+        const renderTarget = new THREE.WebGLRenderTarget(this.canvas.width, this.canvas.height, {
+            format: THREE.RGBAFormat,
+            type: THREE.UnsignedByteType,
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            stencilBuffer: false,
+            depthBuffer: true
+        });
+        this.composer = new EffectComposer(this.renderer, renderTarget);
 
         // Render pass - base scene render
         const renderPass = new RenderPass(this.scene, this.camera);
@@ -316,14 +332,15 @@ export class ThreeRenderer {
             Math.floor(this.canvas.width / 2),
             Math.floor(this.canvas.height / 2)
         );
-        this.bloomPass = new UnrealBloomPass(
+        this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,
             1.2, // strength - moderate glow
             0.5, // radius - tight spread
             0.3  // threshold - preserve texture detail
         );
         this.bloomPass.name = 'bloomPass';
-        this.bloomPass.enabled = true;
+        this.bloomPass.enabled = true; // Using proven working blur shader approach
+        this.bloomPass.renderToScreen = true; // CRITICAL: Last pass must render to screen
         this.composer.addPass(this.bloomPass);
     }
 
@@ -1100,6 +1117,9 @@ export class ThreeRenderer {
             const delta = this.clock.getDelta();
             this.mixer.update(delta);
         }
+
+        // Manually clear with transparent background (needed when autoClear = false)
+        this.renderer.clear();
 
         // Render with post-processing if enabled, otherwise direct render
         if (this.composer) {
