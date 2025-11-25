@@ -141,7 +141,9 @@ export class EmotiveMascot3D {
             this.ctx2D = this.canvas2D.getContext('2d');
 
             // Initialize particle system (2D overlay)
-            if (this.config.enableParticles) {
+            // ONLY create 2D particles if 3D WebGL particles are NOT available
+            // 3D demos should use WebGL particles, not 2D canvas overlay
+            if (this.config.enableParticles && !this.core3D?.particleOrchestrator) {
                 const maxParticles = this.config.maxParticles || 300;
                 this.particleSystem = new ParticleSystem(maxParticles, this.errorBoundary);
 

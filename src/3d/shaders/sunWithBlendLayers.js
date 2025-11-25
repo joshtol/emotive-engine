@@ -195,6 +195,28 @@ void main() {
     finalColor *= emissiveIntensity;
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // LIMB DARKENING (realistic solar effect - edges appear darker than center)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Calculate distance from center (0 at center, 1 at edge)
+    float distFromCenterLimb = length(vWorldPosition.xy) / 0.9; // normalize by sun radius (0.9)
+    distFromCenterLimb = clamp(distFromCenterLimb, 0.0, 1.0);
+
+    // Limb darkening formula: I(μ) = 1 - u*(1-μ) where μ = cos(viewing angle)
+    // Simplified using distance: darker at edges, brighter at center
+    float mu = sqrt(1.0 - distFromCenterLimb * distFromCenterLimb); // cos approximation
+    // EXTREME limb darkening for visibility
+    float limbDarkeningCoeff = 0.98; // 98% darkening at edges
+    float limbBrightness = 1.0 - limbDarkeningCoeff * (1.0 - mu);
+    limbBrightness = pow(limbBrightness, 0.4); // Very aggressive power curve
+
+    // Clamp to prevent over-darkening
+    limbBrightness = max(limbBrightness, 0.02); // Edges at least 2% brightness
+
+    // Apply limb darkening (BEFORE bloom processing)
+    finalColor *= limbBrightness;
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // SOLAR ECLIPSE EFFECT (Moon Occulting Sun)
     // ═══════════════════════════════════════════════════════════════════════════
     // Solar eclipse: Moon passes BETWEEN viewer and sun, blocking our view

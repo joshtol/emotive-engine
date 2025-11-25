@@ -165,9 +165,9 @@ export function createSunMaterial(textureLoader, options = {}) {
             eclipseShadowRadius: { value: 0.072 },  // User-calibrated: Total eclipse size (Annular: 0.042)
             shadowDarkness: { value: 1.00 },  // Always 1.0 - moon blocks 100% of sun's light
 
-            // Blend Multiplexer Layer 1 - Linear Burn @ 0.948
-            layer1Mode: { value: 1.0 },  // 1 = Linear Burn
-            layer1Strength: { value: 0.948 },
+            // Blend Multiplexer Layer 1 - Multiply @ 0.230
+            layer1Mode: { value: 0.0 },  // 0 = Multiply
+            layer1Strength: { value: 0.230 },
             layer1Enabled: { value: 1.0 },
 
             // Blend Multiplexer Layer 2 - DISABLED
@@ -316,6 +316,23 @@ export function createSunMaterial(textureLoader, options = {}) {
                 finalColor *= emissiveIntensity;
 
                 // ═══════════════════════════════════════════════════════════════════════════
+                // LIMB DARKENING (realistic solar effect - edges appear darker than center)
+                // ═══════════════════════════════════════════════════════════════════════════
+
+                // Calculate distance from center (0 at center, 1 at edge)
+                float distFromCenterLimb = length(vWorldPosition.xy) / 0.9; // normalize by sun radius (0.9)
+                distFromCenterLimb = clamp(distFromCenterLimb, 0.0, 1.0);
+
+                // Limb darkening formula: I(μ) = 1 - u*(1-μ) where μ = cos(viewing angle)
+                // Simplified using distance: darker at edges, brighter at center
+                float mu = sqrt(1.0 - distFromCenterLimb * distFromCenterLimb); // cos approximation
+                float limbDarkeningCoeff = 0.6; // NASA solar data: ~60% darkening at limb
+                float limbBrightness = 1.0 - limbDarkeningCoeff * (1.0 - mu);
+
+                // Apply limb darkening (preserves bright core for bloom)
+                finalColor *= limbBrightness;
+
+                // ═══════════════════════════════════════════════════════════════════════════
                 // SHADOW DARKENING (applied AFTER bloom intensity so it doesn't affect bloom)
                 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -375,7 +392,7 @@ export function createSunMaterial(textureLoader, options = {}) {
             colorMap: { value: colorMap },
             normalMap: { value: normalMap },
             baseColor: { value: baseColor },
-            emissiveIntensity: { value: 2.0 },  // Reduced from 6.0 to prevent core blowout
+            emissiveIntensity: { value: 4.0 },  // Increased for stronger bloom
             glowColor: { value: new THREE.Color(1, 1, 1) },  // For ThreeRenderer compatibility
             glowIntensity: { value: 1.0 },  // For ThreeRenderer compatibility
             // Shadow uniforms (same as moon crescent shader)
@@ -509,7 +526,7 @@ export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, delta
         // This preserves the NASA-accurate 5,772K color temperature
 
         uniforms.baseColor.value.copy(baseColor);
-        uniforms.emissiveIntensity.value = 2.0;  // Reduced from 6.0 to prevent core blowout
+        uniforms.emissiveIntensity.value = 4.0;  // Increased for stronger bloom
     } else if (material.color) {
         // Fallback for basic material (no shader uniforms)
         // Sun is ALWAYS NASA white - ignores emotion colors

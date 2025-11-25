@@ -65,6 +65,11 @@ export class Core3DManager {
 
         this.geometry = this.geometryConfig.geometry;
 
+        // Store geometry type name for material/rendering logic
+        if (this.geometry && !this.geometry.isGroup) {
+            this.geometry.userData.geometryType = this.geometryType;
+        }
+
         // Store materialVariant for use when morphing geometries
         this.materialVariant = options.materialVariant || null;
 

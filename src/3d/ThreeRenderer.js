@@ -335,7 +335,7 @@ export class ThreeRenderer {
         this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,
             1.2, // strength - moderate glow
-            0.5, // radius - tight spread
+            0.8, // radius - wider spread for stronger bloom
             0.3  // threshold - preserve texture detail
         );
         this.bloomPass.name = 'bloomPass';
@@ -701,9 +701,17 @@ export class ThreeRenderer {
         }
 
         // Bright white emissive material for lightsaber effect
+        // Crystal shapes (crystal, diamond, icosahedron, octahedron) get stronger bloom
+        const geometryTypeName = outerGeometry.userData?.geometryType;
+        const isCrystalShape =
+            outerGeometry.type === 'IcosahedronGeometry' ||
+            outerGeometry.type === 'OctahedronGeometry' ||
+            geometryTypeName === 'crystal' ||
+            geometryTypeName === 'diamond';
+
         const coreMaterial = new THREE.MeshStandardMaterial({
             emissive: 0xffffff,
-            emissiveIntensity: 2.0,  // Bright white core
+            emissiveIntensity: isCrystalShape ? 3.5 : 2.0,  // Higher bloom for crystals
             color: 0xffffff,
             transparent: false,
             opacity: 1.0

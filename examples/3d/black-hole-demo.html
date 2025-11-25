@@ -240,13 +240,31 @@
         <div class="section">
             <h2>Relativistic Jets</h2>
             <button data-action="toggle-jets" class="active" style="width: 100%; margin-bottom: 10px">🚀 Show Jets</button>
-            <div class="slider-container">
-                <div class="slider-label">
-                    <span>Jet Intensity</span>
-                    <span id="jet-intensity-value">80%</span>
+            <div id="jet-controls">
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Jet Intensity</span>
+                        <span id="jet-intensity-value">80%</span>
+                    </div>
+                    <input type="range" id="jet-intensity-slider" class="slider"
+                           min="0" max="1" step="0.01" value="0.8">
                 </div>
-                <input type="range" id="jet-intensity-slider" class="slider"
-                       min="0" max="1" step="0.01" value="0.8">
+                <div style="margin-top: 10px">
+                    <label style="font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 4px; display: block">Blend Mode</label>
+                    <select id="jet-blend-mode" class="slider" style="width: 100%; padding: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px">
+                        <option value="5">Screen (Default)</option>
+                        <option value="6">Linear Dodge</option>
+                        <option value="7">Color Dodge</option>
+                        <option value="8">Lighten</option>
+                        <option value="9">Lighter Color</option>
+                        <option value="10">Overlay</option>
+                        <option value="11">Soft Light</option>
+                        <option value="12">Hard Light</option>
+                        <option value="0">Multiply</option>
+                        <option value="16">Difference</option>
+                        <option value="17">Exclusion</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -493,11 +511,14 @@
                     document.getElementById('jet-intensity-slider').value = newIntensity;
                     document.getElementById('jet-intensity-value').textContent = `${Math.round(newIntensity * 100)}%`;
 
+                    const jetControls = document.getElementById('jet-controls');
                     if (newIntensity > 0) {
                         e.target.classList.add('active');
+                        jetControls.style.display = 'block';
                         console.log('🚀 Relativistic jets ON');
                     } else {
                         e.target.classList.remove('active');
+                        jetControls.style.display = 'none';
                         console.log('🚀 Relativistic jets OFF');
                     }
                 }
@@ -615,6 +636,25 @@
             }
 
             console.log(`🚀 Jet intensity: ${Math.round(intensity * 100)}%`);
+        });
+
+        // Jet blend mode selector
+        const jetBlendModeSelect = document.getElementById('jet-blend-mode');
+        jetBlendModeSelect.addEventListener('change', (e) => {
+            const blendMode = parseInt(e.target.value);
+            const topJetMesh = mascot?.core3D?.coreMesh?.userData?.topJetMesh;
+            const bottomJetMesh = mascot?.core3D?.coreMesh?.userData?.bottomJetMesh;
+
+            if (topJetMesh && bottomJetMesh && topJetMesh.material?.uniforms && bottomJetMesh.material?.uniforms) {
+                topJetMesh.material.uniforms.jetBlendMode.value = blendMode;
+                bottomJetMesh.material.uniforms.jetBlendMode.value = blendMode;
+
+                const blendModeNames = ['Multiply', 'Linear Burn', 'Color Burn', 'Darken', 'Darker Color',
+                    'Screen', 'Linear Dodge', 'Color Dodge', 'Lighten', 'Lighter Color',
+                    'Overlay', 'Soft Light', 'Hard Light', 'Vivid Light', 'Linear Light', 'Pin Light',
+                    'Difference', 'Exclusion', 'Subtract', 'Divide', 'Hue', 'Saturation'];
+                console.log(`🎨 Jet blend mode: ${blendModeNames[blendMode]}`);
+            }
         });
 
         // Hawking radiation spawn rate slider

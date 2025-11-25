@@ -29,7 +29,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0a0010 0%, #1a0a20 50%, #0f0518 100%);
+            background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
+                        linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             color: white;
             width: 100vw;
             height: 100vh;
@@ -514,17 +515,25 @@
     <!-- RIGHT MENU: Blend Layers -->
     <div class="right-menu">
         <div class="section">
-            <h2>Blend Layers</h2>
-            <div id="layers-container">
-                <!-- Layers will be added here dynamically -->
+            <h2>Corona Blend Layers</h2>
+            <div id="corona-layers-container">
+                <!-- Corona layers will be added here dynamically -->
             </div>
-            <button class="add-layer-btn" id="add-layer-btn">+ Add Layer</button>
+            <button class="add-layer-btn" id="add-corona-layer-btn">+ Add Corona Layer</button>
+        </div>
+
+        <div class="section">
+            <h2>Sun Blend Layers</h2>
+            <div id="layers-container">
+                <!-- Sun layers will be added here dynamically -->
+            </div>
+            <button class="add-layer-btn" id="add-layer-btn">+ Add Sun Layer</button>
         </div>
 
         <div class="section">
             <div class="info-box">
                 <strong>Blend Modes:</strong><br>
-                Drag layers to reorder. Layers are applied sequentially to the entire sun surface. Maximum 4 layers.
+                Drag layers to reorder. Corona layers fix black edges. Sun layers adjust sun appearance. Max 4 per section.
             </div>
         </div>
     </div>
@@ -534,19 +543,40 @@
 
         let mascot = null;
 
-        // Blend mode names (22 total modes)
+        // Configuration constants
+        const MAX_BLEND_LAYERS = 4;          // Maximum blend layers per section (sun/corona)
+        const SHADOW_POS_RANGE = 2.0;        // Eclipse shadow position range (±2.0)
+
+        // Blend mode names (18 total modes - matches shader implementation)
+        // Source: src/3d/shaders/utils/blendModes.js
         const blendModeNames = [
-            'Multiply', 'Linear Burn', 'Color Burn', 'Darken', 'Darker Color',
-            'Screen', 'Linear Dodge', 'Color Dodge', 'Lighten', 'Lighter Color',
-            'Overlay', 'Soft Light', 'Hard Light', 'Vivid Light', 'Linear Light', 'Pin Light',
-            'Difference', 'Exclusion', 'Subtract', 'Divide',
-            'Hue', 'Saturation'
+            'Multiply',       // 0 - Darkening
+            'Linear Burn',    // 1 - Darkening
+            'Color Burn',     // 2 - Darkening (intense)
+            'Color Dodge',    // 3 - Brightening (intense)
+            'Screen',         // 4 - Brightening
+            'Overlay',        // 5 - Contrast
+            'Add',            // 6 - Brightening (glow)
+            'Soft Light',     // 7 - Contrast (gentle)
+            'Hard Light',     // 8 - Contrast (strong)
+            'Vivid Light',    // 9 - Saturation boost
+            'Linear Light',   // 10 - Linear saturation
+            'Difference',     // 11 - Inversion
+            'Exclusion',      // 12 - Soft inversion
+            'Darken',         // 13 - Comparison (darker)
+            'Lighten',        // 14 - Comparison (lighter)
+            'Subtract',       // 15 - Deep shadows
+            'Divide',         // 16 - Ethereal glow
+            'Pin Light'       // 17 - Posterization
         ];
 
         // Layer management
-        let layers = [];
+        let layers = []; // Sun layers
+        let coronaLayers = []; // Corona layers
         let nextLayerId = 1;
+        let nextCoronaLayerId = 1;
         let draggedLayer = null;
+        let draggedCoronaLayer = null;
 
         // Initialize sun with multiplexer material
         (async () => {
@@ -571,18 +601,8 @@
 
                 console.log('☀️ EmotiveMascot3D Sun initialized with multiplexer material');
 
-                // Log sun material state
-                if (mascot.core3D && mascot.core3D.coreMesh) {
-                    console.log('☀️ Sun mesh state:', {
-                        hasCoreMesh: !!mascot.core3D.coreMesh,
-                        hasMaterial: !!mascot.core3D.coreMesh.material,
-                        hasUniforms: !!mascot.core3D.coreMesh.material.uniforms,
-                        uniformKeys: mascot.core3D.coreMesh.material.uniforms ? Object.keys(mascot.core3D.coreMesh.material.uniforms) : []
-                    });
-                }
-
                 // Auto-populate UI from shader defaults (WYSIWYG)
-                // Check if any blend layers are enabled by default in the shader
+                // Check if any sun blend layers are enabled by default in the shader
                 if (mascot.core3D && mascot.core3D.coreMesh && mascot.core3D.coreMesh.material.uniforms) {
                     for (let i = 1; i <= 4; i++) {
                         const enabled = mascot.core3D.coreMesh.material.uniforms[`layer${i}Enabled`].value > 0.5;
@@ -592,7 +612,20 @@
                             addLayer(mode, strength, true, true); // skip shader update during batch load
                         }
                     }
-                    console.log(`📋 Loaded ${layers.length} blend layers from shader defaults`);
+                    console.log(`📋 Loaded ${layers.length} sun blend layers from shader defaults`);
+                }
+
+                // Auto-populate corona blend layers from shader defaults
+                if (mascot.core3D && mascot.core3D.solarEclipse && mascot.core3D.solarEclipse.coronaDisk && mascot.core3D.solarEclipse.coronaDisk.material.uniforms) {
+                    for (let i = 1; i <= 4; i++) {
+                        const enabled = mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Enabled`].value > 0.5;
+                        if (enabled) {
+                            const mode = Math.round(mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Mode`].value);
+                            const strength = mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Strength`].value;
+                            addCoronaLayer(mode, strength, true, true); // skip shader update during batch load
+                        }
+                    }
+                    console.log(`📋 Loaded ${coronaLayers.length} corona blend layers from shader defaults`);
                 }
             } catch (error) {
                 console.error('❌ Failed to initialize:', error);
@@ -612,10 +645,10 @@
 
         // Eclipse stage definitions with magnetic snap points
         // FULL 360° rotation maps to complete eclipse cycle:
-        // -180° (left) = shadow at -2.0 → 0° (top) = shadow at 0.0 (totality) → 180° (right) = shadow at +2.0
+        // -180° (left) = shadow at -SHADOW_POS_RANGE → 0° (top) = shadow at 0.0 (totality) → 180° (right) = shadow at +SHADOW_POS_RANGE
         const ECLIPSE_STAGES = [
-            { angle: -180, shadowPos: -2.0, label: 'Start', snap: true },     // Shadow far left (start of cycle)
-            { angle: 0, shadowPos: 0.0, label: 'Totality', snap: true }       // Shadow centered (total eclipse)
+            { angle: -180, shadowPos: -SHADOW_POS_RANGE, label: 'Start', snap: true },     // Shadow far left (start of cycle)
+            { angle: 0, shadowPos: 0.0, label: 'Totality', snap: true }                    // Shadow centered (total eclipse)
         ];
 
         function initializeEclipseDial() {
@@ -694,25 +727,28 @@
 
                 dialState.currentAngle = angle;
 
-                // Linear mapping: angle (-180° to 180°) → shadow position (-2.0 to +2.0)
-                // -180° = -2.0 (shadow far left)
+                // Linear mapping: angle (-180° to 180°) → shadow position (-SHADOW_POS_RANGE to +SHADOW_POS_RANGE)
+                // -180° = -SHADOW_POS_RANGE (shadow far left)
                 //    0° =  0.0 (shadow centered - totality)
-                // +180° = +2.0 (shadow far right)
-                const shadowPos = (angle / 180.0) * 2.0;
+                // +180° = +SHADOW_POS_RANGE (shadow far right)
+                const shadowPos = (angle / 180.0) * SHADOW_POS_RANGE;
                 dialState.currentShadowPos = shadowPos;
 
                 // Update visual rotation
                 dialKnob.style.transform = `rotate(${angle}deg)`;
 
                 // Display eclipse coverage percentage
-                // Shadow at -2.0 or +2.0 = 0% coverage (no eclipse)
+                // Shadow at ±SHADOW_POS_RANGE = 0% coverage (no eclipse)
                 // Shadow at 0.0 = 100% coverage (totality)
                 // Calculate coverage based on how close shadow is to center
                 const distanceFromCenter = Math.abs(shadowPos);
-                const maxDistance = 2.0;
+                const maxDistance = SHADOW_POS_RANGE;
                 // Coverage is highest (100%) at center, drops to 0% at edges
                 const coverage = Math.max(0, Math.min(100, Math.round((1 - (distanceFromCenter / maxDistance)) * 100)));
                 dialValue.textContent = `${coverage}%`;
+
+                // Update Pin Light layer based on coverage (ONLY at 100% during total eclipse)
+                updatePinLightVisibility(coverage);
 
                 // Update eclipse with direct shadow position
                 if (mascot && mascot.core3D && mascot.core3D.solarEclipse) {
@@ -721,7 +757,6 @@
             }
 
             function onPointerDown(e) {
-                console.log('🎛️ Dial pointer down');
                 dialState.isDragging = true;
                 dialKnob.style.transition = 'none';
                 startAngle = getAngleFromPoint(e.clientX, e.clientY);
@@ -737,14 +772,12 @@
 
             function onPointerUp(e) {
                 if (!dialState.isDragging) return;
-                console.log('🎛️ Dial pointer up');
                 dialState.isDragging = false;
                 dialKnob.style.transition = 'transform 0.1s ease-out';
                 e.preventDefault();
             }
 
             // Mouse events
-            console.log('🎛️ Adding event listeners to dial knob:', dialKnob);
             dialKnob.addEventListener('mousedown', onPointerDown);
             document.addEventListener('mousemove', onPointerMove);
             document.addEventListener('mouseup', onPointerUp);
@@ -763,10 +796,6 @@
 
             // Initialize dial to totality (shadow centered)
             updateDial(0);
-
-            console.log('🎛️ Eclipse dial initialized with full 360° eclipse cycle');
-            console.log('   Dial knob element:', dialKnob);
-            console.log('   Initial rotation:', dialKnob.style.transform);
         }
 
         // Create layer card HTML
@@ -961,8 +990,8 @@
 
         // Add a new layer
         function addLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (layers.length >= 4) {
-                console.warn('⚠️ Maximum 4 layers reached');
+            if (layers.length >= MAX_BLEND_LAYERS) {
+                console.warn(`⚠️ Maximum ${MAX_BLEND_LAYERS} layers reached`);
                 return;
             }
 
@@ -1001,8 +1030,8 @@
         function updateShaderLayers() {
             if (!mascot || !mascot.core3D) return;
 
-            // Update first 4 layers
-            for (let i = 0; i < 4; i++) {
+            // Update all layers
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
                 const layerNum = i + 1;
                 const uiLayer = layers[i];
 
@@ -1012,7 +1041,6 @@
                         strength: uiLayer.strength,
                         enabled: uiLayer.enabled
                     });
-                    console.log(`🎨 Layer ${layerNum}: ${blendModeNames[uiLayer.mode]} @ ${uiLayer.strength.toFixed(3)} [${uiLayer.enabled ? 'ON' : 'OFF'}]`);
                 } else {
                     // Disable unused layers
                     mascot.core3D.setBlendLayer(layerNum, {
@@ -1024,11 +1052,341 @@
             }
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // CORONA LAYER MANAGEMENT
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Create corona layer card HTML
+        function createCoronaLayerCard(layer) {
+            const card = document.createElement('div');
+            card.className = 'layer-card';
+            card.dataset.layerId = layer.id;
+            card.draggable = true;
+
+            card.innerHTML = `
+                <div class="layer-header">
+                    <div class="layer-title">
+                        <span class="drag-handle">⋮⋮</span>
+                        <span>Corona ${layer.id}</span>
+                    </div>
+                    <div class="layer-controls-header">
+                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="toggle-corona">
+                            ${layer.enabled ? 'ON' : 'OFF'}
+                        </button>
+                        <button class="delete-btn" data-action="delete-corona">✕</button>
+                    </div>
+                </div>
+                <div class="layer-controls">
+                    <select class="layer-select" data-action="mode-corona">
+                        ${blendModeNames.map((name, idx) =>
+                            `<option value="${idx}" ${layer.mode === idx ? 'selected' : ''}>${name}</option>`
+                        ).join('')}
+                    </select>
+                    <div class="slider-control" style="margin: 0;">
+                        <div class="slider-label" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                                <span style="font-size: 11px;">Strength</span>
+                                <div class="precision-toggle" data-action="precision-corona" style="display: flex; gap: 2px; font-size: 9px; opacity: 0.7;">
+                                    <button class="precision-btn active" data-step="0.1" style="padding: 2px 4px; background: rgba(255,255,255,0.2); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.1</button>
+                                    <button class="precision-btn" data-step="0.01" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.01</button>
+                                    <button class="precision-btn" data-step="0.001" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.001</button>
+                                </div>
+                            </div>
+                            <span class="slider-value" style="font-size: 11px; font-family: 'Courier New', monospace; min-width: 45px; text-align: right;">${layer.strength.toFixed(3)}</span>
+                        </div>
+                        <input type="range" class="layer-strength-slider" data-action="strength-corona"
+                               min="0" max="5" step="0.1" value="${layer.strength}">
+                    </div>
+                </div>
+            `;
+
+            // Drag handle
+            const dragHandle = card.querySelector('.drag-handle');
+            dragHandle.addEventListener('mousedown', () => {
+                card.draggable = true;
+            });
+
+            // Drag and drop event handlers
+            card.addEventListener('dragstart', (e) => {
+                draggedCoronaLayer = e.currentTarget;
+                e.currentTarget.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            card.addEventListener('dragend', (e) => {
+                e.currentTarget.classList.remove('dragging');
+                draggedCoronaLayer = null;
+                document.querySelectorAll('.layer-card').forEach(card => {
+                    card.classList.remove('drag-over');
+                });
+            });
+
+            card.addEventListener('dragover', (e) => {
+                if (e.preventDefault) {
+                    e.preventDefault();
+                }
+                e.dataTransfer.dropEffect = 'move';
+
+                const afterElement = getDragAfterElement(document.getElementById('corona-layers-container'), e.clientY);
+                const draggable = document.querySelector('.dragging');
+
+                if (afterElement == null) {
+                    document.getElementById('corona-layers-container').appendChild(draggable);
+                } else {
+                    document.getElementById('corona-layers-container').insertBefore(draggable, afterElement);
+                }
+
+                return false;
+            });
+
+            card.addEventListener('drop', (e) => {
+                if (e.stopPropagation) {
+                    e.stopPropagation();
+                }
+
+                // Rebuild layer positions based on DOM order
+                const cards = Array.from(document.getElementById('corona-layers-container').querySelectorAll('.layer-card'));
+                const newOrder = [];
+
+                cards.forEach((card, index) => {
+                    const layerId = parseInt(card.dataset.layerId);
+                    const layer = coronaLayers.find(l => l.id === layerId);
+                    if (layer) {
+                        newOrder.push(layer);
+                    }
+                });
+
+                coronaLayers = newOrder;
+                updateCoronaShaderLayers();
+                console.log('🔄 Reordered corona layers:', coronaLayers);
+
+                return false;
+            });
+
+            // Prevent dragging when interacting with controls
+            const interactiveElements = card.querySelectorAll('select, input, button:not(.drag-handle)');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mousedown', (e) => {
+                    card.draggable = false;
+                    e.stopPropagation();
+                });
+                el.addEventListener('mouseup', () => {
+                    card.draggable = true;
+                });
+            });
+
+            // Toggle button
+            card.querySelector('[data-action="toggle-corona"]').addEventListener('click', () => {
+                layer.enabled = !layer.enabled;
+                const toggleBtn = card.querySelector('[data-action="toggle-corona"]');
+                toggleBtn.textContent = layer.enabled ? 'ON' : 'OFF';
+                toggleBtn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
+                updateCoronaShaderLayers();
+            });
+
+            // Delete button
+            card.querySelector('[data-action="delete-corona"]').addEventListener('click', () => {
+                removeCoronaLayer(layer.id);
+            });
+
+            // Mode select
+            card.querySelector('[data-action="mode-corona"]').addEventListener('change', (e) => {
+                const oldMode = layer.mode;
+                layer.mode = parseInt(e.target.value);
+                console.log(`🎛️ Corona Layer ${layer.id} mode changed: ${oldMode} → ${layer.mode}`);
+                updateCoronaShaderLayers();
+            });
+
+            // Precision mode toggle buttons
+            const precisionButtons = card.querySelectorAll('.precision-btn');
+            const strengthSlider = card.querySelector('[data-action="strength-corona"]');
+            precisionButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    precisionButtons.forEach(b => {
+                        b.classList.remove('active');
+                        b.style.background = 'rgba(255,255,255,0.1)';
+                    });
+                    btn.classList.add('active');
+                    btn.style.background = 'rgba(255,255,255,0.2)';
+
+                    const step = btn.dataset.step;
+                    strengthSlider.step = step;
+
+                    const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+                    card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
+
+                    console.log(`🎯 Corona Layer ${layer.id} precision: ${step}`);
+                });
+            });
+
+            // Strength slider
+            strengthSlider.addEventListener('input', (e) => {
+                layer.strength = parseFloat(e.target.value);
+
+                const activeBtn = card.querySelector('.precision-btn.active');
+                const step = activeBtn ? activeBtn.dataset.step : '0.1';
+                const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+
+                card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
+                updateCoronaShaderLayers();
+            });
+            strengthSlider.addEventListener('change', (e) => {
+                console.log(`🎛️ Corona Layer ${layer.id} strength: ${layer.strength.toFixed(3)}`);
+            });
+
+            return card;
+        }
+
+        // Add a new corona layer
+        function addCoronaLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (coronaLayers.length >= MAX_BLEND_LAYERS) {
+                console.warn(`⚠️ Maximum ${MAX_BLEND_LAYERS} corona layers reached`);
+                return;
+            }
+
+            const layer = {
+                id: nextCoronaLayerId++,
+                mode: mode,
+                strength: strength,
+                enabled: enabled
+            };
+
+            coronaLayers.push(layer);
+            const card = createCoronaLayerCard(layer);
+            document.getElementById('corona-layers-container').appendChild(card);
+
+            if (!skipUpdate) {
+                updateCoronaShaderLayers();
+            }
+
+            console.log(`➕ Added corona layer ${layer.id}: ${blendModeNames[mode]} @ ${strength.toFixed(3)}`);
+        }
+
+        // Remove a corona layer
+        function removeCoronaLayer(layerId) {
+            const index = coronaLayers.findIndex(l => l.id === layerId);
+            if (index === -1) return;
+
+            // If this is the Pin Light layer, reset the ID
+            if (layerId === pinLightLayerId) {
+                pinLightLayerId = null;
+            }
+
+            coronaLayers.splice(index, 1);
+            const card = document.querySelector(`#corona-layers-container [data-layer-id="${layerId}"].layer-card`);
+            if (card) card.remove();
+
+            updateCoronaShaderLayers();
+        }
+
+        // Update corona shader uniforms with current layer state
+        function updateCoronaShaderLayers() {
+            if (!mascot || !mascot.core3D || !mascot.core3D.solarEclipse) return;
+
+            // Update all corona layers
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const layerNum = i + 1;
+                const uiLayer = coronaLayers[i];
+
+                if (uiLayer) {
+                    mascot.core3D.solarEclipse.setCoronaBlendLayer(layerNum, {
+                        mode: uiLayer.mode,
+                        strength: uiLayer.strength,
+                        enabled: uiLayer.enabled
+                    });
+                } else {
+                    // Disable unused layers
+                    mascot.core3D.solarEclipse.setCoronaBlendLayer(layerNum, {
+                        mode: 0,
+                        strength: 0,
+                        enabled: false
+                    });
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PIN LIGHT LAYER MANAGEMENT (TOTALITY-SPECIFIC EFFECT)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Pin Light blend mode (mode 17) appears ONLY at 100% totality during total eclipse.
+        // This creates a dramatic posterization effect suitable for AI mascots and game visuals.
+        // Settings persist when moving away from 100% and are restored when returning.
+
+        let pinLightLayerId = null;
+        let pinLightSettings = { mode: 17, strength: 0.164, enabled: true }; // Persistent settings
+
+        /**
+         * Update Pin Light layer visibility based on eclipse coverage
+         * Adds layer at 100% totality, removes when coverage drops below 100%
+         * @param {number} coverage - Eclipse coverage percentage (0-100)
+         */
+        function updatePinLightVisibility(coverage) {
+            // Get current eclipse type
+            const currentEclipseType = document.querySelector('[data-action="eclipse"].active')?.dataset?.value;
+            const isTotal = currentEclipseType === 'total';
+            const isAtTotality = (isTotal && coverage === 100);
+
+            if (isAtTotality && pinLightLayerId === null) {
+                // Add Pin Light layer at 100% totality with saved settings
+                const pinLightLayer = {
+                    id: nextCoronaLayerId++,
+                    mode: pinLightSettings.mode,
+                    strength: pinLightSettings.strength,
+                    enabled: pinLightSettings.enabled
+                };
+                pinLightLayerId = pinLightLayer.id;
+
+                // Ensure we have space for layer 3
+                while (coronaLayers.length < 2) {
+                    addCoronaLayer(0, 0, false, true);
+                }
+
+                coronaLayers.push(pinLightLayer);
+                const card = createCoronaLayerCard(pinLightLayer);
+                card.style.border = '2px solid #ff9500';
+                card.style.backgroundColor = 'rgba(255, 149, 0, 0.1)';
+                const titleEl = card.querySelector('.layer-title');
+                if (titleEl) titleEl.textContent = 'Layer 3 (Totality)';
+
+                document.getElementById('corona-layers-container').appendChild(card);
+                updateCoronaShaderLayers();
+            } else if (!isAtTotality && pinLightLayerId !== null) {
+                // Save current settings before removing
+                const layerIndex = coronaLayers.findIndex(l => l.id === pinLightLayerId);
+                if (layerIndex !== -1) {
+                    const layer = coronaLayers[layerIndex];
+                    pinLightSettings.mode = layer.mode;
+                    pinLightSettings.strength = layer.strength;
+                    pinLightSettings.enabled = layer.enabled;
+                    coronaLayers.splice(layerIndex, 1);
+                }
+
+                const card = document.querySelector(`#corona-layers-container [data-layer-id="${pinLightLayerId}"].layer-card`);
+                if (card) card.remove();
+
+                pinLightLayerId = null;
+                updateCoronaShaderLayers();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // EVENT HANDLERS (UI CONTROLS)
+        // ═══════════════════════════════════════════════════════════════════════════
+
         // Event delegation for layer controls
         document.addEventListener('click', (e) => {
-            // Add layer button
+            // Add sun layer button
             if (e.target.id === 'add-layer-btn') {
                 addLayer();
+                return;
+            }
+
+            // Add corona layer button
+            if (e.target.id === 'add-corona-layer-btn') {
+                addCoronaLayer();
                 return;
             }
 
@@ -1139,6 +1497,16 @@
             }
         });
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // HELPER FUNCTIONS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /**
+         * Find the element after which a dragged element should be inserted
+         * @param {HTMLElement} container - Container element
+         * @param {number} y - Mouse Y position
+         * @returns {HTMLElement|undefined} Element to insert before, or undefined to append to end
+         */
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.layer-card:not(.dragging)')];
 

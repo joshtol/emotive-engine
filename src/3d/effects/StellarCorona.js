@@ -216,21 +216,40 @@ export class StellarCorona {
                     float dist = length(vPosition);
 
                     // Create edge glow: brightest at inner radius, fades to outer
-                    // Normalize position on sphere surface
-                    float radialGlow = 1.0;
+                    // Calculate distance from center as normalized value (0 at center, 1 at edge)
+                    // Using smoothstep for natural falloff curve
+                    float normalizedDist = dist / layerScale;
+                    float radialGlow = 1.0 - smoothstep(0.0, 1.2, normalizedDist);
 
-                    // Apply glow color with intensity
-                    vec3 glow = glowColor * intensity * radialGlow;
+                    // Realistic corona color gradient (NASA solar observations)
+                    // Inner: Warm white/yellow (photosphere emission)
+                    // Outer: Cool blue-white (scattered light, lower temperature)
+                    vec3 innerColor = vec3(1.0, 0.95, 0.85);   // Warm white/yellow
+                    vec3 midColor = vec3(1.0, 1.0, 1.0);       // Pure white
+                    vec3 outerColor = vec3(0.9, 0.95, 1.0);    // Cool blue-white
 
-                    // Output with opacity falloff
-                    float alpha = opacity * radialGlow;
+                    // Three-stage gradient for natural transition
+                    vec3 coronaColor;
+                    if (normalizedDist < 0.4) {
+                        // Inner region: warm to white
+                        coronaColor = mix(innerColor, midColor, normalizedDist / 0.4);
+                    } else {
+                        // Outer region: white to cool blue
+                        coronaColor = mix(midColor, outerColor, (normalizedDist - 0.4) / 0.6);
+                    }
+
+                    // Apply glow color tint and intensity
+                    vec3 glow = coronaColor * glowColor * intensity * radialGlow;
+
+                    // Output with opacity falloff (quadratic for smoother fade)
+                    float alpha = opacity * radialGlow * radialGlow;
                     gl_FragColor = vec4(glow, alpha);
                 }
             `,
             transparent: true,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
-            side: THREE.BackSide  // Render from inside so we only see the back faces
+            side: THREE.DoubleSide  // Render both sides for smooth edge blending
         });
 
         const mesh = new THREE.Mesh(geometry, material);
