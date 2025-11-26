@@ -194,7 +194,8 @@ export class Particle3DOrchestrator {
             rotationState,
             deltaTime,
             gestureData,  // Pass gesture data to detect spin gestures
-            coreScale     // Pass core scale to maintain particle/core size ratio
+            coreScale,    // Pass core scale to maintain particle/core size ratio
+            this.geometryType // Pass geometry type for special rendering rules (e.g., black hole culling)
         );
 
         // Apply gesture visual effects
@@ -210,6 +211,14 @@ export class Particle3DOrchestrator {
         // Force recalculation on next update
         this.currentEmotion = null;
         this.currentUndertone = null;
+    }
+
+    /**
+     * Set geometry type for special rendering rules
+     * @param {string} geometryType - Geometry type (e.g., 'blackHole', 'crystal')
+     */
+    setGeometryType(geometryType) {
+        this.geometryType = geometryType;
     }
 
     /**

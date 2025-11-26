@@ -347,8 +347,9 @@ export class Particle3DRenderer {
      * @param {number} deltaTime - Time delta for physics (optional)
      * @param {Object} gestureData - Active gesture data (optional)
      * @param {number} coreScale - Final core scale to maintain particle/core size ratio (optional)
+     * @param {string} geometryType - Geometry type for special rendering rules (optional)
      */
-    updateParticles(particles, translator, corePosition, canvasSize, rotationState, deltaTime, gestureData, coreScale) {
+    updateParticles(particles, translator, corePosition, canvasSize, rotationState, deltaTime, gestureData, coreScale, geometryType) {
         this.particleCount = Math.min(particles.length, this.maxParticles);
 
         // Update core scale uniform to maintain EXACT particle/core size ratio
@@ -388,9 +389,10 @@ export class Particle3DRenderer {
             // Translate 2D position to 3D (with orbital physics if enabled)
             const pos3D = translator.translate2DTo3D(particle, corePosition, canvasSize);
 
-            // CULLING: Skip particles in front of black hole (positive Z = between BH and camera)
+            // BLACK HOLE ONLY: Cull particles in front (positive Z = between BH and camera)
+            // This creates the accretion disk effect where particles orbit behind the black hole
             // Camera is at (0, 0, +Z), black hole at origin, so particles with Z > 0 are in front
-            if (pos3D.z > 0) {
+            if (geometryType === 'blackHole' && pos3D.z > 0) {
                 // Hide particle by setting alpha to 0
                 this.alphas[i] = 0;
                 continue;

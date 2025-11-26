@@ -35,6 +35,15 @@ import { LunarEclipse } from './effects/LunarEclipse.js';
 import { updateMoonGlow, MOON_CALIBRATION_ROTATION, MOON_FACING_CONFIG } from './geometries/Moon.js';
 import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
 
+// Crystal calibration rotation to show flat facet facing camera
+// Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
+// Rotating 30° around Y puts a flat face toward the camera (default -Z view direction)
+const CRYSTAL_CALIBRATION_ROTATION = {
+    x: 0,    // No X rotation
+    y: 30,   // 30° Y rotation to show flat facet
+    z: 0     // No Z rotation
+};
+
 export class Core3DManager {
     constructor(canvas, options = {}) {
         this.canvas = canvas;
@@ -93,6 +102,11 @@ export class Core3DManager {
         // Create core mesh with geometry (and optional custom material)
         this.coreMesh = this.renderer.createCoreMesh(this.geometry, customMaterial);
 
+        // For crystal/diamond with blend-layers shader, create inner glowing core
+        if (this.customMaterialType === 'crystal-blend-layers') {
+            this.createCrystalInnerCore();
+        }
+
         // For black hole Groups, apply materials to child meshes
         if (this.customMaterialType === 'blackHole' && this.geometry.isGroup) {
             const { diskMaterial, shadowMaterial } = customMaterial;
@@ -133,6 +147,17 @@ export class Core3DManager {
             ];
             this.cameraRoll = 0; // Camera-space roll (spin the face)
             console.log(`🌙 Moon calibration rotation set: X=${MOON_CALIBRATION_ROTATION.x}°, Y=${MOON_CALIBRATION_ROTATION.y}°, Z=${MOON_CALIBRATION_ROTATION.z}°`);
+        }
+
+        // Set initial calibration rotation for crystal to show flat facet facing camera
+        if (this.geometryType === 'crystal' || this.geometryType === 'diamond') {
+            const degToRad = Math.PI / 180;
+            this.calibrationRotation = [
+                CRYSTAL_CALIBRATION_ROTATION.x * degToRad,
+                CRYSTAL_CALIBRATION_ROTATION.y * degToRad,
+                CRYSTAL_CALIBRATION_ROTATION.z * degToRad
+            ];
+            console.log(`💎 Crystal calibration rotation set: Y=${CRYSTAL_CALIBRATION_ROTATION.y}° (flat facet facing camera)`);
         }
 
         // Animation controller
@@ -249,6 +274,9 @@ export class Core3DManager {
             particleRenderer
         );
 
+        // Set geometry type for special rendering rules (e.g., black hole particle culling)
+        this.particleOrchestrator.setGeometryType(this.geometryType);
+
         // If particles disabled, hide them immediately
         if (!this.particlesEnabled) {
             particleRenderer.geometry.setDrawRange(0, 0);
@@ -271,7 +299,8 @@ export class Core3DManager {
 
         // Apply default glass mode for initial geometry (if specified)
         // Crystal and diamond geometries have defaultGlassMode: true
-        if (this.geometryConfig.defaultGlassMode) {
+        // BUT skip this if we have a custom material (e.g., blend-layers shader)
+        if (this.geometryConfig.defaultGlassMode && !this.customMaterial) {
             this.setGlassMaterialEnabled(true);
         }
 
@@ -390,6 +419,7 @@ export class Core3DManager {
 
         if (this.rotationDisabled) {
             this.rotationBehavior = null; // Keep rotation disabled
+            console.log('🔄 Rotation disabled by user');
         } else if (this.geometryType === 'moon') {
             this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
         } else if (this.geometryType === 'blackHole') {
@@ -398,6 +428,7 @@ export class Core3DManager {
             if (this.rotationBehavior) {
                 // Update existing behavior
                 this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
+                console.log(`🔄 Rotation behavior updated for ${emotion}:`, emotionData['3d'].rotation);
             } else {
                 // Create new rotation behavior with geometry-specific base rotation
                 this.rotationBehavior = new RotationBehavior(
@@ -405,8 +436,10 @@ export class Core3DManager {
                     this.rhythmEngine,
                     geometryRotation
                 );
+                console.log(`🔄 Rotation behavior created for ${emotion}:`, emotionData['3d'].rotation);
             }
         } else {
+            console.log(`🔄 No 3d rotation config for ${emotion}, using fallback`);
             // Fall back to default gentle rotation if no 3d config
             // BUT: Don't create if rotation is disabled
             if (!this.rotationBehavior && !this.rotationDisabled) {
@@ -769,6 +802,303 @@ export class Core3DManager {
     }
 
     /**
+     * Set crystal blend layer for a specific visual component
+     * @param {string} component - Component name: 'core', 'fresnel', 'trans', 'facet'
+     * @param {number} blendIndex - Blend index (1 or 2)
+     * @param {Object} params - { mode, strength, enabled }
+     */
+    setCrystalBlendLayer(component, blendIndex, params = {}) {
+        if ((this.geometryType !== 'crystal' && this.geometryType !== 'diamond') ||
+            !this.customMaterial || this.customMaterialType !== 'crystal-blend-layers') {
+            return;
+        }
+
+        const prefix = `${component}Blend${blendIndex}`;
+
+        if (params.mode !== undefined && this.customMaterial.uniforms[`${prefix}Mode`]) {
+            this.customMaterial.uniforms[`${prefix}Mode`].value = params.mode;
+        }
+        if (params.strength !== undefined && this.customMaterial.uniforms[`${prefix}Strength`]) {
+            this.customMaterial.uniforms[`${prefix}Strength`].value = params.strength;
+        }
+        if (params.enabled !== undefined && this.customMaterial.uniforms[`${prefix}Enabled`]) {
+            this.customMaterial.uniforms[`${prefix}Enabled`].value = params.enabled ? 1.0 : 0.0;
+        }
+    }
+
+    /**
+     * Set crystal shader uniforms
+     * @param {Object} params - Crystal uniform values
+     */
+    setCrystalUniforms(params = {}) {
+        if ((this.geometryType !== 'crystal' && this.geometryType !== 'diamond') ||
+            !this.customMaterial || this.customMaterialType !== 'crystal-blend-layers') {
+            console.warn('⚠️ Crystal uniforms only available with crystal blend-layers material');
+            return;
+        }
+
+        const {uniforms} = this.customMaterial;
+
+        // Helper to safely set uniform value (protect against NaN)
+        const safeSet = (uniform, value, min = 0, max = 10) => {
+            if (uniform && typeof value === 'number' && !isNaN(value) && isFinite(value)) {
+                uniform.value = Math.max(min, Math.min(max, value));
+            }
+        };
+
+        // Crystal-specific parameters with validation
+        safeSet(uniforms.coreGlowStrength, params.coreGlowStrength, 0, 2);
+        if (params.coreGlowFalloff !== undefined && !isNaN(params.coreGlowFalloff)) {
+            safeSet(uniforms.coreGlowFalloff, params.coreGlowFalloff, 0.1, 3);
+            // Also update inner core size
+            this.setCrystalCoreSize(params.coreGlowFalloff);
+        }
+        safeSet(uniforms.fresnelStrength, params.fresnelStrength, 0, 2);
+        safeSet(uniforms.fresnelPower, params.fresnelPower, 0.5, 10); // Min 0.5 to avoid pow issues
+        safeSet(uniforms.transmissionStrength, params.transmissionStrength, 0, 1);
+        safeSet(uniforms.facetStrength, params.facetStrength, 0, 2);
+        safeSet(uniforms.iridescenceStrength, params.iridescenceStrength, 0, 1);
+        safeSet(uniforms.chromaticAberration, params.chromaticAberration, 0, 1);
+        safeSet(uniforms.causticStrength, params.causticStrength, 0, 1);
+        safeSet(uniforms.emissiveIntensity, params.emissiveIntensity, 0, 5);
+
+        // Animation controls
+        safeSet(uniforms.sparkleEnabled, params.sparkleEnabled, 0, 1);
+        safeSet(uniforms.sparkleSpeed, params.sparkleSpeed, 0.1, 5);
+        safeSet(uniforms.causticEnabled, params.causticEnabled, 0, 1);
+        safeSet(uniforms.causticSpeed, params.causticSpeed, 0.1, 10);
+        safeSet(uniforms.causticScale, params.causticScale, 0.5, 10);
+        safeSet(uniforms.causticCoverage, params.causticCoverage, 0, 1);
+        safeSet(uniforms.energyPulseEnabled, params.energyPulseEnabled, 0, 1);
+        safeSet(uniforms.energyPulseSpeed, params.energyPulseSpeed, 0.1, 5);
+    }
+
+    /**
+     * Create inner glowing core for crystal geometry
+     * A crystal-shaped energy core with animated shader
+     */
+    createCrystalInnerCore() {
+        // Remove existing inner core if present
+        if (this.crystalInnerCore) {
+            if (this.coreMesh) {
+                this.coreMesh.remove(this.crystalInnerCore);
+            }
+            this.crystalInnerCore.geometry.dispose();
+            if (this.crystalInnerCore.material) {
+                this.crystalInnerCore.material.dispose();
+            }
+            this.crystalInnerCore = null;
+            this.crystalInnerCoreMaterial = null;
+        }
+
+        if (!this.coreMesh) return;
+
+        // Create crystal-shaped geometry for inner core (matches outer shell)
+        // Using octahedron for a more gem-like inner core
+        const coreGeometry = new THREE.OctahedronGeometry(0.35, 1);
+
+        // Custom shader material for animated energy effect
+        const coreMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                emotionColor: { value: new THREE.Color(1, 1, 1) },
+                energyIntensity: { value: 1.5 },
+                driftEnabled: { value: 1.0 },        // Toggle
+                driftSpeed: { value: 0.5 },          // Speed slider (0.1-2.0 range)
+                shimmerEnabled: { value: 1.0 },      // Toggle
+                shimmerSpeed: { value: 0.5 }         // Speed slider (0.1-2.0 range)
+            },
+            vertexShader: `
+                varying vec3 vPosition;
+                varying vec3 vNormal;
+
+                void main() {
+                    vPosition = position;
+                    vNormal = normalize(normalMatrix * normal);
+                    // Breathing applied via mesh scale, not in shader
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform vec3 emotionColor;
+                uniform float energyIntensity;
+                uniform float driftEnabled;
+                uniform float driftSpeed;
+                uniform float shimmerEnabled;
+                uniform float shimmerSpeed;
+
+                varying vec3 vPosition;
+                varying vec3 vNormal;
+
+                // Smooth noise function
+                float noise3D(vec3 p) {
+                    vec3 i = floor(p);
+                    vec3 f = fract(p);
+                    f = f * f * (3.0 - 2.0 * f);
+                    float n = i.x + i.y * 157.0 + i.z * 113.0;
+                    vec4 v = fract(sin(vec4(n, n+1.0, n+157.0, n+158.0)) * 43758.5453);
+                    return mix(mix(v.x, v.y, f.x), mix(v.z, v.w, f.x), f.y);
+                }
+
+                void main() {
+                    // Breathing applied via mesh scale, not in shader
+
+                    // Drifting energy clouds - slow, ethereal movement
+                    // driftSpeed of 1.0 = gentle drift, 2.0 = moderate, etc.
+                    float energy = 0.8;
+                    if (driftEnabled > 0.5) {
+                        float t = time * driftSpeed;
+                        float drift1 = noise3D(vPosition * 2.0 + vec3(t, t * 0.7, t * 0.3));
+                        float drift2 = noise3D(vPosition * 3.0 - vec3(t * 0.5, t, t * 0.8));
+                        energy = 0.5 + drift1 * drift2 * 1.0;
+                    }
+
+                    // Vertical shimmer - slow rising bands
+                    // shimmerSpeed of 1.0 = gentle shimmer
+                    float shimmer = 0.0;
+                    if (shimmerEnabled > 0.5) {
+                        float t = time * shimmerSpeed;
+                        shimmer = sin(vPosition.y * 5.0 - t) * 0.5 + 0.5;
+                    }
+
+                    // Combine effects (breathing handled via mesh scale)
+                    float totalEnergy = energy;
+                    totalEnergy += shimmer * 0.2;
+
+                    // Edge glow
+                    vec3 viewDir = normalize(-vPosition);
+                    float edgeGlow = 1.0 - abs(dot(vNormal, viewDir));
+                    edgeGlow = pow(edgeGlow, 2.0) * 0.4;
+
+                    // Final color
+                    vec3 coreColor = emotionColor * totalEnergy * energyIntensity;
+                    coreColor += emotionColor * edgeGlow * 0.3;
+
+                    gl_FragColor = vec4(coreColor, 1.0);
+                }
+            `,
+            transparent: false,
+            side: THREE.FrontSide
+        });
+
+        this.crystalInnerCoreMaterial = coreMaterial;
+        this.crystalInnerCore = new THREE.Mesh(coreGeometry, coreMaterial);
+        this.crystalInnerCore.name = 'crystalInnerCore';
+
+        // Set initial scale based on default falloff value
+        const defaultFalloff = this.customMaterial?.uniforms?.coreGlowFalloff?.value || 2.0;
+        this.setCrystalCoreSize(defaultFalloff);
+
+        // Add as child of crystal mesh
+        this.coreMesh.add(this.crystalInnerCore);
+
+        console.log('💎 Created crystal inner core (animated energy octahedron)');
+    }
+
+    /**
+     * Update crystal inner core color, intensity, and animation based on emotion
+     * @param {Array} glowColor - RGB color array [r, g, b] (0-1 range)
+     * @param {number} deltaTime - Time since last frame in seconds (for animation)
+     */
+    updateCrystalInnerCore(glowColor, deltaTime = 0) {
+        if (!this.crystalInnerCoreMaterial) return;
+
+        // Handle ShaderMaterial uniforms
+        if (this.crystalInnerCoreMaterial.uniforms) {
+            // Update time for animation (convert ms to seconds for sane speed values)
+            if (this.crystalInnerCoreMaterial.uniforms.time) {
+                this.crystalInnerCoreMaterial.uniforms.time.value += deltaTime / 1000;
+            }
+
+            // Set emotion color
+            if (this.crystalInnerCoreMaterial.uniforms.emotionColor) {
+                this.crystalInnerCoreMaterial.uniforms.emotionColor.value.setRGB(
+                    glowColor[0], glowColor[1], glowColor[2]
+                );
+            }
+
+            // Update intensity from crystal shader uniforms if available
+            if (this.customMaterial && this.customMaterial.uniforms) {
+                const coreStrength = this.customMaterial.uniforms.coreGlowStrength?.value || 0.5;
+
+                // Map coreGlowStrength to energy intensity
+                if (this.crystalInnerCoreMaterial.uniforms.energyIntensity) {
+                    this.crystalInnerCoreMaterial.uniforms.energyIntensity.value = 1.0 + coreStrength * 2.0;
+                }
+            }
+        }
+
+        // Apply breathing via mesh scale (same as blob mascot)
+        if (this.crystalInnerCore && this.breathingAnimator && this.breathingEnabled) {
+            const breathScale = this.breathingAnimator.getBreathingScale();
+            const baseScale = this.crystalInnerCoreBaseScale || 1.0;
+            this.crystalInnerCore.scale.setScalar(baseScale * breathScale);
+        }
+        // Fallback for MeshStandardMaterial (legacy)
+        else if (this.crystalInnerCoreMaterial.emissive) {
+            this.crystalInnerCoreMaterial.emissive.setRGB(
+                glowColor[0], glowColor[1], glowColor[2]
+            );
+            if (this.customMaterial && this.customMaterial.uniforms) {
+                const coreStrength = this.customMaterial.uniforms.coreGlowStrength?.value || 0.4;
+                this.crystalInnerCoreMaterial.emissiveIntensity = 0.5 + coreStrength * 3.5;
+            }
+        }
+    }
+
+    /**
+     * Set crystal soul effect parameters
+     * @param {Object} params - Soul effect parameters
+     * @param {boolean} params.driftEnabled - Enable/disable drifting energy
+     * @param {number} params.driftSpeed - Drift animation speed (0.01-0.2)
+     * @param {boolean} params.shimmerEnabled - Enable/disable vertical shimmer
+     * @param {number} params.shimmerSpeed - Shimmer animation speed (0.01-0.2)
+     */
+    setCrystalSoulEffects(params = {}) {
+        if (!this.crystalInnerCoreMaterial || !this.crystalInnerCoreMaterial.uniforms) {
+            console.warn('setCrystalSoulEffects: No crystal inner core material found');
+            return;
+        }
+
+        const {uniforms} = this.crystalInnerCoreMaterial;
+
+        if (params.driftEnabled !== undefined && uniforms.driftEnabled) {
+            uniforms.driftEnabled.value = params.driftEnabled ? 1.0 : 0.0;
+        }
+        if (params.driftSpeed !== undefined && uniforms.driftSpeed) {
+            uniforms.driftSpeed.value = Math.max(0.1, Math.min(3.0, params.driftSpeed));
+        }
+        if (params.shimmerEnabled !== undefined && uniforms.shimmerEnabled) {
+            uniforms.shimmerEnabled.value = params.shimmerEnabled ? 1.0 : 0.0;
+        }
+        if (params.shimmerSpeed !== undefined && uniforms.shimmerSpeed) {
+            uniforms.shimmerSpeed.value = Math.max(0.1, Math.min(3.0, params.shimmerSpeed));
+        }
+
+        console.log('Soul uniforms NOW:', {
+            driftEnabled: uniforms.driftEnabled?.value,
+            driftSpeed: uniforms.driftSpeed?.value,
+            shimmerEnabled: uniforms.shimmerEnabled?.value,
+            shimmerSpeed: uniforms.shimmerSpeed?.value
+        });
+    }
+
+    /**
+     * Set crystal inner core size
+     * @param {number} size - Size value 0-1, where 0.5 is default
+     */
+    setCrystalCoreSize(size) {
+        if (!this.crystalInnerCore) return;
+
+        // Map size (0-1) to scale (0.3-1.5), with 0.5 = 1.0 scale
+        // size=0 → 0.3, size=0.5 → 0.9, size=1 → 1.5
+        const scale = 0.3 + size * 1.2;
+        this.crystalInnerCoreBaseScale = scale; // Store for breathing multiplication
+        this.crystalInnerCore.scale.setScalar(scale);
+    }
+
+    /**
      * Morph to different shape with smooth transition
      * @param {string} shapeName - Target geometry name
      * @param {number} duration - Transition duration in ms (default: 800ms)
@@ -913,6 +1243,29 @@ export class Core3DManager {
                 }
             }
 
+            // Create or dispose crystal inner core
+            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'diamond') {
+                // Create inner core if morphing to crystal/diamond
+                if (this.customMaterialType === 'crystal-blend-layers') {
+                    this.createCrystalInnerCore();
+                    console.log('💎 Crystal inner core created');
+                }
+            } else {
+                // Dispose inner core if morphing away from crystal/diamond
+                if (this.crystalInnerCore) {
+                    if (this.coreMesh) {
+                        this.coreMesh.remove(this.crystalInnerCore);
+                    }
+                    this.crystalInnerCore.geometry.dispose();
+                    if (this.crystalInnerCoreMaterial) {
+                        this.crystalInnerCoreMaterial.dispose();
+                    }
+                    this.crystalInnerCore = null;
+                    this.crystalInnerCoreMaterial = null;
+                    console.log('💎 Crystal inner core disposed');
+                }
+            }
+
             // Update rotation behavior for special geometries (moon is tidally locked)
             if (this._targetGeometryType === 'moon') {
                 this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
@@ -950,11 +1303,6 @@ export class Core3DManager {
                     console.log('🌙 Tidal lock enabled (facing behavior active)');
                 }
             } else {
-                // Clear calibration rotation for non-moon geometries
-                this.calibrationRotation[0] = 0;
-                this.calibrationRotation[1] = 0;
-                this.calibrationRotation[2] = 0;
-
                 // Dispose facing behavior when morphing away from moon
                 if (this.facingBehavior) {
                     this.facingBehavior.dispose();
@@ -965,6 +1313,20 @@ export class Core3DManager {
                 // Re-enable auto-rotate when morphing away from moon (if it was originally enabled)
                 if (this.renderer?.controls && this.options.autoRotate !== false) {
                     this.renderer.controls.autoRotate = true;
+                }
+
+                // Set calibration rotation for crystal/diamond, clear for others
+                if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'diamond') {
+                    const degToRad = Math.PI / 180;
+                    this.calibrationRotation[0] = CRYSTAL_CALIBRATION_ROTATION.x * degToRad;
+                    this.calibrationRotation[1] = CRYSTAL_CALIBRATION_ROTATION.y * degToRad;
+                    this.calibrationRotation[2] = CRYSTAL_CALIBRATION_ROTATION.z * degToRad;
+                    console.log(`💎 Crystal calibration rotation set: Y=${CRYSTAL_CALIBRATION_ROTATION.y}° (flat facet facing camera)`);
+                } else {
+                    // Clear calibration rotation for other geometries
+                    this.calibrationRotation[0] = 0;
+                    this.calibrationRotation[1] = 0;
+                    this.calibrationRotation[2] = 0;
                 }
 
                 if (this.rotationDisabled) {
@@ -1090,8 +1452,10 @@ export class Core3DManager {
         }
 
         // Calculate final scale: gesture * morph * breathing * BLINK
+        // Crystal/diamond don't squish on blink - they use energy pulse instead
         // Use Y-axis blink scale (primary squish axis) for uniform application
-        const blinkScale = blinkState.isBlinking ? blinkState.scale[1] : 1.0;
+        const shouldApplyBlinkScale = this.geometryType !== 'crystal' && this.geometryType !== 'diamond';
+        const blinkScale = (blinkState.isBlinking && shouldApplyBlinkScale) ? blinkState.scale[1] : 1.0;
         const finalScale = this.scale * morphScale * breathScale * blinkScale;
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -1148,6 +1512,23 @@ export class Core3DManager {
                 emotionColorStrength: 0.3,
                 cameraPosition: this.renderer.camera.position
             });
+        }
+
+        // Update crystal material if using crystal blend-layers geometry
+        if (this.customMaterialType === 'crystal-blend-layers' && this.customMaterial) {
+            // Update time for animation (convert ms to seconds for sane speed values)
+            this.customMaterial.uniforms.time.value += deltaTime / 1000;
+            // Update emotion color on outer shell
+            this.customMaterial.uniforms.emotionColor.value.setRGB(
+                this.glowColor[0], this.glowColor[1], this.glowColor[2]
+            );
+            // Update blink intensity for energy pulse (smooth sine curve during blink)
+            if (this.customMaterial.uniforms.blinkIntensity) {
+                const blinkPulse = blinkState.isBlinking ? Math.sin(blinkState.progress * Math.PI) : 0;
+                this.customMaterial.uniforms.blinkIntensity.value = blinkPulse;
+            }
+            // Update inner core color and animation
+            this.updateCrystalInnerCore(this.glowColor, deltaTime);
         }
 
         // Render with Three.js

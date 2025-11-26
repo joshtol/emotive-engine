@@ -17,6 +17,7 @@ import * as THREE from 'three';
 import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geometries/Moon.js';
 import { createSunMaterial } from '../geometries/Sun.js';
 import { createBlackHoleMaterial } from '../geometries/BlackHole.js';
+import { getCrystalWithBlendLayersShaders, getCrystalDefaultUniforms } from '../shaders/crystalWithBlendLayers.js';
 
 /**
  * Create custom material for a geometry type
@@ -57,9 +58,10 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
     case 'moon':
         return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant);
 
-        // Future: Add more custom materials here
-        // case 'blackhole':
-        //     return createBlackHoleMaterial(textureLoader, glowColor, glowIntensity);
+    case 'crystal':
+    case 'diamond':
+        // Crystal/diamond always use blend-layers shader
+        return createCrystalMaterial(glowColor, glowIntensity, emotionData);
 
     default:
         console.warn(`Unknown custom material type: ${geometryType}`);
@@ -178,6 +180,39 @@ function createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity,
             shadowMaterial
         },
         type: 'blackHole'
+    };
+}
+
+/**
+ * Create crystal material with blend layers shader
+ * @private
+ */
+function createCrystalMaterial(glowColor, glowIntensity, emotionData = null) {
+    console.log('💎 Creating crystal blend layers material...');
+
+    const shaders = getCrystalWithBlendLayersShaders();
+    const uniforms = getCrystalDefaultUniforms();
+
+    // Set color uniforms
+    uniforms.baseColor.value = new THREE.Color(1.0, 1.0, 1.0);
+    uniforms.emotionColor.value = new THREE.Color(glowColor[0], glowColor[1], glowColor[2]);
+    uniforms.emissiveIntensity.value = glowIntensity * 2.0; // Boost for HDR bloom
+
+    const material = new THREE.ShaderMaterial({
+        vertexShader: shaders.vertexShader,
+        fragmentShader: shaders.fragmentShader,
+        uniforms,
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: true,
+        depthTest: true
+    });
+
+    console.log('✨ Crystal blend layers material created with 4 visual components');
+
+    return {
+        material,
+        type: 'crystal-blend-layers'
     };
 }
 

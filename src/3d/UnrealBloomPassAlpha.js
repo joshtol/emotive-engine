@@ -15,6 +15,7 @@
 import {
     AdditiveBlending,
     Color,
+    HalfFloatType,
     LinearFilter,
     MeshBasicMaterial,
     RGBAFormat,
@@ -97,17 +98,19 @@ export class UnrealBloomPassAlpha extends Pass {
         this.threshold = threshold;
         this.resolution = (resolution !== undefined) ? new Vector2(resolution.x, resolution.y) : new Vector2(256, 256);
 
-        // Render targets with RGBA format for alpha preservation
+        // Render targets with RGBA format for alpha preservation + HDR
         const pars = {
             minFilter: LinearFilter,
             magFilter: LinearFilter,
-            format: RGBAFormat  // CRITICAL: Use RGBA not RGB
+            format: RGBAFormat,      // CRITICAL: Use RGBA not RGB
+            type: HalfFloatType      // HDR: Allow values > 1.0 for proper bloom
         };
 
         this.renderTargetsHorizontal = [];
         this.renderTargetsVertical = [];
         this.nMips = 5;
 
+        // Standard bloom resolution (half of input for performance)
         let resx = Math.round(this.resolution.x / 2);
         let resy = Math.round(this.resolution.y / 2);
 
@@ -167,6 +170,7 @@ export class UnrealBloomPassAlpha extends Pass {
         // Gaussian blur materials with alpha preservation
         this.separableBlurMaterials = [];
         const kernelSizeArray = [3, 5, 7, 9, 11];
+        // Standard bloom resolution (half of input)
         resx = Math.round(this.resolution.x / 2);
         resy = Math.round(this.resolution.y / 2);
 
@@ -255,6 +259,7 @@ export class UnrealBloomPassAlpha extends Pass {
     }
 
     setSize(width, height) {
+        // Standard bloom resolution (half of input for performance)
         let resx = Math.round(width / 2);
         let resy = Math.round(height / 2);
 
@@ -389,10 +394,12 @@ export class UnrealBloomPassAlpha extends Pass {
                     vec2 invSize = 1.0 / texSize;
                     float sigma = kernelRadius / 2.0;
                     float weightSum = gaussianPdf(0.0, sigma);
-                    float alphaSum = 0.0;
 
                     // CRITICAL: Accumulate RGB and alpha SEPARATELY
-                    vec3 diffuseSum = texture2D(colorTexture, vUv).rgb * weightSum;
+                    // Include center pixel for BOTH RGB and alpha
+                    vec4 centerPixel = texture2D(colorTexture, vUv);
+                    vec3 diffuseSum = centerPixel.rgb * weightSum;
+                    float alphaSum = centerPixel.a * weightSum;
 
                     vec2 delta = direction * invSize * kernelRadius / float(MAX_RADIUS);
 

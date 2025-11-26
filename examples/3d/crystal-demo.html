@@ -2,26 +2,22 @@
 <!--
   CRYSTAL SHOWCASE - Emotive Engine 3D Demo
 
-  A comprehensive demonstration of the crystal geometry with full emotional range,
-  gestures, and particle effects.
+  A comprehensive demonstration of the crystal geometry with blend layer system.
 
   What you'll learn:
-  - 3D crystal rendering with dynamic lighting
-  - Complete emotion system (14+ emotions)
-  - Full gesture library (motion, transform, effect)
-  - Particle system controls
-  - Glow intensity management
-  - Undertone modifiers
+  - 3D crystal rendering with custom shader
+  - Blend layer system for visual customization
+  - Fine control over crystal visual components
 
-  Complexity: ⭐⭐⭐ Advanced 3D
-  Features: Crystal geometry, emotions, gestures, particles, glow control
+  Complexity: Advanced 3D
+  Features: Crystal geometry, blend layers, emotions, gestures
 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crystal Showcase - Emotive Engine 3D</title>
-    <meta name="description" content="Comprehensive 3D crystal demo with emotions, gestures, and particle effects">
+    <meta name="description" content="Comprehensive 3D crystal demo with blend layers">
     <style>
         * {
             margin: 0;
@@ -31,7 +27,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
+                        linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             color: white;
             width: 100vw;
             height: 100vh;
@@ -42,8 +39,8 @@
         .left-menu,
         .right-menu {
             width: 18vw;
-            min-width: 200px;
-            max-width: 280px;
+            min-width: 240px;
+            max-width: 300px;
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
             padding: 1.5vw;
@@ -87,7 +84,6 @@
             font-weight: 600;
         }
 
-        /* Button Grid */
         .button-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -123,60 +119,23 @@
             border-color: #667eea;
         }
 
-        /* Single column for visual controls */
-        .visual-controls button {
+        #crystal-container {
             width: 100%;
-            margin-bottom: clamp(6px, 0.7vw, 8px);
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            background: radial-gradient(circle at center, rgba(102, 126, 234, 0.15), transparent);
+            box-shadow: 0 0 150px rgba(102, 126, 234, 0.5);
+            touch-action: none;
         }
 
-        /* Slider */
-        .slider-control {
-            margin-bottom: clamp(10px, 1.2vw, 15px);
+        #crystal-container canvas {
+            width: 100% !important;
+            height: 100% !important;
         }
 
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: clamp(4px, 0.5vw, 6px);
-            font-size: clamp(10px, 0.9vw, 12px);
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .slider-value {
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: clamp(12px, 1.2vw, 16px);
-            height: clamp(12px, 1.2vw, 16px);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: clamp(12px, 1.2vw, 16px);
-            height: clamp(12px, 1.2vw, 16px);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
-        }
-
-        /* Info Box */
         .info-box {
             background: rgba(102, 126, 234, 0.1);
             border: 1px solid rgba(102, 126, 234, 0.3);
@@ -191,70 +150,182 @@
             color: #667eea;
         }
 
-        /* Animation Container */
-        #crystal-container {
+        /* Slider styling */
+        .slider-control {
+            margin-bottom: clamp(10px, 1vw, 12px);
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: clamp(9px, 0.8vw, 10px);
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: clamp(4px, 0.4vw, 5px);
+        }
+
+        .slider {
             width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-            aspect-ratio: 1;
-            border-radius: clamp(12px, 1.5vw, 20px);
-            background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
-            box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+            height: clamp(20px, 1.5vw, 22px);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: clamp(4px, 0.4vw, 5px);
+            cursor: pointer;
+            appearance: none;
         }
 
-        #crystal-container canvas {
-            width: 100% !important;
-            height: 100% !important;
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
         }
 
-        /* Mobile/Tablet Responsive */
-        @media (max-width: 1000px) {
-            body {
-                flex-direction: column;
-            }
-
-            .left-menu,
-            .right-menu {
-                width: 100%;
-                min-width: unset;
-                max-width: unset;
-                max-height: 35vh;
-                border: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 15px;
-            }
-
-            .left-menu {
-                order: 1;
-            }
-
-            .center-content {
-                order: 2;
-                flex: 1;
-                min-height: 30vh;
-            }
-
-            .right-menu {
-                order: 3;
-                border-bottom: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .button-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: clamp(12px, 1.1vw, 14px);
+            height: clamp(12px, 1.1vw, 14px);
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
         }
 
-        @media (max-width: 600px) {
-            .button-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        /* Layer Card Styles */
+        .layers-container {
+            min-height: 40px;
+        }
 
-            .left-menu,
-            .right-menu {
-                padding: 12px;
-            }
+        .layer-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: clamp(6px, 0.6vw, 8px);
+            padding: clamp(8px, 0.8vw, 10px);
+            margin-bottom: clamp(6px, 0.6vw, 8px);
+            cursor: grab;
+        }
+
+        .layer-card:active {
+            cursor: grabbing;
+        }
+
+        .layer-card.dragging {
+            opacity: 0.5;
+        }
+
+        .layer-header {
+            display: flex;
+            align-items: center;
+            gap: clamp(6px, 0.6vw, 8px);
+            margin-bottom: clamp(6px, 0.6vw, 8px);
+        }
+
+        .drag-handle {
+            cursor: grab;
+            user-select: none;
+            font-size: clamp(12px, 1vw, 14px);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .layer-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #667eea;
+            font-size: clamp(10px, 0.9vw, 12px);
+        }
+
+        .layer-controls-header {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .toggle-btn, .delete-btn {
+            padding: 4px 8px;
+            font-size: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .toggle-btn {
+            background: rgba(100, 200, 100, 0.3);
+            border: 1px solid rgba(100, 200, 100, 0.5);
+            color: white;
+        }
+
+        .toggle-btn.disabled {
+            background: rgba(200, 100, 100, 0.3);
+            border-color: rgba(200, 100, 100, 0.5);
+            opacity: 0.6;
+        }
+
+        .delete-btn {
+            background: rgba(200, 100, 100, 0.3);
+            border: 1px solid rgba(200, 100, 100, 0.5);
+            color: white;
+        }
+
+        .layer-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .layer-select {
+            width: 100%;
+            padding: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+            font-size: 11px;
+        }
+
+        .layer-select option {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .precision-btn {
+            transition: all 0.15s ease;
+        }
+
+        .precision-btn:hover {
+            background: rgba(255,255,255,0.25) !important;
+            transform: scale(1.05);
+        }
+
+        .precision-btn.active {
+            background: rgba(255,255,255,0.3) !important;
+            font-weight: bold;
+        }
+
+        .add-layer-btn {
+            width: 100%;
+            padding: clamp(8px, 0.8vw, 10px);
+            background: rgba(100, 200, 255, 0.1);
+            border: 1px dashed rgba(100, 200, 255, 0.3);
+            color: #64c8ff;
+            margin-top: clamp(8px, 0.8vw, 10px);
+        }
+
+        .add-layer-btn:hover {
+            background: rgba(100, 200, 255, 0.2);
+            border-color: rgba(100, 200, 255, 0.5);
+        }
+
+        /* Component sections */
+        .component-section {
+            margin-bottom: clamp(12px, 1.2vw, 16px);
+        }
+
+        .component-section h3 {
+            font-size: clamp(10px, 0.9vw, 11px);
+            color: #667eea;
+            margin-bottom: clamp(6px, 0.6vw, 8px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Scrollbar styling */
@@ -281,130 +352,241 @@
     </style>
 </head>
 <body>
-    <!-- LEFT MENU: Emotions & Controls -->
+    <!-- LEFT MENU: Emotions & Crystal Parameters -->
     <div class="left-menu">
         <div class="section">
-            <h2>Emotions</h2>
-            <div class="button-grid">
-                <button data-action="emotion" data-value="joy">😊 Joy</button>
-                <button data-action="emotion" data-value="love">❤️ Love</button>
-                <button data-action="emotion" data-value="excited">🎉 Excited</button>
-                <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
-                <button data-action="emotion" data-value="calm">😌 Calm</button>
-                <button data-action="emotion" data-value="focused">🎯 Focused</button>
-                <button data-action="emotion" data-value="resting">😴 Resting</button>
-                <button data-action="emotion" data-value="sadness">😢 Sadness</button>
-                <button data-action="emotion" data-value="anger">😠 Anger</button>
-                <button data-action="emotion" data-value="fear">😰 Fear</button>
-                <button data-action="emotion" data-value="surprise">😲 Surprise</button>
-                <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
-                <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
-                <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+            <h2 style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'grid' : 'none'; this.querySelector('span').textContent = this.nextElementSibling.style.display === 'none' ? '+' : '−'">Emotions <span>+</span></h2>
+            <div class="button-grid" style="display: none;">
+                <button data-action="emotion" data-value="joy">Joy</button>
+                <button data-action="emotion" data-value="love" class="active">Love</button>
+                <button data-action="emotion" data-value="excited">Excited</button>
+                <button data-action="emotion" data-value="euphoria">Euphoria</button>
+                <button data-action="emotion" data-value="calm">Calm</button>
+                <button data-action="emotion" data-value="focused">Focused</button>
+                <button data-action="emotion" data-value="sadness">Sadness</button>
+                <button data-action="emotion" data-value="anger">Anger</button>
+                <button data-action="emotion" data-value="fear">Fear</button>
+                <button data-action="emotion" data-value="surprise">Surprise</button>
             </div>
         </div>
 
         <div class="section">
-            <h2>Undertones</h2>
-            <div class="button-grid">
-                <button data-action="undertone" data-value="null">Clear</button>
-                <button data-action="undertone" data-value="subdued">Subdued</button>
-                <button data-action="undertone" data-value="tired">Tired</button>
-                <button data-action="undertone" data-value="nervous">Nervous</button>
-                <button data-action="undertone" data-value="confident">Confident</button>
-                <button data-action="undertone" data-value="intense">Intense</button>
-                <button data-action="undertone" data-value="energetic">Energetic</button>
+            <h2>Shell Animations</h2>
+
+            <div class="slider-control" style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="sparkleEnabled" checked style="width: auto;" onchange="window.updateShellEffects && window.updateShellEffects()">
+                <label for="sparkleEnabled" style="flex: 1;">Sparkle</label>
+            </div>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Sparkle Speed</span>
+                    <span class="slider-value" id="sparkleSpeed-value">1.0</span>
+                </div>
+                <input type="range" id="sparkleSpeed" min="0.1" max="3.0" step="0.1" value="1.0" oninput="document.getElementById('sparkleSpeed-value').textContent = parseFloat(this.value).toFixed(1); window.updateShellEffects && window.updateShellEffects()">
+            </div>
+
+            <div class="slider-control" style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                <input type="checkbox" id="causticEnabled" checked style="width: auto;" onchange="window.updateShellEffects && window.updateShellEffects()">
+                <label for="causticEnabled" style="flex: 1;">Caustics</label>
+            </div>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Caustic Speed</span>
+                    <span class="slider-value" id="causticSpeed-value">1.0</span>
+                </div>
+                <input type="range" id="causticSpeed" min="0.1" max="5.0" step="0.1" value="1.0" oninput="document.getElementById('causticSpeed-value').textContent = parseFloat(this.value).toFixed(1); window.updateShellEffects && window.updateShellEffects()">
+            </div>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Pattern Scale</span>
+                    <span class="slider-value" id="causticScale-value">2.0</span>
+                </div>
+                <input type="range" id="causticScale" min="0.5" max="8.0" step="0.1" value="2.0" oninput="document.getElementById('causticScale-value').textContent = parseFloat(this.value).toFixed(1); window.updateShellEffects && window.updateShellEffects()">
+            </div>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Coverage</span>
+                    <span class="slider-value" id="causticCoverage-value">1.0</span>
+                </div>
+                <input type="range" id="causticCoverage" min="0.0" max="1.0" step="0.05" value="1.0" oninput="document.getElementById('causticCoverage-value').textContent = parseFloat(this.value).toFixed(2); window.updateShellEffects && window.updateShellEffects()">
+            </div>
+
+            <div class="slider-control" style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                <input type="checkbox" id="energyPulseEnabled" checked style="width: auto;" onchange="window.updateShellEffects && window.updateShellEffects()">
+                <label for="energyPulseEnabled" style="flex: 1;">Blink Pulse</label>
+            </div>
+            <div style="font-size: 10px; color: #888; margin-top: 4px;">Energy pulses through shell when crystal blinks (emotion-driven)</div>
+        </div>
+
+        <div class="section">
+            <h2>Soul Effects</h2>
+
+            <div class="slider-control" style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="driftEnabled" checked style="width: auto;" onchange="window.updateSoulEffects && window.updateSoulEffects()">
+                <label for="driftEnabled" style="flex: 1;">Drifting Energy</label>
+            </div>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Drift Speed</span>
+                    <span class="slider-value" id="driftSpeed-value">0.5</span>
+                </div>
+                <input type="range" id="driftSpeed" min="0.1" max="2.0" step="0.1" value="0.5" oninput="document.getElementById('driftSpeed-value').textContent = parseFloat(this.value).toFixed(1); window.updateSoulEffects && window.updateSoulEffects()">
+            </div>
+
+            <div class="slider-control" style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                <input type="checkbox" id="shimmerEnabled" checked style="width: auto;" onchange="window.updateSoulEffects && window.updateSoulEffects()">
+                <label for="shimmerEnabled" style="flex: 1;">Vertical Shimmer</label>
+            </div>
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Shimmer Speed</span>
+                    <span class="slider-value" id="shimmerSpeed-value">0.5</span>
+                </div>
+                <input type="range" id="shimmerSpeed" min="0.1" max="2.0" step="0.1" value="0.5" oninput="document.getElementById('shimmerSpeed-value').textContent = parseFloat(this.value).toFixed(1); window.updateSoulEffects && window.updateSoulEffects()">
             </div>
         </div>
 
-        <div class="section visual-controls">
-            <h2>Visual Controls</h2>
-            <button data-action="toggle-particles" class="active">✨ Particles</button>
-            <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-            <button data-action="toggle-glass" class="active">🔮 Glass Material</button>
-            <button data-action="toggle-blink" class="active">👁️ Blinking</button>
-            <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
-            <button data-action="toggle-auto-rotate" class="active">🔄 Auto-Rotate</button>
+        <div class="section">
+            <h2>Crystal Parameters</h2>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Inner Core Intensity</span>
+                    <span class="slider-value" id="coreGlow-value">0.4</span>
+                </div>
+                <input type="range" id="coreGlow" min="0" max="1" step="0.05" value="0.4">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Inner Core Size</span>
+                    <span class="slider-value" id="coreFalloff-value">0.5</span>
+                </div>
+                <input type="range" id="coreFalloff" min="0" max="1" step="0.05" value="0.5">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Fresnel Strength</span>
+                    <span class="slider-value" id="fresnelStrength-value">1.0</span>
+                </div>
+                <input type="range" id="fresnelStrength" min="0" max="2" step="0.05" value="1.0">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Fresnel Power</span>
+                    <span class="slider-value" id="fresnelPower-value">2.0</span>
+                </div>
+                <input type="range" id="fresnelPower" min="0.5" max="6" step="0.1" value="2.0">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Transmission</span>
+                    <span class="slider-value" id="transmission-value">0.3</span>
+                </div>
+                <input type="range" id="transmission" min="0" max="1" step="0.01" value="0.3">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Facet Sparkle</span>
+                    <span class="slider-value" id="facet-value">0.6</span>
+                </div>
+                <input type="range" id="facet" min="0" max="2" step="0.01" value="0.6">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Iridescence</span>
+                    <span class="slider-value" id="iridescence-value">0.25</span>
+                </div>
+                <input type="range" id="iridescence" min="0" max="1" step="0.01" value="0.25">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Chromatic Aberration</span>
+                    <span class="slider-value" id="chromatic-value">0.4</span>
+                </div>
+                <input type="range" id="chromatic" min="0" max="1" step="0.01" value="0.4">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Caustic Strength</span>
+                    <span class="slider-value" id="caustic-value">0.5</span>
+                </div>
+                <input type="range" id="caustic" min="0" max="1" step="0.01" value="0.5">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Energy Pulse</span>
+                    <span class="slider-value" id="energyPulse-value">1.0</span>
+                </div>
+                <input type="range" id="energyPulse" min="0" max="2" step="0.05" value="1.0">
+            </div>
+
+            <div class="slider-control">
+                <div class="slider-label">
+                    <span>Emissive Intensity</span>
+                    <span class="slider-value" id="emissive-value">0.5</span>
+                </div>
+                <input type="range" id="emissive" min="0" max="2" step="0.05" value="0.5">
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Controls</h2>
+            <button data-action="toggle-particles" class="active" style="width: 100%">Particles</button>
+            <button data-action="toggle-auto-rotate" style="width: 100%; margin-top: 6px">Auto-Rotate</button>
         </div>
 
         <div class="section">
             <div class="info-box">
-                <strong>About Crystal Demo:</strong><br>
-                This demo showcases the full emotional range and gesture library of the Emotive Engine 3D system with a crystal geometry.
+                <strong>Crystal Shader:</strong><br>
+                Adjust crystal parameters on the left. Use blend layers on the right to fine-tune each visual component's appearance.
             </div>
         </div>
     </div>
 
-    <!-- CENTER: 3D Crystal Animation -->
+    <!-- CENTER: Crystal Animation -->
     <div class="center-content">
         <div id="crystal-container"></div>
     </div>
 
-    <!-- RIGHT MENU: Gestures & Camera -->
+    <!-- RIGHT MENU: Blend Layers -->
     <div class="right-menu">
         <div class="section">
-            <h2>Motion Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="bounce">Bounce</button>
-                <button data-action="gesture" data-value="pulse">Pulse</button>
-                <button data-action="gesture" data-value="float">Float</button>
-                <button data-action="gesture" data-value="shake">Shake</button>
-                <button data-action="gesture" data-value="sway">Sway</button>
-                <button data-action="gesture" data-value="wiggle">Wiggle</button>
-                <button data-action="gesture" data-value="nod">Nod</button>
-                <button data-action="gesture" data-value="headBob">Head Bob</button>
-                <button data-action="gesture" data-value="orbit">Orbit</button>
-                <button data-action="gesture" data-value="jitter">Jitter</button>
-                <button data-action="gesture" data-value="twitch">Twitch</button>
-                <button data-action="gesture" data-value="vibrate">Vibrate</button>
-                <button data-action="gesture" data-value="lean">Lean</button>
-                <button data-action="gesture" data-value="point">Point</button>
-                <button data-action="gesture" data-value="reach">Reach</button>
-            </div>
+            <h2>Core Glow Layers</h2>
+            <div class="layers-container" id="core-layers-container"></div>
+            <button class="add-layer-btn" id="add-core-layer-btn">+ Add Core Layer</button>
         </div>
 
         <div class="section">
-            <h2>Transform Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="spin">Spin</button>
-                <button data-action="gesture" data-value="tilt">Tilt</button>
-                <button data-action="gesture" data-value="jump">Jump</button>
-                <button data-action="gesture" data-value="twist">Twist</button>
-                <button data-action="gesture" data-value="hula">Hula</button>
-                <button data-action="gesture" data-value="orbital">Orbital</button>
-                <button data-action="gesture" data-value="stretch">Stretch</button>
-            </div>
+            <h2>Fresnel Rim Layers</h2>
+            <div class="layers-container" id="fresnel-layers-container"></div>
+            <button class="add-layer-btn" id="add-fresnel-layer-btn">+ Add Fresnel Layer</button>
         </div>
 
         <div class="section">
-            <h2>Effect Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="wave">Wave</button>
-                <button data-action="gesture" data-value="flash">Flash</button>
-                <button data-action="gesture" data-value="glow">Glow</button>
-                <button data-action="gesture" data-value="breathe">Breathe</button>
-                <button data-action="gesture" data-value="drift">Drift</button>
-                <button data-action="gesture" data-value="burst">Burst</button>
-                <button data-action="gesture" data-value="flicker">Flicker</button>
-                <button data-action="gesture" data-value="fade">Fade</button>
-            </div>
+            <h2>Transmission Layers</h2>
+            <div class="layers-container" id="trans-layers-container"></div>
+            <button class="add-layer-btn" id="add-trans-layer-btn">+ Add Transmission Layer</button>
         </div>
 
         <div class="section">
-            <h2>Camera Controls</h2>
-            <div class="button-grid">
-                <button data-action="camera" data-value="front">📷 Front</button>
-                <button data-action="camera" data-value="side">📷 Side</button>
-                <button data-action="camera" data-value="top">📷 Top</button>
-                <button data-action="camera" data-value="angle">📷 Angle</button>
-                <button data-action="camera" data-value="back">📷 Back</button>
-                <button data-action="reset-camera">🔄 Reset</button>
-            </div>
+            <h2>Facet Sparkle Layers</h2>
+            <div class="layers-container" id="facet-layers-container"></div>
+            <button class="add-layer-btn" id="add-facet-layer-btn">+ Add Facet Layer</button>
         </div>
 
         <div class="section">
             <div class="info-box">
-                <strong>Gesture System:</strong><br>
-                Click any gesture button to trigger an animation. Gestures can be combined with emotions for expressive animations.
+                <strong>Blend Modes:</strong><br>
+                Drag layers to reorder. Each crystal component supports up to 2 blend layers. Use precision toggles for fine control.
             </div>
         </div>
     </div>
@@ -412,179 +594,599 @@
     <script type="module">
         import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
 
-        let autoRotateDisabled = false; // Track if user manually disabled auto-rotate
+        let mascot = null;
 
-        // Initialize mascot
-        const container = document.getElementById('crystal-container');
-        const mascot = new EmotiveMascot3D({
-            canvasId: 'crystal',
-            coreGeometry: 'crystal',
-            enableParticles: true,
-            enableControls: true,
-            autoRotate: true,
-            enableBlinking: true,
-            enablePostProcessing: true,
-            cameraDistance: 1.0  // Closer default zoom
+        // Configuration
+        const MAX_BLEND_LAYERS = 2; // Crystal shader supports 2 layers per component
+
+        // Blend mode names (18 total - matches shader)
+        const blendModeNames = [
+            'Multiply',       // 0
+            'Linear Burn',    // 1
+            'Color Burn',     // 2
+            'Color Dodge',    // 3
+            'Screen',         // 4
+            'Overlay',        // 5
+            'Add',            // 6
+            'Soft Light',     // 7
+            'Hard Light',     // 8
+            'Vivid Light',    // 9
+            'Linear Light',   // 10
+            'Difference',     // 11
+            'Exclusion',      // 12
+            'Darken',         // 13
+            'Lighten',        // 14
+            'Subtract',       // 15
+            'Divide',         // 16
+            'Pin Light'       // 17
+        ];
+
+        // Component configurations
+        const componentConfigs = {
+            core: { name: 'Core', prefix: 'core', defaultMode: 4, defaultStrength: 0.5 },
+            fresnel: { name: 'Fresnel', prefix: 'fresnel', defaultMode: 4, defaultStrength: 0.6 },
+            trans: { name: 'Trans', prefix: 'trans', defaultMode: 5, defaultStrength: 0.4 },
+            facet: { name: 'Facet', prefix: 'facet', defaultMode: 6, defaultStrength: 0.7 }
+        };
+
+        // Layer management per component
+        const componentLayers = {
+            core: [],
+            fresnel: [],
+            trans: [],
+            facet: []
+        };
+
+        const nextLayerId = {
+            core: 1,
+            fresnel: 1,
+            trans: 1,
+            facet: 1
+        };
+
+        let draggedLayer = null;
+        let draggedComponent = null;
+
+        // Initialize crystal
+        (async () => {
+            try {
+                const container = document.getElementById('crystal-container');
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'crystal',
+                    enableParticles: true,
+                    enablePostProcessing: true,
+                    enableShadows: false,
+                    enableControls: true,
+                    autoRotate: false,
+                    enableBlinking: true,   // Enable for blink pulse effect
+                    enableBreathing: true,  // Enable for breathing animation
+                    cameraDistance: 1.2     // Match 3d-demo distance
+                });
+
+                mascot.init(container);
+                mascot.start();
+                mascot.setEmotion('love');
+
+                console.log('Crystal Demo initialized with blend layers material');
+
+                // Auto-populate sliders and layers from shader defaults after material is ready
+                setTimeout(() => {
+                    syncSlidersFromShaderDefaults();
+                    loadDefaultLayers();
+                }, 200);
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+            }
+        })();
+
+        // Sync all parameter sliders from shader uniform defaults
+        function syncSlidersFromShaderDefaults() {
+            if (!mascot || !mascot.core3D || !mascot.core3D.customMaterial) {
+                console.warn('syncSlidersFromShaderDefaults: material not ready');
+                return;
+            }
+
+            const uniforms = mascot.core3D.customMaterial.uniforms;
+            if (!uniforms) return;
+
+            // Map slider IDs to uniform names
+            const sliderToUniform = {
+                'coreGlow': 'coreGlowStrength',
+                'coreFalloff': 'coreGlowFalloff',
+                'fresnelStrength': 'fresnelStrength',
+                'fresnelPower': 'fresnelPower',
+                'transmission': 'transmissionStrength',
+                'facet': 'facetStrength',
+                'iridescence': 'iridescenceStrength',
+                'chromatic': 'chromaticAberration',
+                'caustic': 'causticStrength',
+                'energyPulse': 'energyPulse',
+                'emissive': 'emissiveIntensity',
+                'sparkleSpeed': 'sparkleSpeed',
+                'causticSpeed': 'causticSpeed',
+                'causticScale': 'causticScale',
+                'causticCoverage': 'causticCoverage'
+            };
+
+            // Sync each slider from uniform value
+            Object.entries(sliderToUniform).forEach(([sliderId, uniformName]) => {
+                const slider = document.getElementById(sliderId);
+                const valueEl = document.getElementById(`${sliderId}-value`);
+                const uniform = uniforms[uniformName];
+
+                if (slider && uniform !== undefined) {
+                    const value = uniform.value;
+                    slider.value = value;
+                    if (valueEl) {
+                        valueEl.textContent = value.toFixed(slider.step < 0.1 ? 2 : 1);
+                    }
+                }
+            });
+
+            // Sync toggle checkboxes
+            const toggleToUniform = {
+                'sparkleEnabled': 'sparkleEnabled',
+                'causticEnabled': 'causticEnabled',
+                'energyPulseEnabled': 'energyPulseEnabled'
+            };
+
+            Object.entries(toggleToUniform).forEach(([checkboxId, uniformName]) => {
+                const checkbox = document.getElementById(checkboxId);
+                const uniform = uniforms[uniformName];
+
+                if (checkbox && uniform !== undefined) {
+                    checkbox.checked = uniform.value > 0.5;
+                }
+            });
+
+            // Sync soul effect sliders from inner core material
+            if (mascot.core3D.crystalInnerCoreMaterial?.uniforms) {
+                const innerUniforms = mascot.core3D.crystalInnerCoreMaterial.uniforms;
+
+                const soulSliders = {
+                    'driftSpeed': 'driftSpeed',
+                    'shimmerSpeed': 'shimmerSpeed'
+                };
+
+                Object.entries(soulSliders).forEach(([sliderId, uniformName]) => {
+                    const slider = document.getElementById(sliderId);
+                    const valueEl = document.getElementById(`${sliderId}-value`);
+                    const uniform = innerUniforms[uniformName];
+
+                    if (slider && uniform !== undefined) {
+                        slider.value = uniform.value;
+                        if (valueEl) {
+                            valueEl.textContent = uniform.value.toFixed(1);
+                        }
+                    }
+                });
+
+                const soulToggles = {
+                    'driftEnabled': 'driftEnabled',
+                    'shimmerEnabled': 'shimmerEnabled'
+                };
+
+                Object.entries(soulToggles).forEach(([checkboxId, uniformName]) => {
+                    const checkbox = document.getElementById(checkboxId);
+                    const uniform = innerUniforms[uniformName];
+
+                    if (checkbox && uniform !== undefined) {
+                        checkbox.checked = uniform.value > 0.5;
+                    }
+                });
+            }
+
+            console.log('Synced sliders from shader defaults');
+        }
+
+        // Load default layers from shader
+        function loadDefaultLayers() {
+            if (!mascot || !mascot.core3D || !mascot.core3D.customMaterial) {
+                setTimeout(loadDefaultLayers, 100);
+                return;
+            }
+
+            const uniforms = mascot.core3D.customMaterial.uniforms;
+            if (!uniforms) return;
+
+            // Load each component's default layers
+            Object.keys(componentConfigs).forEach(comp => {
+                const config = componentConfigs[comp];
+
+                for (let i = 1; i <= MAX_BLEND_LAYERS; i++) {
+                    const enabledKey = `${config.prefix}Blend${i}Enabled`;
+                    const modeKey = `${config.prefix}Blend${i}Mode`;
+                    const strengthKey = `${config.prefix}Blend${i}Strength`;
+
+                    if (uniforms[enabledKey] && uniforms[enabledKey].value > 0.5) {
+                        const mode = Math.round(uniforms[modeKey]?.value || 0);
+                        const strength = uniforms[strengthKey]?.value || 1.0;
+                        addLayer(comp, mode, strength, true, true);
+                    }
+                }
+            });
+
+            console.log('Loaded default blend layers from shader');
+        }
+
+        // Create layer card
+        function createLayerCard(component, layer) {
+            const config = componentConfigs[component];
+            const card = document.createElement('div');
+            card.className = 'layer-card';
+            card.dataset.layerId = layer.id;
+            card.dataset.component = component;
+            card.draggable = true;
+
+            card.innerHTML = `
+                <div class="layer-header">
+                    <div class="layer-title">
+                        <span class="drag-handle">⋮⋮</span>
+                        <span>${config.name} ${layer.id}</span>
+                    </div>
+                    <div class="layer-controls-header">
+                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="toggle">
+                            ${layer.enabled ? 'ON' : 'OFF'}
+                        </button>
+                        <button class="delete-btn" data-action="delete">✕</button>
+                    </div>
+                </div>
+                <div class="layer-controls">
+                    <select class="layer-select" data-action="mode">
+                        ${blendModeNames.map((name, idx) =>
+                            `<option value="${idx}" ${layer.mode === idx ? 'selected' : ''}>${name}</option>`
+                        ).join('')}
+                    </select>
+                    <div class="slider-control" style="margin: 0;">
+                        <div class="slider-label" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                                <span style="font-size: 10px;">Strength</span>
+                                <div class="precision-toggle" style="display: flex; gap: 2px; font-size: 9px; opacity: 0.7;">
+                                    <button class="precision-btn active" data-step="0.1" style="padding: 2px 4px; background: rgba(255,255,255,0.2); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.1</button>
+                                    <button class="precision-btn" data-step="0.01" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.01</button>
+                                    <button class="precision-btn" data-step="0.001" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.001</button>
+                                </div>
+                            </div>
+                            <span class="slider-value" style="font-size: 10px; font-family: 'Courier New', monospace; min-width: 45px; text-align: right;">${layer.strength.toFixed(3)}</span>
+                        </div>
+                        <input type="range" class="layer-strength-slider" data-action="strength"
+                               min="0" max="2" step="0.1" value="${layer.strength}">
+                    </div>
+                </div>
+            `;
+
+            // Drag handle
+            const dragHandle = card.querySelector('.drag-handle');
+            dragHandle.addEventListener('mousedown', () => {
+                card.draggable = true;
+            });
+
+            // Drag events
+            card.addEventListener('dragstart', (e) => {
+                draggedLayer = e.currentTarget;
+                draggedComponent = component;
+                e.currentTarget.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            card.addEventListener('dragend', (e) => {
+                e.currentTarget.classList.remove('dragging');
+                draggedLayer = null;
+                draggedComponent = null;
+            });
+
+            card.addEventListener('dragover', (e) => {
+                if (draggedComponent !== component) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+
+                const container = document.getElementById(`${component}-layers-container`);
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const draggable = document.querySelector('.dragging');
+
+                if (afterElement == null) {
+                    container.appendChild(draggable);
+                } else {
+                    container.insertBefore(draggable, afterElement);
+                }
+            });
+
+            card.addEventListener('drop', (e) => {
+                if (draggedComponent !== component) return;
+                e.stopPropagation();
+
+                // Rebuild layer order
+                const container = document.getElementById(`${component}-layers-container`);
+                const cards = Array.from(container.querySelectorAll('.layer-card'));
+                const newOrder = [];
+
+                cards.forEach(card => {
+                    const layerId = parseInt(card.dataset.layerId);
+                    const layer = componentLayers[component].find(l => l.id === layerId);
+                    if (layer) newOrder.push(layer);
+                });
+
+                componentLayers[component] = newOrder;
+                updateComponentShader(component);
+                console.log(`Reordered ${component} layers`);
+            });
+
+            // Prevent dragging on controls
+            const interactiveElements = card.querySelectorAll('select, input, button:not(.drag-handle)');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mousedown', (e) => {
+                    card.draggable = false;
+                    e.stopPropagation();
+                });
+                el.addEventListener('mouseup', () => {
+                    card.draggable = true;
+                });
+            });
+
+            // Toggle button
+            card.querySelector('[data-action="toggle"]').addEventListener('click', () => {
+                layer.enabled = !layer.enabled;
+                const toggleBtn = card.querySelector('[data-action="toggle"]');
+                toggleBtn.textContent = layer.enabled ? 'ON' : 'OFF';
+                toggleBtn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
+                updateComponentShader(component);
+            });
+
+            // Delete button
+            card.querySelector('[data-action="delete"]').addEventListener('click', () => {
+                removeLayer(component, layer.id);
+            });
+
+            // Mode select
+            card.querySelector('[data-action="mode"]').addEventListener('change', (e) => {
+                layer.mode = parseInt(e.target.value);
+                updateComponentShader(component);
+                console.log(`${config.name} layer ${layer.id} mode: ${blendModeNames[layer.mode]}`);
+            });
+
+            // Precision toggles
+            const precisionButtons = card.querySelectorAll('.precision-btn');
+            const strengthSlider = card.querySelector('[data-action="strength"]');
+            precisionButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    precisionButtons.forEach(b => {
+                        b.classList.remove('active');
+                        b.style.background = 'rgba(255,255,255,0.1)';
+                    });
+                    btn.classList.add('active');
+                    btn.style.background = 'rgba(255,255,255,0.2)';
+
+                    const step = btn.dataset.step;
+                    strengthSlider.step = step;
+
+                    const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+                    card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
+                });
+            });
+
+            // Strength slider
+            strengthSlider.addEventListener('input', (e) => {
+                layer.strength = parseFloat(e.target.value);
+
+                const activeBtn = card.querySelector('.precision-btn.active');
+                const step = activeBtn ? activeBtn.dataset.step : '0.1';
+                const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+
+                card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
+                updateComponentShader(component);
+            });
+
+            return card;
+        }
+
+        // Add layer to component
+        function addLayer(component, mode = null, strength = null, enabled = true, skipUpdate = false) {
+            if (componentLayers[component].length >= MAX_BLEND_LAYERS) {
+                console.warn(`Maximum ${MAX_BLEND_LAYERS} layers for ${component}`);
+                return;
+            }
+
+            const config = componentConfigs[component];
+            const layer = {
+                id: nextLayerId[component]++,
+                mode: mode !== null ? mode : config.defaultMode,
+                strength: strength !== null ? strength : config.defaultStrength,
+                enabled: enabled
+            };
+
+            componentLayers[component].push(layer);
+            const card = createLayerCard(component, layer);
+            document.getElementById(`${component}-layers-container`).appendChild(card);
+
+            if (!skipUpdate) {
+                updateComponentShader(component);
+            }
+
+            console.log(`Added ${config.name} layer ${layer.id}: ${blendModeNames[layer.mode]} @ ${layer.strength.toFixed(3)}`);
+        }
+
+        // Remove layer
+        function removeLayer(component, layerId) {
+            const index = componentLayers[component].findIndex(l => l.id === layerId);
+            if (index === -1) return;
+
+            componentLayers[component].splice(index, 1);
+            const card = document.querySelector(`#${component}-layers-container [data-layer-id="${layerId}"]`);
+            if (card) card.remove();
+
+            updateComponentShader(component);
+            console.log(`Removed ${componentConfigs[component].name} layer ${layerId}`);
+        }
+
+        // Update shader for component
+        function updateComponentShader(component) {
+            if (!mascot || !mascot.core3D) return;
+
+            const config = componentConfigs[component];
+            const layers = componentLayers[component];
+
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const blendNum = i + 1;
+                const uiLayer = layers[i];
+
+                if (uiLayer) {
+                    mascot.core3D.setCrystalBlendLayer(config.prefix, blendNum, {
+                        mode: uiLayer.mode,
+                        strength: uiLayer.strength,
+                        enabled: uiLayer.enabled
+                    });
+                } else {
+                    mascot.core3D.setCrystalBlendLayer(config.prefix, blendNum, {
+                        mode: 0,
+                        strength: 0,
+                        enabled: false
+                    });
+                }
+            }
+        }
+
+        // Helper: get drag after element
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.layer-card:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Crystal parameter updates
+        function updateCrystalUniforms() {
+            if (!mascot || !mascot.core3D) return;
+
+            mascot.core3D.setCrystalUniforms({
+                coreGlowStrength: parseFloat(document.getElementById('coreGlow').value),
+                coreGlowFalloff: parseFloat(document.getElementById('coreFalloff').value),
+                fresnelStrength: parseFloat(document.getElementById('fresnelStrength').value),
+                fresnelPower: parseFloat(document.getElementById('fresnelPower').value),
+                transmissionStrength: parseFloat(document.getElementById('transmission').value),
+                facetStrength: parseFloat(document.getElementById('facet').value),
+                iridescenceStrength: parseFloat(document.getElementById('iridescence').value),
+                chromaticAberration: parseFloat(document.getElementById('chromatic').value),
+                causticStrength: parseFloat(document.getElementById('caustic').value),
+                energyPulse: parseFloat(document.getElementById('energyPulse').value),
+                emissiveIntensity: parseFloat(document.getElementById('emissive').value)
+            });
+        }
+
+        // Setup parameter sliders
+        const paramSliders = ['coreGlow', 'coreFalloff', 'fresnelStrength', 'fresnelPower',
+                             'transmission', 'facet', 'iridescence', 'chromatic', 'caustic', 'energyPulse', 'emissive'];
+
+        paramSliders.forEach(id => {
+            const slider = document.getElementById(id);
+            const valueEl = document.getElementById(`${id}-value`);
+
+            slider.addEventListener('input', () => {
+                valueEl.textContent = parseFloat(slider.value).toFixed(1);
+                updateCrystalUniforms();
+            });
         });
 
-        mascot.init(container);
-        mascot.start();
-
-        // Set initial emotion
-        mascot.setEmotion('love');
-
-        // Enable glass material by default
-        setTimeout(() => {
-            if (mascot.core3D) {
-                mascot.core3D.setGlassMaterialEnabled(true);
-                console.log('🔮 Glass material enabled by default');
+        // Soul Effects handlers - exposed to window for inline handlers
+        window.updateSoulEffects = function() {
+            if (!mascot || !mascot.core3D) {
+                console.warn('updateSoulEffects: mascot or core3D not ready');
+                return;
             }
-        }, 100);
 
-        console.log('✅ Crystal Demo initialized');
+            const params = {
+                driftEnabled: document.getElementById('driftEnabled').checked,
+                driftSpeed: parseFloat(document.getElementById('driftSpeed').value),
+                shimmerEnabled: document.getElementById('shimmerEnabled').checked,
+                shimmerSpeed: parseFloat(document.getElementById('shimmerSpeed').value)
+            };
+            console.log('Calling setCrystalSoulEffects with:', params);
+            mascot.core3D.setCrystalSoulEffects(params);
+        }
 
-        // Track toggle states
-        let particlesEnabled = true;
-        let glowEnabled = true;
-        let glassEnabled = true;
+        // Shell Effects handlers - controls outer crystal shell animations
+        window.updateShellEffects = function() {
+            if (!mascot || !mascot.core3D) return;
 
-        // Event delegation for all buttons
+            mascot.core3D.setCrystalUniforms({
+                sparkleEnabled: document.getElementById('sparkleEnabled').checked ? 1.0 : 0.0,
+                sparkleSpeed: parseFloat(document.getElementById('sparkleSpeed').value),
+                causticEnabled: document.getElementById('causticEnabled').checked ? 1.0 : 0.0,
+                causticSpeed: parseFloat(document.getElementById('causticSpeed').value),
+                causticScale: parseFloat(document.getElementById('causticScale').value),
+                causticCoverage: parseFloat(document.getElementById('causticCoverage').value),
+                energyPulseEnabled: document.getElementById('energyPulseEnabled').checked ? 1.0 : 0.0
+            });
+        }
+
+        // Drift toggle and speed
+        document.getElementById('driftEnabled').addEventListener('change', window.updateSoulEffects);
+        document.getElementById('driftSpeed').addEventListener('input', (e) => {
+            document.getElementById('driftSpeed-value').textContent = parseFloat(e.target.value).toFixed(3);
+            window.updateSoulEffects();
+        });
+
+        // Shimmer toggle and speed
+        document.getElementById('shimmerEnabled').addEventListener('change', window.updateSoulEffects);
+        document.getElementById('shimmerSpeed').addEventListener('input', (e) => {
+            document.getElementById('shimmerSpeed-value').textContent = parseFloat(e.target.value).toFixed(3);
+            window.updateSoulEffects();
+        });
+
+        // Add layer button handlers
+        document.getElementById('add-core-layer-btn').addEventListener('click', () => addLayer('core'));
+        document.getElementById('add-fresnel-layer-btn').addEventListener('click', () => addLayer('fresnel'));
+        document.getElementById('add-trans-layer-btn').addEventListener('click', () => addLayer('trans'));
+        document.getElementById('add-facet-layer-btn').addEventListener('click', () => addLayer('facet'));
+
+        // Other button handlers
         document.addEventListener('click', (e) => {
             if (!e.target.matches('button[data-action]') || !mascot) return;
 
             const action = e.target.dataset.action;
             const value = e.target.dataset.value;
 
-            // Update active state for emotion buttons
             if (action === 'emotion') {
                 document.querySelectorAll('[data-action="emotion"]').forEach(btn => {
                     btn.classList.remove('active');
                 });
                 e.target.classList.add('active');
+                mascot.setEmotion(value);
+                return;
             }
 
-            try {
-                switch (action) {
-                    case 'emotion':
-                        console.log('Setting emotion:', value);
-                        mascot.setEmotion(value);
-                        break;
-
-                    case 'gesture':
-                        console.log('Playing gesture:', value);
-                        mascot.express(value);
-                        break;
-
-                    case 'undertone':
-                        const undertone = value === 'null' ? null : value;
-                        console.log('Setting undertone:', undertone);
-                        mascot.updateUndertone(undertone);
-                        break;
-
-                    case 'toggle-particles':
-                        particlesEnabled = !particlesEnabled;
-                        if (particlesEnabled) {
-                            mascot.enableParticles();
-                            e.target.classList.add('active');
-                            console.log('✨ Particles enabled');
-                        } else {
-                            mascot.disableParticles();
-                            e.target.classList.remove('active');
-                            console.log('💨 Particles disabled');
-                        }
-                        break;
-
-                    case 'toggle-glow':
-                        glowEnabled = !glowEnabled;
-                        if (mascot.core3D) {
-                            mascot.core3D.setCoreGlowEnabled(glowEnabled);
-                            if (glowEnabled) {
-                                e.target.classList.add('active');
-                                console.log('✨ Core glow enabled');
-                            } else {
-                                e.target.classList.remove('active');
-                                console.log('💨 Core glow disabled');
-                            }
-                        }
-                        break;
-
-                    case 'toggle-glass':
-                        glassEnabled = !glassEnabled;
-                        if (mascot.core3D) {
-                            mascot.core3D.setGlassMaterialEnabled(glassEnabled);
-                            if (glassEnabled) {
-                                e.target.classList.add('active');
-                                console.log('🔮 Glass material enabled');
-                            } else {
-                                e.target.classList.remove('active');
-                                console.log('💨 Glass material disabled');
-                            }
-                        }
-                        break;
-
-                    case 'toggle-blink':
-                        if (mascot.blinkingEnabled) {
-                            mascot.disableBlinking();
-                            e.target.classList.remove('active');
-                            console.log('👁️ Blinking disabled');
-                        } else {
-                            mascot.enableBlinking();
-                            e.target.classList.add('active');
-                            console.log('👁️ Blinking enabled');
-                        }
-                        break;
-
-                    case 'toggle-breathing':
-                        if (mascot.breathingEnabled) {
-                            mascot.disableBreathing();
-                            e.target.classList.remove('active');
-                            console.log('🫁 Breathing disabled');
-                        } else {
-                            mascot.enableBreathing();
-                            e.target.classList.add('active');
-                            console.log('🫁 Breathing enabled');
-                        }
-                        break;
-
-                    case 'toggle-auto-rotate':
-                        console.log('🔍 AUTO-ROTATE TOGGLE CLICKED');
-                        const currentState = mascot.autoRotateEnabled;
-                        const newState = !currentState;
-
-                        if (newState) {
-                            mascot.enableAutoRotate();
-                            autoRotateDisabled = false;
-                            console.log('▶️ Auto-rotate ON');
-                            e.target.classList.add('active');
-                        } else {
-                            mascot.disableAutoRotate();
-                            autoRotateDisabled = true;
-                            console.log('🛑 Auto-rotate OFF');
-                            e.target.classList.remove('active');
-                        }
-                        break;
-
-                    case 'camera':
-                        console.log('Setting camera preset:', value);
-                        if (mascot.core3D?.renderer?.setCameraPreset) {
-                            mascot.core3D.renderer.setCameraPreset(value);
-                        }
-                        break;
-
-                    case 'reset-camera':
-                        console.log('Resetting camera');
-                        if (mascot.core3D?.renderer?.resetCamera) {
-                            mascot.core3D.renderer.resetCamera();
-                        }
-                        break;
+            if (action === 'toggle-particles') {
+                if (e.target.classList.contains('active')) {
+                    mascot.disableParticles();
+                    e.target.classList.remove('active');
+                } else {
+                    mascot.enableParticles();
+                    e.target.classList.add('active');
                 }
-            } catch (error) {
-                console.error('Action failed:', error);
+                return;
+            }
+
+            if (action === 'toggle-auto-rotate') {
+                if (mascot.autoRotateEnabled) {
+                    mascot.disableAutoRotate();
+                    e.target.classList.remove('active');
+                } else {
+                    mascot.enableAutoRotate();
+                    e.target.classList.add('active');
+                }
+                return;
             }
         });
-
-        // Set initial active emotion button
-        document.querySelector('[data-value="love"]').classList.add('active');
     </script>
 </body>
 </html>

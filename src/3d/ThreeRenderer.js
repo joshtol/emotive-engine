@@ -52,7 +52,7 @@ export class ThreeRenderer {
         // CRITICAL: Disable autoClear for transparency to work in newer Three.js versions
         this.renderer.autoClear = false;
 
-        // PERFORMANCE: Limit pixel ratio to 1.5 for desktop (35% performance gain, no visible difference)
+        // PERFORMANCE: Limit pixel ratio to 1.5 for desktop (35% performance gain)
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.setSize(canvas.width, canvas.height, false);
 
@@ -310,15 +310,21 @@ export class ThreeRenderer {
      */
     setupPostProcessing() {
         // Effect composer for post-processing chain
-        // Create with alpha-enabled render target for transparent backgrounds
-        const renderTarget = new THREE.WebGLRenderTarget(this.canvas.width, this.canvas.height, {
-            format: THREE.RGBAFormat,
-            type: THREE.UnsignedByteType,
-            minFilter: THREE.LinearFilter,
-            magFilter: THREE.LinearFilter,
-            stencilBuffer: false,
-            depthBuffer: true
-        });
+        // Get actual drawing buffer size (includes pixel ratio)
+        const drawingBufferSize = new THREE.Vector2();
+        this.renderer.getDrawingBufferSize(drawingBufferSize);
+
+        // Create with alpha-enabled render target at full drawing buffer resolution
+        const renderTarget = new THREE.WebGLRenderTarget(
+            drawingBufferSize.x,
+            drawingBufferSize.y, {
+                format: THREE.RGBAFormat,
+                type: THREE.HalfFloatType,  // HDR: Allow values > 1.0 for proper bloom
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                stencilBuffer: false,
+                depthBuffer: true
+            });
         this.composer = new EffectComposer(this.renderer, renderTarget);
 
         // Render pass - base scene render
@@ -326,11 +332,10 @@ export class ThreeRenderer {
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)
-        // PERFORMANCE: Use half resolution for bloom - bloom is a blur effect so lower resolution
-        // doesn't affect visual quality significantly, but improves performance by 2-4x
+        // Use full drawing buffer resolution for sharp bloom
         const bloomResolution = new THREE.Vector2(
-            Math.floor(this.canvas.width / 2),
-            Math.floor(this.canvas.height / 2)
+            drawingBufferSize.x,
+            drawingBufferSize.y
         );
         this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,
@@ -644,6 +649,7 @@ export class ThreeRenderer {
             this.innerCore.geometry.dispose();
             this.disposeMaterial(this.innerCore.material);
             this.innerCore = null;
+            this.innerCoreMaterial = null;
         }
 
         if (!this.coreMesh || !this.coreMesh.geometry) return;
@@ -717,6 +723,9 @@ export class ThreeRenderer {
             opacity: 1.0
         });
 
+        // Store reference for color updates in render()
+        this.innerCoreMaterial = coreMaterial;
+
         this.innerCore = new THREE.Mesh(coreGeometry, coreMaterial);
         this.innerCore.name = 'innerCore';
 
@@ -761,6 +770,7 @@ export class ThreeRenderer {
             this.innerCore.geometry.dispose();
             this.disposeMaterial(this.innerCore.material);
             this.innerCore = null;
+            this.innerCoreMaterial = null;
         }
 
         console.log(`Material mode set to: ${mode}`);
@@ -868,6 +878,11 @@ export class ThreeRenderer {
                 targetStrength = 1.2;   // Moderate glow strength (was 5.0 - too extreme)
                 targetRadius = 0.5;     // Tighter glow spread (was 1.5 - too large)
                 targetThreshold = 0.3;  // Higher threshold to preserve texture detail (was 0.05)
+            } else if (geometryType === 'crystal' || geometryType === 'diamond') {
+                // Crystal/diamond need strong bloom for light emission effect
+                targetStrength = 1.8;   // Strong bloom with HDR
+                targetRadius = 0.7;     // Wide spread for glow halo
+                targetThreshold = 0.35; // Low threshold to catch HDR glow
             } else if (this.materialMode === 'glass') {
                 // Glass mode needs much lower bloom strength to avoid haziness
                 // Since we're using white emissive at fixed intensity for uniformity
@@ -1067,29 +1082,35 @@ export class ThreeRenderer {
             // Skip for THREE.Group (like black hole) - materials are on child meshes
             if (this.coreMesh.material && this.coreMesh.material.uniforms) {
                 // ShaderMaterial (glow material) - update uniforms
-                this._tempColor.setRGB(...glowColor);
-                this.coreMesh.material.uniforms.glowColor.value.lerp(this._tempColor, 0.15);
+                // Only update glowColor if the uniform exists (crystal uses emotionColor instead)
+                if (this.coreMesh.material.uniforms.glowColor) {
+                    this._tempColor.setRGB(...glowColor);
+                    this.coreMesh.material.uniforms.glowColor.value.lerp(this._tempColor, 0.15);
+                }
 
                 // Normalize intensity to prevent huge brightness differences between emotions
                 // Use wider range during gestures to make effects visible
-                // Special case: if glowIntensity is 0 (glow disabled), pass 0 directly
-                let targetIntensity;
-                if (glowIntensity === 0) {
-                    targetIntensity = 0;
-                } else {
-                    if (hasActiveGesture) {
-                        // During gestures: bypass normalization entirely, use raw intensity
-                        // Direct mapping: gesture outputs 1.0-1.8 → shader sees 1.0-1.8
-                        targetIntensity = glowIntensity;
+                // Only update glowIntensity if the uniform exists (crystal uses emissiveIntensity instead)
+                if (this.coreMesh.material.uniforms.glowIntensity) {
+                    // Special case: if glowIntensity is 0 (glow disabled), pass 0 directly
+                    let targetIntensity;
+                    if (glowIntensity === 0) {
+                        targetIntensity = 0;
                     } else {
-                        // Normal state: use normalized intensity for consistent emotions
-                        targetIntensity = this.normalizeIntensity(glowIntensity);
+                        if (hasActiveGesture) {
+                            // During gestures: bypass normalization entirely, use raw intensity
+                            // Direct mapping: gesture outputs 1.0-1.8 → shader sees 1.0-1.8
+                            targetIntensity = glowIntensity;
+                        } else {
+                            // Normal state: use normalized intensity for consistent emotions
+                            targetIntensity = this.normalizeIntensity(glowIntensity);
+                        }
                     }
+                    const currentIntensity = this.coreMesh.material.uniforms.glowIntensity.value;
+                    // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
+                    const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
+                    this.coreMesh.material.uniforms.glowIntensity.value += (targetIntensity - currentIntensity) * lerpSpeed;
                 }
-                const currentIntensity = this.coreMesh.material.uniforms.glowIntensity.value;
-                // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
-                const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
-                this.coreMesh.material.uniforms.glowIntensity.value += (targetIntensity - currentIntensity) * lerpSpeed;
             } else if (this.coreMesh.material && this.coreMesh.material.emissive) {
                 // MeshPhysicalMaterial (glass material) - update emissive properties
                 // BLOOM + COLOR SOLUTION:
@@ -1113,10 +1134,16 @@ export class ThreeRenderer {
                 this.coreMesh.material.color.lerp(this._white, 0.15);
             }
 
-            // Control inner core visibility based on glow intensity
+            // Control inner core visibility and color based on emotion
             if (this.innerCore) {
                 // Hide inner core when glow is disabled (intensity = 0)
                 this.innerCore.visible = glowIntensity > 0;
+
+                // Update inner core color to match emotion
+                if (this.innerCoreMaterial) {
+                    this._tempColor.setRGB(...glowColor);
+                    this.innerCoreMaterial.emissive.lerp(this._tempColor, 0.15);
+                }
             }
         }
 
@@ -1149,14 +1176,15 @@ export class ThreeRenderer {
         this.renderer.setSize(width, height, false);
 
         if (this.composer) {
-            this.composer.setSize(width, height);
+            // Get actual drawing buffer size (includes pixel ratio)
+            const drawingBufferSize = new THREE.Vector2();
+            this.renderer.getDrawingBufferSize(drawingBufferSize);
 
-            // PERFORMANCE: Update bloom pass resolution to half size for better performance
+            this.composer.setSize(drawingBufferSize.x, drawingBufferSize.y);
+
+            // Update bloom pass resolution to full drawing buffer size for sharp bloom
             if (this.bloomPass && this.bloomPass.resolution) {
-                this.bloomPass.resolution.set(
-                    Math.floor(width / 2),
-                    Math.floor(height / 2)
-                );
+                this.bloomPass.resolution.set(drawingBufferSize.x, drawingBufferSize.y);
             }
         }
     }
@@ -1231,6 +1259,7 @@ export class ThreeRenderer {
             this.innerCore.geometry.dispose();
             this.disposeMaterial(this.innerCore.material);
             this.innerCore = null;
+            this.innerCoreMaterial = null;
         }
 
         // Dispose core mesh
