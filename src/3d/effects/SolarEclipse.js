@@ -106,7 +106,7 @@ export class SolarEclipse {
         const coronaRadius = this.sunRadius * 2.05; // x sun diameter
         // RingGeometry with inner radius well inside sun, so corona overlaps bloomed edge
         const innerRadius = this.sunRadius * 0.60; // 40% inside sun's edge
-        const coronaGeometry = new THREE.RingGeometry(innerRadius, coronaRadius, 128);
+        const coronaGeometry = new THREE.RingGeometry(innerRadius, coronaRadius, 2048);
 
         // Shader material with radial wave pattern
         const coronaMaterial = new THREE.ShaderMaterial({
@@ -118,6 +118,7 @@ export class SolarEclipse {
                 uvRotation: { value: 0.0 },  // UV rotation angle in radians
                 rayElongation: { value: 1.0 },  // Ray elongation factor (1.0 = circular, >1.0 = elongated)
                 uberHeroElongation: { value: 1.0 },  // Uber hero ray elongation (much more dramatic)
+                isTotalEclipse: { value: 0.0 },  // 1.0 = total eclipse effects enabled
 
                 // Blend Layer Uniforms (up to 4 layers)
                 // Default: Soft Light @ 2.155 to fix black edges
@@ -161,6 +162,7 @@ export class SolarEclipse {
                 uniform float randomSeed;
                 uniform float rayElongation;
                 uniform float uberHeroElongation;
+                uniform float isTotalEclipse;
 
                 // Blend Layer Uniforms (up to 4 layers)
                 uniform float layer1Mode;
@@ -289,6 +291,12 @@ export class SolarEclipse {
                         float elongationFactor = mix(1.0, rayElongation, verticalWeight);
                         float rayLength = baseRayLength * elongationFactor;
 
+                        // EQUATORIAL ASYMMETRY (total eclipse only): rays along equator are more prominent
+                        // Solar minimum: streamers cluster along equatorial plane
+                        float equatorialWeight = abs(cos(rayAngle)); // 1.0 at horizontal, 0.0 at vertical
+                        float asymmetryBoost = mix(1.0, 1.0 + equatorialWeight * 0.5, isTotalEclipse);
+                        rayLength *= asymmetryBoost;
+
                         // Varied widths with power law (more thin, fewer thick)
                         float baseWidth = 0.03 + (random4 * random4) * 0.2; // 0.03 to 0.23 (naturally varied)
 
@@ -314,16 +322,47 @@ export class SolarEclipse {
                         rayIntensity = max(rayIntensity, streamerIntensity);
                     }
 
-                    // Base corona glow (very thin bright ring for realistic total eclipse)
+                    // Base corona glow - thinner during total eclipse for realism
+                    float baseGlowWidth = mix(0.04, 0.015, isTotalEclipse); // Thinner during totality
                     float baseGlow = smoothstep(shadowEdge - 0.01, shadowEdge, dist) *
-                                    (1.0 - smoothstep(shadowEdge + 0.02, shadowEdge + 0.04, dist));
-
-                    // Combine: base glow + streamers
-                    float finalIntensity = (baseGlow * 0.6 + rayIntensity) * intensity;
+                                    (1.0 - smoothstep(shadowEdge + baseGlowWidth * 0.5, shadowEdge + baseGlowWidth, dist));
 
                     // Enhanced gradient: white → cool blue-white → deep blue with distance
                     // Distance normalized to corona extent (0 = shadow edge, 1 = far corona)
                     float coronaDist = clamp((dist - shadowEdge) / 0.6, 0.0, 1.0);
+
+                    // ═══════════════════════════════════════════════════════════════════════════
+                    // TOTAL ECLIPSE ENHANCEMENTS (scaled continuously by isTotalEclipse 0.0-1.0)
+                    // ═══════════════════════════════════════════════════════════════════════════
+
+                    // 1. CHROMOSPHERE RED RIM - thin pink/red ring at sun's edge (hydrogen emission)
+                    float rimStart = shadowEdge;
+                    float rimEnd = shadowEdge + 0.025;
+                    float chromosphereRim = smoothstep(rimStart - 0.005, rimStart, dist) *
+                                     (1.0 - smoothstep(rimEnd - 0.01, rimEnd, dist));
+                    chromosphereRim *= 0.6 * isTotalEclipse; // Scale by eclipse progress
+                    vec3 chromosphereColor = vec3(1.0, 0.3, 0.4); // Pink-red (H-alpha emission)
+
+                    // 2. STRONGER BRIGHTNESS FALLOFF - inner corona much brighter
+                    // Mix between 1.0 (normal) and enhanced falloff based on isTotalEclipse
+                    float enhancedFalloff = mix(3.0, 0.3, pow(coronaDist, 0.7));
+                    float brightnessMultiplier = mix(1.0, enhancedFalloff, isTotalEclipse);
+
+                    // 3. F-CORONA OUTER GLOW - faint diffuse glow from interplanetary dust
+                    float fCoronaDist = clamp((dist - shadowEdge) / 1.2, 0.0, 1.0);
+                    float fCorona = (1.0 - fCoronaDist) * 0.08;
+                    fCorona *= smoothstep(0.3, 0.5, coronaDist);
+                    fCorona *= isTotalEclipse; // Scale by eclipse progress
+
+                    // 4. WISPY TENDRILS - add fine detail noise to ray intensity
+                    float noiseAngle = angle * 8.0 + time * 0.1;
+                    float noiseRadius = dist * 15.0;
+                    float wispyDetail = hash(noiseAngle + noiseRadius + randomSeed * 3.0) * 0.15;
+                    wispyDetail *= rayIntensity * isTotalEclipse; // Scale by eclipse progress
+
+                    // Combine: base glow + streamers + wispy detail
+                    float finalIntensity = (baseGlow * 0.6 + rayIntensity + wispyDetail) * intensity;
+                    finalIntensity *= brightnessMultiplier;
 
                     // Multi-stage color gradient for realistic corona
                     vec3 innerGlow = vec3(1.0, 1.0, 1.0);           // Pure white at base
@@ -345,6 +384,12 @@ export class SolarEclipse {
                     }
 
                     vec3 finalColor = coronaColor * finalIntensity;
+
+                    // Add chromosphere red rim (total eclipse only)
+                    finalColor += chromosphereColor * chromosphereRim * intensity;
+
+                    // Add F-corona outer glow (total eclipse only)
+                    finalColor += vec3(0.9, 0.85, 0.8) * fCorona * intensity; // Slightly warm white
 
                     // ═══════════════════════════════════════════════════════════════════════════
                     // BLEND LAYERS (Applied globally to entire corona)
@@ -423,6 +468,7 @@ export class SolarEclipse {
                 uvRotation: { value: 0.0 },  // UV rotation angle in radians
                 rayElongation: { value: 1.0 },  // Ray elongation factor (1.0 = circular, >1.0 = elongated)
                 uberHeroElongation: { value: 1.0 },  // Uber hero ray elongation (much more dramatic)
+                isTotalEclipse: { value: 0.0 },  // 1.0 = total eclipse effects enabled
 
                 // Blend Layer Uniforms (up to 4 layers) - shared with main corona
                 // Default: Soft Light @ 2.155 to fix black edges
@@ -742,6 +788,24 @@ export class SolarEclipse {
             this.coronaDisk.material.uniforms.uberHeroElongation.value = uberHeroElongation;
             this.counterCoronaDisk.material.uniforms.uberHeroElongation.value = uberHeroElongation;
 
+            // Ease shader effects (chromosphere, asymmetry, F-corona) as we approach totality
+            // Ramp from 0 to 1.0 between 0.50 and 0.99 proximity with easeInOut curve
+            const effectsMin = 0.50;  // Start easing shader effects at 50% proximity
+            const effectsMax = 0.99;  // Full shader effects at 99% proximity
+            const effectsLinear = Math.max(0, Math.min(1, (proximity - effectsMin) / (effectsMax - effectsMin)));
+            // Smoothstep easeInOut: 3t² - 2t³
+            const effectsProgress = effectsLinear * effectsLinear * (3 - 2 * effectsLinear);
+            const isTotalEclipse = (activeEclipseType === ECLIPSE_TYPES.TOTAL) ? effectsProgress : 0.0;
+            this.coronaDisk.material.uniforms.isTotalEclipse.value = isTotalEclipse;
+            this.counterCoronaDisk.material.uniforms.isTotalEclipse.value = isTotalEclipse;
+
+            // Layer 3: Linear Burn eases in with the other effects
+            // Linear Burn: strength 1.0 = no effect, strength 0.0 = max darkening
+            // So we ramp from 1.0 (no effect) DOWN to 0.053 (full effect) at totality
+            const linearBurnEnabled = (activeEclipseType === ECLIPSE_TYPES.TOTAL && proximity >= effectsMin);
+            const linearBurnStrength = 1.0 - (1.0 - 0.053) * effectsProgress; // 1.0 → 0.053
+            this.setCoronaBlendLayer(3, { mode: 1, strength: linearBurnStrength, enabled: linearBurnEnabled });
+
             // Billboard both coronas to camera (must happen BEFORE rotation)
             this.coronaDisk.lookAt(cameraPosition);
             this.counterCoronaDisk.lookAt(cameraPosition);
@@ -849,12 +913,16 @@ export class SolarEclipse {
             this.coronaDisk.material.uniforms.uberHeroElongation.value = 1.0;
             this.counterCoronaDisk.material.uniforms.uberHeroElongation.value = 1.0;
 
+            // Disable total eclipse enhancements when not in eclipse
+            this.coronaDisk.material.uniforms.isTotalEclipse.value = 0.0;
+            this.counterCoronaDisk.material.uniforms.isTotalEclipse.value = 0.0;
+
             // Reduce corona intensity for normal sun (85% of base)
             this.coronaDisk.material.uniforms.intensity.value = 3.6 * 0.85;
             this.counterCoronaDisk.material.uniforms.intensity.value = 3.6 * 0.85;
 
-            // Disable Pin Light blend mode when not in eclipse
-            this.setCoronaBlendLayer(3, { mode: 17, strength: 0.739, enabled: false });
+            // Disable Linear Burn when not in eclipse
+            this.setCoronaBlendLayer(3, { mode: 1, strength: 0.0, enabled: false });
 
             // Billboard both coronas to camera (must happen BEFORE rotation)
             this.coronaDisk.lookAt(cameraPosition);

@@ -747,8 +747,8 @@
                 const coverage = Math.max(0, Math.min(100, Math.round((1 - (distanceFromCenter / maxDistance)) * 100)));
                 dialValue.textContent = `${coverage}%`;
 
-                // Update Pin Light layer based on coverage (ONLY at 100% during total eclipse)
-                updatePinLightVisibility(coverage);
+                // NOTE: Layer 3 (Linear Burn) is now managed by the engine with easing
+                // updateLinearBurnVisibility(coverage); // Disabled - engine handles this
 
                 // Update eclipse with direct shadow position
                 if (mascot && mascot.core3D && mascot.core3D.solarEclipse) {
@@ -1270,9 +1270,9 @@
             const index = coronaLayers.findIndex(l => l.id === layerId);
             if (index === -1) return;
 
-            // If this is the Pin Light layer, reset the ID
-            if (layerId === pinLightLayerId) {
-                pinLightLayerId = null;
+            // If this is the Linear Burn layer, reset the ID
+            if (layerId === linearBurnLayerId) {
+                linearBurnLayerId = null;
             }
 
             coronaLayers.splice(index, 1);
@@ -1309,43 +1309,43 @@
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // PIN LIGHT LAYER MANAGEMENT (TOTALITY-SPECIFIC EFFECT)
+        // LINEAR BURN LAYER MANAGEMENT (TOTALITY-SPECIFIC EFFECT)
         // ═══════════════════════════════════════════════════════════════════════════
-        // Pin Light blend mode (mode 17) appears ONLY at 100% totality during total eclipse.
-        // This creates a dramatic posterization effect suitable for AI mascots and game visuals.
+        // Linear Burn blend mode (mode 1) appears ONLY at 100% totality during total eclipse.
+        // This creates enhanced depth and contrast suitable for realistic eclipse visuals.
         // Settings persist when moving away from 100% and are restored when returning.
 
-        let pinLightLayerId = null;
-        let pinLightSettings = { mode: 17, strength: 0.164, enabled: true }; // Persistent settings
+        let linearBurnLayerId = null;
+        let linearBurnSettings = { mode: 1, strength: 0.053, enabled: true }; // Persistent settings
 
         /**
-         * Update Pin Light layer visibility based on eclipse coverage
+         * Update Linear Burn layer visibility based on eclipse coverage
          * Adds layer at 100% totality, removes when coverage drops below 100%
          * @param {number} coverage - Eclipse coverage percentage (0-100)
          */
-        function updatePinLightVisibility(coverage) {
+        function updateLinearBurnVisibility(coverage) {
             // Get current eclipse type
             const currentEclipseType = document.querySelector('[data-action="eclipse"].active')?.dataset?.value;
             const isTotal = currentEclipseType === 'total';
             const isAtTotality = (isTotal && coverage === 100);
 
-            if (isAtTotality && pinLightLayerId === null) {
-                // Add Pin Light layer at 100% totality with saved settings
-                const pinLightLayer = {
+            if (isAtTotality && linearBurnLayerId === null) {
+                // Add Linear Burn layer at 100% totality with saved settings
+                const linearBurnLayer = {
                     id: nextCoronaLayerId++,
-                    mode: pinLightSettings.mode,
-                    strength: pinLightSettings.strength,
-                    enabled: pinLightSettings.enabled
+                    mode: linearBurnSettings.mode,
+                    strength: linearBurnSettings.strength,
+                    enabled: linearBurnSettings.enabled
                 };
-                pinLightLayerId = pinLightLayer.id;
+                linearBurnLayerId = linearBurnLayer.id;
 
                 // Ensure we have space for layer 3
                 while (coronaLayers.length < 2) {
                     addCoronaLayer(0, 0, false, true);
                 }
 
-                coronaLayers.push(pinLightLayer);
-                const card = createCoronaLayerCard(pinLightLayer);
+                coronaLayers.push(linearBurnLayer);
+                const card = createCoronaLayerCard(linearBurnLayer);
                 card.style.border = '2px solid #ff9500';
                 card.style.backgroundColor = 'rgba(255, 149, 0, 0.1)';
                 const titleEl = card.querySelector('.layer-title');
@@ -1353,21 +1353,21 @@
 
                 document.getElementById('corona-layers-container').appendChild(card);
                 updateCoronaShaderLayers();
-            } else if (!isAtTotality && pinLightLayerId !== null) {
+            } else if (!isAtTotality && linearBurnLayerId !== null) {
                 // Save current settings before removing
-                const layerIndex = coronaLayers.findIndex(l => l.id === pinLightLayerId);
+                const layerIndex = coronaLayers.findIndex(l => l.id === linearBurnLayerId);
                 if (layerIndex !== -1) {
                     const layer = coronaLayers[layerIndex];
-                    pinLightSettings.mode = layer.mode;
-                    pinLightSettings.strength = layer.strength;
-                    pinLightSettings.enabled = layer.enabled;
+                    linearBurnSettings.mode = layer.mode;
+                    linearBurnSettings.strength = layer.strength;
+                    linearBurnSettings.enabled = layer.enabled;
                     coronaLayers.splice(layerIndex, 1);
                 }
 
-                const card = document.querySelector(`#corona-layers-container [data-layer-id="${pinLightLayerId}"].layer-card`);
+                const card = document.querySelector(`#corona-layers-container [data-layer-id="${linearBurnLayerId}"].layer-card`);
                 if (card) card.remove();
 
-                pinLightLayerId = null;
+                linearBurnLayerId = null;
                 updateCoronaShaderLayers();
             }
         }
