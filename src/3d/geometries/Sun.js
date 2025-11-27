@@ -95,6 +95,10 @@ export function createSunMaterial(textureLoader, options = {}) {
             // Fade in sun when texture loads (avoid odd pattern flash)
             const startTime = performance.now();
             const fadeIn = () => {
+                // Guard against disposed material (prevents error if disposed during fade)
+                if (!material.uniforms || !material.uniforms.opacity) {
+                    return;
+                }
                 const elapsed = performance.now() - startTime;
                 const progress = Math.min(elapsed / 300, 1.0); // 300ms fade
                 material.uniforms.opacity.value = progress;
@@ -447,12 +451,12 @@ export function createSunGeometry(textureLoader = null, options = {}) {
     const resolution = options.resolution || '4k';
     const materialVariant = options.materialVariant || null;
 
-    // Create optimized sphere geometry (reduced from 64x64 for performance)
-    // 32x32 = 1,024 quads = 2,048 triangles (4x fewer than 64x64)
+    // Create high-res sphere geometry for smooth bloom (no edge artifacts)
+    // 128x128 = 16,384 quads = 32,768 triangles (smooth at any zoom)
     const geometry = new THREE.SphereGeometry(
         0.9,  // radius (matches moon radius of 0.9)
-        32,   // width segments (still smooth, but performant)
-        32    // height segments
+        128,  // width segments (smooth edges, no bloom artifacts)
+        128   // height segments
     );
 
     // Track for disposal
@@ -516,30 +520,20 @@ export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, delta
         // Sun is ALWAYS NASA-accurate brilliant white (5,772K photosphere)
         // Ignores emotion colors - calibrated for "joy" emotion
         const brightness = 1.0 + (glowIntensity * 2.0);
-        const baseColor = new THREE.Color(
-            brightness,
-            brightness,
-            brightness * 0.95  // Slight warm tint
-        );
 
         // DO NOT apply emotion tinting - sun stays white regardless of emotion
         // This preserves the NASA-accurate 5,772K color temperature
-
-        uniforms.baseColor.value.copy(baseColor);
+        // Reuse temp color to avoid per-frame allocations
+        uniforms.baseColor.value.setRGB(brightness, brightness, brightness * 0.95);
         uniforms.emissiveIntensity.value = 4.0;  // Increased for stronger bloom
     } else if (material.color) {
         // Fallback for basic material (no shader uniforms)
         // Sun is ALWAYS NASA white - ignores emotion colors
         const brightness = 1.0 + (glowIntensity * 2.0);
-        const baseColor = new THREE.Color(
-            brightness,
-            brightness,
-            brightness * 0.95
-        );
 
         // DO NOT apply emotion tinting - sun stays white regardless of emotion
-
-        material.color.copy(baseColor);
+        // Set color directly to avoid per-frame allocations
+        material.color.setRGB(brightness, brightness, brightness * 0.95);
     }
 }
 

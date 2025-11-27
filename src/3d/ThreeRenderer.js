@@ -52,7 +52,7 @@ export class ThreeRenderer {
         // CRITICAL: Disable autoClear for transparency to work in newer Three.js versions
         this.renderer.autoClear = false;
 
-        // PERFORMANCE: Limit pixel ratio to 1.5 for desktop (35% performance gain)
+        // Use device pixel ratio capped at 1.5 for balance between quality and performance
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.setSize(canvas.width, canvas.height, false);
 
@@ -332,10 +332,10 @@ export class ThreeRenderer {
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)
-        // Use full drawing buffer resolution for sharp bloom
+        // Half resolution for performance (blur naturally expands back)
         const bloomResolution = new THREE.Vector2(
-            drawingBufferSize.x,
-            drawingBufferSize.y
+            Math.round(drawingBufferSize.x / 2),
+            Math.round(drawingBufferSize.y / 2)
         );
         this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,

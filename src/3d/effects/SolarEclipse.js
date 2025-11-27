@@ -63,7 +63,6 @@ export class SolarEclipse {
             this.scene.remove(this.counterCoronaDisk);
             this.sunMesh.add(this.coronaDisk);
             this.sunMesh.add(this.counterCoronaDisk);
-            console.log('🌟 Corona disks parented to sun mesh');
         }
 
         // Create Bailey's Beads effect
@@ -77,7 +76,7 @@ export class SolarEclipse {
     createShadowDisk() {
         // Start with a reasonable size - will be scaled in update()
         const initialShadowRadius = this.sunRadius;
-        const shadowGeometry = new THREE.CircleGeometry(initialShadowRadius, 2048);
+        const shadowGeometry = new THREE.CircleGeometry(initialShadowRadius, 256);
         const shadowMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000,
             transparent: true,  // Enable transparency for multiply blending
@@ -106,7 +105,7 @@ export class SolarEclipse {
         const coronaRadius = this.sunRadius * 2.05; // x sun diameter
         // RingGeometry with inner radius well inside sun, so corona overlaps bloomed edge
         const innerRadius = this.sunRadius * 0.60; // 40% inside sun's edge
-        const coronaGeometry = new THREE.RingGeometry(innerRadius, coronaRadius, 2048);
+        const coronaGeometry = new THREE.RingGeometry(innerRadius, coronaRadius, 256);
 
         // Shader material with radial wave pattern
         const coronaMaterial = new THREE.ShaderMaterial({
@@ -259,14 +258,14 @@ export class SolarEclipse {
                         rayIntensity = max(rayIntensity, heroIntensity);
                     }
 
-                    // 45 supporting rays with rule-of-thirds-aware distribution
-                    for (float i = 0.0; i < 45.0; i++) {
+                    // 20 supporting rays with rule-of-thirds-aware distribution
+                    for (float i = 0.0; i < 20.0; i++) {
                         // Cluster more rays around hero ray positions (rule of thirds)
                         float clusterTarget = mod(i, 3.0); // Which hero ray to cluster near
                         float clusterAngle = heroAngles[int(clusterTarget)];
 
                         // Base distribution with clustering tendency
-                        float spreadAngle = (i / 45.0) * 6.28318;
+                        float spreadAngle = (i / 20.0) * 6.28318;
                         float clusterPull = (hash(i * 13.579 + randomSeed) - 0.5) * 1.5; // Stronger variation
                         float rayAngle = spreadAngle + clusterPull;
 
@@ -508,7 +507,6 @@ export class SolarEclipse {
      */
     setShadowCoverage(coverage) {
         this.customShadowCoverage = coverage;
-        console.log(`🌑 Shadow coverage set to: ${coverage.toFixed(3)}`);
     }
 
     /**
@@ -545,18 +543,10 @@ export class SolarEclipse {
      * @param {string} eclipseType - Eclipse type from ECLIPSE_TYPES
      */
     setEclipseType(eclipseType) {
-        // Reset logging flags
-        this._loggedShaderCheck = false;
-        this._lastLogThreshold = null;
-        this._pinLightLogged = false;
-
         // Only trigger transition if type actually changed
         if (eclipseType === this.eclipseType) {
-            console.log(`🌑 Eclipse type unchanged: ${eclipseType}`);
             return;
         }
-
-        console.log(`🌑 Eclipse type changing: ${this.eclipseType} → ${eclipseType}`);
 
         const wasEnabled = this.enabled;
         this.previousEclipseType = this.eclipseType; // Store previous type before changing
@@ -570,32 +560,24 @@ export class SolarEclipse {
             this.transitionDirection = 'in';
             this.isTransitioning = true;
             this.transitionProgress = 0;
-            console.log(`🌑 Starting transition: ${this.transitionDirection} (OFF → ${eclipseType})`);
         } else if (wasEnabled && !this.enabled) {
             // Exiting eclipse: slide out to left
             this.transitionDirection = 'out';
             this.isTransitioning = true;
             this.transitionProgress = 0;
-            console.log(`🌑 Starting transition: ${this.transitionDirection} (${this.eclipseType} → OFF)`);
         } else if (wasEnabled && this.enabled) {
             // Switching between annular/total: quick cross-fade
             this.isTransitioning = true;
             this.transitionProgress = 0;
             this.transitionDirection = 'switch';
-            console.log(`🌑 Starting transition: ${this.transitionDirection} (${this.eclipseType} ↔ ${eclipseType})`);
         }
 
         // Regenerate random seed for new corona pattern ONLY when switching TO total eclipse
         // (not when already total - prevents double regeneration on repeated clicks)
-        console.log(`🌟 Corona seed check: eclipseType=${eclipseType}, previousEclipseType=${this.previousEclipseType}`);
         if (eclipseType === ECLIPSE_TYPES.TOTAL && this.previousEclipseType !== ECLIPSE_TYPES.TOTAL) {
-            console.log(`🌟 Regenerating corona seed from ${this.randomSeed}`);
             this.randomSeed = Math.random() * 1000;
             this.coronaDisk.material.uniforms.randomSeed.value = this.randomSeed;
             this.counterCoronaDisk.material.uniforms.randomSeed.value = this.randomSeed + 5000;
-            console.log(`🌟 New corona seed: ${this.randomSeed}`);
-        } else {
-            console.log(`🌟 Keeping existing corona seed: ${this.randomSeed}`);
         }
     }
 
@@ -667,10 +649,6 @@ export class SolarEclipse {
         }
 
         // Update shadow disk if eclipse is active or transitioning out
-        if (!this._pathLogged) {
-            console.log(`🔍 Update path: enabled=${this.enabled}, eclipseType=${this.eclipseType}, isTransitioning=${this.isTransitioning}, transitionDirection=${this.transitionDirection}`);
-            this._pathLogged = true;
-        }
         if (this.enabled || (this.transitionDirection === 'out' && this.isTransitioning)) {
             // Use previous eclipse type during exit animation (since eclipseType is now OFF)
             const activeEclipseType = (this.transitionDirection === 'out' && this.isTransitioning)
@@ -776,12 +754,6 @@ export class SolarEclipse {
             const uberHeroElongation = (activeEclipseType === ECLIPSE_TYPES.TOTAL)
                 ? 1.0 + (199.0 * Math.pow(proximity, 5)) // 1.0 → 200.0 (200x length at totality, ultra dramatic)
                 : 1.0;
-
-            // Debug logging
-            if (activeEclipseType === ECLIPSE_TYPES.TOTAL && !this._elongationLogged) {
-                console.log(`🌙 Corona elongation: type=${activeEclipseType}, proximity=${proximity.toFixed(3)}, elongation=${rayElongation.toFixed(3)}, uberHero=${uberHeroElongation.toFixed(3)}`);
-                this._elongationLogged = true;
-            }
 
             this.coronaDisk.material.uniforms.rayElongation.value = rayElongation;
             this.counterCoronaDisk.material.uniforms.rayElongation.value = rayElongation;
@@ -891,10 +863,6 @@ export class SolarEclipse {
             this.counterCoronaDisk.material.uniforms.time.value = this.time;
         } else {
             // Eclipse disabled: hide shadow disk, but keep coronas visible for normal sun
-            if (!this._elsePathLogged) {
-                console.log('🔍 ELSE path executing (eclipse OFF, normal sun)');
-                this._elsePathLogged = true;
-            }
             this.shadowDisk.position.set(200, 0, 0);
 
             // Position both coronas at sun center for normal sun mode
