@@ -284,7 +284,8 @@ export class Core3DManager {
 
         // Initialize solar eclipse system for sun geometry
         if (this.geometryType === 'sun') {
-            const sunRadius = this.geometry.parameters?.radius || 0.5;
+            const sunRadius = this.geometry.parameters?.radius || 0.9; // Sun geometry radius is 0.9
+            console.log('☀️ SolarEclipse sunRadius:', sunRadius, 'geometry.parameters:', this.geometry.parameters);
             this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.coreMesh);
         }
 
@@ -1214,7 +1215,7 @@ export class Core3DManager {
             if (this._targetGeometryType === 'sun') {
                 // Create solar eclipse if morphing to sun
                 if (!this.solarEclipse) {
-                    const sunRadius = this.geometry.parameters?.radius || 0.5;
+                    const sunRadius = this.geometry.parameters?.radius || 0.9; // Sun geometry radius is 0.9
                     this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.renderer.coreMesh);
                     console.log('☀️ Solar eclipse system initialized');
                 }

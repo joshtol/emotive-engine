@@ -873,11 +873,11 @@ export class ThreeRenderer {
             let targetThreshold, targetStrength, targetRadius;
 
             // Sun geometry needs controlled bloom for NASA-quality photosphere detail
-            // Reduced values to show texture while maintaining edge glow
+            // Wider radius to fill gap between sun edge and corona
             if (geometryType === 'sun') {
-                targetStrength = 1.2;   // Moderate glow strength (was 5.0 - too extreme)
-                targetRadius = 0.5;     // Tighter glow spread (was 1.5 - too large)
-                targetThreshold = 0.3;  // Higher threshold to preserve texture detail (was 0.05)
+                targetStrength = 1.2;   // Moderate glow strength
+                targetRadius = 1.0;     // Wider bloom spread to bridge corona gap
+                targetThreshold = 0.3;  // Higher threshold to preserve texture detail
             } else if (geometryType === 'crystal' || geometryType === 'diamond') {
                 // Crystal/diamond need strong bloom for light emission effect
                 targetStrength = 1.8;   // Strong bloom with HDR

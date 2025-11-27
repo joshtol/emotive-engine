@@ -57,6 +57,15 @@ export class SolarEclipse {
         this.createCoronaDisk();
         this.createCounterCoronaDisk();
 
+        // Parent coronas to sun mesh for guaranteed transform sync (Fix 9)
+        if (this.sunMesh) {
+            this.scene.remove(this.coronaDisk);
+            this.scene.remove(this.counterCoronaDisk);
+            this.sunMesh.add(this.coronaDisk);
+            this.sunMesh.add(this.counterCoronaDisk);
+            console.log('🌟 Corona disks parented to sun mesh');
+        }
+
         // Create Bailey's Beads effect
         this.baileysBeads = new BaileysBeads(scene, sunRadius);
     }
@@ -68,7 +77,7 @@ export class SolarEclipse {
     createShadowDisk() {
         // Start with a reasonable size - will be scaled in update()
         const initialShadowRadius = this.sunRadius;
-        const shadowGeometry = new THREE.CircleGeometry(initialShadowRadius, 64);
+        const shadowGeometry = new THREE.CircleGeometry(initialShadowRadius, 2048);
         const shadowMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000,
             transparent: true,  // Enable transparency for multiply blending
@@ -95,7 +104,9 @@ export class SolarEclipse {
      */
     createCoronaDisk() {
         const coronaRadius = this.sunRadius * 2.05; // x sun diameter
-        const coronaGeometry = new THREE.CircleGeometry(coronaRadius, 64);
+        // RingGeometry with inner radius well inside sun, so corona overlaps bloomed edge
+        const innerRadius = this.sunRadius * 0.60; // 40% inside sun's edge
+        const coronaGeometry = new THREE.RingGeometry(innerRadius, coronaRadius, 128);
 
         // Shader material with radial wave pattern
         const coronaMaterial = new THREE.ShaderMaterial({
@@ -192,8 +203,10 @@ export class SolarEclipse {
                     float dist = length(toCenter) * 2.0; // Normalize to 0-1 range
                     float angle = atan(toCenter.y, toCenter.x);  // UVs are already rotated in vertex shader
 
-                    // Shadow edge - where corona starts
-                    float shadowEdge = 0.465;
+                    // Shadow edge - where corona rays start
+                    // Ring inner edge is at (sunRadius*0.85)/coronaRadius = 0.765/1.845 = 0.415
+                    // Start rays at sun's geometric edge (0.488) so they don't show inside sun
+                    float shadowEdge = 0.488;
 
                     // Varied radial streamer pattern with artistic composition
                     float rayIntensity = 0.0;
@@ -230,15 +243,15 @@ export class SolarEclipse {
                         float rayWidth = heroWidth * taper;
 
                         // Soft feathered edges instead of hard cutoff
-                        float edgeSoftness = 0.08; // Feather distance
+                        float edgeSoftness = 0.15; // Wider feather for smooth edges
                         float angularMask = smoothstep(rayWidth + edgeSoftness, rayWidth - edgeSoftness, angleDiff);
 
                         // Very gentle radial falloff for ethereal look
                         float radialFalloff = pow(taper, 0.8);
 
                         // Soft radial range with feathered ends
-                        float radialMask = smoothstep(-0.05, 0.0, distFromEdge) *
-                                          smoothstep(heroLength + 0.1, heroLength, distFromEdge);
+                        float radialMask = smoothstep(-0.1, 0.05, distFromEdge) *
+                                          smoothstep(heroLength + 0.15, heroLength - 0.05, distFromEdge);
 
                         float heroIntensity = angularMask * radialFalloff * radialMask * 0.7; // Reduced intensity for ghostly effect
                         rayIntensity = max(rayIntensity, heroIntensity);
@@ -287,15 +300,15 @@ export class SolarEclipse {
                         float rayWidth = baseWidth * taper;
 
                         // Soft feathered edges for ethereal wisps
-                        float edgeSoftness = 0.05; // Feather distance for supporting rays
+                        float edgeSoftness = 0.10; // Wider feather for smooth edges
                         float angularMask = smoothstep(rayWidth + edgeSoftness, rayWidth - edgeSoftness, angleDiff);
 
                         // Very gentle radial falloff for ghostly appearance
                         float radialFalloff = pow(taper, 1.0);
 
                         // Soft radial range with feathered ends
-                        float radialMask = smoothstep(-0.03, 0.0, distFromEdge) *
-                                          smoothstep(rayLength + 0.08, rayLength, distFromEdge);
+                        float radialMask = smoothstep(-0.08, 0.03, distFromEdge) *
+                                          smoothstep(rayLength + 0.12, rayLength - 0.03, distFromEdge);
 
                         float streamerIntensity = angularMask * radialFalloff * radialMask * 0.5; // Reduced for ethereal wisps
                         rayIntensity = max(rayIntensity, streamerIntensity);
@@ -379,14 +392,15 @@ export class SolarEclipse {
                 }
             `,
             transparent: true,
-            blending: THREE.NormalBlending,  // Use alpha blending instead of additive
+            blending: THREE.AdditiveBlending,  // Additive blending to fill gap with sun bloom
             depthWrite: false,
             side: THREE.DoubleSide
         });
 
         this.coronaDisk = new THREE.Mesh(coronaGeometry, coronaMaterial);
-        this.coronaDisk.position.set(200, 0, 0); // Start off-screen
-        this.coronaDisk.renderOrder = 9998; // Render before shadow (shadow renders at 9990, then coronas on top)
+        this.coronaDisk.position.set(0, 0, 0); // At sun center (will be parented to sun)
+        this.coronaDisk.renderOrder = 9998;
+        // Add to scene initially, will be re-parented to sun mesh when available
         this.scene.add(this.coronaDisk);
     }
 
@@ -432,14 +446,14 @@ export class SolarEclipse {
             vertexShader: this.coronaDisk.material.vertexShader,
             fragmentShader: this.coronaDisk.material.fragmentShader,
             transparent: true,
-            blending: THREE.NormalBlending,  // Use alpha blending instead of additive
+            blending: THREE.AdditiveBlending,  // Additive blending to fill gap with sun bloom
             depthWrite: false,
             side: THREE.DoubleSide
         });
 
         this.counterCoronaDisk = new THREE.Mesh(coronaGeometry, counterMaterial);
-        this.counterCoronaDisk.position.set(200, 0, 0); // Start off-screen
-        this.counterCoronaDisk.renderOrder = 9997; // Render before main corona and shadow
+        this.counterCoronaDisk.position.set(0, 0, 0); // At sun center
+        this.counterCoronaDisk.renderOrder = 9997;
         this.scene.add(this.counterCoronaDisk);
     }
     /**
@@ -689,19 +703,21 @@ export class SolarEclipse {
 
 
             // Update corona disks - ALWAYS VISIBLE (intensity varies by eclipse state)
-            // Position both coronas at sun center
-            this.coronaDisk.position.copy(sunPosition);
-            this.counterCoronaDisk.position.copy(sunPosition);
+            // Coronas are parented to sun mesh, so position/scale is inherited
+            // Only set position if NOT parented (fallback for older code paths)
+            if (!this.coronaDisk.parent || this.coronaDisk.parent === this.scene) {
+                this.coronaDisk.position.copy(sunPosition);
+                this.counterCoronaDisk.position.copy(sunPosition);
+                this.coronaDisk.scale.setScalar(worldScale);
+                this.counterCoronaDisk.scale.setScalar(worldScale);
+            }
+            // If parented, position is (0,0,0) and scale is (1,1,1) relative to parent
 
             // Calculate proximity to totality for dynamic rotation speed and intensity
             // proximity = 0 at edges (shadow far away), 1 at totality (shadow centered)
             const distanceFromCenter = Math.abs(this.currentShadowPosX || 0);
             const maxDistance = 2.0;
             const proximity = Math.max(0, 1 - (distanceFromCenter / maxDistance));
-
-            // Scale both coronas with sun (uniform scaling - keep circular)
-            this.coronaDisk.scale.setScalar(worldScale);
-            this.counterCoronaDisk.scale.setScalar(worldScale);
 
             // For total eclipse: elongate rays via shader (not geometry scaling)
             // Pass elongation factor to shader (1.0 = circular, 25.0 = 2400% longer rays at poles)
@@ -818,10 +834,14 @@ export class SolarEclipse {
             this.shadowDisk.position.set(200, 0, 0);
 
             // Position both coronas at sun center for normal sun mode
-            this.coronaDisk.position.copy(sunPosition);
-            this.counterCoronaDisk.position.copy(sunPosition);
-            this.coronaDisk.scale.setScalar(worldScale);
-            this.counterCoronaDisk.scale.setScalar(worldScale);
+            // Only set position/scale if NOT parented (fallback for older code paths)
+            if (!this.coronaDisk.parent || this.coronaDisk.parent === this.scene) {
+                this.coronaDisk.position.copy(sunPosition);
+                this.counterCoronaDisk.position.copy(sunPosition);
+                this.coronaDisk.scale.setScalar(worldScale);
+                this.counterCoronaDisk.scale.setScalar(worldScale);
+            }
+            // If parented, position is (0,0,0) and scale is (1,1,1) relative to parent
 
             // Reset elongation to normal (no uber rays when eclipse is off)
             this.coronaDisk.material.uniforms.rayElongation.value = 1.0;
