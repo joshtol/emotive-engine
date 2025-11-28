@@ -82,5 +82,13 @@ export default {
                 rate: 0.8               // Deep slow breathing (matches breathRate)
             }
         }
+    },
+
+    // Soul/energy animation parameters (geometry-agnostic)
+    // Used by: Crystal (inner core), Sun (plasma flow), Moon (subtle glow pulse)
+    soulAnimation: {
+        driftSpeed: 0.15,       // Energy movement speed - nearly still, dreaming
+        shimmerSpeed: 0.1,      // Vertical pulse speed - deep sleep rhythm
+        turbulence: 0.05        // Chaos/randomness factor - peaceful stillness
     }
 };

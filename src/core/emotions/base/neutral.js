@@ -120,6 +120,14 @@ export default {
                 rate: 1.0               // Normal breathing (matches breathRate)
             }
         }
+    },
+
+    // Soul/energy animation parameters (geometry-agnostic)
+    // Used by: Crystal (inner core), Sun (plasma flow), Moon (subtle glow pulse)
+    soulAnimation: {
+        driftSpeed: 0.5,        // Energy movement speed - calm, steady baseline
+        shimmerSpeed: 0.5,      // Vertical pulse speed - gentle
+        turbulence: 0.2         // Chaos/randomness factor - minimal
     }
 
     // Note: Black hole behavior auto-derives from modifiers (speed: 1.0, intensity: 1.0, smoothness: 1.0)

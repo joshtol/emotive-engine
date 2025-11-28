@@ -29,28 +29,54 @@
  * Normalize color to have equal luminance across all colors
  * This ensures bloom pass sees the same brightness regardless of color hue
  *
+ * IMPORTANT: Works in LINEAR color space for correct luminance scaling
+ *
  * @param {string} hexColor - Hex color code (e.g., '#FF6B35')
  * @param {number} targetLuminance - Target luminance value (default 0.5)
- * @returns {Object} RGB object with normalized values {r, g, b}
+ * @returns {Object} RGB object with normalized values {r, g, b} in sRGB space
  *
  * @example
  * normalizeColorLuminance('#FFEB3B', 0.5) // Scales down bright yellow
  * normalizeColorLuminance('#6B46C1', 0.5) // Scales up dark purple
  */
 export function normalizeColorLuminance(hexColor, targetLuminance = 0.5) {
-    const currentLuminance = calculateLuminance(hexColor);
-    const scaleFactor = targetLuminance / Math.max(currentLuminance, 0.01);
-
-    // Get RGB values
+    // Get RGB values in sRGB space (0-1)
     const r = parseInt(hexColor.slice(1, 3), 16) / 255;
     const g = parseInt(hexColor.slice(3, 5), 16) / 255;
     const b = parseInt(hexColor.slice(5, 7), 16) / 255;
 
-    // Scale RGB to achieve target luminance
+    // Convert sRGB to linear RGB (inverse gamma)
+    const toLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const rLin = toLinear(r);
+    const gLin = toLinear(g);
+    const bLin = toLinear(b);
+
+    // Calculate current luminance in linear space
+    const currentLuminance = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+
+    // Calculate scale factor to achieve target luminance
+    const scaleFactor = targetLuminance / Math.max(currentLuminance, 0.001);
+
+    // Scale in linear space
+    let rLinScaled = rLin * scaleFactor;
+    let gLinScaled = gLin * scaleFactor;
+    let bLinScaled = bLin * scaleFactor;
+
+    // Clamp in linear space (before gamma) to prevent overflow
+    const maxLin = Math.max(rLinScaled, gLinScaled, bLinScaled);
+    if (maxLin > 1.0) {
+        rLinScaled /= maxLin;
+        gLinScaled /= maxLin;
+        bLinScaled /= maxLin;
+    }
+
+    // Convert back to sRGB (apply gamma)
+    const toSRGB = c => c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1/2.4) - 0.055;
+
     return {
-        r: Math.min(1.0, r * scaleFactor),
-        g: Math.min(1.0, g * scaleFactor),
-        b: Math.min(1.0, b * scaleFactor)
+        r: Math.min(1.0, Math.max(0, toSRGB(rLinScaled))),
+        g: Math.min(1.0, Math.max(0, toSRGB(gLinScaled))),
+        b: Math.min(1.0, Math.max(0, toSRGB(bLinScaled)))
     };
 }
 
@@ -113,7 +139,7 @@ export function calculateLuminance(hexColor) {
  * getGlowIntensityForColor('#FFEB3B', 0, 'glow') // ~0.37 (bright yellow stays dim)
  * getGlowIntensityForColor('#4169E1', 0, 'glow') // ~1.11 (dark blue needs boost)
  */
-export function getGlowIntensityForColor(hexColor, calibrationOffset = 0, mode = 'glow') {
+export function getGlowIntensityForColor(hexColor, calibrationOffset = 0, _mode = 'glow') {
     const luminance = calculateLuminance(hexColor);
 
     // Target perceived brightness (luminance × intensity = constant)

@@ -25,7 +25,7 @@ import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
 import { hexToRGB, rgbToHsl, hslToRgb, applyUndertoneSaturation } from './utils/ColorUtilities.js';
-import { getGlowIntensityForColor } from '../utils/glowIntensityFilter.js';
+import { getGlowIntensityForColor, normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
 import ParticleSystem from '../core/ParticleSystem.js';
 import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
@@ -84,6 +84,7 @@ export class Core3DManager {
 
         // Check if this geometry requires custom material (e.g., moon with textures, sun with emissive)
         // Use MaterialFactory for centralized material creation
+        // IMPORTANT: Must create material BEFORE calling _loadAsyncGeometry so it's available when OBJ loads
         let customMaterial = null;
         const emotionData = getEmotion(this.emotion);
         const materialResult = createCustomMaterial(this.geometryType, this.geometryConfig, {
@@ -99,12 +100,24 @@ export class Core3DManager {
             this.customMaterialType = materialResult.type;
         }
 
-        // Create core mesh with geometry (and optional custom material)
-        this.coreMesh = this.renderer.createCoreMesh(this.geometry, customMaterial);
+        // Check for async geometry loader (e.g., OBJ models)
+        // Must be called AFTER material is created so this.customMaterial is available
+        if (this.geometryConfig.geometryLoader) {
+            this._loadAsyncGeometry();
+        }
 
-        // For crystal/diamond with blend-layers shader, create inner glowing core
-        if (this.customMaterialType === 'crystal-blend-layers') {
-            this.createCrystalInnerCore();
+        // Create core mesh with geometry (and optional custom material)
+        // If geometry is null (e.g., crystal waiting for OBJ), defer mesh creation
+        if (this.geometry === null && this.geometryConfig.geometryLoader) {
+            this._deferredMeshCreation = true;
+            // Mesh will be created in _loadAsyncGeometry when OBJ loads
+        } else {
+            this.coreMesh = this.renderer.createCoreMesh(this.geometry, customMaterial);
+
+            // For crystal/diamond with blend-layers shader, create inner glowing core
+            if (this.customMaterialType === 'crystal') {
+                this.createCrystalInnerCore();
+            }
         }
 
         // For black hole Groups, apply materials to child meshes
@@ -522,6 +535,24 @@ export class Core3DManager {
             // Notify orchestrator of emotion change (will recalculate config)
             this.particleOrchestrator.setEmotion(emotion, undertone);
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // UPDATE CRYSTAL SOUL ANIMATION FROM EMOTION CONFIG
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Soul animation parameters are geometry-agnostic and can be used by:
+        // - Crystal (inner core drift/shimmer)
+        // - Sun (plasma flow) - future
+        // - Moon (subtle glow pulse) - future
+        if (emotionData && emotionData.soulAnimation) {
+            const soul = emotionData.soulAnimation;
+            this.setCrystalSoulEffects({
+                driftEnabled: true,
+                driftSpeed: soul.driftSpeed || 0.5,
+                shimmerEnabled: true,
+                shimmerSpeed: soul.shimmerSpeed || 0.5
+                // Note: turbulence will be used for future geometries (Sun plasma chaos)
+            });
+        }
     }
 
     /**
@@ -810,7 +841,7 @@ export class Core3DManager {
      */
     setCrystalBlendLayer(component, blendIndex, params = {}) {
         if ((this.geometryType !== 'crystal' && this.geometryType !== 'diamond') ||
-            !this.customMaterial || this.customMaterialType !== 'crystal-blend-layers') {
+            !this.customMaterial || this.customMaterialType !== 'crystal') {
             return;
         }
 
@@ -833,7 +864,7 @@ export class Core3DManager {
      */
     setCrystalUniforms(params = {}) {
         if ((this.geometryType !== 'crystal' && this.geometryType !== 'diamond') ||
-            !this.customMaterial || this.customMaterialType !== 'crystal-blend-layers') {
+            !this.customMaterial || this.customMaterialType !== 'crystal') {
             console.warn('⚠️ Crystal uniforms only available with crystal blend-layers material');
             return;
         }
@@ -987,9 +1018,8 @@ export class Core3DManager {
         this.crystalInnerCore = new THREE.Mesh(coreGeometry, coreMaterial);
         this.crystalInnerCore.name = 'crystalInnerCore';
 
-        // Set initial scale based on default falloff value
-        const defaultFalloff = this.customMaterial?.uniforms?.coreGlowFalloff?.value || 2.0;
-        this.setCrystalCoreSize(defaultFalloff);
+        // Set initial scale - default soul size is 1.0 (full size)
+        this.setCrystalCoreSize(1.0);
 
         // Add as child of crystal mesh
         this.coreMesh.add(this.crystalInnerCore);
@@ -1020,13 +1050,11 @@ export class Core3DManager {
             }
 
             // Update intensity from crystal shader uniforms if available
-            if (this.customMaterial && this.customMaterial.uniforms) {
-                const coreStrength = this.customMaterial.uniforms.coreGlowStrength?.value || 0.5;
-
-                // Map coreGlowStrength to energy intensity
-                if (this.crystalInnerCoreMaterial.uniforms.energyIntensity) {
-                    this.crystalInnerCoreMaterial.uniforms.energyIntensity.value = 1.0 + coreStrength * 2.0;
-                }
+            // Keep energy intensity LOW so animation patterns stay visible
+            // The color is already luminance-normalized, so we don't need high multipliers
+            if (this.crystalInnerCoreMaterial.uniforms.energyIntensity) {
+                // Fixed low intensity to preserve animation visibility across all emotions
+                this.crystalInnerCoreMaterial.uniforms.energyIntensity.value = 0.8;
             }
         }
 
@@ -1086,7 +1114,7 @@ export class Core3DManager {
     }
 
     /**
-     * Set crystal inner core size
+     * Set crystal inner core (soul) size
      * @param {number} size - Size value 0-1, where 0.5 is default
      */
     setCrystalCoreSize(size) {
@@ -1097,6 +1125,18 @@ export class Core3DManager {
         const scale = 0.3 + size * 1.2;
         this.crystalInnerCoreBaseScale = scale; // Store for breathing multiplication
         this.crystalInnerCore.scale.setScalar(scale);
+    }
+
+    /**
+     * Set crystal shell size (outer crystal)
+     * @param {number} size - Size value 0.5-2.0, where 1.0 is default
+     */
+    setCrystalShellSize(size) {
+        if (!this.coreMesh || (this.geometryType !== 'crystal' && this.geometryType !== 'diamond')) return;
+
+        // Store base shell scale for use during rendering
+        this.crystalShellBaseScale = size;
+        // Don't apply directly - it will be applied in render() along with other transforms
     }
 
     /**
@@ -1247,7 +1287,7 @@ export class Core3DManager {
             // Create or dispose crystal inner core
             if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'diamond') {
                 // Create inner core if morphing to crystal/diamond
-                if (this.customMaterialType === 'crystal-blend-layers') {
+                if (this.customMaterialType === 'crystal') {
                     this.createCrystalInnerCore();
                     console.log('💎 Crystal inner core created');
                 }
@@ -1452,12 +1492,13 @@ export class Core3DManager {
             }
         }
 
-        // Calculate final scale: gesture * morph * breathing * BLINK
+        // Calculate final scale: gesture * morph * breathing * BLINK * crystal shell scale
         // Crystal/diamond don't squish on blink - they use energy pulse instead
         // Use Y-axis blink scale (primary squish axis) for uniform application
         const shouldApplyBlinkScale = this.geometryType !== 'crystal' && this.geometryType !== 'diamond';
         const blinkScale = (blinkState.isBlinking && shouldApplyBlinkScale) ? blinkState.scale[1] : 1.0;
-        const finalScale = this.scale * morphScale * breathScale * blinkScale;
+        const crystalShellScale = this.crystalShellBaseScale || 2.0;  // Default shell size
+        const finalScale = this.scale * morphScale * breathScale * blinkScale * crystalShellScale;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // PARTICLE SYSTEM UPDATE & RENDERING (Orchestrated)
@@ -1516,20 +1557,38 @@ export class Core3DManager {
         }
 
         // Update crystal material if using crystal blend-layers geometry
-        if (this.customMaterialType === 'crystal-blend-layers' && this.customMaterial) {
-            // Update time for animation (convert ms to seconds for sane speed values)
-            this.customMaterial.uniforms.time.value += deltaTime / 1000;
-            // Update emotion color on outer shell
-            this.customMaterial.uniforms.emotionColor.value.setRGB(
-                this.glowColor[0], this.glowColor[1], this.glowColor[2]
-            );
-            // Update blink intensity for energy pulse (smooth sine curve during blink)
-            if (this.customMaterial.uniforms.blinkIntensity) {
-                const blinkPulse = blinkState.isBlinking ? Math.sin(blinkState.progress * Math.PI) : 0;
-                this.customMaterial.uniforms.blinkIntensity.value = blinkPulse;
+        if (this.customMaterialType === 'crystal' && this.customMaterial) {
+            // Only update uniforms if material is a ShaderMaterial with uniforms
+            if (this.customMaterial.uniforms) {
+                // Update time for animation (convert ms to seconds for sane speed values)
+                this.customMaterial.uniforms.time.value += deltaTime / 1000;
+
+                // Normalize emotion color for consistent perceived brightness across all emotions
+                // This ensures yellow (joy) doesn't wash out the soul while blue (sadness) stays visible
+                // Uses the same normalizeColorLuminance() from glass material system
+                let normalizedColor = this.glowColor;
+                if (this.glowColorHex) {
+                    const normalized = normalizeColorLuminance(this.glowColorHex, 0.30);
+                    normalizedColor = [normalized.r, normalized.g, normalized.b];
+                }
+
+                // Update emotion color on outer shell (luminance-normalized)
+                this.customMaterial.uniforms.emotionColor.value.setRGB(
+                    normalizedColor[0], normalizedColor[1], normalizedColor[2]
+                );
+                // Update blink intensity for energy pulse (smooth sine curve during blink)
+                if (this.customMaterial.uniforms.blinkIntensity) {
+                    const blinkPulse = blinkState.isBlinking ? Math.sin(blinkState.progress * Math.PI) : 0;
+                    this.customMaterial.uniforms.blinkIntensity.value = blinkPulse;
+                }
             }
-            // Update inner core color and animation
-            this.updateCrystalInnerCore(this.glowColor, deltaTime);
+            // Update inner core color and animation (also use normalized color)
+            let normalizedCoreColor = this.glowColor;
+            if (this.glowColorHex) {
+                const normalized = normalizeColorLuminance(this.glowColorHex, 0.30);
+                normalizedCoreColor = [normalized.r, normalized.g, normalized.b];
+            }
+            this.updateCrystalInnerCore(normalizedCoreColor, deltaTime);
         }
 
         // Render with Three.js
@@ -1549,6 +1608,63 @@ export class Core3DManager {
         // Update lunar eclipse animation (Blood Moon)
         if (this.lunarEclipse) {
             this.lunarEclipse.update(deltaTime);
+        }
+    }
+
+    /**
+     * Load async geometry (e.g., OBJ models) and swap when ready
+     * @private
+     */
+    async _loadAsyncGeometry() {
+        try {
+            console.log('💎 [CORE3D] _loadAsyncGeometry called, geometryType:', this.geometryType);
+            console.log('💎 [CORE3D] customMaterial:', this.customMaterial ? 'exists' : 'NULL');
+            console.log('💎 [CORE3D] customMaterialType:', this.customMaterialType);
+
+            const loadedGeometry = await this.geometryConfig.geometryLoader();
+
+            if (!loadedGeometry) {
+                console.warn('💎 [CORE3D] Async geometry load returned null!');
+                return;
+            }
+
+            console.log('💎 [CORE3D] Geometry loaded:', loadedGeometry.attributes?.position?.count, 'vertices');
+
+            // Store geometry type
+            loadedGeometry.userData.geometryType = this.geometryType;
+            this.geometry = loadedGeometry;
+
+            if (this._deferredMeshCreation) {
+                console.log('💎 [CORE3D] Creating deferred mesh with custom material');
+                // First time: create mesh with loaded geometry (no fallback was shown)
+                this.coreMesh = this.renderer.createCoreMesh(loadedGeometry, this.customMaterial);
+                console.log('💎 [CORE3D] Shell mesh created:', this.coreMesh ? 'OK' : 'FAIL');
+                console.log('💎 [CORE3D] coreMesh.geometry:', this.coreMesh?.geometry?.attributes?.position?.count, 'vertices');
+                console.log('💎 [CORE3D] coreMesh in scene:', this.renderer.scene.children.includes(this.coreMesh));
+
+                // Create inner core for crystal
+                if (this.customMaterialType === 'crystal') {
+                    this.createCrystalInnerCore();
+                }
+
+                this._deferredMeshCreation = false;
+            } else if (this.coreMesh) {
+                // Existing mesh: swap geometry
+                const oldGeometry = this.coreMesh.geometry;
+                this.coreMesh.geometry = loadedGeometry;
+
+                // Dispose old procedural geometry
+                if (oldGeometry && oldGeometry !== loadedGeometry) {
+                    oldGeometry.dispose();
+                }
+
+                // Recreate inner core if crystal
+                if (this.customMaterialType === 'crystal' && this.crystalInnerCore) {
+                    this.createCrystalInnerCore();
+                }
+            }
+        } catch (error) {
+            console.warn('Async geometry load failed:', error);
         }
     }
 

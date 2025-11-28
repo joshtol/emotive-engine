@@ -1,246 +1,160 @@
 /**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Material Factory
- *  └─○═╝
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Centralized factory for creating geometry-specific materials
- * @author Emotive Engine Team
- * @module 3d/utils/MaterialFactory
- *
- * Handles creation of custom materials (moon, sun, black hole, etc.) during
- * geometry initialization and morphing transitions.
+ * Material Factory - Creates geometry-specific materials
  */
 
 import * as THREE from 'three';
 import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geometries/Moon.js';
 import { createSunMaterial } from '../geometries/Sun.js';
 import { createBlackHoleMaterial } from '../geometries/BlackHole.js';
-import { getCrystalWithBlendLayersShaders, getCrystalDefaultUniforms } from '../shaders/crystalWithBlendLayers.js';
+import { getCrystalShaders, CRYSTAL_DEFAULT_UNIFORMS } from '../shaders/crystalWithSoul.js';
 
-/**
- * Create custom material for a geometry type
- * @param {string} geometryType - Geometry type (e.g., 'moon', 'sun', 'blackhole')
- * @param {Object} geometryConfig - Geometry configuration from THREE_GEOMETRIES
- * @param {Object} options - Material creation options
- * @param {Array<number>} options.glowColor - RGB color array [r, g, b] (0-1 range)
- * @param {number} options.glowIntensity - Glow intensity (default: 1.0)
- * @param {string} options.materialVariant - Material variant (e.g., 'multiplexer' for moon)
- * @param {Object} options.emotionData - Emotion data for auto-deriving geometry params
- * @returns {Object|null} Material object with { material, type } or null if no custom material
- */
 export function createCustomMaterial(geometryType, geometryConfig, options = {}) {
     const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null } = options;
 
-    // Check if geometry requires custom material
     if (geometryConfig.material === 'custom') {
         return createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData);
     }
 
-    // Check if geometry requires emissive material
     if (geometryConfig.material === 'emissive') {
         return createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData);
     }
 
-    // No custom material needed
     return null;
 }
 
-/**
- * Create custom-type materials (moon, etc.)
- * @private
- */
-function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData) {
+function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, _emotionData) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
     case 'moon':
         return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant);
-
     case 'crystal':
-    case 'diamond':
-        // Crystal/diamond always use blend-layers shader
-        return createCrystalMaterial(glowColor, glowIntensity, emotionData);
-
+        return createCrystalMaterial(glowColor, glowIntensity);
     default:
-        console.warn(`Unknown custom material type: ${geometryType}`);
+        console.warn('Unknown custom material type:', geometryType);
         return null;
     }
 }
 
-/**
- * Create emissive-type materials (sun, etc.)
- * @private
- */
 function createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
     case 'sun':
         return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant, emotionData);
-
     case 'blackHole':
         return createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant, emotionData);
-
-        // Future: Add more emissive materials here
-        // case 'star':
-        //     return createStarMaterial(textureLoader, glowColor, glowIntensity);
-
     default:
-        console.warn(`Unknown emissive material type: ${geometryType}`);
+        console.warn('Unknown emissive material type:', geometryType);
         return null;
     }
 }
 
-/**
- * Create moon material with shadow support
- * @private
- */
+function createCrystalMaterial(glowColor, glowIntensity) {
+    console.log('Creating crystal material (frosted glass + soul)...');
+
+    const { vertexShader, fragmentShader } = getCrystalShaders();
+
+    // Load crystal texture
+    const textureLoader = new THREE.TextureLoader();
+    const crystalTexture = textureLoader.load('/assets/textures/Crystal/crystal.png',
+        () => console.log('💎 Crystal texture loaded'),
+        undefined,
+        err => console.warn('💎 Crystal texture failed to load:', err)
+    );
+
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0 },
+            emotionColor: { value: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]) },
+            glowIntensity: { value: glowIntensity },
+            opacity: { value: 1.0 },
+            frostiness: { value: CRYSTAL_DEFAULT_UNIFORMS.frostiness },
+            fresnelPower: { value: CRYSTAL_DEFAULT_UNIFORMS.fresnelPower },
+            fresnelIntensity: { value: CRYSTAL_DEFAULT_UNIFORMS.fresnelIntensity },
+            innerGlowStrength: { value: CRYSTAL_DEFAULT_UNIFORMS.innerGlowStrength },
+            surfaceRoughness: { value: CRYSTAL_DEFAULT_UNIFORMS.surfaceRoughness },
+            surfaceNoiseScale: { value: CRYSTAL_DEFAULT_UNIFORMS.surfaceNoiseScale },
+            innerWispScale: { value: CRYSTAL_DEFAULT_UNIFORMS.innerWispScale },
+            noiseFrequency: { value: CRYSTAL_DEFAULT_UNIFORMS.noiseFrequency },
+            crystalTexture: { value: crystalTexture },
+            textureStrength: { value: CRYSTAL_DEFAULT_UNIFORMS.textureStrength },
+            layer1Mode: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Mode },
+            layer1Strength: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Strength },
+            layer1Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Enabled },
+            layer2Mode: { value: CRYSTAL_DEFAULT_UNIFORMS.layer2Mode },
+            layer2Strength: { value: CRYSTAL_DEFAULT_UNIFORMS.layer2Strength },
+            layer2Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.layer2Enabled },
+            layer3Mode: { value: CRYSTAL_DEFAULT_UNIFORMS.layer3Mode },
+            layer3Strength: { value: CRYSTAL_DEFAULT_UNIFORMS.layer3Strength },
+            layer3Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.layer3Enabled },
+            layer4Mode: { value: CRYSTAL_DEFAULT_UNIFORMS.layer4Mode },
+            layer4Strength: { value: CRYSTAL_DEFAULT_UNIFORMS.layer4Strength },
+            layer4Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.layer4Enabled }
+        },
+        vertexShader,
+        fragmentShader,
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: true,
+        blending: THREE.NormalBlending
+    });
+
+    console.log('Crystal material created');
+
+    return { material, type: 'crystal' };
+}
+
 function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant = null) {
-    // Detect device for resolution selection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const resolution = isMobile ? '2k' : '4k';
 
-    // Check for multiplexer variant
     if (materialVariant === 'multiplexer') {
-        console.log(`🎨 Creating moon multiplexer material (${resolution})...`);
-
         const material = createMoonMultiplexerMaterial(textureLoader, {
             resolution,
             glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
             glowIntensity
         });
-
-        return {
-            material,
-            type: 'moon-multiplexer'
-        };
+        return { material, type: 'moon-multiplexer' };
     }
-
-    // Default: standard shadow material
-    console.log(`🌙 Creating moon material (${resolution})...`);
 
     const material = createMoonShadowMaterial(textureLoader, {
         resolution,
         glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
         glowIntensity,
-        moonPhase: 'full' // Start with full moon (shadowOffset: 0, 0)
+        moonPhase: 'full'
     });
 
-    return {
-        material,
-        type: 'moon'
-    };
+    return { material, type: 'moon' };
 }
 
-/**
- * Create sun material with NASA photosphere texture
- * @private
- */
-function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null, emotionData = null) {
-    console.log('☀️ Creating sun material (NASA photosphere: 5,772K)...', materialVariant ? `[${materialVariant}]` : '[standard]');
-
+function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null, _emotionData = null) {
     const material = createSunMaterial(textureLoader, {
         glowColor,
         glowIntensity,
         resolution: '4k',
         materialVariant
     });
-
-    console.log('🔥 Sun material created with surface-mapped fire animation');
-
-    return {
-        material,
-        type: 'sun'
-    };
+    return { material, type: 'sun' };
 }
 
-/**
- * Create black hole material with NASA M87* EHT accuracy
- * @private
- */
 function createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null, emotionData = null) {
-    console.log('🕳️ Creating black hole material (M87* supermassive)...', materialVariant ? `[${materialVariant}]` : '[standard]');
-
     const { diskMaterial, shadowMaterial } = createBlackHoleMaterial(textureLoader, {
         glowColor,
         glowIntensity,
         materialVariant,
-        emotionData  // Pass emotion data for auto-deriving params
+        emotionData
     });
-
-    console.log('🌀 Black hole materials created: accretion disk + event horizon shadow');
-
-    // Return materials object for Core3DManager to apply to Group meshes
-    // Core3DManager will handle applying these to the Group's child meshes
-    return {
-        material: {
-            diskMaterial,
-            shadowMaterial
-        },
-        type: 'blackHole'
-    };
+    return { material: { diskMaterial, shadowMaterial }, type: 'blackHole' };
 }
 
-/**
- * Create crystal material with blend layers shader
- * @private
- */
-function createCrystalMaterial(glowColor, glowIntensity, emotionData = null) {
-    console.log('💎 Creating crystal blend layers material...');
-
-    const shaders = getCrystalWithBlendLayersShaders();
-    const uniforms = getCrystalDefaultUniforms();
-
-    // Set color uniforms
-    uniforms.baseColor.value = new THREE.Color(1.0, 1.0, 1.0);
-    uniforms.emotionColor.value = new THREE.Color(glowColor[0], glowColor[1], glowColor[2]);
-    uniforms.emissiveIntensity.value = glowIntensity * 2.0; // Boost for HDR bloom
-
-    const material = new THREE.ShaderMaterial({
-        vertexShader: shaders.vertexShader,
-        fragmentShader: shaders.fragmentShader,
-        uniforms,
-        transparent: true,
-        side: THREE.DoubleSide,
-        depthWrite: true,
-        depthTest: true
-    });
-
-    console.log('✨ Crystal blend layers material created with 4 visual components');
-
-    return {
-        material,
-        type: 'crystal-blend-layers'
-    };
-}
-
-/**
- * Dispose custom material properly
- * @param {Object} customMaterial - Material to dispose
- */
 export function disposeCustomMaterial(customMaterial) {
     if (!customMaterial) return;
-
-    // Dispose individual textures first
-    if (customMaterial.map) {
-        customMaterial.map.dispose();
-    }
-    if (customMaterial.normalMap) {
-        customMaterial.normalMap.dispose();
-    }
-
-    // Dispose any other common textures
-    if (customMaterial.emissiveMap) {
-        customMaterial.emissiveMap.dispose();
-    }
-    if (customMaterial.roughnessMap) {
-        customMaterial.roughnessMap.dispose();
-    }
-    if (customMaterial.metalnessMap) {
-        customMaterial.metalnessMap.dispose();
-    }
+    if (customMaterial.map) customMaterial.map.dispose();
+    if (customMaterial.normalMap) customMaterial.normalMap.dispose();
+    if (customMaterial.emissiveMap) customMaterial.emissiveMap.dispose();
+    if (customMaterial.roughnessMap) customMaterial.roughnessMap.dispose();
+    if (customMaterial.metalnessMap) customMaterial.metalnessMap.dispose();
 }
 
 export default { createCustomMaterial, disposeCustomMaterial };
