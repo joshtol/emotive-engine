@@ -463,7 +463,7 @@ export class ThreeRenderer {
         if (customMaterial) {
             // Use provided custom material (e.g., moon with NASA textures)
             material = customMaterial;
-            // console.log('✅ Using custom material for geometry');
+            console.log('💎 [RENDERER] Using custom material:', material.type, 'isShaderMaterial:', material.isShaderMaterial);
         } else {
             // Create glow material and store it
             if (!this.glowMaterial) {
@@ -479,6 +479,13 @@ export class ThreeRenderer {
         // Create mesh
         this.coreMesh = new THREE.Mesh(geometry, material);
         this.coreMesh.name = 'coreMascot';
+
+        console.log('💎 [RENDERER] Mesh created:');
+        console.log('   geometry vertices:', geometry.attributes?.position?.count);
+        console.log('   material type:', this.coreMesh.material?.type);
+        console.log('   material visible:', this.coreMesh.material?.visible);
+        console.log('   mesh visible:', this.coreMesh.visible);
+        console.log('   mesh frustumCulled:', this.coreMesh.frustumCulled);
 
         if (this.options.enableShadows) {
             this.coreMesh.castShadow = true;

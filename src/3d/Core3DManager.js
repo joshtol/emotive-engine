@@ -267,11 +267,14 @@ export class Core3DManager {
         particleSystem.canvasHeight = canvas.height;
 
         // Create 3D translator (converts 2D → 3D)
+        // Note: coreRadius3D is now updated each frame from Core3DManager
+        // to ensure particles orbit at correct distance regardless of screen size
         const particleTranslator = new Particle3DTranslator({
             worldScale: 2.0,
-            baseRadius: 1.5,
+            baseRadius: 1.5,      // Legacy fallback (coreRadius3D takes precedence)
             depthScale: 0.75,
-            verticalScale: 1.0
+            verticalScale: 1.0,
+            coreRadius3D: 2.0     // Initial value, updated each frame
         });
 
         // Create 3D renderer (Three.js points system)
@@ -1505,6 +1508,11 @@ export class Core3DManager {
         // ═══════════════════════════════════════════════════════════════════════════
         // Only check particleVisibility (runtime toggle), not particlesEnabled (initial config)
         if (this.particleVisibility && this.particleOrchestrator) {
+            // Calculate actual 3D core radius in world units
+            // This ensures particles orbit at consistent distance regardless of screen size
+            // Crystal shell scale is the main factor (default 2.0)
+            const coreRadius3D = (this.crystalShellBaseScale || 2.0) * this.scale * breathScale;
+
             // Delegate all particle logic to orchestrator
             this.particleOrchestrator.update(
                 deltaTime,
@@ -1520,7 +1528,8 @@ export class Core3DManager {
                     quaternion: this.baseQuaternion,
                     angularVelocity: this.rotationBehavior ? this.rotationBehavior.axes : [0, 0, 0]
                 },
-                this.baseScale // Pass base scale only (shader handles perspective)
+                this.baseScale, // Pass base scale only (shader handles perspective)
+                coreRadius3D    // Pass actual 3D core radius for particle orbit distance
             );
         }
 

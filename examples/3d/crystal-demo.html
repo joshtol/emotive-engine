@@ -89,6 +89,40 @@
             text-transform: uppercase;
             letter-spacing: 1.2px;
             font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        h2:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+
+        h2::after {
+            content: '−';
+            font-size: clamp(14px, 1.2vw, 18px);
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.5);
+            transition: transform 0.2s;
+        }
+
+        h2.collapsed::after {
+            content: '+';
+        }
+
+        .section-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
         }
 
         .current-emotion {
@@ -256,20 +290,22 @@
                 width: 100%;
                 min-width: unset;
                 max-width: unset;
-                max-height: 35vh;
+                max-height: 40vh;
                 border: none;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 padding: 15px;
             }
 
-            .left-menu {
+            /* Mobile order: Crystal first, then left menu (emotions), then right menu (settings) */
+            .center-content {
                 order: 1;
+                flex: 0 0 auto;
+                min-height: 35vh;
+                max-height: 45vh;
             }
 
-            .center-content {
+            .left-menu {
                 order: 2;
-                flex: 1;
-                min-height: 30vh;
             }
 
             .right-menu {
@@ -278,14 +314,29 @@
                 border-top: 1px solid rgba(255, 255, 255, 0.1);
             }
 
+            /* Hide current emotion section on mobile */
+            .current-emotion-section {
+                display: none;
+            }
+
             .emotion-grid {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
         @media (max-width: 600px) {
             .emotion-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .emotion-grid button {
+                padding: clamp(6px, 0.6vw, 10px);
+                font-size: clamp(8px, 0.7vw, 10px);
+            }
+
+            .center-content {
+                min-height: 30vh;
+                max-height: 40vh;
             }
         }
 
@@ -309,45 +360,51 @@
 </head>
 <body>
     <div class="left-menu">
-        <div class="section">
+        <div class="section current-emotion-section">
             <h2>Current Emotion</h2>
-            <div class="current-emotion" id="current-emoji">💎</div>
-            <div class="current-name" id="current-name">Neutral</div>
+            <div class="section-content">
+                <div class="current-emotion" id="current-emoji">💎</div>
+                <div class="current-name" id="current-name">Neutral</div>
+            </div>
         </div>
 
         <div class="section">
             <h2>Emotions</h2>
-            <div class="emotion-grid">
-                <button data-emotion="neutral" class="active">😐 Neutral</button>
-                <button data-emotion="joy">😊 Joy</button>
-                <button data-emotion="sadness">😢 Sadness</button>
-                <button data-emotion="anger">😠 Anger</button>
-                <button data-emotion="fear">😨 Fear</button>
-                <button data-emotion="surprise">😲 Surprise</button>
-                <button data-emotion="disgust">🤢 Disgust</button>
-                <button data-emotion="love">❤️ Love</button>
-                <button data-emotion="calm">😌 Calm</button>
-                <button data-emotion="excited">🤩 Excited</button>
-                <button data-emotion="focused">🎯 Focused</button>
-                <button data-emotion="suspicion">🤨 Suspicion</button>
-                <button data-emotion="resting">😴 Resting</button>
-                <button data-emotion="euphoria">🤯 Euphoria</button>
+            <div class="section-content">
+                <div class="emotion-grid">
+                    <button data-emotion="neutral" class="active">😐 Neutral</button>
+                    <button data-emotion="joy">😊 Joy</button>
+                    <button data-emotion="sadness">😢 Sadness</button>
+                    <button data-emotion="anger">😠 Anger</button>
+                    <button data-emotion="fear">😨 Fear</button>
+                    <button data-emotion="surprise">😲 Surprise</button>
+                    <button data-emotion="disgust">🤢 Disgust</button>
+                    <button data-emotion="love">❤️ Love</button>
+                    <button data-emotion="calm">😌 Calm</button>
+                    <button data-emotion="excited">🤩 Excited</button>
+                    <button data-emotion="focused">🎯 Focused</button>
+                    <button data-emotion="suspicion">🤨 Suspicion</button>
+                    <button data-emotion="resting">😴 Resting</button>
+                    <button data-emotion="euphoria">🤯 Euphoria</button>
+                </div>
             </div>
         </div>
 
-        <div class="section">
+        <div class="section display-options-section">
             <h2>Display Options</h2>
-            <div class="toggle-control">
-                <span class="toggle-label">Particles</span>
-                <div class="toggle-switch" id="particles-toggle"></div>
-            </div>
-            <div class="toggle-control">
-                <span class="toggle-label">Auto Rotate</span>
-                <div class="toggle-switch active" id="rotate-toggle"></div>
-            </div>
-            <div class="toggle-control">
-                <span class="toggle-label">Breathing</span>
-                <div class="toggle-switch active" id="breathing-toggle"></div>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Particles</span>
+                    <div class="toggle-switch active" id="particles-toggle"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto Rotate</span>
+                    <div class="toggle-switch active" id="rotate-toggle"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" id="breathing-toggle"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -360,124 +417,128 @@
 
     <div class="right-menu">
         <div class="section">
-            <h2>Crystal Size</h2>
-
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Crystal Shell Size</span>
-                    <span class="slider-value" id="shell-size-value">2.00</span>
+            <h2 class="collapsed">Crystal Size</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Crystal Shell Size</span>
+                        <span class="slider-value" id="shell-size-value">2.00</span>
+                    </div>
+                    <input type="range" id="shell-size-slider" min="0.5" max="3.0" step="0.05" value="2.0">
                 </div>
-                <input type="range" id="shell-size-slider" min="0.5" max="3.0" step="0.05" value="2.0">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Soul Size</span>
-                    <span class="slider-value" id="soul-size-value">1.00</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Soul Size</span>
+                        <span class="slider-value" id="soul-size-value">1.00</span>
+                    </div>
+                    <input type="range" id="soul-size-slider" min="0" max="1" step="0.05" value="1.0">
                 </div>
-                <input type="range" id="soul-size-slider" min="0" max="1" step="0.05" value="1.0">
             </div>
         </div>
 
         <div class="section">
-            <h2>Crystal Appearance</h2>
-
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Frostiness</span>
-                    <span class="slider-value" id="frostiness-value">0.10</span>
+            <h2 class="collapsed">Crystal Appearance</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Frostiness</span>
+                        <span class="slider-value" id="frostiness-value">0.10</span>
+                    </div>
+                    <input type="range" id="frostiness-slider" min="0" max="1" step="0.05" value="0.10">
                 </div>
-                <input type="range" id="frostiness-slider" min="0" max="1" step="0.05" value="0.10">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Inner Glow Strength</span>
-                    <span class="slider-value" id="inner-glow-value">0.20</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Inner Glow Strength</span>
+                        <span class="slider-value" id="inner-glow-value">0.20</span>
+                    </div>
+                    <input type="range" id="inner-glow-slider" min="0" max="2" step="0.1" value="0.2">
                 </div>
-                <input type="range" id="inner-glow-slider" min="0" max="2" step="0.1" value="0.2">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Fresnel Intensity</span>
-                    <span class="slider-value" id="fresnel-value">0.30</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Fresnel Intensity</span>
+                        <span class="slider-value" id="fresnel-value">0.30</span>
+                    </div>
+                    <input type="range" id="fresnel-slider" min="0" max="2" step="0.1" value="0.3">
                 </div>
-                <input type="range" id="fresnel-slider" min="0" max="2" step="0.1" value="0.3">
             </div>
         </div>
 
         <div class="section">
-            <h2>Noise Patterns</h2>
-
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Surface Noise Scale</span>
-                    <span class="slider-value" id="surface-noise-value">1.50</span>
+            <h2 class="collapsed">Noise Patterns</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Surface Noise Scale</span>
+                        <span class="slider-value" id="surface-noise-value">1.50</span>
+                    </div>
+                    <input type="range" id="surface-noise-slider" min="0.1" max="10" step="0.1" value="1.5">
                 </div>
-                <input type="range" id="surface-noise-slider" min="0.1" max="10" step="0.1" value="1.5">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Inner Wisp Scale</span>
-                    <span class="slider-value" id="inner-wisp-value">0.60</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Inner Wisp Scale</span>
+                        <span class="slider-value" id="inner-wisp-value">0.60</span>
+                    </div>
+                    <input type="range" id="inner-wisp-slider" min="0.1" max="5" step="0.1" value="0.6">
                 </div>
-                <input type="range" id="inner-wisp-slider" min="0.1" max="5" step="0.1" value="0.6">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Surface Roughness</span>
-                    <span class="slider-value" id="surface-roughness-value">0.15</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Surface Roughness</span>
+                        <span class="slider-value" id="surface-roughness-value">0.15</span>
+                    </div>
+                    <input type="range" id="surface-roughness-slider" min="0" max="1" step="0.05" value="0.15">
                 </div>
-                <input type="range" id="surface-roughness-slider" min="0" max="1" step="0.05" value="0.15">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Noise Frequency</span>
-                    <span class="slider-value" id="noise-freq-value">1.33</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Noise Frequency</span>
+                        <span class="slider-value" id="noise-freq-value">1.33</span>
+                    </div>
+                    <input type="range" id="noise-freq-slider" min="0.01" max="5" step="0.01" value="1.33">
                 </div>
-                <input type="range" id="noise-freq-slider" min="0.01" max="5" step="0.01" value="1.33">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Texture Strength</span>
-                    <span class="slider-value" id="texture-strength-value">0.55</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Texture Strength</span>
+                        <span class="slider-value" id="texture-strength-value">0.55</span>
+                    </div>
+                    <input type="range" id="texture-strength-slider" min="0" max="1" step="0.05" value="0.55">
                 </div>
-                <input type="range" id="texture-strength-slider" min="0" max="1" step="0.05" value="0.55">
             </div>
         </div>
 
         <div class="section">
-            <h2>Soul Animation</h2>
-
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Drift Speed</span>
-                    <span class="slider-value" id="drift-speed-value">0.50</span>
+            <h2 class="collapsed">Soul Animation</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Drift Speed</span>
+                        <span class="slider-value" id="drift-speed-value">0.50</span>
+                    </div>
+                    <input type="range" id="drift-speed-slider" min="0.1" max="3" step="0.1" value="0.5">
                 </div>
-                <input type="range" id="drift-speed-slider" min="0.1" max="3" step="0.1" value="0.5">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Shimmer Speed</span>
-                    <span class="slider-value" id="shimmer-speed-value">0.50</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Shimmer Speed</span>
+                        <span class="slider-value" id="shimmer-speed-value">0.50</span>
+                    </div>
+                    <input type="range" id="shimmer-speed-slider" min="0.1" max="3" step="0.1" value="0.5">
                 </div>
-                <input type="range" id="shimmer-speed-slider" min="0.1" max="3" step="0.1" value="0.5">
-            </div>
 
-            <div class="toggle-control">
-                <span class="toggle-label">Drift Enabled</span>
-                <div class="toggle-switch active" id="drift-toggle"></div>
-            </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Drift Enabled</span>
+                    <div class="toggle-switch active" id="drift-toggle"></div>
+                </div>
 
-            <div class="toggle-control">
-                <span class="toggle-label">Shimmer Enabled</span>
-                <div class="toggle-switch active" id="shimmer-toggle"></div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Shimmer Enabled</span>
+                    <div class="toggle-switch active" id="shimmer-toggle"></div>
+                </div>
             </div>
         </div>
 
@@ -492,11 +553,35 @@
     <script type="module">
         import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
 
+        // Collapsible sections
+        document.querySelectorAll('h2').forEach(h2 => {
+            h2.addEventListener('click', () => {
+                const content = h2.nextElementSibling;
+                if (content && content.classList.contains('section-content')) {
+                    h2.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                }
+            });
+        });
+
+        // On mobile, collapse Display Options
+        if (window.innerWidth <= 1000) {
+            const displaySection = document.querySelector('.display-options-section');
+            if (displaySection) {
+                const h2 = displaySection.querySelector('h2');
+                const content = displaySection.querySelector('.section-content');
+                if (h2 && content) {
+                    h2.classList.add('collapsed');
+                    content.classList.add('collapsed');
+                }
+            }
+        }
+
         const container = document.getElementById('crystal-container');
         const mascot = new EmotiveMascot3D({
             canvasId: 'crystal',
             coreGeometry: 'crystal',
-            enableParticles: false,
+            enableParticles: true,
             enableControls: true,
             autoRotate: true,
             autoRotateSpeed: 0.3,
@@ -581,12 +666,11 @@
         setupToggle('particles-toggle', (enabled) => {
             if (enabled) mascot.enableParticles();
             else mascot.disableParticles();
-        }, false);
+        }, true);
 
         setupToggle('rotate-toggle', (enabled) => {
-            if (mascot.core3D?.renderer?.controls) {
-                mascot.core3D.renderer.controls.autoRotate = enabled;
-            }
+            if (enabled) mascot.enableAutoRotate();
+            else mascot.disableAutoRotate();
         }, true);
 
         setupToggle('breathing-toggle', (enabled) => {

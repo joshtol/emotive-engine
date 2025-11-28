@@ -67,8 +67,13 @@ export class Particle3DOrchestrator {
      * @param {Object} canvasSize - Canvas dimensions {width, height}
      * @param {Object} rotationState - Mascot rotation state {euler, quaternion, angularVelocity}
      * @param {number} coreScale - Final core scale (baseScale * breath * morph * blink)
+     * @param {number} coreRadius3D - Actual 3D core radius in world units (for particle orbit distance)
      */
-    update(deltaTime, emotion, undertone, activeAnimations, currentTime, corePosition, canvasSize, rotationState, coreScale) {
+    update(deltaTime, emotion, undertone, activeAnimations, currentTime, corePosition, canvasSize, rotationState, coreScale, coreRadius3D) {
+        // Update translator with current 3D core radius for screen-size-independent orbits
+        if (coreRadius3D !== undefined) {
+            this.translator.setCoreRadius3D(coreRadius3D);
+        }
         // Step 1: Calculate emotion-based particle configuration
         const emotionConfig = this._updateEmotionConfig(emotion, undertone);
 

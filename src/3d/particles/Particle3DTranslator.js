@@ -41,7 +41,8 @@ export class Particle3DTranslator {
         // Base world scale - how large is the particle field in world units
         this.worldScale = options.worldScale || 2.0;
 
-        // Base orbital radius around the mascot core
+        // Base orbital radius around the mascot core (in world units)
+        // This should match the 3D core's actual radius
         this.baseRadius = options.baseRadius || 1.5;
 
         // Depth scale multiplier - how much z-depth affects radius
@@ -49,6 +50,10 @@ export class Particle3DTranslator {
 
         // Vertical scale multiplier
         this.verticalScale = options.verticalScale || 1.0;
+
+        // 3D core radius in world units - updated each frame from Core3DManager
+        // This is the actual size of the crystal/orb that particles orbit around
+        this.coreRadius3D = options.coreRadius3D || 1.0;
 
         // Reusable vectors for performance
         this.tempVec3 = new THREE.Vector3();
@@ -59,6 +64,15 @@ export class Particle3DTranslator {
 
         // Current gesture data (updated each frame)
         this.currentGestureData = null;
+    }
+
+    /**
+     * Update the 3D core radius (called each frame when core scale changes)
+     * This ensures particles orbit at correct distance regardless of screen size
+     * @param {number} radius - Core radius in world units
+     */
+    setCoreRadius3D(radius) {
+        this.coreRadius3D = radius;
     }
 
     /**
@@ -302,15 +316,21 @@ export class Particle3DTranslator {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
-        // Calculate distance from center in 2D
+        // Calculate normalized distance (0-1) from center in 2D
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         const distance2D = Math.sqrt(dx * dx + dy * dy);
-        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.8;
+        const normalizedDistance = distance2D / centerX; // 0 at center, 1 at edge
+
+        // Convert to world distance using 3D core radius
+        // Particles orbit between 1.0x and 1.8x the core radius
+        const minOrbit = this.coreRadius3D * 1.0;
+        const maxOrbit = this.coreRadius3D * 1.8;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Add slow spiral motion based on particle age
         const spiralAngle = particle.age * 0.5;
-        const spiralRadius = 0.05;
+        const spiralRadius = this.coreRadius3D * 0.03;
         const spiralX = Math.cos(spiralAngle) * spiralRadius;
         const spiralZ = Math.sin(spiralAngle) * spiralRadius;
 
@@ -398,11 +418,16 @@ export class Particle3DTranslator {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
-        // Calculate distance from center in 2D
+        // Calculate normalized distance (0-1) from center in 2D
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         const distance2D = Math.sqrt(dx * dx + dy * dy);
-        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.7;
+        const normalizedDistance = distance2D / centerX;
+
+        // Convert to world distance using 3D core radius
+        const minOrbit = this.coreRadius3D * 0.9;
+        const maxOrbit = this.coreRadius3D * 1.6;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Position along 3D direction
         const baseX = corePosition.x + dir.x * worldDistance;
@@ -410,7 +435,7 @@ export class Particle3DTranslator {
         const baseZ = corePosition.z + dir.z * worldDistance;
 
         // Add downward fall based on particle age (gravity effect)
-        const fallAmount = particle.age * 0.3;
+        const fallAmount = particle.age * this.coreRadius3D * 0.15;
 
         return this.tempVec3.set(baseX, baseY - fallAmount, baseZ);
     }
@@ -430,8 +455,8 @@ export class Particle3DTranslator {
             // Get or generate the direction the particle will travel when it pops
             const dir = this._getUniformDirection3D(particle);
 
-            // Position farther away from center (0.15 world units) so particles don't appear huge
-            const waitDistance = this.baseRadius * 0.15;
+            // Position at core surface so particles don't appear huge
+            const waitDistance = this.coreRadius3D * 0.15;
             return this.tempVec3.set(
                 corePosition.x + dir.x * waitDistance,
                 corePosition.y + dir.y * waitDistance * this.verticalScale,
@@ -442,13 +467,17 @@ export class Particle3DTranslator {
         // Get or generate uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
-        // Calculate distance traveled based on 2D position from center
+        // Calculate normalized distance (0-1) from center in 2D
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const normalizedDistance = Math.min(distance2D / centerX, 1.5); // Cap at 1.5x
 
-        // Convert 2D distance to world units (scale down more to reduce initial size)
-        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.35;
+        // Convert to world distance using 3D core radius
+        // Popcorn particles burst from core surface to 2.0x core radius
+        const minOrbit = this.coreRadius3D * 0.8;
+        const maxOrbit = this.coreRadius3D * 2.0;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Position particle along its 3D direction
         return this.tempVec3.set(
@@ -465,10 +494,9 @@ export class Particle3DTranslator {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
-        // Expand outward over lifetime
-        const outwardSpeed = 2;
-        const expansion = (1 - particle.life) * outwardSpeed * 0.5;
-        const radius = this.baseRadius * expansion;
+        // Expand outward over lifetime (from core surface to 2x radius)
+        const expansion = (1 - particle.life); // 0 to 1 as particle ages
+        const radius = this.coreRadius3D * (1.0 + expansion * 1.0);
 
         // Position along 3D direction
         return this.tempVec3.set(
@@ -489,14 +517,19 @@ export class Particle3DTranslator {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
-        // Calculate distance from center in 2D
+        // Calculate normalized distance (0-1) from center in 2D
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         const distance2D = Math.sqrt(dx * dx + dy * dy);
-        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius;
+        const normalizedDistance = distance2D / centerX;
 
-        // Position along 3D direction with chaotic jitter
-        const jitterScale = 0.08; // Strong chaotic movement
+        // Convert to world distance using 3D core radius
+        const minOrbit = this.coreRadius3D * 1.0;
+        const maxOrbit = this.coreRadius3D * 2.2;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
+
+        // Position along 3D direction with chaotic jitter (scaled to core size)
+        const jitterScale = this.coreRadius3D * 0.04;
         const jitterX = Math.sin(particle.age * 10 + particle.x * 0.1) * jitterScale;
         const jitterY = Math.cos(particle.age * 12 + particle.y * 0.1) * jitterScale;
         const jitterZ = Math.sin(particle.age * 8 + particle.vx * 0.1) * jitterScale;
@@ -515,9 +548,9 @@ export class Particle3DTranslator {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
-        // Scatter outward based on particle age
-        const scatterAmount = particle.age * 2;
-        const scatterRadius = this.baseRadius * scatterAmount;
+        // Scatter outward based on particle age (from core to 2x radius)
+        const scatterAmount = Math.min(particle.age * 0.8, 1.0);
+        const scatterRadius = this.coreRadius3D * (1.0 + scatterAmount);
 
         // Position along 3D direction
         return this.tempVec3.set(
@@ -534,9 +567,9 @@ export class Particle3DTranslator {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
-        // Repel outward based on particle age
-        const repelStrength = particle.age * 1.5;
-        const repelRadius = this.baseRadius * repelStrength;
+        // Repel outward based on particle age (from core to 2x radius)
+        const repelStrength = Math.min(particle.age * 0.6, 1.0);
+        const repelRadius = this.coreRadius3D * (1.0 + repelStrength);
 
         // Position along 3D direction
         return this.tempVec3.set(
@@ -580,15 +613,20 @@ export class Particle3DTranslator {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
-        // Calculate distance from center in 2D
+        // Calculate normalized distance (0-1) from center in 2D
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         const distance2D = Math.sqrt(dx * dx + dy * dy);
-        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.75;
+        const normalizedDistance = distance2D / centerX;
 
-        // Add very subtle breathing motion
+        // Convert to world distance using 3D core radius
+        const minOrbit = this.coreRadius3D * 1.0;
+        const maxOrbit = this.coreRadius3D * 1.5;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
+
+        // Add very subtle breathing motion (scaled to core size)
         const breathPhase = particle.age * 0.3;
-        const breathOffset = Math.sin(breathPhase) * 0.02;
+        const breathOffset = Math.sin(breathPhase) * this.coreRadius3D * 0.01;
 
         // Position along 3D direction with gentle breathing
         return this.tempVec3.set(
@@ -605,9 +643,9 @@ export class Particle3DTranslator {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
-        // Expand outward uniformly
-        const expansion = 0.5;
-        const radius = this.baseRadius * expansion * (1 - particle.life);
+        // Expand outward uniformly (from core to 1.8x radius)
+        const expansion = 1 - particle.life; // 0 to 1 as particle ages
+        const radius = this.coreRadius3D * (1.0 + expansion * 0.8);
 
         // Position along 3D direction
         return this.tempVec3.set(
@@ -623,10 +661,10 @@ export class Particle3DTranslator {
     _translateAscending(particle, corePosition, canvasSize) {
         const behaviorData = particle.behaviorData || {};
 
-        // Helical motion parameters
+        // Helical motion parameters (scaled to core size)
         const angle = (behaviorData.spiralAngle || 0);
-        const radius = (behaviorData.spiralRadius || 50) * 0.01 * this.baseRadius;
-        const height = particle.age * this.verticalScale;
+        const radius = (behaviorData.spiralRadius || 50) * 0.01 * this.coreRadius3D;
+        const height = particle.age * this.coreRadius3D * 0.5;
 
         // Create helix
         const x = Math.cos(angle) * radius + corePosition.x;
@@ -675,7 +713,7 @@ export class Particle3DTranslator {
 
         // Surveillance particles orbit slowly in their own tilted plane
         const orbitAngle = particle.age * 0.5;
-        const radius = this.baseRadius * 0.6;
+        const radius = this.coreRadius3D * 1.2;
 
         // Create perpendicular vector for rotation plane (same as zen)
         const up = { x: 0, y: 1, z: 0 };
@@ -781,11 +819,16 @@ export class Particle3DTranslator {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
-        // Calculate distance from center in 2D (or use age for steady outward motion)
+        // Calculate normalized distance (0-1) from center in 2D
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
         const distance2D = Math.sqrt(dx * dx + dy * dy);
-        const worldDistance = (distance2D / centerX) * this.worldScale * this.baseRadius * 0.6;
+        const normalizedDistance = distance2D / centerX;
+
+        // Convert to world distance using 3D core radius
+        const minOrbit = this.coreRadius3D * 1.0;
+        const maxOrbit = this.coreRadius3D * 1.6;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Position along 3D direction - focused beams radiating outward
         return this.tempVec3.set(
@@ -825,7 +868,7 @@ export class Particle3DTranslator {
 
         // Zen particles orbit slowly in their own plane
         const zenAngle = particle.age * 0.2;
-        const zenRadius = this.baseRadius * 0.7;
+        const zenRadius = this.coreRadius3D * 1.4;
 
         // Create perpendicular vector for rotation plane
         // Use cross product to get perpendicular direction
