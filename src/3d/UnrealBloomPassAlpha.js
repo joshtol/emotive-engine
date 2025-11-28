@@ -286,8 +286,8 @@ export class UnrealBloomPassAlpha extends Pass {
 
         if (maskActive) renderer.state.buffers.stencil.setTest(false);
 
-        // Render input to screen
-        if (this.renderToScreen) {
+        // Render input to screen (skip if we're doing overlay-only bloom like particles)
+        if (this.renderToScreen && !this.skipBaseCopy) {
             this.fsQuad.material = this.basic;
             this.basic.map = readBuffer.texture;
 

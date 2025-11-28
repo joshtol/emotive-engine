@@ -227,11 +227,7 @@ void main() {
     // Overall brightness adjustment
     finalColor *= 0.85;
 
-    // PREMULTIPLIED ALPHA: Multiply RGB by alpha to eliminate dark halos
-    // When using normal blending with semi-transparent edges, the dark edge colors
-    // (vColor * 0.7) create dark halos because they blend additively with background.
-    // Premultiplying ensures edge contribution is proportional to its visibility.
-    gl_FragColor = vec4(finalColor * finalAlpha, finalAlpha);
+    gl_FragColor = vec4(finalColor, finalAlpha);
 }
 `;
 
@@ -326,15 +322,7 @@ export class Particle3DRenderer {
             vertexShader: particleVertexShader,
             fragmentShader: particleFragmentShader,
             transparent: true,
-            // PREMULTIPLIED ALPHA BLENDING: Eliminates dark halos around particles
-            // Shader outputs: RGB * A, A (premultiplied)
-            // Blend equation: srcColor * 1 + dstColor * (1 - srcAlpha)
-            blending: THREE.CustomBlending,
-            blendEquation: THREE.AddEquation,
-            blendSrc: THREE.OneFactor,           // Source RGB is already premultiplied
-            blendDst: THREE.OneMinusSrcAlphaFactor, // Standard alpha blend for destination
-            blendSrcAlpha: THREE.OneFactor,      // Source alpha
-            blendDstAlpha: THREE.OneMinusSrcAlphaFactor, // Destination alpha
+            blending: THREE.NormalBlending, // Changed from Additive to Normal for less blowout
             depthWrite: false, // Don't write to depth buffer
             depthTest: true // Test depth for proper occlusion
         });

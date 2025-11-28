@@ -474,9 +474,9 @@ export class Particle3DTranslator {
         const normalizedDistance = Math.min(distance2D / centerX, 1.5); // Cap at 1.5x
 
         // Convert to world distance using 3D core radius
-        // Popcorn particles burst from core surface to 2.0x core radius
-        const minOrbit = this.coreRadius3D * 0.8;
-        const maxOrbit = this.coreRadius3D * 2.0;
+        // Popcorn particles burst from core surface to 3.0x core radius (wider spread)
+        const minOrbit = this.coreRadius3D * 0.9;
+        const maxOrbit = this.coreRadius3D * 3.0;
         const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Position particle along its 3D direction

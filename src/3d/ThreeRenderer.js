@@ -15,6 +15,7 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
@@ -347,6 +348,67 @@ export class ThreeRenderer {
         this.bloomPass.enabled = true; // Using proven working blur shader approach
         this.bloomPass.renderToScreen = true; // CRITICAL: Last pass must render to screen
         this.composer.addPass(this.bloomPass);
+
+        // === SEPARATE PARTICLE BLOOM PIPELINE ===
+        // Particles get their own render target with NON-BLACK clear color
+        // This prevents dark halos from blur sampling black transparent pixels
+        this.particleRenderTarget = new THREE.WebGLRenderTarget(
+            drawingBufferSize.x,
+            drawingBufferSize.y, {
+                format: THREE.RGBAFormat,
+                type: THREE.HalfFloatType,
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                stencilBuffer: false,
+                depthBuffer: true
+            });
+
+        // Particle bloom pass (same settings but separate pipeline)
+        this.particleBloomPass = new UnrealBloomPassAlpha(
+            bloomResolution,
+            0.5, // reduced strength for subtler particle glow
+            0.4, // tighter radius
+            0.3  // higher threshold for less glow
+        );
+        this.particleBloomPass.name = 'particleBloomPass';
+        this.particleBloomPass.enabled = true;
+        // IMPORTANT: Use a non-black clear color for particle bloom
+        // This is the key fix - blur will sample white instead of black from transparent areas
+        this.particleBloomPass.clearColor = new THREE.Color(1, 1, 1); // White clear for particle blur
+        // Skip the base copy step - we only want to add bloom on top of existing scene
+        this.particleBloomPass.skipBaseCopy = true;
+
+        // Composite shader to blend particle bloom onto main scene
+        this.particleCompositeShader = {
+            uniforms: {
+                'tDiffuse': { value: null },
+                'tParticles': { value: null }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform sampler2D tParticles;
+                varying vec2 vUv;
+
+                void main() {
+                    vec4 base = texture2D(tDiffuse, vUv);
+                    vec4 particles = texture2D(tParticles, vUv);
+
+                    // Alpha-preserving composite: particles over base
+                    // Use particle alpha to blend
+                    vec3 blended = mix(base.rgb, particles.rgb, particles.a);
+                    float alpha = base.a + particles.a * (1.0 - base.a);
+
+                    gl_FragColor = vec4(blended, alpha);
+                }
+            `
+        };
     }
 
     /**
@@ -1165,7 +1227,51 @@ export class ThreeRenderer {
 
         // Render with post-processing if enabled, otherwise direct render
         if (this.composer) {
+            // === STEP 1: Render main scene (layer 0) through bloom to screen ===
+            this.camera.layers.set(0);
             this.composer.render();
+
+            // === STEP 2: Render particles (layer 1) to separate render target ===
+            if (this.particleRenderTarget && this.particleBloomPass) {
+                // Clear particle render target with WHITE (non-black) to prevent dark halos
+                this.renderer.setRenderTarget(this.particleRenderTarget);
+                this.renderer.setClearColor(0xffffff, 0); // White RGB, but 0 alpha
+                this.renderer.clear();
+
+                // DEPTH PASS: Render crystal (layer 0) to depth buffer only
+                // This ensures particles behind the crystal are properly occluded
+                // Use overrideMaterial to render only to depth buffer (no color output)
+                this.camera.layers.set(0);
+                const depthMaterial = this._depthOnlyMaterial || (this._depthOnlyMaterial = new THREE.MeshBasicMaterial({
+                    colorWrite: false,  // Don't write to color buffer
+                    depthWrite: true    // Only write to depth buffer
+                }));
+                this.scene.overrideMaterial = depthMaterial;
+                this.renderer.render(this.scene, this.camera);
+                this.scene.overrideMaterial = null;
+
+                // Now render particles with depth testing against the crystal
+                this.camera.layers.set(1);
+                this.renderer.render(this.scene, this.camera);
+
+                // Apply bloom to particle render target
+                const particleReadBuffer = this.particleRenderTarget;
+
+                // Render bloom pass on particles (to screen with additive blending)
+                this.particleBloomPass.renderToScreen = true;
+                this.particleBloomPass.render(this.renderer, null, particleReadBuffer, 0, false);
+
+                // Reset clear color
+                this.renderer.setClearColor(0x000000, 0);
+                this.renderer.setRenderTarget(null);
+            } else {
+                // Fallback: Render particles directly (no bloom)
+                this.camera.layers.set(1);
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            // Reset camera to see all layers
+            this.camera.layers.enableAll();
         } else {
             this.renderer.render(this.scene, this.camera);
         }
@@ -1192,6 +1298,14 @@ export class ThreeRenderer {
             // Update bloom pass resolution to full drawing buffer size for sharp bloom
             if (this.bloomPass && this.bloomPass.resolution) {
                 this.bloomPass.resolution.set(drawingBufferSize.x, drawingBufferSize.y);
+            }
+
+            // Resize particle render target and bloom pass
+            if (this.particleRenderTarget) {
+                this.particleRenderTarget.setSize(drawingBufferSize.x, drawingBufferSize.y);
+            }
+            if (this.particleBloomPass) {
+                this.particleBloomPass.setSize(drawingBufferSize.x, drawingBufferSize.y);
             }
         }
     }
@@ -1291,6 +1405,16 @@ export class ThreeRenderer {
         if (this.composer) {
             this.composer.dispose();
             this.composer = null;
+        }
+
+        // Dispose particle render target and bloom pass
+        if (this.particleRenderTarget) {
+            this.particleRenderTarget.dispose();
+            this.particleRenderTarget = null;
+        }
+        if (this.particleBloomPass) {
+            this.particleBloomPass.dispose();
+            this.particleBloomPass = null;
         }
 
         // Dispose controls (removes DOM event listeners)
