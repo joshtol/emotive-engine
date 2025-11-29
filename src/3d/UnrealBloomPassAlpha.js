@@ -258,6 +258,39 @@ export class UnrealBloomPassAlpha extends Pass {
         this.fsQuad.dispose();
     }
 
+    /**
+     * Clear all bloom render targets to remove residual glow
+     * Call this during geometry swaps to prevent bloom bleeding between shapes
+     * @param {WebGLRenderer} renderer - Three.js renderer
+     */
+    clearBloomBuffers(renderer) {
+        const currentRenderTarget = renderer.getRenderTarget();
+        const currentClearColor = renderer.getClearColor(this._oldClearColor);
+        const currentClearAlpha = renderer.getClearAlpha();
+
+        renderer.setClearColor(0x000000, 0);
+
+        // Clear bright pass target
+        renderer.setRenderTarget(this.renderTargetBright);
+        renderer.clear();
+
+        // Clear all horizontal blur targets
+        for (let i = 0; i < this.renderTargetsHorizontal.length; i++) {
+            renderer.setRenderTarget(this.renderTargetsHorizontal[i]);
+            renderer.clear();
+        }
+
+        // Clear all vertical blur targets
+        for (let i = 0; i < this.renderTargetsVertical.length; i++) {
+            renderer.setRenderTarget(this.renderTargetsVertical[i]);
+            renderer.clear();
+        }
+
+        // Restore previous state
+        renderer.setRenderTarget(currentRenderTarget);
+        renderer.setClearColor(currentClearColor, currentClearAlpha);
+    }
+
     setSize(width, height) {
         // Standard bloom resolution (half of input for performance)
         let resx = Math.round(width / 2);

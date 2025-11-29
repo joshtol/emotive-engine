@@ -572,6 +572,18 @@ export class ThreeRenderer {
     swapGeometry(newGeometry, customMaterial = null) {
         if (!this.coreMesh) return;
 
+        // ═══════════════════════════════════════════════════════════════════
+        // CLEAR BLOOM BUFFERS
+        // Prevents residual glow from old geometry bleeding into new one
+        // ═══════════════════════════════════════════════════════════════════
+        if (this.bloomPass) {
+            this.bloomPass.clearBloomBuffers(this.renderer);
+            console.log('[ThreeRenderer] Cleared bloom buffers during geometry swap');
+        }
+        if (this.particleBloomPass) {
+            this.particleBloomPass.clearBloomBuffers(this.renderer);
+        }
+
         // Dispose old geometry
         const oldGeometry = this.coreMesh.geometry;
         if (oldGeometry) {
@@ -942,10 +954,9 @@ export class ThreeRenderer {
             let targetThreshold, targetStrength, targetRadius;
 
             // Sun geometry needs controlled bloom for NASA-quality photosphere detail
-            // Wider radius to fill gap between sun edge and corona
             if (geometryType === 'sun') {
-                targetStrength = 1.2;   // Moderate glow strength
-                targetRadius = 1.0;     // Wider bloom spread to bridge corona gap
+                targetStrength = 1.5;   // Slightly stronger glow
+                targetRadius = 0.4;     // Lower radius prevents pixelation from low-res mips
                 targetThreshold = 0.3;  // Higher threshold to preserve texture detail
             } else if (geometryType === 'crystal' || geometryType === 'diamond') {
                 // Crystal/diamond need strong bloom for light emission effect

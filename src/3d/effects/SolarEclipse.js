@@ -975,8 +975,12 @@ export class SolarEclipse {
         }
 
         // Dispose corona disks
+        // Corona disks may be children of sunMesh OR in scene directly
         if (this.coronaDisk) {
-            this.scene.remove(this.coronaDisk);
+            // Remove from parent (sunMesh or scene)
+            if (this.coronaDisk.parent) {
+                this.coronaDisk.parent.remove(this.coronaDisk);
+            }
             this.coronaDisk.geometry.dispose();
             // Dispose shader material uniforms - no need to null, just dispose material
             this.coronaDisk.material.dispose();
@@ -984,7 +988,10 @@ export class SolarEclipse {
         }
 
         if (this.counterCoronaDisk) {
-            this.scene.remove(this.counterCoronaDisk);
+            // Remove from parent (sunMesh or scene)
+            if (this.counterCoronaDisk.parent) {
+                this.counterCoronaDisk.parent.remove(this.counterCoronaDisk);
+            }
             // Geometry is shared with main corona, already disposed above
             this.counterCoronaDisk.material.dispose();
             this.counterCoronaDisk = null;

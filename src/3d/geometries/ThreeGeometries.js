@@ -12,6 +12,7 @@ import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUti
 import { createMoon } from './Moon.js';
 import { createSunGeometry } from './Sun.js';
 import { createBlackHoleGroup } from './BlackHole.js';
+import { createDiamond as createDiamondData } from './Diamond.js';
 
 /**
  * Merge vertices at the same position to create smooth normals
@@ -83,7 +84,7 @@ function loadCrystalGeometry() {
                     geometry.boundingBox.getSize(size);
                     console.log('💎 [CRYSTAL] Original size:', size.x, size.y, size.z);
                     const maxDim = Math.max(size.x, size.y, size.z);
-                    const scale = 4.0 / maxDim;  // Scaled up from 1.5 to fit around soul
+                    const scale = 2.0 / maxDim;  // Scale to ~2.0 diameter for visibility
                     console.log('💎 [CRYSTAL] Scale factor:', scale);
                     geometry.scale(scale, scale, scale);
                     // Preserve original OBJ normals if present, otherwise compute them
@@ -221,6 +222,19 @@ function createProceduralCrystal() {
 }
 
 /**
+ * Create diamond geometry from raw data
+ * @returns {THREE.BufferGeometry}
+ */
+function createDiamondGeometry() {
+    const data = createDiamondData();
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(data.vertices, 3));
+    geometry.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3));
+    geometry.setIndex(new THREE.BufferAttribute(data.indices, 1));
+    return geometry;
+}
+
+/**
  * Create smooth sphere geometry
  */
 export function createSphere(widthSegments = 64, heightSegments = 64) {
@@ -330,7 +344,7 @@ export const THREE_GEOMETRIES = {
     },
 
     sun: {
-        geometry: new THREE.SphereGeometry(0.9, 64, 64),
+        geometry: new THREE.SphereGeometry(0.5, 64, 64),
         material: 'emissive',
         blink: { type: 'radial-pulse', duration: 200, scaleAxis: [1.05, 1.05, 1.05], glowBoost: 0.5, curve: 'sine' }
     },
@@ -347,5 +361,12 @@ export const THREE_GEOMETRIES = {
         geometryLoader: loadCrystalGeometry,
         material: 'custom',
         blink: { type: 'facet-flash', duration: 160, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.4, curve: 'sine' }
+    },
+
+    // Diamond (brilliant cut)
+    diamond: {
+        geometry: createDiamondGeometry(),
+        material: 'custom',
+        blink: { type: 'facet-flash', duration: 150, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.5, curve: 'sine' }
     }
 };

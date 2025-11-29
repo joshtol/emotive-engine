@@ -24,6 +24,8 @@ export class GeometryMorpher {
         this.morphProgress = 0;
         this.visualProgress = 0; // Smoothed progress for rendering
         this.hasSwappedGeometry = false; // Track if we've swapped at midpoint
+        this.isPausedAtSwap = false; // Paused waiting for async geometry load
+        this.pausedAtTime = 0; // Time when paused (to resume correctly)
 
         // Easing function
         this.easing = 'easeInOutCubic';
@@ -56,8 +58,33 @@ export class GeometryMorpher {
         this.visualProgress = 0;
         this.isTransitioning = true;
         this.hasSwappedGeometry = false; // Reset swap flag
+        this.isPausedAtSwap = false; // Reset pause flag
+        this.pausedAtTime = 0;
 
         return true;
+    }
+
+    /**
+     * Pause morph at swap point (waiting for async geometry)
+     */
+    pauseAtSwap() {
+        if (this.isTransitioning && !this.isPausedAtSwap) {
+            this.isPausedAtSwap = true;
+            this.pausedAtTime = Date.now();
+        }
+    }
+
+    /**
+     * Resume morph after async geometry loaded
+     */
+    resumeFromSwap() {
+        if (this.isPausedAtSwap) {
+            // Adjust start time so morph continues from where it was
+            const pauseDuration = Date.now() - this.pausedAtTime;
+            this.morphStartTime += pauseDuration;
+            this.isPausedAtSwap = false;
+            this.pausedAtTime = 0;
+        }
     }
 
     /**
@@ -72,6 +99,18 @@ export class GeometryMorpher {
                 progress: 0,
                 visualProgress: 0,
                 scaleMultiplier: 1.0
+            };
+        }
+
+        // If paused at swap point, hold at minimum scale
+        if (this.isPausedAtSwap) {
+            const minScale = 0.75;
+            return {
+                isTransitioning: true,
+                progress: 0.5,
+                visualProgress: 0.5,
+                scaleMultiplier: minScale,
+                waitingForGeometry: true
             };
         }
 

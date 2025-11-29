@@ -34,6 +34,8 @@ import { SolarEclipse } from './effects/SolarEclipse.js';
 import { LunarEclipse } from './effects/LunarEclipse.js';
 import { updateMoonGlow, MOON_CALIBRATION_ROTATION, MOON_FACING_CONFIG } from './geometries/Moon.js';
 import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
+import { resetGeometryState } from './GeometryStateManager.js';
+import * as GeometryCache from './utils/GeometryCache.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -281,7 +283,10 @@ export class Core3DManager {
         const particleRenderer = new Particle3DRenderer(50, { renderer: this.renderer.renderer });
 
         // Add particle points to scene
-        this.renderer.scene.add(particleRenderer.getPoints());
+        const particlePoints = particleRenderer.getPoints();
+        // Put particles on layer 1 to render AFTER bloom (avoids dark halo artifacts)
+        particlePoints.layers.set(1);
+        this.renderer.scene.add(particlePoints);
 
         // Create orchestrator (coordinates everything)
         this.particleOrchestrator = new Particle3DOrchestrator(
@@ -300,7 +305,7 @@ export class Core3DManager {
 
         // Initialize solar eclipse system for sun geometry
         if (this.geometryType === 'sun') {
-            const sunRadius = this.geometry.parameters?.radius || 0.9; // Sun geometry radius is 0.9
+            const sunRadius = this.geometry.parameters?.radius || 0.5; // Sun geometry radius is 0.5
             console.log('☀️ SolarEclipse sunRadius:', sunRadius, 'geometry.parameters:', this.geometry.parameters);
             this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.coreMesh);
         }
@@ -1021,8 +1026,8 @@ export class Core3DManager {
         this.crystalInnerCore = new THREE.Mesh(coreGeometry, coreMaterial);
         this.crystalInnerCore.name = 'crystalInnerCore';
 
-        // Set initial scale - default soul size is 1.0 (full size)
-        this.setCrystalCoreSize(1.0);
+        // Set initial scale - default soul size is 0.4
+        this.setCrystalCoreSize(0.4);
 
         // Add as child of crystal mesh
         this.coreMesh.add(this.crystalInnerCore);
@@ -1171,8 +1176,24 @@ export class Core3DManager {
 
         // Store target geometry for when morph completes
         this._targetGeometryConfig = targetGeometryConfig;
-        this._targetGeometry = targetGeometryConfig.geometry;
         this._targetGeometryType = shapeName;
+
+        // Handle async geometry loaders (e.g., crystal OBJ)
+        if (targetGeometryConfig.geometryLoader && !targetGeometryConfig.geometry) {
+            // Start loading during shrink phase so it's ready for swap
+            console.log(`[Core3DManager] Preloading async geometry for ${shapeName}...`);
+            this._targetGeometry = null; // Will be set when loaded
+            this._pendingGeometryLoad = targetGeometryConfig.geometryLoader().then(geometry => {
+                console.log(`[Core3DManager] Async geometry loaded for ${shapeName}`);
+                this._targetGeometry = geometry;
+                // Also update the registry so subsequent morphs don't need to reload
+                targetGeometryConfig.geometry = geometry;
+                this._pendingGeometryLoad = null;
+            });
+        } else {
+            this._targetGeometry = targetGeometryConfig.geometry;
+            this._pendingGeometryLoad = null;
+        }
     }
 
     /**
@@ -1196,8 +1217,33 @@ export class Core3DManager {
         // Update geometry morph animation
         const morphState = this.geometryMorpher.update(deltaTime);
 
+        // If waiting for async geometry to load, pause morph at midpoint
+        if (morphState.shouldSwapGeometry && this._pendingGeometryLoad) {
+            // Geometry still loading - pause at minimum scale until ready
+            this.geometryMorpher.pauseAtSwap();
+            console.log('[Core3DManager] Paused morph waiting for async geometry...');
+        }
+
+        // Check if async geometry finished loading while paused
+        if (morphState.waitingForGeometry && this._targetGeometry && !this._pendingGeometryLoad) {
+            console.log('[Core3DManager] Async geometry ready, resuming morph');
+            this.geometryMorpher.resumeFromSwap();
+            // Re-trigger swap by setting hasSwappedGeometry back to false
+            this.geometryMorpher.hasSwappedGeometry = false;
+        }
+
         // Swap geometry at midpoint (when scale is at minimum) for smooth transition
         if (morphState.shouldSwapGeometry && this._targetGeometry) {
+            // ═══════════════════════════════════════════════════════════════════
+            // RESET OLD GEOMETRY STATE
+            // Clear shader uniforms to defaults before swapping to prevent
+            // visual remnants (e.g., blood moon effects bleeding to crystal)
+            // ═══════════════════════════════════════════════════════════════════
+            const oldGeometryType = this.geometryType;
+            if (this.customMaterial) {
+                resetGeometryState(oldGeometryType, this.customMaterial);
+            }
+
             this.geometry = this._targetGeometry;
             this.geometryType = this._targetGeometryType;
             this.geometryConfig = this._targetGeometryConfig;
@@ -1258,7 +1304,7 @@ export class Core3DManager {
             if (this._targetGeometryType === 'sun') {
                 // Create solar eclipse if morphing to sun
                 if (!this.solarEclipse) {
-                    const sunRadius = this.geometry.parameters?.radius || 0.9; // Sun geometry radius is 0.9
+                    const sunRadius = this.geometry.parameters?.radius || 0.5; // Sun geometry radius is 0.5
                     this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.renderer.coreMesh);
                     console.log('☀️ Solar eclipse system initialized');
                 }
@@ -1774,5 +1820,25 @@ export class Core3DManager {
 
         // Clean up emotive engine reference
         this.emotiveEngine = null;
+
+        // Dispose geometry cache
+        GeometryCache.dispose();
+    }
+
+    /**
+     * Preload all geometry assets for instant morphing
+     * Call this during app initialization for best UX
+     * @returns {Promise<void>}
+     */
+    async preloadGeometries() {
+        const options = {
+            glowColor: this.glowColor || [1.0, 1.0, 0.95],
+            glowIntensity: this.glowIntensity || 1.0,
+            materialVariant: this.materialVariant,
+            emotionData: getEmotion(this.emotion)
+        };
+
+        await GeometryCache.preloadAll(options);
+        console.log('[Core3DManager] All geometries preloaded');
     }
 }
