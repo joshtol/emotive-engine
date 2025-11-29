@@ -84,7 +84,8 @@ void main() {
     // Particle size now scales proportionally with core (breath, morph, blink animations included)
     // The viewportHeight uniform compensates for screen size (larger screens = more pixels)
     // Divide by pixelRatio to maintain consistent size (gl_PointSize is in CSS pixels, not physical pixels)
-    float perspectiveScale = coreScale * (150.0 / length(mvPosition.xyz)) * (viewportHeight / 600.0) / pixelRatio;
+    // Base scale of 75.0 gives smaller, tighter particles around the core
+    float perspectiveScale = coreScale * (75.0 / length(mvPosition.xyz)) * (viewportHeight / 600.0) / pixelRatio;
     gl_PointSize = size * perspectiveScale;
 
     // Final position
@@ -224,8 +225,8 @@ void main() {
     // Apply glow alpha if stronger than base
     finalAlpha = max(finalAlpha, glowAlpha * vCameraOcclusion);
 
-    // Overall brightness adjustment
-    finalColor *= 0.85;
+    // HDR bloom boost - values > 1.0 will bloom
+    finalColor *= 1.5;
 
     gl_FragColor = vec4(finalColor, finalAlpha);
 }
@@ -406,8 +407,8 @@ export class Particle3DRenderer {
 
             // PRIORITY 5: Size variety - use particle's stable baseSize (already has variation)
             const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
-            // Scale down popcorn particles (joy emotion) - slightly larger than before
-            const sizeMultiplier = particle.behavior === 'popcorn' ? 0.38 : 0.85;
+            // Joy popcorn particles are larger (1.2x), others at normal size
+            const sizeMultiplier = particle.behavior === 'popcorn' ? 1.2 : 0.85;
             this.sizes[i] = depthSize * sizeMultiplier; // Scale for point sprite size (particle.size already varies 4-10px)
 
             // Update color

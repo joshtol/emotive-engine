@@ -289,8 +289,8 @@ export class Core3DManager {
 
         // Add particle points to scene
         const particlePoints = particleRenderer.getPoints();
-        // Put particles on layer 1 to render AFTER bloom (avoids dark halo artifacts)
-        particlePoints.layers.set(1);
+        // Put particles on layer 0 to include them in bloom pass
+        particlePoints.layers.set(0);
         this.renderer.scene.add(particlePoints);
 
         // Create orchestrator (coordinates everything)

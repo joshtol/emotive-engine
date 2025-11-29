@@ -39,11 +39,11 @@ import * as THREE from 'three';
 export class Particle3DTranslator {
     constructor(options = {}) {
         // Base world scale - how large is the particle field in world units
-        this.worldScale = options.worldScale || 2.0;
+        this.worldScale = options.worldScale || 0.2;
 
         // Base orbital radius around the mascot core (in world units)
         // This should match the 3D core's actual radius
-        this.baseRadius = options.baseRadius || 1.5;
+        this.baseRadius = options.baseRadius || 0.15;
 
         // Depth scale multiplier - how much z-depth affects radius
         this.depthScale = options.depthScale || 0.75;
@@ -323,9 +323,9 @@ export class Particle3DTranslator {
         const normalizedDistance = distance2D / centerX; // 0 at center, 1 at edge
 
         // Convert to world distance using 3D core radius
-        // Particles orbit between 1.0x and 1.8x the core radius
-        const minOrbit = this.coreRadius3D * 1.0;
-        const maxOrbit = this.coreRadius3D * 1.8;
+        // Neutral: particles spread out wider (0.6x to 1.2x core radius)
+        const minOrbit = this.coreRadius3D * 0.6;
+        const maxOrbit = this.coreRadius3D * 1.2;
         const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Add slow spiral motion based on particle age
@@ -362,7 +362,8 @@ export class Particle3DTranslator {
 
         const { inclination, rotation } = behaviorData.orbitPlane;
         const angle = behaviorData.angle || 0;
-        const radius = (behaviorData.radius || 100) * 0.01 * this.baseRadius;
+        // Love: tighter orbits (0.25x base radius)
+        const radius = (behaviorData.radius || 100) * 0.01 * this.baseRadius * 0.25;
 
         // Depth affects orbital radius
         const radiusMultiplier = 1.0 + (particle.z * this.depthScale);
@@ -408,7 +409,7 @@ export class Particle3DTranslator {
     }
 
     /**
-     * FALLING: Tears falling in 360°x360°x360° sphere with downward bias
+     * FALLING: Tears falling in 360°x360°x360° sphere with downward bias (Sadness)
      * Particles spawn in all directions but fall downward (sadness tears)
      */
     _translateFalling(particle, corePosition, canvasSize) {
@@ -424,9 +425,9 @@ export class Particle3DTranslator {
         const distance2D = Math.sqrt(dx * dx + dy * dy);
         const normalizedDistance = distance2D / centerX;
 
-        // Convert to world distance using 3D core radius
-        const minOrbit = this.coreRadius3D * 0.9;
-        const maxOrbit = this.coreRadius3D * 1.6;
+        // Convert to world distance using 3D core radius - tight (0.3x to 0.5x)
+        const minOrbit = this.coreRadius3D * 0.3;
+        const maxOrbit = this.coreRadius3D * 0.5;
         const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Position along 3D direction
@@ -507,7 +508,7 @@ export class Particle3DTranslator {
     }
 
     /**
-     * AGGRESSIVE: Fast chaotic motion bursting outward in 360°x360°x360°
+     * AGGRESSIVE: Fast chaotic motion bursting outward in 360°x360°x360° (Anger)
      * Anger particles explode from center with violent, erratic movement
      */
     _translateAggressive(particle, corePosition, canvasSize) {
@@ -523,9 +524,9 @@ export class Particle3DTranslator {
         const distance2D = Math.sqrt(dx * dx + dy * dy);
         const normalizedDistance = distance2D / centerX;
 
-        // Convert to world distance using 3D core radius
-        const minOrbit = this.coreRadius3D * 1.0;
-        const maxOrbit = this.coreRadius3D * 2.2;
+        // Convert to world distance using 3D core radius - tight (0.3x to 0.55x)
+        const minOrbit = this.coreRadius3D * 0.3;
+        const maxOrbit = this.coreRadius3D * 0.55;
         const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Position along 3D direction with chaotic jitter (scaled to core size)
@@ -542,15 +543,15 @@ export class Particle3DTranslator {
     }
 
     /**
-     * SCATTERING: Dispersing outward in all directions with uniform 3D distribution
+     * SCATTERING: Dispersing outward in all directions with uniform 3D distribution (Fear)
      */
     _translateScattering(particle, corePosition, canvasSize) {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
-        // Scatter outward based on particle age (from core to 2x radius)
+        // Scatter outward based on particle age - tight (0.3x to 0.6x)
         const scatterAmount = Math.min(particle.age * 0.8, 1.0);
-        const scatterRadius = this.coreRadius3D * (1.0 + scatterAmount);
+        const scatterRadius = this.coreRadius3D * (0.3 + scatterAmount * 0.3);
 
         // Position along 3D direction
         return this.tempVec3.set(
@@ -561,15 +562,15 @@ export class Particle3DTranslator {
     }
 
     /**
-     * REPELLING: Push away from core with uniform 3D distribution
+     * REPELLING: Push away from core with uniform 3D distribution (Disgust)
      */
     _translateRepelling(particle, corePosition, canvasSize) {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
-        // Repel outward based on particle age (from core to 2x radius)
+        // Repel outward based on particle age - tight around core (0.3x to 0.6x)
         const repelStrength = Math.min(particle.age * 0.6, 1.0);
-        const repelRadius = this.coreRadius3D * (1.0 + repelStrength);
+        const repelRadius = this.coreRadius3D * (0.3 + repelStrength * 0.3);
 
         // Position along 3D direction
         return this.tempVec3.set(
@@ -619,9 +620,9 @@ export class Particle3DTranslator {
         const distance2D = Math.sqrt(dx * dx + dy * dy);
         const normalizedDistance = distance2D / centerX;
 
-        // Convert to world distance using 3D core radius
-        const minOrbit = this.coreRadius3D * 1.0;
-        const maxOrbit = this.coreRadius3D * 1.5;
+        // Convert to world distance using 3D core radius - tight (0.25x to 0.45x)
+        const minOrbit = this.coreRadius3D * 0.25;
+        const maxOrbit = this.coreRadius3D * 0.45;
         const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Add very subtle breathing motion (scaled to core size)
