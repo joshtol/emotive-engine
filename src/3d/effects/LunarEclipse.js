@@ -71,13 +71,21 @@ export class LunarEclipse {
     setEclipseType(type) {
         if (this.eclipseType === type) return;
 
+        const wasOff = this.eclipseType === 'off';
         this.eclipseType = type;
+
+        // If starting a new eclipse (was off), reset shadow to west first
+        // Shadow ALWAYS enters from the west (negative X)
+        if (wasOff && type !== 'off') {
+            this.shadowX = -2.0; // Reset to west
+            this.material.uniforms.eclipseShadowPos.value = [this.shadowX, this.shadowY];
+        }
 
         // Set target progress and shadow position based on type
         switch (type) {
         case 'off':
             this.targetProgress = 0.0;
-            this.targetShadowX = -2.0; // Move shadow off-screen left (exit)
+            this.targetShadowX = 2.0; // Move shadow off-screen right (continue east, realistic exit)
             break;
         case 'penumbral':
             this.targetProgress = 0.3; // 30% coverage (subtle darkening)
@@ -85,7 +93,7 @@ export class LunarEclipse {
             break;
         case 'partial':
             this.targetProgress = 0.65; // 65% coverage (edge of umbra)
-            this.targetShadowX = -0.85; // Shadow partially covering moon
+            this.targetShadowX = -0.6; // Shadow partially covering moon (between edge and center)
             break;
         case 'total':
             this.targetProgress = 1.0; // 100% coverage (full blood moon)

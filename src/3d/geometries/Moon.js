@@ -147,7 +147,7 @@ export function getPhaseFromProgress(progress) {
  */
 export function createMoon(widthSegments = 64, heightSegments = 64) {
     const geometry = new THREE.SphereGeometry(
-        0.9,           // radius 0.9 = 1.8 diameter (matches crystal height)
+        0.5,           // radius 0.5 = 1.0 diameter (matches sphere geometry)
         widthSegments, // 64 segments for smooth normal mapping
         heightSegments
     );

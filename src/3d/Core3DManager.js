@@ -63,7 +63,10 @@ export class Core3DManager {
             enableControls: options.enableControls !== false, // Camera controls (mouse/touch)
             autoRotate: isMoon ? false : (options.autoRotate !== false), // Moon is tidally locked
             autoRotateSpeed: options.autoRotateSpeed, // Auto-rotate speed (undefined = default 0.5)
-            cameraDistance: options.cameraDistance // Camera Z distance (undefined = default 3)
+            cameraDistance: options.cameraDistance, // Camera Z distance (undefined = default 3)
+            fov: options.fov, // Field of view (undefined = default 45)
+            minZoom: options.minZoom, // Minimum zoom distance
+            maxZoom: options.maxZoom // Maximum zoom distance
         });
         const geometryConfig = THREE_GEOMETRIES[this.geometryType];
 
@@ -191,10 +194,12 @@ export class Core3DManager {
         // Blink animator (emotion-aware)
         this.blinkAnimator = new BlinkAnimator(this.geometryConfig);
         this.blinkAnimator.setEmotion(this.emotion);
+        this.blinkingManuallyDisabled = false; // Track if user disabled blinking
 
         // Disable blinking if requested
         if (options.enableBlinking === false) {
             this.blinkAnimator.pause();
+            this.blinkingManuallyDisabled = true;
         }
 
         // Rotation behavior system
@@ -1026,8 +1031,8 @@ export class Core3DManager {
         this.crystalInnerCore = new THREE.Mesh(coreGeometry, coreMaterial);
         this.crystalInnerCore.name = 'crystalInnerCore';
 
-        // Set initial scale - default soul size is 0.4
-        this.setCrystalCoreSize(0.4);
+        // Set initial scale - default soul size is 0.25 (slightly under half crystal size)
+        this.setCrystalCoreSize(0.25);
 
         // Add as child of crystal mesh
         this.coreMesh.add(this.crystalInnerCore);
@@ -1445,8 +1450,10 @@ export class Core3DManager {
             this._targetGeometryType = null;
             this._targetGeometryConfig = null;
 
-            // Resume blinks after morph completes
-            this.blinkAnimator.resume();
+            // Resume blinks after morph completes (unless manually disabled)
+            if (!this.blinkingManuallyDisabled) {
+                this.blinkAnimator.resume();
+            }
         }
 
         // Update breathing animation
@@ -1595,7 +1602,9 @@ export class Core3DManager {
         const effectiveGlowIntensity = baseIntensity * opacity;
 
         // Update bloom pass with effective glow intensity (smooth transitions)
-        this.renderer.updateBloom(effectiveGlowIntensity, 0.1, this.geometryType);
+        // Use faster transition during geometry morphs for quicker bloom adaptation
+        const bloomTransitionSpeed = morphState.isTransitioning ? 0.3 : 0.1;
+        this.renderer.updateBloom(effectiveGlowIntensity, bloomTransitionSpeed, this.geometryType);
 
         // Update sun material animation if using sun geometry
         if (this.customMaterialType === 'sun') {
@@ -1657,7 +1666,8 @@ export class Core3DManager {
             hasActiveGesture: this.animator.animations.length > 0,  // Faster lerp during gestures
             calibrationRotation: this.calibrationRotation,  // Applied on top of animated rotation
             solarEclipse: this.solarEclipse,  // Pass eclipse manager for synchronized updates
-            deltaTime  // Pass deltaTime for eclipse animation
+            deltaTime,  // Pass deltaTime for eclipse animation
+            morphProgress: morphState.isTransitioning ? morphState.visualProgress : null  // For corona fade-in
         });
 
         // Update lunar eclipse animation (Blood Moon)

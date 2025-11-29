@@ -199,7 +199,7 @@ void main() {
     // ═══════════════════════════════════════════════════════════════════════════
 
     // Calculate distance from center (0 at center, 1 at edge)
-    float distFromCenterLimb = length(vWorldPosition.xy) / 0.9; // normalize by sun radius (0.9)
+    float distFromCenterLimb = length(vWorldPosition.xy) / 0.5; // normalize by sun radius (0.5)
     distFromCenterLimb = clamp(distFromCenterLimb, 0.0, 1.0);
 
     // Limb darkening formula: I(μ) = 1 - u*(1-μ) where μ = cos(viewing angle)

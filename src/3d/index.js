@@ -134,6 +134,9 @@ export class EmotiveMascot3D {
                 enableBlinking: this.config.enableBlinking,
                 enableBreathing: this.config.enableBreathing,
                 cameraDistance: this.config.cameraDistance,
+                fov: this.config.fov,
+                minZoom: this.config.minZoom,
+                maxZoom: this.config.maxZoom,
                 materialVariant: this.config.materialVariant
             });
 
@@ -629,8 +632,11 @@ export class EmotiveMascot3D {
      * Enable blinking
      */
     enableBlinking() {
-        if (this.core3D && this.core3D.blinkAnimator) {
-            this.core3D.blinkAnimator.resume();
+        if (this.core3D) {
+            this.core3D.blinkingManuallyDisabled = false;
+            if (this.core3D.blinkAnimator) {
+                this.core3D.blinkAnimator.resume();
+            }
         }
     }
 
@@ -638,8 +644,11 @@ export class EmotiveMascot3D {
      * Disable blinking
      */
     disableBlinking() {
-        if (this.core3D && this.core3D.blinkAnimator) {
-            this.core3D.blinkAnimator.pause();
+        if (this.core3D) {
+            this.core3D.blinkingManuallyDisabled = true;
+            if (this.core3D.blinkAnimator) {
+                this.core3D.blinkAnimator.pause();
+            }
         }
     }
 

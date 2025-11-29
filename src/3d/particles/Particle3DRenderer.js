@@ -421,8 +421,7 @@ export class Particle3DRenderer {
             this.alphas[i] = particle.opacity * (particle.baseOpacity || 1.0);
 
             // PRIORITY 3: Enhanced glow with size multipliers (1.33x-1.66x)
-            // Reduced intensity - was too bright and distracting
-            let glowIntensity = particle.hasGlow ? (particle.glowSizeMultiplier || 1.5) * 0.5 : 0;
+            let glowIntensity = particle.hasGlow ? (particle.glowSizeMultiplier || 1.5) * 1.0 : 0;
 
             // Apply gesture effects (these can boost glow further)
             glowIntensity = this._applyGestureEffects(particle, glowIntensity, i);

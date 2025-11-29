@@ -592,7 +592,10 @@
                     autoRotate: true,
                     enableBlinking: false,
                     enableBreathing: false,
-                    cameraDistance: 1.2
+                    cameraDistance: 1.2,  // Camera distance from sun
+                    fov: 30,              // Lower FOV = sun appears larger in frame
+                    minZoom: 0.9,         // Allow zooming in closer
+                    maxZoom: 2.0          // Allow zooming out to see full corona
                 });
 
                 mascot.init(container);
@@ -794,8 +797,12 @@
             });
             document.addEventListener('touchend', onPointerUp);
 
-            // Initialize dial to totality (shadow centered)
-            updateDial(0);
+            // Initialize dial visual to start position (don't set manual control yet)
+            // The engine will animate the shadow from -2.0 to 0.0
+            // Just update the dial knob rotation without calling setManualShadowPosition
+            dialState.currentAngle = -180; // Start position (shadow off-screen left)
+            dialKnob.style.transform = `rotate(${-180}deg)`;
+            dialValue.textContent = '0%'; // 0% coverage at start
         }
 
         // Create layer card HTML

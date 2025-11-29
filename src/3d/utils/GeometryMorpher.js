@@ -12,8 +12,6 @@
  * Manages smooth transitions between geometries similar to 2D ShapeMorpher
  */
 
-import * as THREE from 'three';
-
 export class GeometryMorpher {
     constructor() {
         this.isTransitioning = false;
@@ -92,7 +90,7 @@ export class GeometryMorpher {
      * @param {number} deltaTime - Time since last frame in ms
      * @returns {Object} Current morph state
      */
-    update(deltaTime) {
+    update(_deltaTime) {
         if (!this.isTransitioning) {
             return {
                 isTransitioning: false,
@@ -102,14 +100,13 @@ export class GeometryMorpher {
             };
         }
 
-        // If paused at swap point, hold at minimum scale
+        // If paused at swap point, hold at minimum scale (0 for invisible swap)
         if (this.isPausedAtSwap) {
-            const minScale = 0.75;
             return {
                 isTransitioning: true,
                 progress: 0.5,
                 visualProgress: 0.5,
-                scaleMultiplier: minScale,
+                scaleMultiplier: 0.0,
                 waitingForGeometry: true
             };
         }
@@ -122,11 +119,11 @@ export class GeometryMorpher {
         this.morphProgress = this.applyEasing(rawProgress);
 
         // Smooth visual progress for ultra-smooth rendering (like 2D)
-        // Heavy smoothing: 80% of previous frame, 20% of new
-        this.visualProgress = this.visualProgress * 0.8 + this.morphProgress * 0.2;
+        // Lighter smoothing (60/40) so scale can reach 0 at midpoint
+        this.visualProgress = this.visualProgress * 0.6 + this.morphProgress * 0.4;
 
-        // Snap to final value when very close
-        if (Math.abs(this.visualProgress - this.morphProgress) < 0.001) {
+        // Snap to target when close (ensures we hit 0 at midpoint and 1 at end)
+        if (Math.abs(this.visualProgress - this.morphProgress) < 0.01) {
             this.visualProgress = this.morphProgress;
         }
 
@@ -164,22 +161,29 @@ export class GeometryMorpher {
 
     /**
      * Calculate scale multiplier for shrink/grow animation
-     * Uses smooth continuous curve with playful overshoot
+     * Shrinks to 0 at midpoint for invisible geometry swap, then grows back
+     * Uses smooth easing for jaunty blink effect
      * @param {number} progress - Visual progress (0-1)
      * @returns {number} Scale multiplier
      */
     calculateScaleMultiplier(progress) {
-        // Use a sine wave for smooth, continuous animation
-        // Starts at 1.0, dips to minimum at 0.5, returns to 1.0
-        // Smooth and gentle transition without overshoot
+        // Shrink phase (0 to 0.5): scale goes from 1.0 to 0.0
+        // Grow phase (0.5 to 1.0): scale goes from 0.0 to 1.0
+        // This creates a smooth "blink out, swap, blink in" effect
 
-        const minScale = 0.75; // Shrink to 75% for subtle, smooth effect
-
-        // Pure sine curve for ultra-smooth animation
-        const sinePhase = Math.sin(progress * Math.PI);
-        const mainScale = 1.0 - (sinePhase * (1.0 - minScale));
-
-        return mainScale;
+        if (progress <= 0.5) {
+            // Shrinking: progress 0->0.5 maps to scale 1->0
+            // Use easeInQuad for accelerating shrink (jaunty feel)
+            const shrinkProgress = progress * 2; // 0 to 1
+            const eased = shrinkProgress * shrinkProgress; // easeIn
+            return 1.0 - eased;
+        } else {
+            // Growing: progress 0.5->1.0 maps to scale 0->1
+            // Use easeOutQuad for decelerating grow (bouncy arrival)
+            const growProgress = (progress - 0.5) * 2; // 0 to 1
+            const eased = growProgress * (2 - growProgress); // easeOut
+            return eased;
+        }
     }
 
     /**

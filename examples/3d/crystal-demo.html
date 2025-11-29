@@ -430,9 +430,9 @@
                 <div class="slider-control">
                     <div class="slider-label">
                         <span>Soul Size</span>
-                        <span class="slider-value" id="soul-size-value">1.00</span>
+                        <span class="slider-value" id="soul-size-value">0.25</span>
                     </div>
-                    <input type="range" id="soul-size-slider" min="0" max="1" step="0.05" value="1.0">
+                    <input type="range" id="soul-size-slider" min="0" max="1" step="0.05" value="0.25">
                 </div>
             </div>
         </div>
@@ -597,6 +597,42 @@
         mascot.setEmotion('neutral');
 
         console.log('💎 Crystal demo initialized');
+
+        // Initialize sliders with actual values from engine
+        setTimeout(() => {
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                const u = mascot.core3D.customMaterial.uniforms;
+
+                // Helper to update slider and display
+                const setSlider = (id, value, decimals = 2) => {
+                    const slider = document.getElementById(id + '-slider');
+                    const display = document.getElementById(id + '-value');
+                    if (slider && value !== undefined) {
+                        slider.value = value;
+                        if (display) display.textContent = value.toFixed(decimals);
+                    }
+                };
+
+                // Read values from shader uniforms
+                setSlider('frostiness', u.frostiness?.value);
+                setSlider('inner-glow', u.innerGlowStrength?.value);
+                setSlider('fresnel', u.fresnelIntensity?.value);
+                setSlider('surface-noise', u.surfaceNoiseScale?.value);
+                setSlider('inner-wisp', u.innerWispScale?.value);
+                setSlider('surface-roughness', u.surfaceRoughness?.value);
+                setSlider('noise-freq', u.noiseFrequency?.value);
+                setSlider('texture-strength', u.textureStrength?.value);
+
+                // Soul size from crystalInnerCoreBaseScale
+                if (mascot.core3D.crystalInnerCoreBaseScale !== undefined) {
+                    // Reverse the scale mapping: scale = 0.3 + size * 1.2 → size = (scale - 0.3) / 1.2
+                    const soulSize = (mascot.core3D.crystalInnerCoreBaseScale - 0.3) / 1.2;
+                    setSlider('soul-size', Math.max(0, Math.min(1, soulSize)));
+                }
+
+                console.log('💎 Sliders initialized from engine values');
+            }
+        }, 100);
 
         // Emotion emoji mapping
         const emotionEmojis = {

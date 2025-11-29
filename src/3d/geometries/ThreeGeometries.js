@@ -84,7 +84,7 @@ function loadCrystalGeometry() {
                     geometry.boundingBox.getSize(size);
                     console.log('💎 [CRYSTAL] Original size:', size.x, size.y, size.z);
                     const maxDim = Math.max(size.x, size.y, size.z);
-                    const scale = 2.0 / maxDim;  // Scale to ~2.0 diameter for visibility
+                    const scale = 1.6 / maxDim;  // Scale to ~1.6 diameter to match sun/moon size
                     console.log('💎 [CRYSTAL] Scale factor:', scale);
                     geometry.scale(scale, scale, scale);
                     // Preserve original OBJ normals if present, otherwise compute them

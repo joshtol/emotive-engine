@@ -30,8 +30,13 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
-                        linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            /* Background gradient matching crystal demo: dark green-black top, warm brown bottom */
+            background: linear-gradient(180deg,
+                #0a1810 0%,
+                #1a2820 25%,
+                #2a3530 50%,
+                #4a3a30 75%,
+                #5a4a40 100%);
             color: white;
             width: 100vw;
             height: 100vh;
@@ -85,6 +90,40 @@
             text-transform: uppercase;
             letter-spacing: 1.2px;
             font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        h2:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+
+        h2::after {
+            content: '−';
+            font-size: clamp(14px, 1.2vw, 18px);
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.5);
+            transition: transform 0.2s;
+        }
+
+        h2.collapsed::after {
+            content: '+';
+        }
+
+        .section-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
         }
 
         .button-grid {
@@ -112,14 +151,13 @@
         }
 
         button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(100, 200, 255, 0.5);
         }
 
         button.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
+            background: rgba(100, 200, 255, 0.3);
+            border-color: rgba(100, 200, 255, 0.8);
         }
 
         #mascot-container {
@@ -129,8 +167,8 @@
             max-height: 100%;
             aspect-ratio: 1;
             border-radius: clamp(12px, 1.5vw, 20px);
-            background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
-            box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+            /* Subtle glow around container */
+            box-shadow: 0 0 60px rgba(100, 200, 255, 0.15);
             touch-action: none;
         }
 
@@ -140,9 +178,9 @@
         }
 
         .info-box {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: clamp(6px, 0.6vw, 8px);
+            background: rgba(100, 200, 255, 0.1);
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            border-radius: clamp(8px, 0.8vw, 10px);
             padding: clamp(10px, 1vw, 12px);
             font-size: clamp(10px, 0.85vw, 11px);
             color: rgba(255, 255, 255, 0.7);
@@ -150,13 +188,14 @@
         }
 
         .info-box strong {
-            color: #667eea;
+            color: #6ee7ff;
         }
 
         .visual-controls button {
             grid-column: span 2;
         }
 
+        /* Mobile/Tablet Responsive */
         @media (max-width: 1000px) {
             body {
                 flex-direction: column;
@@ -167,20 +206,22 @@
                 width: 100%;
                 min-width: unset;
                 max-width: unset;
-                max-height: 35vh;
+                max-height: 40vh;
                 border: none;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 padding: 15px;
             }
 
-            .left-menu {
+            /* Mobile order: 3D view first, then left menu (emotions), then right menu (settings) */
+            .center-content {
                 order: 1;
+                flex: 0 0 auto;
+                min-height: 35vh;
+                max-height: 45vh;
             }
 
-            .center-content {
+            .left-menu {
                 order: 2;
-                flex: 1;
-                min-height: 30vh;
             }
 
             .right-menu {
@@ -196,12 +237,17 @@
 
         @media (max-width: 600px) {
             .button-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
 
             .left-menu,
             .right-menu {
                 padding: 12px;
+            }
+
+            .center-content {
+                min-height: 30vh;
+                max-height: 40vh;
             }
         }
 
@@ -232,34 +278,38 @@
     <div class="left-menu">
         <div class="section">
             <h2>Emotions</h2>
-            <div class="button-grid">
-                <button data-action="emotion" data-value="joy">😊 Joy</button>
-                <button data-action="emotion" data-value="love">❤️ Love</button>
-                <button data-action="emotion" data-value="excited">🎉 Excited</button>
-                <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
-                <button data-action="emotion" data-value="calm">😌 Calm</button>
-                <button data-action="emotion" data-value="focused">🎯 Focused</button>
-                <button data-action="emotion" data-value="resting">😴 Resting</button>
-                <button data-action="emotion" data-value="sadness">😢 Sadness</button>
-                <button data-action="emotion" data-value="anger">😠 Anger</button>
-                <button data-action="emotion" data-value="fear">😰 Fear</button>
-                <button data-action="emotion" data-value="surprise">😲 Surprise</button>
-                <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
-                <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
-                <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="emotion" data-value="joy">😊 Joy</button>
+                    <button data-action="emotion" data-value="love">❤️ Love</button>
+                    <button data-action="emotion" data-value="excited">🎉 Excited</button>
+                    <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
+                    <button data-action="emotion" data-value="calm">😌 Calm</button>
+                    <button data-action="emotion" data-value="focused">🎯 Focused</button>
+                    <button data-action="emotion" data-value="resting">😴 Resting</button>
+                    <button data-action="emotion" data-value="sadness">😢 Sadness</button>
+                    <button data-action="emotion" data-value="anger">😠 Anger</button>
+                    <button data-action="emotion" data-value="fear">😰 Fear</button>
+                    <button data-action="emotion" data-value="surprise">😲 Surprise</button>
+                    <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
+                    <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
+                    <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>Undertones</h2>
-            <div class="button-grid">
-                <button data-action="undertone" data-value="null">Clear</button>
-                <button data-action="undertone" data-value="subdued">Subdued</button>
-                <button data-action="undertone" data-value="tired">Tired</button>
-                <button data-action="undertone" data-value="nervous">Nervous</button>
-                <button data-action="undertone" data-value="confident">Confident</button>
-                <button data-action="undertone" data-value="intense">Intense</button>
-                <button data-action="undertone" data-value="energetic">Energetic</button>
+            <h2 class="collapsed">Undertones</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="undertone" data-value="null">Clear</button>
+                    <button data-action="undertone" data-value="subdued">Subdued</button>
+                    <button data-action="undertone" data-value="tired">Tired</button>
+                    <button data-action="undertone" data-value="nervous">Nervous</button>
+                    <button data-action="undertone" data-value="confident">Confident</button>
+                    <button data-action="undertone" data-value="intense">Intense</button>
+                    <button data-action="undertone" data-value="energetic">Energetic</button>
+                </div>
             </div>
         </div>
 
@@ -280,101 +330,107 @@
     <div class="right-menu">
         <div class="section">
             <h2>Core Geometries</h2>
-            <div class="button-grid">
-                <button data-action="geometry" data-value="sphere" class="active">🔮 Sphere</button>
-                <button data-action="geometry" data-value="crystal">💎 Crystal</button>
-                <button data-action="geometry" data-value="diamond">💠 Diamond</button>
-                <button data-action="geometry" data-value="moon">🌙 Moon</button>
-                <button data-action="geometry" data-value="sun">☀️ Sun</button>
-                <button data-action="geometry" data-value="torus">🍩 Torus</button>
-                <button data-action="geometry" data-value="icosahedron">⚽ Icosahedron</button>
-                <button data-action="geometry" data-value="octahedron">🔶 Octahedron</button>
-                <button data-action="geometry" data-value="tetrahedron">🔺 Tetrahedron</button>
-                <button data-action="geometry" data-value="dodecahedron">⬡ Dodecahedron</button>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="geometry" data-value="crystal" class="active">💎 Crystal</button>
+                    <button data-action="geometry" data-value="moon">🌙 Moon</button>
+                    <button data-action="geometry" data-value="sun">☀️ Sun</button>
+                </div>
+
+                <!-- Conditional controls that appear based on geometry type -->
+                <div id="eclipse-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Eclipse Type</div>
+                    <div class="button-grid">
+                        <button data-action="eclipse" data-value="annular">🌑 Annular</button>
+                        <button data-action="eclipse" data-value="total">🌚 Total</button>
+                    </div>
+                </div>
+
+                <div id="moon-phase-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Moon Phase</div>
+                    <div class="button-grid">
+                        <button data-action="moon-phase" data-value="new">🌑 New</button>
+                        <button data-action="moon-phase" data-value="waxing-crescent">🌒 Wax Cres</button>
+                        <button data-action="moon-phase" data-value="first-quarter">🌓 1st Qtr</button>
+                        <button data-action="moon-phase" data-value="waxing-gibbous">🌔 Wax Gib</button>
+                        <button data-action="moon-phase" data-value="full" class="active">🌕 Full</button>
+                        <button data-action="moon-phase" data-value="waning-gibbous">🌖 Wan Gib</button>
+                        <button data-action="moon-phase" data-value="last-quarter">🌗 Last Qtr</button>
+                        <button data-action="moon-phase" data-value="waning-crescent">🌘 Wan Cres</button>
+                    </div>
+                </div>
+
+                <div id="lunar-eclipse-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Lunar Eclipse</div>
+                    <div class="button-grid">
+                        <button data-action="lunar-eclipse" data-value="penumbral">🌔 Penumbral</button>
+                        <button data-action="lunar-eclipse" data-value="partial">🌗 Partial</button>
+                        <button data-action="lunar-eclipse" data-value="total">🩸 Blood Moon</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="section visual-controls">
+        <div class="section visual-controls" id="visual-controls-section">
             <h2>Visual Controls</h2>
-            <button data-action="toggle-particles">✨ Particles</button>
-            <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-            <button data-action="toggle-blink" class="active">👁️ Blinking</button>
-            <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
-            <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
-        </div>
-
-        <div class="section">
-            <h2>Camera Position</h2>
-            <div class="button-grid">
-                <button data-action="camera" data-value="front" class="active">📷 Front</button>
-                <button data-action="camera" data-value="side">📷 Side</button>
-                <button data-action="camera" data-value="top">📷 Top</button>
-                <button data-action="camera" data-value="bottom">📷 Bottom</button>
-                <button data-action="camera" data-value="angle">📷 Angle</button>
-                <button data-action="camera" data-value="back">📷 Back</button>
-            </div>
-        </div>
-
-        <div class="section" id="eclipse-section" style="display: none;">
-            <h2>Eclipse (Sun Only)</h2>
-            <div class="button-grid">
-                <button data-action="eclipse" data-value="annular">🌑 Annular</button>
-                <button data-action="eclipse" data-value="total">🌚 Total</button>
-            </div>
-        </div>
-
-        <div class="section" id="moon-phase-section" style="display: none;">
-            <h2>Moon Phases</h2>
-            <div class="button-grid">
-                <button data-action="moon-phase" data-value="new">🌑 New</button>
-                <button data-action="moon-phase" data-value="waxing-crescent">🌒 Waxing Crescent</button>
-                <button data-action="moon-phase" data-value="first-quarter">🌓 First Quarter</button>
-                <button data-action="moon-phase" data-value="waxing-gibbous">🌔 Waxing Gibbous</button>
-                <button data-action="moon-phase" data-value="full" class="active">🌕 Full</button>
-                <button data-action="moon-phase" data-value="waning-gibbous">🌖 Waning Gibbous</button>
-                <button data-action="moon-phase" data-value="last-quarter">🌗 Last Quarter</button>
-                <button data-action="moon-phase" data-value="waning-crescent">🌘 Waning Crescent</button>
-            </div>
-        </div>
-
-        <div class="section" id="lunar-eclipse-section" style="display: none;">
-            <h2>Lunar Eclipse (Moon Only)</h2>
-            <div class="button-grid">
-                <button data-action="lunar-eclipse" data-value="penumbral">🌔 Penumbral</button>
-                <button data-action="lunar-eclipse" data-value="partial">🌗 Partial</button>
-                <button data-action="lunar-eclipse" data-value="total">🩸 Total (Blood Moon)</button>
+            <div class="section-content">
+                <button data-action="toggle-particles">✨ Particles</button>
+                <button data-action="toggle-glow" class="active">💫 Core Glow</button>
+                <button data-action="toggle-blink" class="active">👁️ Blinking</button>
+                <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
+                <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
             </div>
         </div>
 
         <div class="section">
-            <h2>Motion Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="bounce">Bounce</button>
-                <button data-action="gesture" data-value="pulse">Pulse</button>
-                <button data-action="gesture" data-value="float">Float</button>
-                <button data-action="gesture" data-value="shake">Shake</button>
-                <button data-action="gesture" data-value="sway">Sway</button>
-                <button data-action="gesture" data-value="wiggle">Wiggle</button>
+            <h2 class="collapsed">Motion Gestures</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="gesture" data-value="bounce">Bounce</button>
+                    <button data-action="gesture" data-value="pulse">Pulse</button>
+                    <button data-action="gesture" data-value="float">Float</button>
+                    <button data-action="gesture" data-value="shake">Shake</button>
+                    <button data-action="gesture" data-value="sway">Sway</button>
+                    <button data-action="gesture" data-value="wiggle">Wiggle</button>
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>Transform Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="spin">Spin</button>
-                <button data-action="gesture" data-value="jump">Jump</button>
-                <button data-action="gesture" data-value="twist">Twist</button>
-                <button data-action="gesture" data-value="stretch">Stretch</button>
+            <h2 class="collapsed">Transform Gestures</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="gesture" data-value="spin">Spin</button>
+                    <button data-action="gesture" data-value="jump">Jump</button>
+                    <button data-action="gesture" data-value="twist">Twist</button>
+                    <button data-action="gesture" data-value="stretch">Stretch</button>
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>Effect Gestures</h2>
-            <div class="button-grid">
-                <button data-action="gesture" data-value="flash">Flash</button>
-                <button data-action="gesture" data-value="glow">Glow</button>
-                <button data-action="gesture" data-value="breathe">Breathe</button>
-                <button data-action="gesture" data-value="flicker">Flicker</button>
+            <h2 class="collapsed">Effect Gestures</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="gesture" data-value="flash">Flash</button>
+                    <button data-action="gesture" data-value="glow">Glow</button>
+                    <button data-action="gesture" data-value="breathe">Breathe</button>
+                    <button data-action="gesture" data-value="flicker">Flicker</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Camera Position</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="camera" data-value="front" class="active">📷 Front</button>
+                    <button data-action="camera" data-value="side">📷 Side</button>
+                    <button data-action="camera" data-value="top">📷 Top</button>
+                    <button data-action="camera" data-value="bottom">📷 Bottom</button>
+                    <button data-action="camera" data-value="angle">📷 Angle</button>
+                    <button data-action="camera" data-value="back">📷 Back</button>
+                </div>
             </div>
         </div>
 
@@ -390,20 +446,23 @@
         import EmotiveMascot3D, { animateMoonPhase } from '../../dist/emotive-mascot-3d.js?t=1731948960';
 
         let mascot = null;
-        let currentGeometry = 'sphere';
+        let currentGeometry = 'crystal';
 
         // Initialize 3D mascot
         (async () => {
             try {
                 const container = document.getElementById('mascot-container');
                 mascot = new EmotiveMascot3D({
-                    coreGeometry: 'sphere',
+                    coreGeometry: 'crystal',
                     enableParticles: true,
                     enablePostProcessing: true,
                     enableShadows: false,
                     enableControls: true,
-                    autoRotate: false,
-                    cameraDistance: 1.2,
+                    autoRotate: true,  // Crystal has autorotate ON
+                    cameraDistance: 1.2,  // Camera distance from model
+                    fov: 30,              // Lower FOV = model appears larger in frame
+                    minZoom: 0.9,         // Allow zooming in closer
+                    maxZoom: 2.0,         // Allow zooming out
                     materialVariant: 'multiplexer'  // Use multiplexer material for blood moon effects
                 });
 
@@ -411,14 +470,44 @@
                 mascot.start();
                 mascot.setEmotion('joy');
 
-                // Start with particles disabled
-                mascot.disableParticles();
+                // Crystal defaults: particles ON, autorotate ON, blinking OFF
+                mascot.enableParticles();
+                mascot.disableBlinking();
 
-                console.log('✅ EmotiveMascot3D Full Demo initialized');
+                // Update button states to match defaults
+                document.querySelector('[data-action="toggle-particles"]')?.classList.add('active');
+                document.querySelector('[data-action="toggle-auto-rotate"]')?.classList.add('active');
+                document.querySelector('[data-action="toggle-blink"]')?.classList.remove('active');
+
+                console.log('✅ EmotiveMascot3D Full Demo initialized (crystal defaults: particles ON, autorotate ON, blinking OFF)');
             } catch (error) {
                 console.error('❌ Failed to initialize:', error);
             }
         })();
+
+        // Collapsible sections - toggle on h2 click
+        document.querySelectorAll('.section h2').forEach(h2 => {
+            h2.addEventListener('click', () => {
+                const content = h2.nextElementSibling;
+                if (content && content.classList.contains('section-content')) {
+                    h2.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                }
+            });
+        });
+
+        // Collapse Visual Controls on mobile
+        if (window.innerWidth <= 768) {
+            const visualControlsSection = document.getElementById('visual-controls-section');
+            if (visualControlsSection) {
+                const h2 = visualControlsSection.querySelector('h2');
+                const content = visualControlsSection.querySelector('.section-content');
+                if (h2 && content) {
+                    h2.classList.add('collapsed');
+                    content.classList.add('collapsed');
+                }
+            }
+        }
 
         // Event delegation for all buttons
         document.addEventListener('click', (e) => {
@@ -465,8 +554,31 @@
                         moonPhaseSection.style.display = (value === 'moon') ? 'block' : 'none';
                         lunarEclipseSection.style.display = (value === 'moon') ? 'block' : 'none';
 
-                        // Initialize moon to full phase when switching to it (copied from moon-demo)
-                        if (value === 'moon') {
+                        // Apply geometry-specific defaults
+                        // Crystal: particles ON, autorotate ON, blinking OFF
+                        // Moon: particles OFF, autorotate OFF, blinking OFF
+                        // Sun: particles OFF, autorotate ON, blinking OFF
+                        const particlesBtn = document.querySelector('[data-action="toggle-particles"]');
+                        const autoRotateBtn = document.querySelector('[data-action="toggle-auto-rotate"]');
+                        const blinkBtn = document.querySelector('[data-action="toggle-blink"]');
+
+                        if (value === 'crystal') {
+                            mascot.enableParticles();
+                            mascot.enableAutoRotate();
+                            mascot.disableBlinking();
+                            particlesBtn?.classList.add('active');
+                            autoRotateBtn?.classList.add('active');
+                            blinkBtn?.classList.remove('active');
+                            console.log('💎 Crystal defaults: particles ON, autorotate ON, blinking OFF');
+                        } else if (value === 'moon') {
+                            mascot.disableParticles();
+                            mascot.disableAutoRotate();
+                            mascot.disableBlinking();
+                            particlesBtn?.classList.remove('active');
+                            autoRotateBtn?.classList.remove('active');
+                            blinkBtn?.classList.remove('active');
+                            console.log('🌙 Moon defaults: particles OFF, autorotate OFF, blinking OFF');
+
                             // Wait for morph to complete and material to be created
                             // Morph duration is 1000ms, swap happens at 500ms
                             setTimeout(() => {
@@ -483,6 +595,14 @@
                                     console.log('🔒 Moon tidally locked - autoRotate forcibly disabled');
                                 }
                             }, 600); // Wait for geometry swap at midpoint
+                        } else if (value === 'sun') {
+                            mascot.disableParticles();
+                            mascot.enableAutoRotate();
+                            mascot.disableBlinking();
+                            particlesBtn?.classList.remove('active');
+                            autoRotateBtn?.classList.add('active');
+                            blinkBtn?.classList.remove('active');
+                            console.log('☀️ Sun defaults: particles OFF, autorotate ON, blinking OFF');
                         }
                         break;
 

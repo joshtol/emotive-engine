@@ -71,8 +71,9 @@ export class ThreeRenderer {
         canvas.addEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
 
         // Create camera
+        const fov = options.fov !== undefined ? options.fov : 45;
         this.camera = new THREE.PerspectiveCamera(
-            45, // FOV (matches custom WebGL)
+            fov, // FOV (default 45, lower = more zoomed in appearance)
             canvas.width / canvas.height, // aspect
             0.1, // near
             100 // far
@@ -139,9 +140,9 @@ export class ThreeRenderer {
         this.controls.dampingFactor = 0.1; // Increased from 0.05 for faster response
 
         // Set distance limits (min/max zoom for both mouse wheel and pinch)
-        // Use configured camera distance as the baseline, allowing zoom from 50% to 200% of initial distance
-        const minZoom = this.cameraDistance * 0.5;
-        const maxZoom = this.cameraDistance * 2.0;
+        // Use custom min/max if provided, otherwise default to 50%-200% of initial distance
+        const minZoom = this.options.minZoom !== undefined ? this.options.minZoom : this.cameraDistance * 0.5;
+        const maxZoom = this.options.maxZoom !== undefined ? this.options.maxZoom : this.cameraDistance * 2.0;
         this.controls.minDistance = minZoom;
         this.controls.maxDistance = maxZoom;
 
@@ -333,10 +334,10 @@ export class ThreeRenderer {
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)
-        // Half resolution for performance (blur naturally expands back)
+        // Full resolution for sharp bloom on sun/eclipse Baily's beads
         const bloomResolution = new THREE.Vector2(
-            Math.round(drawingBufferSize.x / 2),
-            Math.round(drawingBufferSize.y / 2)
+            drawingBufferSize.x,
+            drawingBufferSize.y
         );
         this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,
@@ -1099,7 +1100,8 @@ export class ThreeRenderer {
             calibrationRotation = [0, 0, 0],  // Manual rotation offset applied on top of animations
             cameraRoll = 0,  // Camera-space roll rotation applied after all other rotations
             solarEclipse = null,  // Solar eclipse manager for synchronized updates
-            deltaTime = 0  // Delta time for eclipse animation
+            deltaTime = 0,  // Delta time for eclipse animation
+            morphProgress = null  // Morph progress for corona fade-in (null = no morph, 0-1 = morphing)
         } = params;
 
         // Update camera controls (required for damping and auto-rotate)
@@ -1155,7 +1157,7 @@ export class ThreeRenderer {
             // to ensure shadow disk and corona are positioned based on the CURRENT frame's transforms,
             // not the previous frame's. This prevents visible lag during gesture animations.
             if (solarEclipse) {
-                solarEclipse.update(this.camera, this.coreMesh, deltaTime);
+                solarEclipse.update(this.camera, this.coreMesh, deltaTime, morphProgress);
             }
 
             // Update material properties based on material type

@@ -19,12 +19,12 @@ import { blendModesGLSL } from '../utils/blendModes.js';
 export const moonWithBlendLayersVertexShader = `
 /**
  * Moon Vertex Shader
- * Passes world-space normal to fragment shader for realistic lighting
+ * Passes view-space normal for camera-relative moon phase shadows
  */
 
-varying vec3 vPosition; // LOCAL position
+varying vec3 vPosition; // LOCAL position (object space)
 varying vec3 vWorldPosition;
-varying vec3 vWorldNormal; // WORLD SPACE normal (rotates with moon)
+varying vec3 vViewNormal; // VIEW SPACE normal (fixed relative to camera)
 varying vec3 vViewPosition;
 varying vec2 vUv;
 
@@ -32,9 +32,10 @@ void main() {
     vUv = uv;
     vPosition = position;
 
-    // Transform normal to WORLD space (not view space)
-    // This makes the shadow rotate with the moon geometry
-    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+    // Transform normal to VIEW space (camera-relative)
+    // This keeps the moon phase shadow fixed relative to camera view
+    // When you rotate the moon, the texture rotates but the phase shadow stays put
+    vViewNormal = normalize(normalMatrix * normal);
 
     vec4 worldPosition = modelMatrix * vec4(position, 1.0);
     vWorldPosition = worldPosition.xyz;
@@ -100,7 +101,7 @@ uniform float layer4Enabled;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
-varying vec3 vWorldNormal;
+varying vec3 vViewNormal;
 varying vec3 vViewPosition;
 varying vec2 vUv;
 
@@ -110,8 +111,9 @@ varying vec2 vUv;
 ${blendModesGLSL}
 
 void main() {
-    // DIRECTIONAL SHADOW in WORLD SPACE - realistic moon phase lighting
-    vec3 worldNormal = normalize(vWorldNormal);
+    // DIRECTIONAL SHADOW in VIEW SPACE - camera-relative moon phase
+    // Shadow stays fixed relative to screen; rotating moon doesn't change which side is lit
+    vec3 viewNormal = normalize(vViewNormal);
 
     float lightX = shadowOffset.x;
     float lightY = shadowOffset.y;
@@ -119,7 +121,8 @@ void main() {
     float lightZ = 1.0 - pow(offsetMagnitude, 1.5);
     vec3 lightDir = normalize(vec3(lightX, lightY, lightZ));
 
-    float facing = dot(worldNormal, lightDir);
+    // Light direction is in view space (camera-relative)
+    float facing = dot(viewNormal, lightDir);
     float edgeWidth = max(fwidth(facing) * 4.0, shadowSoftness * 3.0);
     float shadowFactor = smoothstep(-edgeWidth, edgeWidth, facing);
 
@@ -130,27 +133,23 @@ void main() {
         texColor = vec4(0.5, 0.5, 0.5, 1.0);
     }
 
-    // LIMB DARKENING
+    // VIEW DIRECTION (for eclipse rim effects only, NOT for general lighting)
     vec3 viewDir = normalize(-vViewPosition);
-    float rimFactor = dot(worldNormal, viewDir);
-    float limbDarkening = smoothstep(0.0, 0.6, rimFactor);
+    float rimFactor = dot(viewNormal, viewDir);
 
-    // DIFFUSE LIGHTING
-    float diffuse = max(facing, 0.0);
-    float diffuseLighting = mix(0.7, 1.0, diffuse);
-
-    // EARTHSHINE
+    // EARTHSHINE - faint blue glow on shadowed side
     vec3 earthshine = texColor.rgb * 0.01 * vec3(0.35, 0.4, 0.6);
 
-    // Apply shadow transition
+    // Apply shadow transition (moon phase only - NOT camera-based)
+    // The moon texture is uniformly visible; only the phase shadow creates darkness
     float litFactor = pow(shadowFactor, 2.0);
     vec3 detailEnhanced = texColor.rgb * 1.08;
     float textureLuminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
     detailEnhanced = mix(texColor.rgb * 0.95, texColor.rgb * 1.12, smoothstep(0.3, 0.7, textureLuminance));
 
-    vec3 litColor = detailEnhanced * diffuseLighting;
-    vec3 shadowedColor = mix(earthshine, litColor, litFactor);
-    shadowedColor *= mix(0.6, 1.0, limbDarkening);
+    // Lit areas show texture; shadowed areas show earthshine
+    // NO camera-based limb darkening - moon rotates, texture stays uniformly lit
+    vec3 shadowedColor = mix(earthshine, detailEnhanced, litFactor);
 
     vec3 emissive = vec3(0.02, 0.02, 0.02) * shadowFactor;
     vec3 emotionGlow = glowColor * glowIntensity * 0.02 * shadowFactor;
@@ -166,42 +165,45 @@ void main() {
         // No need for shader-side modulation
         float effectiveProgress = eclipseProgress;
 
-        // Calculate distance from shadow center in UV space
+        // Calculate distance from shadow center using VIEW-SPACE position (3D spherical)
+        // This creates a proper circular shadow on the sphere, not a flat UV-based cutoff
+        // viewNormal.xy ranges -1 to 1, scale to match UV range (0 to 0.5 from center)
         vec2 shadowCenter = vec2(eclipseShadowPos.x, eclipseShadowPos.y);
-        vec2 moonCenter = vUv - vec2(0.5, 0.5); // Center UV coordinates
-        float distFromShadow = length(moonCenter - shadowCenter);
-
-        // Earth's umbra (full shadow) - Softer edge for smoother transitions
-        float umbraRadius = eclipseShadowRadius * 0.7;
-        float umbraEdge = 0.08; // Softer for smoother shadow transitions
-        float umbra = 1.0 - smoothstep(umbraRadius - umbraEdge, umbraRadius + umbraEdge, distFromShadow);
-
-        // Earth's penumbra (partial shadow) - softer outer edge
-        float penumbraRadius = eclipseShadowRadius * 1.1;
-        float penumbraEdge = 0.15;
-        float penumbra = 1.0 - smoothstep(penumbraRadius - penumbraEdge, penumbraRadius + penumbraEdge, distFromShadow);
+        vec2 spherePos = viewNormal.xy * 0.5; // Scale to UV-equivalent range
+        float distFromShadow = length(spherePos - shadowCenter);
 
         // TOTALITY FACTOR: Based on how centered the shadow is on the moon
         // When shadowX near 0.0 (centered), we're at totality - brightens and reddens
-        // When shadowX far from 0.0 (off to side), we're partial - stays dark and sharp
-        // VERY WIDE RANGE: 0.6 range - blood moon glow visible through most of shadow sweep
+        // When shadowX far from 0.0 (off to side), we're partial - stays dark and diffuse
         float shadowCenteredness = 1.0 - smoothstep(0.0, 0.6, abs(eclipseShadowPos.x));
         float totalityFactor = shadowCenteredness;
 
-        // UMBRA DARKENING: Controlled by shadowDarkness uniform
-        // shadowDarkness = 0.0: No darkening
-        // shadowDarkness = 1.0: Maximum darkening (70% at partials, 30% at totality)
-        // Base darkening varies with totality: more at partials, less at totality
-        float baseDarkening = mix(0.70, 0.30, totalityFactor);
+        // Earth's umbra (full shadow) - DIFFUSE at partials, sharper at totality
+        float umbraRadius = eclipseShadowRadius * 0.7;
+        // Edge softness: very diffuse at partials (0.25), sharp at totality (0.05)
+        float umbraEdge = mix(0.25, 0.05, totalityFactor);
+        float umbra = 1.0 - smoothstep(umbraRadius - umbraEdge, umbraRadius + umbraEdge, distFromShadow);
+
+        // Earth's penumbra (partial shadow) - wider and softer
+        // Penumbra extends further at partials, tighter at totality
+        float penumbraRadius = eclipseShadowRadius * mix(1.4, 1.1, totalityFactor);
+        float penumbraEdge = mix(0.3, 0.15, totalityFactor);
+        float penumbra = 1.0 - smoothstep(penumbraRadius - penumbraEdge, penumbraRadius + penumbraEdge, distFromShadow);
+
+        // UMBRA DARKENING: Much darker at partials, lighter at totality
+        // Partials: 85% darkening (very dark shadow)
+        // Totality: 30% darkening (blood moon glow visible)
+        float baseDarkening = mix(0.85, 0.30, totalityFactor);
         float umbraDarkeningAmount = baseDarkening * shadowDarkness;
         float umbraDarkening = umbra * effectiveProgress;
 
         // Apply base darkening first
         finalColor *= (1.0 - umbraDarkening * umbraDarkeningAmount);
 
-        // PENUMBRA: Lighter darkening (Earth partially blocks sunlight)
+        // PENUMBRA: Darker gradient at partials, lighter at totality
         float penumbraDarkening = (penumbra - umbra) * effectiveProgress;
-        finalColor *= (1.0 - penumbraDarkening * 0.20);
+        float penumbraDarkenAmount = mix(0.50, 0.20, totalityFactor); // 50% at partials, 20% at totality
+        finalColor *= (1.0 - penumbraDarkening * penumbraDarkenAmount);
 
         // BLOOD MOON COLOR: Applied throughout entire eclipse, not just totality
         // Matches real lunar eclipse behavior - color present at all phases
@@ -217,8 +219,9 @@ void main() {
         // The glow spreads FROM the visible bright crescent INTO the shadowed area
         // During totality: shadow finally covers entire moon, full blood moon
 
-        vec2 pixelPos = vUv - vec2(0.5, 0.5);
-        float pixelX = pixelPos.x;
+        // Use view-space normal for spherical position (not UV)
+        // Scale to match UV range
+        float pixelX = viewNormal.x * 0.5;
 
         // THE LIT CRESCENT: Always visible during partial phases
         // During partials, the moon is partially lit (outside umbra)

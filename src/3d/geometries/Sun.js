@@ -92,22 +92,11 @@ export function createSunMaterial(textureLoader, options = {}) {
     const colorMap = textureLoader.load(
         colorPath,
         texture => {
-            // Fade in sun when texture loads (avoid odd pattern flash)
-            const startTime = performance.now();
-            const fadeIn = () => {
-                // Guard against disposed material (prevents error if disposed during fade)
-                if (!material.uniforms || !material.uniforms.opacity) {
-                    return;
-                }
-                const elapsed = performance.now() - startTime;
-                const progress = Math.min(elapsed / 300, 1.0); // 300ms fade
-                material.uniforms.opacity.value = progress;
-
-                if (progress < 1.0) {
-                    requestAnimationFrame(fadeIn);
-                }
-            };
-            fadeIn();
+            // Texture loaded - set full opacity immediately
+            // (morph transitions handle fade-in/out separately)
+            if (material.uniforms?.opacity) {
+                material.uniforms.opacity.value = 1.0;
+            }
 
             const pending = pendingTextures.get(colorPath);
             if (pending) {
@@ -166,7 +155,7 @@ export function createSunMaterial(textureLoader, options = {}) {
             // Solar Eclipse (moon's shadow covering sun - complete occlusion)
             eclipseProgress: { value: 0.0 },
             eclipseShadowPos: { value: [-2.0, 0.0] },  // Start off-screen
-            eclipseShadowRadius: { value: 0.072 },  // User-calibrated: Total eclipse size (Annular: 0.042)
+            eclipseShadowRadius: { value: 0.882 },  // User-calibrated: Total eclipse size
             shadowDarkness: { value: 1.00 },  // Always 1.0 - moon blocks 100% of sun's light
 
             // Blend Multiplexer Layer 1 - Multiply @ 0.230
@@ -324,7 +313,7 @@ export function createSunMaterial(textureLoader, options = {}) {
                 // ═══════════════════════════════════════════════════════════════════════════
 
                 // Calculate distance from center (0 at center, 1 at edge)
-                float distFromCenterLimb = length(vWorldPosition.xy) / 0.9; // normalize by sun radius (0.9)
+                float distFromCenterLimb = length(vWorldPosition.xy) / 0.5; // normalize by sun radius (0.5)
                 distFromCenterLimb = clamp(distFromCenterLimb, 0.0, 1.0);
 
                 // Limb darkening formula: I(μ) = 1 - u*(1-μ) where μ = cos(viewing angle)
@@ -454,7 +443,7 @@ export function createSunGeometry(textureLoader = null, options = {}) {
     // Create high-res sphere geometry for smooth bloom (no edge artifacts)
     // 128x128 = 16,384 quads = 32,768 triangles (smooth at any zoom)
     const geometry = new THREE.SphereGeometry(
-        0.9,  // radius (matches moon radius of 0.9)
+        0.5,  // radius 0.5 = 1.0 diameter (matches sphere geometry)
         128,  // width segments (smooth edges, no bloom artifacts)
         128   // height segments
     );

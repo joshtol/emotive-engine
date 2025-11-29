@@ -110,9 +110,9 @@ export class UnrealBloomPassAlpha extends Pass {
         this.renderTargetsVertical = [];
         this.nMips = 5;
 
-        // Standard bloom resolution (half of input for performance)
-        let resx = Math.round(this.resolution.x / 2);
-        let resy = Math.round(this.resolution.y / 2);
+        // 75% resolution for sharp bloom with good performance
+        let resx = Math.round(this.resolution.x * 0.75);
+        let resy = Math.round(this.resolution.y * 0.75);
 
         this.renderTargetBright = new WebGLRenderTarget(resx, resy, pars);
         this.renderTargetBright.texture.name = 'UnrealBloomPassAlpha.bright';
@@ -170,9 +170,9 @@ export class UnrealBloomPassAlpha extends Pass {
         // Gaussian blur materials with alpha preservation
         this.separableBlurMaterials = [];
         const kernelSizeArray = [3, 5, 7, 9, 11];
-        // Standard bloom resolution (half of input)
-        resx = Math.round(this.resolution.x / 2);
-        resy = Math.round(this.resolution.y / 2);
+        // 75% resolution for sharp bloom with good performance
+        resx = Math.round(this.resolution.x * 0.75);
+        resy = Math.round(this.resolution.y * 0.75);
 
         for (let i = 0; i < this.nMips; i++) {
             this.separableBlurMaterials.push(this.getSeperableBlurMaterial(kernelSizeArray[i]));
@@ -292,9 +292,9 @@ export class UnrealBloomPassAlpha extends Pass {
     }
 
     setSize(width, height) {
-        // Standard bloom resolution (half of input for performance)
-        let resx = Math.round(width / 2);
-        let resy = Math.round(height / 2);
+        // 75% resolution for sharp bloom with good performance
+        let resx = Math.round(width * 0.75);
+        let resy = Math.round(height * 0.75);
 
         this.renderTargetBright.setSize(resx, resy);
 

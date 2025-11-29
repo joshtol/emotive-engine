@@ -58,6 +58,7 @@ export class SolarEclipse {
         this.createCounterCoronaDisk();
 
         // Parent coronas to sun mesh for guaranteed transform sync (Fix 9)
+        // Shadow disk stays in scene for proper billboarding
         if (this.sunMesh) {
             this.scene.remove(this.coronaDisk);
             this.scene.remove(this.counterCoronaDisk);
@@ -92,7 +93,7 @@ export class SolarEclipse {
         this.shadowDisk = new THREE.Mesh(shadowGeometry, shadowMaterial);
         this.shadowDisk.renderOrder = 10000;  // Render AFTER coronas to occlude them
 
-        // Always add to scene, never as child
+        // Add to scene initially, will be re-parented to sun mesh if available
         this.shadowDisk.position.set(200, 0, 0); // Start off-screen
         this.scene.add(this.shadowDisk);
     }
@@ -126,7 +127,7 @@ export class SolarEclipse {
                 layer1Enabled: { value: 1.0 },
 
                 // Default: Darken @ 0.695 for depth
-                layer2Mode: { value: 3.0 },  // Darken
+                layer2Mode: { value: 5.0 },  // Overlay
                 layer2Strength: { value: 0.695 },
                 layer2Enabled: { value: 1.0 },
 
@@ -476,7 +477,7 @@ export class SolarEclipse {
                 layer1Enabled: { value: 1.0 },
 
                 // Default: Darken @ 0.695 for depth
-                layer2Mode: { value: 3.0 },  // Darken
+                layer2Mode: { value: 5.0 },  // Overlay
                 layer2Strength: { value: 0.695 },
                 layer2Enabled: { value: 1.0 },
 
@@ -554,6 +555,12 @@ export class SolarEclipse {
         this.enabled = (eclipseType !== ECLIPSE_TYPES.OFF);
         this.manualControl = false; // Reset manual control when eclipse type changes
 
+        // Get shadow coverage values for interpolation
+        const prevConfig = getEclipseConfig(this.previousEclipseType);
+        const newConfig = getEclipseConfig(eclipseType);
+        this.startShadowCoverage = prevConfig.shadowCoverage;
+        this.targetShadowCoverage = newConfig.shadowCoverage;
+
         // Determine transition direction
         if (!wasEnabled && this.enabled) {
             // Entering eclipse: slide in from right
@@ -566,19 +573,13 @@ export class SolarEclipse {
             this.isTransitioning = true;
             this.transitionProgress = 0;
         } else if (wasEnabled && this.enabled) {
-            // Switching between annular/total: quick cross-fade
+            // Switching between annular/total: animate shadow size change
             this.isTransitioning = true;
             this.transitionProgress = 0;
             this.transitionDirection = 'switch';
         }
 
-        // Regenerate random seed for new corona pattern ONLY when switching TO total eclipse
-        // (not when already total - prevents double regeneration on repeated clicks)
-        if (eclipseType === ECLIPSE_TYPES.TOTAL && this.previousEclipseType !== ECLIPSE_TYPES.TOTAL) {
-            this.randomSeed = Math.random() * 1000;
-            this.coronaDisk.material.uniforms.randomSeed.value = this.randomSeed;
-            this.counterCoronaDisk.material.uniforms.randomSeed.value = this.randomSeed + 5000;
-        }
+        // Corona pattern uses fixed seed for consistency - no randomization on eclipse type change
     }
 
     /**
@@ -625,12 +626,31 @@ export class SolarEclipse {
      * @param {THREE.Camera} camera - Camera for position calculations
      * @param {THREE.Mesh} sunMesh - Sun mesh for position/scale (already updated for current frame)
      * @param {number} deltaTime - Time since last frame (milliseconds)
+     * @param {number|null} morphProgress - Morph animation progress (null = no morph, 0-1 = morphing)
      */
-    update(camera, sunMesh, deltaTime) {
+    update(camera, sunMesh, deltaTime, morphProgress = null) {
         const cameraPosition = camera.position;
         const sunPosition = sunMesh.position;
         const sunScale = sunMesh.scale;
         const worldScale = sunScale.x; // World scale for consistent sizing
+
+        // Calculate corona fade multiplier for morph transitions
+        // Entry (Anything->Sun): rays fade in with inverse cubic (slow start, fast finish - bloom effect)
+        // Exit (Sun->Anything): rays fade out with cubic (fast start, slow finish - rays lead)
+        let coronaMorphFade = 1.0;
+        if (morphProgress !== null && morphProgress > 0.5) {
+            // Grow phase (entry): progress 0.5->1.0
+            // Inverse of exit: slow start, accelerating finish (rays bloom from sun)
+            const t = (morphProgress - 0.5) * 2; // 0 to 1 as grow progresses
+            coronaMorphFade = t * t * t; // Cubic: starts slow at 0, accelerates to 1
+        } else if (morphProgress !== null && morphProgress <= 0.5) {
+            // Shrink phase (exit): morphProgress goes 0->0.5
+            // At start (morphProgress=0): rays should be full (1.0)
+            // At end (morphProgress=0.5): rays should be gone (0.0)
+            // Rays fade FAST (cubic) - they lead ahead of sun's shrink
+            const t = morphProgress * 2; // 0 to 1 as shrink progresses
+            coronaMorphFade = (1.0 - t) * (1.0 - t) * (1.0 - t); // Cubic: starts at 1, drops fast to 0
+        }
 
         // Update time for corona animation
         // Accelerate time 3x for normal sun (more visible undulation), normal speed for eclipses
@@ -657,21 +677,28 @@ export class SolarEclipse {
             const config = getEclipseConfig(activeEclipseType);
             const scaledSunRadius = this.sunRadius * worldScale;
 
-            // Use linear progress for constant speed (no easing - prevents jerkiness)
-            const easedProgress = this.transitionProgress;
+            // Use eased progress for smooth transitions
+            const easedProgress = this.easeInOutCubic(this.transitionProgress);
 
-            // Calculate shadow size based on eclipse type (restore original logic)
-            const shadowCoverage = this.customShadowCoverage !== undefined
-                ? this.customShadowCoverage
-                : config.shadowCoverage;
+            // Calculate shadow size - only interpolate during 'switch' transitions (annular ↔ total)
+            // For 'in' and 'out' transitions, shadow maintains its size (like real moon)
+            let shadowCoverage;
+            if (this.customShadowCoverage !== undefined) {
+                // Manual slider override
+                shadowCoverage = this.customShadowCoverage;
+            } else if (this.transitionDirection === 'switch' && this.isTransitioning &&
+                       this.startShadowCoverage !== undefined && this.targetShadowCoverage !== undefined) {
+                // Only interpolate size when switching between annular/total
+                shadowCoverage = this.startShadowCoverage + (this.targetShadowCoverage - this.startShadowCoverage) * easedProgress;
+            } else {
+                // Use target config coverage (constant size during in/out transitions)
+                shadowCoverage = config.shadowCoverage;
+            }
             const shadowRadius = scaledSunRadius * shadowCoverage;
             const baseShadowScale = shadowRadius / this.sunRadius;
 
-            // Keep shadow at full size throughout transition (no scale animation)
+            // Scale shadow disk
             this.shadowDisk.scale.setScalar(baseShadowScale);
-
-            // Position shadow disk between camera and sun - REUSE temp vector
-            this._directionToCamera.subVectors(cameraPosition, sunPosition).normalize();
 
             // Calculate shadow position
             // shadowPosX range: -2.0 to +2.0
@@ -687,6 +714,9 @@ export class SolarEclipse {
                 } else if (this.transitionDirection === 'out') {
                     // Arc out from 0.0 to 1.0
                     this.currentShadowPosX = 0.0 + (easedProgress * 1.0); // 0.0 → 1.0
+                } else if (this.transitionDirection === 'switch') {
+                    // Shadow stays centered during annular<->total switch, only size changes
+                    this.currentShadowPosX = 0.0;
                 }
             } else {
                 // At rest: centered
@@ -704,12 +734,16 @@ export class SolarEclipse {
             const horizontalOffset = arcT * arcRadius * 0.5; // Horizontal position
             const verticalOffset = -(arcT * arcT) * arcRadius * 0.25; // Downward parabola: y = -x²
 
-            // BILLBOARD SHADOW DISK: Position shadow disk to occlude corona
+            // Position shadow disk between camera and sun - REUSE temp vector
+            this._directionToCamera.subVectors(cameraPosition, sunPosition).normalize();
+
             // Get perpendicular vectors for positioning - REUSE temp vectors
             this._right.crossVectors(this._directionToCamera, this._up).normalize();
             this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
 
-            const shadowOffset = scaledSunRadius * 1.01;
+            // Position shadow at sun's surface (no offset) to maintain consistent relative size
+            // The small Z-offset was causing perspective-based size changes when zooming
+            const shadowOffset = 0;
             // Build position using temp vector to avoid allocations
             this._tempOffset.copy(this._directionToCamera).multiplyScalar(shadowOffset);
             this.shadowDisk.position.copy(sunPosition).add(this._tempOffset);
@@ -743,17 +777,34 @@ export class SolarEclipse {
             const maxDistance = 2.0;
             const proximity = Math.max(0, 1 - (distanceFromCenter / maxDistance));
 
+            // Calculate total eclipse blend factor
+            // During 'switch' transition, animate between 0 (annular) and 1 (total)
+            let totalEclipseBlend = 0.0;
+            if (this.transitionDirection === 'switch' && this.isTransitioning) {
+                // Switching between annular/total: animate the blend
+                const wasTotal = (this.previousEclipseType === ECLIPSE_TYPES.TOTAL);
+                const isTotal = (this.eclipseType === ECLIPSE_TYPES.TOTAL);
+                if (isTotal && !wasTotal) {
+                    // Annular → Total: blend from 0 to 1
+                    totalEclipseBlend = easedProgress;
+                } else if (!isTotal && wasTotal) {
+                    // Total → Annular: blend from 1 to 0
+                    totalEclipseBlend = 1.0 - easedProgress;
+                }
+            } else if (activeEclipseType === ECLIPSE_TYPES.TOTAL) {
+                // Normal total eclipse: use proximity-based effects
+                totalEclipseBlend = 1.0;
+            }
+
             // For total eclipse: elongate rays via shader (not geometry scaling)
             // Pass elongation factor to shader (1.0 = circular, 25.0 = 2400% longer rays at poles)
             // Use quartic easing (^4) to keep rays normal length until very close to totality
-            const rayElongation = (activeEclipseType === ECLIPSE_TYPES.TOTAL)
-                ? 1.0 + (24.0 * Math.pow(proximity, 4)) // 1.0 → 25.0 (25x length at totality, rapid growth near end)
-                : 1.0;
+            const baseRayElongation = 1.0 + (24.0 * Math.pow(proximity, 4)); // 1.0 → 25.0
+            const rayElongation = 1.0 + (baseRayElongation - 1.0) * totalEclipseBlend;
 
             // Uber hero rays: 3 dramatic streamers that extend MUCH further at totality
-            const uberHeroElongation = (activeEclipseType === ECLIPSE_TYPES.TOTAL)
-                ? 1.0 + (199.0 * Math.pow(proximity, 5)) // 1.0 → 200.0 (200x length at totality, ultra dramatic)
-                : 1.0;
+            const baseUberHeroElongation = 1.0 + (199.0 * Math.pow(proximity, 5)); // 1.0 → 200.0
+            const uberHeroElongation = 1.0 + (baseUberHeroElongation - 1.0) * totalEclipseBlend;
 
             this.coronaDisk.material.uniforms.rayElongation.value = rayElongation;
             this.counterCoronaDisk.material.uniforms.rayElongation.value = rayElongation;
@@ -767,15 +818,16 @@ export class SolarEclipse {
             const effectsLinear = Math.max(0, Math.min(1, (proximity - effectsMin) / (effectsMax - effectsMin)));
             // Smoothstep easeInOut: 3t² - 2t³
             const effectsProgress = effectsLinear * effectsLinear * (3 - 2 * effectsLinear);
-            const isTotalEclipse = (activeEclipseType === ECLIPSE_TYPES.TOTAL) ? effectsProgress : 0.0;
+            // Apply total eclipse blend to shader effects
+            const isTotalEclipse = effectsProgress * totalEclipseBlend;
             this.coronaDisk.material.uniforms.isTotalEclipse.value = isTotalEclipse;
             this.counterCoronaDisk.material.uniforms.isTotalEclipse.value = isTotalEclipse;
 
             // Layer 3: Linear Burn eases in with the other effects
             // Linear Burn: strength 1.0 = no effect, strength 0.0 = max darkening
             // So we ramp from 1.0 (no effect) DOWN to 0.053 (full effect) at totality
-            const linearBurnEnabled = (activeEclipseType === ECLIPSE_TYPES.TOTAL && proximity >= effectsMin);
-            const linearBurnStrength = 1.0 - (1.0 - 0.053) * effectsProgress; // 1.0 → 0.053
+            const linearBurnEnabled = (totalEclipseBlend > 0 && proximity >= effectsMin);
+            const linearBurnStrength = 1.0 - (1.0 - 0.053) * effectsProgress * totalEclipseBlend; // 1.0 → 0.053
             this.setCoronaBlendLayer(3, { mode: 1, strength: linearBurnStrength, enabled: linearBurnEnabled });
 
             // Billboard both coronas to camera (must happen BEFORE rotation)
@@ -811,52 +863,30 @@ export class SolarEclipse {
                 // NORMAL SUN: Bright corona (solar atmosphere always visible)
                 coronaIntensity = 3.6;  // Increased for stronger bloom
             } else if (activeEclipseType === ECLIPSE_TYPES.ANNULAR) {
-                // ANNULAR ECLIPSE: Dim corona at totality (92% reduction - more dramatic than total)
+                // ANNULAR ECLIPSE: Dim corona based on proximity to shadow
+                const maxIntensity = 3.6; // Normal sun brightness
+                const minIntensity = maxIntensity * 0.08; // 8% at totality
                 if (this.transitionDirection === 'manual') {
-                    // MANUAL MODE: Gradient from full brightness to 8% at totality
-                    const maxIntensity = 3.6; // Normal sun brightness (increased for bloom)
-                    const minIntensity = maxIntensity * 0.08; // 8% = 92% reduction
                     coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * proximity;
-                } else if (this.isTransitioning && this.transitionDirection === 'in') {
-                    // TRANSITION IN: Fade from full brightness to dimmed
-                    const maxIntensity = 3.6;
-                    const minIntensity = maxIntensity * 0.08;
-                    coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * easedProgress;
-                } else if (this.isTransitioning && this.transitionDirection === 'out') {
-                    // TRANSITION OUT: Fade from dimmed to full brightness
-                    const maxIntensity = 3.6;
-                    const minIntensity = maxIntensity * 0.08;
-                    coronaIntensity = minIntensity + (maxIntensity - minIntensity) * easedProgress;
                 } else {
-                    // STEADY STATE: Dimmed (8% of normal)
-                    coronaIntensity = 3.6 * 0.08;
+                    // Use proximity for automatic dimming (shadow position determines intensity)
+                    coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * proximity;
                 }
             } else if (activeEclipseType === ECLIPSE_TYPES.TOTAL) {
-                // TOTAL ECLIPSE: Dim corona at totality (35% reduction)
+                // TOTAL ECLIPSE: Dim corona based on proximity to shadow
+                const maxIntensity = 3.6; // Normal sun brightness
+                const minIntensity = maxIntensity * 0.65; // 65% at totality
                 if (this.transitionDirection === 'manual') {
-                    // MANUAL MODE: Gradient from full brightness to 65% at totality
-                    const maxIntensity = 3.6; // Normal sun brightness (increased for bloom)
-                    const minIntensity = maxIntensity * 0.65; // 65% = 35% reduction
                     coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * proximity;
-                } else if (this.isTransitioning && this.transitionDirection === 'in') {
-                    // TRANSITION IN: Fade from full brightness to dimmed
-                    const maxIntensity = 3.6;
-                    const minIntensity = maxIntensity * 0.65;
-                    coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * easedProgress;
-                } else if (this.isTransitioning && this.transitionDirection === 'out') {
-                    // TRANSITION OUT: Fade from dimmed to full brightness
-                    const maxIntensity = 3.6;
-                    const minIntensity = maxIntensity * 0.65;
-                    coronaIntensity = minIntensity + (maxIntensity - minIntensity) * easedProgress;
                 } else {
-                    // STEADY STATE: Dimmed (65% of normal)
-                    coronaIntensity = 3.6 * 0.65;
+                    // Use proximity for automatic dimming (shadow position determines intensity)
+                    coronaIntensity = maxIntensity - (maxIntensity - minIntensity) * proximity;
                 }
             }
 
-            // Apply intensity to both coronas
-            this.coronaDisk.material.uniforms.intensity.value = coronaIntensity;
-            this.counterCoronaDisk.material.uniforms.intensity.value = coronaIntensity;
+            // Apply intensity to both coronas (with morph fade multiplier)
+            this.coronaDisk.material.uniforms.intensity.value = coronaIntensity * coronaMorphFade;
+            this.counterCoronaDisk.material.uniforms.intensity.value = coronaIntensity * coronaMorphFade;
 
             // Update shader time uniform for both
             this.coronaDisk.material.uniforms.time.value = this.time;
@@ -885,9 +915,9 @@ export class SolarEclipse {
             this.coronaDisk.material.uniforms.isTotalEclipse.value = 0.0;
             this.counterCoronaDisk.material.uniforms.isTotalEclipse.value = 0.0;
 
-            // Reduce corona intensity for normal sun (85% of base)
-            this.coronaDisk.material.uniforms.intensity.value = 3.6 * 0.85;
-            this.counterCoronaDisk.material.uniforms.intensity.value = 3.6 * 0.85;
+            // Reduce corona intensity for normal sun (85% of base, with morph fade)
+            this.coronaDisk.material.uniforms.intensity.value = 3.6 * 0.85 * coronaMorphFade;
+            this.counterCoronaDisk.material.uniforms.intensity.value = 3.6 * 0.85 * coronaMorphFade;
 
             // Disable Linear Burn when not in eclipse
             this.setCoronaBlendLayer(3, { mode: 1, strength: 0.0, enabled: false });
@@ -902,9 +932,9 @@ export class SolarEclipse {
             this.coronaDisk.material.uniforms.uvRotation.value += rotationSpeed; // Clockwise
             this.counterCoronaDisk.material.uniforms.uvRotation.value -= rotationSpeed; // Counter-clockwise
 
-            // Bright corona for normal sun (no eclipse)
-            this.coronaDisk.material.uniforms.intensity.value = 3.6;
-            this.counterCoronaDisk.material.uniforms.intensity.value = 3.6;
+            // Bright corona for normal sun (no eclipse, with morph fade)
+            this.coronaDisk.material.uniforms.intensity.value = 3.6 * coronaMorphFade;
+            this.counterCoronaDisk.material.uniforms.intensity.value = 3.6 * coronaMorphFade;
 
             // Update shader time uniform for both
             this.coronaDisk.material.uniforms.time.value = this.time;
@@ -966,7 +996,7 @@ export class SolarEclipse {
      * Dispose of all eclipse resources
      */
     dispose() {
-        // Dispose shadow disk
+        // Dispose shadow disk (always in scene, not parented)
         if (this.shadowDisk) {
             this.scene.remove(this.shadowDisk);
             this.shadowDisk.geometry.dispose();
