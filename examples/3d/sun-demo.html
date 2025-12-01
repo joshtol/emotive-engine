@@ -195,20 +195,47 @@
 
         let activePrecisionCard = null;
 
-        // Double-tap detection helper
-        function createDoubleTapDetector(callback, delay = 300) {
-            let lastTap = 0;
-            return function(e) {
-                const now = Date.now();
-                if (now - lastTap < delay) {
-                    e.preventDefault();
-                    e.stopPropagation();
+        // Long-press detection helper (tap and hold)
+        function createLongPressHandler(element, callback, holdDuration = 400) {
+            let pressTimer = null;
+            let startX, startY;
+            const moveThreshold = 10; // Cancel if moved more than 10px
+
+            const start = (e) => {
+                const touch = e.touches ? e.touches[0] : e;
+                startX = touch.clientX;
+                startY = touch.clientY;
+                pressTimer = setTimeout(() => {
                     callback(e);
-                    lastTap = 0;
-                } else {
-                    lastTap = now;
+                    pressTimer = null;
+                }, holdDuration);
+            };
+
+            const cancel = () => {
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
                 }
             };
+
+            const move = (e) => {
+                if (!pressTimer) return;
+                const touch = e.touches ? e.touches[0] : e;
+                const dx = Math.abs(touch.clientX - startX);
+                const dy = Math.abs(touch.clientY - startY);
+                if (dx > moveThreshold || dy > moveThreshold) {
+                    cancel();
+                }
+            };
+
+            element.addEventListener('mousedown', start);
+            element.addEventListener('touchstart', start, { passive: true });
+            element.addEventListener('mouseup', cancel);
+            element.addEventListener('mouseleave', cancel);
+            element.addEventListener('touchend', cancel);
+            element.addEventListener('touchcancel', cancel);
+            element.addEventListener('mousemove', move);
+            element.addEventListener('touchmove', move, { passive: true });
         }
 
         // Enter precision mode on a card
@@ -420,12 +447,9 @@
                 isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
             });
 
-            // Double-tap/click on slider control to enter precision mode
+            // Long-press on slider control to enter precision mode
             const openPrecision = () => enterPrecisionMode(card, layer, slider, valueEl, isCorona);
-            const doubleTapHandler = createDoubleTapDetector(openPrecision);
-
-            sliderControl.addEventListener('dblclick', openPrecision);
-            sliderControl.addEventListener('touchend', doubleTapHandler);
+            createLongPressHandler(sliderControl, openPrecision);
 
             return card;
         }

@@ -1063,12 +1063,12 @@ input[type="range"]::-moz-range-thumb {
 
 /* ─────────────────────────────────────────────────────────────────────────────
    PRECISION MODE - Inline fine-tuning
-   Double-tap slider to replace card content with precision controls
+   Long-press (tap and hold) slider to replace card content with precision controls
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* Hint on slider that precision mode exists */
 .layer-card .slider-control::after {
-    content: '2×tap';
+    content: 'hold';
     position: absolute;
     right: 38px; /* Position before the value */
     top: 50%;
