@@ -812,8 +812,45 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   STRENGTH FADER - Mixing console style vertical feel, horizontal layout
+   STRENGTH FADER - Clean inline layout with label, slider, and value
    ───────────────────────────────────────────────────────────────────────────── */
+
+/* Override .slider-control in layer cards for inline layout */
+.layer-card .slider-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+    position: relative; /* For precision hint positioning */
+}
+
+.layer-card .slider-label {
+    display: contents; /* Let children flow into parent flex */
+}
+
+.layer-card .slider-label > span:first-child {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    flex-shrink: 0;
+    min-width: 52px;
+}
+
+.layer-card .slider-label > .slider-value {
+    order: 3; /* Move value to end */
+    font-size: 11px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    color: var(--layer-accent, var(--accent));
+    min-width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.layer-card .slider-control input[type="range"] {
+    flex: 1;
+    order: 2; /* Slider in middle */
+}
+
+/* Legacy strength-control class (for backwards compat) */
 .strength-control {
     display: flex;
     flex-direction: column;
@@ -1030,17 +1067,14 @@ input[type="range"]::-moz-range-thumb {
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* Hint on slider that precision mode exists */
-.layer-card .slider-control {
-    position: relative;
-}
-
 .layer-card .slider-control::after {
-    content: '2×';
+    content: '2×tap';
     position: absolute;
-    right: 4px;
-    top: 2px;
-    font-size: 8px;
-    color: rgba(255, 255, 255, 0.25);
+    right: 38px; /* Position before the value */
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.2);
     pointer-events: none;
     transition: color 0.2s ease;
 }
