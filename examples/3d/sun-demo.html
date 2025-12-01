@@ -400,12 +400,14 @@
                             ).join('')}
                         </div>
                     </div>
-                    <div class="slider-control">
-                        <div class="slider-label">
-                            <span>Strength</span>
-                            <span class="slider-value">${layer.strength.toFixed(1)}</span>
+                    <div class="fader-control">
+                        <span class="fader-label">Strength</span>
+                        <button class="fader-step fader-step-down" data-step="-0.1">−</button>
+                        <div class="fader-track">
+                            <input type="range" data-action="${strengthAction}" min="0" max="5" step="0.1" value="${layer.strength}">
                         </div>
-                        <input type="range" data-action="${strengthAction}" min="0" max="5" step="0.1" value="${layer.strength}">
+                        <button class="fader-step fader-step-up" data-step="0.1">+</button>
+                        <span class="fader-value">${layer.strength.toFixed(1)}</span>
                     </div>
                 </div>
             `;
@@ -446,18 +448,30 @@
             });
 
             const slider = card.querySelector(`[data-action="${strengthAction}"]`);
-            const valueEl = card.querySelector('.slider-value');
-            const sliderControl = card.querySelector('.slider-control');
+            const valueEl = card.querySelector('.fader-value');
+            const faderControl = card.querySelector('.fader-control');
+            const faderTrack = card.querySelector('.fader-track');
+            const stepDown = card.querySelector('.fader-step-down');
+            const stepUp = card.querySelector('.fader-step-up');
 
-            slider.addEventListener('input', (e) => {
-                layer.strength = parseFloat(e.target.value);
+            const updateValue = (newValue) => {
+                layer.strength = Math.max(0, Math.min(5, newValue));
+                slider.value = layer.strength;
                 valueEl.textContent = layer.strength.toFixed(1);
                 isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
+            };
+
+            slider.addEventListener('input', (e) => {
+                updateValue(parseFloat(e.target.value));
             });
 
-            // Long-press on slider control to enter precision mode
+            // Step buttons for ±0.1 fine tuning
+            stepDown.addEventListener('click', () => updateValue(layer.strength - 0.1));
+            stepUp.addEventListener('click', () => updateValue(layer.strength + 0.1));
+
+            // Long-press on fader track (not buttons) to enter precision mode
             const openPrecision = () => enterPrecisionMode(card, layer, slider, valueEl, isCorona);
-            createLongPressHandler(sliderControl, openPrecision);
+            createLongPressHandler(faderTrack, openPrecision);
 
             return card;
         }

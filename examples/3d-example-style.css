@@ -812,20 +812,91 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   STRENGTH FADER - Clean inline layout with label, slider, and value
+   FADER CONTROL - Audio mixer style with step buttons
+   Layout: [Label] [−] [====slider====] [+] [Value]
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* Override .slider-control in layer cards for inline layout */
+.fader-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+}
+
+.fader-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    flex-shrink: 0;
+    min-width: 48px;
+}
+
+.fader-value {
+    font-size: 11px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    color: var(--layer-accent, var(--accent));
+    min-width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Step buttons - compact touch-friendly */
+.fader-step {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fader-step:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.fader-step:active {
+    background: rgba(var(--accent-rgb), 0.2);
+    border-color: rgba(var(--accent-rgb), 0.4);
+    color: var(--accent);
+    transform: scale(0.95);
+}
+
+/* Fader track - contains the slider, receives long-press */
+.fader-track {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    padding: 8px 0; /* Expand touch target vertically */
+}
+
+.fader-track input[type="range"] {
+    width: 100%;
+    margin: 0;
+}
+
+/* Legacy .slider-control support (for non-layer-card sliders) */
 .layer-card .slider-control {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 0;
-    position: relative; /* For precision hint positioning */
+    position: relative;
 }
 
 .layer-card .slider-label {
-    display: contents; /* Let children flow into parent flex */
+    display: contents;
 }
 
 .layer-card .slider-label > span:first-child {
@@ -836,7 +907,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .layer-card .slider-label > .slider-value {
-    order: 3; /* Move value to end */
+    order: 3;
     font-size: 11px;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
     color: var(--layer-accent, var(--accent));
@@ -847,7 +918,7 @@ input[type="range"]::-moz-range-thumb {
 
 .layer-card .slider-control input[type="range"] {
     flex: 1;
-    order: 2; /* Slider in middle */
+    order: 2;
 }
 
 /* Legacy strength-control class (for backwards compat) */
@@ -1066,21 +1137,21 @@ input[type="range"]::-moz-range-thumb {
    Long-press (tap and hold) slider to replace card content with precision controls
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* Hint on slider that precision mode exists */
-.layer-card .slider-control::after {
+/* Hint on fader track that precision mode exists */
+.fader-track::after {
     content: 'hold';
     position: absolute;
-    right: 38px; /* Position before the value */
+    right: 4px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 7px;
-    color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.15);
     pointer-events: none;
     transition: color 0.2s ease;
 }
 
-.layer-card .slider-control:hover::after {
-    color: rgba(var(--accent-rgb), 0.5);
+.fader-track:hover::after {
+    color: rgba(var(--accent-rgb), 0.4);
 }
 
 /* Precision mode replaces layer-controls content */
