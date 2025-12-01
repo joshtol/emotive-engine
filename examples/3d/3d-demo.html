@@ -4,272 +4,37 @@
 
   A complete demonstration of all 3D geometries with emotional expression.
 
-  What you'll learn:
-  - All geometry types (sphere, crystal, diamond, moon, sun, platonic solids)
-  - Geometry morphing with smooth transitions
-  - Emotion-driven color changes
-  - Glass and emissive materials
-  - Eclipse effects (sun)
-  - Moon phases
+  Features:
+  - Crystal, Moon, and Sun geometries with smooth morphing
+  - 14 emotions with unique particle behaviors and colors
+  - Moon phases and lunar eclipse (blood moon) effects
+  - Solar eclipse effects (annular and total)
+  - Camera controls with touch/mouse interaction
+  - Particle systems with bloom effects
 
-  Complexity: ⭐⭐⭐ Advanced 3D
-  Features: All geometries, morphing, materials, emotions, particles
+  Learn more: https://github.com/anthropics/emotive-engine
 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Showcase - Emotive Engine Complete Demo</title>
-    <meta name="description" content="Complete 3D demo with all geometries, emotions, and materials">
+    <title>3D Showcase - Emotive Engine</title>
+    <meta name="description" content="Interactive 3D demo showcasing emotional expression through geometry, particles, and visual effects">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Theme: Crystal blue-green gradient */
+        :root {
+            --accent: #6ee7ff;
+            --accent-rgb: 100, 200, 255;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            /* Background gradient matching crystal demo: dark green-black top, warm brown bottom */
             background: linear-gradient(180deg,
                 #0a1810 0%,
                 #1a2820 25%,
                 #2a3530 50%,
                 #4a3a30 75%,
                 #5a4a40 100%);
-            color: white;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-        }
-
-        .left-menu,
-        .right-menu {
-            width: 18vw;
-            min-width: 200px;
-            max-width: 280px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            padding: 1.5vw;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        .left-menu {
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .right-menu {
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .center-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
-            padding: 2vmin;
-        }
-
-        .section {
-            margin-bottom: clamp(15px, 2vw, 25px);
-            padding-bottom: clamp(12px, 1.5vw, 20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section:last-child {
-            border-bottom: none;
-        }
-
-        h2 {
-            font-size: clamp(11px, 1vw, 13px);
-            margin-bottom: clamp(8px, 1vw, 12px);
-            color: rgba(255, 255, 255, 0.8);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-        }
-
-        h2:hover {
-            color: rgba(255, 255, 255, 1);
-        }
-
-        h2::after {
-            content: '−';
-            font-size: clamp(14px, 1.2vw, 18px);
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.5);
-            transition: transform 0.2s;
-        }
-
-        h2.collapsed::after {
-            content: '+';
-        }
-
-        .section-content {
-            overflow: hidden;
-            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
-            max-height: 1000px;
-            opacity: 1;
-        }
-
-        .section-content.collapsed {
-            max-height: 0;
-            opacity: 0;
-            margin-bottom: 0;
-        }
-
-        .button-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(5px, 0.6vw, 8px);
-            margin-bottom: clamp(8px, 1vw, 12px);
-        }
-
-        button {
-            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border-radius: clamp(6px, 0.6vw, 8px);
-            cursor: pointer;
-            font-size: clamp(9px, 0.8vw, 11px);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: clamp(2px, 0.3vw, 4px);
-            min-width: 0;
-            width: 100%;
-        }
-
-        button:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(100, 200, 255, 0.5);
-        }
-
-        button.active {
-            background: rgba(100, 200, 255, 0.3);
-            border-color: rgba(100, 200, 255, 0.8);
-        }
-
-        #mascot-container {
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-            aspect-ratio: 1;
-            border-radius: clamp(12px, 1.5vw, 20px);
-            /* Subtle glow around container */
-            box-shadow: 0 0 60px rgba(100, 200, 255, 0.15);
-            touch-action: none;
-        }
-
-        #mascot-container canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        .info-box {
-            background: rgba(100, 200, 255, 0.1);
-            border: 1px solid rgba(100, 200, 255, 0.3);
-            border-radius: clamp(8px, 0.8vw, 10px);
-            padding: clamp(10px, 1vw, 12px);
-            font-size: clamp(10px, 0.85vw, 11px);
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.5;
-        }
-
-        .info-box strong {
-            color: #6ee7ff;
-        }
-
-        .visual-controls button {
-            grid-column: span 2;
-        }
-
-        /* Mobile/Tablet Responsive */
-        @media (max-width: 1000px) {
-            body {
-                flex-direction: column;
-            }
-
-            .left-menu,
-            .right-menu {
-                width: 100%;
-                min-width: unset;
-                max-width: unset;
-                max-height: 40vh;
-                border: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 15px;
-            }
-
-            /* Mobile order: 3D view first, then left menu (emotions), then right menu (settings) */
-            .center-content {
-                order: 1;
-                flex: 0 0 auto;
-                min-height: 35vh;
-                max-height: 45vh;
-            }
-
-            .left-menu {
-                order: 2;
-            }
-
-            .right-menu {
-                order: 3;
-                border-bottom: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .button-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        @media (max-width: 600px) {
-            .button-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .left-menu,
-            .right-menu {
-                padding: 12px;
-            }
-
-            .center-content {
-                min-height: 30vh;
-                max-height: 40vh;
-            }
-        }
-
-        .left-menu::-webkit-scrollbar,
-        .right-menu::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .left-menu::-webkit-scrollbar-track,
-        .right-menu::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .left-menu::-webkit-scrollbar-thumb,
-        .right-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        .left-menu::-webkit-scrollbar-thumb:hover,
-        .right-menu::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
@@ -315,8 +80,8 @@
 
         <div class="section">
             <div class="info-box">
-                <strong>Full 3D Demo:</strong><br>
-                Explore all geometries with smooth morphing transitions. Each shape has unique materials and animations!
+                <strong>Emotive Engine 3D</strong><br>
+                Explore emotional expression through geometry, particles, and visual effects. Each emotion has unique behaviors!
             </div>
         </div>
     </div>
@@ -329,7 +94,7 @@
     <!-- RIGHT MENU: Controls & Geometries -->
     <div class="right-menu">
         <div class="section">
-            <h2>Core Geometries</h2>
+            <h2>Geometry</h2>
             <div class="section-content">
                 <div class="button-grid">
                     <button data-action="geometry" data-value="crystal" class="active">💎 Crystal</button>
@@ -337,15 +102,16 @@
                     <button data-action="geometry" data-value="sun">☀️ Sun</button>
                 </div>
 
-                <!-- Conditional controls that appear based on geometry type -->
+                <!-- Solar Eclipse controls (sun only) -->
                 <div id="eclipse-section" style="display: none; margin-top: 12px;">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Eclipse Type</div>
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Solar Eclipse</div>
                     <div class="button-grid">
                         <button data-action="eclipse" data-value="annular">🌑 Annular</button>
                         <button data-action="eclipse" data-value="total">🌚 Total</button>
                     </div>
                 </div>
 
+                <!-- Moon Phase controls (moon only) -->
                 <div id="moon-phase-section" style="display: none; margin-top: 12px;">
                     <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Moon Phase</div>
                     <div class="button-grid">
@@ -360,6 +126,7 @@
                     </div>
                 </div>
 
+                <!-- Lunar Eclipse controls (moon only, full moon required) -->
                 <div id="lunar-eclipse-section" style="display: none; margin-top: 12px;">
                     <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Lunar Eclipse</div>
                     <div class="button-grid">
@@ -372,13 +139,15 @@
         </div>
 
         <div class="section visual-controls" id="visual-controls-section">
-            <h2>Visual Controls</h2>
-            <div class="section-content">
-                <button data-action="toggle-particles">✨ Particles</button>
-                <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-                <button data-action="toggle-blink" class="active">👁️ Blinking</button>
-                <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
-                <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
+            <h2 class="collapsed">Visual Controls</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="toggle-particles">✨ Particles</button>
+                    <button data-action="toggle-glow" class="active">💫 Core Glow</button>
+                    <button data-action="toggle-blink" class="active">👁️ Blinking</button>
+                    <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
+                    <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
+                </div>
             </div>
         </div>
 
@@ -421,7 +190,7 @@
         </div>
 
         <div class="section">
-            <h2 class="collapsed">Camera Position</h2>
+            <h2 class="collapsed">Camera</h2>
             <div class="section-content collapsed">
                 <div class="button-grid">
                     <button data-action="camera" data-value="front" class="active">📷 Front</button>
@@ -436,19 +205,19 @@
 
         <div class="section">
             <div class="info-box">
-                <strong>Smooth Morphing:</strong><br>
-                Click any geometry to see smooth transitions. Materials automatically switch between glass and emissive modes.
+                <strong>Tip:</strong> Click and drag to rotate. Scroll to zoom. Each geometry has unique materials and effects.
             </div>
         </div>
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { animateMoonPhase } from '../../dist/emotive-mascot-3d.js?t=1731948960';
+        import EmotiveMascot3D, { animateMoonPhase } from '../../dist/emotive-mascot-3d.js';
 
         let mascot = null;
         let currentGeometry = 'crystal';
+        let currentMoonPhase = 'full';
 
-        // Initialize 3D mascot
+        // Initialize
         (async () => {
             try {
                 const container = document.getElementById('mascot-container');
@@ -458,304 +227,227 @@
                     enablePostProcessing: true,
                     enableShadows: false,
                     enableControls: true,
-                    autoRotate: true,  // Crystal has autorotate ON
-                    cameraDistance: 1.2,  // Camera distance from model
-                    fov: 30,              // Lower FOV = model appears larger in frame
-                    minZoom: 0.9,         // Allow zooming in closer
-                    maxZoom: 2.0,         // Allow zooming out
-                    materialVariant: 'multiplexer'  // Use multiplexer material for blood moon effects
+                    autoRotate: true,
+                    cameraDistance: 1.2,
+                    fov: 30,
+                    minZoom: 0.9,
+                    maxZoom: 2.0,
+                    materialVariant: 'multiplexer'
                 });
 
                 mascot.init(container);
                 mascot.start();
                 mascot.setEmotion('joy');
 
-                // Crystal defaults: particles ON, autorotate ON, blinking OFF
+                // Crystal defaults
                 mascot.enableParticles();
                 mascot.disableBlinking();
 
-                // Update button states to match defaults
+                // Update button states
                 document.querySelector('[data-action="toggle-particles"]')?.classList.add('active');
                 document.querySelector('[data-action="toggle-auto-rotate"]')?.classList.add('active');
                 document.querySelector('[data-action="toggle-blink"]')?.classList.remove('active');
-
-                console.log('✅ EmotiveMascot3D Full Demo initialized (crystal defaults: particles ON, autorotate ON, blinking OFF)');
             } catch (error) {
-                console.error('❌ Failed to initialize:', error);
+                console.error('Failed to initialize EmotiveMascot3D:', error);
             }
         })();
 
-        // Collapsible sections - toggle on h2 click
+        // Collapsible sections
         document.querySelectorAll('.section h2').forEach(h2 => {
             h2.addEventListener('click', () => {
                 const content = h2.nextElementSibling;
-                if (content && content.classList.contains('section-content')) {
+                if (content?.classList.contains('section-content')) {
                     h2.classList.toggle('collapsed');
                     content.classList.toggle('collapsed');
                 }
             });
         });
 
-        // Collapse Visual Controls on mobile
-        if (window.innerWidth <= 768) {
-            const visualControlsSection = document.getElementById('visual-controls-section');
-            if (visualControlsSection) {
-                const h2 = visualControlsSection.querySelector('h2');
-                const content = visualControlsSection.querySelector('.section-content');
-                if (h2 && content) {
-                    h2.classList.add('collapsed');
-                    content.classList.add('collapsed');
-                }
-            }
-        }
-
-        // Event delegation for all buttons
+        // Event delegation
         document.addEventListener('click', (e) => {
             if (!e.target.matches('button[data-action]') || !mascot) return;
 
             const action = e.target.dataset.action;
             const value = e.target.dataset.value;
 
-            try {
-                switch (action) {
-                    case 'emotion':
-                        console.log('Setting emotion:', value);
-                        mascot.setEmotion(value);
-                        // Update active state
-                        document.querySelectorAll('[data-action="emotion"]').forEach(btn => btn.classList.remove('active'));
+            switch (action) {
+                case 'emotion':
+                    mascot.setEmotion(value);
+                    document.querySelectorAll('[data-action="emotion"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    break;
+
+                case 'undertone':
+                    mascot.setUndertone(value === 'null' ? null : value);
+                    document.querySelectorAll('[data-action="undertone"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    break;
+
+                case 'geometry':
+                    mascot.morphTo(value);
+                    currentGeometry = value;
+
+                    document.querySelectorAll('[data-action="geometry"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    // Show/hide geometry-specific controls
+                    document.getElementById('eclipse-section').style.display = (value === 'sun') ? 'block' : 'none';
+                    document.getElementById('moon-phase-section').style.display = (value === 'moon') ? 'block' : 'none';
+                    document.getElementById('lunar-eclipse-section').style.display = (value === 'moon') ? 'block' : 'none';
+
+                    // Apply geometry-specific defaults
+                    const particlesBtn = document.querySelector('[data-action="toggle-particles"]');
+                    const autoRotateBtn = document.querySelector('[data-action="toggle-auto-rotate"]');
+                    const blinkBtn = document.querySelector('[data-action="toggle-blink"]');
+
+                    if (value === 'crystal') {
+                        mascot.enableParticles();
+                        mascot.enableAutoRotate();
+                        mascot.disableBlinking();
+                        particlesBtn?.classList.add('active');
+                        autoRotateBtn?.classList.add('active');
+                        blinkBtn?.classList.remove('active');
+                    } else if (value === 'moon') {
+                        mascot.disableParticles();
+                        mascot.disableAutoRotate();
+                        mascot.disableBlinking();
+                        particlesBtn?.classList.remove('active');
+                        autoRotateBtn?.classList.remove('active');
+                        blinkBtn?.classList.remove('active');
+
+                        // Initialize moon to full phase after morph completes
+                        setTimeout(() => {
+                            if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+                                mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = 0;
+                                mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = 0;
+                            }
+                            if (mascot.core3D?.renderer?.controls) {
+                                mascot.core3D.renderer.controls.autoRotate = false;
+                            }
+                        }, 600);
+                    } else if (value === 'sun') {
+                        mascot.disableParticles();
+                        mascot.enableAutoRotate();
+                        mascot.disableBlinking();
+                        particlesBtn?.classList.remove('active');
+                        autoRotateBtn?.classList.add('active');
+                        blinkBtn?.classList.remove('active');
+                    }
+                    break;
+
+                case 'gesture':
+                    mascot.express(value);
+                    break;
+
+                case 'toggle-particles':
+                    if (mascot.core3D?.particleVisibility) {
+                        mascot.disableParticles();
+                        e.target.classList.remove('active');
+                    } else {
+                        mascot.enableParticles();
                         e.target.classList.add('active');
-                        break;
+                    }
+                    break;
 
-                    case 'undertone':
-                        console.log('Setting undertone:', value);
-                        mascot.setUndertone(value === 'null' ? null : value);
-                        // Update active state
-                        document.querySelectorAll('[data-action="undertone"]').forEach(btn => btn.classList.remove('active'));
+                case 'toggle-glow':
+                    if (mascot.core3D?.coreGlowEnabled !== false) {
+                        mascot.core3D.setCoreGlowEnabled(false);
+                        e.target.classList.remove('active');
+                    } else {
+                        mascot.core3D.setCoreGlowEnabled(true);
                         e.target.classList.add('active');
-                        break;
+                    }
+                    break;
 
-                    case 'geometry':
-                        // Switch geometry using built-in morph system
-                        // Glass material is automatically enabled/disabled based on geometry type
-                        console.log(`🔄 Morphing to ${value} geometry...`);
-                        mascot.morphTo(value);
-                        currentGeometry = value;
+                case 'toggle-blink':
+                    if (mascot.blinkingEnabled) {
+                        mascot.disableBlinking();
+                        e.target.classList.remove('active');
+                    } else {
+                        mascot.enableBlinking();
+                        e.target.classList.add('active');
+                    }
+                    break;
 
-                        // Update button states
-                        document.querySelectorAll('[data-action="geometry"]').forEach(btn => btn.classList.remove('active'));
+                case 'toggle-breathing':
+                    if (mascot.breathingEnabled) {
+                        mascot.disableBreathing();
+                        e.target.classList.remove('active');
+                    } else {
+                        mascot.enableBreathing();
+                        e.target.classList.add('active');
+                    }
+                    break;
+
+                case 'toggle-auto-rotate':
+                    if (mascot.autoRotateEnabled) {
+                        mascot.disableAutoRotate();
+                        e.target.classList.remove('active');
+                    } else {
+                        mascot.enableAutoRotate();
+                        e.target.classList.add('active');
+                    }
+                    break;
+
+                case 'eclipse':
+                    if (currentGeometry !== 'sun') break;
+
+                    const eclipseButtons = document.querySelectorAll('[data-action="eclipse"]');
+                    if (e.target.classList.contains('active')) {
+                        mascot.core3D.setSunShadow('off');
+                        e.target.classList.remove('active');
+                    } else {
+                        eclipseButtons.forEach(btn => btn.classList.remove('active'));
+                        mascot.core3D.setSunShadow(value);
+                        e.target.classList.add('active');
+                    }
+                    break;
+
+                case 'moon-phase':
+                    if (currentGeometry !== 'moon') break;
+
+                    if (mascot.core3D?.customMaterial) {
+                        animateMoonPhase(mascot.core3D.customMaterial, value, 1500);
+                        currentMoonPhase = value;
+
+                        document.querySelectorAll('[data-action="moon-phase"]').forEach(btn => btn.classList.remove('active'));
                         e.target.classList.add('active');
 
-                        // Show/hide geometry-specific controls
-                        const eclipseSection = document.getElementById('eclipse-section');
-                        const moonPhaseSection = document.getElementById('moon-phase-section');
+                        // Lunar eclipse only available on full moon
                         const lunarEclipseSection = document.getElementById('lunar-eclipse-section');
-
-                        eclipseSection.style.display = (value === 'sun') ? 'block' : 'none';
-                        moonPhaseSection.style.display = (value === 'moon') ? 'block' : 'none';
-                        lunarEclipseSection.style.display = (value === 'moon') ? 'block' : 'none';
-
-                        // Apply geometry-specific defaults
-                        // Crystal: particles ON, autorotate ON, blinking OFF
-                        // Moon: particles OFF, autorotate OFF, blinking OFF
-                        // Sun: particles OFF, autorotate ON, blinking OFF
-                        const particlesBtn = document.querySelector('[data-action="toggle-particles"]');
-                        const autoRotateBtn = document.querySelector('[data-action="toggle-auto-rotate"]');
-                        const blinkBtn = document.querySelector('[data-action="toggle-blink"]');
-
-                        if (value === 'crystal') {
-                            mascot.enableParticles();
-                            mascot.enableAutoRotate();
-                            mascot.disableBlinking();
-                            particlesBtn?.classList.add('active');
-                            autoRotateBtn?.classList.add('active');
-                            blinkBtn?.classList.remove('active');
-                            console.log('💎 Crystal defaults: particles ON, autorotate ON, blinking OFF');
-                        } else if (value === 'moon') {
-                            mascot.disableParticles();
-                            mascot.disableAutoRotate();
-                            mascot.disableBlinking();
-                            particlesBtn?.classList.remove('active');
-                            autoRotateBtn?.classList.remove('active');
-                            blinkBtn?.classList.remove('active');
-                            console.log('🌙 Moon defaults: particles OFF, autorotate OFF, blinking OFF');
-
-                            // Wait for morph to complete and material to be created
-                            // Morph duration is 1000ms, swap happens at 500ms
-                            setTimeout(() => {
-                                // Set to full moon on load (exactly as moon-demo does)
-                                if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
-                                    mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = 0;
-                                    mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = 0;
-                                    console.log('🌕 Moon initialized to full phase');
-                                }
-
-                                // Ensure auto-rotate is OFF for tidal locking (force disable, exactly as moon-demo does)
-                                if (mascot.core3D?.renderer?.controls) {
-                                    mascot.core3D.renderer.controls.autoRotate = false;
-                                    console.log('🔒 Moon tidally locked - autoRotate forcibly disabled');
-                                }
-                            }, 600); // Wait for geometry swap at midpoint
-                        } else if (value === 'sun') {
-                            mascot.disableParticles();
-                            mascot.enableAutoRotate();
-                            mascot.disableBlinking();
-                            particlesBtn?.classList.remove('active');
-                            autoRotateBtn?.classList.add('active');
-                            blinkBtn?.classList.remove('active');
-                            console.log('☀️ Sun defaults: particles OFF, autorotate ON, blinking OFF');
-                        }
-                        break;
-
-                    case 'gesture':
-                        console.log('Playing gesture:', value);
-                        mascot.express(value);
-                        break;
-
-                    case 'toggle-particles':
-                        const particlesVisible = mascot.core3D?.particleVisibility || false;
-                        if (particlesVisible) {
-                            mascot.disableParticles();
-                            e.target.classList.remove('active');
-                            console.log('💨 Particles disabled');
+                        if (value === 'full') {
+                            lunarEclipseSection.style.opacity = '1';
+                            lunarEclipseSection.style.pointerEvents = 'auto';
                         } else {
-                            mascot.enableParticles();
-                            e.target.classList.add('active');
-                            console.log('✨ Particles enabled');
-                        }
-                        break;
-
-                    case 'toggle-glow':
-                        if (mascot.core3D?.coreGlowEnabled !== false) {
-                            mascot.core3D.setCoreGlowEnabled(false);
-                            e.target.classList.remove('active');
-                            console.log('💫 Core glow disabled');
-                        } else {
-                            mascot.core3D.setCoreGlowEnabled(true);
-                            e.target.classList.add('active');
-                            console.log('💫 Core glow enabled');
-                        }
-                        break;
-
-                    case 'toggle-blink':
-                        if (mascot.blinkingEnabled) {
-                            mascot.disableBlinking();
-                            e.target.classList.remove('active');
-                            console.log('👁️ Blinking disabled');
-                        } else {
-                            mascot.enableBlinking();
-                            e.target.classList.add('active');
-                            console.log('👁️ Blinking enabled');
-                        }
-                        break;
-
-                    case 'toggle-breathing':
-                        if (mascot.breathingEnabled) {
-                            mascot.disableBreathing();
-                            e.target.classList.remove('active');
-                            console.log('🫁 Breathing disabled');
-                        } else {
-                            mascot.enableBreathing();
-                            e.target.classList.add('active');
-                            console.log('🫁 Breathing enabled');
-                        }
-                        break;
-
-                    case 'toggle-auto-rotate':
-                        if (mascot.autoRotateEnabled) {
-                            mascot.disableAutoRotate();
-                            console.log('🛑 Auto-rotate OFF');
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.enableAutoRotate();
-                            console.log('▶️ Auto-rotate ON');
-                            e.target.classList.add('active');
-                        }
-                        break;
-
-                    case 'eclipse':
-                        // Only works with sun geometry
-                        if (currentGeometry !== 'sun') {
-                            console.warn('Eclipse only works with sun geometry');
-                            break;
-                        }
-
-                        // Toggle between eclipse types
-                        const eclipseType = e.target.dataset.value;
-                        const eclipseButtons = document.querySelectorAll('[data-action="eclipse"]');
-
-                        if (e.target.classList.contains('active')) {
-                            // Turn OFF eclipse
-                            mascot.core3D.setSunShadow('off');
-                            e.target.classList.remove('active');
-                            console.log('☀️ Eclipse OFF');
-                        } else {
-                            // Turn ON this eclipse type and turn off others
-                            eclipseButtons.forEach(btn => btn.classList.remove('active'));
-                            mascot.core3D.setSunShadow(eclipseType);
-                            e.target.classList.add('active');
-                            console.log(`🌑 ${eclipseType.toUpperCase()} Eclipse ON`);
-                        }
-                        break;
-
-                    case 'moon-phase':
-                        // Only works with moon geometry
-                        if (currentGeometry !== 'moon') {
-                            console.warn('Moon phases only work with moon geometry');
-                            break;
-                        }
-
-                        const phase = e.target.dataset.value;
-                        if (mascot.core3D?.customMaterial) {
-                            console.log(`🌙 Changing moon phase to: ${phase}`);
-                            animateMoonPhase(mascot.core3D.customMaterial, phase, 1500);
-
-                            // Update button states
-                            document.querySelectorAll('[data-action="moon-phase"]').forEach(btn => btn.classList.remove('active'));
-                            e.target.classList.add('active');
-                        }
-                        break;
-
-                    case 'camera':
-                        const cameraPreset = e.target.dataset.value;
-                        console.log(`📷 Setting camera to: ${cameraPreset}`);
-                        mascot.setCameraPreset(cameraPreset, 1000);
-
-                        // Update button states
-                        document.querySelectorAll('[data-action="camera"]').forEach(btn => btn.classList.remove('active'));
-                        e.target.classList.add('active');
-                        break;
-
-                    case 'lunar-eclipse':
-                        // Only works with moon geometry
-                        if (currentGeometry !== 'moon') {
-                            console.warn('Lunar eclipse only works with moon geometry');
-                            break;
-                        }
-
-                        // Toggle between eclipse types
-                        const lunarEclipseType = e.target.dataset.value;
-                        const lunarEclipseButtons = document.querySelectorAll('[data-action="lunar-eclipse"]');
-
-                        if (e.target.classList.contains('active')) {
-                            // Turn OFF eclipse
                             mascot.core3D.setMoonEclipse('off');
-                            e.target.classList.remove('active');
-                            // Show moon phases when eclipse is off
-                            document.getElementById('moon-phase-section').style.display = 'block';
-                            console.log('🌕 Lunar eclipse OFF');
-                        } else {
-                            // Turn ON this eclipse type and turn off others
-                            lunarEclipseButtons.forEach(btn => btn.classList.remove('active'));
-                            mascot.core3D.setMoonEclipse(lunarEclipseType);
-                            e.target.classList.add('active');
-                            // Hide moon phases when eclipse is active
-                            document.getElementById('moon-phase-section').style.display = 'none';
-                            console.log(`🩸 ${lunarEclipseType.toUpperCase()} Lunar Eclipse ON`);
+                            document.querySelectorAll('[data-action="lunar-eclipse"]').forEach(btn => btn.classList.remove('active'));
+                            lunarEclipseSection.style.opacity = '0.4';
+                            lunarEclipseSection.style.pointerEvents = 'none';
                         }
-                        break;
-                }
-            } catch (error) {
-                console.error('Action failed:', error);
+                    }
+                    break;
+
+                case 'camera':
+                    mascot.setCameraPreset(value, 1000);
+                    document.querySelectorAll('[data-action="camera"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    break;
+
+                case 'lunar-eclipse':
+                    if (currentGeometry !== 'moon' || currentMoonPhase !== 'full') break;
+
+                    const lunarEclipseButtons = document.querySelectorAll('[data-action="lunar-eclipse"]');
+                    if (e.target.classList.contains('active')) {
+                        mascot.core3D.setMoonEclipse('off');
+                        e.target.classList.remove('active');
+                        document.getElementById('moon-phase-section').style.display = 'block';
+                    } else {
+                        lunarEclipseButtons.forEach(btn => btn.classList.remove('active'));
+                        mascot.core3D.setMoonEclipse(value);
+                        e.target.classList.add('active');
+                        document.getElementById('moon-phase-section').style.display = 'none';
+                    }
+                    break;
             }
         });
 

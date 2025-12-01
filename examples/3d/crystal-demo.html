@@ -20,15 +20,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crystal Soul - Emotive Engine 3D</title>
     <meta name="description" content="Frosted crystal with inner soul glow driven by emotional states">
+
+    <!-- Shared 3D example styles -->
+    <link rel="stylesheet" href="../3d-example-style.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Theme: Cyan crystal */
+        :root {
+            --accent: #6ee7ff;
+            --accent-rgb: 110, 231, 255;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             /* Background gradient matching reference image: dark green-black top, warm brown bottom */
             background: linear-gradient(180deg,
                 #0a1810 0%,
@@ -36,95 +39,9 @@
                 #2a3530 50%,
                 #4a3a30 75%,
                 #5a4a40 100%);
-            color: white;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
         }
 
-        .left-menu,
-        .right-menu {
-            width: 18vw;
-            min-width: 200px;
-            max-width: 280px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-            padding: 1.5vw;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        .left-menu {
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .right-menu {
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .center-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
-            padding: 2vmin;
-        }
-
-        .section {
-            margin-bottom: clamp(15px, 2vw, 25px);
-            padding-bottom: clamp(12px, 1.5vw, 20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section:last-child {
-            border-bottom: none;
-        }
-
-        h2 {
-            font-size: clamp(11px, 1vw, 13px);
-            margin-bottom: clamp(8px, 1vw, 12px);
-            color: rgba(255, 255, 255, 0.8);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-        }
-
-        h2:hover {
-            color: rgba(255, 255, 255, 1);
-        }
-
-        h2::after {
-            content: '−';
-            font-size: clamp(14px, 1.2vw, 18px);
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.5);
-            transition: transform 0.2s;
-        }
-
-        h2.collapsed::after {
-            content: '+';
-        }
-
-        .section-content {
-            overflow: hidden;
-            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
-            max-height: 1000px;
-            opacity: 1;
-        }
-
-        .section-content.collapsed {
-            max-height: 0;
-            opacity: 0;
-            margin-bottom: 0;
-        }
-
+        /* Crystal-specific: current emotion display */
         .current-emotion {
             text-align: center;
             font-size: clamp(32px, 3vw, 42px);
@@ -139,130 +56,7 @@
             margin-bottom: clamp(10px, 1.2vw, 15px);
         }
 
-        .emotion-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: clamp(6px, 0.6vw, 8px);
-        }
-
-        .emotion-grid button {
-            padding: clamp(8px, 0.8vw, 12px);
-            font-size: clamp(9px, 0.8vw, 11px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            border-radius: clamp(6px, 0.6vw, 8px);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .emotion-grid button:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(100, 200, 255, 0.5);
-        }
-
-        .emotion-grid button.active {
-            background: rgba(100, 200, 255, 0.3);
-            border-color: rgba(100, 200, 255, 0.8);
-        }
-
-        .slider-control {
-            margin-bottom: clamp(12px, 1.2vw, 16px);
-        }
-
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: clamp(10px, 0.9vw, 12px);
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: clamp(4px, 0.4vw, 6px);
-        }
-
-        .slider-value {
-            color: #6ee7ff;
-            font-family: monospace;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 4px;
-            -webkit-appearance: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            outline: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: clamp(12px, 1.2vw, 16px);
-            height: clamp(12px, 1.2vw, 16px);
-            background: #6ee7ff;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .toggle-control {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: clamp(8px, 0.8vw, 12px);
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: clamp(6px, 0.6vw, 8px);
-            margin-bottom: clamp(8px, 0.8vw, 12px);
-        }
-
-        .toggle-label {
-            font-size: clamp(10px, 0.9vw, 12px);
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 40px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .toggle-switch.active {
-            background: rgba(100, 200, 255, 0.6);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 16px;
-            height: 16px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s;
-        }
-
-        .toggle-switch.active::after {
-            transform: translateX(20px);
-        }
-
-        .info-box {
-            background: rgba(100, 200, 255, 0.1);
-            border: 1px solid rgba(100, 200, 255, 0.3);
-            border-radius: clamp(8px, 0.8vw, 10px);
-            padding: clamp(10px, 1vw, 12px);
-            font-size: clamp(10px, 0.85vw, 11px);
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.5;
-        }
-
-        .info-box strong {
-            color: #6ee7ff;
-        }
-
+        /* Crystal container */
         #crystal-container {
             width: 100%;
             height: 100%;
@@ -279,41 +73,8 @@
             height: 100% !important;
         }
 
-        /* Mobile/Tablet Responsive */
+        /* Mobile responsive */
         @media (max-width: 1000px) {
-            body {
-                flex-direction: column;
-            }
-
-            .left-menu,
-            .right-menu {
-                width: 100%;
-                min-width: unset;
-                max-width: unset;
-                max-height: 40vh;
-                border: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 15px;
-            }
-
-            /* Mobile order: Crystal first, then left menu (emotions), then right menu (settings) */
-            .center-content {
-                order: 1;
-                flex: 0 0 auto;
-                min-height: 35vh;
-                max-height: 45vh;
-            }
-
-            .left-menu {
-                order: 2;
-            }
-
-            .right-menu {
-                order: 3;
-                border-bottom: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
             /* Hide current emotion section on mobile */
             .current-emotion-section {
                 display: none;
@@ -333,28 +94,6 @@
                 padding: clamp(6px, 0.6vw, 10px);
                 font-size: clamp(8px, 0.7vw, 10px);
             }
-
-            .center-content {
-                min-height: 30vh;
-                max-height: 40vh;
-            }
-        }
-
-        /* Scrollbar styling */
-        .left-menu::-webkit-scrollbar,
-        .right-menu::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .left-menu::-webkit-scrollbar-track,
-        .right-menu::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .left-menu::-webkit-scrollbar-thumb,
-        .right-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
         }
     </style>
 </head>
@@ -390,21 +129,10 @@
             </div>
         </div>
 
-        <div class="section display-options-section">
-            <h2>Display Options</h2>
-            <div class="section-content">
-                <div class="toggle-control">
-                    <span class="toggle-label">Particles</span>
-                    <div class="toggle-switch active" id="particles-toggle"></div>
-                </div>
-                <div class="toggle-control">
-                    <span class="toggle-label">Auto Rotate</span>
-                    <div class="toggle-switch active" id="rotate-toggle"></div>
-                </div>
-                <div class="toggle-control">
-                    <span class="toggle-label">Breathing</span>
-                    <div class="toggle-switch active" id="breathing-toggle"></div>
-                </div>
+        <div class="section">
+            <div class="info-box">
+                <strong>Crystal Soul</strong><br>
+                A frosted crystal with an inner glowing "soul" that changes color based on emotional state.
             </div>
         </div>
     </div>
@@ -416,6 +144,18 @@
     </div>
 
     <div class="right-menu">
+        <div class="section visual-controls">
+            <h2 class="collapsed">Visual Controls</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="toggle-particles">✨ Particles</button>
+                    <button data-action="toggle-glow" class="active">💫 Core Glow</button>
+                    <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
+                    <button data-action="toggle-auto-rotate" class="active">🔄 Auto-Rotate</button>
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2 class="collapsed">Crystal Size</h2>
             <div class="section-content collapsed">
@@ -542,17 +282,9 @@
             </div>
         </div>
 
-        <div class="section">
-            <div class="info-box">
-                <strong>Crystal Soul:</strong><br>
-                The inner glow represents the "soul" of the crystal, changing color based on emotional state. The frosted exterior diffuses the light while the fresnel effect creates bright edges.
-            </div>
-        </div>
     </div>
 
-    <script type="module">
-        import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
-
+    <script>
         // Collapsible sections
         document.querySelectorAll('h2').forEach(h2 => {
             h2.addEventListener('click', () => {
@@ -564,30 +296,25 @@
             });
         });
 
-        // On mobile, collapse Display Options
-        if (window.innerWidth <= 1000) {
-            const displaySection = document.querySelector('.display-options-section');
-            if (displaySection) {
-                const h2 = displaySection.querySelector('h2');
-                const content = displaySection.querySelector('.section-content');
-                if (h2 && content) {
-                    h2.classList.add('collapsed');
-                    content.classList.add('collapsed');
-                }
-            }
-        }
+    </script>
+
+    <script type="module">
+        import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
 
         const container = document.getElementById('crystal-container');
         const mascot = new EmotiveMascot3D({
             canvasId: 'crystal',
             coreGeometry: 'crystal',
-            enableParticles: true,
+            enableParticles: false,
             enableControls: true,
             autoRotate: true,
             autoRotateSpeed: 0.3,
             enableBlinking: false,
             enableBreathing: true,
-            cameraDistance: 2.5
+            cameraDistance: 1.2,
+            fov: 30,
+            minZoom: 0.9,
+            maxZoom: 2.0
         });
 
         mascot.init(container);
@@ -688,9 +415,60 @@
             });
         });
 
-        // Toggle controls
+        // Visual Controls event handlers
+        document.querySelectorAll('[data-action]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                if (!action) return;
+
+                switch (action) {
+                    case 'toggle-particles':
+                        if (mascot.particlesEnabled) {
+                            mascot.disableParticles();
+                            e.target.classList.remove('active');
+                        } else {
+                            mascot.enableParticles();
+                            e.target.classList.add('active');
+                        }
+                        break;
+
+                    case 'toggle-glow':
+                        if (mascot.core3D?.coreGlowEnabled !== false) {
+                            mascot.core3D.setCoreGlowEnabled(false);
+                            e.target.classList.remove('active');
+                        } else {
+                            mascot.core3D.setCoreGlowEnabled(true);
+                            e.target.classList.add('active');
+                        }
+                        break;
+
+                    case 'toggle-breathing':
+                        if (mascot.breathingEnabled) {
+                            mascot.disableBreathing();
+                            e.target.classList.remove('active');
+                        } else {
+                            mascot.enableBreathing();
+                            e.target.classList.add('active');
+                        }
+                        break;
+
+                    case 'toggle-auto-rotate':
+                        if (mascot.autoRotateEnabled) {
+                            mascot.disableAutoRotate();
+                            e.target.classList.remove('active');
+                        } else {
+                            mascot.enableAutoRotate();
+                            e.target.classList.add('active');
+                        }
+                        break;
+                }
+            });
+        });
+
+        // Soul Animation toggle controls (crystal-specific)
         function setupToggle(id, onToggle, initialState = false) {
             const toggle = document.getElementById(id);
+            if (!toggle) return;
             if (initialState) toggle.classList.add('active');
 
             toggle.addEventListener('click', () => {
@@ -698,22 +476,6 @@
                 onToggle(toggle.classList.contains('active'));
             });
         }
-
-        setupToggle('particles-toggle', (enabled) => {
-            if (enabled) mascot.enableParticles();
-            else mascot.disableParticles();
-        }, true);
-
-        setupToggle('rotate-toggle', (enabled) => {
-            if (enabled) mascot.enableAutoRotate();
-            else mascot.disableAutoRotate();
-        }, true);
-
-        setupToggle('breathing-toggle', (enabled) => {
-            if (mascot.core3D) {
-                mascot.core3D.breathingEnabled = enabled;
-            }
-        }, true);
 
         setupToggle('drift-toggle', (enabled) => {
             if (mascot.core3D?.setCrystalSoulEffects) {

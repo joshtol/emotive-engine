@@ -20,36 +20,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Black Hole Showcase - Emotive Engine 3D</title>
     <meta name="description" content="NASA M87* black hole demo with accretion disk and gravitational physics">
+
+    <!-- Shared 3D example styles -->
+    <link rel="stylesheet" href="../3d-example-style.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Theme: Orange cosmic */
+        :root {
+            --accent: #ff5500;
+            --accent-rgb: 255, 85, 0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
                         linear-gradient(135deg, #000000 0%, #0a0010 50%, #000008 100%);
-            color: white;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
         }
 
-        .left-menu,
-        .right-menu {
-            width: 18vw;
-            min-width: 240px;
-            max-width: 300px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            padding: 1.5vw;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
+        /* Override panel borders with orange */
         .left-menu {
             border-right: 1px solid rgba(255, 100, 0, 0.2);
         }
@@ -58,69 +45,11 @@
             border-left: 1px solid rgba(255, 100, 0, 0.2);
         }
 
-        .center-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
-            padding: 2vmin;
-        }
-
         .section {
-            margin-bottom: clamp(15px, 2vw, 25px);
-            padding-bottom: clamp(12px, 1.5vw, 20px);
-            border-bottom: 1px solid rgba(255, 100, 0, 0.1);
+            border-bottom-color: rgba(255, 100, 0, 0.1);
         }
 
-        .section:last-child {
-            border-bottom: none;
-        }
-
-        h2 {
-            font-size: clamp(11px, 1vw, 13px);
-            margin-bottom: clamp(8px, 1vw, 12px);
-            color: rgba(255, 150, 50, 0.9);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            font-weight: 600;
-        }
-
-        .button-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(5px, 0.6vw, 8px);
-            margin-bottom: clamp(8px, 1vw, 12px);
-        }
-
-        button {
-            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
-            background: rgba(255, 100, 0, 0.1);
-            border: 1px solid rgba(255, 100, 0, 0.2);
-            color: #fff;
-            border-radius: clamp(6px, 0.6vw, 8px);
-            cursor: pointer;
-            font-size: clamp(9px, 0.8vw, 11px);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: clamp(2px, 0.3vw, 4px);
-            min-width: 0;
-            width: 100%;
-        }
-
-        button:hover {
-            background: rgba(255, 100, 0, 0.2);
-            border-color: rgba(255, 100, 0, 0.4);
-            transform: translateY(-1px);
-        }
-
-        button.active {
-            background: linear-gradient(135deg, #ff5500 0%, #ff3300 100%);
-            border-color: #ff5500;
-        }
-
+        /* Black hole container */
         #blackhole-container {
             width: 100%;
             height: 100%;
@@ -139,64 +68,10 @@
             height: 100% !important;
         }
 
-        .info-box {
-            background: rgba(255, 100, 0, 0.1);
-            border: 1px solid rgba(255, 100, 0, 0.3);
-            border-radius: clamp(6px, 0.6vw, 8px);
-            padding: clamp(10px, 1vw, 12px);
-            font-size: clamp(10px, 0.85vw, 11px);
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.5;
-        }
-
-        .info-box strong {
-            color: #ff7733;
-        }
-
-        .slider-container {
-            margin-bottom: clamp(10px, 1vw, 12px);
-        }
-
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: clamp(9px, 0.8vw, 10px);
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: clamp(4px, 0.4vw, 5px);
-        }
-
-        .slider {
-            width: 100%;
-            height: clamp(20px, 1.5vw, 22px);
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: clamp(4px, 0.4vw, 5px);
-            cursor: pointer;
-            appearance: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            appearance: none;
-            width: clamp(14px, 1.2vw, 16px);
-            height: clamp(14px, 1.2vw, 16px);
-            background: #ff5500;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .left-menu::-webkit-scrollbar,
-        .right-menu::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .left-menu::-webkit-scrollbar-track,
-        .right-menu::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-        }
-
+        /* Custom scrollbar for orange theme */
         .left-menu::-webkit-scrollbar-thumb,
         .right-menu::-webkit-scrollbar-thumb {
             background: rgba(255, 100, 0, 0.3);
-            border-radius: 3px;
         }
 
         .left-menu::-webkit-scrollbar-thumb:hover,
@@ -210,99 +85,94 @@
     <div class="left-menu">
         <div class="section">
             <h2>Emotions (Auto-Derived Behavior)</h2>
-            <div class="button-grid">
-                <button data-emotion="neutral">😐 Neutral</button>
-                <button data-emotion="joy">😊 Joy</button>
-                <button data-emotion="fear" class="active">😨 Fear</button>
-                <button data-emotion="anger">😠 Anger</button>
-                <button data-emotion="sadness">😢 Sad</button>
-                <button data-emotion="surprise">😲 Surprise</button>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-emotion="neutral">😐 Neutral</button>
+                    <button data-emotion="joy">😊 Joy</button>
+                    <button data-emotion="fear" class="active">😨 Fear</button>
+                    <button data-emotion="anger">😠 Anger</button>
+                    <button data-emotion="sadness">😢 Sad</button>
+                    <button data-emotion="surprise">😲 Surprise</button>
+                </div>
+                <div class="info-box" style="margin-top: 8px; font-size: clamp(8px, 0.75vw, 9px);">
+                    Black hole adapts to emotion modifiers:<br>
+                    • <strong>Speed</strong> → disk rotation<br>
+                    • <strong>Intensity</strong> → turbulence<br>
+                    • <strong>Smoothness</strong> → chaos (inverse)
+                </div>
             </div>
-            <div class="info-box" style="margin-top: 8px; font-size: clamp(8px, 0.75vw, 9px);">
-                Black hole adapts to emotion modifiers:<br>
-                • <strong>Speed</strong> → disk rotation<br>
-                • <strong>Intensity</strong> → turbulence<br>
-                • <strong>Smoothness</strong> → chaos (inverse)
-            </div>
         </div>
 
         <div class="section">
-            <h2>Particles</h2>
-            <button data-action="toggle-particles">✨ Show Particles</button>
-        </div>
-
-        <div class="section">
-            <h2>Visual Controls</h2>
-            <button data-action="toggle-glow" class="active" style="width: 100%">💫 Disk Glow</button>
-            <button data-action="toggle-controls" class="active" style="width: 100%; margin-top: 6px">🎮 Camera Controls</button>
-        </div>
-
-        <div class="section">
-            <h2>Relativistic Jets</h2>
-            <button data-action="toggle-jets" class="active" style="width: 100%; margin-bottom: 10px">🚀 Show Jets</button>
-            <div id="jet-controls">
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <span>Jet Intensity</span>
-                        <span id="jet-intensity-value">80%</span>
+            <h2 class="collapsed">Relativistic Jets</h2>
+            <div class="section-content collapsed">
+                <button data-action="toggle-jets" class="active" style="width: 100%; margin-bottom: 10px">🚀 Show Jets</button>
+                <div id="jet-controls">
+                    <div class="slider-control">
+                        <div class="slider-label">
+                            <span>Jet Intensity</span>
+                            <span class="slider-value" id="jet-intensity-value">80%</span>
+                        </div>
+                        <input type="range" id="jet-intensity-slider" min="0" max="1" step="0.01" value="0.8">
                     </div>
-                    <input type="range" id="jet-intensity-slider" class="slider"
-                           min="0" max="1" step="0.01" value="0.8">
-                </div>
-                <div style="margin-top: 10px">
-                    <label style="font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 4px; display: block">Blend Mode</label>
-                    <select id="jet-blend-mode" class="slider" style="width: 100%; padding: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px">
-                        <option value="5">Screen (Default)</option>
-                        <option value="6">Linear Dodge</option>
-                        <option value="7">Color Dodge</option>
-                        <option value="8">Lighten</option>
-                        <option value="9">Lighter Color</option>
-                        <option value="10">Overlay</option>
-                        <option value="11">Soft Light</option>
-                        <option value="12">Hard Light</option>
-                        <option value="0">Multiply</option>
-                        <option value="16">Difference</option>
-                        <option value="17">Exclusion</option>
-                    </select>
+                    <div style="margin-top: 10px">
+                        <label style="font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 4px; display: block">Blend Mode</label>
+                        <select id="jet-blend-mode" style="width: 100%; padding: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px">
+                            <option value="5">Screen (Default)</option>
+                            <option value="6">Linear Dodge</option>
+                            <option value="7">Color Dodge</option>
+                            <option value="8">Lighten</option>
+                            <option value="9">Lighter Color</option>
+                            <option value="10">Overlay</option>
+                            <option value="11">Soft Light</option>
+                            <option value="12">Hard Light</option>
+                            <option value="0">Multiply</option>
+                            <option value="16">Difference</option>
+                            <option value="17">Exclusion</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>Hawking Radiation</h2>
-            <button data-action="toggle-hawking" style="width: 100%; margin-bottom: 10px">✨ Show Hawking Radiation</button>
-            <div class="slider-container">
-                <div class="slider-label">
-                    <span>Spawn Rate</span>
-                    <span id="hawking-rate-value">0.0/sec</span>
+            <h2 class="collapsed">Hawking Radiation</h2>
+            <div class="section-content collapsed">
+                <button data-action="toggle-hawking" style="width: 100%; margin-bottom: 10px">✨ Show Hawking Radiation</button>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Spawn Rate</span>
+                        <span class="slider-value" id="hawking-rate-value">0.0/sec</span>
+                    </div>
+                    <input type="range" id="hawking-rate-slider" min="0" max="5" step="0.1" value="0">
                 </div>
-                <input type="range" id="hawking-rate-slider" class="slider"
-                       min="0" max="5" step="0.1" value="0">
             </div>
         </div>
 
         <div class="section">
-            <h2>Gravitational Lensing</h2>
-            <button data-action="toggle-lensing" style="width: 100%; margin-bottom: 10px">🌀 Show Einstein Ring</button>
-            <div class="slider-container">
-                <div class="slider-label">
-                    <span>Lensing Strength</span>
-                    <span id="lensing-strength-value">0%</span>
+            <h2 class="collapsed">Gravitational Lensing</h2>
+            <div class="section-content collapsed">
+                <button data-action="toggle-lensing" style="width: 100%; margin-bottom: 10px">🌀 Show Einstein Ring</button>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Lensing Strength</span>
+                        <span class="slider-value" id="lensing-strength-value">0%</span>
+                    </div>
+                    <input type="range" id="lensing-strength-slider" min="0" max="1" step="0.01" value="0">
                 </div>
-                <input type="range" id="lensing-strength-slider" class="slider"
-                       min="0" max="1" step="0.01" value="0">
             </div>
         </div>
 
         <div class="section">
-            <h2>Disk Rotation Speed</h2>
-            <div class="slider-container">
-                <div class="slider-label">
-                    <span>Speed</span>
-                    <span id="rotation-speed-value">1.00x</span>
+            <h2 class="collapsed">Disk Rotation Speed</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Speed</span>
+                        <span class="slider-value" id="rotation-speed-value">1.00x</span>
+                    </div>
+                    <input type="range" id="rotation-speed-slider" min="0" max="3" step="0.1" value="1.0">
                 </div>
-                <input type="range" id="rotation-speed-slider" class="slider"
-                       min="0" max="3" step="0.1" value="1.0">
             </div>
         </div>
 
@@ -319,79 +189,70 @@
         <div id="blackhole-container"></div>
     </div>
 
-    <!-- RIGHT MENU: Blend Layers & Physics -->
+    <!-- RIGHT MENU: Visual Controls & Physics -->
     <div class="right-menu">
-        <div class="section">
-            <h2>Disk Blend Layers</h2>
-            <div id="blend-layers-container">
-                <!-- Layer 1: Base -->
-                <div class="slider-container" style="margin-bottom: 12px;">
-                    <div class="slider-label">
-                        <span>Layer 1: Base</span>
-                        <span id="layer1-value">100%</span>
-                    </div>
-                    <input type="range" id="layer1-slider" class="slider"
-                           min="0" max="1" step="0.01" value="1.0">
-                </div>
-
-                <!-- Layer 2: Overlay -->
-                <div class="slider-container" style="margin-bottom: 12px;">
-                    <div class="slider-label">
-                        <span>Layer 2: Overlay</span>
-                        <span id="layer2-value">40%</span>
-                    </div>
-                    <input type="range" id="layer2-slider" class="slider"
-                           min="0" max="1" step="0.01" value="0.4">
-                </div>
-
-                <!-- Layer 3: Additive -->
-                <div class="slider-container" style="margin-bottom: 12px;">
-                    <div class="slider-label">
-                        <span>Layer 3: Additive</span>
-                        <span id="layer3-value">60%</span>
-                    </div>
-                    <input type="range" id="layer3-slider" class="slider"
-                           min="0" max="1" step="0.01" value="0.6">
-                </div>
-
-                <!-- Layer 4: Screen -->
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <span>Layer 4: Screen</span>
-                        <span id="layer4-value">30%</span>
-                    </div>
-                    <input type="range" id="layer4-slider" class="slider"
-                           min="0" max="1" step="0.01" value="0.3">
+        <div class="section visual-controls">
+            <h2 class="collapsed">Visual Controls</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="toggle-particles">✨ Particles</button>
+                    <button data-action="toggle-glow" class="active">💫 Core Glow</button>
+                    <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>NASA M87* Physics</h2>
-            <div class="info-box">
-                <strong>Event Horizon:</strong> 2.0× Schwarzschild<br>
-                Pure black sphere<br><br>
-
-                <strong>Photon Ring:</strong> 1.5× Schwarzschild<br>
-                Light orbits here<br><br>
-
-                <strong>ISCO:</strong> 2.5× Schwarzschild<br>
-                Inner edge of disk<br><br>
-
-                <strong>Disk:</strong> 2.5-8× Schwarzschild<br>
-                Hot plasma, differential rotation
+            <h2 class="collapsed">🎨 Blend Layers</h2>
+            <div class="section-content collapsed">
+                <button class="add-layer-btn" id="add-layer-btn">+ Add Layer</button>
+                <div id="layer-stack" class="layer-stack"></div>
             </div>
         </div>
 
         <div class="section">
-            <h2>Particle Physics</h2>
-            <div class="info-box">
-                <strong>Orbital Decay:</strong> Angular momentum loss<br><br>
-                <strong>Spaghettification:</strong> Tidal stretching near horizon<br><br>
-                <strong>Velocity:</strong> Increases as radius decreases
+            <h2 class="collapsed">NASA M87* Physics</h2>
+            <div class="section-content collapsed">
+                <div class="info-box">
+                    <strong>Event Horizon:</strong> 2.0× Schwarzschild<br>
+                    Pure black sphere<br><br>
+
+                    <strong>Photon Ring:</strong> 1.5× Schwarzschild<br>
+                    Light orbits here<br><br>
+
+                    <strong>ISCO:</strong> 2.5× Schwarzschild<br>
+                    Inner edge of disk<br><br>
+
+                    <strong>Disk:</strong> 2.5-8× Schwarzschild<br>
+                    Hot plasma, differential rotation
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Particle Physics</h2>
+            <div class="section-content collapsed">
+                <div class="info-box">
+                    <strong>Orbital Decay:</strong> Angular momentum loss<br><br>
+                    <strong>Spaghettification:</strong> Tidal stretching near horizon<br><br>
+                    <strong>Velocity:</strong> Increases as radius decreases
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Collapsible sections
+        document.querySelectorAll('h2').forEach(h2 => {
+            h2.addEventListener('click', () => {
+                const content = h2.nextElementSibling;
+                if (content && content.classList.contains('section-content')) {
+                    h2.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                }
+            });
+        });
+    </script>
 
     <script type="module">
         import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
@@ -482,16 +343,14 @@
                 return;
             }
 
-            // Toggle camera controls
-            if (e.target.dataset.action === 'toggle-controls') {
-                if (mascot.controlsEnabled) {
-                    mascot.disableControls();
+            // Toggle auto-rotate
+            if (e.target.dataset.action === 'toggle-auto-rotate') {
+                if (mascot.autoRotateEnabled) {
+                    mascot.disableAutoRotate();
                     e.target.classList.remove('active');
-                    console.log('🛑 Camera controls OFF');
                 } else {
-                    mascot.enableControls();
+                    mascot.enableAutoRotate();
                     e.target.classList.add('active');
-                    console.log('▶️ Camera controls ON');
                 }
                 return;
             }
@@ -587,28 +446,371 @@
             }
         });
 
-        // Blend layer sliders
-        const blendLayers = [
-            { id: 'layer1', num: 1, name: 'Base' },
-            { id: 'layer2', num: 2, name: 'Overlay' },
-            { id: 'layer3', num: 3, name: 'Additive' },
-            { id: 'layer4', num: 4, name: 'Screen' }
+        // ═══════════════════════════════════════════════════════════════════════════
+        // BLEND LAYER MANAGEMENT SYSTEM
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        const blendModes = [
+            { name: 'Multiply', category: 'darken' },
+            { name: 'Linear Burn', category: 'darken' },
+            { name: 'Color Burn', category: 'darken' },
+            { name: 'Color Dodge', category: 'lighten' },
+            { name: 'Screen', category: 'lighten' },
+            { name: 'Overlay', category: 'contrast' },
+            { name: 'Add', category: 'lighten' },
+            { name: 'Soft Light', category: 'contrast' },
+            { name: 'Hard Light', category: 'contrast' },
+            { name: 'Vivid Light', category: 'contrast' },
+            { name: 'Linear Light', category: 'contrast' },
+            { name: 'Difference', category: 'inversion' },
+            { name: 'Exclusion', category: 'inversion' },
+            { name: 'Darken', category: 'darken' },
+            { name: 'Lighten', category: 'lighten' },
+            { name: 'Subtract', category: 'darken' },
+            { name: 'Divide', category: 'lighten' },
+            { name: 'Pin Light', category: 'contrast' }
         ];
 
-        blendLayers.forEach(layer => {
-            const slider = document.getElementById(`${layer.id}-slider`);
-            slider.addEventListener('input', (e) => {
-                const strength = parseFloat(e.target.value);
-                document.getElementById(`${layer.id}-value`).textContent = `${Math.round(strength * 100)}%`;
+        const layerStack = document.getElementById('layer-stack');
+        const addLayerBtn = document.getElementById('add-layer-btn');
 
-                // Update blend layer strength in shader
-                const diskMesh = mascot?.core3D?.coreMesh?.userData?.diskMesh;
-                if (diskMesh?.material?.uniforms?.[`layer${layer.num}Strength`]) {
-                    diskMesh.material.uniforms[`layer${layer.num}Strength`].value = strength;
-                    console.log(`🎨 Layer ${layer.num} (${layer.name}): ${Math.round(strength * 100)}%`);
+        let layers = [];
+        let nextLayerId = 1;
+        let draggedElement = null;
+
+        function getModeCategory(modeIndex) {
+            return blendModes[modeIndex]?.category || 'contrast';
+        }
+
+        function createLayerCard(layer) {
+            const card = document.createElement('div');
+            card.className = `layer-card${layer.enabled ? '' : ' disabled'}`;
+            card.dataset.layerId = layer.id;
+            card.dataset.modeCategory = getModeCategory(layer.mode);
+            card.draggable = true;
+
+            const currentModeName = blendModes[layer.mode]?.name || 'Normal';
+
+            card.innerHTML = `
+                <div class="layer-header">
+                    <div class="layer-title">
+                        <span class="drag-handle">⋮⋮</span>
+                        <span class="layer-name">Layer ${layer.position}</span>
+                    </div>
+                    <div class="layer-controls-header">
+                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="toggle">
+                            ${layer.enabled ? 'ON' : 'OFF'}
+                        </button>
+                        <button class="delete-btn" data-action="delete">✕</button>
+                    </div>
+                </div>
+                <div class="layer-controls">
+                    <div class="custom-select" data-action="mode">
+                        <div class="custom-select-trigger">
+                            <span class="custom-select-value">${currentModeName}</span>
+                        </div>
+                        <div class="custom-select-dropdown">
+                            ${blendModes.map((mode, idx) =>
+                                `<div class="custom-select-option${layer.mode === idx ? ' selected' : ''}" data-value="${idx}">${mode.name}</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    <div class="strength-control">
+                        <div class="strength-header">
+                            <div class="precision-controls">
+                                <span class="precision-label">Strength</span>
+                                <div class="precision-toggle">
+                                    <button class="precision-btn active" data-step="0.1">0.1</button>
+                                    <button class="precision-btn" data-step="0.01">0.01</button>
+                                    <button class="precision-btn" data-step="0.001">0.001</button>
+                                </div>
+                            </div>
+                            <span class="strength-value">${layer.strength.toFixed(3)}</span>
+                        </div>
+                        <input type="range" class="layer-strength-slider" data-action="strength"
+                               min="0" max="5" step="0.1" value="${layer.strength}">
+                    </div>
+                </div>
+            `;
+
+            // Drag events
+            const dragHandle = card.querySelector('.drag-handle');
+            dragHandle.addEventListener('mousedown', () => { card.draggable = true; });
+
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+            card.addEventListener('dragover', handleDragOver);
+            card.addEventListener('drop', handleDrop);
+
+            // Prevent dragging when interacting with controls
+            const interactiveElements = card.querySelectorAll('select, input, button');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mousedown', (e) => { card.draggable = false; e.stopPropagation(); });
+                el.addEventListener('mouseup', () => { card.draggable = true; });
+            });
+
+            // Toggle button
+            card.querySelector('[data-action="toggle"]').addEventListener('click', () => {
+                layer.enabled = !layer.enabled;
+                updateLayerCard(card, layer);
+                updateShaderLayers();
+            });
+
+            // Delete button
+            card.querySelector('[data-action="delete"]').addEventListener('click', () => {
+                deleteLayer(layer.id);
+            });
+
+            // Custom select dropdown
+            const customSelect = card.querySelector('[data-action="mode"]');
+            const trigger = customSelect.querySelector('.custom-select-trigger');
+            const dropdown = customSelect.querySelector('.custom-select-dropdown');
+            const valueDisplay = customSelect.querySelector('.custom-select-value');
+            const options = dropdown.querySelectorAll('.custom-select-option');
+            let focusedIndex = -1;
+
+            const updateFocus = (index, apply = true) => {
+                options.forEach(o => o.classList.remove('focused'));
+                if (index >= 0 && index < options.length) {
+                    focusedIndex = index;
+                    options[index].classList.add('focused');
+                    options[index].scrollIntoView({ block: 'nearest' });
+                    if (apply) {
+                        // Apply blend mode immediately while navigating
+                        const newMode = parseInt(options[index].dataset.value);
+                        layer.mode = newMode;
+                        card.dataset.modeCategory = getModeCategory(layer.mode);
+                        valueDisplay.textContent = blendModes[newMode]?.name || 'Normal';
+                        options.forEach(o => o.classList.remove('selected'));
+                        options[index].classList.add('selected');
+                        updateShaderLayers();
+                    }
+                }
+            };
+
+            const selectOption = (option) => {
+                const newMode = parseInt(option.dataset.value);
+                layer.mode = newMode;
+                card.dataset.modeCategory = getModeCategory(layer.mode);
+                valueDisplay.textContent = blendModes[newMode]?.name || 'Normal';
+                options.forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                customSelect.classList.remove('open');
+                updateShaderLayers();
+            };
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select.open').forEach(s => {
+                    if (s !== customSelect) s.classList.remove('open');
+                });
+                customSelect.classList.toggle('open');
+                if (customSelect.classList.contains('open')) {
+                    const selectedIdx = Array.from(options).findIndex(o => o.classList.contains('selected'));
+                    updateFocus(selectedIdx >= 0 ? selectedIdx : 0, false);
                 }
             });
+
+            trigger.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!customSelect.classList.contains('open')) {
+                        customSelect.classList.add('open');
+                        const selectedIdx = Array.from(options).findIndex(o => o.classList.contains('selected'));
+                        updateFocus(selectedIdx >= 0 ? selectedIdx : 0, false);
+                    }
+                }
+            });
+
+            customSelect.addEventListener('keydown', (e) => {
+                // Allow arrow navigation even when closed
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!customSelect.classList.contains('open')) {
+                        customSelect.classList.add('open');
+                    }
+                    updateFocus(Math.min(focusedIndex + 1, options.length - 1));
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (!customSelect.classList.contains('open')) {
+                        customSelect.classList.add('open');
+                    }
+                    updateFocus(Math.max(focusedIndex - 1, 0));
+                } else if (e.key === 'Enter' || e.key === 'Escape') {
+                    e.preventDefault();
+                    customSelect.classList.remove('open');
+                }
+            });
+
+            dropdown.addEventListener('click', (e) => {
+                const option = e.target.closest('.custom-select-option');
+                if (option) selectOption(option);
+            });
+
+            trigger.setAttribute('tabindex', '0');
+
+            // Precision buttons
+            const precisionButtons = card.querySelectorAll('.precision-btn');
+            const strengthSlider = card.querySelector('[data-action="strength"]');
+            precisionButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    precisionButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    strengthSlider.step = btn.dataset.step;
+                    const precision = btn.dataset.step === '0.1' ? 1 : (btn.dataset.step === '0.01' ? 2 : 3);
+                    card.querySelector('.strength-value').textContent = layer.strength.toFixed(precision);
+                });
+            });
+
+            // Strength slider
+            strengthSlider.addEventListener('input', (e) => {
+                layer.strength = parseFloat(e.target.value);
+                const activeBtn = card.querySelector('.precision-btn.active');
+                const step = activeBtn ? activeBtn.dataset.step : '0.1';
+                const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
+                card.querySelector('.strength-value').textContent = layer.strength.toFixed(precision);
+                updateShaderLayers();
+            });
+
+            return card;
+        }
+
+        function updateLayerCard(card, layer) {
+            const toggleBtn = card.querySelector('[data-action="toggle"]');
+            toggleBtn.textContent = layer.enabled ? 'ON' : 'OFF';
+            toggleBtn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
+            card.classList.toggle('disabled', !layer.enabled);
+            card.querySelector('.layer-name').textContent = `Layer ${layer.position}`;
+            card.dataset.modeCategory = getModeCategory(layer.mode);
+        }
+
+        function addLayer(mode = 0, strength = 1.0, enabled = true, skipShaderUpdate = false) {
+            if (layers.length >= 4) return;
+
+            const layer = { id: nextLayerId++, position: layers.length + 1, mode, strength, enabled };
+            layers.push(layer);
+            layerStack.appendChild(createLayerCard(layer));
+            if (!skipShaderUpdate) updateShaderLayers();
+        }
+
+        function deleteLayer(layerId) {
+            const index = layers.findIndex(l => l.id === layerId);
+            if (index === -1) return;
+            layers.splice(index, 1);
+            layers.forEach((layer, idx) => { layer.position = idx + 1; });
+            renderLayers();
+            updateShaderLayers();
+        }
+
+        function renderLayers() {
+            layerStack.innerHTML = '';
+            layers.forEach(layer => { layerStack.appendChild(createLayerCard(layer)); });
+        }
+
+        function updateShaderLayers() {
+            const diskMesh = mascot?.core3D?.coreMesh?.userData?.diskMesh;
+            if (!diskMesh?.material?.uniforms) return;
+
+            for (let i = 0; i < 4; i++) {
+                const layerNum = i + 1;
+                const uiLayer = layers[i];
+                if (uiLayer) {
+                    if (diskMesh.material.uniforms[`layer${layerNum}Mode`]) {
+                        diskMesh.material.uniforms[`layer${layerNum}Mode`].value = uiLayer.mode;
+                    }
+                    if (diskMesh.material.uniforms[`layer${layerNum}Strength`]) {
+                        diskMesh.material.uniforms[`layer${layerNum}Strength`].value = uiLayer.strength;
+                    }
+                    if (diskMesh.material.uniforms[`layer${layerNum}Enabled`]) {
+                        diskMesh.material.uniforms[`layer${layerNum}Enabled`].value = uiLayer.enabled ? 1.0 : 0.0;
+                    }
+                } else {
+                    if (diskMesh.material.uniforms[`layer${layerNum}Enabled`]) {
+                        diskMesh.material.uniforms[`layer${layerNum}Enabled`].value = 0.0;
+                    }
+                }
+            }
+        }
+
+        // Drag-and-drop handlers
+        function handleDragStart(e) {
+            draggedElement = e.currentTarget;
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            draggedElement = null;
+            document.querySelectorAll('.layer-card').forEach(card => { card.classList.remove('drag-over'); });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const afterElement = getDragAfterElement(layerStack, e.clientY);
+            const draggable = document.querySelector('.dragging');
+            if (afterElement == null) {
+                layerStack.appendChild(draggable);
+            } else {
+                layerStack.insertBefore(draggable, afterElement);
+            }
+            return false;
+        }
+
+        function handleDrop(e) {
+            e.stopPropagation();
+            const cards = Array.from(layerStack.querySelectorAll('.layer-card'));
+            const newOrder = [];
+            cards.forEach((card, index) => {
+                const layerId = parseInt(card.dataset.layerId);
+                const layer = layers.find(l => l.id === layerId);
+                if (layer) { layer.position = index + 1; newOrder.push(layer); }
+            });
+            layers = newOrder;
+            renderLayers();
+            updateShaderLayers();
+            return false;
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.layer-card:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: child };
+                }
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        addLayerBtn.addEventListener('click', () => addLayer());
+
+        // Close custom dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-select')) {
+                document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
+            }
         });
+
+        // Initialize layers from shader defaults after mascot loads
+        setTimeout(() => {
+            const diskMesh = mascot?.core3D?.coreMesh?.userData?.diskMesh;
+            if (diskMesh?.material?.uniforms) {
+                for (let i = 1; i <= 4; i++) {
+                    const enabledUniform = diskMesh.material.uniforms[`layer${i}Enabled`];
+                    if (enabledUniform && enabledUniform.value > 0.5) {
+                        const mode = Math.round(diskMesh.material.uniforms[`layer${i}Mode`]?.value || 0);
+                        const strength = diskMesh.material.uniforms[`layer${i}Strength`]?.value || 1.0;
+                        addLayer(mode, strength, true, true);
+                    }
+                }
+                console.log(`🕳️ Layer system initialized - ${layers.length} layers`);
+            }
+        }, 1500);
 
         // Jet intensity slider
         const jetIntensitySlider = document.getElementById('jet-intensity-slider');

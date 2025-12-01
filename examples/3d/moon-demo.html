@@ -20,71 +20,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Moon - Emotive Engine 3D</title>
     <meta name="description" content="Realistic 3D moon with dynamic lighting, phases, and emotional expressions">
+
+    <!-- Shared 3D example styles -->
+    <link rel="stylesheet" href="../3d-example-style.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Theme: Purple lunar */
+        :root {
+            --accent: #667eea;
+            --accent-rgb: 102, 126, 234;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
                         linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            color: white;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
         }
 
-        .left-menu,
-        .right-menu {
-            width: 18vw;
-            min-width: 200px;
-            max-width: 280px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            padding: 1.5vw;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        .left-menu {
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .right-menu {
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .center-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
-            padding: 2vmin;
-        }
-
-        .section {
-            margin-bottom: clamp(15px, 2vw, 25px);
-            padding-bottom: clamp(12px, 1.5vw, 20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section:last-child {
-            border-bottom: none;
-        }
-
-        h2 {
-            font-size: clamp(11px, 1vw, 13px);
-            margin-bottom: clamp(8px, 1vw, 12px);
-            color: rgba(255, 255, 255, 0.8);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            font-weight: 600;
-        }
-
+        /* Moon-specific: current phase display */
         .current-phase {
             text-align: center;
             font-size: clamp(32px, 3vw, 42px);
@@ -99,59 +51,15 @@
             margin-bottom: clamp(10px, 1.2vw, 15px);
         }
 
-        .phase-grid,
-        .emotion-grid {
+        /* Phase grid */
+        .phase-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: clamp(5px, 0.6vw, 8px);
             margin-bottom: clamp(8px, 1vw, 12px);
         }
 
-        button {
-            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border-radius: clamp(6px, 0.6vw, 8px);
-            cursor: pointer;
-            font-size: clamp(9px, 0.8vw, 11px);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: clamp(2px, 0.3vw, 4px);
-            min-width: 0;
-            width: 100%;
-        }
-
-        button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-
-        button.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
-        }
-
-        .slider-control {
-            margin-bottom: clamp(10px, 1.2vw, 15px);
-        }
-
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: clamp(4px, 0.5vw, 6px);
-            font-size: clamp(10px, 0.9vw, 12px);
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .slider-value {
-            color: #667eea;
-            font-weight: 600;
-        }
-
+        /* Increment controls for fine-tuning */
         .increment-controls {
             display: flex;
             gap: clamp(4px, 0.5vw, 6px);
@@ -164,49 +72,7 @@
             font-size: clamp(10px, 0.9vw, 12px);
         }
 
-        input[type="range"] {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: clamp(12px, 1.2vw, 16px);
-            height: clamp(12px, 1.2vw, 16px);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: clamp(12px, 1.2vw, 16px);
-            height: clamp(12px, 1.2vw, 16px);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
-        }
-
-        .info-box {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: clamp(6px, 0.6vw, 8px);
-            padding: clamp(10px, 1vw, 12px);
-            font-size: clamp(10px, 0.85vw, 11px);
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.5;
-        }
-
-        .info-box strong {
-            color: #667eea;
-        }
-
+        /* Moon container */
         #moon-container {
             width: 100%;
             height: 100%;
@@ -223,41 +89,9 @@
             height: 100% !important;
         }
 
-        /* Mobile/Tablet Responsive */
+        /* Mobile: 4-column phase grid */
         @media (max-width: 1000px) {
-            body {
-                flex-direction: column;
-            }
-
-            .left-menu,
-            .right-menu {
-                width: 100%;
-                min-width: unset;
-                max-width: unset;
-                max-height: 35vh;
-                border: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 15px;
-            }
-
-            .left-menu {
-                order: 1;
-            }
-
-            .center-content {
-                order: 2;
-                flex: 1;
-                min-height: 30vh;
-            }
-
-            .right-menu {
-                order: 3;
-                border-bottom: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .phase-grid,
-            .emotion-grid {
+            .phase-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
 
@@ -267,37 +101,9 @@
         }
 
         @media (max-width: 600px) {
-            .phase-grid,
-            .emotion-grid {
+            .phase-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-
-            .left-menu,
-            .right-menu {
-                padding: 12px;
-            }
-        }
-
-        /* Scrollbar styling */
-        .left-menu::-webkit-scrollbar,
-        .right-menu::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .left-menu::-webkit-scrollbar-track,
-        .right-menu::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .left-menu::-webkit-scrollbar-thumb,
-        .right-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        .left-menu::-webkit-scrollbar-thumb:hover,
-        .right-menu::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
@@ -305,80 +111,85 @@
     <div class="left-menu">
         <div class="section">
             <h2>Current Phase</h2>
-            <div class="current-phase" id="current-emoji">🌕</div>
-            <div class="current-name" id="current-name">Full Moon</div>
+            <div class="section-content">
+                <div class="current-phase" id="current-emoji">🌕</div>
+                <div class="current-name" id="current-name">Full Moon</div>
+            </div>
         </div>
 
         <div class="section">
             <h2>Named Phases</h2>
-            <div class="phase-grid">
-                <button data-phase="new">🌑 New</button>
-                <button data-phase="waxing-crescent">🌒 Waxing Crescent</button>
-                <button data-phase="first-quarter">🌓 First Quarter</button>
-                <button data-phase="waxing-gibbous">🌔 Waxing Gibbous</button>
-                <button data-phase="full" class="active">🌕 Full</button>
-                <button data-phase="waning-gibbous">🌖 Waning Gibbous</button>
-                <button data-phase="last-quarter">🌗 Last Quarter</button>
-                <button data-phase="waning-crescent">🌘 Waning Crescent</button>
+            <div class="section-content">
+                <div class="phase-grid">
+                    <button data-phase="new">🌑 New</button>
+                    <button data-phase="waxing-crescent">🌒 Waxing Crescent</button>
+                    <button data-phase="first-quarter">🌓 First Quarter</button>
+                    <button data-phase="waxing-gibbous">🌔 Waxing Gibbous</button>
+                    <button data-phase="full" class="active">🌕 Full</button>
+                    <button data-phase="waning-gibbous">🌖 Waning Gibbous</button>
+                    <button data-phase="last-quarter">🌗 Last Quarter</button>
+                    <button data-phase="waning-crescent">🌘 Waning Crescent</button>
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>Moon Rotation (Calibration)</h2>
-
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>X-Axis (Rotation around X)</span>
-                    <span class="slider-value" id="rotation-x-value">55.5°</span>
+            <h2 class="collapsed">Moon Rotation (Calibration)</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>X-Axis (Rotation around X)</span>
+                        <span class="slider-value" id="rotation-x-value">55.5°</span>
+                    </div>
+                    <div class="increment-controls">
+                        <button class="increment-btn" data-axis="rotX" data-delta="-5">-5°</button>
+                        <button class="increment-btn" data-axis="rotX" data-delta="-1">-1°</button>
+                        <button class="increment-btn" data-axis="rotX" data-delta="1">+1°</button>
+                        <button class="increment-btn" data-axis="rotX" data-delta="5">+5°</button>
+                    </div>
+                    <input type="range" id="rotation-x-slider" min="-180" max="180" step="0.5" value="55.5">
                 </div>
-                <div class="increment-controls">
-                    <button class="increment-btn" data-axis="rotX" data-delta="-5">-5°</button>
-                    <button class="increment-btn" data-axis="rotX" data-delta="-1">-1°</button>
-                    <button class="increment-btn" data-axis="rotX" data-delta="1">+1°</button>
-                    <button class="increment-btn" data-axis="rotX" data-delta="5">+5°</button>
-                </div>
-                <input type="range" id="rotation-x-slider" min="-180" max="180" step="0.5" value="55.5">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Y-Axis (Rotation around Y)</span>
-                    <span class="slider-value" id="rotation-y-value">-85.0°</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Y-Axis (Rotation around Y)</span>
+                        <span class="slider-value" id="rotation-y-value">-85.0°</span>
+                    </div>
+                    <div class="increment-controls">
+                        <button class="increment-btn" data-axis="rotY" data-delta="-5">-5°</button>
+                        <button class="increment-btn" data-axis="rotY" data-delta="-1">-1°</button>
+                        <button class="increment-btn" data-axis="rotY" data-delta="1">+1°</button>
+                        <button class="increment-btn" data-axis="rotY" data-delta="5">+5°</button>
+                    </div>
+                    <input type="range" id="rotation-y-slider" min="-180" max="180" step="0.5" value="-85.0">
                 </div>
-                <div class="increment-controls">
-                    <button class="increment-btn" data-axis="rotY" data-delta="-5">-5°</button>
-                    <button class="increment-btn" data-axis="rotY" data-delta="-1">-1°</button>
-                    <button class="increment-btn" data-axis="rotY" data-delta="1">+1°</button>
-                    <button class="increment-btn" data-axis="rotY" data-delta="5">+5°</button>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Z-Axis (Spin Face CW/CCW)</span>
+                        <span class="slider-value" id="rotation-z-value">-60.5°</span>
+                    </div>
+                    <div class="increment-controls">
+                        <button class="increment-btn" data-axis="rotZ" data-delta="-5">-5°</button>
+                        <button class="increment-btn" data-axis="rotZ" data-delta="-1">-1°</button>
+                        <button class="increment-btn" data-axis="rotZ" data-delta="1">+1°</button>
+                        <button class="increment-btn" data-axis="rotZ" data-delta="5">+5°</button>
+                    </div>
+                    <input type="range" id="rotation-z-slider" min="-180" max="180" step="0.5" value="-60.5">
                 </div>
-                <input type="range" id="rotation-y-slider" min="-180" max="180" step="0.5" value="-85.0">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Z-Axis (Spin Face CW/CCW)</span>
-                    <span class="slider-value" id="rotation-z-value">-60.5°</span>
+                <button id="reset-rotation" style="width: 100%; margin-top: 8px;">🔄 Reset Calibration</button>
+
+                <div class="info-box" style="margin-top: 10px;">
+                    <strong>Independent Axis Rotation</strong><br>
+                    • X & Y: World-space axes<br>
+                    • Z: Camera-space (spins face CW/CCW as viewed)
                 </div>
-                <div class="increment-controls">
-                    <button class="increment-btn" data-axis="rotZ" data-delta="-5">-5°</button>
-                    <button class="increment-btn" data-axis="rotZ" data-delta="-1">-1°</button>
-                    <button class="increment-btn" data-axis="rotZ" data-delta="1">+1°</button>
-                    <button class="increment-btn" data-axis="rotZ" data-delta="5">+5°</button>
+
+                <div class="info-box" style="margin-top: 10px;">
+                    <strong>Current Calibration</strong><br>
+                    X=55.5°, Y=-85°, Z=-60.5°
                 </div>
-                <input type="range" id="rotation-z-slider" min="-180" max="180" step="0.5" value="-60.5">
-            </div>
-
-            <button id="reset-rotation" style="width: 100%; margin-top: 8px;">🔄 Reset Calibration</button>
-
-            <div class="info-box" style="margin-top: 10px;">
-                <strong>Independent Axis Rotation</strong><br>
-                • X & Y: World-space axes<br>
-                • Z: Camera-space (spins face CW/CCW as viewed)
-            </div>
-
-            <div class="info-box" style="margin-top: 10px;">
-                <strong>Current Calibration</strong><br>
-                X=55.5°, Y=-85°, Z=-60.5°
             </div>
         </div>
     </div>
@@ -388,107 +199,113 @@
     <div class="right-menu">
         <div class="section">
             <h2>Shadow Position</h2>
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>X Offset (Fine Control)</span>
-                    <span class="slider-value" id="shadow-x-value">0.0</span>
+            <div class="section-content">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>X Offset (Fine Control)</span>
+                        <span class="slider-value" id="shadow-x-value">0.0</span>
+                    </div>
+                    <div class="increment-controls">
+                        <button class="increment-btn" data-axis="x" data-delta="-0.5">-0.5</button>
+                        <button class="increment-btn" data-axis="x" data-delta="-0.1">-0.1</button>
+                        <button class="increment-btn" data-axis="x" data-delta="0.1">+0.1</button>
+                        <button class="increment-btn" data-axis="x" data-delta="0.5">+0.5</button>
+                    </div>
+                    <input type="range" id="shadow-x-slider" min="-200" max="200" step="0.1" value="0">
                 </div>
-                <div class="increment-controls">
-                    <button class="increment-btn" data-axis="x" data-delta="-0.5">-0.5</button>
-                    <button class="increment-btn" data-axis="x" data-delta="-0.1">-0.1</button>
-                    <button class="increment-btn" data-axis="x" data-delta="0.1">+0.1</button>
-                    <button class="increment-btn" data-axis="x" data-delta="0.5">+0.5</button>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Y Offset</span>
+                        <span class="slider-value" id="shadow-y-value">0.0</span>
+                    </div>
+                    <div class="increment-controls">
+                        <button class="increment-btn" data-axis="y" data-delta="-10">-10</button>
+                        <button class="increment-btn" data-axis="y" data-delta="-1">-1</button>
+                        <button class="increment-btn" data-axis="y" data-delta="1">+1</button>
+                        <button class="increment-btn" data-axis="y" data-delta="10">+10</button>
+                    </div>
+                    <input type="range" id="shadow-y-slider" min="-100" max="100" step="1" value="0">
                 </div>
-                <input type="range" id="shadow-x-slider" min="-200" max="200" step="0.1" value="0">
-            </div>
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Y Offset</span>
-                    <span class="slider-value" id="shadow-y-value">0.0</span>
+                <div class="info-box">
+                    <strong>Range: -200 to +200</strong><br>
+                    • 0 = Full, 0.7 = Gibbous<br>
+                    • 1.0 = Quarter, 1.5 = Crescent<br>
+                    • 50-200 = New moon range<br>
+                    Use ±0.1 buttons for fine control!<br>
+                    Drag slider to find darkest point
                 </div>
-                <div class="increment-controls">
-                    <button class="increment-btn" data-axis="y" data-delta="-10">-10</button>
-                    <button class="increment-btn" data-axis="y" data-delta="-1">-1</button>
-                    <button class="increment-btn" data-axis="y" data-delta="1">+1</button>
-                    <button class="increment-btn" data-axis="y" data-delta="10">+10</button>
-                </div>
-                <input type="range" id="shadow-y-slider" min="-100" max="100" step="1" value="0">
-            </div>
-            <div class="info-box">
-                <strong>Range: -200 to +200</strong><br>
-                • 0 = Full, 0.7 = Gibbous<br>
-                • 1.0 = Quarter, 1.5 = Crescent<br>
-                • 50-200 = New moon range<br>
-                Use ±0.1 buttons for fine control!<br>
-                Drag slider to find darkest point
             </div>
         </div>
 
         <div class="section">
             <h2>Camera</h2>
-            <button id="reset-camera">📷 Reset View</button>
-            <div class="info-box" style="margin-top: 10px;">
-                <strong>🔒 Tidally Locked</strong><br>
-                Like the real moon, the same side always faces you. Only the terminator (shadow) moves across the surface as phases change.
+            <div class="section-content">
+                <button id="reset-camera">📷 Reset View</button>
+                <div class="info-box" style="margin-top: 10px;">
+                    <strong>🔒 Tidally Locked</strong><br>
+                    Like the real moon, the same side always faces you. Only the terminator (shadow) moves across the surface as phases change.
+                </div>
             </div>
         </div>
 
         <div class="section">
             <h2>🩸 Blood Moon (Lunar Eclipse)</h2>
-            <div class="button-grid" style="margin-bottom: 15px;">
-                <button class="phase-btn" data-eclipse="off" style="background: rgba(100, 100, 100, 0.3);">Off</button>
-                <button class="phase-btn" data-eclipse="total" style="background: rgba(200, 50, 50, 0.3);">🩸 Total</button>
-            </div>
-
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Blend Mode</span>
-                    <span class="slider-value" id="blend-mode-value">Multiply</span>
+            <div class="section-content">
+                <div class="button-grid" style="margin-bottom: 15px;">
+                    <button class="phase-btn" data-eclipse="off" style="background: rgba(100, 100, 100, 0.3);">Off</button>
+                    <button class="phase-btn" data-eclipse="total" style="background: rgba(200, 50, 50, 0.3);">🩸 Total</button>
                 </div>
-                <select id="blend-mode-select" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; font-size: 14px;">
-                    <option value="0">Multiply</option>
-                    <option value="1">Linear Burn</option>
-                    <option value="2">Color Burn</option>
-                    <option value="3">Color Dodge</option>
-                    <option value="4">Screen</option>
-                    <option value="5">Overlay</option>
-                </select>
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Blend Strength</span>
-                    <span class="slider-value" id="blend-strength-value">2.0</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Blend Mode</span>
+                        <span class="slider-value" id="blend-mode-value">Multiply</span>
+                    </div>
+                    <select id="blend-mode-select" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; font-size: 14px;">
+                        <option value="0">Multiply</option>
+                        <option value="1">Linear Burn</option>
+                        <option value="2">Color Burn</option>
+                        <option value="3">Color Dodge</option>
+                        <option value="4">Screen</option>
+                        <option value="5">Overlay</option>
+                    </select>
                 </div>
-                <input type="range" id="blend-strength-slider" min="0" max="5" step="0.1" value="2.0">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Emissive Glow</span>
-                    <span class="slider-value" id="emissive-value">0.3</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Blend Strength</span>
+                        <span class="slider-value" id="blend-strength-value">2.0</span>
+                    </div>
+                    <input type="range" id="blend-strength-slider" min="0" max="5" step="0.1" value="2.0">
                 </div>
-                <input type="range" id="emissive-slider" min="0" max="1" step="0.01" value="0.3">
-            </div>
 
-            <div class="slider-control">
-                <div class="slider-label">
-                    <span>Darkening (Eclipse Intensity)</span>
-                    <span class="slider-value" id="darkening-value">0.0</span>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Emissive Glow</span>
+                        <span class="slider-value" id="emissive-value">0.3</span>
+                    </div>
+                    <input type="range" id="emissive-slider" min="0" max="1" step="0.01" value="0.3">
                 </div>
-                <input type="range" id="darkening-slider" min="0" max="1" step="0.01" value="0.0">
-            </div>
 
-            <div class="info-box">
-                <strong>Blend Modes:</strong><br>
-                • <strong>Multiply:</strong> Darker, subdued tones - classic darkening<br>
-                • <strong>Linear Burn:</strong> Deep saturation - intense color<br>
-                • <strong>Color Burn:</strong> Darkens with high contrast - dramatic shadows<br>
-                • <strong>Color Dodge:</strong> Brightens highlights - glowing edges<br>
-                • <strong>Screen:</strong> Lightens overall - soft glow effect<br>
-                • <strong>Overlay:</strong> Contrast boost - vivid depth<br>
-                <br>
-                Adjust <strong>Blend Strength</strong> (0-5) to control intensity!
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Darkening (Eclipse Intensity)</span>
+                        <span class="slider-value" id="darkening-value">0.0</span>
+                    </div>
+                    <input type="range" id="darkening-slider" min="0" max="1" step="0.01" value="0.0">
+                </div>
+
+                <div class="info-box">
+                    <strong>Blend Modes:</strong><br>
+                    • <strong>Multiply:</strong> Darker, subdued tones - classic darkening<br>
+                    • <strong>Linear Burn:</strong> Deep saturation - intense color<br>
+                    • <strong>Color Burn:</strong> Darkens with high contrast - dramatic shadows<br>
+                    • <strong>Color Dodge:</strong> Brightens highlights - glowing edges<br>
+                    • <strong>Screen:</strong> Lightens overall - soft glow effect<br>
+                    • <strong>Overlay:</strong> Contrast boost - vivid depth<br>
+                    <br>
+                    Adjust <strong>Blend Strength</strong> (0-5) to control intensity!
+                </div>
             </div>
         </div>
 
@@ -499,6 +316,19 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Collapsible sections
+        document.querySelectorAll('h2').forEach(h2 => {
+            h2.addEventListener('click', () => {
+                const content = h2.nextElementSibling;
+                if (content && content.classList.contains('section-content')) {
+                    h2.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                }
+            });
+        });
+    </script>
 
     <script type="module">
         // Updated: 2025-01-10 - Added particle toggle, disabled blinking/breathing by default

@@ -1,539 +1,117 @@
 <!DOCTYPE html>
 <!--
-  SOLAR ECLIPSE SHOWCASE - Emotive Engine 3D Demo
+  SOLAR ECLIPSE - Emotive Engine 3D Demo
 
-  A demonstration of shader-based solar eclipse effects with blend layer controls.
+  Solar eclipse with shader effects and blend layer controls.
 
-  What you'll learn:
+  Features:
   - Solar eclipse rendering with shader effects
   - Annular and total eclipse types
-  - Umbral and penumbral shadow phases
   - Blend mode layer system for eclipse appearance
-  - Corona and Bailey's Beads effects
-
-  Complexity: ⭐⭐⭐ Advanced 3D + Shaders
-  Features: Sun geometry, solar eclipse, blend layers, shader effects
+  - Corona effects
 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Eclipse Showcase - Emotive Engine 3D</title>
+    <title>Solar Eclipse - Emotive Engine</title>
     <meta name="description" content="Solar eclipse demo with shader-based eclipse effects and blend layers">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --accent: #ff9500;
+            --accent-rgb: 255, 149, 0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
                         linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            color: white;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-        }
-
-        .left-menu,
-        .right-menu {
-            width: 18vw;
-            min-width: 240px;
-            max-width: 300px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            padding: 1.5vw;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        .left-menu {
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .right-menu {
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .center-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
-            padding: 2vmin;
-        }
-
-        .section {
-            margin-bottom: clamp(15px, 2vw, 25px);
-            padding-bottom: clamp(12px, 1.5vw, 20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section:last-child {
-            border-bottom: none;
-        }
-
-        h2 {
-            font-size: clamp(11px, 1vw, 13px);
-            margin-bottom: clamp(8px, 1vw, 12px);
-            color: rgba(255, 255, 255, 0.8);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            font-weight: 600;
-        }
-
-        .button-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(5px, 0.6vw, 8px);
-            margin-bottom: clamp(8px, 1vw, 12px);
-        }
-
-        button {
-            padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border-radius: clamp(6px, 0.6vw, 8px);
-            cursor: pointer;
-            font-size: clamp(9px, 0.8vw, 11px);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: clamp(2px, 0.3vw, 4px);
-            min-width: 0;
-            width: 100%;
-        }
-
-        button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-
-        button.active {
-            background: linear-gradient(135deg, #ff9500 0%, #ff5e00 100%);
-            border-color: #ff9500;
-        }
-
-        #sun-container {
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-            aspect-ratio: 1;
-            border-radius: clamp(12px, 1.5vw, 20px);
-            background: radial-gradient(circle at center, rgba(255, 149, 0, 0.15), transparent);
-            box-shadow: 0 0 150px rgba(255, 149, 0, 0.5);
-            touch-action: none;
-        }
-
-        #sun-container canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        .info-box {
-            background: rgba(255, 149, 0, 0.1);
-            border: 1px solid rgba(255, 149, 0, 0.3);
-            border-radius: clamp(6px, 0.6vw, 8px);
-            padding: clamp(10px, 1vw, 12px);
-            font-size: clamp(10px, 0.85vw, 11px);
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.5;
-        }
-
-        .info-box strong {
-            color: #ff9500;
-        }
-
-        /* Blend Layer Styles */
-        #layers-container {
-            min-height: 60px;
-        }
-
-        .layer-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: clamp(6px, 0.6vw, 8px);
-            padding: clamp(8px, 0.8vw, 10px);
-            margin-bottom: clamp(6px, 0.6vw, 8px);
-            cursor: grab;
-        }
-
-        .layer-card:active {
-            cursor: grabbing;
-        }
-
-        .layer-card.dragging {
-            opacity: 0.5;
-        }
-
-        .layer-header {
-            display: flex;
-            align-items: center;
-            gap: clamp(6px, 0.6vw, 8px);
-            margin-bottom: clamp(6px, 0.6vw, 8px);
-        }
-
-        .drag-handle {
-            cursor: grab;
-            user-select: none;
-            font-size: clamp(12px, 1vw, 14px);
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .layer-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            color: #ff9500;
-        }
-
-        .layer-controls-header {
-            display: flex;
-            gap: 6px;
-        }
-
-        .toggle-btn, .delete-btn {
-            padding: 4px 8px;
-            font-size: 11px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .toggle-btn {
-            background: rgba(100, 200, 100, 0.3);
-            border: 1px solid rgba(100, 200, 100, 0.5);
-            color: white;
-        }
-
-        .toggle-btn.disabled {
-            background: rgba(200, 100, 100, 0.3);
-            border-color: rgba(200, 100, 100, 0.5);
-            opacity: 0.6;
-        }
-
-        .delete-btn {
-            background: rgba(200, 100, 100, 0.3);
-            border: 1px solid rgba(200, 100, 100, 0.5);
-            color: white;
-        }
-
-        .layer-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .layer-select {
-            width: 100%;
-            padding: 6px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            color: white;
-            font-size: 12px;
-        }
-
-        .layer-select option {
-            background: #1a1a2e;
-            color: white;
-        }
-
-        .precision-btn {
-            transition: all 0.15s ease;
-        }
-
-        .precision-btn:hover {
-            background: rgba(255,255,255,0.25) !important;
-            transform: scale(1.05);
-        }
-
-        .precision-btn.active {
-            background: rgba(255,255,255,0.3) !important;
-            font-weight: bold;
-        }
-
-        .add-layer-btn {
-            width: 100%;
-            padding: clamp(8px, 0.8vw, 10px);
-            background: rgba(100, 200, 255, 0.1);
-            border: 1px dashed rgba(100, 200, 255, 0.3);
-            color: #64c8ff;
-            margin-top: clamp(8px, 0.8vw, 10px);
-        }
-
-        .add-layer-btn:hover {
-            background: rgba(100, 200, 255, 0.2);
-            border-color: rgba(100, 200, 255, 0.5);
-        }
-
-        /* Rotary Dial Styling */
-        .dial-container {
-            margin-bottom: clamp(15px, 1.5vw, 20px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: clamp(8px, 0.8vw, 10px);
-        }
-
-        .dial-label {
-            font-size: clamp(9px, 0.8vw, 10px);
-            color: rgba(255, 255, 255, 0.6);
-            text-align: center;
-        }
-
-        .dial-wrapper {
-            position: relative;
-            width: clamp(120px, 12vw, 140px);
-            height: clamp(120px, 12vw, 140px);
-        }
-
-        .dial-track {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
-            border: 2px solid rgba(255, 149, 0, 0.3);
-            position: relative;
-            box-shadow:
-                inset 0 0 20px rgba(0, 0, 0, 0.5),
-                0 0 20px rgba(255, 149, 0, 0.2);
-        }
-
-        .dial-marker {
-            position: absolute;
-            width: 3px;
-            height: 10px;
-            background: rgba(255, 149, 0, 0.4);
-            top: 5px;
-            left: 50%;
-            transform-origin: center calc(50% + 55px);
-            margin-left: -1.5px;
-        }
-
-        .dial-marker.major {
-            width: 4px;
-            height: 15px;
-            background: rgba(255, 149, 0, 0.8);
-            margin-left: -2px;
-        }
-
-        .dial-marker-label {
-            position: absolute;
-            font-size: clamp(8px, 0.7vw, 9px);
-            color: rgba(255, 149, 0, 0.9);
-            font-weight: 600;
-            white-space: nowrap;
-            pointer-events: none;
-        }
-
-        .dial-knob {
-            position: absolute;
-            width: 70%;
-            height: 70%;
-            top: 15%;
-            left: 15%;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(255, 149, 0, 0.4), rgba(0, 0, 0, 0.6));
-            border: 3px solid rgba(255, 149, 0, 0.6);
-            cursor: grab;
-            box-shadow:
-                0 4px 10px rgba(0, 0, 0, 0.5),
-                inset 0 -2px 5px rgba(0, 0, 0, 0.5),
-                inset 0 2px 5px rgba(255, 149, 0, 0.3);
-            transition: transform 0.1s ease-out;
-        }
-
-        .dial-knob:active {
-            cursor: grabbing;
-        }
-
-        .dial-pointer {
-            position: absolute;
-            width: 4px;
-            height: 45%;
-            background: linear-gradient(to bottom, #ff9500, rgba(255, 149, 0, 0.3));
-            top: 5%;
-            left: 50%;
-            margin-left: -2px;
-            border-radius: 2px 2px 0 0;
-            box-shadow: 0 0 8px rgba(255, 149, 0, 0.9);
-            pointer-events: none;
-        }
-
-        .dial-pointer::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 8px;
-            height: 8px;
-            background: #ff9500;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(255, 149, 0, 1);
-        }
-
-        .dial-value {
-            position: absolute;
-            bottom: 25%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: clamp(11px, 1vw, 13px);
-            font-weight: 600;
-            color: #ff9500;
-            text-shadow: 0 0 5px rgba(255, 149, 0, 0.5);
-        }
-
-        /* Standard Slider styling */
-        .slider-container {
-            margin-bottom: clamp(10px, 1vw, 12px);
-        }
-
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: clamp(9px, 0.8vw, 10px);
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: clamp(4px, 0.4vw, 5px);
-        }
-
-        .slider {
-            width: 100%;
-            height: clamp(20px, 1.5vw, 22px);
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: clamp(4px, 0.4vw, 5px);
-            cursor: pointer;
-            appearance: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            appearance: none;
-            width: clamp(14px, 1.2vw, 16px);
-            height: clamp(14px, 1.2vw, 16px);
-            background: #ff9500;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .left-menu::-webkit-scrollbar,
-        .right-menu::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .left-menu::-webkit-scrollbar-track,
-        .right-menu::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .left-menu::-webkit-scrollbar-thumb,
-        .right-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        .left-menu::-webkit-scrollbar-thumb:hover,
-        .right-menu::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 <body>
-    <!-- LEFT MENU: Eclipse Controls -->
     <div class="left-menu">
         <div class="section">
             <h2>Eclipse Type</h2>
-            <div class="button-grid">
-                <button data-action="eclipse" data-value="off" class="active">☀️ Off</button>
-                <button data-action="eclipse" data-value="annular">🌑 Annular</button>
-                <button data-action="eclipse" data-value="total">🌚 Total</button>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="eclipse" data-value="off" class="active">Off</button>
+                    <button data-action="eclipse" data-value="annular">Annular</button>
+                    <button data-action="eclipse" data-value="total">Total</button>
+                </div>
             </div>
         </div>
 
         <div class="section" id="eclipse-controls-section" style="display: none;">
-            <h2>Eclipse Animation Controls</h2>
-
-            <!-- Circular Eclipse Dial -->
-            <div class="dial-container">
-                <div class="dial-label">Eclipse Phase</div>
-                <div class="dial-wrapper">
-                    <div class="dial-track" id="eclipse-dial-track">
-                        <!-- Markers will be dynamically added -->
+            <h2>Eclipse Position</h2>
+            <div class="section-content">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Shadow Position</span>
+                        <span class="slider-value" id="shadow-pos-value">0.00</span>
                     </div>
-                    <div class="dial-knob" id="eclipse-dial-knob">
-                        <div class="dial-pointer"></div>
-                        <div class="dial-value" id="eclipse-dial-value">0%</div>
+                    <input type="range" id="shadow-pos-slider" min="-2" max="2" step="0.01" value="0">
+                </div>
+                <div class="slider-control" id="total-shadow-control" style="display: none;">
+                    <div class="slider-label">
+                        <span>Shadow Size</span>
+                        <span class="slider-value" id="total-shadow-value">0.990</span>
                     </div>
+                    <input type="range" id="total-shadow-slider" min="0.85" max="1.05" step="0.001" value="0.990">
                 </div>
-            </div>
-
-            <!-- Shadow Size Controls -->
-            <div class="slider-control" id="total-shadow-control" style="margin-top: 12px; display: none;">
-                <div class="slider-label">
-                    <span>Total Eclipse Shadow Size</span>
-                    <span class="slider-value" id="total-shadow-value">0.990</span>
+                <div class="slider-control" id="annular-shadow-control" style="display: none;">
+                    <div class="slider-label">
+                        <span>Shadow Size</span>
+                        <span class="slider-value" id="annular-shadow-value">0.870</span>
+                    </div>
+                    <input type="range" id="annular-shadow-slider" min="0.70" max="0.95" step="0.001" value="0.870">
                 </div>
-                <input type="range" id="total-shadow-slider" min="0.85" max="1.05" step="0.001" value="0.990">
-            </div>
-
-            <div class="slider-control" id="annular-shadow-control" style="margin-top: 12px; display: none;">
-                <div class="slider-label">
-                    <span>Annular Eclipse Shadow Size</span>
-                    <span class="slider-value" id="annular-shadow-value">0.870</span>
-                </div>
-                <input type="range" id="annular-shadow-slider" min="0.70" max="0.95" step="0.001" value="0.870">
             </div>
         </div>
 
         <div class="section">
             <h2>Visual Controls</h2>
-            <button data-action="toggle-glow" class="active" style="width: 100%">💫 Core Glow</button>
-            <button data-action="toggle-auto-rotate" style="width: 100%; margin-top: 6px">🔄 Auto-Rotate</button>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="toggle-glow" class="active">Core Glow</button>
+                    <button data-action="toggle-auto-rotate">Auto-Rotate</button>
+                </div>
+            </div>
         </div>
 
         <div class="section">
             <div class="info-box">
                 <strong>Solar Eclipse:</strong><br>
-                Shader-based eclipse effects darken the sun where the moon's shadow covers it. Use blend layers to adjust the eclipse appearance.
+                Shader-based eclipse effects darken the sun where the moon's shadow covers it.
             </div>
         </div>
     </div>
 
-    <!-- CENTER: Sun Animation -->
     <div class="center-content">
         <div id="sun-container"></div>
     </div>
 
-    <!-- RIGHT MENU: Blend Layers -->
     <div class="right-menu">
         <div class="section">
             <h2>Corona Blend Layers</h2>
-            <div id="corona-layers-container">
-                <!-- Corona layers will be added here dynamically -->
+            <div class="section-content">
+                <div id="corona-layers-container"></div>
+                <button class="add-layer-btn" id="add-corona-layer-btn">+ Add Corona Layer</button>
             </div>
-            <button class="add-layer-btn" id="add-corona-layer-btn">+ Add Corona Layer</button>
         </div>
 
         <div class="section">
             <h2>Sun Blend Layers</h2>
-            <div id="layers-container">
-                <!-- Sun layers will be added here dynamically -->
+            <div class="section-content">
+                <div id="layers-container"></div>
+                <button class="add-layer-btn" id="add-layer-btn">+ Add Sun Layer</button>
             </div>
-            <button class="add-layer-btn" id="add-layer-btn">+ Add Sun Layer</button>
         </div>
 
         <div class="section">
             <div class="info-box">
                 <strong>Blend Modes:</strong><br>
-                Drag layers to reorder. Corona layers fix black edges. Sun layers adjust sun appearance. Max 4 per section.
+                Drag layers to reorder. Max 4 per section.
             </div>
         </div>
     </div>
@@ -542,49 +120,26 @@
         import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
 
         let mascot = null;
+        const MAX_BLEND_LAYERS = 4;
 
-        // Configuration constants
-        const MAX_BLEND_LAYERS = 4;          // Maximum blend layers per section (sun/corona)
-        const SHADOW_POS_RANGE = 2.0;        // Eclipse shadow position range (±2.0)
-
-        // Blend mode names (18 total modes - matches shader implementation)
-        // Source: src/3d/shaders/utils/blendModes.js
         const blendModeNames = [
-            'Multiply',       // 0 - Darkening
-            'Linear Burn',    // 1 - Darkening
-            'Color Burn',     // 2 - Darkening (intense)
-            'Color Dodge',    // 3 - Brightening (intense)
-            'Screen',         // 4 - Brightening
-            'Overlay',        // 5 - Contrast
-            'Add',            // 6 - Brightening (glow)
-            'Soft Light',     // 7 - Contrast (gentle)
-            'Hard Light',     // 8 - Contrast (strong)
-            'Vivid Light',    // 9 - Saturation boost
-            'Linear Light',   // 10 - Linear saturation
-            'Difference',     // 11 - Inversion
-            'Exclusion',      // 12 - Soft inversion
-            'Darken',         // 13 - Comparison (darker)
-            'Lighten',        // 14 - Comparison (lighter)
-            'Subtract',       // 15 - Deep shadows
-            'Divide',         // 16 - Ethereal glow
-            'Pin Light'       // 17 - Posterization
+            'Multiply', 'Linear Burn', 'Color Burn', 'Color Dodge', 'Screen',
+            'Overlay', 'Add', 'Soft Light', 'Hard Light', 'Vivid Light',
+            'Linear Light', 'Difference', 'Exclusion', 'Darken', 'Lighten',
+            'Subtract', 'Divide', 'Pin Light'
         ];
 
-        // Layer management
-        let layers = []; // Sun layers
-        let coronaLayers = []; // Corona layers
+        let layers = [];
+        let coronaLayers = [];
         let nextLayerId = 1;
         let nextCoronaLayerId = 1;
-        let draggedLayer = null;
-        let draggedCoronaLayer = null;
 
-        // Initialize sun with multiplexer material
         (async () => {
             try {
                 const container = document.getElementById('sun-container');
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'sun',
-                    materialVariant: 'multiplexer', // Use multiplexer shader with blend layers
+                    materialVariant: 'multiplexer',
                     enableParticles: false,
                     enablePostProcessing: true,
                     enableShadows: false,
@@ -592,902 +147,254 @@
                     autoRotate: true,
                     enableBlinking: false,
                     enableBreathing: false,
-                    cameraDistance: 1.2,  // Camera distance from sun
-                    fov: 30,              // Lower FOV = sun appears larger in frame
-                    minZoom: 0.9,         // Allow zooming in closer
-                    maxZoom: 2.0          // Allow zooming out to see full corona
+                    cameraDistance: 1.2
                 });
 
                 mascot.init(container);
                 mascot.start();
                 mascot.setEmotion('joy');
 
-                console.log('☀️ EmotiveMascot3D Sun initialized with multiplexer material');
-
-                // Auto-populate UI from shader defaults (WYSIWYG)
-                // Check if any sun blend layers are enabled by default in the shader
-                if (mascot.core3D && mascot.core3D.coreMesh && mascot.core3D.coreMesh.material.uniforms) {
-                    for (let i = 1; i <= 4; i++) {
-                        const enabled = mascot.core3D.coreMesh.material.uniforms[`layer${i}Enabled`].value > 0.5;
-                        if (enabled) {
-                            const mode = Math.round(mascot.core3D.coreMesh.material.uniforms[`layer${i}Mode`].value);
-                            const strength = mascot.core3D.coreMesh.material.uniforms[`layer${i}Strength`].value;
-                            addLayer(mode, strength, true, true); // skip shader update during batch load
+                // Auto-populate from shader defaults
+                setTimeout(() => {
+                    if (mascot.core3D?.coreMesh?.material?.uniforms) {
+                        for (let i = 1; i <= 4; i++) {
+                            const enabled = mascot.core3D.coreMesh.material.uniforms[`layer${i}Enabled`].value > 0.5;
+                            if (enabled) {
+                                const mode = Math.round(mascot.core3D.coreMesh.material.uniforms[`layer${i}Mode`].value);
+                                const strength = mascot.core3D.coreMesh.material.uniforms[`layer${i}Strength`].value;
+                                addLayer(mode, strength, true, true);
+                            }
                         }
                     }
-                    console.log(`📋 Loaded ${layers.length} sun blend layers from shader defaults`);
-                }
 
-                // Auto-populate corona blend layers from shader defaults
-                if (mascot.core3D && mascot.core3D.solarEclipse && mascot.core3D.solarEclipse.coronaDisk && mascot.core3D.solarEclipse.coronaDisk.material.uniforms) {
-                    for (let i = 1; i <= 4; i++) {
-                        const enabled = mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Enabled`].value > 0.5;
-                        if (enabled) {
-                            const mode = Math.round(mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Mode`].value);
-                            const strength = mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Strength`].value;
-                            addCoronaLayer(mode, strength, true, true); // skip shader update during batch load
+                    if (mascot.core3D?.solarEclipse?.coronaDisk?.material?.uniforms) {
+                        for (let i = 1; i <= 4; i++) {
+                            const enabled = mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Enabled`].value > 0.5;
+                            if (enabled) {
+                                const mode = Math.round(mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Mode`].value);
+                                const strength = mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Strength`].value;
+                                addCoronaLayer(mode, strength, true, true);
+                            }
                         }
                     }
-                    console.log(`📋 Loaded ${coronaLayers.length} corona blend layers from shader defaults`);
-                }
+                }, 500);
             } catch (error) {
-                console.error('❌ Failed to initialize:', error);
+                console.error('Failed to initialize:', error);
             }
         })();
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // ECLIPSE DIAL CONTROL
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        let dialState = {
-            isDragging: false,
-            currentAngle: 0, // Start at totality (0° = shadow centered)
-            currentShadowPos: 0.0,
-            snapThreshold: 10 // degrees
-        };
-
-        // Eclipse stage definitions with magnetic snap points
-        // FULL 360° rotation maps to complete eclipse cycle:
-        // -180° (left) = shadow at -SHADOW_POS_RANGE → 0° (top) = shadow at 0.0 (totality) → 180° (right) = shadow at +SHADOW_POS_RANGE
-        const ECLIPSE_STAGES = [
-            { angle: -180, shadowPos: -SHADOW_POS_RANGE, label: 'Start', snap: true },     // Shadow far left (start of cycle)
-            { angle: 0, shadowPos: 0.0, label: 'Totality', snap: true }                    // Shadow centered (total eclipse)
-        ];
-
-        function initializeEclipseDial() {
-            const dialTrack = document.getElementById('eclipse-dial-track');
-            const dialKnob = document.getElementById('eclipse-dial-knob');
-            const dialValue = document.getElementById('eclipse-dial-value');
-
-            if (!dialTrack || !dialKnob || !dialValue) {
-                console.error('❌ Dial elements not found');
-                return;
-            }
-
-            // Clear any existing markers
-            dialTrack.innerHTML = '';
-
-            // Create dial markers
-            ECLIPSE_STAGES.forEach((stage, index) => {
-                const marker = document.createElement('div');
-                marker.className = `dial-marker ${stage.snap ? 'major' : ''}`;
-                marker.style.transform = `rotate(${stage.angle}deg)`;
-                dialTrack.appendChild(marker);
-
-                // Add labels for major stages
-                if (stage.snap && stage.label !== 'No Eclipse') {
-                    const label = document.createElement('div');
-                    label.className = 'dial-marker-label';
-                    label.textContent = stage.label;
-
-                    // Position label outside the dial
-                    const radius = 75; // px from center
-                    const angleRad = (stage.angle - 90) * Math.PI / 180; // -90 offset for top = 0°
-                    const x = Math.cos(angleRad) * radius;
-                    const y = Math.sin(angleRad) * radius;
-
-                    label.style.left = `calc(50% + ${x}px)`;
-                    label.style.top = `calc(50% + ${y}px)`;
-                    label.style.transform = 'translate(-50%, -50%)';
-
-                    dialTrack.appendChild(label);
+        // Collapsible sections
+        document.querySelectorAll('.section h2').forEach(h2 => {
+            h2.addEventListener('click', () => {
+                const content = h2.nextElementSibling;
+                if (content?.classList.contains('section-content')) {
+                    h2.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
                 }
             });
+        });
 
-            // Mouse/touch interaction
-            let startAngle = 0;
-            let centerX, centerY;
-
-            function getAngleFromPoint(clientX, clientY) {
-                const rect = dialKnob.getBoundingClientRect();
-                centerX = rect.left + rect.width / 2;
-                centerY = rect.top + rect.height / 2;
-
-                const dx = clientX - centerX;
-                const dy = clientY - centerY;
-                let angle = Math.atan2(dy, dx) * 180 / Math.PI + 90; // +90 to make top = 0°
-
-                // Normalize to -180 to 180 range
-                if (angle > 180) angle -= 360;
-                if (angle < -180) angle += 360;
-
-                return angle;
-            }
-
-            function updateDial(angle) {
-                // NO CLAMPING - allow full 360° rotation
-                // Normalize angle to -180° to 180° range
-                while (angle > 180) angle -= 360;
-                while (angle < -180) angle += 360;
-
-                // Check for magnetic snapping
-                for (const stage of ECLIPSE_STAGES) {
-                    if (stage.snap && Math.abs(angle - stage.angle) < dialState.snapThreshold) {
-                        angle = stage.angle;
-                        break;
-                    }
-                }
-
-                dialState.currentAngle = angle;
-
-                // Linear mapping: angle (-180° to 180°) → shadow position (-SHADOW_POS_RANGE to +SHADOW_POS_RANGE)
-                // -180° = -SHADOW_POS_RANGE (shadow far left)
-                //    0° =  0.0 (shadow centered - totality)
-                // +180° = +SHADOW_POS_RANGE (shadow far right)
-                const shadowPos = (angle / 180.0) * SHADOW_POS_RANGE;
-                dialState.currentShadowPos = shadowPos;
-
-                // Update visual rotation
-                dialKnob.style.transform = `rotate(${angle}deg)`;
-
-                // Display eclipse coverage percentage
-                // Shadow at ±SHADOW_POS_RANGE = 0% coverage (no eclipse)
-                // Shadow at 0.0 = 100% coverage (totality)
-                // Calculate coverage based on how close shadow is to center
-                const distanceFromCenter = Math.abs(shadowPos);
-                const maxDistance = SHADOW_POS_RANGE;
-                // Coverage is highest (100%) at center, drops to 0% at edges
-                const coverage = Math.max(0, Math.min(100, Math.round((1 - (distanceFromCenter / maxDistance)) * 100)));
-                dialValue.textContent = `${coverage}%`;
-
-                // NOTE: Layer 3 (Linear Burn) is now managed by the engine with easing
-                // updateLinearBurnVisibility(coverage); // Disabled - engine handles this
-
-                // Update eclipse with direct shadow position
-                if (mascot && mascot.core3D && mascot.core3D.solarEclipse) {
-                    mascot.core3D.solarEclipse.setManualShadowPosition(shadowPos);
-                }
-            }
-
-            function onPointerDown(e) {
-                dialState.isDragging = true;
-                dialKnob.style.transition = 'none';
-                startAngle = getAngleFromPoint(e.clientX, e.clientY);
-                e.preventDefault();
-            }
-
-            function onPointerMove(e) {
-                if (!dialState.isDragging) return;
-                const angle = getAngleFromPoint(e.clientX, e.clientY);
-                updateDial(angle);
-                e.preventDefault();
-            }
-
-            function onPointerUp(e) {
-                if (!dialState.isDragging) return;
-                dialState.isDragging = false;
-                dialKnob.style.transition = 'transform 0.1s ease-out';
-                e.preventDefault();
-            }
-
-            // Mouse events
-            dialKnob.addEventListener('mousedown', onPointerDown);
-            document.addEventListener('mousemove', onPointerMove);
-            document.addEventListener('mouseup', onPointerUp);
-
-            // Touch events
-            dialKnob.addEventListener('touchstart', (e) => {
-                const touch = e.touches[0];
-                onPointerDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => e.preventDefault() });
-            });
-            document.addEventListener('touchmove', (e) => {
-                if (!dialState.isDragging) return;
-                const touch = e.touches[0];
-                onPointerMove({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => e.preventDefault() });
-            });
-            document.addEventListener('touchend', onPointerUp);
-
-            // Initialize dial visual to start position (don't set manual control yet)
-            // The engine will animate the shadow from -2.0 to 0.0
-            // Just update the dial knob rotation without calling setManualShadowPosition
-            dialState.currentAngle = -180; // Start position (shadow off-screen left)
-            dialKnob.style.transform = `rotate(${-180}deg)`;
-            dialValue.textContent = '0%'; // 0% coverage at start
-        }
-
-        // Create layer card HTML
-        function createLayerCard(layer) {
+        // Layer management
+        function createLayerCard(layer, isCorona = false) {
             const card = document.createElement('div');
             card.className = 'layer-card';
             card.dataset.layerId = layer.id;
-            card.draggable = true;
+
+            const prefix = isCorona ? 'Corona' : 'Layer';
+            const toggleAction = isCorona ? 'toggle-corona' : 'toggle';
+            const deleteAction = isCorona ? 'delete-corona' : 'delete';
+            const strengthAction = isCorona ? 'strength-corona' : 'strength';
 
             card.innerHTML = `
                 <div class="layer-header">
                     <div class="layer-title">
-                        <span class="drag-handle">⋮⋮</span>
-                        <span>Layer ${layer.id}</span>
+                        <span class="drag-handle">...</span>
+                        <span class="layer-name">${prefix} ${layer.id}</span>
                     </div>
                     <div class="layer-controls-header">
-                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="toggle">
+                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="${toggleAction}">
                             ${layer.enabled ? 'ON' : 'OFF'}
                         </button>
-                        <button class="delete-btn" data-action="delete">✕</button>
+                        <button class="delete-btn" data-action="${deleteAction}">x</button>
                     </div>
                 </div>
                 <div class="layer-controls">
-                    <select class="layer-select" data-action="mode">
-                        ${blendModeNames.map((name, idx) =>
-                            `<option value="${idx}" ${layer.mode === idx ? 'selected' : ''}>${name}</option>`
-                        ).join('')}
-                    </select>
-                    <div class="slider-control" style="margin: 0;">
-                        <div class="slider-label" style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; gap: 4px; align-items: center;">
-                                <span style="font-size: 11px;">Strength</span>
-                                <div class="precision-toggle" data-action="precision" style="display: flex; gap: 2px; font-size: 9px; opacity: 0.7;">
-                                    <button class="precision-btn active" data-step="0.1" style="padding: 2px 4px; background: rgba(255,255,255,0.2); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.1</button>
-                                    <button class="precision-btn" data-step="0.01" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.01</button>
-                                    <button class="precision-btn" data-step="0.001" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.001</button>
-                                </div>
-                            </div>
-                            <span class="slider-value" style="font-size: 11px; font-family: 'Courier New', monospace; min-width: 45px; text-align: right;">${layer.strength.toFixed(3)}</span>
+                    <div class="custom-select">
+                        <div class="custom-select-trigger">${blendModeNames[layer.mode]}</div>
+                        <div class="custom-select-dropdown">
+                            ${blendModeNames.map((name, idx) =>
+                                `<div class="custom-select-option${layer.mode === idx ? ' selected' : ''}" data-value="${idx}">${name}</div>`
+                            ).join('')}
                         </div>
-                        <input type="range" class="layer-strength-slider" data-action="strength"
-                               min="0" max="5" step="0.1" value="${layer.strength}">
+                    </div>
+                    <div class="slider-control">
+                        <div class="slider-label">
+                            <span>Strength</span>
+                            <span class="slider-value">${layer.strength.toFixed(1)}</span>
+                        </div>
+                        <input type="range" data-action="${strengthAction}" min="0" max="5" step="0.1" value="${layer.strength}">
                     </div>
                 </div>
             `;
 
-            // Drag handle only
-            const dragHandle = card.querySelector('.drag-handle');
-            dragHandle.addEventListener('mousedown', () => {
-                card.draggable = true;
+            const select = card.querySelector('.custom-select');
+            const trigger = select.querySelector('.custom-select-trigger');
+            const options = select.querySelectorAll('.custom-select-option');
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select.open').forEach(s => s !== select && s.classList.remove('open'));
+                select.classList.toggle('open');
             });
 
-            // Drag and drop event handlers (from blood-moon-demo)
-            card.addEventListener('dragstart', (e) => {
-                draggedLayer = e.currentTarget;
-                e.currentTarget.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-
-            card.addEventListener('dragend', (e) => {
-                e.currentTarget.classList.remove('dragging');
-                draggedLayer = null;
-
-                // Remove all drag-over states
-                document.querySelectorAll('.layer-card').forEach(card => {
-                    card.classList.remove('drag-over');
-                });
-            });
-
-            card.addEventListener('dragover', (e) => {
-                if (e.preventDefault) {
-                    e.preventDefault();
-                }
-                e.dataTransfer.dropEffect = 'move';
-
-                const afterElement = getDragAfterElement(document.getElementById('layers-container'), e.clientY);
-                const draggable = document.querySelector('.dragging');
-
-                if (afterElement == null) {
-                    document.getElementById('layers-container').appendChild(draggable);
-                } else {
-                    document.getElementById('layers-container').insertBefore(draggable, afterElement);
-                }
-
-                return false;
-            });
-
-            card.addEventListener('drop', (e) => {
-                if (e.stopPropagation) {
+            options.forEach(option => {
+                option.addEventListener('click', (e) => {
                     e.stopPropagation();
-                }
-
-                // Rebuild layer positions based on DOM order
-                const cards = Array.from(document.getElementById('layers-container').querySelectorAll('.layer-card'));
-                const newOrder = [];
-
-                cards.forEach((card, index) => {
-                    const layerId = parseInt(card.dataset.layerId);
-                    const layer = layers.find(l => l.id === layerId);
-                    if (layer) {
-                        newOrder.push(layer);
-                    }
-                });
-
-                layers = newOrder;
-                updateShaderLayers();
-                console.log('🔄 Reordered layers:', layers);
-
-                return false;
-            });
-
-            // Prevent dragging when interacting with controls
-            const interactiveElements = card.querySelectorAll('select, input, button:not(.drag-handle)');
-            interactiveElements.forEach(el => {
-                el.addEventListener('mousedown', (e) => {
-                    card.draggable = false;
-                    e.stopPropagation();
-                });
-                el.addEventListener('mouseup', () => {
-                    card.draggable = true;
+                    layer.mode = parseInt(option.dataset.value);
+                    trigger.textContent = blendModeNames[layer.mode];
+                    options.forEach(o => o.classList.remove('selected'));
+                    option.classList.add('selected');
+                    select.classList.remove('open');
+                    isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
                 });
             });
 
-            // Toggle button
-            card.querySelector('[data-action="toggle"]').addEventListener('click', () => {
+            card.querySelector(`[data-action="${toggleAction}"]`).addEventListener('click', () => {
                 layer.enabled = !layer.enabled;
-                const toggleBtn = card.querySelector('[data-action="toggle"]');
-                toggleBtn.textContent = layer.enabled ? 'ON' : 'OFF';
-                toggleBtn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
-                updateShaderLayers();
+                const btn = card.querySelector(`[data-action="${toggleAction}"]`);
+                btn.textContent = layer.enabled ? 'ON' : 'OFF';
+                btn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
+                card.classList.toggle('disabled', !layer.enabled);
+                isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
             });
 
-            // Delete button
-            card.querySelector('[data-action="delete"]').addEventListener('click', () => {
-                removeLayer(layer.id);
+            card.querySelector(`[data-action="${deleteAction}"]`).addEventListener('click', () => {
+                isCorona ? removeCoronaLayer(layer.id) : removeLayer(layer.id);
             });
 
-            // Mode select
-            card.querySelector('[data-action="mode"]').addEventListener('change', (e) => {
-                const oldMode = layer.mode;
-                layer.mode = parseInt(e.target.value);
-                console.log(`🎛️ Layer ${layer.id} mode changed: ${oldMode} → ${layer.mode}`);
-                updateShaderLayers();
-            });
-
-            // Precision mode toggle buttons
-            const precisionButtons = card.querySelectorAll('.precision-btn');
-            const strengthSlider = card.querySelector('[data-action="strength"]');
-            precisionButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    // Update button states
-                    precisionButtons.forEach(b => {
-                        b.classList.remove('active');
-                        b.style.background = 'rgba(255,255,255,0.1)';
-                    });
-                    btn.classList.add('active');
-                    btn.style.background = 'rgba(255,255,255,0.2)';
-
-                    // Update slider step
-                    const step = btn.dataset.step;
-                    strengthSlider.step = step;
-
-                    // Update display precision
-                    const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
-                    card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
-
-                    console.log(`🎯 Layer ${layer.id} precision: ${step}`);
-                });
-            });
-
-            // Strength slider - update in real-time during drag
-            strengthSlider.addEventListener('input', (e) => {
+            const slider = card.querySelector(`[data-action="${strengthAction}"]`);
+            slider.addEventListener('input', (e) => {
                 layer.strength = parseFloat(e.target.value);
-
-                // Get current precision from active button
-                const activeBtn = card.querySelector('.precision-btn.active');
-                const step = activeBtn ? activeBtn.dataset.step : '0.1';
-                const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
-
-                card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
-                updateShaderLayers(); // Update shader in real-time
-            });
-            strengthSlider.addEventListener('change', (e) => {
-                console.log(`🎛️ Layer ${layer.id} strength: ${layer.strength.toFixed(3)}`);
+                card.querySelector('.slider-value').textContent = layer.strength.toFixed(1);
+                isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
             });
 
             return card;
         }
 
-        // Add a new layer
         function addLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (layers.length >= MAX_BLEND_LAYERS) {
-                console.warn(`⚠️ Maximum ${MAX_BLEND_LAYERS} layers reached`);
-                return;
-            }
-
-            const layer = {
-                id: nextLayerId++,
-                mode: mode,
-                strength: strength,
-                enabled: enabled
-            };
-
+            if (layers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextLayerId++, mode, strength, enabled };
             layers.push(layer);
-            const card = createLayerCard(layer);
-            document.getElementById('layers-container').appendChild(card);
-
-            if (!skipUpdate) {
-                updateShaderLayers();
-            }
-
-            console.log(`➕ Added layer ${layer.id}: ${blendModeNames[mode]} @ ${strength.toFixed(3)}`);
+            document.getElementById('layers-container').appendChild(createLayerCard(layer, false));
+            if (!skipUpdate) updateShaderLayers();
         }
 
-        // Remove a layer
         function removeLayer(layerId) {
-            const index = layers.findIndex(l => l.id === layerId);
-            if (index === -1) return;
-
-            layers.splice(index, 1);
-            const card = document.querySelector(`[data-layer-id="${layerId}"].layer-card`);
-            if (card) card.remove();
-
+            const idx = layers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            layers.splice(idx, 1);
+            document.querySelector(`#layers-container [data-layer-id="${layerId}"]`)?.remove();
             updateShaderLayers();
-            console.log(`➖ Removed layer ${layerId}`);
         }
 
-        // Update shader uniforms with current layer state
         function updateShaderLayers() {
-            if (!mascot || !mascot.core3D) return;
-
-            // Update all layers
+            if (!mascot?.core3D) return;
             for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layerNum = i + 1;
-                const uiLayer = layers[i];
-
-                if (uiLayer) {
-                    mascot.core3D.setBlendLayer(layerNum, {
-                        mode: uiLayer.mode,
-                        strength: uiLayer.strength,
-                        enabled: uiLayer.enabled
-                    });
-                } else {
-                    // Disable unused layers
-                    mascot.core3D.setBlendLayer(layerNum, {
-                        mode: 0,
-                        strength: 0,
-                        enabled: false
-                    });
-                }
+                const layer = layers[i];
+                mascot.core3D.setBlendLayer(i + 1, layer
+                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                    : { mode: 0, strength: 0, enabled: false });
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // CORONA LAYER MANAGEMENT
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        // Create corona layer card HTML
-        function createCoronaLayerCard(layer) {
-            const card = document.createElement('div');
-            card.className = 'layer-card';
-            card.dataset.layerId = layer.id;
-            card.draggable = true;
-
-            card.innerHTML = `
-                <div class="layer-header">
-                    <div class="layer-title">
-                        <span class="drag-handle">⋮⋮</span>
-                        <span>Corona ${layer.id}</span>
-                    </div>
-                    <div class="layer-controls-header">
-                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="toggle-corona">
-                            ${layer.enabled ? 'ON' : 'OFF'}
-                        </button>
-                        <button class="delete-btn" data-action="delete-corona">✕</button>
-                    </div>
-                </div>
-                <div class="layer-controls">
-                    <select class="layer-select" data-action="mode-corona">
-                        ${blendModeNames.map((name, idx) =>
-                            `<option value="${idx}" ${layer.mode === idx ? 'selected' : ''}>${name}</option>`
-                        ).join('')}
-                    </select>
-                    <div class="slider-control" style="margin: 0;">
-                        <div class="slider-label" style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; gap: 4px; align-items: center;">
-                                <span style="font-size: 11px;">Strength</span>
-                                <div class="precision-toggle" data-action="precision-corona" style="display: flex; gap: 2px; font-size: 9px; opacity: 0.7;">
-                                    <button class="precision-btn active" data-step="0.1" style="padding: 2px 4px; background: rgba(255,255,255,0.2); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.1</button>
-                                    <button class="precision-btn" data-step="0.01" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.01</button>
-                                    <button class="precision-btn" data-step="0.001" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: white; cursor: pointer; font-size: 9px;">0.001</button>
-                                </div>
-                            </div>
-                            <span class="slider-value" style="font-size: 11px; font-family: 'Courier New', monospace; min-width: 45px; text-align: right;">${layer.strength.toFixed(3)}</span>
-                        </div>
-                        <input type="range" class="layer-strength-slider" data-action="strength-corona"
-                               min="0" max="5" step="0.1" value="${layer.strength}">
-                    </div>
-                </div>
-            `;
-
-            // Drag handle
-            const dragHandle = card.querySelector('.drag-handle');
-            dragHandle.addEventListener('mousedown', () => {
-                card.draggable = true;
-            });
-
-            // Drag and drop event handlers
-            card.addEventListener('dragstart', (e) => {
-                draggedCoronaLayer = e.currentTarget;
-                e.currentTarget.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-
-            card.addEventListener('dragend', (e) => {
-                e.currentTarget.classList.remove('dragging');
-                draggedCoronaLayer = null;
-                document.querySelectorAll('.layer-card').forEach(card => {
-                    card.classList.remove('drag-over');
-                });
-            });
-
-            card.addEventListener('dragover', (e) => {
-                if (e.preventDefault) {
-                    e.preventDefault();
-                }
-                e.dataTransfer.dropEffect = 'move';
-
-                const afterElement = getDragAfterElement(document.getElementById('corona-layers-container'), e.clientY);
-                const draggable = document.querySelector('.dragging');
-
-                if (afterElement == null) {
-                    document.getElementById('corona-layers-container').appendChild(draggable);
-                } else {
-                    document.getElementById('corona-layers-container').insertBefore(draggable, afterElement);
-                }
-
-                return false;
-            });
-
-            card.addEventListener('drop', (e) => {
-                if (e.stopPropagation) {
-                    e.stopPropagation();
-                }
-
-                // Rebuild layer positions based on DOM order
-                const cards = Array.from(document.getElementById('corona-layers-container').querySelectorAll('.layer-card'));
-                const newOrder = [];
-
-                cards.forEach((card, index) => {
-                    const layerId = parseInt(card.dataset.layerId);
-                    const layer = coronaLayers.find(l => l.id === layerId);
-                    if (layer) {
-                        newOrder.push(layer);
-                    }
-                });
-
-                coronaLayers = newOrder;
-                updateCoronaShaderLayers();
-                console.log('🔄 Reordered corona layers:', coronaLayers);
-
-                return false;
-            });
-
-            // Prevent dragging when interacting with controls
-            const interactiveElements = card.querySelectorAll('select, input, button:not(.drag-handle)');
-            interactiveElements.forEach(el => {
-                el.addEventListener('mousedown', (e) => {
-                    card.draggable = false;
-                    e.stopPropagation();
-                });
-                el.addEventListener('mouseup', () => {
-                    card.draggable = true;
-                });
-            });
-
-            // Toggle button
-            card.querySelector('[data-action="toggle-corona"]').addEventListener('click', () => {
-                layer.enabled = !layer.enabled;
-                const toggleBtn = card.querySelector('[data-action="toggle-corona"]');
-                toggleBtn.textContent = layer.enabled ? 'ON' : 'OFF';
-                toggleBtn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
-                updateCoronaShaderLayers();
-            });
-
-            // Delete button
-            card.querySelector('[data-action="delete-corona"]').addEventListener('click', () => {
-                removeCoronaLayer(layer.id);
-            });
-
-            // Mode select
-            card.querySelector('[data-action="mode-corona"]').addEventListener('change', (e) => {
-                const oldMode = layer.mode;
-                layer.mode = parseInt(e.target.value);
-                console.log(`🎛️ Corona Layer ${layer.id} mode changed: ${oldMode} → ${layer.mode}`);
-                updateCoronaShaderLayers();
-            });
-
-            // Precision mode toggle buttons
-            const precisionButtons = card.querySelectorAll('.precision-btn');
-            const strengthSlider = card.querySelector('[data-action="strength-corona"]');
-            precisionButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    precisionButtons.forEach(b => {
-                        b.classList.remove('active');
-                        b.style.background = 'rgba(255,255,255,0.1)';
-                    });
-                    btn.classList.add('active');
-                    btn.style.background = 'rgba(255,255,255,0.2)';
-
-                    const step = btn.dataset.step;
-                    strengthSlider.step = step;
-
-                    const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
-                    card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
-
-                    console.log(`🎯 Corona Layer ${layer.id} precision: ${step}`);
-                });
-            });
-
-            // Strength slider
-            strengthSlider.addEventListener('input', (e) => {
-                layer.strength = parseFloat(e.target.value);
-
-                const activeBtn = card.querySelector('.precision-btn.active');
-                const step = activeBtn ? activeBtn.dataset.step : '0.1';
-                const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
-
-                card.querySelector('.slider-value').textContent = layer.strength.toFixed(precision);
-                updateCoronaShaderLayers();
-            });
-            strengthSlider.addEventListener('change', (e) => {
-                console.log(`🎛️ Corona Layer ${layer.id} strength: ${layer.strength.toFixed(3)}`);
-            });
-
-            return card;
-        }
-
-        // Add a new corona layer
         function addCoronaLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (coronaLayers.length >= MAX_BLEND_LAYERS) {
-                console.warn(`⚠️ Maximum ${MAX_BLEND_LAYERS} corona layers reached`);
-                return;
-            }
-
-            const layer = {
-                id: nextCoronaLayerId++,
-                mode: mode,
-                strength: strength,
-                enabled: enabled
-            };
-
+            if (coronaLayers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextCoronaLayerId++, mode, strength, enabled };
             coronaLayers.push(layer);
-            const card = createCoronaLayerCard(layer);
-            document.getElementById('corona-layers-container').appendChild(card);
-
-            if (!skipUpdate) {
-                updateCoronaShaderLayers();
-            }
-
-            console.log(`➕ Added corona layer ${layer.id}: ${blendModeNames[mode]} @ ${strength.toFixed(3)}`);
+            document.getElementById('corona-layers-container').appendChild(createLayerCard(layer, true));
+            if (!skipUpdate) updateCoronaShaderLayers();
         }
 
-        // Remove a corona layer
         function removeCoronaLayer(layerId) {
-            const index = coronaLayers.findIndex(l => l.id === layerId);
-            if (index === -1) return;
-
-            // If this is the Linear Burn layer, reset the ID
-            if (layerId === linearBurnLayerId) {
-                linearBurnLayerId = null;
-            }
-
-            coronaLayers.splice(index, 1);
-            const card = document.querySelector(`#corona-layers-container [data-layer-id="${layerId}"].layer-card`);
-            if (card) card.remove();
-
+            const idx = coronaLayers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            coronaLayers.splice(idx, 1);
+            document.querySelector(`#corona-layers-container [data-layer-id="${layerId}"]`)?.remove();
             updateCoronaShaderLayers();
         }
 
-        // Update corona shader uniforms with current layer state
         function updateCoronaShaderLayers() {
-            if (!mascot || !mascot.core3D || !mascot.core3D.solarEclipse) return;
-
-            // Update all corona layers
+            if (!mascot?.core3D?.solarEclipse) return;
             for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layerNum = i + 1;
-                const uiLayer = coronaLayers[i];
-
-                if (uiLayer) {
-                    mascot.core3D.solarEclipse.setCoronaBlendLayer(layerNum, {
-                        mode: uiLayer.mode,
-                        strength: uiLayer.strength,
-                        enabled: uiLayer.enabled
-                    });
-                } else {
-                    // Disable unused layers
-                    mascot.core3D.solarEclipse.setCoronaBlendLayer(layerNum, {
-                        mode: 0,
-                        strength: 0,
-                        enabled: false
-                    });
-                }
+                const layer = coronaLayers[i];
+                mascot.core3D.solarEclipse.setCoronaBlendLayer(i + 1, layer
+                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                    : { mode: 0, strength: 0, enabled: false });
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // LINEAR BURN LAYER MANAGEMENT (TOTALITY-SPECIFIC EFFECT)
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Linear Burn blend mode (mode 1) appears ONLY at 100% totality during total eclipse.
-        // This creates enhanced depth and contrast suitable for realistic eclipse visuals.
-        // Settings persist when moving away from 100% and are restored when returning.
-
-        let linearBurnLayerId = null;
-        let linearBurnSettings = { mode: 1, strength: 0.053, enabled: true }; // Persistent settings
-
-        /**
-         * Update Linear Burn layer visibility based on eclipse coverage
-         * Adds layer at 100% totality, removes when coverage drops below 100%
-         * @param {number} coverage - Eclipse coverage percentage (0-100)
-         */
-        function updateLinearBurnVisibility(coverage) {
-            // Get current eclipse type
-            const currentEclipseType = document.querySelector('[data-action="eclipse"].active')?.dataset?.value;
-            const isTotal = currentEclipseType === 'total';
-            const isAtTotality = (isTotal && coverage === 100);
-
-            if (isAtTotality && linearBurnLayerId === null) {
-                // Add Linear Burn layer at 100% totality with saved settings
-                const linearBurnLayer = {
-                    id: nextCoronaLayerId++,
-                    mode: linearBurnSettings.mode,
-                    strength: linearBurnSettings.strength,
-                    enabled: linearBurnSettings.enabled
-                };
-                linearBurnLayerId = linearBurnLayer.id;
-
-                // Ensure we have space for layer 3
-                while (coronaLayers.length < 2) {
-                    addCoronaLayer(0, 0, false, true);
-                }
-
-                coronaLayers.push(linearBurnLayer);
-                const card = createCoronaLayerCard(linearBurnLayer);
-                card.style.border = '2px solid #ff9500';
-                card.style.backgroundColor = 'rgba(255, 149, 0, 0.1)';
-                const titleEl = card.querySelector('.layer-title');
-                if (titleEl) titleEl.textContent = 'Layer 3 (Totality)';
-
-                document.getElementById('corona-layers-container').appendChild(card);
-                updateCoronaShaderLayers();
-            } else if (!isAtTotality && linearBurnLayerId !== null) {
-                // Save current settings before removing
-                const layerIndex = coronaLayers.findIndex(l => l.id === linearBurnLayerId);
-                if (layerIndex !== -1) {
-                    const layer = coronaLayers[layerIndex];
-                    linearBurnSettings.mode = layer.mode;
-                    linearBurnSettings.strength = layer.strength;
-                    linearBurnSettings.enabled = layer.enabled;
-                    coronaLayers.splice(layerIndex, 1);
-                }
-
-                const card = document.querySelector(`#corona-layers-container [data-layer-id="${linearBurnLayerId}"].layer-card`);
-                if (card) card.remove();
-
-                linearBurnLayerId = null;
-                updateCoronaShaderLayers();
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // EVENT HANDLERS (UI CONTROLS)
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        // Event delegation for layer controls
         document.addEventListener('click', (e) => {
-            // Add sun layer button
-            if (e.target.id === 'add-layer-btn') {
-                addLayer();
-                return;
+            if (!e.target.closest('.custom-select')) {
+                document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
             }
 
-            // Add corona layer button
-            if (e.target.id === 'add-corona-layer-btn') {
-                addCoronaLayer();
-                return;
-            }
+            if (e.target.id === 'add-layer-btn') { addLayer(); return; }
+            if (e.target.id === 'add-corona-layer-btn') { addCoronaLayer(); return; }
 
-            // Eclipse controls
             if (e.target.dataset.action === 'eclipse') {
-                const eclipseType = e.target.dataset.value;
+                const type = e.target.dataset.value;
                 document.querySelectorAll('[data-action="eclipse"]').forEach(btn => btn.classList.remove('active'));
                 e.target.classList.add('active');
 
-                // Show/hide eclipse controls section
-                const controlsSection = document.getElementById('eclipse-controls-section');
-
-                if (eclipseType === 'off') {
-                    // Hide controls when eclipse is off
-                    controlsSection.style.display = 'none';
-                    document.getElementById('total-shadow-control').style.display = 'none';
-                    document.getElementById('annular-shadow-control').style.display = 'none';
+                const controls = document.getElementById('eclipse-controls-section');
+                if (type === 'off') {
+                    controls.style.display = 'none';
                     mascot.core3D.setSunShadow('off');
-                    console.log('☀️ Eclipse OFF');
                 } else {
-                    // Show controls when eclipse is active
-                    controlsSection.style.display = 'block';
+                    controls.style.display = 'block';
+                    document.getElementById('total-shadow-control').style.display = type === 'total' ? 'block' : 'none';
+                    document.getElementById('annular-shadow-control').style.display = type === 'annular' ? 'block' : 'none';
+                    mascot.core3D.setSunShadow(type);
 
-                    // Show appropriate shadow size control and set initial radius
-                    if (eclipseType === 'total') {
-                        document.getElementById('total-shadow-control').style.display = 'block';
-                        document.getElementById('annular-shadow-control').style.display = 'none';
-
-                        // Set initial shadow radius for total eclipse
-                        setTimeout(() => {
-                            if (mascot.core3D?.customMaterial?.uniforms) {
-                                const totalRadius = parseFloat(document.getElementById('total-shadow-slider').value);
-                                mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = totalRadius;
-                                console.log(`🌑 Total eclipse initialized with shadow size: ${totalRadius.toFixed(3)}`);
-                            }
-                        }, 100);
-                    } else if (eclipseType === 'annular') {
-                        document.getElementById('total-shadow-control').style.display = 'none';
-                        document.getElementById('annular-shadow-control').style.display = 'block';
-
-                        // Set initial shadow radius for annular eclipse
-                        setTimeout(() => {
-                            if (mascot.core3D?.customMaterial?.uniforms) {
-                                const annularRadius = parseFloat(document.getElementById('annular-shadow-slider').value);
-                                mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = annularRadius;
-                                console.log(`🌑 Annular eclipse initialized with shadow size: ${annularRadius.toFixed(3)}`);
-                            }
-                        }, 100);
-                    }
-
-                    mascot.core3D.setSunShadow(eclipseType);
-                    console.log(`🌑 ${eclipseType.toUpperCase()} Eclipse ON`);
-
-                    // Initialize dial when controls become visible (if not already initialized)
-                    if (!dialState.initialized) {
-                        initializeEclipseDial();
-                        dialState.initialized = true;
-                    }
+                    setTimeout(() => {
+                        if (mascot.core3D?.customMaterial?.uniforms) {
+                            const slider = type === 'total' ? 'total-shadow-slider' : 'annular-shadow-slider';
+                            mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = parseFloat(document.getElementById(slider).value);
+                        }
+                    }, 100);
                 }
                 return;
             }
 
-            // Toggle core glow
             if (e.target.dataset.action === 'toggle-glow') {
-                if (mascot.core3D?.coreGlowEnabled !== false) {
-                    mascot.core3D.setCoreGlowEnabled(false);
-                    e.target.classList.remove('active');
-                    console.log('💫 Core glow disabled');
-                } else {
-                    mascot.core3D.setCoreGlowEnabled(true);
-                    e.target.classList.add('active');
-                    console.log('💫 Core glow enabled');
-                }
+                const enabled = mascot.core3D?.coreGlowEnabled !== false;
+                mascot.core3D.setCoreGlowEnabled(!enabled);
+                e.target.classList.toggle('active', !enabled);
                 return;
             }
 
-            // Toggle auto-rotate
             if (e.target.dataset.action === 'toggle-auto-rotate') {
                 if (mascot.autoRotateEnabled) {
                     mascot.disableAutoRotate();
                     e.target.classList.remove('active');
-                    console.log('🛑 Auto-rotate OFF');
                 } else {
                     mascot.enableAutoRotate();
                     e.target.classList.add('active');
-                    console.log('▶️ Auto-rotate ON');
                 }
                 return;
             }
         });
 
-        // Shadow size sliders
-        const totalShadowSlider = document.getElementById('total-shadow-slider');
-        totalShadowSlider.addEventListener('input', (e) => {
+        document.getElementById('shadow-pos-slider').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('shadow-pos-value').textContent = value.toFixed(2);
+            if (mascot?.core3D?.solarEclipse) {
+                mascot.core3D.solarEclipse.setManualShadowPosition(value);
+            }
+        });
+
+        document.getElementById('total-shadow-slider').addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
             document.getElementById('total-shadow-value').textContent = value.toFixed(3);
             if (mascot.core3D?.solarEclipse) {
@@ -1495,39 +402,13 @@
             }
         });
 
-        const annularShadowSlider = document.getElementById('annular-shadow-slider');
-        annularShadowSlider.addEventListener('input', (e) => {
+        document.getElementById('annular-shadow-slider').addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
             document.getElementById('annular-shadow-value').textContent = value.toFixed(3);
             if (mascot.core3D?.solarEclipse) {
                 mascot.core3D.solarEclipse.setShadowCoverage(value);
             }
         });
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // HELPER FUNCTIONS
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        /**
-         * Find the element after which a dragged element should be inserted
-         * @param {HTMLElement} container - Container element
-         * @param {number} y - Mouse Y position
-         * @returns {HTMLElement|undefined} Element to insert before, or undefined to append to end
-         */
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.layer-card:not(.dragging)')];
-
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
     </script>
 </body>
 </html>
