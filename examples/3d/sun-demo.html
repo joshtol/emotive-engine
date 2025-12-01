@@ -465,6 +465,67 @@
                 updateValue(parseFloat(e.target.value));
             });
 
+            // Slider activation delay - prevents accidental movement on touch
+            // Slider starts disabled, enabled after deliberate horizontal drag
+            let sliderActive = false;
+            let touchStartX = null;
+            const activationThreshold = 15; // px of horizontal movement to activate
+
+            slider.style.pointerEvents = 'none'; // Start disabled
+
+            const activateSlider = () => {
+                if (!sliderActive) {
+                    sliderActive = true;
+                    slider.style.pointerEvents = 'auto';
+                }
+            };
+
+            const deactivateSlider = () => {
+                sliderActive = false;
+                slider.style.pointerEvents = 'none';
+                touchStartX = null;
+            };
+
+            faderTrack.addEventListener('mousedown', (e) => {
+                touchStartX = e.clientX;
+            });
+
+            faderTrack.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+
+            faderTrack.addEventListener('mousemove', (e) => {
+                if (touchStartX !== null && !sliderActive) {
+                    const dx = Math.abs(e.clientX - touchStartX);
+                    if (dx > activationThreshold) {
+                        activateSlider();
+                        // Simulate mousedown on slider to start dragging
+                        const rect = slider.getBoundingClientRect();
+                        const percent = (e.clientX - rect.left) / rect.width;
+                        const value = parseFloat(slider.min) + percent * (parseFloat(slider.max) - parseFloat(slider.min));
+                        updateValue(value);
+                    }
+                }
+            });
+
+            faderTrack.addEventListener('touchmove', (e) => {
+                if (touchStartX !== null && !sliderActive) {
+                    const dx = Math.abs(e.touches[0].clientX - touchStartX);
+                    if (dx > activationThreshold) {
+                        activateSlider();
+                        const rect = slider.getBoundingClientRect();
+                        const percent = (e.touches[0].clientX - rect.left) / rect.width;
+                        const value = parseFloat(slider.min) + percent * (parseFloat(slider.max) - parseFloat(slider.min));
+                        updateValue(value);
+                    }
+                }
+            }, { passive: true });
+
+            faderTrack.addEventListener('mouseup', deactivateSlider);
+            faderTrack.addEventListener('mouseleave', deactivateSlider);
+            faderTrack.addEventListener('touchend', deactivateSlider);
+            faderTrack.addEventListener('touchcancel', deactivateSlider);
+
             // Step buttons for ±0.1 fine tuning
             stepDown.addEventListener('click', () => updateValue(layer.strength - 0.1));
             stepUp.addEventListener('click', () => updateValue(layer.strength + 0.1));
