@@ -309,6 +309,16 @@
             </div>
         </div>
 
+        <div class="section visual-controls">
+            <h2>Visual Controls</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="toggle-glow" class="active">Core Glow</button>
+                    <button data-action="toggle-auto-rotate">Auto-Rotate</button>
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <div class="info-box">
                 <strong>How it works:</strong><br>
@@ -643,6 +653,29 @@
             if (mascot.core3D) {
                 mascot.core3D.setBloodMoonBlend({ eclipseIntensity: value });
             }
+        });
+
+        // Visual controls
+        document.querySelectorAll('[data-action]').forEach(button => {
+            button.addEventListener('click', () => {
+                const action = button.dataset.action;
+
+                if (action === 'toggle-glow') {
+                    const enabled = mascot.core3D?.coreGlowEnabled !== false;
+                    mascot.core3D.setCoreGlowEnabled(!enabled);
+                    button.classList.toggle('active', !enabled);
+                }
+
+                if (action === 'toggle-auto-rotate') {
+                    if (mascot.autoRotateEnabled) {
+                        mascot.disableAutoRotate();
+                        button.classList.remove('active');
+                    } else {
+                        mascot.enableAutoRotate();
+                        button.classList.add('active');
+                    }
+                }
+            });
         });
     </script>
 </body>
