@@ -243,6 +243,9 @@
             // Exit any existing precision mode
             if (activePrecisionCard) exitPrecisionMode();
 
+            // Clear any text selection caused by long-press
+            window.getSelection()?.removeAllRanges();
+
             const currentValue = layer.strength;
             const range = 0.2; // ±0.1 from current value
             let min = Math.max(0, currentValue - range / 2);
