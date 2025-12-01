@@ -118,17 +118,10 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
+        import EmotiveMascot3D, { blendModeNames } from '../../dist/emotive-mascot-3d.js';
 
         let mascot = null;
         const MAX_BLEND_LAYERS = 4;
-
-        const blendModeNames = [
-            'Multiply', 'Linear Burn', 'Color Burn', 'Color Dodge', 'Screen',
-            'Overlay', 'Add', 'Soft Light', 'Hard Light', 'Vivid Light',
-            'Linear Light', 'Difference', 'Exclusion', 'Darken', 'Lighten',
-            'Subtract', 'Divide', 'Pin Light'
-        ];
 
         let layers = [];
         let coronaLayers = [];
@@ -193,6 +186,150 @@
                     content.classList.toggle('collapsed');
                 }
             });
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PRECISION MODE - Inline fine-tuning
+        // Double-tap slider to replace card content with precision controls
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        let activePrecisionCard = null;
+
+        // Double-tap detection helper
+        function createDoubleTapDetector(callback, delay = 300) {
+            let lastTap = 0;
+            return function(e) {
+                const now = Date.now();
+                if (now - lastTap < delay) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    callback(e);
+                    lastTap = 0;
+                } else {
+                    lastTap = now;
+                }
+            };
+        }
+
+        // Enter precision mode on a card
+        function enterPrecisionMode(card, layer, mainSlider, valueEl, isCorona) {
+            // Exit any existing precision mode
+            if (activePrecisionCard) exitPrecisionMode();
+
+            const currentValue = layer.strength;
+            const range = 0.2; // ±0.1 from current value
+            let min = Math.max(0, currentValue - range / 2);
+            let max = Math.min(5, currentValue + range / 2);
+            if (max >= 5) { min = 5 - range; max = 5; }
+            if (min <= 0) { min = 0; max = range; }
+
+            // Create precision controls
+            const precisionEl = document.createElement('div');
+            precisionEl.className = 'precision-inline';
+            precisionEl.innerHTML = `
+                <div class="precision-inline-header">
+                    <span class="precision-inline-title">Fine Tune</span>
+                    <button class="precision-inline-close">×</button>
+                </div>
+                <div class="precision-inline-value">${currentValue.toFixed(3)}</div>
+                <input type="range" class="precision-inline-slider" min="${min}" max="${max}" step="0.001" value="${currentValue}">
+                <div class="precision-inline-range">
+                    <span>${min.toFixed(2)}</span>
+                    <span>${max.toFixed(2)}</span>
+                </div>
+            `;
+
+            card.classList.add('precision-mode');
+            card.appendChild(precisionEl);
+
+            const precisionSlider = precisionEl.querySelector('.precision-inline-slider');
+            const precisionValue = precisionEl.querySelector('.precision-inline-value');
+            const closeBtn = precisionEl.querySelector('.precision-inline-close');
+
+            // Store context
+            activePrecisionCard = {
+                card, layer, mainSlider, valueEl, isCorona, precisionEl, precisionSlider, precisionValue
+            };
+
+            // Slider input
+            precisionSlider.addEventListener('input', () => {
+                const value = parseFloat(precisionSlider.value);
+                layer.strength = value;
+                mainSlider.value = value;
+                valueEl.textContent = value.toFixed(1);
+                precisionValue.textContent = value.toFixed(3);
+                isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
+            });
+
+            // Close button
+            closeBtn.addEventListener('click', exitPrecisionMode);
+
+            // Tap value to type
+            precisionValue.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'precision-inline-input';
+                input.value = layer.strength.toFixed(3);
+                input.step = '0.001';
+                input.min = '0';
+                input.max = '5';
+
+                precisionValue.replaceWith(input);
+                input.focus();
+                input.select();
+
+                const finishEdit = () => {
+                    let value = parseFloat(input.value);
+                    if (isNaN(value)) value = layer.strength;
+                    value = Math.max(0, Math.min(5, value));
+
+                    layer.strength = value;
+                    mainSlider.value = value;
+                    valueEl.textContent = value.toFixed(1);
+
+                    // Re-center slider range
+                    let newMin = Math.max(0, value - 0.1);
+                    let newMax = Math.min(5, value + 0.1);
+                    if (newMax >= 5) { newMin = 4.8; newMax = 5; }
+                    if (newMin <= 0) { newMin = 0; newMax = 0.2; }
+                    precisionSlider.min = newMin;
+                    precisionSlider.max = newMax;
+                    precisionSlider.value = value;
+                    precisionEl.querySelector('.precision-inline-range').innerHTML =
+                        `<span>${newMin.toFixed(2)}</span><span>${newMax.toFixed(2)}</span>`;
+
+                    isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
+
+                    // Restore value display
+                    const newValueEl = document.createElement('div');
+                    newValueEl.className = 'precision-inline-value';
+                    newValueEl.textContent = value.toFixed(3);
+                    input.replaceWith(newValueEl);
+                    activePrecisionCard.precisionValue = newValueEl;
+
+                    // Re-attach click handler
+                    newValueEl.addEventListener('click', arguments.callee);
+                };
+
+                input.addEventListener('blur', finishEdit);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') input.blur();
+                });
+            });
+        }
+
+        // Exit precision mode
+        function exitPrecisionMode() {
+            if (!activePrecisionCard) return;
+            const { card, precisionEl } = activePrecisionCard;
+            card.classList.remove('precision-mode');
+            precisionEl.remove();
+            activePrecisionCard = null;
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') exitPrecisionMode();
         });
 
         // Layer management
@@ -274,11 +411,21 @@
             });
 
             const slider = card.querySelector(`[data-action="${strengthAction}"]`);
+            const valueEl = card.querySelector('.slider-value');
+            const sliderControl = card.querySelector('.slider-control');
+
             slider.addEventListener('input', (e) => {
                 layer.strength = parseFloat(e.target.value);
-                card.querySelector('.slider-value').textContent = layer.strength.toFixed(1);
+                valueEl.textContent = layer.strength.toFixed(1);
                 isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
             });
+
+            // Double-tap/click on slider control to enter precision mode
+            const openPrecision = () => enterPrecisionMode(card, layer, slider, valueEl, isCorona);
+            const doubleTapHandler = createDoubleTapDetector(openPrecision);
+
+            sliderControl.addEventListener('dblclick', openPrecision);
+            sliderControl.addEventListener('touchend', doubleTapHandler);
 
             return card;
         }

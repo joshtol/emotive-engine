@@ -47,7 +47,6 @@ export async function preload(geometryType, options = {}) {
 
     // Load geometry (may be async for OBJ models like crystal)
     if (config.geometryLoader) {
-        console.log(`[GeometryCache] Loading async geometry for ${geometryType}...`);
         entry.geometry = await config.geometryLoader();
     } else {
         entry.geometry = config.geometry;
@@ -70,12 +69,6 @@ export async function preload(geometryType, options = {}) {
 
     entry.loaded = true;
     cache.set(geometryType, entry);
-
-    console.log(`[GeometryCache] Cached ${geometryType}:`, {
-        hasGeometry: !!entry.geometry,
-        hasMaterial: !!entry.material,
-        materialType: entry.materialType
-    });
 
     return entry;
 }
@@ -135,11 +128,9 @@ export function updateMaterialOptions(geometryType, options) {
  */
 export async function preloadAll(options = {}) {
     const types = ['crystal', 'moon', 'sun'];
-    console.log('[GeometryCache] Preloading all geometries...');
 
     await Promise.all(types.map(type => preload(type, options)));
 
-    console.log('[GeometryCache] All geometries preloaded');
 }
 
 /**
@@ -153,7 +144,6 @@ export function dispose() {
             entry.material.dispose();
         }
         // Note: Don't dispose shared geometries from THREE_GEOMETRIES
-        console.log(`[GeometryCache] Disposed ${type}`);
     }
     cache.clear();
 }

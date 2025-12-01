@@ -507,14 +507,12 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
         shadowGlow: 0.3
     };
 
-    console.log('🕳️ BlackHole.js: Creating black hole material...', materialVariant ? `[${materialVariant}]` : '[standard]');
 
     // Load noise texture for turbulence
     const noisePath = '/assets/textures/perlin-noise-512.png';
     const noiseTexture = textureLoader.load(
         noisePath,
         texture => {
-            console.log('🕳️ BlackHole.js: Noise texture loaded successfully');
         },
         undefined,
         error => {
@@ -629,7 +627,6 @@ export function createBlackHoleMaterial(textureLoader, options = {}) {
         side: THREE.FrontSide
     });
 
-    console.log('🕳️ BlackHole.js: Materials created successfully');
 
     return {
         diskMaterial,

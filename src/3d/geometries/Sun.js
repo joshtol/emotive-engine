@@ -144,11 +144,9 @@ export function createSunMaterial(textureLoader, options = {}) {
 
     if (materialVariant === 'multiplexer') {
         // Use blend layers shader for solar eclipse effects
-        console.log('☀️ Sun.js: Creating MULTIPLEXER material variant with eclipse shader');
         const { vertexShader: vs, fragmentShader: fs } = getSunWithBlendLayersShaders();
         vertexShader = vs;
         fragmentShader = fs;
-        console.log('☀️ Sun.js: Loaded sunWithBlendLayers shaders');
 
         // Add solar eclipse uniforms
         additionalUniforms = {
@@ -178,14 +176,8 @@ export function createSunMaterial(textureLoader, options = {}) {
             layer4Strength: { value: 0.0 },
             layer4Enabled: { value: 0.0 }
         };
-        console.log('☀️ Sun.js: Added eclipse uniforms:', {
-            eclipseProgress: additionalUniforms.eclipseProgress.value,
-            eclipseShadowPos: additionalUniforms.eclipseShadowPos.value,
-            shadowDarkness: additionalUniforms.shadowDarkness.value
-        });
     } else {
         // Use standard sun shader (no eclipse support)
-        console.log('☀️ Sun.js: Using STANDARD shader (no eclipse support)');
         vertexShader = `
             varying vec2 vUv;
             varying vec3 vNormal;
@@ -406,15 +398,6 @@ export function createSunMaterial(textureLoader, options = {}) {
 
     // Store pending textures for disposal
     material.userData.pendingTextures = pendingTextures;
-
-    // Log final material state
-    console.log('☀️ Sun.js: Material created with uniforms:', {
-        hasEclipseProgress: !!material.uniforms.eclipseProgress,
-        hasEclipseShadowPos: !!material.uniforms.eclipseShadowPos,
-        hasShadowDarkness: !!material.uniforms.shadowDarkness,
-        hasLayer1: !!material.uniforms.layer1Enabled,
-        materialVariant
-    });
 
     return material;
 }

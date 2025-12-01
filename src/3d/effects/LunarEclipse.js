@@ -108,7 +108,6 @@ export class LunarEclipse {
         this.animating = true;
         this.startTime = performance.now();
 
-        console.log(`🌕🌑 Lunar Eclipse: ${type} (progress: ${this.progress.toFixed(2)} → ${this.targetProgress.toFixed(2)}, shadow: ${this.shadowX.toFixed(2)} → ${this.targetShadowX.toFixed(2)})`);
     }
 
     /**
@@ -152,7 +151,6 @@ export class LunarEclipse {
         // Stop animation when complete
         if (animProgress >= 1.0) {
             this.animating = false;
-            console.log(`🌕 Eclipse animation complete: ${this.eclipseType} (shadow pos: ${this.shadowX.toFixed(2)})`);
         }
     }
 

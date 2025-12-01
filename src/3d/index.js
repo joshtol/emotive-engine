@@ -156,7 +156,6 @@ export class EmotiveMascot3D {
             }
 
             // Initialization complete
-            // console.log('Emotive Engine 3D initialized:', {
             //     geometry: this.config.coreGeometry,
             //     particles: this.config.enableParticles
             // });
@@ -404,7 +403,6 @@ export class EmotiveMascot3D {
                 ? (config.musicalDuration.beats || 2) * 500
                 : (config.duration || 800);
 
-            // console.log(`[3D] Gesture ${gestureName} duration: ${duration}ms`);
 
             // Track current gesture for particle system
             this.currentGesture = {
@@ -418,7 +416,6 @@ export class EmotiveMascot3D {
             // Clear gesture when complete
             const timeoutId = setTimeout(() => {
                 if (this.currentGesture && this.currentGesture.name === gestureName) {
-                    // console.log(`[3D] Gesture ${gestureName} completed`);
                     this.currentGesture = null;
                 }
             }, duration);
@@ -567,14 +564,6 @@ export class EmotiveMascot3D {
             this.core3D.particleOrchestrator.renderer.setVisible(true);
             this.core3D.particleOrchestrator.setEmotion(this.core3D.emotion, this.core3D.undertone);
 
-            const {points} = this.core3D.particleOrchestrator.renderer;
-            const geom = this.core3D.particleOrchestrator.renderer.geometry;
-            console.log('✨ 3D Particles enabled', {
-                pointsVisible: points.visible,
-                drawRangeStart: geom.drawRange.start,
-                drawRangeCount: geom.drawRange.count,
-                particleCount: this.core3D.particleOrchestrator.getParticleCount()
-            });
         }
 
         // Only enable 2D canvas particle system if we don't have 3D particles
@@ -586,10 +575,8 @@ export class EmotiveMascot3D {
                 this.particleSystem = new ParticleSystem(maxParticles, this.errorBoundary);
                 this.particleSystem.canvasWidth = this.canvas2D.width;
                 this.particleSystem.canvasHeight = this.canvas2D.height;
-                console.log('✨ 2D Particles enabled - system created');
-            } else if (this.particleSystem) {
-                console.log('⚠️ 2D Particles already enabled');
             }
+            // else: particleSystem already exists, no action needed
         }
     }
 
@@ -603,7 +590,6 @@ export class EmotiveMascot3D {
             this.core3D.particleOrchestrator.renderer.setVisible(false);
             // Clear particles immediately and let update loop handle draw range naturally
             this.core3D.particleOrchestrator.clear();
-            console.log('💨 3D Particles disabled');
         }
 
         // Only disable 2D canvas particle system if we don't have 3D particles
@@ -613,11 +599,9 @@ export class EmotiveMascot3D {
             if (this.particleSystem) {
                 this.particleSystem.destroy();
                 this.particleSystem = null;
-                console.log('💨 2D Particles disabled - system destroyed');
                 // Canvas will be automatically cleared on next animation frame
-            } else {
-                console.log('⚠️ 2D Particles already disabled');
             }
+            // else: no 2D particle system to disable
         }
     }
 
@@ -754,3 +738,10 @@ export {
     setMoonPhase,
     animateMoonPhase
 } from './geometries/Moon.js';
+
+// Export blend mode utilities
+export {
+    blendModeNames,
+    getBlendModeName,
+    getBlendModeIndex
+} from './shaders/utils/blendModes.js';

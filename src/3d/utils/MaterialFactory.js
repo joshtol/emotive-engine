@@ -51,14 +51,12 @@ function createEmissiveMaterial(geometryType, glowColor, glowIntensity, material
 }
 
 function createCrystalMaterial(glowColor, glowIntensity) {
-    console.log('Creating crystal material (frosted glass + soul)...');
 
     const { vertexShader, fragmentShader } = getCrystalShaders();
 
     // Load crystal texture
     const textureLoader = new THREE.TextureLoader();
     const crystalTexture = textureLoader.load('/assets/textures/Crystal/crystal.png',
-        () => console.log('💎 Crystal texture loaded'),
         undefined,
         err => console.warn('💎 Crystal texture failed to load:', err)
     );
@@ -100,7 +98,6 @@ function createCrystalMaterial(glowColor, glowIntensity) {
         blending: THREE.NormalBlending
     });
 
-    console.log('Crystal material created');
 
     return { material, type: 'crystal' };
 }

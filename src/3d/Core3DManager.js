@@ -143,7 +143,6 @@ export class Core3DManager {
             // Store disk material as primary custom material for updates
             this.customMaterial = diskMaterial;
 
-            console.log('🕳️ Applied black hole materials to Group meshes');
         }
 
         // Calibration rotation offset (applied on top of all animations)
@@ -164,7 +163,6 @@ export class Core3DManager {
                 MOON_CALIBRATION_ROTATION.z * degToRad   // Z: camera-space roll (spins face CW/CCW)
             ];
             this.cameraRoll = 0; // Camera-space roll (spin the face)
-            console.log(`🌙 Moon calibration rotation set: X=${MOON_CALIBRATION_ROTATION.x}°, Y=${MOON_CALIBRATION_ROTATION.y}°, Z=${MOON_CALIBRATION_ROTATION.z}°`);
         }
 
         // Set initial calibration rotation for crystal to show flat facet facing camera
@@ -175,7 +173,6 @@ export class Core3DManager {
                 CRYSTAL_CALIBRATION_ROTATION.y * degToRad,
                 CRYSTAL_CALIBRATION_ROTATION.z * degToRad
             ];
-            console.log(`💎 Crystal calibration rotation set: Y=${CRYSTAL_CALIBRATION_ROTATION.y}° (flat facet facing camera)`);
         }
 
         // Animation controller
@@ -311,7 +308,6 @@ export class Core3DManager {
         // Initialize solar eclipse system for sun geometry
         if (this.geometryType === 'sun') {
             const sunRadius = this.geometry.parameters?.radius || 0.5; // Sun geometry radius is 0.5
-            console.log('☀️ SolarEclipse sunRadius:', sunRadius, 'geometry.parameters:', this.geometry.parameters);
             this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.coreMesh);
         }
 
@@ -446,7 +442,6 @@ export class Core3DManager {
 
         if (this.rotationDisabled) {
             this.rotationBehavior = null; // Keep rotation disabled
-            console.log('🔄 Rotation disabled by user');
         } else if (this.geometryType === 'moon') {
             this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
         } else if (this.geometryType === 'blackHole') {
@@ -455,7 +450,6 @@ export class Core3DManager {
             if (this.rotationBehavior) {
                 // Update existing behavior
                 this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
-                console.log(`🔄 Rotation behavior updated for ${emotion}:`, emotionData['3d'].rotation);
             } else {
                 // Create new rotation behavior with geometry-specific base rotation
                 this.rotationBehavior = new RotationBehavior(
@@ -463,10 +457,8 @@ export class Core3DManager {
                     this.rhythmEngine,
                     geometryRotation
                 );
-                console.log(`🔄 Rotation behavior created for ${emotion}:`, emotionData['3d'].rotation);
             }
         } else {
-            console.log(`🔄 No 3d rotation config for ${emotion}, using fallback`);
             // Fall back to default gentle rotation if no 3d config
             // BUT: Don't create if rotation is disabled
             if (!this.rotationBehavior && !this.rotationDisabled) {
@@ -520,13 +512,11 @@ export class Core3DManager {
             materialMode
         );
 
-        console.log(`🎨 ${emotion.toUpperCase()} base intensity: ${this.baseGlowIntensity.toFixed(3)} (color: ${glowColor}, mode: ${materialMode})`);
 
         // Apply undertone glow multiplier to base intensity
         if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].glow) {
             const beforeUndertone = this.baseGlowIntensity;
             this.baseGlowIntensity *= undertoneModifier['3d'].glow.intensityMultiplier;
-            console.log(`   🎭 Undertone ${undertone} multiplier: ${undertoneModifier['3d'].glow.intensityMultiplier.toFixed(3)}, final: ${this.baseGlowIntensity.toFixed(3)}`);
         }
 
         // Update breathing animator with emotion and undertone
@@ -574,7 +564,6 @@ export class Core3DManager {
      */
     setCoreGlowEnabled(enabled) {
         this.coreGlowEnabled = enabled;
-        console.log(`🔦 Core glow toggle: ${enabled ? 'enabled' : 'disabled'}, coreGlowEnabled=${this.coreGlowEnabled}`);
     }
 
     /**
@@ -1037,7 +1026,6 @@ export class Core3DManager {
         // Add as child of crystal mesh
         this.coreMesh.add(this.crystalInnerCore);
 
-        console.log('💎 Created crystal inner core (animated energy octahedron)');
     }
 
     /**
@@ -1099,7 +1087,7 @@ export class Core3DManager {
      */
     setCrystalSoulEffects(params = {}) {
         if (!this.crystalInnerCoreMaterial || !this.crystalInnerCoreMaterial.uniforms) {
-            console.warn('setCrystalSoulEffects: No crystal inner core material found');
+            // Crystal inner core not yet loaded - this is normal during initialization
             return;
         }
 
@@ -1117,13 +1105,6 @@ export class Core3DManager {
         if (params.shimmerSpeed !== undefined && uniforms.shimmerSpeed) {
             uniforms.shimmerSpeed.value = Math.max(0.1, Math.min(3.0, params.shimmerSpeed));
         }
-
-        console.log('Soul uniforms NOW:', {
-            driftEnabled: uniforms.driftEnabled?.value,
-            driftSpeed: uniforms.driftSpeed?.value,
-            shimmerEnabled: uniforms.shimmerEnabled?.value,
-            shimmerSpeed: uniforms.shimmerSpeed?.value
-        });
     }
 
     /**
@@ -1186,10 +1167,8 @@ export class Core3DManager {
         // Handle async geometry loaders (e.g., crystal OBJ)
         if (targetGeometryConfig.geometryLoader && !targetGeometryConfig.geometry) {
             // Start loading during shrink phase so it's ready for swap
-            console.log(`[Core3DManager] Preloading async geometry for ${shapeName}...`);
             this._targetGeometry = null; // Will be set when loaded
             this._pendingGeometryLoad = targetGeometryConfig.geometryLoader().then(geometry => {
-                console.log(`[Core3DManager] Async geometry loaded for ${shapeName}`);
                 this._targetGeometry = geometry;
                 // Also update the registry so subsequent morphs don't need to reload
                 targetGeometryConfig.geometry = geometry;
@@ -1226,12 +1205,10 @@ export class Core3DManager {
         if (morphState.shouldSwapGeometry && this._pendingGeometryLoad) {
             // Geometry still loading - pause at minimum scale until ready
             this.geometryMorpher.pauseAtSwap();
-            console.log('[Core3DManager] Paused morph waiting for async geometry...');
         }
 
         // Check if async geometry finished loading while paused
         if (morphState.waitingForGeometry && this._targetGeometry && !this._pendingGeometryLoad) {
-            console.log('[Core3DManager] Async geometry ready, resuming morph');
             this.geometryMorpher.resumeFromSwap();
             // Re-trigger swap by setting hasSwappedGeometry back to false
             this.geometryMorpher.hasSwappedGeometry = false;
@@ -1311,14 +1288,12 @@ export class Core3DManager {
                 if (!this.solarEclipse) {
                     const sunRadius = this.geometry.parameters?.radius || 0.5; // Sun geometry radius is 0.5
                     this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.renderer.coreMesh);
-                    console.log('☀️ Solar eclipse system initialized');
                 }
             } else {
                 // Dispose solar eclipse if morphing away from sun
                 if (this.solarEclipse) {
                     this.solarEclipse.dispose();
                     this.solarEclipse = null;
-                    console.log('🌑 Solar eclipse system disposed');
                 }
             }
 
@@ -1327,14 +1302,12 @@ export class Core3DManager {
                 // Create lunar eclipse if morphing to moon and custom material exists
                 if (!this.lunarEclipse && this.customMaterial) {
                     this.lunarEclipse = new LunarEclipse(this.customMaterial);
-                    console.log('🌙 Lunar eclipse system initialized');
                 }
             } else {
                 // Dispose lunar eclipse if morphing away from moon
                 if (this.lunarEclipse) {
                     this.lunarEclipse.dispose();
                     this.lunarEclipse = null;
-                    console.log('🌕 Lunar eclipse system disposed');
                 }
             }
 
@@ -1343,7 +1316,6 @@ export class Core3DManager {
                 // Create inner core if morphing to crystal/diamond
                 if (this.customMaterialType === 'crystal') {
                     this.createCrystalInnerCore();
-                    console.log('💎 Crystal inner core created');
                 }
             } else {
                 // Dispose inner core if morphing away from crystal/diamond
@@ -1357,7 +1329,6 @@ export class Core3DManager {
                     }
                     this.crystalInnerCore = null;
                     this.crystalInnerCoreMaterial = null;
-                    console.log('💎 Crystal inner core disposed');
                 }
             }
 
@@ -1381,7 +1352,6 @@ export class Core3DManager {
                 this.calibrationRotation[0] = MOON_CALIBRATION_ROTATION.x * degToRad;
                 this.calibrationRotation[1] = MOON_CALIBRATION_ROTATION.y * degToRad;
                 this.calibrationRotation[2] = MOON_CALIBRATION_ROTATION.z * degToRad;
-                console.log('🌙 Applied moon calibration rotation (Earth-facing view)');
 
                 // Create facing behavior for tidal lock
                 if (!this.facingBehavior && MOON_FACING_CONFIG.enabled) {
@@ -1395,14 +1365,12 @@ export class Core3DManager {
                             MOON_CALIBRATION_ROTATION.z * degToRad
                         ]
                     }, this.renderer.camera);
-                    console.log('🌙 Tidal lock enabled (facing behavior active)');
                 }
             } else {
                 // Dispose facing behavior when morphing away from moon
                 if (this.facingBehavior) {
                     this.facingBehavior.dispose();
                     this.facingBehavior = null;
-                    console.log('🌍 Tidal lock disabled (facing behavior disposed)');
                 }
 
                 // Re-enable auto-rotate when morphing away from moon (if it was originally enabled)
@@ -1416,7 +1384,6 @@ export class Core3DManager {
                     this.calibrationRotation[0] = CRYSTAL_CALIBRATION_ROTATION.x * degToRad;
                     this.calibrationRotation[1] = CRYSTAL_CALIBRATION_ROTATION.y * degToRad;
                     this.calibrationRotation[2] = CRYSTAL_CALIBRATION_ROTATION.z * degToRad;
-                    console.log(`💎 Crystal calibration rotation set: Y=${CRYSTAL_CALIBRATION_ROTATION.y}° (flat facet facing camera)`);
                 } else {
                     // Clear calibration rotation for other geometries
                     this.calibrationRotation[0] = 0;
@@ -1481,7 +1448,6 @@ export class Core3DManager {
 
         // DEBUG: Log rotation state for moon
         // if (this.geometryType === 'moon') {
-        //     console.log('🌙 Moon rotation:', {
         //         geometryType: this.geometryType,
         //         rotationBehavior: !!this.rotationBehavior,
         //         rotationDisabled: this.rotationDisabled,
@@ -1682,9 +1648,6 @@ export class Core3DManager {
      */
     async _loadAsyncGeometry() {
         try {
-            console.log('💎 [CORE3D] _loadAsyncGeometry called, geometryType:', this.geometryType);
-            console.log('💎 [CORE3D] customMaterial:', this.customMaterial ? 'exists' : 'NULL');
-            console.log('💎 [CORE3D] customMaterialType:', this.customMaterialType);
 
             const loadedGeometry = await this.geometryConfig.geometryLoader();
 
@@ -1693,19 +1656,14 @@ export class Core3DManager {
                 return;
             }
 
-            console.log('💎 [CORE3D] Geometry loaded:', loadedGeometry.attributes?.position?.count, 'vertices');
 
             // Store geometry type
             loadedGeometry.userData.geometryType = this.geometryType;
             this.geometry = loadedGeometry;
 
             if (this._deferredMeshCreation) {
-                console.log('💎 [CORE3D] Creating deferred mesh with custom material');
                 // First time: create mesh with loaded geometry (no fallback was shown)
                 this.coreMesh = this.renderer.createCoreMesh(loadedGeometry, this.customMaterial);
-                console.log('💎 [CORE3D] Shell mesh created:', this.coreMesh ? 'OK' : 'FAIL');
-                console.log('💎 [CORE3D] coreMesh.geometry:', this.coreMesh?.geometry?.attributes?.position?.count, 'vertices');
-                console.log('💎 [CORE3D] coreMesh in scene:', this.renderer.scene.children.includes(this.coreMesh));
 
                 // Create inner core for crystal
                 if (this.customMaterialType === 'crystal') {
@@ -1761,7 +1719,6 @@ export class Core3DManager {
                 const points = particleRenderer.getPoints();
                 if (points && this.renderer?.scene) {
                     this.renderer.scene.remove(points);
-                    console.log('🧹 Removed particle points from scene');
                 }
             }
             this.particleOrchestrator.destroy();
@@ -1773,14 +1730,12 @@ export class Core3DManager {
             // Eclipse cleanup will remove all meshes from scene internally
             this.solarEclipse.dispose();
             this.solarEclipse = null;
-            console.log('🧹 Disposed solar eclipse system');
         }
 
         // Clean up lunar eclipse system
         if (this.lunarEclipse) {
             this.lunarEclipse.dispose();
             this.lunarEclipse = null;
-            console.log('🧹 Disposed lunar eclipse system');
         }
 
         // Clean up virtual particle pool
@@ -1849,6 +1804,5 @@ export class Core3DManager {
         };
 
         await GeometryCache.preloadAll(options);
-        console.log('[Core3DManager] All geometries preloaded');
     }
 }

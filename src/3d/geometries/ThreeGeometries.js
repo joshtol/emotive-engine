@@ -24,7 +24,6 @@ function mergeVerticesForSmoothNormals(geometry) {
     // BufferGeometryUtils.mergeVertices merges vertices that share the same position
     // This allows computeVertexNormals to average normals across faces
     const merged = BufferGeometryUtils.mergeVertices(geometry, 0.0001);
-    console.log('💎 [CRYSTAL] Merged vertices:', geometry.attributes.position.count, '->', merged.attributes.position.count);
     return merged;
 }
 
@@ -59,17 +58,13 @@ export function setCrystalSmoothNormals(smooth) {
 function loadCrystalGeometry() {
     return new Promise(resolve => {
         const loader = new OBJLoader();
-        console.log('💎 [CRYSTAL] Starting OBJ load from /assets/models/Crystal/crystal.obj');
         loader.load(
             '/assets/models/Crystal/crystal.obj',
             obj => {
-                console.log('💎 [CRYSTAL] OBJ loaded, traversing for mesh...');
                 let geometry = null;
                 obj.traverse(child => {
-                    console.log('💎 [CRYSTAL] Found child:', child.type, child.isMesh ? '(is mesh)' : '');
                     if (child.isMesh && child.geometry) {
                         ({ geometry } = child);
-                        console.log('💎 [CRYSTAL] Found geometry with', geometry.attributes.position?.count, 'vertices');
                     }
                 });
 
@@ -77,41 +72,28 @@ function loadCrystalGeometry() {
                     geometry.computeBoundingBox();
                     const center = new THREE.Vector3();
                     geometry.boundingBox.getCenter(center);
-                    console.log('💎 [CRYSTAL] Original center:', center.x, center.y, center.z);
                     geometry.translate(-center.x, -center.y, -center.z);
 
                     const size = new THREE.Vector3();
                     geometry.boundingBox.getSize(size);
-                    console.log('💎 [CRYSTAL] Original size:', size.x, size.y, size.z);
                     const maxDim = Math.max(size.x, size.y, size.z);
                     const scale = 1.6 / maxDim;  // Scale to ~1.6 diameter to match sun/moon size
-                    console.log('💎 [CRYSTAL] Scale factor:', scale);
                     geometry.scale(scale, scale, scale);
                     // Preserve original OBJ normals if present, otherwise compute them
                     if (!geometry.attributes.normal) {
                         geometry.computeVertexNormals();
-                        console.log('💎 [CRYSTAL] Computed vertex normals (none in OBJ)');
-                    } else {
-                        console.log('💎 [CRYSTAL] Using original OBJ normals');
                     }
+                    // else: keep original normals from OBJ file
 
                     // Recompute bounding box after transforms
                     geometry.computeBoundingBox();
                     const finalSize = new THREE.Vector3();
                     geometry.boundingBox.getSize(finalSize);
 
-                    console.log('💎 [CRYSTAL] OBJ geometry ready:');
-                    console.log('   vertices:', geometry.attributes.position?.count);
-                    console.log('   has index:', !!geometry.index);
-                    console.log('   index count:', geometry.index?.count);
-                    console.log('   final size:', finalSize.x.toFixed(2), finalSize.y.toFixed(2), finalSize.z.toFixed(2));
-                    console.log('   boundingBox min:', geometry.boundingBox.min.x.toFixed(2), geometry.boundingBox.min.y.toFixed(2), geometry.boundingBox.min.z.toFixed(2));
-                    console.log('   boundingBox max:', geometry.boundingBox.max.x.toFixed(2), geometry.boundingBox.max.y.toFixed(2), geometry.boundingBox.max.z.toFixed(2));
 
                     // Simplify geometry to reduce triangle count
                     let finalGeometry = geometry;
                     if (crystalSimplificationRatio > 0) {
-                        console.log('💎 [CRYSTAL] Simplifying geometry with ratio:', crystalSimplificationRatio);
                         const originalVertexCount = geometry.attributes.position.count;
                         const targetCount = Math.floor(originalVertexCount * (1 - crystalSimplificationRatio));
 
@@ -119,8 +101,6 @@ function loadCrystalGeometry() {
                             const modifier = new SimplifyModifier();
                             finalGeometry = modifier.modify(geometry, targetCount);
 
-                            console.log('💎 [CRYSTAL] Simplified from', originalVertexCount, 'to', finalGeometry.attributes.position.count, 'vertices');
-                            console.log('💎 [CRYSTAL] Triangle reduction:', `${((1 - finalGeometry.attributes.position.count / originalVertexCount) * 100).toFixed(1)}%`);
                         } catch (err) {
                             console.warn('💎 [CRYSTAL] Simplification failed, using original:', err);
                             finalGeometry = geometry;
@@ -129,7 +109,6 @@ function loadCrystalGeometry() {
 
                     // Compute normals - smooth or faceted
                     if (crystalUseSmoothNormals) {
-                        console.log('💎 [CRYSTAL] Computing smooth normals (eliminates faceted look)');
                         try {
                             // Merge vertices to create smooth normals across shared vertices
                             const merged = mergeVerticesForSmoothNormals(finalGeometry);
@@ -153,17 +132,14 @@ function loadCrystalGeometry() {
                 } else {
                     console.warn('💎 [CRYSTAL] No mesh in OBJ, using fallback');
                     const fallback = createProceduralCrystal();
-                    console.log('💎 [CRYSTAL] Fallback geometry:', fallback.attributes.position?.count, 'vertices');
                     resolve(fallback);
                 }
             },
             progress => {
-                console.log('💎 [CRYSTAL] Loading progress:', progress.loaded, '/', progress.total);
             },
             error => {
                 console.warn('💎 [CRYSTAL] OBJ load FAILED:', error);
                 const fallback = createProceduralCrystal();
-                console.log('💎 [CRYSTAL] Fallback geometry:', fallback.attributes.position?.count, 'vertices');
                 resolve(fallback);
             }
         );

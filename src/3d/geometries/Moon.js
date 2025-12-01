@@ -672,22 +672,6 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
 
     const { vertexShader, fragmentShader } = getMoonWithBlendLayersShaders();
 
-    // DIAGNOSTIC: Check if blend modes are in the fragment shader
-    console.log('🔍 Shader Diagnostics:');
-    console.log('  Fragment shader length:', fragmentShader.length);
-    console.log('  Contains "applyBlendMode":', fragmentShader.includes('applyBlendMode'));
-    console.log('  Contains "vec3 applyBlendMode":', fragmentShader.includes('vec3 applyBlendMode'));
-    console.log('  Fragment shader preview (first 500 chars):', fragmentShader.substring(0, 500));
-
-    // Find where applyBlendMode is defined
-    const blendModeDefIndex = fragmentShader.indexOf('vec3 applyBlendMode');
-    if (blendModeDefIndex !== -1) {
-        console.log('  ✅ applyBlendMode function found at position:', blendModeDefIndex);
-        console.log('  Function definition:', fragmentShader.substring(blendModeDefIndex, blendModeDefIndex + 100));
-    } else {
-        console.error('  ❌ applyBlendMode function NOT FOUND in shader!');
-    }
-
     const material = new THREE.ShaderMaterial({
         uniforms: {
             colorMap: { value: null },
@@ -740,18 +724,6 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
         depthWrite: true,
         side: THREE.FrontSide
     });
-
-    // DIAGNOSTIC: Log blend layer uniform values
-    console.log('🎨 Blend Layer Uniforms Initialized:');
-    console.log(`  Layer 1: Mode=${material.uniforms.layer1Mode.value 
-    } Strength=${material.uniforms.layer1Strength.value 
-    } Enabled=${material.uniforms.layer1Enabled.value}`);
-    console.log(`  Layer 2: Mode=${material.uniforms.layer2Mode.value 
-    } Strength=${material.uniforms.layer2Strength.value 
-    } Enabled=${material.uniforms.layer2Enabled.value}`);
-    console.log(`  Layer 3: Mode=${material.uniforms.layer3Mode.value 
-    } Strength=${material.uniforms.layer3Strength.value 
-    } Enabled=${material.uniforms.layer3Enabled.value}`);
 
     // Load textures with fade-in (same as standard material)
     const colorPath = `/assets/textures/Moon/moon-color-${resolution}.jpg`;

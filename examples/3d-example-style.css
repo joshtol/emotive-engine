@@ -1024,6 +1024,138 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   PRECISION MODE - Inline fine-tuning
+   Double-tap slider to replace card content with precision controls
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Precision mode replaces layer-controls content */
+.layer-card.precision-mode .layer-controls {
+    display: none;
+}
+
+.precision-inline {
+    padding: 10px;
+}
+
+.precision-inline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.precision-inline-title {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.precision-inline-close {
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.precision-inline-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Large value display */
+.precision-inline-value {
+    font-size: 24px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-weight: 600;
+    color: var(--accent);
+    text-align: center;
+    padding: 6px;
+    margin-bottom: 10px;
+    cursor: text;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+}
+
+.precision-inline-value:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+}
+
+/* Editable input */
+.precision-inline-input {
+    width: 100%;
+    font-size: 24px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 6px;
+    text-align: center;
+    outline: none;
+    margin-bottom: 10px;
+}
+
+/* Precision slider */
+.precision-inline-slider {
+    width: 100%;
+    height: 28px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 14px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    margin-bottom: 6px;
+}
+
+.precision-inline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(145deg, #fff 0%, #ddd 100%);
+    border-radius: 50%;
+    cursor: grab;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.3),
+        0 0 0 2px rgba(var(--accent-rgb), 0.4);
+}
+
+.precision-inline-slider::-webkit-slider-thumb:active {
+    cursor: grabbing;
+}
+
+.precision-inline-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(145deg, #fff 0%, #ddd 100%);
+    border-radius: 50%;
+    cursor: grab;
+    border: none;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.3),
+        0 0 0 2px rgba(var(--accent-rgb), 0.4);
+}
+
+/* Range labels */
+.precision-inline-range {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    MOBILE RESPONSIVE
    ───────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 1000px) {
@@ -1079,6 +1211,25 @@ input[type="range"]::-moz-range-thumb {
     .layer-card input[type="range"]::-moz-range-thumb {
         width: 28px;
         height: 28px;
+    }
+
+    /* Precision inline mobile - larger touch targets */
+    .precision-inline-slider {
+        height: 36px;
+    }
+
+    .precision-inline-slider::-webkit-slider-thumb {
+        width: 32px;
+        height: 32px;
+    }
+
+    .precision-inline-slider::-moz-range-thumb {
+        width: 32px;
+        height: 32px;
+    }
+
+    .precision-inline-value {
+        font-size: 28px;
     }
 }
 

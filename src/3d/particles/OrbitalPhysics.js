@@ -113,11 +113,6 @@ export class OrbitalPhysics {
             this.currentAngularVelocity.lerp(this.zeroVec, 0.1);
         }
 
-        // Debug log angular velocity
-        if (angVelMag > 0.1) {
-            console.log('⚡ Angular velocity:', rawAngularVelocity.toArray(), 'magnitude:', angVelMag.toFixed(3), 'applied:', this.currentAngularVelocity.length().toFixed(3));
-        }
-
         // Store current rotation for next frame
         this.lastRotation.copy(currentRotation);
         this.lastQuaternion.copy(currentQuaternion);

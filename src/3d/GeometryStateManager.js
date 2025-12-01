@@ -23,12 +23,10 @@ import { CRYSTAL_DEFAULT_UNIFORMS } from './shaders/crystalWithSoul.js';
  */
 export function resetMoon(material) {
     if (!material || !material.uniforms) {
-        console.log('[GeometryStateManager] resetMoon: No material or uniforms');
         return;
     }
 
     const u = material.uniforms;
-    console.log('[GeometryStateManager] Resetting moon state...');
 
     // Moon phase - reset to full moon
     if (u.shadowOffset) {
@@ -103,7 +101,6 @@ export function resetMoon(material) {
         u.opacity.value = 1.0;
     }
 
-    console.log('[GeometryStateManager] Moon reset complete');
 }
 
 /**
@@ -114,12 +111,10 @@ export function resetMoon(material) {
  */
 export function resetSun(material) {
     if (!material || !material.uniforms) {
-        console.log('[GeometryStateManager] resetSun: No material or uniforms');
         return;
     }
 
     const u = material.uniforms;
-    console.log('[GeometryStateManager] Resetting sun state...');
 
     // Solar eclipse - reset to no eclipse
     if (u.eclipseProgress) {
@@ -178,7 +173,6 @@ export function resetSun(material) {
         u.time.value = 0;
     }
 
-    console.log('[GeometryStateManager] Sun reset complete');
 }
 
 /**
@@ -189,13 +183,11 @@ export function resetSun(material) {
  */
 export function resetCrystal(material) {
     if (!material || !material.uniforms) {
-        console.log('[GeometryStateManager] resetCrystal: No material or uniforms');
         return;
     }
 
     const u = material.uniforms;
     const defaults = CRYSTAL_DEFAULT_UNIFORMS;
-    console.log('[GeometryStateManager] Resetting crystal state...');
 
     // Crystal appearance
     if (u.frostiness) u.frostiness.value = defaults.frostiness;
@@ -238,7 +230,6 @@ export function resetCrystal(material) {
     // Reset time
     if (u.time) u.time.value = defaults.time;
 
-    console.log('[GeometryStateManager] Crystal reset complete');
 }
 
 /**
@@ -261,7 +252,6 @@ export function resetGeometryState(geometryType, material) {
         resetCrystal(material);
         break;
     default:
-        console.log(`[GeometryStateManager] No reset function for geometry: ${geometryType}`);
     }
 }
 

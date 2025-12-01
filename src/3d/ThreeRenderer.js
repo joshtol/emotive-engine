@@ -258,7 +258,6 @@ export class ThreeRenderer {
                 this.envMap = pmremGenerator.fromEquirectangular(texture).texture;
                 texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (10-22MB GPU memory leak fix)
                 pmremGenerator.dispose();
-                // console.log('✅ Loaded HDRI environment map');
                 return;
             } catch (exrError) {
                 console.warn('Could not load EXR, trying fallback:', exrError.message);
@@ -303,7 +302,6 @@ export class ThreeRenderer {
         this._envScene = envScene;
         this._envCubeCamera = cubeCamera;
 
-        // console.log('Using procedural environment map');
     }
 
     /**
@@ -434,7 +432,6 @@ export class ThreeRenderer {
      * Recreates resources and resumes rendering
      */
     handleContextRestored() {
-        // console.log('✅ WebGL context restored - recreating resources');
         this._contextLost = false;
 
         // Recreate all GPU resources
@@ -446,7 +443,6 @@ export class ThreeRenderer {
      * Rebuilds geometries, materials, textures, and post-processing
      */
     recreateResources() {
-        // console.log('🔄 Recreating GPU resources after context restoration');
 
         // Recreate environment map
         this.createEnvironmentMap();
@@ -471,7 +467,6 @@ export class ThreeRenderer {
         // Note: Three.js automatically recreates geometries and textures
         // when they are first accessed after context restoration
 
-        // console.log('✅ GPU resources recreated successfully');
     }
 
     /**
@@ -526,7 +521,6 @@ export class ThreeRenderer {
         if (customMaterial) {
             // Use provided custom material (e.g., moon with NASA textures)
             material = customMaterial;
-            console.log('💎 [RENDERER] Using custom material:', material.type, 'isShaderMaterial:', material.isShaderMaterial);
         } else {
             // Create glow material and store it
             if (!this.glowMaterial) {
@@ -543,12 +537,6 @@ export class ThreeRenderer {
         this.coreMesh = new THREE.Mesh(geometry, material);
         this.coreMesh.name = 'coreMascot';
 
-        console.log('💎 [RENDERER] Mesh created:');
-        console.log('   geometry vertices:', geometry.attributes?.position?.count);
-        console.log('   material type:', this.coreMesh.material?.type);
-        console.log('   material visible:', this.coreMesh.material?.visible);
-        console.log('   mesh visible:', this.coreMesh.visible);
-        console.log('   mesh frustumCulled:', this.coreMesh.frustumCulled);
 
         if (this.options.enableShadows) {
             this.coreMesh.castShadow = true;
@@ -579,7 +567,6 @@ export class ThreeRenderer {
         // ═══════════════════════════════════════════════════════════════════
         if (this.bloomPass) {
             this.bloomPass.clearBloomBuffers(this.renderer);
-            console.log('[ThreeRenderer] Cleared bloom buffers during geometry swap');
         }
         if (this.particleBloomPass) {
             this.particleBloomPass.clearBloomBuffers(this.renderer);
@@ -596,7 +583,6 @@ export class ThreeRenderer {
 
         // If custom material provided, swap material too
         if (customMaterial) {
-            // console.log('✅ Swapping to custom material during morph');
             // Dispose old material (but NOT if it's glow/glass material - we reuse those)
             if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
                 this.disposeMaterial(this.coreMesh.material);
@@ -610,7 +596,6 @@ export class ThreeRenderer {
                 : this.glowMaterial;
 
             if (this.coreMesh.material !== standardMaterial) {
-                // console.log('✅ Restoring standard material:', this.materialMode);
                 // Dispose custom material
                 if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
                     this.disposeMaterial(this.coreMesh.material);
@@ -740,17 +725,9 @@ export class ThreeRenderer {
         const outerGeometry = this.coreMesh.geometry;
         let coreGeometry;
 
-        console.log('🔍 Creating inner core:', {
-            type: outerGeometry.type,
-            hasParams: !!outerGeometry.parameters,
-            tube: outerGeometry.parameters?.tube,
-            radius: outerGeometry.parameters?.radius
-        });
-
         // Check geometry type by constructor or parameters
         if (outerGeometry.type === 'TorusGeometry' || outerGeometry.parameters?.tube !== undefined) {
             // TORUS: Create thinner torus that follows the donut hole
-            console.log('✅ Detected TORUS, creating torus inner core');
             const params = outerGeometry.parameters;
             const radius = params.radius || 1.0;
             const tubeRadius = (params.tube || 0.4) * 0.25; // Much thinner tube for lightsaber effect
@@ -855,7 +832,6 @@ export class ThreeRenderer {
             this.innerCoreMaterial = null;
         }
 
-        console.log(`Material mode set to: ${mode}`);
     }
 
     /**
