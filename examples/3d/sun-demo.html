@@ -294,8 +294,11 @@
             // Close button
             closeBtn.addEventListener('click', exitPrecisionMode);
 
-            // Tap value to type
-            precisionValue.addEventListener('click', () => {
+            // Tap value to type - named function so it can re-attach itself
+            function handleValueClick() {
+                const currentValueEl = activePrecisionCard?.precisionValue;
+                if (!currentValueEl) return;
+
                 const input = document.createElement('input');
                 input.type = 'number';
                 input.className = 'precision-inline-input';
@@ -304,7 +307,7 @@
                 input.min = '0';
                 input.max = '5';
 
-                precisionValue.replaceWith(input);
+                currentValueEl.replaceWith(input);
                 input.focus();
                 input.select();
 
@@ -338,14 +341,16 @@
                     activePrecisionCard.precisionValue = newValueEl;
 
                     // Re-attach click handler
-                    newValueEl.addEventListener('click', arguments.callee);
+                    newValueEl.addEventListener('click', handleValueClick);
                 };
 
                 input.addEventListener('blur', finishEdit);
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') input.blur();
                 });
-            });
+            }
+
+            precisionValue.addEventListener('click', handleValueClick);
         }
 
         // Exit precision mode
