@@ -228,8 +228,16 @@
                 }
             };
 
+            // Prevent context menu on long-press
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+
             element.addEventListener('mousedown', start);
-            element.addEventListener('touchstart', start, { passive: true });
+            element.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevent text selection and context menu
+                start(e);
+            });
             element.addEventListener('mouseup', cancel);
             element.addEventListener('mouseleave', cancel);
             element.addEventListener('touchend', cancel);

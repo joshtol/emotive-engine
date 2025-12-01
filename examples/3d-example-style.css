@@ -821,6 +821,9 @@ input[type="range"]::-moz-range-thumb {
     align-items: center;
     gap: 6px;
     position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none; /* Prevent iOS callout menu */
 }
 
 .fader-label {
