@@ -1028,9 +1028,44 @@ input[type="range"]::-moz-range-thumb {
    Double-tap slider to replace card content with precision controls
    ───────────────────────────────────────────────────────────────────────────── */
 
+/* Hint on slider that precision mode exists */
+.layer-card .slider-control {
+    position: relative;
+}
+
+.layer-card .slider-control::after {
+    content: '2×';
+    position: absolute;
+    right: 4px;
+    top: 2px;
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.25);
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+.layer-card .slider-control:hover::after {
+    color: rgba(var(--accent-rgb), 0.5);
+}
+
 /* Precision mode replaces layer-controls content */
 .layer-card.precision-mode .layer-controls {
     display: none;
+}
+
+/* Card glow when in precision mode */
+.layer-card.precision-mode {
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        0 0 0 2px rgba(var(--accent-rgb), 0.4),
+        0 0 20px rgba(var(--accent-rgb), 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.layer-card.precision-mode::before {
+    opacity: 1;
+    width: 3px;
+    box-shadow: 0 0 15px var(--accent);
 }
 
 .precision-inline {
@@ -1051,25 +1086,25 @@ input[type="range"]::-moz-range-thumb {
     letter-spacing: 0.5px;
 }
 
+/* Done button - prominent accent colored */
 .precision-inline-close {
-    width: 22px;
-    height: 22px;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 3px;
-    color: rgba(255, 255, 255, 0.5);
+    padding: 4px 10px;
+    background: rgba(var(--accent-rgb), 0.2);
+    border: 1px solid rgba(var(--accent-rgb), 0.5);
+    border-radius: 4px;
+    color: var(--accent);
     cursor: pointer;
-    font-size: 12px;
+    font-size: 10px;
+    font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.15s ease;
-    padding: 0;
 }
 
 .precision-inline-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(var(--accent-rgb), 0.3);
+    border-color: var(--accent);
 }
 
 /* Large value display */
