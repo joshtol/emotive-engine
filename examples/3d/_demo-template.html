@@ -84,9 +84,9 @@
             <h2>Visual Controls</h2>
             <div class="section-content">
                 <div class="button-grid">
-                    <button data-action="toggle-particles">Particles</button>
+                    <button data-action="toggle-particles" class="active">Particles</button>
                     <button data-action="toggle-glow" class="active">Core Glow</button>
-                    <button data-action="toggle-auto-rotate">Auto-Rotate</button>
+                    <button data-action="toggle-auto-rotate" class="active">Auto-Rotate</button>
                 </div>
             </div>
         </div>
@@ -105,11 +105,17 @@
         // Initialize mascot
         const container = document.getElementById('animation-container');
         const mascot = new EmotiveMascot3D({
-            canvasId: 'demo',
-            coreGeometry: 'sphere', // Change to your geometry
+            coreGeometry: 'crystal', // Change to: crystal, moon, sun
             enableParticles: true,
+            enablePostProcessing: true,
+            enableShadows: false,
             enableControls: true,
-            autoRotate: false
+            autoRotate: true,
+            cameraDistance: 1.2,
+            fov: 30,
+            minZoom: 0.9,
+            maxZoom: 2.0,
+            materialVariant: 'multiplexer'
         });
 
         mascot.init(container);
