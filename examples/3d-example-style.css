@@ -316,6 +316,42 @@ input[type="range"]::-moz-range-thumb {
     height: 100% !important;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   CAMERA CONTROLS HINT - Fade-out tooltip on first load
+   ───────────────────────────────────────────────────────────────────────────── */
+.center-content {
+    position: relative;
+}
+
+.camera-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+    z-index: 10;
+    opacity: 1;
+    animation: cameraHintFade 4s ease-out forwards;
+    white-space: nowrap;
+}
+
+.camera-hint::before {
+    content: '🎥 ';
+}
+
+@keyframes cameraHintFade {
+    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    70% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    MOBILE RESPONSIVE
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -893,6 +929,7 @@ input[type="range"]::-moz-range-thumb {
     flex: 1;
     min-width: 0;
     margin: 0;
+    touch-action: pan-x; /* Allow horizontal slider dragging */
 }
 
 /* Legacy .slider-control support (for non-layer-card sliders) */
