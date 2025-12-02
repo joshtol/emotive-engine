@@ -36,8 +36,8 @@
             <div class="section-content">
                 <div class="button-grid">
                     <button data-action="eclipse" data-value="off" class="active">Off</button>
-                    <button data-action="eclipse" data-value="annular">Annular</button>
                     <button data-action="eclipse" data-value="total">Total</button>
+                    <button data-action="eclipse" data-value="annular">Annular</button>
                 </div>
             </div>
         </div>
@@ -82,25 +82,9 @@
     </div>
 
     <div class="right-menu">
-        <div class="section">
-            <h2>Corona Blend Layers</h2>
-            <div class="section-content">
-                <div id="corona-layers-container"></div>
-                <button class="add-layer-btn" id="add-corona-layer-btn">+ Add Corona Layer</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Sun Blend Layers</h2>
-            <div class="section-content">
-                <div id="layers-container"></div>
-                <button class="add-layer-btn" id="add-layer-btn">+ Add Sun Layer</button>
-            </div>
-        </div>
-
         <div class="section visual-controls">
-            <h2>Visual Controls</h2>
-            <div class="section-content">
+            <h2 class="collapsed">Visual Controls</h2>
+            <div class="section-content collapsed">
                 <div class="button-grid">
                     <button data-action="toggle-particles">Particles</button>
                     <button data-action="toggle-glow" class="active">Core Glow</button>
@@ -112,7 +96,23 @@
         <div class="section">
             <div class="info-box">
                 <strong>Blend Modes:</strong><br>
-                Drag layers to reorder. Max 4 per section.
+                Click value to fine-tune. Drag layers to reorder. Max 4 per section.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Sun Blend Layers</h2>
+            <div class="section-content">
+                <div id="layers-container"></div>
+                <button class="add-layer-btn" id="add-layer-btn">+ Add Sun Layer</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Corona Blend Layers</h2>
+            <div class="section-content">
+                <div id="corona-layers-container"></div>
+                <button class="add-layer-btn" id="add-corona-layer-btn">+ Add Corona Layer</button>
             </div>
         </div>
     </div>
