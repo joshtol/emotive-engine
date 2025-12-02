@@ -433,20 +433,21 @@
                     </div>
                 </div>
                 <div class="layer-controls">
-                    <div class="custom-select">
-                        <div class="custom-select-trigger">${blendModeNames[layer.mode]}</div>
-                        <div class="custom-select-dropdown">
-                            ${blendModeNames.map((name, idx) =>
-                                `<div class="custom-select-option${layer.mode === idx ? ' selected' : ''}" data-value="${idx}">${name}</div>`
-                            ).join('')}
+                    <div class="layer-settings-row">
+                        <div class="custom-select">
+                            <div class="custom-select-trigger">${blendModeNames[layer.mode]}</div>
+                            <div class="custom-select-dropdown">
+                                ${blendModeNames.map((name, idx) =>
+                                    `<div class="custom-select-option${layer.mode === idx ? ' selected' : ''}" data-value="${idx}">${name}</div>`
+                                ).join('')}
+                            </div>
                         </div>
+                        <span class="fader-value">${layer.strength.toFixed(3)}</span>
                     </div>
                     <div class="fader-control">
-                        <span class="fader-label">Strength</span>
                         <button class="fader-step fader-step-down">−</button>
                         <input type="range" class="fader-slider" data-action="${strengthAction}" min="0" max="5" step="0.1" value="${layer.strength}">
                         <button class="fader-step fader-step-up">+</button>
-                        <span class="fader-value">${layer.strength.toFixed(3)}</span>
                     </div>
                 </div>
             `;
