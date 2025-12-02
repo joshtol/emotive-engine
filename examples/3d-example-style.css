@@ -860,6 +860,7 @@ input[type="range"]::-moz-range-thumb {
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none; /* Prevent iOS callout menu */
+    touch-action: none; /* Disable browser touch handling - let slider work directly */
 }
 
 .fader-label {
