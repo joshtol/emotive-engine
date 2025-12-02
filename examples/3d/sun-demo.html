@@ -295,7 +295,7 @@
                 newValue = Math.max(0, Math.min(5, newValue));
                 layer.strength = newValue;
                 mainSlider.value = newValue;
-                valueEl.textContent = newValue.toFixed(1);
+                valueEl.textContent = newValue.toFixed(3);
                 precisionValue.textContent = newValue.toFixed(3);
 
                 // Re-center slider range around new value
@@ -322,7 +322,7 @@
                 const value = parseFloat(precisionSlider.value);
                 layer.strength = value;
                 mainSlider.value = value;
-                valueEl.textContent = value.toFixed(1);
+                valueEl.textContent = value.toFixed(3);
                 precisionValue.textContent = value.toFixed(3);
                 isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
             });
@@ -358,7 +358,7 @@
 
                     layer.strength = value;
                     mainSlider.value = value;
-                    valueEl.textContent = value.toFixed(1);
+                    valueEl.textContent = value.toFixed(3);
 
                     // Re-center slider range
                     let newMin = Math.max(0, value - 0.1);
@@ -445,7 +445,7 @@
                         <button class="fader-step fader-step-down">−</button>
                         <input type="range" class="fader-slider" data-action="${strengthAction}" min="0" max="5" step="0.1" value="${layer.strength}">
                         <button class="fader-step fader-step-up">+</button>
-                        <span class="fader-value">${layer.strength.toFixed(1)}</span>
+                        <span class="fader-value">${layer.strength.toFixed(3)}</span>
                     </div>
                 </div>
             `;
@@ -493,7 +493,7 @@
             const updateValue = (newValue) => {
                 layer.strength = Math.max(0, Math.min(5, newValue));
                 slider.value = layer.strength;
-                valueEl.textContent = layer.strength.toFixed(1);
+                valueEl.textContent = layer.strength.toFixed(3);
                 isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
             };
 

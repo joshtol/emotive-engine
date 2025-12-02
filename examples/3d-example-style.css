@@ -837,7 +837,7 @@ input[type="range"]::-moz-range-thumb {
     font-size: 11px;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
     color: var(--layer-accent, var(--accent));
-    min-width: 36px;
+    min-width: 48px;
     text-align: right;
     flex-shrink: 0;
     cursor: pointer;
