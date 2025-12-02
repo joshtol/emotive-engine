@@ -844,10 +844,14 @@ input[type="range"]::-moz-range-thumb {
     padding: 4px 6px;
     border-radius: 4px;
     transition: background 0.15s ease;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
 }
 
 .fader-value:hover {
     background: rgba(var(--accent-rgb), 0.15);
+    text-decoration-style: solid;
 }
 
 /* Step buttons - compact touch-friendly */
