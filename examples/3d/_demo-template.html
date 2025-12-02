@@ -64,6 +64,7 @@
     <!-- CENTER ANIMATION -->
     <div class="center-content">
         <div id="animation-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
     </div>
 
     <!-- RIGHT MENU -->
@@ -120,6 +121,11 @@
 
         mascot.init(container);
         mascot.start();
+
+        // Fire sway gesture on load
+        setTimeout(() => {
+            mascot.express('sway');
+        }, 500);
 
         // Collapsible sections
         document.querySelectorAll('.section h2').forEach(h2 => {

@@ -1530,7 +1530,9 @@ export class Core3DManager {
             // Calculate actual 3D core radius in world units
             // This ensures particles orbit at consistent distance regardless of screen size
             // Crystal shell scale is the main factor (default 2.0)
-            const coreRadius3D = (this.crystalShellBaseScale || 2.0) * this.scale * breathScale;
+            // particleRadiusMultiplier adjusts for different geometry shapes/sizes
+            const particleRadiusMultiplier = this.geometryConfig?.particleRadiusMultiplier || 1.0;
+            const coreRadius3D = (this.crystalShellBaseScale || 2.0) * this.scale * breathScale * particleRadiusMultiplier;
 
             // Delegate all particle logic to orchestrator
             this.particleOrchestrator.update(

@@ -14,6 +14,10 @@
 
   Complexity: ⭐⭐⭐⭐⭐ Expert 3D Shaders + Physics
   Features: Shadow sweep animation, multi-layer blend modes, real-time color pickers, logarithmic progress curves
+
+  Texture Attribution:
+  Credit: NASA's Scientific Visualization Studio (https://svs.gsfc.nasa.gov/4720/)
+  Data: Ernie Wright (USRA), Noah Petro (NASA/GSFC)
 -->
 <html lang="en">
 <head>
@@ -157,49 +161,37 @@
         </div>
 
         <div class="section">
-            <h2 class="collapsed">Advanced Shadow</h2>
-            <div class="section-content collapsed">
-                <div class="slider-control">
-                    <div class="slider-label">
-                        <span>Shadow Radius</span>
-                        <span class="slider-value" id="shadow-radius-value">1.2</span>
-                    </div>
-                    <input type="range" id="shadow-radius-slider" min="0.5" max="2.5" step="0.05" value="1.2">
-                </div>
+            <div class="info-box">
+                <strong>Blood Moon Eclipse</strong><br>
+                Earth's shadow sweeps across the moon with realistic Rayleigh scattering.
+            </div>
+        </div>
+    </div>
 
-                <div class="slider-control">
-                    <div class="slider-label">
-                        <span>Eclipse Progress</span>
-                        <span class="slider-value" id="eclipse-progress-value">0.0</span>
-                    </div>
-                    <input type="range" id="eclipse-progress-slider" min="0" max="1" step="0.01" value="0.0">
-                </div>
+    <div class="center-content">
+        <div id="moon-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <div class="right-menu">
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Blend Modes:</strong><br>
+                Click value to fine-tune. Drag layers to reorder. Max 4 layers.
             </div>
         </div>
 
         <div class="section">
-            <h2 class="collapsed">Lighting</h2>
-            <div class="section-content collapsed">
-                <div class="slider-control">
-                    <div class="slider-label">
-                        <span>Emissive Glow</span>
-                        <span class="slider-value" id="emissive-value">0.3</span>
-                    </div>
-                    <input type="range" id="emissive-slider" min="0" max="1" step="0.01" value="0.3">
-                </div>
-
-                <div class="slider-control">
-                    <div class="slider-label">
-                        <span>Shadow Darkness</span>
-                        <span class="slider-value" id="shadow-darkness-value">1.00</span>
-                    </div>
-                    <input type="range" id="shadow-darkness-slider" min="0" max="1" step="0.01" value="1.0">
-                </div>
+            <h2>Blend Layers</h2>
+            <div class="section-content">
+                <div id="layer-stack" class="layer-stack"></div>
+                <button id="add-layer-btn" class="add-layer-btn">+ Add Layer</button>
             </div>
         </div>
 
         <div class="section">
-            <h2 class="collapsed">🎨 Color Grading</h2>
+            <h2 class="collapsed">Color Grading</h2>
             <div class="section-content collapsed">
                 <div class="color-grading">
                     <div style="margin-bottom: 10px;">
@@ -234,32 +226,44 @@
         </div>
 
         <div class="section">
-            <div class="info-box">
-                <strong>Blood Moon Eclipse</strong><br>
-                Earth's shadow sweeps across the moon with realistic Rayleigh scattering.
-            </div>
-        </div>
-    </div>
-    <div class="center-content">
-        <div id="moon-container"></div>
-    </div>
-    <div class="right-menu">
-        <div class="section visual-controls">
-            <h2 class="collapsed">Visual Controls</h2>
+            <h2 class="collapsed">Lighting</h2>
             <div class="section-content collapsed">
-                <div class="button-grid">
-                    <button data-action="toggle-particles">✨ Particles</button>
-                    <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-                    <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Emissive Glow</span>
+                        <span class="slider-value" id="emissive-value">0.3</span>
+                    </div>
+                    <input type="range" id="emissive-slider" min="0" max="1" step="0.01" value="0.3">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Shadow Darkness</span>
+                        <span class="slider-value" id="shadow-darkness-value">1.00</span>
+                    </div>
+                    <input type="range" id="shadow-darkness-slider" min="0" max="1" step="0.01" value="1.0">
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <h2 class="collapsed">🎨 Blend Layers</h2>
+            <h2 class="collapsed">Advanced Shadow</h2>
             <div class="section-content collapsed">
-                <button id="add-layer-btn" class="add-layer-btn">+ Add Layer</button>
-                <div id="layer-stack" class="layer-stack"></div>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Shadow Radius</span>
+                        <span class="slider-value" id="shadow-radius-value">1.2</span>
+                    </div>
+                    <input type="range" id="shadow-radius-slider" min="0.5" max="2.5" step="0.05" value="1.2">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Eclipse Progress</span>
+                        <span class="slider-value" id="eclipse-progress-value">0.0</span>
+                    </div>
+                    <input type="range" id="eclipse-progress-slider" min="0" max="1" step="0.01" value="0.0">
+                </div>
             </div>
         </div>
     </div>
@@ -279,7 +283,8 @@
 
     <script type="module">
         // Updated: 2025-01-10 - Added particle toggle, disabled blinking/breathing by default
-        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase } from '../../dist/emotive-mascot-3d.js?t=1736871234';
+        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase, blendModeNames } from '../../dist/emotive-mascot-3d.js?t=1736871234';
+        import { createLayerCard, setupDragAndDrop, exitPrecisionMode } from './layer-utils.js';
 
         // Store current rotation values (declared early for use in initialization)
         // Calibrated to show classic "Man in the Moon" Earth-facing view
@@ -322,27 +327,63 @@
             }
         });
 
-        // Initialize blood moon eclipse on load (Total Eclipse at center)
+        // Animate blood moon eclipse on load (start as normal moon, transition to total eclipse)
         setTimeout(() => {
             if (mascot.core3D?.customMaterial?.uniforms) {
-                // Start at total eclipse (shadow at center)
-                mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value = [0.0, 0.0];
-                mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = 1.2;
-                mascot.core3D.customMaterial.uniforms.eclipseProgress.value = 1.0;
-                mascot.core3D.customMaterial.uniforms.emissiveStrength.value = 0.39;
-                mascot.core3D.customMaterial.uniforms.shadowDarkness.value = 0.53;
+                const uniforms = mascot.core3D.customMaterial.uniforms;
 
-                // Update UI sliders
-                document.getElementById('eclipse-progress-slider').value = 1.0;
-                document.getElementById('eclipse-progress-value').textContent = '1.00';
-                document.getElementById('emissive-slider').value = 0.39;
-                document.getElementById('emissive-value').textContent = '0.39';
-                document.getElementById('shadow-darkness-slider').value = 0.53;
-                document.getElementById('shadow-darkness-value').textContent = '0.53';
+                // Start as normal moon (no eclipse)
+                uniforms.eclipseShadowPos.value = [-2.0, 0.0];  // Shadow off to the side
+                uniforms.eclipseShadowRadius.value = 1.2;
+                uniforms.eclipseProgress.value = 0.0;
+                uniforms.emissiveStrength.value = 0.0;
+                uniforms.shadowDarkness.value = 1.0;
 
-                console.log('Blood moon initialized at total eclipse');
+                // Animate to total eclipse over 2 seconds
+                const duration = 2000;
+                const startTime = performance.now();
+
+                function animateEclipse(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1.0);
+
+                    // Ease-in-out curve
+                    const eased = progress < 0.5
+                        ? 2 * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                    // Animate shadow position from -2 to 0
+                    uniforms.eclipseShadowPos.value[0] = -2.0 + (2.0 * eased);
+
+                    // Animate eclipse progress
+                    uniforms.eclipseProgress.value = eased;
+
+                    // Animate emissive glow
+                    uniforms.emissiveStrength.value = 0.39 * eased;
+
+                    // Animate shadow darkness
+                    uniforms.shadowDarkness.value = 1.0 - (0.47 * eased);
+
+                    // Update UI sliders
+                    document.getElementById('shadow-pos-slider').value = uniforms.eclipseShadowPos.value[0];
+                    document.getElementById('shadow-pos-value').textContent = uniforms.eclipseShadowPos.value[0].toFixed(2);
+                    document.getElementById('eclipse-progress-slider').value = eased;
+                    document.getElementById('eclipse-progress-value').textContent = eased.toFixed(2);
+                    document.getElementById('emissive-slider').value = uniforms.emissiveStrength.value;
+                    document.getElementById('emissive-value').textContent = uniforms.emissiveStrength.value.toFixed(2);
+                    document.getElementById('shadow-darkness-slider').value = uniforms.shadowDarkness.value;
+                    document.getElementById('shadow-darkness-value').textContent = uniforms.shadowDarkness.value.toFixed(2);
+
+                    if (progress < 1.0) {
+                        requestAnimationFrame(animateEclipse);
+                    } else {
+                        console.log('Blood moon eclipse animation complete');
+                    }
+                }
+
+                requestAnimationFrame(animateEclipse);
             }
-        }, 1200);
+        }, 800);
 
         // Ensure auto-rotate is OFF for tidal locking (force disable)
         setTimeout(() => {
@@ -353,46 +394,6 @@
         }, 500);
 
         console.log('✅ Blood Moon demo initialized');
-
-        // Visual Controls event handlers
-        document.querySelectorAll('[data-action]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const action = e.target.dataset.action;
-                if (!action) return;
-
-                switch (action) {
-                    case 'toggle-particles':
-                        if (mascot.particlesEnabled) {
-                            mascot.disableParticles();
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.enableParticles();
-                            e.target.classList.add('active');
-                        }
-                        break;
-
-                    case 'toggle-glow':
-                        if (mascot.core3D?.coreGlowEnabled !== false) {
-                            mascot.core3D.setCoreGlowEnabled(false);
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.core3D.setCoreGlowEnabled(true);
-                            e.target.classList.add('active');
-                        }
-                        break;
-
-                    case 'toggle-auto-rotate':
-                        if (mascot.autoRotateEnabled) {
-                            mascot.disableAutoRotate();
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.enableAutoRotate();
-                            e.target.classList.add('active');
-                        }
-                        break;
-                }
-            });
-        });
 
         // Eclipse progress slider (advanced control)
         const eclipseProgressSlider = document.getElementById('eclipse-progress-slider');
@@ -503,473 +504,55 @@
         });
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // BLEND LAYER MANAGEMENT SYSTEM
+        // BLEND LAYER MANAGEMENT SYSTEM (using shared layer-utils.js)
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Blend mode definitions with categories and icons
-        const blendModes = [
-            { name: 'Multiply', category: 'darken', icon: '×' },
-            { name: 'Linear Burn', category: 'darken', icon: '▼' },
-            { name: 'Color Burn', category: 'darken', icon: '◆' },
-            { name: 'Color Dodge', category: 'lighten', icon: '◇' },
-            { name: 'Screen', category: 'lighten', icon: '□' },
-            { name: 'Overlay', category: 'contrast', icon: '◈' },
-            { name: 'Add', category: 'lighten', icon: '+' },
-            { name: 'Soft Light', category: 'contrast', icon: '○' },
-            { name: 'Hard Light', category: 'contrast', icon: '●' },
-            { name: 'Vivid Light', category: 'contrast', icon: '◉' },
-            { name: 'Linear Light', category: 'contrast', icon: '⊕' },
-            { name: 'Difference', category: 'inversion', icon: '≠' },
-            { name: 'Exclusion', category: 'inversion', icon: '⊘' },
-            { name: 'Darken', category: 'darken', icon: '▽' },
-            { name: 'Lighten', category: 'lighten', icon: '△' },
-            { name: 'Subtract', category: 'darken', icon: '−' },
-            { name: 'Divide', category: 'lighten', icon: '÷' },
-            { name: 'Pin Light', category: 'contrast', icon: '⊙' },
-            { name: 'Hue', category: 'component', icon: 'H' },
-            { name: 'Saturation', category: 'component', icon: 'S' },
-            { name: 'Color', category: 'component', icon: 'C' },
-            { name: 'Luminosity', category: 'component', icon: 'L' }
-        ];
-
+        const MAX_BLEND_LAYERS = 4;
         const layerStack = document.getElementById('layer-stack');
         const addLayerBtn = document.getElementById('add-layer-btn');
 
         let layers = [];
         let nextLayerId = 1;
-        let draggedElement = null;
 
-        // Get blend mode category for coloring
-        function getModeCategory(modeIndex) {
-            return blendModes[modeIndex]?.category || 'contrast';
-        }
-
-        // Generate select options grouped by category
-        function generateModeOptions(selectedMode) {
-            const categories = {
-                darken: { label: '🔻 Darken', modes: [] },
-                lighten: { label: '🔺 Lighten', modes: [] },
-                contrast: { label: '◐ Contrast', modes: [] },
-                inversion: { label: '⊘ Inversion', modes: [] },
-                component: { label: '🎨 Component', modes: [] }
-            };
-
-            blendModes.forEach((mode, idx) => {
-                categories[mode.category].modes.push({ ...mode, index: idx });
-            });
-
-            let html = '';
-            for (const [cat, data] of Object.entries(categories)) {
-                html += `<optgroup label="${data.label}">`;
-                data.modes.forEach(mode => {
-                    html += `<option value="${mode.index}" ${mode.index === selectedMode ? 'selected' : ''}>${mode.icon} ${mode.name}</option>`;
-                });
-                html += '</optgroup>';
-            }
-            return html;
-        }
-
-        function createLayerCard(layer) {
-            const card = document.createElement('div');
-            card.className = `layer-card${layer.enabled ? '' : ' disabled'}`;
-            card.dataset.layerId = layer.id;
-            card.dataset.modeCategory = getModeCategory(layer.mode);
-            card.draggable = true;
-
-            const currentModeName = blendModes[layer.mode]?.name || 'Normal';
-
-            card.innerHTML = `
-                <div class="swipe-indicator left">🗑️</div>
-                <div class="swipe-indicator right">✓</div>
-                <div class="layer-header">
-                    <div class="layer-title">
-                        <span class="drag-handle">⋮⋮</span>
-                        <span class="layer-name">Layer ${layer.position}</span>
-                    </div>
-                    <div class="layer-controls-header">
-                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="toggle">
-                            ${layer.enabled ? 'ON' : 'OFF'}
-                        </button>
-                        <button class="delete-btn" data-action="delete">✕</button>
-                    </div>
-                </div>
-                <div class="layer-controls">
-                    <div class="custom-select" data-action="mode">
-                        <div class="custom-select-trigger">
-                            <span class="custom-select-value">${currentModeName}</span>
-                        </div>
-                        <div class="custom-select-dropdown">
-                            ${blendModes.map((mode, idx) =>
-                                `<div class="custom-select-option${layer.mode === idx ? ' selected' : ''}" data-value="${idx}">${mode.name}</div>`
-                            ).join('')}
-                        </div>
-                    </div>
-                    <div class="strength-control">
-                        <div class="strength-header">
-                            <div class="precision-controls">
-                                <span class="precision-label">Strength</span>
-                                <div class="precision-toggle">
-                                    <button class="precision-btn active" data-step="0.1">0.1</button>
-                                    <button class="precision-btn" data-step="0.01">0.01</button>
-                                    <button class="precision-btn" data-step="0.001">0.001</button>
-                                </div>
-                            </div>
-                            <span class="strength-value" data-action="edit-value">${layer.strength.toFixed(3)}</span>
-                        </div>
-                        <input type="range" class="layer-strength-slider" data-action="strength"
-                               min="0" max="5" step="0.1" value="${layer.strength}">
-                    </div>
-                </div>
-            `;
-
-            // Collapse/expand on title click
-            const layerTitle = card.querySelector('.layer-title');
-            layerTitle.addEventListener('click', (e) => {
-                if (e.target.classList.contains('drag-handle')) return;
-                card.classList.toggle('collapsed');
-            });
-
-            // Drag handle
-            const dragHandle = card.querySelector('.drag-handle');
-            dragHandle.addEventListener('mousedown', () => { card.draggable = true; });
-
-            card.addEventListener('dragstart', handleDragStart);
-            card.addEventListener('dragend', handleDragEnd);
-            card.addEventListener('dragover', handleDragOver);
-            card.addEventListener('drop', handleDrop);
-
-            // Prevent dragging when interacting with controls
-            const interactiveElements = card.querySelectorAll('select, input, button:not(.drag-handle)');
-            interactiveElements.forEach(el => {
-                el.addEventListener('mousedown', (e) => { card.draggable = false; e.stopPropagation(); });
-                el.addEventListener('mouseup', () => { card.draggable = true; });
-            });
-
-            // Toggle button
-            card.querySelector('[data-action="toggle"]').addEventListener('click', () => {
-                layer.enabled = !layer.enabled;
-                updateLayerCard(card, layer);
-                updateShaderLayers();
-            });
-
-            // Delete button
-            card.querySelector('[data-action="delete"]').addEventListener('click', () => { deleteLayer(layer.id); });
-
-            // Custom select dropdown
-            const customSelect = card.querySelector('[data-action="mode"]');
-            const trigger = customSelect.querySelector('.custom-select-trigger');
-            const dropdown = customSelect.querySelector('.custom-select-dropdown');
-            const valueDisplay = customSelect.querySelector('.custom-select-value');
-            const options = dropdown.querySelectorAll('.custom-select-option');
-            let focusedIndex = -1;
-
-            const updateFocus = (index, apply = true) => {
-                options.forEach(o => o.classList.remove('focused'));
-                if (index >= 0 && index < options.length) {
-                    focusedIndex = index;
-                    options[index].classList.add('focused');
-                    options[index].scrollIntoView({ block: 'nearest' });
-                    if (apply) {
-                        // Apply blend mode immediately while navigating
-                        const newMode = parseInt(options[index].dataset.value);
-                        layer.mode = newMode;
-                        card.dataset.modeCategory = getModeCategory(layer.mode);
-                        valueDisplay.textContent = blendModes[newMode]?.name || 'Normal';
-                        options.forEach(o => o.classList.remove('selected'));
-                        options[index].classList.add('selected');
-                        updateShaderLayers();
-                    }
-                }
-            };
-
-            const selectOption = (option) => {
-                const newMode = parseInt(option.dataset.value);
-                layer.mode = newMode;
-                card.dataset.modeCategory = getModeCategory(layer.mode);
-                valueDisplay.textContent = blendModes[newMode]?.name || 'Normal';
-                options.forEach(o => o.classList.remove('selected'));
-                option.classList.add('selected');
-                customSelect.classList.remove('open');
-                updateShaderLayers();
-            };
-
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.querySelectorAll('.custom-select.open').forEach(s => {
-                    if (s !== customSelect) s.classList.remove('open');
-                });
-                customSelect.classList.toggle('open');
-                if (customSelect.classList.contains('open')) {
-                    const selectedIdx = Array.from(options).findIndex(o => o.classList.contains('selected'));
-                    updateFocus(selectedIdx >= 0 ? selectedIdx : 0, false);
-                }
-            });
-
-            trigger.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (!customSelect.classList.contains('open')) {
-                        customSelect.classList.add('open');
-                        const selectedIdx = Array.from(options).findIndex(o => o.classList.contains('selected'));
-                        updateFocus(selectedIdx >= 0 ? selectedIdx : 0, false);
-                    }
-                }
-            });
-
-            customSelect.addEventListener('keydown', (e) => {
-                // Allow arrow navigation even when closed
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (!customSelect.classList.contains('open')) {
-                        customSelect.classList.add('open');
-                    }
-                    updateFocus(Math.min(focusedIndex + 1, options.length - 1));
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    if (!customSelect.classList.contains('open')) {
-                        customSelect.classList.add('open');
-                    }
-                    updateFocus(Math.max(focusedIndex - 1, 0));
-                } else if (e.key === 'Enter' || e.key === 'Escape') {
-                    e.preventDefault();
-                    customSelect.classList.remove('open');
-                }
-            });
-
-            dropdown.addEventListener('click', (e) => {
-                const option = e.target.closest('.custom-select-option');
-                if (option) selectOption(option);
-            });
-
-            trigger.setAttribute('tabindex', '0');
-
-            // Precision buttons
-            const precisionButtons = card.querySelectorAll('.precision-btn');
-            const strengthSlider = card.querySelector('[data-action="strength"]');
-            precisionButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    precisionButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    strengthSlider.step = btn.dataset.step;
-                    const precision = btn.dataset.step === '0.1' ? 1 : (btn.dataset.step === '0.01' ? 2 : 3);
-                    card.querySelector('.strength-value').textContent = layer.strength.toFixed(precision);
-                });
-            });
-
-            // Strength slider
-            strengthSlider.addEventListener('input', (e) => {
-                layer.strength = parseFloat(e.target.value);
-                const activeBtn = card.querySelector('.precision-btn.active');
-                const step = activeBtn ? activeBtn.dataset.step : '0.1';
-                const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
-                card.querySelector('.strength-value').textContent = layer.strength.toFixed(precision);
-                updateShaderLayers();
-            });
-
-            // Double-tap value to edit directly
-            const strengthValueEl = card.querySelector('.strength-value');
-            strengthValueEl.addEventListener('dblclick', (e) => {
-                e.stopPropagation();
-                const currentValue = layer.strength;
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.className = 'strength-value-input';
-                input.value = currentValue;
-                input.min = 0;
-                input.max = 5;
-                input.step = 0.001;
-
-                strengthValueEl.replaceWith(input);
-                input.focus();
-                input.select();
-
-                const finishEdit = () => {
-                    let newValue = parseFloat(input.value);
-                    if (isNaN(newValue)) newValue = currentValue;
-                    newValue = Math.max(0, Math.min(5, newValue));
-                    layer.strength = newValue;
-                    strengthSlider.value = newValue;
-
-                    const newSpan = document.createElement('span');
-                    newSpan.className = 'strength-value';
-                    newSpan.dataset.action = 'edit-value';
-                    const activeBtn = card.querySelector('.precision-btn.active');
-                    const step = activeBtn ? activeBtn.dataset.step : '0.1';
-                    const precision = step === '0.1' ? 1 : (step === '0.01' ? 2 : 3);
-                    newSpan.textContent = layer.strength.toFixed(precision);
-
-                    // Re-attach dblclick listener
-                    newSpan.addEventListener('dblclick', arguments.callee);
-
-                    input.replaceWith(newSpan);
-                    updateShaderLayers();
-                };
-
-                input.addEventListener('blur', finishEdit);
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') finishEdit();
-                    if (e.key === 'Escape') {
-                        input.value = currentValue;
-                        finishEdit();
-                    }
-                });
-            });
-
-            // Mobile swipe gestures
-            let touchStartX = 0;
-            let touchStartY = 0;
-            let isSwiping = false;
-
-            card.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-                isSwiping = false;
-            }, { passive: true });
-
-            card.addEventListener('touchmove', (e) => {
-                const deltaX = e.touches[0].clientX - touchStartX;
-                const deltaY = e.touches[0].clientY - touchStartY;
-
-                // Only trigger if horizontal swipe is dominant
-                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
-                    isSwiping = true;
-                    card.classList.remove('swiping-left', 'swiping-right');
-                    if (deltaX < -50) {
-                        card.classList.add('swiping-left');
-                    } else if (deltaX > 50) {
-                        card.classList.add('swiping-right');
-                    }
-                }
-            }, { passive: true });
-
-            card.addEventListener('touchend', (e) => {
-                if (isSwiping) {
-                    if (card.classList.contains('swiping-left')) {
-                        // Swipe left = delete
-                        deleteLayer(layer.id);
-                    } else if (card.classList.contains('swiping-right')) {
-                        // Swipe right = toggle
-                        layer.enabled = !layer.enabled;
-                        updateLayerCard(card, layer);
-                        updateShaderLayers();
-                    }
-                }
-                card.classList.remove('swiping-left', 'swiping-right');
-                isSwiping = false;
-            });
-
-            return card;
-        }
-
-        function updateLayerCard(card, layer) {
-            const toggleBtn = card.querySelector('[data-action="toggle"]');
-            toggleBtn.textContent = layer.enabled ? 'ON' : 'OFF';
-            toggleBtn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
-            card.classList.toggle('disabled', !layer.enabled);
-            card.querySelector('.layer-name').textContent = `Layer ${layer.position}`;
-            card.dataset.modeCategory = getModeCategory(layer.mode);
-        }
-
-        function addLayer(mode = 0, strength = 2.0, enabled = false, skipShaderUpdate = false) {
-            if (layers.length >= 4) return;
-
-            const layer = { id: nextLayerId++, position: layers.length + 1, mode, strength, enabled };
-            layers.push(layer);
-            layerStack.appendChild(createLayerCard(layer));
-            if (!skipShaderUpdate) updateShaderLayers();
-        }
-
-        function deleteLayer(layerId) {
-            const index = layers.findIndex(l => l.id === layerId);
-            if (index === -1) return;
-            layers.splice(index, 1);
-            layers.forEach((layer, idx) => { layer.position = idx + 1; });
-            renderLayers();
-            updateShaderLayers();
-        }
-
-        function renderLayers() {
-            layerStack.innerHTML = '';
-            layers.forEach(layer => { layerStack.appendChild(createLayerCard(layer)); });
-        }
-
+        // Shader update function
         function updateShaderLayers() {
-            if (!mascot.core3D?.customMaterial?.uniforms) return;
-
-            for (let i = 0; i < 4; i++) {
-                const layerNum = i + 1;
-                const uiLayer = layers[i];
-                if (uiLayer) {
-                    mascot.core3D.setBlendLayer(layerNum, { mode: uiLayer.mode, strength: uiLayer.strength, enabled: uiLayer.enabled });
-                } else {
-                    mascot.core3D.setBlendLayer(layerNum, { enabled: false });
-                }
+            if (!mascot.core3D) return;
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const layer = layers[i];
+                mascot.core3D.setBlendLayer(i + 1, layer
+                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                    : { mode: 0, strength: 0, enabled: false });
             }
         }
 
-        // Drag-and-drop handlers
-        function handleDragStart(e) {
-            draggedElement = e.currentTarget;
-            e.currentTarget.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        }
-
-        function handleDragEnd(e) {
-            e.currentTarget.classList.remove('dragging');
-            draggedElement = null;
-            document.querySelectorAll('.layer-card').forEach(card => { card.classList.remove('drag-over'); });
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            const afterElement = getDragAfterElement(layerStack, e.clientY);
-            const draggable = document.querySelector('.dragging');
-            if (afterElement == null) {
-                layerStack.appendChild(draggable);
-            } else {
-                layerStack.insertBefore(draggable, afterElement);
-            }
-            return false;
-        }
-
-        function handleDrop(e) {
-            e.stopPropagation();
-            const cards = Array.from(layerStack.querySelectorAll('.layer-card'));
-            const newOrder = [];
-            cards.forEach((card, index) => {
-                const layerId = parseInt(card.dataset.layerId);
-                const layer = layers.find(l => l.id === layerId);
-                if (layer) { layer.position = index + 1; newOrder.push(layer); }
+        // Layer management using shared utilities
+        function addLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (layers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextLayerId++, mode, strength, enabled };
+            layers.push(layer);
+            const card = createLayerCard({
+                layer,
+                blendModeNames,
+                prefix: 'Layer',
+                onUpdate: updateShaderLayers,
+                onDelete: removeLayer
             });
-            layers = newOrder;
-            renderLayers();
-            updateShaderLayers();
-            return false;
+            layerStack.appendChild(card);
+            if (!skipUpdate) updateShaderLayers();
         }
 
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.layer-card:not(.dragging)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset, element: child };
-                }
-                return closest;
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        function removeLayer(layerId) {
+            const idx = layers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            layers.splice(idx, 1);
+            layerStack.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
+            updateShaderLayers();
         }
+
+        // Setup drag and drop
+        setupDragAndDrop(layerStack, layers, updateShaderLayers);
 
         addLayerBtn.addEventListener('click', () => addLayer());
-
-        // Close custom dropdowns when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.custom-select')) {
-                document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
-            }
-        });
 
         // Initialize layers from shader defaults
         setTimeout(() => {

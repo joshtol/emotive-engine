@@ -316,19 +316,22 @@ export const THREE_GEOMETRIES = {
     moon: {
         geometry: createMoon(64, 64),
         material: 'custom',
-        blink: { type: 'gentle-pulse', duration: 180, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.2, curve: 'sine' }
+        blink: { type: 'gentle-pulse', duration: 180, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.2, curve: 'sine' },
+        particleRadiusMultiplier: 1.4  // Wider sphere needs particles further out
     },
 
     sun: {
         geometry: new THREE.SphereGeometry(0.5, 64, 64),
         material: 'emissive',
-        blink: { type: 'radial-pulse', duration: 200, scaleAxis: [1.05, 1.05, 1.05], glowBoost: 0.5, curve: 'sine' }
+        blink: { type: 'radial-pulse', duration: 200, scaleAxis: [1.05, 1.05, 1.05], glowBoost: 0.5, curve: 'sine' },
+        particleRadiusMultiplier: 1.5  // Sun with corona needs particles even further
     },
 
     blackHole: {
         geometry: createBlackHoleGroup(),
         material: 'emissive',
-        blink: { type: 'accretion-flare', duration: 250, scaleAxis: [1.1, 1.1, 1.1], glowBoost: 0.7, rotation: [0, Math.PI / 8, 0], curve: 'sine' }
+        blink: { type: 'accretion-flare', duration: 250, scaleAxis: [1.1, 1.1, 1.1], glowBoost: 0.7, rotation: [0, Math.PI / 8, 0], curve: 'sine' },
+        particleRadiusMultiplier: 1.8  // Accretion disk effect needs wide particle field
     },
 
     // Crystal with inner soul glow
@@ -336,7 +339,8 @@ export const THREE_GEOMETRIES = {
         geometry: null,
         geometryLoader: loadCrystalGeometry,
         material: 'custom',
-        blink: { type: 'facet-flash', duration: 160, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.4, curve: 'sine' }
+        blink: { type: 'facet-flash', duration: 160, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.4, curve: 'sine' },
+        particleRadiusMultiplier: 0.85  // Tall narrow crystal - particles closer to core
     },
 
     // Diamond (brilliant cut)

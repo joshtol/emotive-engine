@@ -39,60 +39,8 @@
     </style>
 </head>
 <body>
-    <!-- LEFT MENU: Emotions -->
+    <!-- LEFT MENU: Geometry -->
     <div class="left-menu">
-        <div class="section">
-            <h2>Emotions</h2>
-            <div class="section-content">
-                <div class="button-grid">
-                    <button data-action="emotion" data-value="joy">😊 Joy</button>
-                    <button data-action="emotion" data-value="love">❤️ Love</button>
-                    <button data-action="emotion" data-value="excited">🎉 Excited</button>
-                    <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
-                    <button data-action="emotion" data-value="calm">😌 Calm</button>
-                    <button data-action="emotion" data-value="focused">🎯 Focused</button>
-                    <button data-action="emotion" data-value="resting">😴 Resting</button>
-                    <button data-action="emotion" data-value="sadness">😢 Sadness</button>
-                    <button data-action="emotion" data-value="anger">😠 Anger</button>
-                    <button data-action="emotion" data-value="fear">😰 Fear</button>
-                    <button data-action="emotion" data-value="surprise">😲 Surprise</button>
-                    <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
-                    <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
-                    <button data-action="emotion" data-value="neutral">😐 Neutral</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="collapsed">Undertones</h2>
-            <div class="section-content collapsed">
-                <div class="button-grid">
-                    <button data-action="undertone" data-value="null">Clear</button>
-                    <button data-action="undertone" data-value="subdued">Subdued</button>
-                    <button data-action="undertone" data-value="tired">Tired</button>
-                    <button data-action="undertone" data-value="nervous">Nervous</button>
-                    <button data-action="undertone" data-value="confident">Confident</button>
-                    <button data-action="undertone" data-value="intense">Intense</button>
-                    <button data-action="undertone" data-value="energetic">Energetic</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="info-box">
-                <strong>Emotive Engine 3D</strong><br>
-                Explore emotional expression through geometry, particles, and visual effects. Each emotion has unique behaviors!
-            </div>
-        </div>
-    </div>
-
-    <!-- CENTER: 3D Animation -->
-    <div class="center-content">
-        <div id="mascot-container"></div>
-    </div>
-
-    <!-- RIGHT MENU: Controls & Geometries -->
-    <div class="right-menu">
         <div class="section">
             <h2>Geometry</h2>
             <div class="section-content">
@@ -134,6 +82,59 @@
                         <button data-action="lunar-eclipse" data-value="partial">🌗 Partial</button>
                         <button data-action="lunar-eclipse" data-value="total">🩸 Blood Moon</button>
                     </div>
+                    <div id="lunar-eclipse-hint" style="display: none; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 6px; font-style: italic;">Select Full Moon to unlock</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Emotive Engine 3D</strong><br>
+                Explore emotional expression through geometry, particles, and visual effects. Each emotion has unique behaviors!
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: 3D Animation -->
+    <div class="center-content">
+        <div id="mascot-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <!-- RIGHT MENU: Emotions & Controls -->
+    <div class="right-menu">
+        <div class="section">
+            <h2>Emotions</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="emotion" data-value="joy">😊 Joy</button>
+                    <button data-action="emotion" data-value="love">❤️ Love</button>
+                    <button data-action="emotion" data-value="excited">🎉 Excited</button>
+                    <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
+                    <button data-action="emotion" data-value="calm">😌 Calm</button>
+                    <button data-action="emotion" data-value="focused">🎯 Focused</button>
+                    <button data-action="emotion" data-value="resting">😴 Resting</button>
+                    <button data-action="emotion" data-value="sadness">😢 Sadness</button>
+                    <button data-action="emotion" data-value="anger">😠 Anger</button>
+                    <button data-action="emotion" data-value="fear">😰 Fear</button>
+                    <button data-action="emotion" data-value="surprise">😲 Surprise</button>
+                    <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
+                    <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
+                    <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+                </div>
+
+                <!-- Undertones subcategory -->
+                <div style="margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Undertones</div>
+                    <div class="button-grid">
+                        <button data-action="undertone" data-value="null">Clear</button>
+                        <button data-action="undertone" data-value="subdued">Subdued</button>
+                        <button data-action="undertone" data-value="tired">Tired</button>
+                        <button data-action="undertone" data-value="nervous">Nervous</button>
+                        <button data-action="undertone" data-value="confident">Confident</button>
+                        <button data-action="undertone" data-value="intense">Intense</button>
+                        <button data-action="undertone" data-value="energetic">Energetic</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -142,18 +143,21 @@
             <h2 class="collapsed">Visual Controls</h2>
             <div class="section-content collapsed">
                 <div class="button-grid">
-                    <button data-action="toggle-particles">✨ Particles</button>
-                    <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-                    <button data-action="toggle-blink" class="active">👁️ Blinking</button>
-                    <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
-                    <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
+                    <button data-action="toggle-particles">Particles</button>
+                    <button data-action="toggle-glow" class="active">Core Glow</button>
+                    <button data-action="toggle-blink" class="active">Blinking</button>
+                    <button data-action="toggle-breathing" class="active">Breathing</button>
+                    <button data-action="toggle-auto-rotate">Auto-Rotate</button>
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <h2 class="collapsed">Motion Gestures</h2>
+            <h2 class="collapsed">Gestures <span style="font-size: 10px; font-weight: normal; opacity: 0.6;">(stackable!)</span></h2>
             <div class="section-content collapsed">
+                <div class="info-box" style="margin-bottom: 10px;">
+                    Tap multiple gestures rapidly - they blend together seamlessly!
+                </div>
                 <div class="button-grid">
                     <button data-action="gesture" data-value="bounce">Bounce</button>
                     <button data-action="gesture" data-value="pulse">Pulse</button>
@@ -161,26 +165,10 @@
                     <button data-action="gesture" data-value="shake">Shake</button>
                     <button data-action="gesture" data-value="sway">Sway</button>
                     <button data-action="gesture" data-value="wiggle">Wiggle</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="collapsed">Transform Gestures</h2>
-            <div class="section-content collapsed">
-                <div class="button-grid">
                     <button data-action="gesture" data-value="spin">Spin</button>
                     <button data-action="gesture" data-value="jump">Jump</button>
                     <button data-action="gesture" data-value="twist">Twist</button>
                     <button data-action="gesture" data-value="stretch">Stretch</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="collapsed">Effect Gestures</h2>
-            <div class="section-content collapsed">
-                <div class="button-grid">
                     <button data-action="gesture" data-value="flash">Flash</button>
                     <button data-action="gesture" data-value="glow">Glow</button>
                     <button data-action="gesture" data-value="breathe">Breathe</button>
@@ -193,19 +181,13 @@
             <h2 class="collapsed">Camera</h2>
             <div class="section-content collapsed">
                 <div class="button-grid">
-                    <button data-action="camera" data-value="front" class="active">📷 Front</button>
-                    <button data-action="camera" data-value="side">📷 Side</button>
-                    <button data-action="camera" data-value="top">📷 Top</button>
-                    <button data-action="camera" data-value="bottom">📷 Bottom</button>
-                    <button data-action="camera" data-value="angle">📷 Angle</button>
-                    <button data-action="camera" data-value="back">📷 Back</button>
+                    <button data-action="camera" data-value="front" class="active">Front</button>
+                    <button data-action="camera" data-value="side">Side</button>
+                    <button data-action="camera" data-value="top">Top</button>
+                    <button data-action="camera" data-value="bottom">Bottom</button>
+                    <button data-action="camera" data-value="angle">Angle</button>
+                    <button data-action="camera" data-value="back">Back</button>
                 </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="info-box">
-                <strong>Tip:</strong> Click and drag to rotate. Scroll to zoom. Each geometry has unique materials and effects.
             </div>
         </div>
     </div>
@@ -237,7 +219,7 @@
 
                 mascot.init(container);
                 mascot.start();
-                mascot.setEmotion('joy');
+                mascot.setEmotion('neutral');
 
                 // Crystal defaults
                 mascot.enableParticles();
@@ -247,6 +229,11 @@
                 document.querySelector('[data-action="toggle-particles"]')?.classList.add('active');
                 document.querySelector('[data-action="toggle-auto-rotate"]')?.classList.add('active');
                 document.querySelector('[data-action="toggle-blink"]')?.classList.remove('active');
+
+                // Fire sway gesture on load
+                setTimeout(() => {
+                    mascot.express('sway');
+                }, 500);
             } catch (error) {
                 console.error('Failed to initialize EmotiveMascot3D:', error);
             }
@@ -415,14 +402,17 @@
 
                         // Lunar eclipse only available on full moon
                         const lunarEclipseSection = document.getElementById('lunar-eclipse-section');
+                        const lunarEclipseHint = document.getElementById('lunar-eclipse-hint');
                         if (value === 'full') {
                             lunarEclipseSection.style.opacity = '1';
                             lunarEclipseSection.style.pointerEvents = 'auto';
+                            lunarEclipseHint.style.display = 'none';
                         } else {
                             mascot.core3D.setMoonEclipse('off');
                             document.querySelectorAll('[data-action="lunar-eclipse"]').forEach(btn => btn.classList.remove('active'));
                             lunarEclipseSection.style.opacity = '0.4';
                             lunarEclipseSection.style.pointerEvents = 'none';
+                            lunarEclipseHint.style.display = 'block';
                         }
                     }
                     break;
@@ -452,7 +442,7 @@
         });
 
         // Set initial active button
-        document.querySelector('[data-value="joy"]').classList.add('active');
+        document.querySelector('[data-value="neutral"]').classList.add('active');
     </script>
 </body>
 </html>

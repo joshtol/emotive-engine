@@ -26,7 +26,8 @@
     "assets/emotive-engine-icon.svg",
     "assets/emotive-engine-full-BW.svg",
     "README.md",
-    "LICENSE.md"
+    "LICENSE.md",
+    "THIRD-PARTY-LICENSES.md"
   ],
   "scripts": {
     "build": "rollup -c --environment NODE_ENV:production && node scripts/copy-built-files.js",

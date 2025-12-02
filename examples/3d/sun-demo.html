@@ -9,6 +9,10 @@
   - Annular and total eclipse types
   - Blend mode layer system for eclipse appearance
   - Corona effects
+
+  Texture Attribution:
+  Sun texture by Solar System Scope (https://www.solarsystemscope.com/textures/)
+  Licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 -->
 <html lang="en">
 <head>
@@ -87,7 +91,6 @@
             <h2 class="collapsed">Visual Controls</h2>
             <div class="section-content collapsed">
                 <div class="button-grid">
-                    <button data-action="toggle-particles">Particles</button>
                     <button data-action="toggle-glow" class="active">Core Glow</button>
                     <button data-action="toggle-auto-rotate" class="active">Auto-Rotate</button>
                 </div>
@@ -120,6 +123,7 @@
 
     <script type="module">
         import EmotiveMascot3D, { blendModeNames } from '../../dist/emotive-mascot-3d.js';
+        import { createLayerCard, setupDragAndDrop, exitPrecisionMode } from './layer-utils.js';
 
         let mascot = null;
         const MAX_BLEND_LAYERS = 4;
@@ -129,6 +133,82 @@
         let nextLayerId = 1;
         let nextCoronaLayerId = 1;
 
+        const layersContainer = document.getElementById('layers-container');
+        const coronaLayersContainer = document.getElementById('corona-layers-container');
+
+        // Shader update functions
+        function updateShaderLayers() {
+            if (!mascot?.core3D) return;
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const layer = layers[i];
+                mascot.core3D.setBlendLayer(i + 1, layer
+                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                    : { mode: 0, strength: 0, enabled: false });
+            }
+        }
+
+        function updateCoronaShaderLayers() {
+            if (!mascot?.core3D?.solarEclipse) return;
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const layer = coronaLayers[i];
+                mascot.core3D.solarEclipse.setCoronaBlendLayer(i + 1, layer
+                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                    : { mode: 0, strength: 0, enabled: false });
+            }
+        }
+
+        // Layer management
+        function addLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (layers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextLayerId++, mode, strength, enabled };
+            layers.push(layer);
+            const card = createLayerCard({
+                layer,
+                blendModeNames,
+                prefix: 'Layer',
+                onUpdate: updateShaderLayers,
+                onDelete: removeLayer
+            });
+            layersContainer.appendChild(card);
+            if (!skipUpdate) updateShaderLayers();
+        }
+
+        function removeLayer(layerId) {
+            const idx = layers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            layers.splice(idx, 1);
+            layersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
+            updateShaderLayers();
+        }
+
+        function addCoronaLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (coronaLayers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextCoronaLayerId++, mode, strength, enabled };
+            coronaLayers.push(layer);
+            const card = createLayerCard({
+                layer,
+                blendModeNames,
+                prefix: 'Corona',
+                onUpdate: updateCoronaShaderLayers,
+                onDelete: removeCoronaLayer
+            });
+            coronaLayersContainer.appendChild(card);
+            if (!skipUpdate) updateCoronaShaderLayers();
+        }
+
+        function removeCoronaLayer(layerId) {
+            const idx = coronaLayers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            coronaLayers.splice(idx, 1);
+            coronaLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
+            updateCoronaShaderLayers();
+        }
+
+        // Setup drag and drop for both containers
+        setupDragAndDrop(layersContainer, layers, updateShaderLayers);
+        setupDragAndDrop(coronaLayersContainer, coronaLayers, updateCoronaShaderLayers);
+
+        // Initialize mascot
         (async () => {
             try {
                 const container = document.getElementById('sun-container');
@@ -189,388 +269,8 @@
             });
         });
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // PRECISION MODE - Inline fine-tuning
-        // Double-tap slider to replace card content with precision controls
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        let activePrecisionCard = null;
-
-        // Long-press detection helper (tap and hold)
-        function createLongPressHandler(element, callback, holdDuration = 400) {
-            let pressTimer = null;
-            let startX, startY;
-            const moveThreshold = 10; // Cancel if moved more than 10px
-
-            const start = (e) => {
-                const touch = e.touches ? e.touches[0] : e;
-                startX = touch.clientX;
-                startY = touch.clientY;
-                pressTimer = setTimeout(() => {
-                    callback(e);
-                    pressTimer = null;
-                }, holdDuration);
-            };
-
-            const cancel = () => {
-                if (pressTimer) {
-                    clearTimeout(pressTimer);
-                    pressTimer = null;
-                }
-            };
-
-            const move = (e) => {
-                if (!pressTimer) return;
-                const touch = e.touches ? e.touches[0] : e;
-                const dx = Math.abs(touch.clientX - startX);
-                const dy = Math.abs(touch.clientY - startY);
-                if (dx > moveThreshold || dy > moveThreshold) {
-                    cancel();
-                }
-            };
-
-            // Prevent context menu on long-press
-            element.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-            });
-
-            element.addEventListener('mousedown', start);
-            element.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Prevent text selection and context menu
-                start(e);
-            });
-            element.addEventListener('mouseup', cancel);
-            element.addEventListener('mouseleave', cancel);
-            element.addEventListener('touchend', cancel);
-            element.addEventListener('touchcancel', cancel);
-            element.addEventListener('mousemove', move);
-            element.addEventListener('touchmove', move, { passive: true });
-        }
-
-        // Enter precision mode on a card
-        function enterPrecisionMode(card, layer, mainSlider, valueEl, isCorona) {
-            // Exit any existing precision mode
-            if (activePrecisionCard) exitPrecisionMode();
-
-            // Clear any text selection caused by long-press
-            window.getSelection()?.removeAllRanges();
-
-            const currentValue = layer.strength;
-            const range = 0.2; // ±0.1 from current value
-            let min = Math.max(0, currentValue - range / 2);
-            let max = Math.min(5, currentValue + range / 2);
-            if (max >= 5) { min = 5 - range; max = 5; }
-            if (min <= 0) { min = 0; max = range; }
-
-            // Create precision controls
-            const precisionEl = document.createElement('div');
-            precisionEl.className = 'precision-inline';
-            precisionEl.innerHTML = `
-                <div class="precision-inline-header">
-                    <span class="precision-inline-title">Fine Tune</span>
-                    <button class="precision-inline-close">Done</button>
-                </div>
-                <div class="precision-inline-value">${currentValue.toFixed(3)}</div>
-                <div class="precision-inline-fader">
-                    <button class="fader-step fader-step-down">−</button>
-                    <input type="range" class="precision-inline-slider" min="${min}" max="${max}" step="0.001" value="${currentValue}">
-                    <button class="fader-step fader-step-up">+</button>
-                </div>
-                <div class="precision-inline-range">
-                    <span>${min.toFixed(2)}</span>
-                    <span>${max.toFixed(2)}</span>
-                </div>
-            `;
-
-            card.classList.add('precision-mode');
-            card.appendChild(precisionEl);
-
-            const precisionSlider = precisionEl.querySelector('.precision-inline-slider');
-            const precisionValue = precisionEl.querySelector('.precision-inline-value');
-            const closeBtn = precisionEl.querySelector('.precision-inline-close');
-            const stepDownBtn = precisionEl.querySelector('.fader-step-down');
-            const stepUpBtn = precisionEl.querySelector('.fader-step-up');
-
-            // Helper to update precision value and re-center range
-            const updatePrecisionValue = (newValue) => {
-                newValue = Math.max(0, Math.min(5, newValue));
-                layer.strength = newValue;
-                mainSlider.value = newValue;
-                valueEl.textContent = newValue.toFixed(3);
-                precisionValue.textContent = newValue.toFixed(3);
-
-                // Re-center slider range around new value
-                let newMin = Math.max(0, newValue - 0.1);
-                let newMax = Math.min(5, newValue + 0.1);
-                if (newMax >= 5) { newMin = 4.8; newMax = 5; }
-                if (newMin <= 0) { newMin = 0; newMax = 0.2; }
-                precisionSlider.min = newMin;
-                precisionSlider.max = newMax;
-                precisionSlider.value = newValue;
-                precisionEl.querySelector('.precision-inline-range').innerHTML =
-                    `<span>${newMin.toFixed(2)}</span><span>${newMax.toFixed(2)}</span>`;
-
-                isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
-            };
-
-            // Store context
-            activePrecisionCard = {
-                card, layer, mainSlider, valueEl, isCorona, precisionEl, precisionSlider, precisionValue
-            };
-
-            // Slider input
-            precisionSlider.addEventListener('input', () => {
-                const value = parseFloat(precisionSlider.value);
-                layer.strength = value;
-                mainSlider.value = value;
-                valueEl.textContent = value.toFixed(3);
-                precisionValue.textContent = value.toFixed(3);
-                isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
-            });
-
-            // Step buttons for ±0.1
-            stepDownBtn.addEventListener('click', () => updatePrecisionValue(layer.strength - 0.1));
-            stepUpBtn.addEventListener('click', () => updatePrecisionValue(layer.strength + 0.1));
-
-            // Close button
-            closeBtn.addEventListener('click', exitPrecisionMode);
-
-            // Tap value to type - named function so it can re-attach itself
-            function handleValueClick() {
-                const currentValueEl = activePrecisionCard?.precisionValue;
-                if (!currentValueEl) return;
-
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.className = 'precision-inline-input';
-                input.value = layer.strength.toFixed(3);
-                input.step = '0.001';
-                input.min = '0';
-                input.max = '5';
-
-                currentValueEl.replaceWith(input);
-                input.focus();
-                input.select();
-
-                const finishEdit = () => {
-                    let value = parseFloat(input.value);
-                    if (isNaN(value)) value = layer.strength;
-                    value = Math.max(0, Math.min(5, value));
-
-                    layer.strength = value;
-                    mainSlider.value = value;
-                    valueEl.textContent = value.toFixed(3);
-
-                    // Re-center slider range
-                    let newMin = Math.max(0, value - 0.1);
-                    let newMax = Math.min(5, value + 0.1);
-                    if (newMax >= 5) { newMin = 4.8; newMax = 5; }
-                    if (newMin <= 0) { newMin = 0; newMax = 0.2; }
-                    precisionSlider.min = newMin;
-                    precisionSlider.max = newMax;
-                    precisionSlider.value = value;
-                    precisionEl.querySelector('.precision-inline-range').innerHTML =
-                        `<span>${newMin.toFixed(2)}</span><span>${newMax.toFixed(2)}</span>`;
-
-                    isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
-
-                    // Restore value display
-                    const newValueEl = document.createElement('div');
-                    newValueEl.className = 'precision-inline-value';
-                    newValueEl.textContent = value.toFixed(3);
-                    input.replaceWith(newValueEl);
-                    activePrecisionCard.precisionValue = newValueEl;
-
-                    // Re-attach click handler
-                    newValueEl.addEventListener('click', handleValueClick);
-                };
-
-                input.addEventListener('blur', finishEdit);
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') input.blur();
-                });
-            }
-
-            precisionValue.addEventListener('click', handleValueClick);
-        }
-
-        // Exit precision mode
-        function exitPrecisionMode() {
-            if (!activePrecisionCard) return;
-            const { card, precisionEl } = activePrecisionCard;
-            card.classList.remove('precision-mode');
-            precisionEl.remove();
-            activePrecisionCard = null;
-        }
-
-        // Close on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') exitPrecisionMode();
-        });
-
-        // Layer management
-        function createLayerCard(layer, isCorona = false) {
-            const card = document.createElement('div');
-            card.className = 'layer-card';
-            card.dataset.layerId = layer.id;
-
-            const prefix = isCorona ? 'Corona' : 'Layer';
-            const toggleAction = isCorona ? 'toggle-corona' : 'toggle';
-            const deleteAction = isCorona ? 'delete-corona' : 'delete';
-            const strengthAction = isCorona ? 'strength-corona' : 'strength';
-
-            card.innerHTML = `
-                <div class="layer-header">
-                    <div class="layer-title">
-                        <span class="drag-handle">⠿</span>
-                        <span class="layer-name">${prefix} ${layer.id}</span>
-                    </div>
-                    <div class="layer-controls-header">
-                        <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}" data-action="${toggleAction}">
-                            ${layer.enabled ? 'ON' : 'OFF'}
-                        </button>
-                        <button class="delete-btn" data-action="${deleteAction}">x</button>
-                    </div>
-                </div>
-                <div class="layer-controls">
-                    <div class="layer-settings-row">
-                        <div class="custom-select">
-                            <div class="custom-select-trigger">${blendModeNames[layer.mode]}</div>
-                            <div class="custom-select-dropdown">
-                                ${blendModeNames.map((name, idx) =>
-                                    `<div class="custom-select-option${layer.mode === idx ? ' selected' : ''}" data-value="${idx}">${name}</div>`
-                                ).join('')}
-                            </div>
-                        </div>
-                        <span class="fader-value">${layer.strength.toFixed(3)}</span>
-                    </div>
-                    <div class="fader-control">
-                        <button class="fader-step fader-step-down">−</button>
-                        <input type="range" class="fader-slider" data-action="${strengthAction}" min="0" max="5" step="0.1" value="${layer.strength}">
-                        <button class="fader-step fader-step-up">+</button>
-                    </div>
-                </div>
-            `;
-
-            const select = card.querySelector('.custom-select');
-            const trigger = select.querySelector('.custom-select-trigger');
-            const options = select.querySelectorAll('.custom-select-option');
-
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.querySelectorAll('.custom-select.open').forEach(s => s !== select && s.classList.remove('open'));
-                select.classList.toggle('open');
-            });
-
-            options.forEach(option => {
-                option.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    layer.mode = parseInt(option.dataset.value);
-                    trigger.textContent = blendModeNames[layer.mode];
-                    options.forEach(o => o.classList.remove('selected'));
-                    option.classList.add('selected');
-                    select.classList.remove('open');
-                    isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
-                });
-            });
-
-            card.querySelector(`[data-action="${toggleAction}"]`).addEventListener('click', () => {
-                layer.enabled = !layer.enabled;
-                const btn = card.querySelector(`[data-action="${toggleAction}"]`);
-                btn.textContent = layer.enabled ? 'ON' : 'OFF';
-                btn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
-                card.classList.toggle('disabled', !layer.enabled);
-                isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
-            });
-
-            card.querySelector(`[data-action="${deleteAction}"]`).addEventListener('click', () => {
-                isCorona ? removeCoronaLayer(layer.id) : removeLayer(layer.id);
-            });
-
-            const slider = card.querySelector(`[data-action="${strengthAction}"]`);
-            const valueEl = card.querySelector('.fader-value');
-            const stepDown = card.querySelector('.fader-step-down');
-            const stepUp = card.querySelector('.fader-step-up');
-
-            const updateValue = (newValue) => {
-                layer.strength = Math.max(0, Math.min(5, newValue));
-                slider.value = layer.strength;
-                valueEl.textContent = layer.strength.toFixed(3);
-                isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
-            };
-
-            slider.addEventListener('input', (e) => {
-                updateValue(parseFloat(e.target.value));
-            });
-
-            // Step buttons for ±0.1 fine tuning
-            stepDown.addEventListener('click', () => updateValue(layer.strength - 0.1));
-            stepUp.addEventListener('click', () => updateValue(layer.strength + 0.1));
-
-            // Click on value to enter precision mode
-            const openPrecision = () => enterPrecisionMode(card, layer, slider, valueEl, isCorona);
-            valueEl.addEventListener('click', openPrecision);
-
-            return card;
-        }
-
-        function addLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (layers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextLayerId++, mode, strength, enabled };
-            layers.push(layer);
-            document.getElementById('layers-container').appendChild(createLayerCard(layer, false));
-            if (!skipUpdate) updateShaderLayers();
-        }
-
-        function removeLayer(layerId) {
-            const idx = layers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            layers.splice(idx, 1);
-            document.querySelector(`#layers-container [data-layer-id="${layerId}"]`)?.remove();
-            updateShaderLayers();
-        }
-
-        function updateShaderLayers() {
-            if (!mascot?.core3D) return;
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layer = layers[i];
-                mascot.core3D.setBlendLayer(i + 1, layer
-                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
-                    : { mode: 0, strength: 0, enabled: false });
-            }
-        }
-
-        function addCoronaLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (coronaLayers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextCoronaLayerId++, mode, strength, enabled };
-            coronaLayers.push(layer);
-            document.getElementById('corona-layers-container').appendChild(createLayerCard(layer, true));
-            if (!skipUpdate) updateCoronaShaderLayers();
-        }
-
-        function removeCoronaLayer(layerId) {
-            const idx = coronaLayers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            coronaLayers.splice(idx, 1);
-            document.querySelector(`#corona-layers-container [data-layer-id="${layerId}"]`)?.remove();
-            updateCoronaShaderLayers();
-        }
-
-        function updateCoronaShaderLayers() {
-            if (!mascot?.core3D?.solarEclipse) return;
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layer = coronaLayers[i];
-                mascot.core3D.solarEclipse.setCoronaBlendLayer(i + 1, layer
-                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
-                    : { mode: 0, strength: 0, enabled: false });
-            }
-        }
-
+        // UI event handlers
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.custom-select')) {
-                document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
-            }
-
             if (e.target.id === 'add-layer-btn') { addLayer(); return; }
             if (e.target.id === 'add-corona-layer-btn') { addCoronaLayer(); return; }
 
@@ -595,17 +295,6 @@
                             mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = parseFloat(document.getElementById(slider).value);
                         }
                     }, 100);
-                }
-                return;
-            }
-
-            if (e.target.dataset.action === 'toggle-particles') {
-                if (mascot.core3D?.particleVisibility) {
-                    mascot.disableParticles();
-                    e.target.classList.remove('active');
-                } else {
-                    mascot.enableParticles();
-                    e.target.classList.add('active');
                 }
                 return;
             }
