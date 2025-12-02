@@ -270,7 +270,11 @@
                     <button class="precision-inline-close">Done</button>
                 </div>
                 <div class="precision-inline-value">${currentValue.toFixed(3)}</div>
-                <input type="range" class="precision-inline-slider" min="${min}" max="${max}" step="0.001" value="${currentValue}">
+                <div class="precision-inline-fader">
+                    <button class="fader-step fader-step-down">−</button>
+                    <input type="range" class="precision-inline-slider" min="${min}" max="${max}" step="0.001" value="${currentValue}">
+                    <button class="fader-step fader-step-up">+</button>
+                </div>
                 <div class="precision-inline-range">
                     <span>${min.toFixed(2)}</span>
                     <span>${max.toFixed(2)}</span>
@@ -283,6 +287,30 @@
             const precisionSlider = precisionEl.querySelector('.precision-inline-slider');
             const precisionValue = precisionEl.querySelector('.precision-inline-value');
             const closeBtn = precisionEl.querySelector('.precision-inline-close');
+            const stepDownBtn = precisionEl.querySelector('.fader-step-down');
+            const stepUpBtn = precisionEl.querySelector('.fader-step-up');
+
+            // Helper to update precision value and re-center range
+            const updatePrecisionValue = (newValue) => {
+                newValue = Math.max(0, Math.min(5, newValue));
+                layer.strength = newValue;
+                mainSlider.value = newValue;
+                valueEl.textContent = newValue.toFixed(1);
+                precisionValue.textContent = newValue.toFixed(3);
+
+                // Re-center slider range around new value
+                let newMin = Math.max(0, newValue - 0.1);
+                let newMax = Math.min(5, newValue + 0.1);
+                if (newMax >= 5) { newMin = 4.8; newMax = 5; }
+                if (newMin <= 0) { newMin = 0; newMax = 0.2; }
+                precisionSlider.min = newMin;
+                precisionSlider.max = newMax;
+                precisionSlider.value = newValue;
+                precisionEl.querySelector('.precision-inline-range').innerHTML =
+                    `<span>${newMin.toFixed(2)}</span><span>${newMax.toFixed(2)}</span>`;
+
+                isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
+            };
 
             // Store context
             activePrecisionCard = {
@@ -298,6 +326,10 @@
                 precisionValue.textContent = value.toFixed(3);
                 isCorona ? updateCoronaShaderLayers() : updateShaderLayers();
             });
+
+            // Step buttons for ±0.1
+            stepDownBtn.addEventListener('click', () => updatePrecisionValue(layer.strength - 0.1));
+            stepUpBtn.addEventListener('click', () => updatePrecisionValue(layer.strength + 0.1));
 
             // Close button
             closeBtn.addEventListener('click', exitPrecisionMode);
@@ -410,11 +442,9 @@
                     </div>
                     <div class="fader-control">
                         <span class="fader-label">Strength</span>
-                        <button class="fader-step fader-step-down" data-step="-0.1">−</button>
-                        <div class="fader-track">
-                            <input type="range" data-action="${strengthAction}" min="0" max="5" step="0.1" value="${layer.strength}">
-                        </div>
-                        <button class="fader-step fader-step-up" data-step="0.1">+</button>
+                        <button class="fader-step fader-step-down">−</button>
+                        <input type="range" class="fader-slider" data-action="${strengthAction}" min="0" max="5" step="0.1" value="${layer.strength}">
+                        <button class="fader-step fader-step-up">+</button>
                         <span class="fader-value">${layer.strength.toFixed(1)}</span>
                     </div>
                 </div>
@@ -457,8 +487,6 @@
 
             const slider = card.querySelector(`[data-action="${strengthAction}"]`);
             const valueEl = card.querySelector('.fader-value');
-            const faderControl = card.querySelector('.fader-control');
-            const faderTrack = card.querySelector('.fader-track');
             const stepDown = card.querySelector('.fader-step-down');
             const stepUp = card.querySelector('.fader-step-up');
 
@@ -473,74 +501,13 @@
                 updateValue(parseFloat(e.target.value));
             });
 
-            // Slider activation delay - prevents accidental movement on touch
-            // Slider starts disabled, enabled after deliberate horizontal drag
-            let sliderActive = false;
-            let touchStartX = null;
-            const activationThreshold = 15; // px of horizontal movement to activate
-
-            slider.style.pointerEvents = 'none'; // Start disabled
-
-            const activateSlider = () => {
-                if (!sliderActive) {
-                    sliderActive = true;
-                    slider.style.pointerEvents = 'auto';
-                }
-            };
-
-            const deactivateSlider = () => {
-                sliderActive = false;
-                slider.style.pointerEvents = 'none';
-                touchStartX = null;
-            };
-
-            faderTrack.addEventListener('mousedown', (e) => {
-                touchStartX = e.clientX;
-            });
-
-            faderTrack.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].clientX;
-            }, { passive: true });
-
-            faderTrack.addEventListener('mousemove', (e) => {
-                if (touchStartX !== null && !sliderActive) {
-                    const dx = Math.abs(e.clientX - touchStartX);
-                    if (dx > activationThreshold) {
-                        activateSlider();
-                        // Simulate mousedown on slider to start dragging
-                        const rect = slider.getBoundingClientRect();
-                        const percent = (e.clientX - rect.left) / rect.width;
-                        const value = parseFloat(slider.min) + percent * (parseFloat(slider.max) - parseFloat(slider.min));
-                        updateValue(value);
-                    }
-                }
-            });
-
-            faderTrack.addEventListener('touchmove', (e) => {
-                if (touchStartX !== null && !sliderActive) {
-                    const dx = Math.abs(e.touches[0].clientX - touchStartX);
-                    if (dx > activationThreshold) {
-                        activateSlider();
-                        const rect = slider.getBoundingClientRect();
-                        const percent = (e.touches[0].clientX - rect.left) / rect.width;
-                        const value = parseFloat(slider.min) + percent * (parseFloat(slider.max) - parseFloat(slider.min));
-                        updateValue(value);
-                    }
-                }
-            }, { passive: true });
-
-            faderTrack.addEventListener('mouseup', deactivateSlider);
-            faderTrack.addEventListener('mouseleave', deactivateSlider);
-            faderTrack.addEventListener('touchend', deactivateSlider);
-            faderTrack.addEventListener('touchcancel', deactivateSlider);
-
             // Step buttons for ±0.1 fine tuning
             stepDown.addEventListener('click', () => updateValue(layer.strength - 0.1));
             stepUp.addEventListener('click', () => updateValue(layer.strength + 0.1));
 
-            // Long-press on fader track (not buttons) to enter precision mode
+            // Click on value to enter precision mode
             const openPrecision = () => enterPrecisionMode(card, layer, slider, valueEl, isCorona);
-            createLongPressHandler(faderTrack, openPrecision);
+            valueEl.addEventListener('click', openPrecision);
 
             return card;
         }
