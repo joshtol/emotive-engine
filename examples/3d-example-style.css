@@ -44,6 +44,9 @@ body {
     height: 100vh;
     display: flex;
     overflow: hidden;
+    /* Disable 300ms tap delay on mobile (iOS Safari, Chrome) */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

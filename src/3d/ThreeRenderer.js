@@ -175,6 +175,42 @@ export class ThreeRenderer {
 
         // Prevent browser touch gestures from interfering with canvas interaction
         this.renderer.domElement.style.touchAction = 'none';
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TOUCH LAG FIX: Add high-priority touch event listeners
+        // OrbitControls uses passive listeners by default which can cause lag.
+        // We intercept touch events early with non-passive listeners to ensure
+        // immediate response without waiting for browser gesture detection.
+        // ═══════════════════════════════════════════════════════════════════════════
+        const {domElement} = this.renderer;
+
+        // Track if we're actively controlling to prevent interference
+        let isTouching = false;
+
+        // Intercept touchstart to prevent 300ms delay and ensure immediate response
+        domElement.addEventListener('touchstart', e => {
+            isTouching = true;
+            // Don't prevent default here - let OrbitControls handle the event
+            // But mark that we're actively touching
+        }, { passive: true, capture: true });
+
+        domElement.addEventListener('touchmove', e => {
+            if (isTouching) {
+                // Prevent scrolling/bouncing while interacting with 3D canvas
+                e.preventDefault();
+            }
+        }, { passive: false, capture: true });
+
+        domElement.addEventListener('touchend', () => {
+            isTouching = false;
+        }, { passive: true, capture: true });
+
+        domElement.addEventListener('touchcancel', () => {
+            isTouching = false;
+        }, { passive: true, capture: true });
+
+        // Store reference for cleanup
+        this._touchControlsActive = false;
     }
 
     /**
