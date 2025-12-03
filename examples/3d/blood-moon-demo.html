@@ -389,11 +389,102 @@
         setTimeout(() => {
             if (mascot.core3D?.renderer?.controls) {
                 mascot.core3D.renderer.controls.autoRotate = false;
-                console.log('🔒 Moon tidally locked - autoRotate forcibly disabled');
             }
         }, 500);
 
-        console.log('✅ Blood Moon demo initialized');
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TIDAL LOCK AUTO-RETURN
+        // After user stops rotating, smoothly return camera to tidal lock position
+        // (preserves zoom level, only resets rotation)
+        // ═══════════════════════════════════════════════════════════════════════════
+        let tidalLockTimeout = null;
+        let isReturningToLock = false;
+        const IDLE_DELAY = 2000; // Wait 2 seconds after interaction stops
+
+        // Store initial camera angles (tidal lock position)
+        let tidalLockAzimuth = 0;
+        let tidalLockPolar = Math.PI / 2; // Default to equator view
+
+        // Capture tidal lock position once controls are ready
+        setTimeout(() => {
+            const controls = mascot.core3D?.renderer?.controls;
+            if (controls) {
+                tidalLockAzimuth = controls.getAzimuthalAngle();
+                tidalLockPolar = controls.getPolarAngle();
+            }
+        }, 100);
+
+        // Smoothly animate back to tidal lock
+        function returnToTidalLock() {
+            const controls = mascot.core3D?.renderer?.controls;
+            if (!controls) return;
+
+            isReturningToLock = true;
+            const startAzimuth = controls.getAzimuthalAngle();
+            const startPolar = controls.getPolarAngle();
+            const startTime = performance.now();
+            const duration = 1500; // 1.5 second return animation
+
+            function animateReturn() {
+                if (!isReturningToLock) return;
+
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease-out cubic for smooth deceleration
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                // Interpolate angles
+                const currentAzimuth = startAzimuth + (tidalLockAzimuth - startAzimuth) * eased;
+                const currentPolar = startPolar + (tidalLockPolar - startPolar) * eased;
+
+                // Apply rotation (keeping current zoom distance)
+                const distance = controls.getDistance();
+                const target = controls.target;
+                const x = target.x + distance * Math.sin(currentPolar) * Math.sin(currentAzimuth);
+                const y = target.y + distance * Math.cos(currentPolar);
+                const z = target.z + distance * Math.sin(currentPolar) * Math.cos(currentAzimuth);
+                controls.object.position.set(x, y, z);
+                controls.update();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateReturn);
+                } else {
+                    isReturningToLock = false;
+                }
+            }
+
+            animateReturn();
+        }
+
+        // Listen for user interaction to cancel/restart timer
+        function onUserInteraction() {
+            // Cancel any pending return
+            if (tidalLockTimeout) {
+                clearTimeout(tidalLockTimeout);
+                tidalLockTimeout = null;
+            }
+            // Stop ongoing return animation
+            isReturningToLock = false;
+        }
+
+        function onUserInteractionEnd() {
+            // Start countdown to return to tidal lock
+            if (tidalLockTimeout) clearTimeout(tidalLockTimeout);
+            tidalLockTimeout = setTimeout(returnToTidalLock, IDLE_DELAY);
+        }
+
+        // Attach listeners once canvas is ready
+        setTimeout(() => {
+            const canvas = mascot.core3D?.renderer?.renderer?.domElement;
+            if (canvas) {
+                canvas.addEventListener('pointerdown', onUserInteraction);
+                canvas.addEventListener('pointermove', (e) => {
+                    if (e.buttons > 0) onUserInteraction(); // Only during drag
+                });
+                canvas.addEventListener('pointerup', onUserInteractionEnd);
+                canvas.addEventListener('pointerleave', onUserInteractionEnd);
+            }
+        }, 200);
 
         // Eclipse progress slider (advanced control)
         const eclipseProgressSlider = document.getElementById('eclipse-progress-slider');

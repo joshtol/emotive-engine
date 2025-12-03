@@ -119,12 +119,15 @@ export class CrystalSoul {
             },
             vertexShader: soulVertexShader,
             fragmentShader: soulFragmentShader,
-            transparent: false,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false,  // Always render, ignore depth
             side: THREE.FrontSide
         });
 
         this.mesh = new THREE.Mesh(geometry, this.material);
         this.mesh.name = 'crystalSoul';
+        this.mesh.renderOrder = 1;  // Render after shell (shell is 0)
     }
 
     /**
@@ -136,16 +139,6 @@ export class CrystalSoul {
             console.warn('[CrystalSoul] Cannot attach to null parent');
             return;
         }
-
-        // Debug: check parent mesh properties including geometry bounds
-        const bbox = parentMesh.geometry?.boundingBox;
-        console.log('[SOUL DEBUG] Attaching to parent:', {
-            parentName: parentMesh.name,
-            parentScale: parentMesh.scale.toArray(),
-            parentPosition: parentMesh.position.toArray(),
-            geometryBounds: bbox ? { min: bbox.min.toArray(), max: bbox.max.toArray() } : 'no bbox',
-            parentVisible: parentMesh.visible
-        });
 
         // Remove from previous parent if any
         if (this.parentMesh && this.mesh.parent === this.parentMesh) {

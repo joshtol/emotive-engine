@@ -120,7 +120,7 @@ export class Core3DManager {
         } else {
             this.coreMesh = this.renderer.createCoreMesh(this.geometry, customMaterial);
 
-            // For crystal/mineral with blend-layers shader, create inner glowing core
+            // For crystal/rough with blend-layers shader, create inner glowing core
             if (this.customMaterialType === 'crystal') {
                 this.createCrystalInnerCore();
             }
@@ -166,8 +166,8 @@ export class Core3DManager {
             this.cameraRoll = 0; // Camera-space roll (spin the face)
         }
 
-        // Set initial calibration rotation for crystal/mineral/heart to show flat facet facing camera
-        if (this.geometryType === 'crystal' || this.geometryType === 'mineral' || this.geometryType === 'heart') {
+        // Set initial calibration rotation for crystal/rough/heart to show flat facet facing camera
+        if (this.geometryType === 'crystal' || this.geometryType === 'rough' || this.geometryType === 'heart') {
             const degToRad = Math.PI / 180;
             this.calibrationRotation = [
                 CRYSTAL_CALIBRATION_ROTATION.x * degToRad,
@@ -843,7 +843,7 @@ export class Core3DManager {
      * @param {Object} params - { mode, strength, enabled }
      */
     setCrystalBlendLayer(component, blendIndex, params = {}) {
-        if ((this.geometryType !== 'crystal' && this.geometryType !== 'mineral') ||
+        if ((this.geometryType !== 'crystal' && this.geometryType !== 'rough') ||
             !this.customMaterial || this.customMaterialType !== 'crystal') {
             return;
         }
@@ -866,7 +866,7 @@ export class Core3DManager {
      * @param {Object} params - Crystal uniform values
      */
     setCrystalUniforms(params = {}) {
-        if ((this.geometryType !== 'crystal' && this.geometryType !== 'mineral') ||
+        if ((this.geometryType !== 'crystal' && this.geometryType !== 'rough') ||
             !this.customMaterial || this.customMaterialType !== 'crystal') {
             console.warn('⚠️ Crystal uniforms only available with crystal blend-layers material');
             return;
@@ -913,22 +913,6 @@ export class Core3DManager {
      * Uses CrystalSoul class for reusable soul effect
      */
     createCrystalInnerCore() {
-        console.log('[SOUL DEBUG] createCrystalInnerCore called for:', this.geometryType);
-
-        // Debug: Log shell material uniforms that affect alpha
-        if (this.customMaterial?.uniforms) {
-            const u = this.customMaterial.uniforms;
-            console.log('[SHELL DEBUG] Material uniforms for', this.geometryType, {
-                frostiness: u.frostiness?.value,
-                fresnelPower: u.fresnelPower?.value,
-                fresnelIntensity: u.fresnelIntensity?.value,
-                innerGlowStrength: u.innerGlowStrength?.value,
-                surfaceRoughness: u.surfaceRoughness?.value,
-                textureStrength: u.textureStrength?.value,
-                opacity: u.opacity?.value
-            });
-        }
-
         // Dispose existing soul if present
         if (this.crystalSoul) {
             this.crystalSoul.dispose();
@@ -936,7 +920,6 @@ export class Core3DManager {
         }
 
         if (!this.coreMesh) {
-            console.log('[SOUL DEBUG] No coreMesh, aborting');
             return;
         }
 
@@ -944,26 +927,25 @@ export class Core3DManager {
         this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: this.geometryType });
         this.crystalSoul.attachTo(this.coreMesh);
 
-        // Set initial size
-        this.crystalSoul.setSize(0.25);
-
-        // Heart shell larger than crystal/mineral
+        // Geometry-specific shell and soul sizes
+        let soulScale = 0.5;  // Default
         if (this.geometryType === 'heart') {
             this.crystalShellBaseScale = 2.4;
+            soulScale = 0.6;
+        } else if (this.geometryType === 'rough') {
+            this.crystalShellBaseScale = 1.6;
+            soulScale = 0.85;  // Large soul for rough
+        } else if (this.geometryType === 'crystal') {
+            soulScale = 0.6;  // Slightly larger for crystal
         }
+
+        this.crystalSoul.baseScale = soulScale;
+        this.crystalSoul.mesh.scale.setScalar(soulScale);
 
         // Legacy references for backwards compatibility
         this.crystalInnerCore = this.crystalSoul.mesh;
         this.crystalInnerCoreMaterial = this.crystalSoul.material;
         this.crystalInnerCoreBaseScale = this.crystalSoul.baseScale;
-
-        console.log('[SOUL DEBUG] Soul created:', {
-            geometryType: this.geometryType,
-            soulMesh: this.crystalSoul.mesh ? 'exists' : 'null',
-            soulVisible: this.crystalSoul.mesh?.visible,
-            parentChildren: this.coreMesh.children.length,
-            renderOrder: this.crystalSoul.mesh?.renderOrder
-        });
     }
 
     /**
@@ -974,19 +956,6 @@ export class Core3DManager {
     updateCrystalInnerCore(glowColor, deltaTime = 0) {
         if (!this.crystalSoul) {
             return;
-        }
-
-        // Debug: log first update and every 120 frames
-        if (!this._soulUpdateCount) this._soulUpdateCount = 0;
-        this._soulUpdateCount++;
-        if (this._soulUpdateCount === 1 || this._soulUpdateCount % 120 === 0) {
-            console.log(`[SOUL DEBUG] update #${this._soulUpdateCount}`, {
-                geometryType: this.geometryType,
-                color: glowColor?.map(c => c.toFixed(2)),
-                attached: this.crystalSoul.isAttached(),
-                visible: this.crystalSoul.mesh?.visible,
-                scale: this.crystalSoul.mesh?.scale.x.toFixed(2)
-            });
         }
 
         // Get breathing scale if enabled
@@ -1029,7 +998,7 @@ export class Core3DManager {
      * @param {number} size - Size value 0.5-2.0, where 1.0 is default
      */
     setCrystalShellSize(size) {
-        if (!this.coreMesh || (this.geometryType !== 'crystal' && this.geometryType !== 'mineral' && this.geometryType !== 'heart')) return;
+        if (!this.coreMesh || (this.geometryType !== 'crystal' && this.geometryType !== 'rough' && this.geometryType !== 'heart')) return;
 
         // Store base shell scale for use during rendering
         this.crystalShellBaseScale = size;
@@ -1215,13 +1184,13 @@ export class Core3DManager {
             }
 
             // Create or dispose crystal inner core
-            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'mineral' || this._targetGeometryType === 'heart') {
-                // Create inner core if morphing to crystal/mineral/heart
+            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart') {
+                // Create inner core if morphing to crystal/rough/heart
                 if (this.customMaterialType === 'crystal') {
                     this.createCrystalInnerCore();
                 }
             } else {
-                // Dispose inner core if morphing away from crystal/mineral/heart
+                // Dispose inner core if morphing away from crystal/rough/heart
                 if (this.crystalSoul) {
                     this.crystalSoul.dispose();
                     this.crystalSoul = null;
@@ -1276,8 +1245,8 @@ export class Core3DManager {
                     this.renderer.controls.autoRotate = true;
                 }
 
-                // Set calibration rotation for crystal/mineral/heart, clear for others
-                if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'mineral' || this._targetGeometryType === 'heart') {
+                // Set calibration rotation for crystal/rough/heart, clear for others
+                if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart') {
                     const degToRad = Math.PI / 180;
                     this.calibrationRotation[0] = CRYSTAL_CALIBRATION_ROTATION.x * degToRad;
                     this.calibrationRotation[1] = CRYSTAL_CALIBRATION_ROTATION.y * degToRad;
@@ -1415,7 +1384,7 @@ export class Core3DManager {
         // Calculate final scale: gesture * morph * breathing * BLINK * crystal shell scale
         // Crystal/diamond don't squish on blink - they use energy pulse instead
         // Use Y-axis blink scale (primary squish axis) for uniform application
-        const shouldApplyBlinkScale = this.geometryType !== 'crystal' && this.geometryType !== 'mineral';
+        const shouldApplyBlinkScale = this.geometryType !== 'crystal' && this.geometryType !== 'rough';
         const blinkScale = (blinkState.isBlinking && shouldApplyBlinkScale) ? blinkState.scale[1] : 1.0;
         const crystalShellScale = this.crystalShellBaseScale || 2.0;  // Default shell size
         const finalScale = this.scale * morphScale * breathScale * blinkScale * crystalShellScale;

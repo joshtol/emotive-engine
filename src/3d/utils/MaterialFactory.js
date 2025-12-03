@@ -35,13 +35,13 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
             fresnelIntensity: 0.20,
             sssStrength: 0.20
         });  // Crystal texture with tuned settings
-    case 'mineral':
-        return createCrystalMaterial(glowColor, glowIntensity, 'mineral', {
+    case 'rough':
+        return createCrystalMaterial(glowColor, glowIntensity, 'rough', {
             frostiness: 0.05,
             innerGlowStrength: 0.0,
             fresnelIntensity: 1.6,
             sssStrength: 0.8
-        });  // Mineral texture with SSS
+        });  // Rough texture with SSS
     case 'heart':
         return createCrystalMaterial(glowColor, glowIntensity, 'heart', {
             frostiness: 0.05,           // Low frost - more transparent shell
@@ -79,7 +79,7 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
         const textureLoader = new THREE.TextureLoader();
         const texturePaths = {
             crystal: '/assets/textures/Crystal/crystal.png',
-            mineral: '/assets/textures/Crystal/mineral.png',
+            rough: '/assets/textures/Crystal/rough.png',
             heart: '/assets/textures/Crystal/heart.png'
         };
         const texturePath = texturePaths[textureType] || texturePaths.crystal;

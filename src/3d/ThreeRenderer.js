@@ -951,8 +951,8 @@ export class ThreeRenderer {
                 targetStrength = 1.5;   // Slightly stronger glow
                 targetRadius = 0.4;     // Lower radius prevents pixelation from low-res mips
                 targetThreshold = 0.3;  // Higher threshold to preserve texture detail
-            } else if (geometryType === 'crystal' || geometryType === 'mineral' || geometryType === 'heart') {
-                // Crystal/mineral/heart need strong bloom for light emission effect
+            } else if (geometryType === 'crystal' || geometryType === 'rough' || geometryType === 'heart') {
+                // Crystal/rough/heart need strong bloom for light emission effect
                 targetStrength = 1.8;   // Strong bloom with HDR
                 targetRadius = 0.7;     // Wide spread for glow halo
                 targetThreshold = 0.35; // Low threshold to catch HDR glow

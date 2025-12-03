@@ -198,14 +198,14 @@ function createProceduralCrystal() {
 }
 
 /**
- * Load mineral OBJ model asynchronously
- * @returns {Promise<THREE.BufferGeometry>} Mineral geometry
+ * Load rough OBJ model asynchronously
+ * @returns {Promise<THREE.BufferGeometry>} Rough geometry
  */
-function loadMineralGeometry() {
+function loadRoughGeometry() {
     return new Promise(resolve => {
         const loader = new OBJLoader();
         loader.load(
-            '/assets/models/Crystal/mineral.obj',
+            '/assets/models/Crystal/rough.obj',
             obj => {
                 let geometry = null;
                 obj.traverse(child => {
@@ -234,13 +234,13 @@ function loadMineralGeometry() {
 
                     resolve(geometry);
                 } else {
-                    console.warn('💎 [MINERAL] No mesh in OBJ, using fallback sphere');
+                    console.warn('💎 [ROUGH] No mesh in OBJ, using fallback sphere');
                     resolve(new THREE.SphereGeometry(0.5, 32, 32));
                 }
             },
             undefined,
             error => {
-                console.warn('💎 [MINERAL] OBJ load failed:', error);
+                console.warn('💎 [ROUGH] OBJ load failed:', error);
                 resolve(new THREE.SphereGeometry(0.5, 32, 32));
             }
         );
@@ -380,10 +380,10 @@ export const THREE_GEOMETRIES = {
         particleRadiusMultiplier: 0.85  // Tall narrow crystal - particles closer to core
     },
 
-    // Mineral (raw crystal formation)
-    mineral: {
+    // Rough (raw crystal formation)
+    rough: {
         geometry: null,
-        geometryLoader: loadMineralGeometry,
+        geometryLoader: loadRoughGeometry,
         material: 'custom',
         blink: { type: 'facet-flash', duration: 150, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.5, curve: 'sine' },
         particleRadiusMultiplier: 0.9

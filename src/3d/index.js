@@ -514,6 +514,7 @@ export class EmotiveMascot3D {
                 // Enable OrbitControls camera rotation
                 if (this.core3D.renderer?.controls) {
                     this.core3D.renderer.controls.autoRotate = true;
+                    this.core3D.renderer.controls.autoRotateSpeed = this.core3D.options?.autoRotateSpeed ?? 0.5;
                 }
 
                 // Enable geometry's internal rotation behavior
@@ -530,10 +531,18 @@ export class EmotiveMascot3D {
     disableAutoRotate() {
         if (this.core3D?.renderer?.controls) {
             this.core3D.renderer.controls.autoRotate = false;
+            this.core3D.renderer.controls.autoRotateSpeed = 0;
         }
         if (this.core3D) {
             this.core3D.rotationDisabled = true;
             this.core3D.rotationBehavior = null;
+            // Zero out any accumulated rotation velocity
+            if (this.core3D.baseEuler) {
+                // Keep current position but stop future rotation
+                this.core3D.baseEuler[0] = 0;
+                this.core3D.baseEuler[1] = 0;
+                this.core3D.baseEuler[2] = 0;
+            }
         }
     }
 
