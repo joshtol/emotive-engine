@@ -135,9 +135,9 @@ export class ThreeRenderer {
         // IMPORTANT: OrbitControls needs renderer.domElement, not the canvas directly
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
-        // Enable smooth damping for better feel (especially important for touch)
+        // Enable smooth damping for better feel
         this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.1; // Increased from 0.05 for faster response
+        this.controls.dampingFactor = 0.1;
 
         // Set distance limits (min/max zoom for both mouse wheel and pinch)
         // Use custom min/max if provided, otherwise default to 50%-200% of initial distance
@@ -165,52 +165,30 @@ export class ThreeRenderer {
         // - ONE finger: Rotate (orbit around mascot)
         // - TWO fingers: Pinch to zoom + pan (but pan is disabled above)
 
-        // Mobile-specific improvements
-        if ('ontouchstart' in window) {
-            // Faster response on touch devices
-            this.controls.dampingFactor = 0.15; // Even faster on touch
-            this.controls.rotateSpeed = 1.0; // More responsive rotation on mobile
-            this.controls.zoomSpeed = 2.0; // Very responsive pinch zoom
+        // Mobile-specific tuning
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            this.controls.rotateSpeed = 1.0;
+            this.controls.zoomSpeed = 1.2;
         }
 
         // Prevent browser touch gestures from interfering with canvas interaction
         this.renderer.domElement.style.touchAction = 'none';
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // TOUCH LAG FIX: Add high-priority touch event listeners
-        // OrbitControls uses passive listeners by default which can cause lag.
-        // We intercept touch events early with non-passive listeners to ensure
-        // immediate response without waiting for browser gesture detection.
+        // TOUCH LATENCY FIX: Update controls immediately on pointer events
+        // Mobile browsers batch/throttle pointer events to rAF timing. By calling
+        // controls.update() directly in the event handler (before rAF), we ensure
+        // the camera state is current when the next frame renders.
         // ═══════════════════════════════════════════════════════════════════════════
-        const {domElement} = this.renderer;
-
-        // Track if we're actively controlling to prevent interference
-        let isTouching = false;
-
-        // Intercept touchstart to prevent 300ms delay and ensure immediate response
-        domElement.addEventListener('touchstart', e => {
-            isTouching = true;
-            // Don't prevent default here - let OrbitControls handle the event
-            // But mark that we're actively touching
-        }, { passive: true, capture: true });
-
-        domElement.addEventListener('touchmove', e => {
-            if (isTouching) {
-                // Prevent scrolling/bouncing while interacting with 3D canvas
-                e.preventDefault();
+        const immediateUpdate = () => {
+            if (this.controls) {
+                this.controls.update();
             }
-        }, { passive: false, capture: true });
+        };
 
-        domElement.addEventListener('touchend', () => {
-            isTouching = false;
-        }, { passive: true, capture: true });
-
-        domElement.addEventListener('touchcancel', () => {
-            isTouching = false;
-        }, { passive: true, capture: true });
-
-        // Store reference for cleanup
-        this._touchControlsActive = false;
+        // Listen for pointer events at capture phase for earliest possible handling
+        this.renderer.domElement.addEventListener('pointermove', immediateUpdate, { passive: true });
+        this.renderer.domElement.addEventListener('pointerdown', immediateUpdate, { passive: true });
     }
 
     /**
@@ -368,10 +346,12 @@ export class ThreeRenderer {
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)
-        // Full resolution for sharp bloom on sun/eclipse Baily's beads
+        // Reduce bloom resolution on mobile for better performance
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const bloomScale = isMobile ? 0.5 : 1.0; // Half resolution on mobile
         const bloomResolution = new THREE.Vector2(
-            drawingBufferSize.x,
-            drawingBufferSize.y
+            Math.floor(drawingBufferSize.x * bloomScale),
+            Math.floor(drawingBufferSize.y * bloomScale)
         );
         this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,
@@ -971,8 +951,8 @@ export class ThreeRenderer {
                 targetStrength = 1.5;   // Slightly stronger glow
                 targetRadius = 0.4;     // Lower radius prevents pixelation from low-res mips
                 targetThreshold = 0.3;  // Higher threshold to preserve texture detail
-            } else if (geometryType === 'crystal' || geometryType === 'diamond') {
-                // Crystal/diamond need strong bloom for light emission effect
+            } else if (geometryType === 'crystal' || geometryType === 'mineral' || geometryType === 'heart') {
+                // Crystal/mineral/heart need strong bloom for light emission effect
                 targetStrength = 1.8;   // Strong bloom with HDR
                 targetRadius = 0.7;     // Wide spread for glow halo
                 targetThreshold = 0.35; // Low threshold to catch HDR glow
@@ -1116,7 +1096,8 @@ export class ThreeRenderer {
             morphProgress = null  // Morph progress for corona fade-in (null = no morph, 0-1 = morphing)
         } = params;
 
-        // Update camera controls (required for damping and auto-rotate)
+        // Update camera controls FIRST before any rendering
+        // This ensures touch/mouse input is processed immediately
         if (this.controls) {
             this.controls.update();
         }

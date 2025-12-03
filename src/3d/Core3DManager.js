@@ -28,6 +28,7 @@ import { hexToRGB, rgbToHsl, hslToRgb, applyUndertoneSaturation } from './utils/
 import { getGlowIntensityForColor, normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
 import ParticleSystem from '../core/ParticleSystem.js';
 import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
+import { CrystalSoul } from './effects/CrystalSoul.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
 import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
 import { SolarEclipse } from './effects/SolarEclipse.js';
@@ -119,7 +120,7 @@ export class Core3DManager {
         } else {
             this.coreMesh = this.renderer.createCoreMesh(this.geometry, customMaterial);
 
-            // For crystal/diamond with blend-layers shader, create inner glowing core
+            // For crystal/mineral with blend-layers shader, create inner glowing core
             if (this.customMaterialType === 'crystal') {
                 this.createCrystalInnerCore();
             }
@@ -165,8 +166,8 @@ export class Core3DManager {
             this.cameraRoll = 0; // Camera-space roll (spin the face)
         }
 
-        // Set initial calibration rotation for crystal to show flat facet facing camera
-        if (this.geometryType === 'crystal' || this.geometryType === 'diamond') {
+        // Set initial calibration rotation for crystal/mineral/heart to show flat facet facing camera
+        if (this.geometryType === 'crystal' || this.geometryType === 'mineral' || this.geometryType === 'heart') {
             const degToRad = Math.PI / 180;
             this.calibrationRotation = [
                 CRYSTAL_CALIBRATION_ROTATION.x * degToRad,
@@ -842,7 +843,7 @@ export class Core3DManager {
      * @param {Object} params - { mode, strength, enabled }
      */
     setCrystalBlendLayer(component, blendIndex, params = {}) {
-        if ((this.geometryType !== 'crystal' && this.geometryType !== 'diamond') ||
+        if ((this.geometryType !== 'crystal' && this.geometryType !== 'mineral') ||
             !this.customMaterial || this.customMaterialType !== 'crystal') {
             return;
         }
@@ -865,7 +866,7 @@ export class Core3DManager {
      * @param {Object} params - Crystal uniform values
      */
     setCrystalUniforms(params = {}) {
-        if ((this.geometryType !== 'crystal' && this.geometryType !== 'diamond') ||
+        if ((this.geometryType !== 'crystal' && this.geometryType !== 'mineral') ||
             !this.customMaterial || this.customMaterialType !== 'crystal') {
             console.warn('⚠️ Crystal uniforms only available with crystal blend-layers material');
             return;
@@ -908,203 +909,109 @@ export class Core3DManager {
     }
 
     /**
-     * Create inner glowing core for crystal geometry
-     * A crystal-shaped energy core with animated shader
+     * Create inner glowing core for crystal-type geometries
+     * Uses CrystalSoul class for reusable soul effect
      */
     createCrystalInnerCore() {
-        // Remove existing inner core if present
-        if (this.crystalInnerCore) {
-            if (this.coreMesh) {
-                this.coreMesh.remove(this.crystalInnerCore);
-            }
-            this.crystalInnerCore.geometry.dispose();
-            if (this.crystalInnerCore.material) {
-                this.crystalInnerCore.material.dispose();
-            }
-            this.crystalInnerCore = null;
-            this.crystalInnerCoreMaterial = null;
+        console.log('[SOUL DEBUG] createCrystalInnerCore called for:', this.geometryType);
+
+        // Debug: Log shell material uniforms that affect alpha
+        if (this.customMaterial?.uniforms) {
+            const u = this.customMaterial.uniforms;
+            console.log('[SHELL DEBUG] Material uniforms for', this.geometryType, {
+                frostiness: u.frostiness?.value,
+                fresnelPower: u.fresnelPower?.value,
+                fresnelIntensity: u.fresnelIntensity?.value,
+                innerGlowStrength: u.innerGlowStrength?.value,
+                surfaceRoughness: u.surfaceRoughness?.value,
+                textureStrength: u.textureStrength?.value,
+                opacity: u.opacity?.value
+            });
         }
 
-        if (!this.coreMesh) return;
+        // Dispose existing soul if present
+        if (this.crystalSoul) {
+            this.crystalSoul.dispose();
+            this.crystalSoul = null;
+        }
 
-        // Create crystal-shaped geometry for inner core (matches outer shell)
-        // Using octahedron for a more gem-like inner core
-        const coreGeometry = new THREE.OctahedronGeometry(0.35, 1);
+        if (!this.coreMesh) {
+            console.log('[SOUL DEBUG] No coreMesh, aborting');
+            return;
+        }
 
-        // Custom shader material for animated energy effect
-        const coreMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 0 },
-                emotionColor: { value: new THREE.Color(1, 1, 1) },
-                energyIntensity: { value: 1.5 },
-                driftEnabled: { value: 1.0 },        // Toggle
-                driftSpeed: { value: 0.5 },          // Speed slider (0.1-2.0 range)
-                shimmerEnabled: { value: 1.0 },      // Toggle
-                shimmerSpeed: { value: 0.5 }         // Speed slider (0.1-2.0 range)
-            },
-            vertexShader: `
-                varying vec3 vPosition;
-                varying vec3 vNormal;
+        // Create new soul and attach to coreMesh
+        this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: this.geometryType });
+        this.crystalSoul.attachTo(this.coreMesh);
 
-                void main() {
-                    vPosition = position;
-                    vNormal = normalize(normalMatrix * normal);
-                    // Breathing applied via mesh scale, not in shader
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform float time;
-                uniform vec3 emotionColor;
-                uniform float energyIntensity;
-                uniform float driftEnabled;
-                uniform float driftSpeed;
-                uniform float shimmerEnabled;
-                uniform float shimmerSpeed;
+        // Set initial size
+        this.crystalSoul.setSize(0.25);
 
-                varying vec3 vPosition;
-                varying vec3 vNormal;
+        // Heart shell larger than crystal/mineral
+        if (this.geometryType === 'heart') {
+            this.crystalShellBaseScale = 2.4;
+        }
 
-                // Smooth noise function
-                float noise3D(vec3 p) {
-                    vec3 i = floor(p);
-                    vec3 f = fract(p);
-                    f = f * f * (3.0 - 2.0 * f);
-                    float n = i.x + i.y * 157.0 + i.z * 113.0;
-                    vec4 v = fract(sin(vec4(n, n+1.0, n+157.0, n+158.0)) * 43758.5453);
-                    return mix(mix(v.x, v.y, f.x), mix(v.z, v.w, f.x), f.y);
-                }
+        // Legacy references for backwards compatibility
+        this.crystalInnerCore = this.crystalSoul.mesh;
+        this.crystalInnerCoreMaterial = this.crystalSoul.material;
+        this.crystalInnerCoreBaseScale = this.crystalSoul.baseScale;
 
-                void main() {
-                    // Breathing applied via mesh scale, not in shader
-
-                    // Drifting energy clouds - slow, ethereal movement
-                    // driftSpeed of 1.0 = gentle drift, 2.0 = moderate, etc.
-                    float energy = 0.8;
-                    if (driftEnabled > 0.5) {
-                        float t = time * driftSpeed;
-                        float drift1 = noise3D(vPosition * 2.0 + vec3(t, t * 0.7, t * 0.3));
-                        float drift2 = noise3D(vPosition * 3.0 - vec3(t * 0.5, t, t * 0.8));
-                        energy = 0.5 + drift1 * drift2 * 1.0;
-                    }
-
-                    // Vertical shimmer - slow rising bands
-                    // shimmerSpeed of 1.0 = gentle shimmer
-                    float shimmer = 0.0;
-                    if (shimmerEnabled > 0.5) {
-                        float t = time * shimmerSpeed;
-                        shimmer = sin(vPosition.y * 5.0 - t) * 0.5 + 0.5;
-                    }
-
-                    // Combine effects (breathing handled via mesh scale)
-                    float totalEnergy = energy;
-                    totalEnergy += shimmer * 0.2;
-
-                    // Edge glow
-                    vec3 viewDir = normalize(-vPosition);
-                    float edgeGlow = 1.0 - abs(dot(vNormal, viewDir));
-                    edgeGlow = pow(edgeGlow, 2.0) * 0.4;
-
-                    // Final color
-                    vec3 coreColor = emotionColor * totalEnergy * energyIntensity;
-                    coreColor += emotionColor * edgeGlow * 0.3;
-
-                    gl_FragColor = vec4(coreColor, 1.0);
-                }
-            `,
-            transparent: false,
-            side: THREE.FrontSide
+        console.log('[SOUL DEBUG] Soul created:', {
+            geometryType: this.geometryType,
+            soulMesh: this.crystalSoul.mesh ? 'exists' : 'null',
+            soulVisible: this.crystalSoul.mesh?.visible,
+            parentChildren: this.coreMesh.children.length,
+            renderOrder: this.crystalSoul.mesh?.renderOrder
         });
-
-        this.crystalInnerCoreMaterial = coreMaterial;
-        this.crystalInnerCore = new THREE.Mesh(coreGeometry, coreMaterial);
-        this.crystalInnerCore.name = 'crystalInnerCore';
-
-        // Set initial scale - default soul size is 0.25 (slightly under half crystal size)
-        this.setCrystalCoreSize(0.25);
-
-        // Add as child of crystal mesh
-        this.coreMesh.add(this.crystalInnerCore);
-
     }
 
     /**
      * Update crystal inner core color, intensity, and animation based on emotion
      * @param {Array} glowColor - RGB color array [r, g, b] (0-1 range)
-     * @param {number} deltaTime - Time since last frame in seconds (for animation)
+     * @param {number} deltaTime - Time since last frame in ms (for animation)
      */
     updateCrystalInnerCore(glowColor, deltaTime = 0) {
-        if (!this.crystalInnerCoreMaterial) return;
-
-        // Handle ShaderMaterial uniforms
-        if (this.crystalInnerCoreMaterial.uniforms) {
-            // Update time for animation (convert ms to seconds for sane speed values)
-            if (this.crystalInnerCoreMaterial.uniforms.time) {
-                this.crystalInnerCoreMaterial.uniforms.time.value += deltaTime / 1000;
-            }
-
-            // Set emotion color
-            if (this.crystalInnerCoreMaterial.uniforms.emotionColor) {
-                this.crystalInnerCoreMaterial.uniforms.emotionColor.value.setRGB(
-                    glowColor[0], glowColor[1], glowColor[2]
-                );
-            }
-
-            // Update intensity from crystal shader uniforms if available
-            // Keep energy intensity LOW so animation patterns stay visible
-            // The color is already luminance-normalized, so we don't need high multipliers
-            if (this.crystalInnerCoreMaterial.uniforms.energyIntensity) {
-                // Fixed low intensity to preserve animation visibility across all emotions
-                this.crystalInnerCoreMaterial.uniforms.energyIntensity.value = 0.8;
-            }
+        if (!this.crystalSoul) {
+            return;
         }
 
-        // Apply breathing via mesh scale (same as blob mascot)
-        if (this.crystalInnerCore && this.breathingAnimator && this.breathingEnabled) {
-            const breathScale = this.breathingAnimator.getBreathingScale();
-            const baseScale = this.crystalInnerCoreBaseScale || 1.0;
-            this.crystalInnerCore.scale.setScalar(baseScale * breathScale);
+        // Debug: log first update and every 120 frames
+        if (!this._soulUpdateCount) this._soulUpdateCount = 0;
+        this._soulUpdateCount++;
+        if (this._soulUpdateCount === 1 || this._soulUpdateCount % 120 === 0) {
+            console.log(`[SOUL DEBUG] update #${this._soulUpdateCount}`, {
+                geometryType: this.geometryType,
+                color: glowColor?.map(c => c.toFixed(2)),
+                attached: this.crystalSoul.isAttached(),
+                visible: this.crystalSoul.mesh?.visible,
+                scale: this.crystalSoul.mesh?.scale.x.toFixed(2)
+            });
         }
-        // Fallback for MeshStandardMaterial (legacy)
-        else if (this.crystalInnerCoreMaterial.emissive) {
-            this.crystalInnerCoreMaterial.emissive.setRGB(
-                glowColor[0], glowColor[1], glowColor[2]
-            );
-            if (this.customMaterial && this.customMaterial.uniforms) {
-                const coreStrength = this.customMaterial.uniforms.coreGlowStrength?.value || 0.4;
-                this.crystalInnerCoreMaterial.emissiveIntensity = 0.5 + coreStrength * 3.5;
-            }
-        }
+
+        // Get breathing scale if enabled
+        const breathScale = (this.breathingAnimator && this.breathingEnabled)
+            ? this.breathingAnimator.getBreathingScale()
+            : 1.0;
+
+        // Update the soul
+        this.crystalSoul.update(deltaTime, glowColor, breathScale);
+
+        // Keep legacy reference in sync
+        this.crystalInnerCoreBaseScale = this.crystalSoul.baseScale;
     }
 
     /**
      * Set crystal soul effect parameters
      * @param {Object} params - Soul effect parameters
      * @param {boolean} params.driftEnabled - Enable/disable drifting energy
-     * @param {number} params.driftSpeed - Drift animation speed (0.01-0.2)
+     * @param {number} params.driftSpeed - Drift animation speed (0.1-3.0)
      * @param {boolean} params.shimmerEnabled - Enable/disable vertical shimmer
-     * @param {number} params.shimmerSpeed - Shimmer animation speed (0.01-0.2)
+     * @param {number} params.shimmerSpeed - Shimmer animation speed (0.1-3.0)
      */
     setCrystalSoulEffects(params = {}) {
-        if (!this.crystalInnerCoreMaterial || !this.crystalInnerCoreMaterial.uniforms) {
-            // Crystal inner core not yet loaded - this is normal during initialization
-            return;
-        }
-
-        const {uniforms} = this.crystalInnerCoreMaterial;
-
-        if (params.driftEnabled !== undefined && uniforms.driftEnabled) {
-            uniforms.driftEnabled.value = params.driftEnabled ? 1.0 : 0.0;
-        }
-        if (params.driftSpeed !== undefined && uniforms.driftSpeed) {
-            uniforms.driftSpeed.value = Math.max(0.1, Math.min(3.0, params.driftSpeed));
-        }
-        if (params.shimmerEnabled !== undefined && uniforms.shimmerEnabled) {
-            uniforms.shimmerEnabled.value = params.shimmerEnabled ? 1.0 : 0.0;
-        }
-        if (params.shimmerSpeed !== undefined && uniforms.shimmerSpeed) {
-            uniforms.shimmerSpeed.value = Math.max(0.1, Math.min(3.0, params.shimmerSpeed));
-        }
+        if (!this.crystalSoul) return;
+        this.crystalSoul.setEffects(params);
     }
 
     /**
@@ -1112,13 +1019,9 @@ export class Core3DManager {
      * @param {number} size - Size value 0-1, where 0.5 is default
      */
     setCrystalCoreSize(size) {
-        if (!this.crystalInnerCore) return;
-
-        // Map size (0-1) to scale (0.3-1.5), with 0.5 = 1.0 scale
-        // size=0 → 0.3, size=0.5 → 0.9, size=1 → 1.5
-        const scale = 0.3 + size * 1.2;
-        this.crystalInnerCoreBaseScale = scale; // Store for breathing multiplication
-        this.crystalInnerCore.scale.setScalar(scale);
+        if (!this.crystalSoul) return;
+        this.crystalSoul.setSize(size);
+        this.crystalInnerCoreBaseScale = this.crystalSoul.baseScale;
     }
 
     /**
@@ -1126,7 +1029,7 @@ export class Core3DManager {
      * @param {number} size - Size value 0.5-2.0, where 1.0 is default
      */
     setCrystalShellSize(size) {
-        if (!this.coreMesh || (this.geometryType !== 'crystal' && this.geometryType !== 'diamond')) return;
+        if (!this.coreMesh || (this.geometryType !== 'crystal' && this.geometryType !== 'mineral' && this.geometryType !== 'heart')) return;
 
         // Store base shell scale for use during rendering
         this.crystalShellBaseScale = size;
@@ -1312,21 +1215,16 @@ export class Core3DManager {
             }
 
             // Create or dispose crystal inner core
-            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'diamond') {
-                // Create inner core if morphing to crystal/diamond
+            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'mineral' || this._targetGeometryType === 'heart') {
+                // Create inner core if morphing to crystal/mineral/heart
                 if (this.customMaterialType === 'crystal') {
                     this.createCrystalInnerCore();
                 }
             } else {
-                // Dispose inner core if morphing away from crystal/diamond
-                if (this.crystalInnerCore) {
-                    if (this.coreMesh) {
-                        this.coreMesh.remove(this.crystalInnerCore);
-                    }
-                    this.crystalInnerCore.geometry.dispose();
-                    if (this.crystalInnerCoreMaterial) {
-                        this.crystalInnerCoreMaterial.dispose();
-                    }
+                // Dispose inner core if morphing away from crystal/mineral/heart
+                if (this.crystalSoul) {
+                    this.crystalSoul.dispose();
+                    this.crystalSoul = null;
                     this.crystalInnerCore = null;
                     this.crystalInnerCoreMaterial = null;
                 }
@@ -1378,8 +1276,8 @@ export class Core3DManager {
                     this.renderer.controls.autoRotate = true;
                 }
 
-                // Set calibration rotation for crystal/diamond, clear for others
-                if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'diamond') {
+                // Set calibration rotation for crystal/mineral/heart, clear for others
+                if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'mineral' || this._targetGeometryType === 'heart') {
                     const degToRad = Math.PI / 180;
                     this.calibrationRotation[0] = CRYSTAL_CALIBRATION_ROTATION.x * degToRad;
                     this.calibrationRotation[1] = CRYSTAL_CALIBRATION_ROTATION.y * degToRad;
@@ -1517,7 +1415,7 @@ export class Core3DManager {
         // Calculate final scale: gesture * morph * breathing * BLINK * crystal shell scale
         // Crystal/diamond don't squish on blink - they use energy pulse instead
         // Use Y-axis blink scale (primary squish axis) for uniform application
-        const shouldApplyBlinkScale = this.geometryType !== 'crystal' && this.geometryType !== 'diamond';
+        const shouldApplyBlinkScale = this.geometryType !== 'crystal' && this.geometryType !== 'mineral';
         const blinkScale = (blinkState.isBlinking && shouldApplyBlinkScale) ? blinkState.scale[1] : 1.0;
         const crystalShellScale = this.crystalShellBaseScale || 2.0;  // Default shell size
         const finalScale = this.scale * morphScale * breathScale * blinkScale * crystalShellScale;
@@ -1684,7 +1582,7 @@ export class Core3DManager {
                 }
 
                 // Recreate inner core if crystal
-                if (this.customMaterialType === 'crystal' && this.crystalInnerCore) {
+                if (this.customMaterialType === 'crystal' && this.crystalSoul) {
                     this.createCrystalInnerCore();
                 }
             }
@@ -1738,6 +1636,14 @@ export class Core3DManager {
         if (this.lunarEclipse) {
             this.lunarEclipse.dispose();
             this.lunarEclipse = null;
+        }
+
+        // Clean up crystal soul
+        if (this.crystalSoul) {
+            this.crystalSoul.dispose();
+            this.crystalSoul = null;
+            this.crystalInnerCore = null;
+            this.crystalInnerCoreMaterial = null;
         }
 
         // Clean up virtual particle pool

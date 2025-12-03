@@ -29,7 +29,26 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
     case 'moon':
         return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant);
     case 'crystal':
-        return createCrystalMaterial(glowColor, glowIntensity);
+        return createCrystalMaterial(glowColor, glowIntensity, 'crystal', {
+            frostiness: 0.30,
+            innerGlowStrength: 0.10,
+            fresnelIntensity: 0.20,
+            sssStrength: 0.20
+        });  // Crystal texture with tuned settings
+    case 'mineral':
+        return createCrystalMaterial(glowColor, glowIntensity, 'mineral', {
+            frostiness: 0.05,
+            innerGlowStrength: 0.0,
+            fresnelIntensity: 1.6,
+            sssStrength: 0.8
+        });  // Mineral texture with SSS
+    case 'heart':
+        return createCrystalMaterial(glowColor, glowIntensity, 'heart', {
+            frostiness: 0.05,           // Low frost - more transparent shell
+            innerGlowStrength: 0.0,     // Soul provides the glow
+            fresnelIntensity: 1.4,      // Strong edge glow
+            sssStrength: 0.6            // Light scatters through
+        });    // Heart texture with transparent shell
     default:
         console.warn('Unknown custom material type:', geometryType);
         return null;
@@ -50,16 +69,25 @@ function createEmissiveMaterial(geometryType, glowColor, glowIntensity, material
     }
 }
 
-function createCrystalMaterial(glowColor, glowIntensity) {
+function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal', overrides = {}) {
 
     const { vertexShader, fragmentShader } = getCrystalShaders();
 
-    // Load crystal texture
-    const textureLoader = new THREE.TextureLoader();
-    const crystalTexture = textureLoader.load('/assets/textures/Crystal/crystal.png',
-        undefined,
-        err => console.warn('💎 Crystal texture failed to load:', err)
-    );
+    // Load texture based on geometry type
+    let crystalTexture = null;
+    if (textureType) {
+        const textureLoader = new THREE.TextureLoader();
+        const texturePaths = {
+            crystal: '/assets/textures/Crystal/crystal.png',
+            mineral: '/assets/textures/Crystal/mineral.png',
+            heart: '/assets/textures/Crystal/heart.png'
+        };
+        const texturePath = texturePaths[textureType] || texturePaths.crystal;
+        crystalTexture = textureLoader.load(texturePath,
+            undefined,
+            err => console.warn(`💎 ${textureType} texture failed to load:`, err)
+        );
+    }
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
@@ -67,16 +95,21 @@ function createCrystalMaterial(glowColor, glowIntensity) {
             emotionColor: { value: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]) },
             glowIntensity: { value: glowIntensity },
             opacity: { value: 1.0 },
-            frostiness: { value: CRYSTAL_DEFAULT_UNIFORMS.frostiness },
-            fresnelPower: { value: CRYSTAL_DEFAULT_UNIFORMS.fresnelPower },
-            fresnelIntensity: { value: CRYSTAL_DEFAULT_UNIFORMS.fresnelIntensity },
-            innerGlowStrength: { value: CRYSTAL_DEFAULT_UNIFORMS.innerGlowStrength },
+            frostiness: { value: overrides.frostiness ?? CRYSTAL_DEFAULT_UNIFORMS.frostiness },
+            fresnelPower: { value: overrides.fresnelPower ?? CRYSTAL_DEFAULT_UNIFORMS.fresnelPower },
+            fresnelIntensity: { value: overrides.fresnelIntensity ?? CRYSTAL_DEFAULT_UNIFORMS.fresnelIntensity },
+            innerGlowStrength: { value: overrides.innerGlowStrength ?? CRYSTAL_DEFAULT_UNIFORMS.innerGlowStrength },
             surfaceRoughness: { value: CRYSTAL_DEFAULT_UNIFORMS.surfaceRoughness },
             surfaceNoiseScale: { value: CRYSTAL_DEFAULT_UNIFORMS.surfaceNoiseScale },
             innerWispScale: { value: CRYSTAL_DEFAULT_UNIFORMS.innerWispScale },
             noiseFrequency: { value: CRYSTAL_DEFAULT_UNIFORMS.noiseFrequency },
             crystalTexture: { value: crystalTexture },
-            textureStrength: { value: CRYSTAL_DEFAULT_UNIFORMS.textureStrength },
+            // Heart texture slightly more transparent than crystal
+            textureStrength: { value: textureType === 'heart' ? 0.35 : (textureType ? CRYSTAL_DEFAULT_UNIFORMS.textureStrength : 0.0) },
+            // Subsurface scattering
+            sssStrength: { value: overrides.sssStrength ?? CRYSTAL_DEFAULT_UNIFORMS.sssStrength },
+            sssDistortion: { value: overrides.sssDistortion ?? CRYSTAL_DEFAULT_UNIFORMS.sssDistortion },
+            sssColor: { value: new THREE.Color(CRYSTAL_DEFAULT_UNIFORMS.sssColor[0], CRYSTAL_DEFAULT_UNIFORMS.sssColor[1], CRYSTAL_DEFAULT_UNIFORMS.sssColor[2]) },
             layer1Mode: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Mode },
             layer1Strength: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Strength },
             layer1Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Enabled },
@@ -94,7 +127,7 @@ function createCrystalMaterial(glowColor, glowIntensity) {
         fragmentShader,
         transparent: true,
         side: THREE.DoubleSide,
-        depthWrite: true,
+        depthWrite: false,  // Don't write depth so inner soul can render through
         blending: THREE.NormalBlending
     });
 

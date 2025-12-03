@@ -12,7 +12,7 @@ import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUti
 import { createMoon } from './Moon.js';
 import { createSunGeometry } from './Sun.js';
 import { createBlackHoleGroup } from './BlackHole.js';
-import { createDiamond as createDiamondData } from './Diamond.js';
+import { loadHeartGeometry } from './Heart.js';
 
 /**
  * Merge vertices at the same position to create smooth normals
@@ -198,16 +198,53 @@ function createProceduralCrystal() {
 }
 
 /**
- * Create diamond geometry from raw data
- * @returns {THREE.BufferGeometry}
+ * Load mineral OBJ model asynchronously
+ * @returns {Promise<THREE.BufferGeometry>} Mineral geometry
  */
-function createDiamondGeometry() {
-    const data = createDiamondData();
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(data.vertices, 3));
-    geometry.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3));
-    geometry.setIndex(new THREE.BufferAttribute(data.indices, 1));
-    return geometry;
+function loadMineralGeometry() {
+    return new Promise(resolve => {
+        const loader = new OBJLoader();
+        loader.load(
+            '/assets/models/Crystal/mineral.obj',
+            obj => {
+                let geometry = null;
+                obj.traverse(child => {
+                    if (child.isMesh && child.geometry) {
+                        ({ geometry } = child);
+                    }
+                });
+
+                if (geometry) {
+                    // Center the geometry
+                    geometry.computeBoundingBox();
+                    const center = new THREE.Vector3();
+                    geometry.boundingBox.getCenter(center);
+                    geometry.translate(-center.x, -center.y, -center.z);
+
+                    // Scale to ~1.6 diameter to match other geometries
+                    const size = new THREE.Vector3();
+                    geometry.boundingBox.getSize(size);
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 1.6 / maxDim;
+                    geometry.scale(scale, scale, scale);
+
+                    // Compute normals
+                    geometry.computeVertexNormals();
+                    geometry.computeBoundingBox();
+
+                    resolve(geometry);
+                } else {
+                    console.warn('💎 [MINERAL] No mesh in OBJ, using fallback sphere');
+                    resolve(new THREE.SphereGeometry(0.5, 32, 32));
+                }
+            },
+            undefined,
+            error => {
+                console.warn('💎 [MINERAL] OBJ load failed:', error);
+                resolve(new THREE.SphereGeometry(0.5, 32, 32));
+            }
+        );
+    });
 }
 
 /**
@@ -343,10 +380,21 @@ export const THREE_GEOMETRIES = {
         particleRadiusMultiplier: 0.85  // Tall narrow crystal - particles closer to core
     },
 
-    // Diamond (brilliant cut)
-    diamond: {
-        geometry: createDiamondGeometry(),
+    // Mineral (raw crystal formation)
+    mineral: {
+        geometry: null,
+        geometryLoader: loadMineralGeometry,
         material: 'custom',
-        blink: { type: 'facet-flash', duration: 150, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.5, curve: 'sine' }
+        blink: { type: 'facet-flash', duration: 150, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.5, curve: 'sine' },
+        particleRadiusMultiplier: 0.9
+    },
+
+    // Heart-cut crystal
+    heart: {
+        geometry: null,
+        geometryLoader: loadHeartGeometry,
+        material: 'custom',
+        blink: { type: 'gentle-pulse', duration: 180, scaleAxis: [0.92, 0.92, 0.92], glowBoost: 0.6, curve: 'sine' },
+        particleRadiusMultiplier: 0.9  // Heart shape - particles slightly closer than sphere
     }
 };

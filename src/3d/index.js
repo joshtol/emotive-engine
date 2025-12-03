@@ -196,6 +196,8 @@ export class EmotiveMascot3D {
         this.canvas2D.style.top = '0';
         this.canvas2D.style.left = '0';
         this.canvas2D.style.zIndex = '1';
+        // Disable pointer events - let WebGL canvas handle all interaction
+        this.canvas2D.style.pointerEvents = 'none';
         this.container.appendChild(this.canvas2D);
 
         // Create WebGL canvas for 3D core (Layer 2 - front)
@@ -210,6 +212,8 @@ export class EmotiveMascot3D {
         // ENABLE pointer events for camera controls (mouse/touch interaction)
         // Note: This means the WebGL canvas captures clicks, not the particle layer
         this.webglCanvas.style.pointerEvents = 'auto';
+        // Prevent browser touch gestures (scroll, zoom) on canvas
+        this.webglCanvas.style.touchAction = 'none';
         this.container.appendChild(this.webglCanvas);
     }
 

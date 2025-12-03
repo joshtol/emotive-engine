@@ -69,6 +69,11 @@ uniform float noiseFrequency;     // Frequency of hash noise pattern (default: 1
 uniform sampler2D crystalTexture;
 uniform float textureStrength;    // How much texture affects appearance (default: 0.5)
 
+// Subsurface scattering
+uniform float sssStrength;        // SSS intensity (default: 0.0)
+uniform float sssDistortion;      // How much normal distorts light path (default: 0.2)
+uniform vec3 sssColor;            // SSS tint color (default: emotion color)
+
 // Blend layer uniforms for advanced effects
 uniform float layer1Mode;
 uniform float layer1Strength;
@@ -212,7 +217,37 @@ void main() {
     vec3 rimGlow = rimColor * fresnel * 1.2;
 
     // ═══════════════════════════════════════════════════════════════════════
-    // COMBINE - Bright soul + frosted shell + glowing rim
+    // SUBSURFACE SCATTERING - Light penetrating and scattering through material
+    // ═══════════════════════════════════════════════════════════════════════
+    vec3 sss = vec3(0.0);
+    if (sssStrength > 0.001) {
+        // Light direction (from above-front for visibility)
+        vec3 lightDir = normalize(vec3(0.5, 1.0, 0.8));
+
+        // Classic SSS: light wraps around object edges
+        // Higher distortion = more diffuse scatter through material
+        vec3 scatterNormal = normalize(normal + lightDir * sssDistortion);
+
+        // Back-lighting term: light passing through from behind
+        float backLight = max(0.0, dot(viewDir, -lightDir));
+        backLight = pow(backLight, 1.5);
+
+        // Wrap lighting: soft diffuse that wraps around edges
+        float wrapLight = max(0.0, (dot(normal, lightDir) + 0.5) / 1.5);
+
+        // Translucency: view-dependent scatter through thin areas
+        float translucency = pow(1.0 - abs(dot(normal, viewDir)), 2.0);
+
+        // Combine SSS components
+        float sssIntensity = (backLight * 0.5 + wrapLight * 0.3 + translucency * 0.4) * sssStrength;
+
+        // Apply SSS with emotion color tint
+        vec3 sssBaseColor = mix(vec3(1.0, 0.95, 0.9), emotionColor, 0.5);
+        sss = sssBaseColor * sssIntensity;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // COMBINE - Bright soul + frosted shell + glowing rim + SSS
     // ═══════════════════════════════════════════════════════════════════════
 
     // Blend soul through frost - soul is primary, frost softens it
@@ -224,6 +259,9 @@ void main() {
 
     // Add bright rim glow at edges
     finalColor += rimGlow;
+
+    // Add subsurface scattering
+    finalColor += sss;
 
     // Ensure minimum brightness so crystal is always visible
     finalColor = max(finalColor, vec3(0.15, 0.2, 0.25));
@@ -310,6 +348,11 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
 
     // Texture
     textureStrength: 0.55,      // How much texture affects appearance
+
+    // Subsurface scattering
+    sssStrength: 0.0,           // SSS intensity (0 = off)
+    sssDistortion: 0.2,         // Normal distortion of light path
+    sssColor: [1.0, 0.9, 0.8],  // Warm white tint
 
     // Blend layers (disabled by default)
     layer1Mode: 6,              // Add mode for glow boost
