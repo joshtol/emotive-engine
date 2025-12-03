@@ -175,8 +175,8 @@ float calculateCurvature(vec3 normal) {
  * @param lightColor - Light color
  * @param baseColor - Material base/albedo color
  * @param sssStrength - Overall SSS strength
- * @param absorption - Absorption coefficients RGB
- * @param scatterDist - Scatter distance RGB
+ * @param absorption - Absorption coefficients RGB (inverted: higher = MORE of that color)
+ * @param scatterDist - Scatter distance RGB (higher = more scatter)
  * @param thicknessBias - Base thickness
  * @param thicknessScale - Thickness multiplier
  * @param curvatureScale - Curvature influence
@@ -208,44 +208,54 @@ vec3 calculatePhysicalSSS(
     float thickness = estimateThickness(normal, viewDir, position, thicknessBias, thicknessScale);
 
     // ─────────────────────────────────────────────────────────────────────
-    // ABSORPTION (Beer's Law)
-    // Light changes color as it passes through material
+    // ABSORPTION COLOR (Simplified Beer's Law)
+    // Creates the characteristic color of translucent materials
+    // absorption values are inverted: high value = MORE of that color passes through
     // ─────────────────────────────────────────────────────────────────────
-    vec3 transmittance = beersLawAbsorption(thickness, absorption);
+    // Invert absorption so higher values = more color (more intuitive for artists)
+    vec3 invertedAbsorption = vec3(3.0) - absorption;
+    // Gentle exponential falloff - not as aggressive as true Beer's Law
+    vec3 colorShift = exp(-invertedAbsorption * thickness * 0.5);
+    // Ensure we always have some color
+    colorShift = max(colorShift, vec3(0.1));
 
     // ─────────────────────────────────────────────────────────────────────
-    // DIFFUSION PROFILE
-    // How light spreads after entering the material
+    // SCATTER INTENSITY
+    // How much light scatters based on material properties
     // ─────────────────────────────────────────────────────────────────────
-    // Use thickness as proxy for scatter radius
-    vec3 diffusion = christensenBurleyDiffusion(thickness * 0.5, baseColor, scatterDist);
-    // Normalize to prevent blow-out
-    diffusion = diffusion / (diffusion + vec3(1.0));
+    // Higher scatter distance = more light gets through
+    vec3 scatterIntensity = scatterDist * 2.0;
+    scatterIntensity = clamp(scatterIntensity, vec3(0.2), vec3(2.0));
 
     // ─────────────────────────────────────────────────────────────────────
-    // LIGHTING TERMS
+    // LIGHTING TERMS - Boosted for visibility
     // ─────────────────────────────────────────────────────────────────────
 
-    // Back-lighting: light passing through from behind
+    // Back-lighting: light passing through from behind (strongest SSS cue)
     float NdotL = dot(normal, lightDir);
     float backLight = max(0.0, -NdotL);
-    backLight = pow(backLight, 1.5);
+    backLight = pow(backLight, 1.2) * 1.5;  // Boosted
 
-    // Wrap lighting: soft diffuse that wraps around to dark side
-    float wrapLight = max(0.0, (NdotL + 0.5) / 1.5);
+    // Wrap lighting: soft diffuse that wraps around
+    float wrapLight = (NdotL + 1.0) * 0.5;  // Full wrap, 0-1 range
     wrapLight = wrapLight * wrapLight;
 
-    // View-dependent translucency
+    // View-dependent translucency (looking through thin parts)
     float VdotL = dot(viewDir, -lightDir);
-    float translucency = pow(max(0.0, VdotL), 2.0);
+    float translucency = pow(max(0.0, VdotL), 1.5) * 1.2;  // Boosted
 
-    // Forward scattering (light scatters toward viewer)
-    vec3 H = normalize(lightDir + normal * 0.5);
-    float forwardScatter = pow(max(0.0, dot(viewDir, -H)), 4.0);
+    // Edge glow (fresnel-like SSS at silhouettes)
+    float edgeGlow = pow(1.0 - abs(dot(normal, viewDir)), 2.0);
+
+    // ─────────────────────────────────────────────────────────────────────
+    // THICKNESS-BASED TRANSMISSION
+    // Thin areas let more light through
+    // ─────────────────────────────────────────────────────────────────────
+    float thinTransmission = 1.0 - thickness * 0.5;
+    thinTransmission = max(thinTransmission, 0.3);
 
     // ─────────────────────────────────────────────────────────────────────
     // CURVATURE ENHANCEMENT
-    // SSS more visible on curved surfaces
     // ─────────────────────────────────────────────────────────────────────
     float curvature = calculateCurvature(normal);
     float curvatureFactor = 1.0 + curvature * curvatureScale;
@@ -254,26 +264,26 @@ vec3 calculatePhysicalSSS(
     // COMBINE ALL TERMS
     // ─────────────────────────────────────────────────────────────────────
 
-    // Direct SSS from light
-    float directSSS = backLight * 0.4 + translucency * 0.3 + forwardScatter * 0.3;
+    // Total light contribution (more additive for visibility)
+    float totalLight = backLight + translucency * 0.8 + wrapLight * 0.4 + edgeGlow * 0.5;
+    totalLight *= curvatureFactor * thinTransmission;
 
-    // Wrap contribution (softer, fills shadows)
-    float wrapSSS = wrapLight * 0.5;
+    // Base SSS color with absorption-based tint
+    vec3 sssColor = baseColor * colorShift * scatterIntensity;
 
-    // Total light intensity
-    float totalLight = (directSSS + wrapSSS) * curvatureFactor;
+    // Ambient SSS (always visible, gives material its translucent look)
+    vec3 ambientSSS = baseColor * colorShift * ambient * 1.5;
 
-    // Apply absorption and diffusion
-    vec3 sssColor = baseColor * transmittance * diffusion;
+    // Direct SSS from lighting
+    vec3 directSSS = sssColor * lightColor * totalLight;
 
-    // Add ambient SSS (always-present glow)
-    vec3 ambientSSS = baseColor * transmittance * ambient * 0.5;
+    // Final combination
+    vec3 finalSSS = directSSS + ambientSSS;
 
-    // Final SSS contribution
-    vec3 finalSSS = sssColor * lightColor * totalLight + ambientSSS;
+    // Apply overall strength with quadratic boost for low values
+    float boostedStrength = sssStrength * (1.0 + sssStrength);
 
-    // Apply overall strength
-    return finalSSS * sssStrength;
+    return finalSSS * boostedStrength;
 }
 
 /**
@@ -320,133 +330,137 @@ vec3 calculateSimpleSSS(
 
 /**
  * Material presets for common translucent materials
- * These values are based on measured data and artistic tuning
+ * These values are tuned for visual impact
+ *
+ * Absorption: Higher value = MORE of that color passes through (inverted from physics)
+ * ScatterDistance: Higher = more scatter/glow
  */
 export const SSS_PRESETS = {
     // Jade - green translucent stone
     jade: {
         sssStrength: 1.0,
-        // Jade absorbs red and blue, lets green through
-        sssAbsorption: [2.5, 0.3, 1.8],
-        // Tight scatter distance for the "deep glow" look
-        sssScatterDistance: [0.15, 0.4, 0.2],
-        sssThicknessBias: 0.3,
-        sssThicknessScale: 0.7,
+        // High green, low red/blue = green jade color
+        sssAbsorption: [0.4, 2.8, 0.6],
+        sssScatterDistance: [0.3, 0.8, 0.4],
+        sssThicknessBias: 0.2,
+        sssThicknessScale: 0.8,
         sssCurvatureScale: 1.5,
-        sssAmbient: 0.15
+        sssAmbient: 0.4
     },
 
-    // Imperial jade - more vivid green
+    // Imperial jade - more vivid emerald green
     imperialJade: {
         sssStrength: 1.0,
-        sssAbsorption: [3.0, 0.2, 2.5],
-        sssScatterDistance: [0.1, 0.5, 0.15],
-        sssThicknessBias: 0.25,
-        sssThicknessScale: 0.8,
-        sssCurvatureScale: 1.8,
-        sssAmbient: 0.2
+        sssAbsorption: [0.2, 3.0, 0.3],
+        sssScatterDistance: [0.2, 1.0, 0.3],
+        sssThicknessBias: 0.15,
+        sssThicknessScale: 0.9,
+        sssCurvatureScale: 2.0,
+        sssAmbient: 0.5
     },
 
     // White jade / mutton fat jade
     whiteJade: {
         sssStrength: 0.9,
-        sssAbsorption: [0.3, 0.3, 0.4],
-        sssScatterDistance: [0.5, 0.5, 0.45],
-        sssThicknessBias: 0.35,
+        sssAbsorption: [2.5, 2.6, 2.4],
+        sssScatterDistance: [0.7, 0.7, 0.65],
+        sssThicknessBias: 0.3,
         sssThicknessScale: 0.6,
         sssCurvatureScale: 1.2,
-        sssAmbient: 0.25
+        sssAmbient: 0.5
     },
 
-    // Wax / candle
+    // Wax / candle - warm orange glow
     wax: {
         sssStrength: 1.0,
-        // Wax has warm absorption (lets orange/red through)
-        sssAbsorption: [0.2, 0.8, 1.5],
-        // Broad scatter for waxy look
-        sssScatterDistance: [0.8, 0.5, 0.3],
-        sssThicknessBias: 0.4,
-        sssThicknessScale: 0.6,
+        // High red/orange, less blue
+        sssAbsorption: [2.8, 2.0, 0.8],
+        sssScatterDistance: [1.0, 0.7, 0.4],
+        sssThicknessBias: 0.35,
+        sssThicknessScale: 0.7,
         sssCurvatureScale: 1.0,
-        sssAmbient: 0.2
+        sssAmbient: 0.5
     },
 
-    // Human skin (Caucasian reference)
+    // Human skin - warm red undertones
     skin: {
-        sssStrength: 0.8,
-        // Skin: blood absorbs blue/green, lets red through
-        sssAbsorption: [0.4, 1.2, 1.8],
-        sssScatterDistance: [0.6, 0.35, 0.25],
-        sssThicknessBias: 0.3,
-        sssThicknessScale: 0.5,
+        sssStrength: 0.9,
+        // Red from blood, less green/blue
+        sssAbsorption: [2.8, 1.5, 1.0],
+        sssScatterDistance: [0.8, 0.5, 0.35],
+        sssThicknessBias: 0.25,
+        sssThicknessScale: 0.6,
         sssCurvatureScale: 2.0,
-        sssAmbient: 0.1
-    },
-
-    // Marble (white)
-    marble: {
-        sssStrength: 0.6,
-        sssAbsorption: [0.4, 0.45, 0.5],
-        sssScatterDistance: [0.3, 0.28, 0.25],
-        sssThicknessBias: 0.5,
-        sssThicknessScale: 0.4,
-        sssCurvatureScale: 0.8,
-        sssAmbient: 0.15
-    },
-
-    // Milk / cream
-    milk: {
-        sssStrength: 1.0,
-        sssAbsorption: [0.1, 0.15, 0.3],
-        sssScatterDistance: [1.0, 0.9, 0.7],
-        sssThicknessBias: 0.5,
-        sssThicknessScale: 0.5,
-        sssCurvatureScale: 0.5,
         sssAmbient: 0.3
     },
 
-    // Honey / amber
-    honey: {
-        sssStrength: 0.9,
-        sssAbsorption: [0.1, 0.5, 2.0],
-        sssScatterDistance: [0.6, 0.4, 0.1],
-        sssThicknessBias: 0.35,
-        sssThicknessScale: 0.7,
-        sssCurvatureScale: 1.2,
-        sssAmbient: 0.2
-    },
-
-    // Crystal / ice (very clear, minimal absorption)
-    crystal: {
-        sssStrength: 0.4,
-        sssAbsorption: [0.1, 0.1, 0.08],
-        sssScatterDistance: [0.2, 0.22, 0.25],
-        sssThicknessBias: 0.2,
-        sssThicknessScale: 0.8,
-        sssCurvatureScale: 1.5,
-        sssAmbient: 0.1
-    },
-
-    // Rose quartz
-    roseQuartz: {
-        sssStrength: 0.8,
-        sssAbsorption: [0.3, 0.8, 0.7],
-        sssScatterDistance: [0.45, 0.3, 0.32],
-        sssThicknessBias: 0.3,
-        sssThicknessScale: 0.7,
-        sssCurvatureScale: 1.3,
-        sssAmbient: 0.15
-    },
-
-    // Soap
-    soap: {
+    // Marble (white with warm tint)
+    marble: {
         sssStrength: 0.7,
-        sssAbsorption: [0.2, 0.25, 0.3],
-        sssScatterDistance: [0.6, 0.55, 0.5],
+        sssAbsorption: [2.4, 2.3, 2.2],
+        sssScatterDistance: [0.4, 0.38, 0.35],
         sssThicknessBias: 0.4,
         sssThicknessScale: 0.5,
         sssCurvatureScale: 0.8,
-        sssAmbient: 0.2
+        sssAmbient: 0.35
+    },
+
+    // Milk / cream - very white, slight warm
+    milk: {
+        sssStrength: 1.0,
+        sssAbsorption: [2.9, 2.85, 2.7],
+        sssScatterDistance: [1.2, 1.1, 0.9],
+        sssThicknessBias: 0.4,
+        sssThicknessScale: 0.5,
+        sssCurvatureScale: 0.5,
+        sssAmbient: 0.6
+    },
+
+    // Honey / amber - golden orange
+    honey: {
+        sssStrength: 1.0,
+        // Strong red/yellow, absorbs blue
+        sssAbsorption: [2.9, 2.2, 0.4],
+        sssScatterDistance: [0.8, 0.6, 0.2],
+        sssThicknessBias: 0.3,
+        sssThicknessScale: 0.8,
+        sssCurvatureScale: 1.2,
+        sssAmbient: 0.45
+    },
+
+    // Crystal / ice - cool blue tint
+    crystal: {
+        sssStrength: 0.6,
+        // Slightly more blue
+        sssAbsorption: [2.4, 2.5, 2.8],
+        sssScatterDistance: [0.3, 0.35, 0.4],
+        sssThicknessBias: 0.15,
+        sssThicknessScale: 0.9,
+        sssCurvatureScale: 1.5,
+        sssAmbient: 0.25
+    },
+
+    // Rose quartz - pink/magenta tint
+    roseQuartz: {
+        sssStrength: 0.9,
+        // High red, medium blue, less green = pink
+        sssAbsorption: [2.7, 1.2, 2.3],
+        sssScatterDistance: [0.6, 0.4, 0.55],
+        sssThicknessBias: 0.25,
+        sssThicknessScale: 0.75,
+        sssCurvatureScale: 1.3,
+        sssAmbient: 0.4
+    },
+
+    // Soap - slight blue/white
+    soap: {
+        sssStrength: 0.8,
+        sssAbsorption: [2.5, 2.6, 2.7],
+        sssScatterDistance: [0.7, 0.7, 0.75],
+        sssThicknessBias: 0.35,
+        sssThicknessScale: 0.55,
+        sssCurvatureScale: 0.9,
+        sssAmbient: 0.45
     }
 };
 

@@ -646,97 +646,97 @@
             }
         });
 
-        // SSS Material Presets
+        // SSS Material Presets (higher absorption = MORE of that color passes through)
         const sssPresets = {
             jade: {
                 sssStrength: 1.0,
-                sssAbsorption: [2.5, 0.3, 1.8],
-                sssScatterDistance: [0.15, 0.4, 0.2],
-                sssThicknessBias: 0.3,
-                sssThicknessScale: 0.7,
-                sssCurvatureScale: 1.5,
-                sssAmbient: 0.15
-            },
-            imperialJade: {
-                sssStrength: 1.0,
-                sssAbsorption: [3.0, 0.2, 2.5],
-                sssScatterDistance: [0.1, 0.5, 0.15],
-                sssThicknessBias: 0.25,
-                sssThicknessScale: 0.8,
-                sssCurvatureScale: 1.8,
-                sssAmbient: 0.2
-            },
-            whiteJade: {
-                sssStrength: 0.9,
-                sssAbsorption: [0.3, 0.3, 0.4],
-                sssScatterDistance: [0.5, 0.5, 0.45],
-                sssThicknessBias: 0.35,
-                sssThicknessScale: 0.6,
-                sssCurvatureScale: 1.2,
-                sssAmbient: 0.25
-            },
-            wax: {
-                sssStrength: 1.0,
-                sssAbsorption: [0.2, 0.8, 1.5],
-                sssScatterDistance: [0.8, 0.5, 0.3],
-                sssThicknessBias: 0.4,
-                sssThicknessScale: 0.6,
-                sssCurvatureScale: 1.0,
-                sssAmbient: 0.2
-            },
-            skin: {
-                sssStrength: 0.8,
-                sssAbsorption: [0.4, 1.2, 1.8],
-                sssScatterDistance: [0.6, 0.35, 0.25],
-                sssThicknessBias: 0.3,
-                sssThicknessScale: 0.5,
-                sssCurvatureScale: 2.0,
-                sssAmbient: 0.1
-            },
-            marble: {
-                sssStrength: 0.6,
-                sssAbsorption: [0.4, 0.45, 0.5],
-                sssScatterDistance: [0.3, 0.28, 0.25],
-                sssThicknessBias: 0.5,
-                sssThicknessScale: 0.4,
-                sssCurvatureScale: 0.8,
-                sssAmbient: 0.15
-            },
-            milk: {
-                sssStrength: 1.0,
-                sssAbsorption: [0.1, 0.15, 0.3],
-                sssScatterDistance: [1.0, 0.9, 0.7],
-                sssThicknessBias: 0.5,
-                sssThicknessScale: 0.5,
-                sssCurvatureScale: 0.5,
-                sssAmbient: 0.3
-            },
-            honey: {
-                sssStrength: 0.9,
-                sssAbsorption: [0.1, 0.5, 2.0],
-                sssScatterDistance: [0.6, 0.4, 0.1],
-                sssThicknessBias: 0.35,
-                sssThicknessScale: 0.7,
-                sssCurvatureScale: 1.2,
-                sssAmbient: 0.2
-            },
-            crystal: {
-                sssStrength: 0.4,
-                sssAbsorption: [0.1, 0.1, 0.08],
-                sssScatterDistance: [0.2, 0.22, 0.25],
+                sssAbsorption: [0.4, 2.8, 0.6],
+                sssScatterDistance: [0.3, 0.8, 0.4],
                 sssThicknessBias: 0.2,
                 sssThicknessScale: 0.8,
                 sssCurvatureScale: 1.5,
-                sssAmbient: 0.1
+                sssAmbient: 0.4
+            },
+            imperialJade: {
+                sssStrength: 1.0,
+                sssAbsorption: [0.2, 3.0, 0.3],
+                sssScatterDistance: [0.2, 1.0, 0.3],
+                sssThicknessBias: 0.15,
+                sssThicknessScale: 0.9,
+                sssCurvatureScale: 2.0,
+                sssAmbient: 0.5
+            },
+            whiteJade: {
+                sssStrength: 0.9,
+                sssAbsorption: [2.5, 2.6, 2.4],
+                sssScatterDistance: [0.7, 0.7, 0.65],
+                sssThicknessBias: 0.3,
+                sssThicknessScale: 0.6,
+                sssCurvatureScale: 1.2,
+                sssAmbient: 0.5
+            },
+            wax: {
+                sssStrength: 1.0,
+                sssAbsorption: [2.8, 2.0, 0.8],
+                sssScatterDistance: [1.0, 0.7, 0.4],
+                sssThicknessBias: 0.35,
+                sssThicknessScale: 0.7,
+                sssCurvatureScale: 1.0,
+                sssAmbient: 0.5
+            },
+            skin: {
+                sssStrength: 0.9,
+                sssAbsorption: [2.8, 1.5, 1.0],
+                sssScatterDistance: [0.8, 0.5, 0.35],
+                sssThicknessBias: 0.25,
+                sssThicknessScale: 0.6,
+                sssCurvatureScale: 2.0,
+                sssAmbient: 0.3
+            },
+            marble: {
+                sssStrength: 0.7,
+                sssAbsorption: [2.4, 2.3, 2.2],
+                sssScatterDistance: [0.4, 0.38, 0.35],
+                sssThicknessBias: 0.4,
+                sssThicknessScale: 0.5,
+                sssCurvatureScale: 0.8,
+                sssAmbient: 0.35
+            },
+            milk: {
+                sssStrength: 1.0,
+                sssAbsorption: [2.9, 2.85, 2.7],
+                sssScatterDistance: [1.2, 1.1, 0.9],
+                sssThicknessBias: 0.4,
+                sssThicknessScale: 0.5,
+                sssCurvatureScale: 0.5,
+                sssAmbient: 0.6
+            },
+            honey: {
+                sssStrength: 1.0,
+                sssAbsorption: [2.9, 2.2, 0.4],
+                sssScatterDistance: [0.8, 0.6, 0.2],
+                sssThicknessBias: 0.3,
+                sssThicknessScale: 0.8,
+                sssCurvatureScale: 1.2,
+                sssAmbient: 0.45
+            },
+            crystal: {
+                sssStrength: 0.6,
+                sssAbsorption: [2.4, 2.5, 2.8],
+                sssScatterDistance: [0.3, 0.35, 0.4],
+                sssThicknessBias: 0.15,
+                sssThicknessScale: 0.9,
+                sssCurvatureScale: 1.5,
+                sssAmbient: 0.25
             },
             roseQuartz: {
-                sssStrength: 0.8,
-                sssAbsorption: [0.3, 0.8, 0.7],
-                sssScatterDistance: [0.45, 0.3, 0.32],
-                sssThicknessBias: 0.3,
-                sssThicknessScale: 0.7,
+                sssStrength: 0.9,
+                sssAbsorption: [2.7, 1.2, 2.3],
+                sssScatterDistance: [0.6, 0.4, 0.55],
+                sssThicknessBias: 0.25,
+                sssThicknessScale: 0.75,
                 sssCurvatureScale: 1.3,
-                sssAmbient: 0.15
+                sssAmbient: 0.4
             }
         };
 
