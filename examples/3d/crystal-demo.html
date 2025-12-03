@@ -218,10 +218,60 @@
 
                 <div class="slider-control">
                     <div class="slider-label">
-                        <span>Subsurface Scattering</span>
+                        <span>SSS Strength</span>
                         <span class="slider-value" id="sss-value">0.00</span>
                     </div>
                     <input type="range" id="sss-slider" min="0" max="2" step="0.05" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">SSS Material Preset</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-sss-preset="jade" class="active">🟢 Jade</button>
+                    <button data-sss-preset="imperialJade">💚 Imperial</button>
+                    <button data-sss-preset="whiteJade">⚪ White Jade</button>
+                    <button data-sss-preset="wax">🕯️ Wax</button>
+                    <button data-sss-preset="skin">👋 Skin</button>
+                    <button data-sss-preset="marble">🏛️ Marble</button>
+                    <button data-sss-preset="milk">🥛 Milk</button>
+                    <button data-sss-preset="honey">🍯 Honey</button>
+                    <button data-sss-preset="crystal">💎 Crystal</button>
+                    <button data-sss-preset="roseQuartz">🌸 Rose Quartz</button>
+                </div>
+
+                <div class="slider-control" style="margin-top: 15px;">
+                    <div class="slider-label">
+                        <span>Thickness Bias</span>
+                        <span class="slider-value" id="sss-thickness-bias-value">0.30</span>
+                    </div>
+                    <input type="range" id="sss-thickness-bias-slider" min="0" max="1" step="0.05" value="0.3">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Thickness Scale</span>
+                        <span class="slider-value" id="sss-thickness-scale-value">0.70</span>
+                    </div>
+                    <input type="range" id="sss-thickness-scale-slider" min="0" max="2" step="0.05" value="0.7">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Curvature Scale</span>
+                        <span class="slider-value" id="sss-curvature-value">1.50</span>
+                    </div>
+                    <input type="range" id="sss-curvature-slider" min="0" max="3" step="0.1" value="1.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>SSS Ambient</span>
+                        <span class="slider-value" id="sss-ambient-value">0.15</span>
+                    </div>
+                    <input type="range" id="sss-ambient-slider" min="0" max="1" step="0.05" value="0.15">
                 </div>
             </div>
         </div>
@@ -569,6 +619,169 @@
             if (mascot.core3D?.customMaterial?.uniforms?.sssStrength) {
                 mascot.core3D.customMaterial.uniforms.sssStrength.value = value;
             }
+        });
+
+        // SSS advanced sliders
+        setupSlider('sss-thickness-bias-slider', 'sss-thickness-bias-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssThicknessBias) {
+                mascot.core3D.customMaterial.uniforms.sssThicknessBias.value = value;
+            }
+        });
+
+        setupSlider('sss-thickness-scale-slider', 'sss-thickness-scale-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssThicknessScale) {
+                mascot.core3D.customMaterial.uniforms.sssThicknessScale.value = value;
+            }
+        });
+
+        setupSlider('sss-curvature-slider', 'sss-curvature-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssCurvatureScale) {
+                mascot.core3D.customMaterial.uniforms.sssCurvatureScale.value = value;
+            }
+        });
+
+        setupSlider('sss-ambient-slider', 'sss-ambient-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssAmbient) {
+                mascot.core3D.customMaterial.uniforms.sssAmbient.value = value;
+            }
+        });
+
+        // SSS Material Presets
+        const sssPresets = {
+            jade: {
+                sssStrength: 1.0,
+                sssAbsorption: [2.5, 0.3, 1.8],
+                sssScatterDistance: [0.15, 0.4, 0.2],
+                sssThicknessBias: 0.3,
+                sssThicknessScale: 0.7,
+                sssCurvatureScale: 1.5,
+                sssAmbient: 0.15
+            },
+            imperialJade: {
+                sssStrength: 1.0,
+                sssAbsorption: [3.0, 0.2, 2.5],
+                sssScatterDistance: [0.1, 0.5, 0.15],
+                sssThicknessBias: 0.25,
+                sssThicknessScale: 0.8,
+                sssCurvatureScale: 1.8,
+                sssAmbient: 0.2
+            },
+            whiteJade: {
+                sssStrength: 0.9,
+                sssAbsorption: [0.3, 0.3, 0.4],
+                sssScatterDistance: [0.5, 0.5, 0.45],
+                sssThicknessBias: 0.35,
+                sssThicknessScale: 0.6,
+                sssCurvatureScale: 1.2,
+                sssAmbient: 0.25
+            },
+            wax: {
+                sssStrength: 1.0,
+                sssAbsorption: [0.2, 0.8, 1.5],
+                sssScatterDistance: [0.8, 0.5, 0.3],
+                sssThicknessBias: 0.4,
+                sssThicknessScale: 0.6,
+                sssCurvatureScale: 1.0,
+                sssAmbient: 0.2
+            },
+            skin: {
+                sssStrength: 0.8,
+                sssAbsorption: [0.4, 1.2, 1.8],
+                sssScatterDistance: [0.6, 0.35, 0.25],
+                sssThicknessBias: 0.3,
+                sssThicknessScale: 0.5,
+                sssCurvatureScale: 2.0,
+                sssAmbient: 0.1
+            },
+            marble: {
+                sssStrength: 0.6,
+                sssAbsorption: [0.4, 0.45, 0.5],
+                sssScatterDistance: [0.3, 0.28, 0.25],
+                sssThicknessBias: 0.5,
+                sssThicknessScale: 0.4,
+                sssCurvatureScale: 0.8,
+                sssAmbient: 0.15
+            },
+            milk: {
+                sssStrength: 1.0,
+                sssAbsorption: [0.1, 0.15, 0.3],
+                sssScatterDistance: [1.0, 0.9, 0.7],
+                sssThicknessBias: 0.5,
+                sssThicknessScale: 0.5,
+                sssCurvatureScale: 0.5,
+                sssAmbient: 0.3
+            },
+            honey: {
+                sssStrength: 0.9,
+                sssAbsorption: [0.1, 0.5, 2.0],
+                sssScatterDistance: [0.6, 0.4, 0.1],
+                sssThicknessBias: 0.35,
+                sssThicknessScale: 0.7,
+                sssCurvatureScale: 1.2,
+                sssAmbient: 0.2
+            },
+            crystal: {
+                sssStrength: 0.4,
+                sssAbsorption: [0.1, 0.1, 0.08],
+                sssScatterDistance: [0.2, 0.22, 0.25],
+                sssThicknessBias: 0.2,
+                sssThicknessScale: 0.8,
+                sssCurvatureScale: 1.5,
+                sssAmbient: 0.1
+            },
+            roseQuartz: {
+                sssStrength: 0.8,
+                sssAbsorption: [0.3, 0.8, 0.7],
+                sssScatterDistance: [0.45, 0.3, 0.32],
+                sssThicknessBias: 0.3,
+                sssThicknessScale: 0.7,
+                sssCurvatureScale: 1.3,
+                sssAmbient: 0.15
+            }
+        };
+
+        function applySSSPreset(presetName) {
+            const preset = sssPresets[presetName];
+            if (!preset || !mascot.core3D?.customMaterial?.uniforms) return;
+
+            const u = mascot.core3D.customMaterial.uniforms;
+
+            // Apply preset values
+            if (u.sssStrength) u.sssStrength.value = preset.sssStrength;
+            if (u.sssAbsorption) u.sssAbsorption.value.set(...preset.sssAbsorption);
+            if (u.sssScatterDistance) u.sssScatterDistance.value.set(...preset.sssScatterDistance);
+            if (u.sssThicknessBias) u.sssThicknessBias.value = preset.sssThicknessBias;
+            if (u.sssThicknessScale) u.sssThicknessScale.value = preset.sssThicknessScale;
+            if (u.sssCurvatureScale) u.sssCurvatureScale.value = preset.sssCurvatureScale;
+            if (u.sssAmbient) u.sssAmbient.value = preset.sssAmbient;
+
+            // Update sliders to reflect new values
+            const setSlider = (id, value) => {
+                const slider = document.getElementById(id + '-slider');
+                const display = document.getElementById(id + '-value');
+                if (slider) slider.value = value;
+                if (display) display.textContent = value.toFixed(2);
+            };
+
+            setSlider('sss', preset.sssStrength);
+            setSlider('sss-thickness-bias', preset.sssThicknessBias);
+            setSlider('sss-thickness-scale', preset.sssThicknessScale);
+            setSlider('sss-curvature', preset.sssCurvatureScale);
+            setSlider('sss-ambient', preset.sssAmbient);
+
+            console.log(`🎨 Applied SSS preset: ${presetName}`);
+        }
+
+        // SSS preset buttons
+        document.querySelectorAll('[data-sss-preset]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const presetName = btn.dataset.sssPreset;
+                applySSSPreset(presetName);
+
+                // Update active state
+                document.querySelectorAll('[data-sss-preset]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
         });
 
         // Noise pattern sliders

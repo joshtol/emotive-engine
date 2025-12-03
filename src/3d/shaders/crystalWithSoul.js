@@ -21,6 +21,7 @@
  */
 
 import { blendModesGLSL } from './utils/blendModes.js';
+import { sssGLSL } from './utils/subsurfaceScattering.js';
 
 /**
  * Vertex shader for frosted crystal
@@ -69,10 +70,16 @@ uniform float noiseFrequency;     // Frequency of hash noise pattern (default: 1
 uniform sampler2D crystalTexture;
 uniform float textureStrength;    // How much texture affects appearance (default: 0.5)
 
-// Subsurface scattering
-uniform float sssStrength;        // SSS intensity (default: 0.0)
-uniform float sssDistortion;      // How much normal distorts light path (default: 0.2)
-uniform vec3 sssColor;            // SSS tint color (default: emotion color)
+// Physically-based subsurface scattering
+uniform float sssStrength;            // Overall SSS intensity (0-1)
+uniform vec3 sssAbsorption;           // Absorption coefficients per RGB channel
+uniform vec3 sssScatterDistance;      // Mean free path / scatter radius per RGB
+uniform float sssThicknessBias;       // Thickness offset (0-1)
+uniform float sssThicknessScale;      // Thickness multiplier
+uniform float sssCurvatureScale;      // How much curvature affects SSS
+uniform float sssAmbient;             // Ambient SSS contribution
+uniform vec3 sssLightDir;             // Primary light direction for SSS
+uniform vec3 sssLightColor;           // Light color for SSS
 
 // Blend layer uniforms for advanced effects
 uniform float layer1Mode;
@@ -148,6 +155,11 @@ float fbm(vec3 p) {
 // ═══════════════════════════════════════════════════════════════════════════
 ${blendModesGLSL}
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PHYSICALLY-BASED SUBSURFACE SCATTERING
+// ═══════════════════════════════════════════════════════════════════════════
+${sssGLSL}
+
 void main() {
     vec3 normal = normalize(vNormal);
     vec3 viewDir = normalize(vViewPosition);
@@ -217,34 +229,24 @@ void main() {
     vec3 rimGlow = rimColor * fresnel * 1.2;
 
     // ═══════════════════════════════════════════════════════════════════════
-    // SUBSURFACE SCATTERING - Light penetrating and scattering through material
+    // PHYSICALLY-BASED SUBSURFACE SCATTERING
+    // Uses BSSRDF with Beer's Law absorption and Burley diffusion profile
     // ═══════════════════════════════════════════════════════════════════════
-    vec3 sss = vec3(0.0);
-    if (sssStrength > 0.001) {
-        // Light direction (from above-front for visibility)
-        vec3 lightDir = normalize(vec3(0.5, 1.0, 0.8));
-
-        // Classic SSS: light wraps around object edges
-        // Higher distortion = more diffuse scatter through material
-        vec3 scatterNormal = normalize(normal + lightDir * sssDistortion);
-
-        // Back-lighting term: light passing through from behind
-        float backLight = max(0.0, dot(viewDir, -lightDir));
-        backLight = pow(backLight, 1.5);
-
-        // Wrap lighting: soft diffuse that wraps around edges
-        float wrapLight = max(0.0, (dot(normal, lightDir) + 0.5) / 1.5);
-
-        // Translucency: view-dependent scatter through thin areas
-        float translucency = pow(1.0 - abs(dot(normal, viewDir)), 2.0);
-
-        // Combine SSS components
-        float sssIntensity = (backLight * 0.5 + wrapLight * 0.3 + translucency * 0.4) * sssStrength;
-
-        // Apply SSS with emotion color tint
-        vec3 sssBaseColor = mix(vec3(1.0, 0.95, 0.9), emotionColor, 0.5);
-        sss = sssBaseColor * sssIntensity;
-    }
+    vec3 sss = calculatePhysicalSSS(
+        normal,
+        viewDir,
+        vPosition,
+        normalize(sssLightDir),
+        sssLightColor,
+        emotionColor,
+        sssStrength,
+        sssAbsorption,
+        sssScatterDistance,
+        sssThicknessBias,
+        sssThicknessScale,
+        sssCurvatureScale,
+        sssAmbient
+    );
 
     // ═══════════════════════════════════════════════════════════════════════
     // COMBINE - Bright soul + frosted shell + glowing rim + SSS
@@ -349,10 +351,16 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     // Texture
     textureStrength: 0.55,      // How much texture affects appearance
 
-    // Subsurface scattering
-    sssStrength: 0.0,           // SSS intensity (0 = off)
-    sssDistortion: 0.2,         // Normal distortion of light path
-    sssColor: [1.0, 0.9, 0.8],  // Warm white tint
+    // Physically-based subsurface scattering (jade preset as default)
+    sssStrength: 0.0,                       // Overall SSS intensity (0-1)
+    sssAbsorption: [2.5, 0.3, 1.8],         // Absorption coefficients RGB (jade-like)
+    sssScatterDistance: [0.15, 0.4, 0.2],   // Mean free path / scatter radius RGB
+    sssThicknessBias: 0.3,                  // Base thickness value
+    sssThicknessScale: 0.7,                 // Thickness multiplier
+    sssCurvatureScale: 1.5,                 // Curvature influence on SSS
+    sssAmbient: 0.15,                       // Ambient SSS contribution
+    sssLightDir: [0.5, 1.0, 0.8],           // Primary light direction
+    sssLightColor: [1.0, 0.98, 0.95],       // Light color (warm white)
 
     // Blend layers (disabled by default)
     layer1Mode: 6,              // Add mode for glow boost

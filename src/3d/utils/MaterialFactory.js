@@ -7,6 +7,7 @@ import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geom
 import { createSunMaterial } from '../geometries/Sun.js';
 import { createBlackHoleMaterial } from '../geometries/BlackHole.js';
 import { getCrystalShaders, CRYSTAL_DEFAULT_UNIFORMS } from '../shaders/crystalWithSoul.js';
+import { SSS_PRESETS } from '../shaders/utils/subsurfaceScattering.js';
 
 export function createCustomMaterial(geometryType, geometryConfig, options = {}) {
     const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null } = options;
@@ -33,21 +34,24 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
             frostiness: 0.30,
             innerGlowStrength: 0.10,
             fresnelIntensity: 0.20,
-            sssStrength: 0.20
+            sssStrength: 0.4,
+            sssPreset: 'crystal'        // Clear crystal SSS
         });  // Crystal texture with tuned settings
     case 'rough':
         return createCrystalMaterial(glowColor, glowIntensity, 'rough', {
             frostiness: 0.05,
             innerGlowStrength: 0.0,
             fresnelIntensity: 1.6,
-            sssStrength: 0.8
-        });  // Rough texture with SSS
+            sssStrength: 1.0,
+            sssPreset: 'jade'           // Jade-like SSS for rough stone
+        });  // Rough texture with jade SSS
     case 'heart':
         return createCrystalMaterial(glowColor, glowIntensity, 'heart', {
             frostiness: 0.05,           // Low frost - more transparent shell
             innerGlowStrength: 0.0,     // Soul provides the glow
             fresnelIntensity: 1.4,      // Strong edge glow
-            sssStrength: 0.6            // Light scatters through
+            sssStrength: 0.8,
+            sssPreset: 'roseQuartz'     // Rose quartz SSS for heart
         });    // Heart texture with transparent shell
     default:
         console.warn('Unknown custom material type:', geometryType);
@@ -89,6 +93,9 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
         );
     }
 
+    // Get SSS preset if specified, otherwise use defaults
+    const sssPreset = overrides.sssPreset ? SSS_PRESETS[overrides.sssPreset] : null;
+
     const material = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: 0 },
@@ -106,10 +113,21 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
             crystalTexture: { value: crystalTexture },
             // Heart texture slightly more transparent than crystal
             textureStrength: { value: textureType === 'heart' ? 0.35 : (textureType ? CRYSTAL_DEFAULT_UNIFORMS.textureStrength : 0.0) },
-            // Subsurface scattering
-            sssStrength: { value: overrides.sssStrength ?? CRYSTAL_DEFAULT_UNIFORMS.sssStrength },
-            sssDistortion: { value: overrides.sssDistortion ?? CRYSTAL_DEFAULT_UNIFORMS.sssDistortion },
-            sssColor: { value: new THREE.Color(CRYSTAL_DEFAULT_UNIFORMS.sssColor[0], CRYSTAL_DEFAULT_UNIFORMS.sssColor[1], CRYSTAL_DEFAULT_UNIFORMS.sssColor[2]) },
+            // Physically-based subsurface scattering
+            sssStrength: { value: overrides.sssStrength ?? sssPreset?.sssStrength ?? CRYSTAL_DEFAULT_UNIFORMS.sssStrength },
+            sssAbsorption: { value: new THREE.Vector3(
+                ...(overrides.sssAbsorption ?? sssPreset?.sssAbsorption ?? CRYSTAL_DEFAULT_UNIFORMS.sssAbsorption)
+            ) },
+            sssScatterDistance: { value: new THREE.Vector3(
+                ...(overrides.sssScatterDistance ?? sssPreset?.sssScatterDistance ?? CRYSTAL_DEFAULT_UNIFORMS.sssScatterDistance)
+            ) },
+            sssThicknessBias: { value: overrides.sssThicknessBias ?? sssPreset?.sssThicknessBias ?? CRYSTAL_DEFAULT_UNIFORMS.sssThicknessBias },
+            sssThicknessScale: { value: overrides.sssThicknessScale ?? sssPreset?.sssThicknessScale ?? CRYSTAL_DEFAULT_UNIFORMS.sssThicknessScale },
+            sssCurvatureScale: { value: overrides.sssCurvatureScale ?? sssPreset?.sssCurvatureScale ?? CRYSTAL_DEFAULT_UNIFORMS.sssCurvatureScale },
+            sssAmbient: { value: overrides.sssAmbient ?? sssPreset?.sssAmbient ?? CRYSTAL_DEFAULT_UNIFORMS.sssAmbient },
+            sssLightDir: { value: new THREE.Vector3(...(overrides.sssLightDir ?? CRYSTAL_DEFAULT_UNIFORMS.sssLightDir)) },
+            sssLightColor: { value: new THREE.Vector3(...(overrides.sssLightColor ?? CRYSTAL_DEFAULT_UNIFORMS.sssLightColor)) },
+            // Blend layers
             layer1Mode: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Mode },
             layer1Strength: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Strength },
             layer1Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.layer1Enabled },
