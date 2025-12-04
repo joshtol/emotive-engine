@@ -30,29 +30,22 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
     case 'moon':
         return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant);
     case 'crystal':
-        return createCrystalMaterial(glowColor, glowIntensity, 'crystal', {
-            frostiness: 0.30,
-            innerGlowStrength: 0.10,
-            fresnelIntensity: 0.20,
-            sssStrength: 0.4,
-            sssPreset: 'crystal'        // Clear crystal SSS
-        });  // Crystal texture with tuned settings
+        // Uses CRYSTAL_DEFAULT_UNIFORMS - no overrides needed
+        return createCrystalMaterial(glowColor, glowIntensity, 'crystal', {});
     case 'rough':
+        // Custom crystal appearance for rough stone, uses crystal SSS preset
         return createCrystalMaterial(glowColor, glowIntensity, 'rough', {
             frostiness: 0.05,
             innerGlowStrength: 0.0,
-            fresnelIntensity: 1.6,
-            sssStrength: 1.0,
-            sssPreset: 'jade'           // Jade-like SSS for rough stone
-        });  // Rough texture with jade SSS
+            fresnelIntensity: 1.6
+        });
     case 'heart':
+        // Custom crystal appearance for heart - tuned for flat geometry
         return createCrystalMaterial(glowColor, glowIntensity, 'heart', {
-            frostiness: 0.05,           // Low frost - more transparent shell
-            innerGlowStrength: 0.0,     // Soul provides the glow
-            fresnelIntensity: 1.4,      // Strong edge glow
-            sssStrength: 0.8,
-            sssPreset: 'roseQuartz'     // Rose quartz SSS for heart
-        });    // Heart texture with transparent shell
+            frostiness: 0.475,
+            innerGlowStrength: 0.117,
+            fresnelIntensity: 1.206
+        });
     default:
         console.warn('Unknown custom material type:', geometryType);
         return null;

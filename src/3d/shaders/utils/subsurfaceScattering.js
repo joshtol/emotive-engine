@@ -208,24 +208,30 @@ vec3 calculatePhysicalSSS(
     float thickness = estimateThickness(normal, viewDir, position, thicknessBias, thicknessScale);
 
     // ─────────────────────────────────────────────────────────────────────
-    // ABSORPTION COLOR (Simplified Beer's Law)
+    // ABSORPTION COLOR (Beer's Law with artist-friendly values)
     // Creates the characteristic color of translucent materials
-    // absorption values are inverted: high value = MORE of that color passes through
+    // absorption values: high value = MORE of that color passes through (transmitted)
+    // This is inverted from physics but intuitive: jade has high green absorption
     // ─────────────────────────────────────────────────────────────────────
-    // Invert absorption so higher values = more color (more intuitive for artists)
-    vec3 invertedAbsorption = vec3(3.0) - absorption;
-    // Gentle exponential falloff - not as aggressive as true Beer's Law
-    vec3 colorShift = exp(-invertedAbsorption * thickness * 0.5);
-    // Ensure we always have some color
-    colorShift = max(colorShift, vec3(0.1));
+    // Use absorption directly as transmittance - higher = more of that color shows
+    // Normalize to prevent any channel from dominating
+    float maxAbsorption = max(absorption.r, max(absorption.g, absorption.b));
+    vec3 normalizedTransmit = absorption / max(maxAbsorption, 0.001);
+
+    // Apply thickness-based falloff - thin areas show more color
+    float thicknessFactor = 1.0 - thickness * 0.3;
+    vec3 colorShift = normalizedTransmit * thicknessFactor;
+
+    // Ensure minimum color presence
+    colorShift = max(colorShift, vec3(0.15));
 
     // ─────────────────────────────────────────────────────────────────────
     // SCATTER INTENSITY
     // How much light scatters based on material properties
     // ─────────────────────────────────────────────────────────────────────
-    // Higher scatter distance = more light gets through
-    vec3 scatterIntensity = scatterDist * 2.0;
-    scatterIntensity = clamp(scatterIntensity, vec3(0.2), vec3(2.0));
+    // Higher scatter distance = more light gets through, but keep it subtle
+    vec3 scatterIntensity = scatterDist * 0.8;
+    scatterIntensity = clamp(scatterIntensity, vec3(0.1), vec3(1.0));
 
     // ─────────────────────────────────────────────────────────────────────
     // LIGHTING TERMS - Boosted for visibility
@@ -268,22 +274,21 @@ vec3 calculatePhysicalSSS(
     float totalLight = backLight + translucency * 0.8 + wrapLight * 0.4 + edgeGlow * 0.5;
     totalLight *= curvatureFactor * thinTransmission;
 
-    // Base SSS color with absorption-based tint
-    vec3 sssColor = baseColor * colorShift * scatterIntensity;
+    // Base SSS color - colorShift IS the tint (e.g., green for jade)
+    // Don't multiply by baseColor to avoid washing out with emotionColor
+    vec3 sssColor = colorShift * scatterIntensity;
 
     // Ambient SSS (always visible, gives material its translucent look)
-    vec3 ambientSSS = baseColor * colorShift * ambient * 1.5;
+    vec3 ambientSSS = sssColor * ambient;
 
-    // Direct SSS from lighting
-    vec3 directSSS = sssColor * lightColor * totalLight;
+    // Direct SSS from lighting - subtle contribution
+    vec3 directSSS = sssColor * lightColor * totalLight * 0.5;
 
     // Final combination
     vec3 finalSSS = directSSS + ambientSSS;
 
-    // Apply overall strength with quadratic boost for low values
-    float boostedStrength = sssStrength * (1.0 + sssStrength);
-
-    return finalSSS * boostedStrength;
+    // Apply overall strength (linear, no boost to prevent blowout)
+    return finalSSS * sssStrength;
 }
 
 /**
@@ -336,19 +341,7 @@ vec3 calculateSimpleSSS(
  * ScatterDistance: Higher = more scatter/glow
  */
 export const SSS_PRESETS = {
-    // Jade - green translucent stone
-    jade: {
-        sssStrength: 1.0,
-        // High green, low red/blue = green jade color
-        sssAbsorption: [0.4, 2.8, 0.6],
-        sssScatterDistance: [0.3, 0.8, 0.4],
-        sssThicknessBias: 0.2,
-        sssThicknessScale: 0.8,
-        sssCurvatureScale: 1.5,
-        sssAmbient: 0.4
-    },
-
-    // Imperial jade - more vivid emerald green
+    // Imperial Jade - vivid emerald green
     imperialJade: {
         sssStrength: 1.0,
         sssAbsorption: [0.2, 3.0, 0.3],
@@ -356,111 +349,43 @@ export const SSS_PRESETS = {
         sssThicknessBias: 0.15,
         sssThicknessScale: 0.9,
         sssCurvatureScale: 2.0,
-        sssAmbient: 0.5
-    },
-
-    // White jade / mutton fat jade
-    whiteJade: {
-        sssStrength: 0.9,
-        sssAbsorption: [2.5, 2.6, 2.4],
-        sssScatterDistance: [0.7, 0.7, 0.65],
-        sssThicknessBias: 0.3,
-        sssThicknessScale: 0.6,
-        sssCurvatureScale: 1.2,
-        sssAmbient: 0.5
-    },
-
-    // Wax / candle - warm orange glow
-    wax: {
-        sssStrength: 1.0,
-        // High red/orange, less blue
-        sssAbsorption: [2.8, 2.0, 0.8],
-        sssScatterDistance: [1.0, 0.7, 0.4],
-        sssThicknessBias: 0.35,
-        sssThicknessScale: 0.7,
-        sssCurvatureScale: 1.0,
-        sssAmbient: 0.5
-    },
-
-    // Human skin - warm red undertones
-    skin: {
-        sssStrength: 0.9,
-        // Red from blood, less green/blue
-        sssAbsorption: [2.8, 1.5, 1.0],
-        sssScatterDistance: [0.8, 0.5, 0.35],
-        sssThicknessBias: 0.25,
-        sssThicknessScale: 0.6,
-        sssCurvatureScale: 2.0,
-        sssAmbient: 0.3
-    },
-
-    // Marble (white with warm tint)
-    marble: {
-        sssStrength: 0.7,
-        sssAbsorption: [2.4, 2.3, 2.2],
-        sssScatterDistance: [0.4, 0.38, 0.35],
-        sssThicknessBias: 0.4,
-        sssThicknessScale: 0.5,
-        sssCurvatureScale: 0.8,
-        sssAmbient: 0.35
-    },
-
-    // Milk / cream - very white, slight warm
-    milk: {
-        sssStrength: 1.0,
-        sssAbsorption: [2.9, 2.85, 2.7],
-        sssScatterDistance: [1.2, 1.1, 0.9],
-        sssThicknessBias: 0.4,
-        sssThicknessScale: 0.5,
-        sssCurvatureScale: 0.5,
-        sssAmbient: 0.6
-    },
-
-    // Honey / amber - golden orange
-    honey: {
-        sssStrength: 1.0,
-        // Strong red/yellow, absorbs blue
-        sssAbsorption: [2.9, 2.2, 0.4],
-        sssScatterDistance: [0.8, 0.6, 0.2],
-        sssThicknessBias: 0.3,
-        sssThicknessScale: 0.8,
-        sssCurvatureScale: 1.2,
-        sssAmbient: 0.45
+        sssAmbient: 0.60,
+        // Crystal appearance (defaults)
+        frostiness: 0.585,
+        innerGlowStrength: 0.478,
+        fresnelIntensity: 0.298
     },
 
     // Crystal / ice - cool blue tint
     crystal: {
-        sssStrength: 0.6,
-        // Slightly more blue
+        sssStrength: 0.594,
         sssAbsorption: [2.4, 2.5, 2.8],
         sssScatterDistance: [0.3, 0.35, 0.4],
         sssThicknessBias: 0.15,
-        sssThicknessScale: 0.9,
-        sssCurvatureScale: 1.5,
-        sssAmbient: 0.25
-    },
-
-    // Rose quartz - pink/magenta tint
-    roseQuartz: {
-        sssStrength: 0.9,
-        // High red, medium blue, less green = pink
-        sssAbsorption: [2.7, 1.2, 2.3],
-        sssScatterDistance: [0.6, 0.4, 0.55],
-        sssThicknessBias: 0.25,
-        sssThicknessScale: 0.75,
-        sssCurvatureScale: 1.3,
-        sssAmbient: 0.4
-    },
-
-    // Soap - slight blue/white
-    soap: {
-        sssStrength: 0.8,
-        sssAbsorption: [2.5, 2.6, 2.7],
-        sssScatterDistance: [0.7, 0.7, 0.75],
-        sssThicknessBias: 0.35,
         sssThicknessScale: 0.55,
-        sssCurvatureScale: 0.9,
-        sssAmbient: 0.45
+        sssCurvatureScale: 1.70,
+        sssAmbient: 0.20,
+        // Crystal appearance (defaults)
+        frostiness: 0.585,
+        innerGlowStrength: 0.478,
+        fresnelIntensity: 0.298
+    },
+
+    // Ruby - deep red gemstone
+    // Note: Red has low luminance weight (0.299) vs green (0.587) in shader
+    // So we use higher green/blue to prevent red blowout while maintaining red dominance
+    ruby: {
+        sssStrength: 2.0,
+        sssAbsorption: [3.0, 0.1, 0.4],       // Deep crimson - high red, tiny green, slight blue/magenta
+        sssScatterDistance: [1.0, 0.2, 0.3],
+        sssThicknessBias: 0.35,
+        sssThicknessScale: 1.30,
+        sssCurvatureScale: 2.10,
+        sssAmbient: 0.65,
+        // Crystal appearance - tuned for red's different luminance behavior
+        frostiness: 0.590,
+        innerGlowStrength: 1.396,
+        fresnelIntensity: 1.456
     }
 };
 

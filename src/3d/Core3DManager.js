@@ -88,6 +88,9 @@ export class Core3DManager {
         // Store materialVariant for use when morphing geometries
         this.materialVariant = options.materialVariant || null;
 
+        // Callback for when material is swapped during morph (allows immediate preset application)
+        this.onMaterialSwap = null;
+
         // Check if this geometry requires custom material (e.g., moon with textures, sun with emissive)
         // Use MaterialFactory for centralized material creation
         // IMPORTANT: Must create material BEFORE calling _loadAsyncGeometry so it's available when OBJ loads
@@ -1140,6 +1143,16 @@ export class Core3DManager {
                 // Crystal and diamond have defaultGlassMode: true, others default to false
                 const shouldEnableGlass = this._targetGeometryConfig.defaultGlassMode === true;
                 this.setGlassMaterialEnabled(shouldEnableGlass);
+            }
+
+            // Invoke material swap callback immediately (before geometry becomes visible)
+            // This allows presets to be applied while scale is still 0
+            if (this.onMaterialSwap) {
+                this.onMaterialSwap({
+                    geometryType: this._targetGeometryType,
+                    material: this.customMaterial,
+                    materialType: this.customMaterialType
+                });
             }
 
             // Update blink animator with new geometry's blink config

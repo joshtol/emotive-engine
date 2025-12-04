@@ -46,8 +46,20 @@
             <div class="section-content">
                 <div class="button-grid">
                     <button data-action="geometry" data-value="crystal" class="active">💎 Crystal</button>
+                    <button data-action="geometry" data-value="heart">💗 Heart</button>
+                    <button data-action="geometry" data-value="rough">🪨 Rough</button>
                     <button data-action="geometry" data-value="moon">🌙 Moon</button>
                     <button data-action="geometry" data-value="sun">☀️ Sun</button>
+                </div>
+
+                <!-- Crystal Material presets (crystal geometries only) -->
+                <div id="crystal-material-section" style="margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Crystal Material</div>
+                    <div class="button-grid">
+                        <button data-action="sss-preset" data-value="imperialJade">💚 Jade</button>
+                        <button data-action="sss-preset" data-value="crystal" class="active">💎 Crystal</button>
+                        <button data-action="sss-preset" data-value="ruby">❤️ Ruby</button>
+                    </div>
                 </div>
 
                 <!-- Solar Eclipse controls (sun only) -->
@@ -198,6 +210,74 @@
         let mascot = null;
         let currentGeometry = 'crystal';
         let currentMoonPhase = 'full';
+        let currentSSSPreset = 'crystal';
+
+        // SSS Material Presets (from crystal-demo.html)
+        const sssPresets = {
+            imperialJade: {
+                sssStrength: 1.0,
+                sssAbsorption: [0.2, 3.0, 0.3],
+                sssScatterDistance: [0.2, 1.0, 0.3],
+                sssThicknessBias: 0.15,
+                sssThicknessScale: 0.9,
+                sssCurvatureScale: 2.0,
+                sssAmbient: 0.60,
+                frostiness: 0.585,
+                innerGlowStrength: 0.478,
+                fresnelIntensity: 0.298
+            },
+            crystal: {
+                sssStrength: 0.594,
+                sssAbsorption: [2.4, 2.5, 2.8],
+                sssScatterDistance: [0.3, 0.35, 0.4],
+                sssThicknessBias: 0.15,
+                sssThicknessScale: 0.55,
+                sssCurvatureScale: 1.70,
+                sssAmbient: 0.20,
+                frostiness: 0.585,
+                innerGlowStrength: 0.478,
+                fresnelIntensity: 0.298
+            },
+            ruby: {
+                sssStrength: 2.0,
+                sssAbsorption: [3.0, 0.1, 0.4],
+                sssScatterDistance: [1.0, 0.2, 0.3],
+                sssThicknessBias: 0.35,
+                sssThicknessScale: 1.30,
+                sssCurvatureScale: 2.10,
+                sssAmbient: 0.65,
+                frostiness: 0.590,
+                innerGlowStrength: 1.396,
+                fresnelIntensity: 1.456
+            }
+        };
+
+        function applySSSPreset(presetName) {
+            const preset = sssPresets[presetName];
+            if (!preset || !mascot?.core3D?.customMaterial?.uniforms) return;
+
+            const u = mascot.core3D.customMaterial.uniforms;
+
+            // Apply SSS-specific values (these work for all geometries)
+            if (u.sssStrength) u.sssStrength.value = preset.sssStrength;
+            if (u.sssAbsorption) u.sssAbsorption.value.set(...preset.sssAbsorption);
+            if (u.sssScatterDistance) u.sssScatterDistance.value.set(...preset.sssScatterDistance);
+            if (u.sssThicknessBias) u.sssThicknessBias.value = preset.sssThicknessBias;
+            if (u.sssThicknessScale) u.sssThicknessScale.value = preset.sssThicknessScale;
+            if (u.sssCurvatureScale) u.sssCurvatureScale.value = preset.sssCurvatureScale;
+            if (u.sssAmbient) u.sssAmbient.value = preset.sssAmbient;
+
+            // Heart has its own calibrated appearance values - don't override them
+            if (currentGeometry !== 'heart') {
+                if (u.frostiness) u.frostiness.value = preset.frostiness;
+                if (u.innerGlowStrength) u.innerGlowStrength.value = preset.innerGlowStrength;
+                if (u.fresnelIntensity) u.fresnelIntensity.value = preset.fresnelIntensity;
+            }
+        }
+
+        function isCrystalGeometry(geometry) {
+            return ['crystal', 'heart', 'rough'].includes(geometry);
+        }
 
         // Initialize
         (async () => {
@@ -224,6 +304,15 @@
                 // Crystal defaults
                 mascot.enableParticles();
                 mascot.disableBlinking();
+
+                // Register callback for material swap during morph (applies SSS preset immediately)
+                if (mascot.core3D) {
+                    mascot.core3D.onMaterialSwap = () => {
+                        if (isCrystalGeometry(currentGeometry)) {
+                            applySSSPreset(currentSSSPreset);
+                        }
+                    };
+                }
 
                 // Update button states
                 document.querySelector('[data-action="toggle-particles"]')?.classList.add('active');
@@ -278,6 +367,8 @@
                     e.target.classList.add('active');
 
                     // Show/hide geometry-specific controls
+                    const isCrystal = isCrystalGeometry(value);
+                    document.getElementById('crystal-material-section').style.display = isCrystal ? 'block' : 'none';
                     document.getElementById('eclipse-section').style.display = (value === 'sun') ? 'block' : 'none';
                     document.getElementById('moon-phase-section').style.display = (value === 'moon') ? 'block' : 'none';
                     document.getElementById('lunar-eclipse-section').style.display = (value === 'moon') ? 'block' : 'none';
@@ -287,7 +378,8 @@
                     const autoRotateBtn = document.querySelector('[data-action="toggle-auto-rotate"]');
                     const blinkBtn = document.querySelector('[data-action="toggle-blink"]');
 
-                    if (value === 'crystal') {
+                    if (isCrystal) {
+                        // Crystal-type geometries (crystal, heart, rough)
                         mascot.enableParticles();
                         mascot.enableAutoRotate();
                         mascot.disableBlinking();
@@ -437,6 +529,15 @@
                         e.target.classList.add('active');
                         document.getElementById('moon-phase-section').style.display = 'none';
                     }
+                    break;
+
+                case 'sss-preset':
+                    if (!isCrystalGeometry(currentGeometry)) break;
+
+                    currentSSSPreset = value;
+                    applySSSPreset(value);
+                    document.querySelectorAll('[data-action="sss-preset"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
                     break;
             }
         });

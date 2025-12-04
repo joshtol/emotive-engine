@@ -203,14 +203,16 @@ void main() {
 
     // Soul intensity controls overall brightness, but we preserve pattern contrast
     // by mixing between a dimmed base and the full pattern
-    float baseLevel = 0.3;  // Minimum brightness to see the color
-    float patternContrast = 0.7;  // How much the pattern modulates brightness
+    float baseLevel = 0.2;  // Minimum brightness to see the color
+    float patternContrast = 0.8;  // How much the pattern modulates brightness
     float soulIntensity = (baseLevel + animationPattern * patternContrast) * innerGlowStrength;
 
     // Soul color from emotion
     // NOTE: emotionColor is pre-normalized by normalizeColorLuminance() in Core3DManager
     // This ensures consistent perceived brightness across all emotions (yellow won't wash out, blue stays visible)
-    vec3 soulColor = emotionColor * soulIntensity * glowIntensity * 2.0;
+    // Use sqrt curve for more gradual response - prevents immediate blowout
+    float glowCurve = sqrt(innerGlowStrength * glowIntensity);
+    vec3 soulColor = emotionColor * soulIntensity * glowCurve;
 
     // ═══════════════════════════════════════════════════════════════════════
     // FROSTED SHELL - Milky white layer over the soul
@@ -259,14 +261,44 @@ void main() {
     vec3 texContribution = texColor.rgb * textureStrength;
     finalColor = mix(finalColor, finalColor + texContribution, textureStrength);
 
-    // Add bright rim glow at edges
-    finalColor += rimGlow;
+    // Apply SSS material color - jade should BE green, not white with green tint
+    // The sssAbsorption values directly define the material color:
+    // Jade: [0.4, 2.8, 0.6] means high green transmittance
+    if (sssStrength > 0.01) {
+        // Normalize absorption to get hue direction (0-1 range)
+        vec3 absorption = sssAbsorption;
+        float maxAbs = max(max(absorption.r, absorption.g), absorption.b);
+        vec3 hue = absorption / max(maxAbs, 0.001);
 
-    // Add subsurface scattering
-    finalColor += sss;
+        // Create a medium-brightness saturated material color
+        // Target luminance around 0.35 for good visibility without blowout
+        float targetLum = 0.35;
+        vec3 materialColor = hue * targetLum / max(dot(hue, vec3(0.299, 0.587, 0.114)), 0.001);
+        materialColor = clamp(materialColor, vec3(0.0), vec3(0.7));
 
-    // Ensure minimum brightness so crystal is always visible
-    finalColor = max(finalColor, vec3(0.15, 0.2, 0.25));
+        // Add subtle variation from SSS lighting calculation
+        float sssLum = dot(sss, vec3(0.299, 0.587, 0.114));
+        materialColor *= (0.8 + sssLum * 0.4);
+
+        // Replace crystal color with material color
+        float replaceAmount = sssStrength * 0.75;
+        finalColor = mix(finalColor, materialColor, replaceAmount);
+    }
+
+    // Add rim glow, tinted toward material color
+    if (sssStrength > 0.01) {
+        vec3 absorption = sssAbsorption;
+        float maxAbs = max(max(absorption.r, absorption.g), absorption.b);
+        vec3 hue = absorption / max(maxAbs, 0.001);
+        // Tint rim toward material color, reduced intensity
+        vec3 tintedRim = rimGlow * mix(vec3(1.0), hue, sssStrength * 0.5);
+        finalColor += tintedRim * 0.3;
+    } else {
+        finalColor += rimGlow;
+    }
+
+    // Ensure minimum brightness so crystal is always visible (neutral gray, no color bias)
+    finalColor = max(finalColor, vec3(0.15));
 
     // ═══════════════════════════════════════════════════════════════════════
     // BLEND LAYERS (for advanced visual tuning)
@@ -337,10 +369,10 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     opacity: 1.0,
 
     // Crystal appearance (tuned for crystal.obj)
-    frostiness: 0.10,           // Low frost - more transparent
+    frostiness: 0.585,          // Frosted translucency
     fresnelPower: 2.5,          // Edge brightness falloff
-    fresnelIntensity: 0.30,     // Edge brightness strength
-    innerGlowStrength: 0.20,    // How much soul shows through
+    fresnelIntensity: 0.298,    // Edge brightness strength
+    innerGlowStrength: 0.478,   // How much soul shows through
     surfaceRoughness: 0.15,     // Surface texture variation
 
     // Noise scales
@@ -351,14 +383,14 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     // Texture
     textureStrength: 0.55,      // How much texture affects appearance
 
-    // Physically-based subsurface scattering (jade preset as default)
-    sssStrength: 0.0,                       // Overall SSS intensity (0-1)
-    sssAbsorption: [2.5, 0.3, 1.8],         // Absorption coefficients RGB (jade-like)
-    sssScatterDistance: [0.15, 0.4, 0.2],   // Mean free path / scatter radius RGB
-    sssThicknessBias: 0.3,                  // Base thickness value
-    sssThicknessScale: 0.7,                 // Thickness multiplier
-    sssCurvatureScale: 1.5,                 // Curvature influence on SSS
-    sssAmbient: 0.15,                       // Ambient SSS contribution
+    // Physically-based subsurface scattering (crystal preset as default)
+    sssStrength: 0.594,                     // Overall SSS intensity
+    sssAbsorption: [2.4, 2.5, 2.8],         // Absorption coefficients RGB (crystal - cool blue tint)
+    sssScatterDistance: [0.3, 0.35, 0.4],   // Mean free path / scatter radius RGB
+    sssThicknessBias: 0.15,                 // Base thickness value
+    sssThicknessScale: 0.55,                // Thickness multiplier
+    sssCurvatureScale: 1.70,                // Curvature influence on SSS
+    sssAmbient: 0.20,                       // Ambient SSS contribution
     sssLightDir: [0.5, 1.0, 0.8],           // Primary light direction
     sssLightColor: [1.0, 0.98, 0.95],       // Light color (warm white)
 
