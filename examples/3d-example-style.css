@@ -851,6 +851,44 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   NATIVE SELECT - Keyboard-navigable blend mode selector
+   Supports arrow key navigation without opening dropdown
+   ───────────────────────────────────────────────────────────────────────────── */
+.blend-mode-select {
+    flex: 1;
+    max-width: 140px;
+    padding: 7px 28px 7px 10px;
+    background-color: #0d0d14;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 11px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%23666' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.blend-mode-select:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.blend-mode-select:focus {
+    outline: none;
+    border-color: rgba(var(--accent-rgb), 0.4);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
+}
+
+.blend-mode-select option {
+    background-color: #0d0d14;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 8px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    LAYER SETTINGS ROW - Dropdown + Value on same line
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -1296,6 +1334,10 @@ input[type="range"]::-moz-range-thumb {
     align-items: center;
     gap: 8px;
     margin-bottom: 6px;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: none; /* Container blocks touch, slider overrides */
 }
 
 .precision-inline-fader .fader-step {
@@ -1314,6 +1356,7 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
+    touch-action: pan-x; /* Allow horizontal slider dragging */
 }
 
 .precision-inline-slider::-webkit-slider-thumb {
@@ -1384,6 +1427,11 @@ input[type="range"]::-moz-range-thumb {
 
     .custom-select-option {
         padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .blend-mode-select {
+        padding: 10px 30px 10px 12px;
         font-size: 13px;
     }
 

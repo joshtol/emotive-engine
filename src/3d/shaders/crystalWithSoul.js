@@ -61,6 +61,13 @@ uniform float fresnelIntensity;  // Edge brightness strength (default: 1.2)
 uniform float innerGlowStrength; // How much inner soul shows through (default: 0.8)
 uniform float surfaceRoughness;  // Surface texture variation (default: 0.3)
 
+// Enhanced lighting controls
+uniform float shadowDarkness;     // How dark shadows can get (0-1, default: 0.4)
+uniform float specularIntensity;  // Edge highlight brightness (default: 0.8)
+uniform float specularPower;      // Specular falloff sharpness (default: 32.0)
+uniform float transmissionContrast; // Thin/thick brightness ratio (default: 1.5)
+uniform float minBrightness;      // Minimum brightness floor (default: 0.05)
+
 // Noise scale controls
 uniform float surfaceNoiseScale;  // Scale of surface frost pattern (default: 1.5)
 uniform float innerWispScale;     // Scale of internal energy wisps (default: 0.5)
@@ -81,22 +88,38 @@ uniform float sssAmbient;             // Ambient SSS contribution
 uniform vec3 sssLightDir;             // Primary light direction for SSS
 uniform vec3 sssLightColor;           // Light color for SSS
 
-// Blend layer uniforms for advanced effects
-uniform float layer1Mode;
-uniform float layer1Strength;
-uniform float layer1Enabled;
+// Component-specific blend layers
+// Shell layers - affect the frosted crystal shell
+uniform float shellLayer1Mode;
+uniform float shellLayer1Strength;
+uniform float shellLayer1Enabled;
+uniform float shellLayer2Mode;
+uniform float shellLayer2Strength;
+uniform float shellLayer2Enabled;
 
-uniform float layer2Mode;
-uniform float layer2Strength;
-uniform float layer2Enabled;
+// Soul layers - affect the inner glowing soul color
+uniform float soulLayer1Mode;
+uniform float soulLayer1Strength;
+uniform float soulLayer1Enabled;
+uniform float soulLayer2Mode;
+uniform float soulLayer2Strength;
+uniform float soulLayer2Enabled;
 
-uniform float layer3Mode;
-uniform float layer3Strength;
-uniform float layer3Enabled;
+// Rim layers - affect the fresnel rim glow
+uniform float rimLayer1Mode;
+uniform float rimLayer1Strength;
+uniform float rimLayer1Enabled;
+uniform float rimLayer2Mode;
+uniform float rimLayer2Strength;
+uniform float rimLayer2Enabled;
 
-uniform float layer4Mode;
-uniform float layer4Strength;
-uniform float layer4Enabled;
+// SSS layers - affect subsurface scattering contribution
+uniform float sssLayer1Mode;
+uniform float sssLayer1Strength;
+uniform float sssLayer1Enabled;
+uniform float sssLayer2Mode;
+uniform float sssLayer2Strength;
+uniform float sssLayer2Enabled;
 
 varying vec3 vPosition;
 varying vec3 vNormal;
@@ -156,6 +179,56 @@ float fbm(vec3 p) {
 ${blendModesGLSL}
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ENHANCED LIGHTING FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Calculate ambient occlusion from geometry
+float calculateAO(vec3 normal, vec3 viewDir, vec3 position) {
+    // Faces pointing away from view are in shadow
+    float viewAO = max(0.0, dot(normal, viewDir));
+
+    // Use light direction for directional shadow instead of gravity
+    // This creates shadows on the side away from light
+    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.8)); // Match sssLightDir default
+    float lightAO = dot(normal, lightDir) * 0.5 + 0.5;
+
+    // Combine AO factors - no gravity term
+    return viewAO * 0.5 + lightAO * 0.5;
+}
+
+// Calculate specular highlights on facet edges
+float calculateFacetSpecular(vec3 normal, vec3 viewDir, vec3 lightDir, float power) {
+    // Detect facet edges from normal discontinuities
+    float edgeDetect = length(fwidth(normal)) * 15.0;
+    edgeDetect = smoothstep(0.1, 0.5, edgeDetect);
+
+    // Standard Blinn-Phong specular
+    vec3 halfVec = normalize(lightDir + viewDir);
+    float specular = pow(max(0.0, dot(normal, halfVec)), power);
+
+    // Boost specular on edges
+    specular += edgeDetect * 0.5;
+
+    return specular;
+}
+
+// Calculate light transmission based on thickness
+float calculateTransmission(vec3 position, vec3 normal, vec3 viewDir, float contrast) {
+    // Thickness estimation - edges are thin, center is thick
+    float distFromCenter = length(position);
+    float thickness = smoothstep(0.0, 0.6, distFromCenter);
+
+    // View angle affects perceived thickness
+    float viewThickness = 1.0 - abs(dot(normal, viewDir));
+    thickness = mix(thickness, viewThickness, 0.5);
+
+    // Thin areas transmit more light (brighter), thick areas are darker
+    float transmission = 1.0 - thickness * contrast * 0.5;
+
+    return clamp(transmission, 0.3, 1.5);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // PHYSICALLY-BASED SUBSURFACE SCATTERING
 // ═══════════════════════════════════════════════════════════════════════════
 ${sssGLSL}
@@ -169,6 +242,24 @@ void main() {
     // ═══════════════════════════════════════════════════════════════════════
     float fresnel = pow(1.0 - abs(dot(normal, viewDir)), fresnelPower);
     fresnel *= fresnelIntensity;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // AMBIENT OCCLUSION - Dark shadows for depth
+    // ═══════════════════════════════════════════════════════════════════════
+    float ao = calculateAO(normal, viewDir, vPosition);
+    float shadowFactor = mix(1.0, ao, shadowDarkness);
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SPECULAR HIGHLIGHTS - Bright catches on facet edges
+    // ═══════════════════════════════════════════════════════════════════════
+    vec3 lightDir = normalize(sssLightDir);
+    float specular = calculateFacetSpecular(normal, viewDir, lightDir, specularPower);
+    specular *= specularIntensity;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LIGHT TRANSMISSION - Thin areas glow, thick areas darken
+    // ═══════════════════════════════════════════════════════════════════════
+    float transmission = calculateTransmission(vPosition, normal, viewDir, transmissionContrast);
 
     // ═══════════════════════════════════════════════════════════════════════
     // TEXTURE SAMPLING - Crystal surface detail from UV-mapped texture
@@ -193,42 +284,117 @@ void main() {
     float internalWisp = fbm(vPosition * innerWispScale + vec3(time * 0.1, time * 0.07, time * 0.13));
     internalWisp = smoothstep(0.2, 0.8, internalWisp);
 
-    // Core glow - strongest in center, fades toward edges
+    // Core glow - strongest in center, fades toward edges with sharper falloff
     float distFromCenter = length(vPosition);
-    float coreGlow = exp(-distFromCenter * 1.8) * glowPulse;
+    float coreGlow = exp(-distFromCenter * 2.5) * glowPulse;
+
+    // Caustic-like hot spots - light concentrates in certain areas
+    float caustic = noise3D(vPosition * 4.0 + vec3(time * 0.15));
+    caustic = pow(caustic, 3.0) * 2.0; // Sharp bright spots
 
     // Animation pattern (0-1 range) - this creates the visible wisp/glow variation
     // Keep this SEPARATE from overall brightness so patterns stay visible
-    float animationPattern = coreGlow * 0.7 + internalWisp * 0.3;
+    float animationPattern = coreGlow * 0.6 + internalWisp * 0.25 + caustic * 0.15;
 
-    // Soul intensity controls overall brightness, but we preserve pattern contrast
-    // by mixing between a dimmed base and the full pattern
-    float baseLevel = 0.2;  // Minimum brightness to see the color
-    float patternContrast = 0.8;  // How much the pattern modulates brightness
+    // Soul intensity controls overall brightness with more dramatic falloff
+    // Brighter near core, darker at edges
+    float baseLevel = 0.1;  // Lower base for more contrast
+    float patternContrast = 0.9;  // Higher contrast for more variation
     float soulIntensity = (baseLevel + animationPattern * patternContrast) * innerGlowStrength;
+
+    // Apply transmission to soul - thin areas glow brighter
+    soulIntensity *= transmission;
 
     // Soul color from emotion
     // NOTE: emotionColor is pre-normalized by normalizeColorLuminance() in Core3DManager
     // This ensures consistent perceived brightness across all emotions (yellow won't wash out, blue stays visible)
-    // Use sqrt curve for more gradual response - prevents immediate blowout
-    float glowCurve = sqrt(innerGlowStrength * glowIntensity);
+    // Reduced intensity to prevent blowout - soul should be visible but not white
+    float glowCurve = sqrt(innerGlowStrength * glowIntensity) * 0.5;
     vec3 soulColor = emotionColor * soulIntensity * glowCurve;
+    // Clamp soul color to prevent blowout
+    soulColor = min(soulColor, vec3(0.8));
 
     // ═══════════════════════════════════════════════════════════════════════
-    // FROSTED SHELL - Milky white layer over the soul
+    // SOUL BLEND LAYERS - Apply before combining with shell
+    // ═══════════════════════════════════════════════════════════════════════
+    if (soulLayer1Enabled > 0.5) {
+        int mode = int(soulLayer1Mode + 0.5);
+        vec3 blendResult = applyBlendMode(soulColor, emotionColor * soulLayer1Strength, mode);
+        soulColor = mix(soulColor, blendResult, soulLayer1Strength);
+    }
+    if (soulLayer2Enabled > 0.5) {
+        int mode = int(soulLayer2Mode + 0.5);
+        vec3 blendResult = applyBlendMode(soulColor, emotionColor * soulLayer2Strength, mode);
+        soulColor = mix(soulColor, blendResult, soulLayer2Strength);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FROSTED SHELL - Milky white layer with INTERNAL lighting model
+    // Lit from inside: thin edges bright, thick center dark
     // ═══════════════════════════════════════════════════════════════════════
 
-    // Frosted glass base - lighter than before
-    vec3 frostBase = vec3(0.6, 0.65, 0.7) * frostiness;
+    // Frosted glass base - will be modulated by thickness
+    // Lower base values allow for darker thick areas while maintaining bright edges
+    vec3 frostBase = vec3(0.45, 0.48, 0.55) * frostiness;
+
+    // THICKNESS-BASED DARKNESS (internal lighting model)
+    // Face-on facets are THICK (light travels far through) = DARK
+    // Edge-on facets are THIN (light escapes easily) = BRIGHT
+    float edgeThinness = 1.0 - abs(dot(normal, viewDir));  // 1 at edges, 0 facing camera
+
+    // Apply curve to make face-on areas darker more aggressively
+    float thinness = pow(edgeThinness, 0.7);  // Push more area toward dark
+
+    // Thickness multiplier: thin edges=bright (1.0), thick face-on=dark (0.08)
+    float thicknessMultiplier = 0.08 + thinness * 0.92;
+    frostBase *= thicknessMultiplier;
 
     // Surface variation adds subtle texture
-    frostBase += vec3(surfaceNoise * 0.1);
+    frostBase += vec3(surfaceNoise * 0.03);
+
+    // Specular highlights on facet edges (external light catch)
+    float facetHighlight = pow(max(0.0, dot(normal, normalize(vec3(0.5, 1.0, 0.8)))), 16.0);
+    frostBase += vec3(facetHighlight * 0.2);
+
+    // SOUL BLEED - Inner glow illuminates the shell from inside
+    // Use gentler falloff so color reaches the shell surface
+    float soulBleed = exp(-distFromCenter * 1.2) * innerGlowStrength;
+    // Stronger color contribution - tint the frost with emotion color
+    frostBase = mix(frostBase, frostBase + emotionColor * 0.4, soulBleed);
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SHELL BLEND LAYERS - Apply to frosted shell
+    // ═══════════════════════════════════════════════════════════════════════
+    if (shellLayer1Enabled > 0.5) {
+        int mode = int(shellLayer1Mode + 0.5);
+        vec3 blendResult = applyBlendMode(frostBase, emotionColor * shellLayer1Strength, mode);
+        frostBase = mix(frostBase, blendResult, shellLayer1Strength);
+    }
+    if (shellLayer2Enabled > 0.5) {
+        int mode = int(shellLayer2Mode + 0.5);
+        vec3 blendResult = applyBlendMode(frostBase, emotionColor * shellLayer2Strength, mode);
+        frostBase = mix(frostBase, blendResult, shellLayer2Strength);
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // FRESNEL RIM - Bright emotion-colored edge glow
     // ═══════════════════════════════════════════════════════════════════════
     vec3 rimColor = mix(vec3(0.5, 0.9, 1.0), emotionColor, 0.6);
     vec3 rimGlow = rimColor * fresnel * 1.2;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // RIM BLEND LAYERS - Apply to fresnel rim glow
+    // ═══════════════════════════════════════════════════════════════════════
+    if (rimLayer1Enabled > 0.5) {
+        int mode = int(rimLayer1Mode + 0.5);
+        vec3 blendResult = applyBlendMode(rimGlow, emotionColor * rimLayer1Strength, mode);
+        rimGlow = mix(rimGlow, blendResult, rimLayer1Strength);
+    }
+    if (rimLayer2Enabled > 0.5) {
+        int mode = int(rimLayer2Mode + 0.5);
+        vec3 blendResult = applyBlendMode(rimGlow, emotionColor * rimLayer2Strength, mode);
+        rimGlow = mix(rimGlow, blendResult, rimLayer2Strength);
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHYSICALLY-BASED SUBSURFACE SCATTERING
@@ -251,11 +417,30 @@ void main() {
     );
 
     // ═══════════════════════════════════════════════════════════════════════
-    // COMBINE - Bright soul + frosted shell + glowing rim + SSS
+    // SSS BLEND LAYERS - Apply to subsurface scattering contribution
+    // ═══════════════════════════════════════════════════════════════════════
+    if (sssLayer1Enabled > 0.5) {
+        int mode = int(sssLayer1Mode + 0.5);
+        vec3 blendResult = applyBlendMode(sss, emotionColor * sssLayer1Strength, mode);
+        sss = mix(sss, blendResult, sssLayer1Strength);
+    }
+    if (sssLayer2Enabled > 0.5) {
+        int mode = int(sssLayer2Mode + 0.5);
+        vec3 blendResult = applyBlendMode(sss, emotionColor * sssLayer2Strength, mode);
+        sss = mix(sss, blendResult, sssLayer2Strength);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // COMBINE - Frosted shell base + soul glow (soul adds to shell, doesn't replace)
     // ═══════════════════════════════════════════════════════════════════════
 
-    // Blend soul through frost - soul is primary, frost softens it
-    vec3 finalColor = mix(frostBase, soulColor, 0.6 + soulIntensity * 0.4);
+    // Start with shell as base - preserves dark shadows
+    vec3 finalColor = frostBase;
+
+    // Add soul glow on top (additive, not replacement) - concentrated in center
+    // Soul should illuminate dark areas but not wash out entirely
+    float soulBlendFactor = soulIntensity * 0.6;
+    finalColor += soulColor * soulBlendFactor;
 
     // Apply texture - blend based on texture brightness and strength
     vec3 texContribution = texColor.rgb * textureStrength;
@@ -297,36 +482,22 @@ void main() {
         finalColor += rimGlow;
     }
 
-    // Ensure minimum brightness so crystal is always visible (neutral gray, no color bias)
-    finalColor = max(finalColor, vec3(0.15));
+    // ═══════════════════════════════════════════════════════════════════════
+    // SPECULAR HIGHLIGHTS - Add bright hot spots
+    // ═══════════════════════════════════════════════════════════════════════
+    vec3 specularColor = vec3(1.0, 0.98, 0.95); // Warm white highlights
+    finalColor += specularColor * specular * transmission;
 
     // ═══════════════════════════════════════════════════════════════════════
-    // BLEND LAYERS (for advanced visual tuning)
+    // FINAL THICKNESS APPLICATION - Apply AFTER all additive terms
+    // This ensures thick areas stay dark even with glow added
     // ═══════════════════════════════════════════════════════════════════════
+    // thicknessMultiplier: 0.15 in thick center, 1.0 at thin edges
+    finalColor *= thicknessMultiplier;
 
-    if (layer1Enabled > 0.5) {
-        int mode1 = int(layer1Mode + 0.5);
-        vec3 blendResult = applyBlendMode(finalColor, emotionColor * layer1Strength, mode1);
-        finalColor = mix(finalColor, blendResult, layer1Strength);
-    }
-
-    if (layer2Enabled > 0.5) {
-        int mode2 = int(layer2Mode + 0.5);
-        vec3 blendResult = applyBlendMode(finalColor, emotionColor * layer2Strength, mode2);
-        finalColor = mix(finalColor, blendResult, layer2Strength);
-    }
-
-    if (layer3Enabled > 0.5) {
-        int mode3 = int(layer3Mode + 0.5);
-        vec3 blendResult = applyBlendMode(finalColor, emotionColor * layer3Strength, mode3);
-        finalColor = mix(finalColor, blendResult, layer3Strength);
-    }
-
-    if (layer4Enabled > 0.5) {
-        int mode4 = int(layer4Mode + 0.5);
-        vec3 blendResult = applyBlendMode(finalColor, emotionColor * layer4Strength, mode4);
-        finalColor = mix(finalColor, blendResult, layer4Strength);
-    }
+    // Ensure minimum brightness (very low floor for dramatic shadows)
+    // Only apply to prevent pure black - allow near-black shadows
+    finalColor = max(finalColor, vec3(minBrightness * 0.5));
 
     // ═══════════════════════════════════════════════════════════════════════
     // ALPHA - More opaque for visibility
@@ -369,11 +540,18 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     opacity: 1.0,
 
     // Crystal appearance (tuned for crystal.obj)
-    frostiness: 0.585,          // Frosted translucency
-    fresnelPower: 2.5,          // Edge brightness falloff
-    fresnelIntensity: 0.298,    // Edge brightness strength
-    innerGlowStrength: 0.478,   // How much soul shows through
-    surfaceRoughness: 0.15,     // Surface texture variation
+    frostiness: 0.55,           // Frosted translucency (slightly less opaque)
+    fresnelPower: 2.8,          // Edge brightness falloff (slightly sharper)
+    fresnelIntensity: 0.35,     // Edge brightness strength (more visible rim)
+    innerGlowStrength: 0.55,    // How much soul shows through (boosted)
+    surfaceRoughness: 0.12,     // Surface texture variation (subtler)
+
+    // Enhanced lighting
+    shadowDarkness: 0.60,       // How dark shadows can get (0-1) - strong shadows
+    specularIntensity: 0.9,     // Edge highlight brightness
+    specularPower: 28.0,        // Specular falloff sharpness
+    transmissionContrast: 1.0,  // Thin/thick brightness ratio
+    minBrightness: 0.02,        // Minimum brightness floor (near-black allowed)
 
     // Noise scales
     surfaceNoiseScale: 1.50,    // Scale of surface frost pattern
@@ -384,30 +562,46 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     textureStrength: 0.55,      // How much texture affects appearance
 
     // Physically-based subsurface scattering (crystal preset as default)
-    sssStrength: 0.594,                     // Overall SSS intensity
+    sssStrength: 0.65,                      // Overall SSS intensity (boosted)
     sssAbsorption: [2.4, 2.5, 2.8],         // Absorption coefficients RGB (crystal - cool blue tint)
-    sssScatterDistance: [0.3, 0.35, 0.4],   // Mean free path / scatter radius RGB
-    sssThicknessBias: 0.15,                 // Base thickness value
-    sssThicknessScale: 0.55,                // Thickness multiplier
-    sssCurvatureScale: 1.70,                // Curvature influence on SSS
-    sssAmbient: 0.20,                       // Ambient SSS contribution
+    sssScatterDistance: [0.35, 0.4, 0.45],  // Mean free path / scatter radius RGB (increased)
+    sssThicknessBias: 0.18,                 // Base thickness value
+    sssThicknessScale: 0.60,                // Thickness multiplier
+    sssCurvatureScale: 1.80,                // Curvature influence on SSS
+    sssAmbient: 0.30,                       // Ambient SSS contribution (boosted for visibility)
     sssLightDir: [0.5, 1.0, 0.8],           // Primary light direction
     sssLightColor: [1.0, 0.98, 0.95],       // Light color (warm white)
 
-    // Blend layers (disabled by default)
-    layer1Mode: 6,              // Add mode for glow boost
-    layer1Strength: 0.0,
-    layer1Enabled: 0,
+    // Component-specific blend layers (all disabled by default)
+    // Shell layers - affect frosted crystal shell
+    shellLayer1Mode: 0,
+    shellLayer1Strength: 0.0,
+    shellLayer1Enabled: 0,
+    shellLayer2Mode: 0,
+    shellLayer2Strength: 0.0,
+    shellLayer2Enabled: 0,
 
-    layer2Mode: 0,
-    layer2Strength: 0.0,
-    layer2Enabled: 0,
+    // Soul layers - affect inner glowing soul
+    soulLayer1Mode: 0,
+    soulLayer1Strength: 0.0,
+    soulLayer1Enabled: 0,
+    soulLayer2Mode: 0,
+    soulLayer2Strength: 0.0,
+    soulLayer2Enabled: 0,
 
-    layer3Mode: 0,
-    layer3Strength: 0.0,
-    layer3Enabled: 0,
+    // Rim layers - affect fresnel rim glow
+    rimLayer1Mode: 0,
+    rimLayer1Strength: 0.0,
+    rimLayer1Enabled: 0,
+    rimLayer2Mode: 0,
+    rimLayer2Strength: 0.0,
+    rimLayer2Enabled: 0,
 
-    layer4Mode: 0,
-    layer4Strength: 0.0,
-    layer4Enabled: 0
+    // SSS layers - affect subsurface scattering
+    sssLayer1Mode: 0,
+    sssLayer1Strength: 0.0,
+    sssLayer1Enabled: 0,
+    sssLayer2Mode: 0,
+    sssLayer2Strength: 0.0,
+    sssLayer2Enabled: 0
 };

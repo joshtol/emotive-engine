@@ -41,14 +41,11 @@ export function createLayerCard({ layer, blendModeNames, prefix = 'Layer', onUpd
         </div>
         <div class="layer-controls">
             <div class="layer-settings-row">
-                <div class="custom-select">
-                    <div class="custom-select-trigger">${blendModeNames[layer.mode]}</div>
-                    <div class="custom-select-dropdown">
-                        ${blendModeNames.map((name, idx) =>
-        `<div class="custom-select-option${layer.mode === idx ? ' selected' : ''}" data-value="${idx}">${name}</div>`
+                <select class="blend-mode-select">
+                    ${blendModeNames.map((name, idx) =>
+        `<option value="${idx}"${layer.mode === idx ? ' selected' : ''}>${name}</option>`
     ).join('')}
-                    </div>
-                </div>
+                </select>
                 <span class="fader-value">${layer.strength.toFixed(3)}</span>
             </div>
             <div class="fader-control">
@@ -62,9 +59,7 @@ export function createLayerCard({ layer, blendModeNames, prefix = 'Layer', onUpd
     // Elements
     const toggleBtn = card.querySelector('.toggle-btn');
     const deleteBtn = card.querySelector('.delete-btn');
-    const select = card.querySelector('.custom-select');
-    const trigger = select.querySelector('.custom-select-trigger');
-    const options = select.querySelectorAll('.custom-select-option');
+    const selectEl = card.querySelector('.blend-mode-select');
     const slider = card.querySelector('.fader-slider');
     const valueEl = card.querySelector('.fader-value');
     const stepDown = card.querySelector('.fader-step-down');
@@ -91,23 +86,10 @@ export function createLayerCard({ layer, blendModeNames, prefix = 'Layer', onUpd
     // Delete button
     deleteBtn.addEventListener('click', () => onDelete?.(layer.id));
 
-    // Custom select dropdown
-    trigger.addEventListener('click', e => {
-        e.stopPropagation();
-        document.querySelectorAll('.custom-select.open').forEach(s => s !== select && s.classList.remove('open'));
-        select.classList.toggle('open');
-    });
-
-    options.forEach(option => {
-        option.addEventListener('click', e => {
-            e.stopPropagation();
-            layer.mode = parseInt(option.dataset.value, 10);
-            trigger.textContent = blendModeNames[layer.mode];
-            options.forEach(o => o.classList.remove('selected'));
-            option.classList.add('selected');
-            select.classList.remove('open');
-            onUpdate?.();
-        });
+    // Native select - supports keyboard navigation (arrow keys work while focused)
+    selectEl.addEventListener('change', () => {
+        layer.mode = parseInt(selectEl.value, 10);
+        onUpdate?.();
     });
 
     // Slider
@@ -129,7 +111,7 @@ export function createLayerCard({ layer, blendModeNames, prefix = 'Layer', onUpd
     dragHandle.addEventListener('touchstart', () => { card.draggable = true; }, { passive: true });
 
     // Prevent dragging when interacting with controls
-    const interactiveElements = card.querySelectorAll('select, input, button, .custom-select, .fader-value');
+    const interactiveElements = card.querySelectorAll('select, input, button, .fader-value');
     interactiveElements.forEach(el => {
         el.addEventListener('mousedown', e => {
             if (!e.target.closest('.drag-handle')) {
@@ -371,12 +353,3 @@ function getDragAfterElement(container, y) {
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CLOSE DROPDOWNS ON OUTSIDE CLICK
-// ═══════════════════════════════════════════════════════════════════════════════
-
-document.addEventListener('click', e => {
-    if (!e.target.closest('.custom-select')) {
-        document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
-    }
-});

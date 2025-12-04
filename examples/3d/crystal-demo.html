@@ -345,6 +345,45 @@
             </div>
         </div>
 
+        <div class="section">
+            <div class="info-box">
+                <strong>Blend Layers:</strong><br>
+                Click value to fine-tune. Drag layers to reorder. Max 2 per component.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Shell Blend Layers</h2>
+            <div class="section-content collapsed">
+                <div id="shell-layers-container"></div>
+                <button class="add-layer-btn" id="add-shell-layer-btn">+ Add Shell Layer</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Soul Blend Layers</h2>
+            <div class="section-content collapsed">
+                <div id="soul-layers-container"></div>
+                <button class="add-layer-btn" id="add-soul-layer-btn">+ Add Soul Layer</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Rim Blend Layers</h2>
+            <div class="section-content collapsed">
+                <div id="rim-layers-container"></div>
+                <button class="add-layer-btn" id="add-rim-layer-btn">+ Add Rim Layer</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">SSS Blend Layers</h2>
+            <div class="section-content collapsed">
+                <div id="sss-layers-container"></div>
+                <button class="add-layer-btn" id="add-sss-layer-btn">+ Add SSS Layer</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -362,7 +401,26 @@
     </script>
 
     <script type="module">
-        import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
+        import EmotiveMascot3D, { blendModeNames } from '../../dist/emotive-mascot-3d.js';
+        import { createLayerCard, setupDragAndDrop, exitPrecisionMode } from './layer-utils.js';
+
+        const MAX_BLEND_LAYERS = 2;  // 2 layers per component
+
+        // Layer state for each component
+        let shellLayers = [];
+        let soulLayers = [];
+        let rimLayers = [];
+        let sssBlendLayers = [];
+        let nextShellLayerId = 1;
+        let nextSoulLayerId = 1;
+        let nextRimLayerId = 1;
+        let nextSssLayerId = 1;
+
+        // Get containers
+        const shellLayersContainer = document.getElementById('shell-layers-container');
+        const soulLayersContainer = document.getElementById('soul-layers-container');
+        const rimLayersContainer = document.getElementById('rim-layers-container');
+        const sssLayersContainer = document.getElementById('sss-layers-container');
 
         const container = document.getElementById('crystal-container');
         const mascot = new EmotiveMascot3D({
@@ -815,6 +873,164 @@
                 mascot.core3D.setCrystalSoulEffects({ shimmerSpeed: value });
             }
         });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // BLEND LAYER MANAGEMENT
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Update shader uniforms for each component
+        function updateShellLayers() {
+            if (!mascot?.core3D?.customMaterial?.uniforms) return;
+            const u = mascot.core3D.customMaterial.uniforms;
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const layer = shellLayers[i];
+                const idx = i + 1;
+                if (u[`shellLayer${idx}Mode`]) u[`shellLayer${idx}Mode`].value = layer?.mode ?? 0;
+                if (u[`shellLayer${idx}Strength`]) u[`shellLayer${idx}Strength`].value = layer?.strength ?? 0;
+                if (u[`shellLayer${idx}Enabled`]) u[`shellLayer${idx}Enabled`].value = layer?.enabled ? 1 : 0;
+            }
+        }
+
+        function updateSoulLayers() {
+            if (!mascot?.core3D?.customMaterial?.uniforms) return;
+            const u = mascot.core3D.customMaterial.uniforms;
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const layer = soulLayers[i];
+                const idx = i + 1;
+                if (u[`soulLayer${idx}Mode`]) u[`soulLayer${idx}Mode`].value = layer?.mode ?? 0;
+                if (u[`soulLayer${idx}Strength`]) u[`soulLayer${idx}Strength`].value = layer?.strength ?? 0;
+                if (u[`soulLayer${idx}Enabled`]) u[`soulLayer${idx}Enabled`].value = layer?.enabled ? 1 : 0;
+            }
+        }
+
+        function updateRimLayers() {
+            if (!mascot?.core3D?.customMaterial?.uniforms) return;
+            const u = mascot.core3D.customMaterial.uniforms;
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const layer = rimLayers[i];
+                const idx = i + 1;
+                if (u[`rimLayer${idx}Mode`]) u[`rimLayer${idx}Mode`].value = layer?.mode ?? 0;
+                if (u[`rimLayer${idx}Strength`]) u[`rimLayer${idx}Strength`].value = layer?.strength ?? 0;
+                if (u[`rimLayer${idx}Enabled`]) u[`rimLayer${idx}Enabled`].value = layer?.enabled ? 1 : 0;
+            }
+        }
+
+        function updateSssBlendLayers() {
+            if (!mascot?.core3D?.customMaterial?.uniforms) return;
+            const u = mascot.core3D.customMaterial.uniforms;
+            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                const layer = sssBlendLayers[i];
+                const idx = i + 1;
+                if (u[`sssLayer${idx}Mode`]) u[`sssLayer${idx}Mode`].value = layer?.mode ?? 0;
+                if (u[`sssLayer${idx}Strength`]) u[`sssLayer${idx}Strength`].value = layer?.strength ?? 0;
+                if (u[`sssLayer${idx}Enabled`]) u[`sssLayer${idx}Enabled`].value = layer?.enabled ? 1 : 0;
+            }
+        }
+
+        // Add layer functions
+        function addShellLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (shellLayers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextShellLayerId++, mode, strength, enabled };
+            shellLayers.push(layer);
+            const card = createLayerCard({
+                layer,
+                blendModeNames,
+                prefix: 'Shell',
+                onUpdate: updateShellLayers,
+                onDelete: removeShellLayer
+            });
+            shellLayersContainer.appendChild(card);
+            if (!skipUpdate) updateShellLayers();
+        }
+
+        function removeShellLayer(layerId) {
+            const idx = shellLayers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            shellLayers.splice(idx, 1);
+            shellLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
+            updateShellLayers();
+        }
+
+        function addSoulLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (soulLayers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextSoulLayerId++, mode, strength, enabled };
+            soulLayers.push(layer);
+            const card = createLayerCard({
+                layer,
+                blendModeNames,
+                prefix: 'Soul',
+                onUpdate: updateSoulLayers,
+                onDelete: removeSoulLayer
+            });
+            soulLayersContainer.appendChild(card);
+            if (!skipUpdate) updateSoulLayers();
+        }
+
+        function removeSoulLayer(layerId) {
+            const idx = soulLayers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            soulLayers.splice(idx, 1);
+            soulLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
+            updateSoulLayers();
+        }
+
+        function addRimLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (rimLayers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextRimLayerId++, mode, strength, enabled };
+            rimLayers.push(layer);
+            const card = createLayerCard({
+                layer,
+                blendModeNames,
+                prefix: 'Rim',
+                onUpdate: updateRimLayers,
+                onDelete: removeRimLayer
+            });
+            rimLayersContainer.appendChild(card);
+            if (!skipUpdate) updateRimLayers();
+        }
+
+        function removeRimLayer(layerId) {
+            const idx = rimLayers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            rimLayers.splice(idx, 1);
+            rimLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
+            updateRimLayers();
+        }
+
+        function addSssBlendLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
+            if (sssBlendLayers.length >= MAX_BLEND_LAYERS) return;
+            const layer = { id: nextSssLayerId++, mode, strength, enabled };
+            sssBlendLayers.push(layer);
+            const card = createLayerCard({
+                layer,
+                blendModeNames,
+                prefix: 'SSS',
+                onUpdate: updateSssBlendLayers,
+                onDelete: removeSssBlendLayer
+            });
+            sssLayersContainer.appendChild(card);
+            if (!skipUpdate) updateSssBlendLayers();
+        }
+
+        function removeSssBlendLayer(layerId) {
+            const idx = sssBlendLayers.findIndex(l => l.id === layerId);
+            if (idx === -1) return;
+            sssBlendLayers.splice(idx, 1);
+            sssLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
+            updateSssBlendLayers();
+        }
+
+        // Setup drag and drop for all containers
+        setupDragAndDrop(shellLayersContainer, shellLayers, updateShellLayers);
+        setupDragAndDrop(soulLayersContainer, soulLayers, updateSoulLayers);
+        setupDragAndDrop(rimLayersContainer, rimLayers, updateRimLayers);
+        setupDragAndDrop(sssLayersContainer, sssBlendLayers, updateSssBlendLayers);
+
+        // Add layer button handlers
+        document.getElementById('add-shell-layer-btn').addEventListener('click', () => addShellLayer());
+        document.getElementById('add-soul-layer-btn').addEventListener('click', () => addSoulLayer());
+        document.getElementById('add-rim-layer-btn').addEventListener('click', () => addRimLayer());
+        document.getElementById('add-sss-layer-btn').addEventListener('click', () => addSssBlendLayer());
 
         // Initial emotion display
         updateEmotionDisplay('neutral');
