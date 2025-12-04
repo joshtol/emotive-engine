@@ -568,6 +568,11 @@ export class Core3DManager {
      */
     setCoreGlowEnabled(enabled) {
         this.coreGlowEnabled = enabled;
+
+        // Also toggle crystal soul visibility for crystal-type geometries
+        if (this.crystalSoul) {
+            this.crystalSoul.setVisible(enabled);
+        }
     }
 
     /**
@@ -944,6 +949,9 @@ export class Core3DManager {
 
         this.crystalSoul.baseScale = soulScale;
         this.crystalSoul.mesh.scale.setScalar(soulScale);
+
+        // Respect coreGlowEnabled toggle state
+        this.crystalSoul.setVisible(this.coreGlowEnabled);
 
         // Legacy references for backwards compatibility
         this.crystalInnerCore = this.crystalSoul.mesh;
@@ -1459,6 +1467,14 @@ export class Core3DManager {
             updateSunMaterial(this.coreMesh, this.glowColor, effectiveGlowIntensity, deltaTime);
         }
 
+        // Moon: glowIntensity affects subtle emotion-colored glow (very subtle effect, * 0.02 in shader)
+        // Unlike crystals, moon doesn't have a "core" that glows - it's a textured lit sphere
+        if ((this.customMaterialType === 'moon' || this.customMaterialType === 'moon-multiplexer') && this.customMaterial) {
+            if (this.customMaterial.uniforms && this.customMaterial.uniforms.glowIntensity) {
+                this.customMaterial.uniforms.glowIntensity.value = effectiveGlowIntensity;
+            }
+        }
+
         // Update black hole material animation if using black hole geometry
         if (this.customMaterialType === 'blackHole') {
             updateBlackHoleMaterial(this.coreMesh, deltaTime, {
@@ -1474,6 +1490,11 @@ export class Core3DManager {
             if (this.customMaterial.uniforms) {
                 // Update time for animation (convert ms to seconds for sane speed values)
                 this.customMaterial.uniforms.time.value += deltaTime / 1000;
+
+                // Update glow intensity - respects coreGlowEnabled toggle
+                if (this.customMaterial.uniforms.glowIntensity) {
+                    this.customMaterial.uniforms.glowIntensity.value = effectiveGlowIntensity;
+                }
 
                 // Normalize emotion color for consistent perceived brightness across all emotions
                 // This ensures yellow (joy) doesn't wash out the soul while blue (sadness) stays visible
@@ -1495,12 +1516,15 @@ export class Core3DManager {
                 }
             }
             // Update inner core color and animation (also use normalized color)
-            let normalizedCoreColor = this.glowColor;
-            if (this.glowColorHex) {
-                const normalized = normalizeColorLuminance(this.glowColorHex, 0.30);
-                normalizedCoreColor = [normalized.r, normalized.g, normalized.b];
+            // Only update if core glow is enabled
+            if (this.coreGlowEnabled) {
+                let normalizedCoreColor = this.glowColor;
+                if (this.glowColorHex) {
+                    const normalized = normalizeColorLuminance(this.glowColorHex, 0.30);
+                    normalizedCoreColor = [normalized.r, normalized.g, normalized.b];
+                }
+                this.updateCrystalInnerCore(normalizedCoreColor, deltaTime);
             }
-            this.updateCrystalInnerCore(normalizedCoreColor, deltaTime);
         }
 
         // Render with Three.js

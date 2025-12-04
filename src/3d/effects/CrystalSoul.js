@@ -252,6 +252,16 @@ export class CrystalSoul {
     }
 
     /**
+     * Set soul visibility
+     * @param {boolean} visible - Whether the soul should be visible
+     */
+    setVisible(visible) {
+        if (this.mesh) {
+            this.mesh.visible = visible;
+        }
+    }
+
+    /**
      * Dispose of resources
      */
     dispose() {
