@@ -226,7 +226,8 @@
                 sssAmbient: 0.12,
                 frostiness: 0.15,
                 innerGlowStrength: 0.20,
-                fresnelIntensity: 1.5
+                fresnelIntensity: 1.5,
+                causticIntensity: 1.2
             },
             emerald: {
                 sssStrength: 2.0,
@@ -241,16 +242,17 @@
                 fresnelIntensity: 1.2
             },
             ruby: {
-                sssStrength: 1.4,
-                sssAbsorption: [3.5, 0.05, 0.15],
-                sssScatterDistance: [0.35, 0.06, 0.12],
-                sssThicknessBias: 0.55,
-                sssThicknessScale: 1.7,
-                sssCurvatureScale: 2.0,
-                sssAmbient: 0.12,
-                frostiness: 0.15,
-                innerGlowStrength: 0.15,
-                fresnelIntensity: 0.55
+                sssStrength: 1.8,
+                sssAbsorption: [4.0, 0.03, 0.08],
+                sssScatterDistance: [0.4, 0.04, 0.08],
+                sssThicknessBias: 0.65,
+                sssThicknessScale: 1.9,
+                sssCurvatureScale: 2.5,
+                sssAmbient: 0.08,
+                frostiness: 0.12,
+                innerGlowStrength: 0.12,
+                fresnelIntensity: 1.2,
+                causticIntensity: 1.15
             },
             sapphire: {
                 sssStrength: 2.2,
@@ -292,6 +294,11 @@
             if (u.sssThicknessScale) u.sssThicknessScale.value = preset.sssThicknessScale;
             if (u.sssCurvatureScale) u.sssCurvatureScale.value = preset.sssCurvatureScale;
             if (u.sssAmbient) u.sssAmbient.value = preset.sssAmbient;
+
+            // Apply caustic intensity if specified
+            if (preset.causticIntensity !== undefined && u.causticIntensity) {
+                u.causticIntensity.value = preset.causticIntensity;
+            }
 
             // Heart has its own calibrated appearance values - don't override them
             if (currentGeometry !== 'heart') {

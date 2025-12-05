@@ -216,6 +216,52 @@ float calculateFacetSpecular(vec3 normal, vec3 viewDir, vec3 lightDir, float pow
     return specular;
 }
 
+// Calculate "fire" - intense sparkle points that real gems exhibit
+// These are concentrated, view-dependent highlights from light dispersion
+float calculateFire(vec3 normal, vec3 viewDir, vec3 lightDir) {
+    // Primary fire highlight - VERY sharp falloff for pinpoint sparkles
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float fire1 = pow(max(0.0, dot(reflectDir, viewDir)), 512.0);
+
+    // Secondary fire from different light angle (simulates environment)
+    vec3 lightDir2 = normalize(vec3(-0.3, 0.8, 0.5));
+    vec3 reflectDir2 = reflect(-lightDir2, normal);
+    float fire2 = pow(max(0.0, dot(reflectDir2, viewDir)), 384.0);
+
+    // Third fire point for more sparkle
+    vec3 lightDir3 = normalize(vec3(0.7, 0.4, -0.6));
+    vec3 reflectDir3 = reflect(-lightDir3, normal);
+    float fire3 = pow(max(0.0, dot(reflectDir3, viewDir)), 256.0);
+
+    // Combine fire points - only keep the brightest peaks
+    float fire = fire1 + fire2 * 0.7 + fire3 * 0.5;
+
+    // Facet edges catch more fire
+    float edgeFactor = length(fwidth(normal)) * 20.0;
+    fire *= (1.0 + edgeFactor * 2.0);
+
+    return fire;
+}
+
+// Calculate bright lines along facet edges where bevels catch light
+float calculateFacetEdgeLines(vec3 normal, vec3 viewDir, vec3 lightDir) {
+    // Detect edges from normal discontinuities
+    float edgeMag = length(fwidth(normal));
+
+    // Sharp threshold to create distinct lines
+    float edgeLine = smoothstep(0.02, 0.08, edgeMag);
+
+    // Modulate by light angle - edges facing light are brighter
+    float lightFacing = max(0.0, dot(normal, lightDir));
+    edgeLine *= (0.3 + lightFacing * 0.7);
+
+    // View-dependent - edges perpendicular to view are more visible
+    float viewPerp = 1.0 - abs(dot(normal, viewDir));
+    edgeLine *= (0.5 + viewPerp * 0.5);
+
+    return edgeLine;
+}
+
 // Calculate light transmission based on thickness
 float calculateTransmission(vec3 position, vec3 normal, vec3 viewDir, float contrast) {
     // Thickness estimation - edges are thin, center is thick
@@ -292,42 +338,80 @@ void main() {
     // INTERNAL CAUSTICS - Light refraction pools inside the gem
     // Creates bright concentrated spots that shift with viewing angle
     // Real caustics form where refracted light rays converge inside the gem
+    // Now with CHROMATIC ABERRATION - different wavelengths refract differently
     // ═══════════════════════════════════════════════════════════════════════
 
-    // Refract view direction through gem surface (IOR ~1.76 for ruby/sapphire)
-    vec3 refractDir = refract(-viewDir, normal, 0.57);
-
-    // Sample position shifts significantly with view angle
-    // This creates the view-dependent "swimming" effect of internal light
-    vec3 causticPos = vPosition * causticScale + refractDir * 1.5;
+    // Refract view direction through gem surface with different IOR per wavelength
+    // Red refracts less (higher IOR ratio), blue refracts more (lower IOR ratio)
+    // Chromatic separation is REDUCED for colored gems to avoid color contamination
+    // Quartz (low sssStrength) gets full rainbow, colored gems get subtle dispersion
+    float chromaticStrength = 1.0 - clamp((sssStrength - 0.5) * 0.8, 0.0, 0.8);
+    float iorR = mix(0.57, 0.70, chromaticStrength); // Red - approaches green for colored gems
+    float iorB = mix(0.57, 0.44, chromaticStrength); // Blue - approaches green for colored gems
+    vec3 refractDirR = refract(-viewDir, normal, iorR);
+    vec3 refractDirG = refract(-viewDir, normal, 0.57); // Green - always medium
+    vec3 refractDirB = refract(-viewDir, normal, iorB);
 
     // Animated drift
     float causticTime = time * causticSpeed;
-    causticPos += vec3(causticTime * 0.3, causticTime * 0.2, causticTime * 0.1);
+    vec3 drift = vec3(causticTime * 0.3, causticTime * 0.2, causticTime * 0.1);
 
-    // Create caustic pattern using interference of two wave patterns
-    // This mimics how light rays converge and diverge inside refractive media
-    float wave1 = sin(causticPos.x * 2.0 + causticPos.y * 1.5 + causticPos.z);
-    float wave2 = sin(causticPos.y * 2.3 - causticPos.x * 1.2 + causticPos.z * 1.8);
-    float wave3 = sin(causticPos.z * 1.9 + causticPos.x * 0.8 - causticPos.y * 1.4);
+    // Sample positions for each color channel
+    // Offset is also reduced for colored gems to minimize chromatic contamination
+    float spatialOffset = mix(1.0, 3.0, chromaticStrength);
+    vec3 causticPosR = vPosition * causticScale + refractDirR * spatialOffset + drift;
+    vec3 causticPosG = vPosition * causticScale + refractDirG * spatialOffset + drift;
+    vec3 causticPosB = vPosition * causticScale + refractDirB * spatialOffset + drift;
 
-    // Interference creates bright spots where waves align
-    float interference = (wave1 + wave2 + wave3) / 3.0; // -1 to 1 range
+    // Create caustic pattern for each channel
+    // Red channel
+    float waveR1 = sin(causticPosR.x * 2.0 + causticPosR.y * 1.5 + causticPosR.z);
+    float waveR2 = sin(causticPosR.y * 2.3 - causticPosR.x * 1.2 + causticPosR.z * 1.8);
+    float waveR3 = sin(causticPosR.z * 1.9 + causticPosR.x * 0.8 - causticPosR.y * 1.4);
+    float interferenceR = (waveR1 + waveR2 + waveR3) / 3.0;
+    float causticR = smoothstep(0.3, 0.8, interferenceR);
 
-    // Sharp threshold - only keep the brightest convergence points
-    float caustic = smoothstep(0.3, 0.8, interference); // Only top ~25% becomes bright
+    // Green channel
+    float waveG1 = sin(causticPosG.x * 2.0 + causticPosG.y * 1.5 + causticPosG.z);
+    float waveG2 = sin(causticPosG.y * 2.3 - causticPosG.x * 1.2 + causticPosG.z * 1.8);
+    float waveG3 = sin(causticPosG.z * 1.9 + causticPosG.x * 0.8 - causticPosG.y * 1.4);
+    float interferenceG = (waveG1 + waveG2 + waveG3) / 3.0;
+    float causticG = smoothstep(0.3, 0.8, interferenceG);
+
+    // Blue channel
+    float waveB1 = sin(causticPosB.x * 2.0 + causticPosB.y * 1.5 + causticPosB.z);
+    float waveB2 = sin(causticPosB.y * 2.3 - causticPosB.x * 1.2 + causticPosB.z * 1.8);
+    float waveB3 = sin(causticPosB.z * 1.9 + causticPosB.x * 0.8 - causticPosB.y * 1.4);
+    float interferenceB = (waveB1 + waveB2 + waveB3) / 3.0;
+    float causticB = smoothstep(0.3, 0.8, interferenceB);
+
+    // Combine into RGB caustic with chromatic separation
+    vec3 causticRGB = vec3(causticR, causticG, causticB);
 
     // Add noise variation to break up uniformity
-    float noiseVar = noise3D(causticPos * 0.5);
-    caustic *= (0.7 + noiseVar * 0.6);
+    float noiseVar = noise3D(causticPosG * 0.5);
+    causticRGB *= (0.7 + noiseVar * 0.6);
+
+    // Clamp caustic peaks to prevent hot spot blobs
+    // This keeps caustics subtle and distributed rather than concentrated
+    causticRGB = min(causticRGB, vec3(0.6));
 
     // Caustics are MORE visible in thick areas (center) where light has more
     // material to refract through and pool
     float thickness = abs(dot(normal, viewDir)); // 1 at center, 0 at edges
-    caustic *= (0.3 + thickness * 0.7);
+    causticRGB *= (0.3 + thickness * 0.7);
 
     // Apply intensity control
-    caustic *= causticIntensity;
+    causticRGB *= causticIntensity;
+
+    // Boost caustic visibility for colored gems to compensate for reduced chromatic spread
+    // Colored gems (high sssStrength) have suppressed chromatic aberration, so boost their
+    // monochromatic caustics to maintain internal "life" and sparkle
+    float causticBoost = 1.0 + clamp((sssStrength - 0.5) * 0.8, 0.0, 0.6);
+    causticRGB *= causticBoost;
+
+    // Also keep a scalar caustic for compatibility
+    float caustic = (causticRGB.r + causticRGB.g + causticRGB.b) / 3.0;
 
     // Animation pattern (0-1 range) - core glow + caustic hot spots
     float animationPattern = coreGlow * 0.7 + caustic * 0.3;
@@ -516,8 +600,11 @@ void main() {
         vec3 absorption = sssAbsorption;
         float maxAbs = max(max(absorption.r, absorption.g), absorption.b);
         vec3 hue = absorption / max(maxAbs, 0.001);
-        // Tint rim toward material color
-        vec3 tintedRim = rimGlow * mix(vec3(1.0), hue, sssStrength * 0.5);
+        // Stronger tint for colored gems - use gem hue directly
+        float rimTintStrength = clamp(sssStrength * 0.6, 0.0, 0.95);
+        vec3 tintedRim = rimGlow * mix(vec3(1.0), hue * 1.2, rimTintStrength);
+        // Cap rim to prevent bloom
+        tintedRim = min(tintedRim, vec3(0.5));
         finalColor += tintedRim;
     } else {
         finalColor += rimGlow;
@@ -525,9 +612,57 @@ void main() {
 
     // ═══════════════════════════════════════════════════════════════════════
     // SPECULAR HIGHLIGHTS - Add bright hot spots
+    // Tinted by gem color for colored gems to prevent white bloom
     // ═══════════════════════════════════════════════════════════════════════
-    vec3 specularColor = vec3(1.0, 0.98, 0.95); // Warm white highlights
-    finalColor += specularColor * specular * transmission;
+    vec3 specularColor = vec3(1.0, 0.98, 0.95); // Warm white highlights for clear gems
+    float specularIntensityMod = 1.0;
+
+    if (sssStrength > 0.5) {
+        // Tint specular by gem color to prevent white bloom
+        vec3 absorption = sssAbsorption;
+        float maxAbs = max(max(absorption.r, absorption.g), absorption.b);
+        vec3 gemHue = absorption / max(maxAbs, 0.001);
+        float colorStrength = clamp((sssStrength - 0.5) * 0.5, 0.0, 1.0);
+        // Use gem hue for specular color
+        specularColor = mix(specularColor, gemHue * 1.3, colorStrength);
+        // Also reduce specular intensity for colored gems
+        specularIntensityMod = mix(1.0, 0.4, colorStrength);
+    }
+
+    vec3 specularContrib = specularColor * specular * transmission * specularIntensityMod;
+    specularContrib = min(specularContrib, vec3(0.5)); // Cap specular to prevent bloom
+    finalColor += specularContrib;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FACET EDGE LINES - Bright catches along beveled edges
+    // ═══════════════════════════════════════════════════════════════════════
+    float edgeLines = calculateFacetEdgeLines(normal, viewDir, lightDir);
+    finalColor += vec3(edgeLines * 0.15) * transmission;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SATURATION BOOST AT THIN EDGES
+    // Real gems have MORE saturated color at thin edges where light escapes
+    // ═══════════════════════════════════════════════════════════════════════
+    if (sssStrength > 0.01) {
+        // thinness: 1 at edges, 0 facing camera
+        float satBoost = thinness * 0.4; // Up to 40% saturation boost at edges
+
+        // Get current color's saturation
+        float maxC = max(max(finalColor.r, finalColor.g), finalColor.b);
+        float minC = min(min(finalColor.r, finalColor.g), finalColor.b);
+        float currentSat = maxC > 0.001 ? (maxC - minC) / maxC : 0.0;
+
+        // Boost saturation at thin areas
+        if (maxC > 0.001 && currentSat > 0.01) {
+            // Calculate luminance
+            float lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+            // Increase saturation by moving away from gray toward the color
+            vec3 gray = vec3(lum);
+            float newSat = min(currentSat + satBoost, 1.0);
+            float satRatio = currentSat > 0.001 ? newSat / currentSat : 1.0;
+            finalColor = gray + (finalColor - gray) * satRatio;
+        }
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // FINAL THICKNESS APPLICATION - Apply AFTER all additive terms
@@ -538,21 +673,68 @@ void main() {
 
     // ═══════════════════════════════════════════════════════════════════════
     // INTERNAL CAUSTICS - Bright spots from light concentration inside gem
+    // Now with chromatic aberration for rainbow dispersion effect
     // Applied AFTER thickness darkening so they punch through dark areas
     // ═══════════════════════════════════════════════════════════════════════
     if (causticIntensity > 0.01) {
         // Get material hue for tinting caustics
-        vec3 causticColor = vec3(1.0); // Default white
-        if (sssStrength > 0.01) {
+        vec3 causticTint = vec3(1.0); // Default white
+        float causticTintStrength = 0.4; // Default for clear gems
+        if (sssStrength > 0.5) {
             vec3 absorption = sssAbsorption;
             float maxAbs = max(max(absorption.r, absorption.g), absorption.b);
             vec3 hue = absorption / max(maxAbs, 0.001);
-            // Caustics are tinted toward material color but stay bright
-            causticColor = mix(vec3(1.0), hue, 0.6);
+            // Stronger tint for colored gems to prevent white bloom
+            causticTintStrength = clamp((sssStrength - 0.5) * 0.8 + 0.4, 0.4, 0.9);
+            causticTint = mix(vec3(1.0), hue * 1.2, causticTintStrength);
         }
-        // Add caustic brightness - punches through dark thick areas
-        finalColor += causticColor * caustic;
+        // Add RGB caustic with chromatic aberration
+        // Reduce raw RGB blend for colored gems
+        float rawBlend = mix(0.3, 0.1, clamp((sssStrength - 0.5) * 0.5, 0.0, 1.0));
+        vec3 causticFinal = causticRGB * causticTint + causticRGB * rawBlend;
+        causticFinal = min(causticFinal, vec3(0.4)); // Cap to prevent bloom
+        finalColor += causticFinal;
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FIRE - Intense sparkle points from light dispersion in facets
+    // The "fire" effect that makes gems sparkle brilliantly
+    // ═══════════════════════════════════════════════════════════════════════
+    float fire = calculateFire(normal, viewDir, lightDir);
+
+    // Tint fire by gem color - colored gems should have tinted highlights
+    // Pure white fire only for quartz/clear gems (low sssStrength)
+    vec3 fireColor = vec3(1.0, 0.99, 0.97); // Base warm white
+    float fireIntensity = 0.3; // Base intensity for clear gems
+    float fireClamp = 1.5; // Max fire value for clear gems
+
+    if (sssStrength > 0.5) {
+        // Get gem hue from absorption - this IS the gem's color
+        vec3 absorption = sssAbsorption;
+        float maxAbs = max(max(absorption.r, absorption.g), absorption.b);
+        vec3 gemHue = absorption / max(maxAbs, 0.001);
+
+        // For colored gems, fire should BE the gem color, not white
+        // The more colored the gem (higher sssStrength), the more the fire matches the gem
+        float colorStrength = clamp((sssStrength - 0.5) * 0.5, 0.0, 1.0);
+
+        // Use gem hue directly as fire color - NOT mixed with white
+        // This ensures fire can never bloom to white
+        fireColor = gemHue * 1.2; // Slight brightness boost but stay saturated
+
+        // Reduce fire intensity AND clamp for colored gems to prevent bloom washout
+        // Colored gems should have subtle, saturated fire, not bright white spots
+        fireIntensity = mix(0.3, 0.08, colorStrength); // Much lower for colored gems
+        fireClamp = mix(1.5, 0.5, colorStrength); // Much lower clamp for colored gems
+    }
+
+    // Apply fire clamp BEFORE multiplying by color
+    fire = min(fire, fireClamp);
+
+    // Calculate fire contribution and clamp to prevent any channel from blooming
+    vec3 fireContribution = fireColor * fire * fireIntensity;
+    fireContribution = min(fireContribution, vec3(0.4)); // Hard cap on fire brightness
+    finalColor += fireContribution;
 
     // Ensure minimum brightness - allow near-black for gemstones
     // minBrightness of 0.01 allows true darks while preventing total black
@@ -618,7 +800,7 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
 
     // Internal caustics
     causticIntensity: 0.8,      // Brightness of internal caustic hot spots
-    causticScale: 4.0,          // Scale of caustic pattern
+    causticScale: 2.0,          // Scale of caustic pattern
     causticSpeed: 0.12,         // Animation speed of caustics
 
     // Texture

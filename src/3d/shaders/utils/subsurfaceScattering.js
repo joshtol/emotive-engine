@@ -354,7 +354,8 @@ export const SSS_PRESETS = {
         // Crystal appearance - maximum clarity
         frostiness: 0.15,                      // Very clear, almost no frost
         innerGlowStrength: 0.20,               // Minimal soul
-        fresnelIntensity: 1.5                  // Bright edge sparkle
+        fresnelIntensity: 1.5,                 // Bright edge sparkle
+        causticIntensity: 1.2                  // Boosted caustics for internal structure
     },
 
     // Emerald - deep vivid green with near-black core
@@ -376,17 +377,18 @@ export const SSS_PRESETS = {
     // Ruby - deep red gemstone with wine/burgundy depth
     // Reference: Pigeon blood ruby - deep wine core, cherry red thin areas
     ruby: {
-        sssStrength: 1.4,                      // Richer red saturation
-        sssAbsorption: [3.5, 0.05, 0.15],      // High red, minimal green/blue
-        sssScatterDistance: [0.35, 0.06, 0.12],// Tighter scatter for sharper look
-        sssThicknessBias: 0.55,                // Balanced core
-        sssThicknessScale: 1.7,                // Good gradient range
-        sssCurvatureScale: 2.0,                // Gentler edge definition
-        sssAmbient: 0.12,                      // Restore contrast
+        sssStrength: 1.8,                      // Boosted for richer saturation
+        sssAbsorption: [4.0, 0.03, 0.08],      // Higher red, near-zero green/blue for purer red
+        sssScatterDistance: [0.4, 0.04, 0.08], // More red scatter, minimal other colors
+        sssThicknessBias: 0.65,                // Darker core like other gemstones
+        sssThicknessScale: 1.9,                // More contrast thick/thin
+        sssCurvatureScale: 2.5,                // Sharper edge definition
+        sssAmbient: 0.08,                      // Lower ambient for deeper shadows
         // Crystal appearance - rich gem brilliance
-        frostiness: 0.15,                      // Clearer/glossier
-        innerGlowStrength: 0.15,               // Subtle internal glow
-        fresnelIntensity: 0.55                 // Some edge sparkle
+        frostiness: 0.12,                      // Very clear for glossy look
+        innerGlowStrength: 0.12,               // Subtle internal glow
+        fresnelIntensity: 1.2,                 // Brighter edges like other gems
+        causticIntensity: 1.15                 // Enhanced caustics for ruby
     },
 
     // Sapphire - deep vivid blue gemstone with near-black shadows
