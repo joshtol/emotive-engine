@@ -198,8 +198,12 @@ export function resetCrystal(material) {
 
     // Noise scales
     if (u.surfaceNoiseScale) u.surfaceNoiseScale.value = defaults.surfaceNoiseScale;
-    if (u.innerWispScale) u.innerWispScale.value = defaults.innerWispScale;
     if (u.noiseFrequency) u.noiseFrequency.value = defaults.noiseFrequency;
+
+    // Internal caustics
+    if (u.causticIntensity) u.causticIntensity.value = defaults.causticIntensity;
+    if (u.causticScale) u.causticScale.value = defaults.causticScale;
+    if (u.causticSpeed) u.causticSpeed.value = defaults.causticSpeed;
 
     // Texture
     if (u.textureStrength) u.textureStrength.value = defaults.textureStrength;

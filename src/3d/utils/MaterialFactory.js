@@ -107,8 +107,11 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
             transmissionContrast: { value: overrides.transmissionContrast ?? CRYSTAL_DEFAULT_UNIFORMS.transmissionContrast },
             minBrightness: { value: overrides.minBrightness ?? CRYSTAL_DEFAULT_UNIFORMS.minBrightness },
             surfaceNoiseScale: { value: CRYSTAL_DEFAULT_UNIFORMS.surfaceNoiseScale },
-            innerWispScale: { value: CRYSTAL_DEFAULT_UNIFORMS.innerWispScale },
             noiseFrequency: { value: CRYSTAL_DEFAULT_UNIFORMS.noiseFrequency },
+            // Internal caustics
+            causticIntensity: { value: overrides.causticIntensity ?? CRYSTAL_DEFAULT_UNIFORMS.causticIntensity },
+            causticScale: { value: overrides.causticScale ?? CRYSTAL_DEFAULT_UNIFORMS.causticScale },
+            causticSpeed: { value: overrides.causticSpeed ?? CRYSTAL_DEFAULT_UNIFORMS.causticSpeed },
             crystalTexture: { value: crystalTexture },
             // Heart texture slightly more transparent than crystal
             textureStrength: { value: textureType === 'heart' ? 0.35 : (textureType ? CRYSTAL_DEFAULT_UNIFORMS.textureStrength : 0.0) },

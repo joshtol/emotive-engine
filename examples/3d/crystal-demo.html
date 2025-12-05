@@ -110,6 +110,19 @@
             </div>
         </div>
 
+        <div class="section">
+            <h2>SSS Material Preset</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-sss-preset="quartz" class="active">💎 Quartz</button>
+                    <button data-sss-preset="emerald">💚 Emerald</button>
+                    <button data-sss-preset="ruby">❤️ Ruby</button>
+                    <button data-sss-preset="sapphire">💙 Sapphire</button>
+                    <button data-sss-preset="amethyst">💜 Amethyst</button>
+                </div>
+            </div>
+        </div>
+
         <div class="section current-emotion-section">
             <h2>Current Emotion</h2>
             <div class="section-content">
@@ -169,7 +182,7 @@
         </div>
 
         <div class="section">
-            <h2 class="collapsed">Crystal Size</h2>
+            <h2 class="collapsed">Crystal Appearance</h2>
             <div class="section-content collapsed">
                 <div class="slider-control">
                     <div class="slider-label">
@@ -186,12 +199,7 @@
                     </div>
                     <input type="range" id="soul-size-slider" min="0" max="1" step="0.05" value="0.25">
                 </div>
-            </div>
-        </div>
 
-        <div class="section">
-            <h2 class="collapsed">Crystal Appearance</h2>
-            <div class="section-content collapsed">
                 <div class="slider-control">
                     <div class="slider-label">
                         <span>Frostiness</span>
@@ -227,15 +235,9 @@
         </div>
 
         <div class="section">
-            <h2 class="collapsed">SSS Material Preset</h2>
+            <h2 class="collapsed">SSS Advanced</h2>
             <div class="section-content collapsed">
-                <div class="button-grid">
-                    <button data-sss-preset="imperialJade">💚 Imperial Jade</button>
-                    <button data-sss-preset="crystal" class="active">💎 Crystal</button>
-                    <button data-sss-preset="ruby">❤️ Ruby</button>
-                </div>
-
-                <div class="slider-control" style="margin-top: 15px;">
+                <div class="slider-control">
                     <div class="slider-label">
                         <span>Thickness Bias</span>
                         <span class="slider-value" id="sss-thickness-bias-value">---</span>
@@ -282,10 +284,26 @@
 
                 <div class="slider-control">
                     <div class="slider-label">
-                        <span>Inner Wisp Scale</span>
-                        <span class="slider-value" id="inner-wisp-value">---</span>
+                        <span>Caustic Intensity</span>
+                        <span class="slider-value" id="caustic-intensity-value">---</span>
                     </div>
-                    <input type="range" id="inner-wisp-slider" min="0.1" max="5" step="0.1" value="0.5">
+                    <input type="range" id="caustic-intensity-slider" min="0" max="2" step="0.05" value="0.4">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Caustic Scale</span>
+                        <span class="slider-value" id="caustic-scale-value">---</span>
+                    </div>
+                    <input type="range" id="caustic-scale-slider" min="0.5" max="10" step="0.5" value="3.0">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Caustic Speed</span>
+                        <span class="slider-value" id="caustic-speed-value">---</span>
+                    </div>
+                    <input type="range" id="caustic-speed-slider" min="0" max="1" step="0.05" value="0.15">
                 </div>
 
                 <div class="slider-control">
@@ -457,7 +475,7 @@
         }
 
         // Track currently selected SSS preset and geometry
-        let currentSSSPreset = 'crystal';
+        let currentSSSPreset = 'quartz';
         let currentGeometry = 'crystal';
 
         // Sync sliders with current engine values
@@ -474,7 +492,9 @@
 
             // Read Noise Pattern values (2 decimals)
             setSlider('surface-noise', u.surfaceNoiseScale?.value);
-            setSlider('inner-wisp', u.innerWispScale?.value);
+            setSlider('caustic-intensity', u.causticIntensity?.value);
+            setSlider('caustic-scale', u.causticScale?.value);
+            setSlider('caustic-speed', u.causticSpeed?.value);
             setSlider('surface-roughness', u.surfaceRoughness?.value);
             setSlider('noise-freq', u.noiseFrequency?.value);
             setSlider('texture-strength', u.textureStrength?.value);
@@ -734,46 +754,67 @@
             }
         });
 
-        // SSS Material Presets (higher absorption = MORE of that color passes through)
+        // SSS Material Presets - ALL designed for NEAR-BLACK shadows
         const sssPresets = {
-            imperialJade: {
-                sssStrength: 1.0,
-                sssAbsorption: [0.2, 3.0, 0.3],
-                sssScatterDistance: [0.2, 1.0, 0.3],
-                sssThicknessBias: 0.15,
-                sssThicknessScale: 0.9,
-                sssCurvatureScale: 2.0,
-                sssAmbient: 0.60,
-                // Crystal appearance (defaults)
-                frostiness: 0.585,
-                innerGlowStrength: 0.478,
-                fresnelIntensity: 0.298
+            quartz: {
+                sssStrength: 0.8,
+                sssAbsorption: [2.8, 2.9, 3.0],
+                sssScatterDistance: [0.2, 0.2, 0.25],
+                sssThicknessBias: 0.60,
+                sssThicknessScale: 1.8,
+                sssCurvatureScale: 3.0,
+                sssAmbient: 0.12,
+                frostiness: 0.15,
+                innerGlowStrength: 0.20,
+                fresnelIntensity: 1.5
             },
-            crystal: {
-                sssStrength: 0.594,
-                sssAbsorption: [2.4, 2.5, 2.8],
-                sssScatterDistance: [0.3, 0.35, 0.4],
-                sssThicknessBias: 0.15,
-                sssThicknessScale: 0.55,
-                sssCurvatureScale: 1.70,
-                sssAmbient: 0.20,
-                // Crystal appearance (defaults)
-                frostiness: 0.585,
-                innerGlowStrength: 0.478,
-                fresnelIntensity: 0.298
+            emerald: {
+                sssStrength: 2.0,
+                sssAbsorption: [0.05, 4.0, 0.1],
+                sssScatterDistance: [0.1, 0.5, 0.1],
+                sssThicknessBias: 0.65,
+                sssThicknessScale: 1.8,
+                sssCurvatureScale: 3.0,
+                sssAmbient: 0.10,
+                frostiness: 0.20,
+                innerGlowStrength: 0.15,
+                fresnelIntensity: 1.2
             },
             ruby: {
-                sssStrength: 2.0,
-                sssAbsorption: [3.0, 0.1, 0.4],
-                sssScatterDistance: [1.0, 0.2, 0.3],
-                sssThicknessBias: 0.35,
-                sssThicknessScale: 1.30,
-                sssCurvatureScale: 2.10,
-                sssAmbient: 0.65,
-                // Crystal appearance - tuned for red's different luminance behavior
-                frostiness: 0.590,
-                innerGlowStrength: 1.396,
-                fresnelIntensity: 1.456
+                sssStrength: 1.4,
+                sssAbsorption: [3.5, 0.05, 0.15],
+                sssScatterDistance: [0.35, 0.06, 0.12],
+                sssThicknessBias: 0.55,
+                sssThicknessScale: 1.7,
+                sssCurvatureScale: 2.0,
+                sssAmbient: 0.12,
+                frostiness: 0.15,
+                innerGlowStrength: 0.15,
+                fresnelIntensity: 0.55
+            },
+            sapphire: {
+                sssStrength: 2.2,
+                sssAbsorption: [0.15, 0.4, 4.0],
+                sssScatterDistance: [0.1, 0.15, 0.5],
+                sssThicknessBias: 0.65,
+                sssThicknessScale: 1.8,
+                sssCurvatureScale: 3.0,
+                sssAmbient: 0.10,
+                frostiness: 0.18,
+                innerGlowStrength: 0.15,
+                fresnelIntensity: 1.3
+            },
+            amethyst: {
+                sssStrength: 2.5,
+                sssAbsorption: [3.0, 0.05, 4.5],
+                sssScatterDistance: [0.4, 0.05, 0.5],
+                sssThicknessBias: 0.70,
+                sssThicknessScale: 2.0,
+                sssCurvatureScale: 3.0,
+                sssAmbient: 0.08,
+                frostiness: 0.18,
+                innerGlowStrength: 0.12,
+                fresnelIntensity: 1.4
             }
         };
 
@@ -808,6 +849,29 @@
                 }
             }
 
+            // Apply iridescence blend layers (creates rainbow "fire" on rotation)
+            // Rim layers
+            if (u.rimLayer1Mode) u.rimLayer1Mode.value = preset.rimLayer1Mode ?? 0;
+            if (u.rimLayer1Strength) u.rimLayer1Strength.value = preset.rimLayer1Strength ?? 0;
+            if (u.rimLayer1Enabled) u.rimLayer1Enabled.value = preset.rimLayer1Enabled ?? 0;
+            if (u.rimLayer2Mode) u.rimLayer2Mode.value = preset.rimLayer2Mode ?? 0;
+            if (u.rimLayer2Strength) u.rimLayer2Strength.value = preset.rimLayer2Strength ?? 0;
+            if (u.rimLayer2Enabled) u.rimLayer2Enabled.value = preset.rimLayer2Enabled ?? 0;
+            // SSS layers
+            if (u.sssLayer1Mode) u.sssLayer1Mode.value = preset.sssLayer1Mode ?? 0;
+            if (u.sssLayer1Strength) u.sssLayer1Strength.value = preset.sssLayer1Strength ?? 0;
+            if (u.sssLayer1Enabled) u.sssLayer1Enabled.value = preset.sssLayer1Enabled ?? 0;
+            if (u.sssLayer2Mode) u.sssLayer2Mode.value = preset.sssLayer2Mode ?? 0;
+            if (u.sssLayer2Strength) u.sssLayer2Strength.value = preset.sssLayer2Strength ?? 0;
+            if (u.sssLayer2Enabled) u.sssLayer2Enabled.value = preset.sssLayer2Enabled ?? 0;
+            // Shell layers
+            if (u.shellLayer1Mode) u.shellLayer1Mode.value = preset.shellLayer1Mode ?? 0;
+            if (u.shellLayer1Strength) u.shellLayer1Strength.value = preset.shellLayer1Strength ?? 0;
+            if (u.shellLayer1Enabled) u.shellLayer1Enabled.value = preset.shellLayer1Enabled ?? 0;
+            if (u.shellLayer2Mode) u.shellLayer2Mode.value = preset.shellLayer2Mode ?? 0;
+            if (u.shellLayer2Strength) u.shellLayer2Strength.value = preset.shellLayer2Strength ?? 0;
+            if (u.shellLayer2Enabled) u.shellLayer2Enabled.value = preset.shellLayer2Enabled ?? 0;
+
             // Update sliders to reflect new values (use global setSlider)
             setSlider('sss', preset.sssStrength, 3);
             setSlider('sss-thickness-bias', preset.sssThicknessBias);
@@ -815,7 +879,71 @@
             setSlider('sss-curvature', preset.sssCurvatureScale);
             setSlider('sss-ambient', preset.sssAmbient);
 
-            console.log(`🎨 Applied SSS preset: ${presetName}`);
+            // Sync UI blend layer cards with preset values
+            syncBlendLayersFromPreset(preset);
+
+            console.log(`🎨 Applied SSS preset: ${presetName} (with iridescence blend layers)`);
+        }
+
+        // Sync blend layer UI cards with preset values
+        function syncBlendLayersFromPreset(preset) {
+            // Clear existing UI layers
+            clearAllLayerUI();
+
+            // Shell layers
+            if (preset.shellLayer1Enabled) {
+                addShellLayer(preset.shellLayer1Mode, preset.shellLayer1Strength, true, true);
+            }
+            if (preset.shellLayer2Enabled) {
+                addShellLayer(preset.shellLayer2Mode, preset.shellLayer2Strength, true, true);
+            }
+
+            // Rim layers
+            if (preset.rimLayer1Enabled) {
+                addRimLayer(preset.rimLayer1Mode, preset.rimLayer1Strength, true, true);
+            }
+            if (preset.rimLayer2Enabled) {
+                addRimLayer(preset.rimLayer2Mode, preset.rimLayer2Strength, true, true);
+            }
+
+            // SSS blend layers
+            if (preset.sssLayer1Enabled) {
+                addSssBlendLayer(preset.sssLayer1Mode, preset.sssLayer1Strength, true, true);
+            }
+            if (preset.sssLayer2Enabled) {
+                addSssBlendLayer(preset.sssLayer2Mode, preset.sssLayer2Strength, true, true);
+            }
+
+            // Soul layers (presets don't typically have soul layers, but support it)
+            if (preset.soulLayer1Enabled) {
+                addSoulLayer(preset.soulLayer1Mode, preset.soulLayer1Strength, true, true);
+            }
+            if (preset.soulLayer2Enabled) {
+                addSoulLayer(preset.soulLayer2Mode, preset.soulLayer2Strength, true, true);
+            }
+        }
+
+        // Clear all layer UI and state
+        function clearAllLayerUI() {
+            // Clear shell layers
+            shellLayers.length = 0;
+            shellLayersContainer.innerHTML = '';
+            nextShellLayerId = 1;
+
+            // Clear soul layers
+            soulLayers.length = 0;
+            soulLayersContainer.innerHTML = '';
+            nextSoulLayerId = 1;
+
+            // Clear rim layers
+            rimLayers.length = 0;
+            rimLayersContainer.innerHTML = '';
+            nextRimLayerId = 1;
+
+            // Clear SSS blend layers
+            sssBlendLayers.length = 0;
+            sssLayersContainer.innerHTML = '';
+            nextSssLayerId = 1;
         }
 
         // SSS preset buttons
@@ -838,9 +966,21 @@
             }
         });
 
-        setupSlider('inner-wisp-slider', 'inner-wisp-value', (value) => {
-            if (mascot.core3D?.customMaterial?.uniforms?.innerWispScale) {
-                mascot.core3D.customMaterial.uniforms.innerWispScale.value = value;
+        setupSlider('caustic-intensity-slider', 'caustic-intensity-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.causticIntensity) {
+                mascot.core3D.customMaterial.uniforms.causticIntensity.value = value;
+            }
+        });
+
+        setupSlider('caustic-scale-slider', 'caustic-scale-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.causticScale) {
+                mascot.core3D.customMaterial.uniforms.causticScale.value = value;
+            }
+        });
+
+        setupSlider('caustic-speed-slider', 'caustic-speed-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.causticSpeed) {
+                mascot.core3D.customMaterial.uniforms.causticSpeed.value = value;
             }
         });
 
@@ -892,15 +1032,9 @@
         }
 
         function updateSoulLayers() {
-            if (!mascot?.core3D?.customMaterial?.uniforms) return;
-            const u = mascot.core3D.customMaterial.uniforms;
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layer = soulLayers[i];
-                const idx = i + 1;
-                if (u[`soulLayer${idx}Mode`]) u[`soulLayer${idx}Mode`].value = layer?.mode ?? 0;
-                if (u[`soulLayer${idx}Strength`]) u[`soulLayer${idx}Strength`].value = layer?.strength ?? 0;
-                if (u[`soulLayer${idx}Enabled`]) u[`soulLayer${idx}Enabled`].value = layer?.enabled ? 1 : 0;
-            }
+            // Update the actual CrystalSoul mesh (octahedron), not the shell uniforms
+            if (!mascot?.core3D?.crystalSoul) return;
+            mascot.core3D.crystalSoul.setBlendLayers(soulLayers);
         }
 
         function updateRimLayers() {
@@ -1034,6 +1168,14 @@
 
         // Initial emotion display
         updateEmotionDisplay('neutral');
+
+        // Sync blend layers from initial preset after a short delay (ensure DOM ready)
+        setTimeout(() => {
+            if (sssPresets[currentSSSPreset]) {
+                syncBlendLayersFromPreset(sssPresets[currentSSSPreset]);
+                console.log(`💎 Initial blend layers synced from ${currentSSSPreset} preset`);
+            }
+        }, 100);
     </script>
 </body>
 </html>

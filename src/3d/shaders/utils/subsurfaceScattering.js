@@ -334,60 +334,114 @@ vec3 calculateSimpleSSS(
 `;
 
 /**
- * Material presets for common translucent materials
- * These values are tuned for visual impact
+ * Material presets for gemstones
+ * All presets designed for NEAR-BLACK shadows in thick areas
  *
  * Absorption: Higher value = MORE of that color passes through (inverted from physics)
  * ScatterDistance: Higher = more scatter/glow
  */
 export const SSS_PRESETS = {
-    // Imperial Jade - vivid emerald green
-    imperialJade: {
-        sssStrength: 1.0,
-        sssAbsorption: [0.2, 3.0, 0.3],
-        sssScatterDistance: [0.2, 1.0, 0.3],
-        sssThicknessBias: 0.15,
-        sssThicknessScale: 0.9,
-        sssCurvatureScale: 2.0,
-        sssAmbient: 0.60,
-        // Crystal appearance (defaults)
-        frostiness: 0.585,
-        innerGlowStrength: 0.478,
-        fresnelIntensity: 0.298
+    // Quartz - clear/white crystal, near-black depth
+    // Reference: Clear quartz with deep black shadows and brilliant facet highlights
+    quartz: {
+        sssStrength: 0.8,
+        sssAbsorption: [2.8, 2.9, 3.0],        // Slight cool tint, mostly neutral
+        sssScatterDistance: [0.2, 0.2, 0.25],  // Tight scatter for sharp internal look
+        sssThicknessBias: 0.60,                // Dark core
+        sssThicknessScale: 1.8,                // Strong thick/thin contrast
+        sssCurvatureScale: 3.0,                // Sharp edge definition
+        sssAmbient: 0.12,                      // Very low ambient for deep shadows
+        // Crystal appearance - maximum clarity
+        frostiness: 0.15,                      // Very clear, almost no frost
+        innerGlowStrength: 0.20,               // Minimal soul
+        fresnelIntensity: 1.5                  // Bright edge sparkle
     },
 
-    // Crystal / ice - cool blue tint
-    crystal: {
-        sssStrength: 0.594,
-        sssAbsorption: [2.4, 2.5, 2.8],
-        sssScatterDistance: [0.3, 0.35, 0.4],
-        sssThicknessBias: 0.15,
-        sssThicknessScale: 0.55,
-        sssCurvatureScale: 1.70,
-        sssAmbient: 0.20,
-        // Crystal appearance (defaults)
-        frostiness: 0.585,
-        innerGlowStrength: 0.478,
-        fresnelIntensity: 0.298
-    },
-
-    // Ruby - deep red gemstone
-    // Note: Red has low luminance weight (0.299) vs green (0.587) in shader
-    // So we use higher green/blue to prevent red blowout while maintaining red dominance
-    ruby: {
+    // Emerald - deep vivid green with near-black core
+    // Reference: Cut emerald with dark center and bright green edges
+    emerald: {
         sssStrength: 2.0,
-        sssAbsorption: [3.0, 0.1, 0.4],       // Deep crimson - high red, tiny green, slight blue/magenta
-        sssScatterDistance: [1.0, 0.2, 0.3],
-        sssThicknessBias: 0.35,
-        sssThicknessScale: 1.30,
-        sssCurvatureScale: 2.10,
-        sssAmbient: 0.65,
-        // Crystal appearance - tuned for red's different luminance behavior
-        frostiness: 0.590,
-        innerGlowStrength: 1.396,
-        fresnelIntensity: 1.456
+        sssAbsorption: [0.05, 4.0, 0.1],       // Pure vivid green, near-zero red/blue
+        sssScatterDistance: [0.1, 0.5, 0.1],   // Tight scatter, green dominant
+        sssThicknessBias: 0.65,                // Dark core
+        sssThicknessScale: 1.8,                // Strong thick/thin contrast
+        sssCurvatureScale: 3.0,                // Sharp edge definition
+        sssAmbient: 0.10,                      // Very low ambient for deep shadows
+        // Crystal appearance - sharp gemstone look
+        frostiness: 0.20,                      // Very clear
+        innerGlowStrength: 0.15,               // Minimal soul for gem clarity
+        fresnelIntensity: 1.2                  // Bright edges
+    },
+
+    // Ruby - deep red gemstone with wine/burgundy depth
+    // Reference: Pigeon blood ruby - deep wine core, cherry red thin areas
+    ruby: {
+        sssStrength: 1.4,                      // Richer red saturation
+        sssAbsorption: [3.5, 0.05, 0.15],      // High red, minimal green/blue
+        sssScatterDistance: [0.35, 0.06, 0.12],// Tighter scatter for sharper look
+        sssThicknessBias: 0.55,                // Balanced core
+        sssThicknessScale: 1.7,                // Good gradient range
+        sssCurvatureScale: 2.0,                // Gentler edge definition
+        sssAmbient: 0.12,                      // Restore contrast
+        // Crystal appearance - rich gem brilliance
+        frostiness: 0.15,                      // Clearer/glossier
+        innerGlowStrength: 0.15,               // Subtle internal glow
+        fresnelIntensity: 0.55                 // Some edge sparkle
+    },
+
+    // Sapphire - deep vivid blue gemstone with near-black shadows
+    // Reference: Ceylon blue sapphire with dark center and bright blue edges
+    sapphire: {
+        sssStrength: 2.2,
+        sssAbsorption: [0.15, 0.4, 4.0],       // Deep blue: very high blue, low red/green
+        sssScatterDistance: [0.1, 0.15, 0.5],  // Blue scatter dominant
+        sssThicknessBias: 0.65,                // Dark core
+        sssThicknessScale: 1.8,                // Strong thick/thin contrast
+        sssCurvatureScale: 3.0,                // Sharp edge definition
+        sssAmbient: 0.10,                      // Very low ambient for deep shadows
+        // Crystal appearance - sharp gemstone look
+        frostiness: 0.18,                      // Very clear
+        innerGlowStrength: 0.15,               // Minimal soul
+        fresnelIntensity: 1.3                  // Bright edges
+    },
+
+    // Amethyst - deep violet gemstone with near-black shadows
+    // Reference: Rich purple with deep black shadows and bright pink/white facet highlights
+    amethyst: {
+        sssStrength: 2.5,
+        sssAbsorption: [3.0, 0.05, 4.5],       // Deep violet: high red+blue, very low green
+        sssScatterDistance: [0.4, 0.05, 0.5],  // Red and blue scatter, no green
+        sssThicknessBias: 0.70,                // Very dark core
+        sssThicknessScale: 2.0,                // Maximum thick/thin contrast
+        sssCurvatureScale: 3.0,                // Sharp edge definition
+        sssAmbient: 0.08,                      // Very low ambient for deep shadows
+        // Crystal appearance - dark gemstone with bright highlights
+        frostiness: 0.18,                      // Very clear, minimal frost
+        innerGlowStrength: 0.12,               // Minimal soul
+        fresnelIntensity: 1.4                  // Bright edges for facet sparkle
     }
 };
+
+/**
+ * Blend mode reference for iridescence effects:
+ *
+ * BEST FOR IRIDESCENCE (rainbow fire):
+ *  3 = Color Dodge  - Intense sparkle, best for diamond fire
+ *  9 = Vivid Light  - Saturated color shifts, good for colored gems
+ *  4 = Screen       - Soft rainbow glow overlay
+ *  5 = Overlay      - Balanced color enhancement, respects shadows
+ *  7 = Soft Light   - Gentle shifts, preserves dark areas
+ *  8 = Hard Light   - Strong color pop
+ *  6 = Add          - Bright additive glow
+ * 10 = Linear Light - Linear saturation, facet sparkle
+ *
+ * AVOID FOR IRIDESCENCE:
+ *  0 = Multiply     - Darkens (kills fire)
+ *  1 = Linear Burn  - Too dark
+ *  2 = Color Burn   - Too dark
+ * 15 = Subtract     - Removes light
+ * 11 = Difference   - Unnatural inversion
+ */
 
 /**
  * Get SSS uniform values for a preset

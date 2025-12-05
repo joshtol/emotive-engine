@@ -7,6 +7,7 @@
  */
 
 import * as THREE from 'three';
+import { blendModesGLSL } from '../shaders/utils/blendModes.js';
 
 // Vertex shader for soul effect
 const soulVertexShader = `
@@ -30,8 +31,19 @@ const soulFragmentShader = `
     uniform float shimmerEnabled;
     uniform float shimmerSpeed;
 
+    // Blend layer uniforms
+    uniform float blendLayer1Mode;
+    uniform float blendLayer1Strength;
+    uniform float blendLayer1Enabled;
+    uniform float blendLayer2Mode;
+    uniform float blendLayer2Strength;
+    uniform float blendLayer2Enabled;
+
     varying vec3 vPosition;
     varying vec3 vNormal;
+
+    // Blend modes (injected from blendModesGLSL)
+    ${blendModesGLSL}
 
     // Smooth noise function
     float noise3D(vec3 p) {
@@ -69,9 +81,21 @@ const soulFragmentShader = `
         float edgeGlow = 1.0 - abs(dot(vNormal, viewDir));
         edgeGlow = pow(edgeGlow, 2.0) * 0.4;
 
-        // Final color
+        // Final color before blend layers
         vec3 coreColor = emotionColor * totalEnergy * energyIntensity;
         coreColor += emotionColor * edgeGlow * 0.3;
+
+        // Apply blend layers to the entire soul color
+        if (blendLayer1Enabled > 0.5) {
+            int mode = int(blendLayer1Mode + 0.5);
+            vec3 blendResult = applyBlendMode(coreColor, emotionColor * blendLayer1Strength, mode);
+            coreColor = mix(coreColor, blendResult, blendLayer1Strength);
+        }
+        if (blendLayer2Enabled > 0.5) {
+            int mode = int(blendLayer2Mode + 0.5);
+            vec3 blendResult = applyBlendMode(coreColor, emotionColor * blendLayer2Strength, mode);
+            coreColor = mix(coreColor, blendResult, blendLayer2Strength);
+        }
 
         gl_FragColor = vec4(coreColor, 1.0);
     }
@@ -115,7 +139,14 @@ export class CrystalSoul {
                 driftEnabled: { value: 1.0 },
                 driftSpeed: { value: 0.5 },
                 shimmerEnabled: { value: 1.0 },
-                shimmerSpeed: { value: 0.5 }
+                shimmerSpeed: { value: 0.5 },
+                // Blend layer uniforms
+                blendLayer1Mode: { value: 0 },
+                blendLayer1Strength: { value: 0 },
+                blendLayer1Enabled: { value: 0 },
+                blendLayer2Mode: { value: 0 },
+                blendLayer2Strength: { value: 0 },
+                blendLayer2Enabled: { value: 0 }
             },
             vertexShader: soulVertexShader,
             fragmentShader: soulFragmentShader,
@@ -240,6 +271,34 @@ export class CrystalSoul {
     setColor(color) {
         if (this.material && this.material.uniforms && this.material.uniforms.emotionColor) {
             this.material.uniforms.emotionColor.value.setRGB(color[0], color[1], color[2]);
+        }
+    }
+
+    /**
+     * Set blend layers for the soul
+     * @param {Array} layers - Array of layer objects [{mode, strength, enabled}, ...]
+     */
+    setBlendLayers(layers) {
+        if (!this.material || !this.material.uniforms) return;
+
+        const u = this.material.uniforms;
+
+        // Layer 1
+        if (layers[0]) {
+            if (u.blendLayer1Mode) u.blendLayer1Mode.value = layers[0].mode ?? 0;
+            if (u.blendLayer1Strength) u.blendLayer1Strength.value = layers[0].strength ?? 0;
+            if (u.blendLayer1Enabled) u.blendLayer1Enabled.value = layers[0].enabled ? 1 : 0;
+        } else {
+            if (u.blendLayer1Enabled) u.blendLayer1Enabled.value = 0;
+        }
+
+        // Layer 2
+        if (layers[1]) {
+            if (u.blendLayer2Mode) u.blendLayer2Mode.value = layers[1].mode ?? 0;
+            if (u.blendLayer2Strength) u.blendLayer2Strength.value = layers[1].strength ?? 0;
+            if (u.blendLayer2Enabled) u.blendLayer2Enabled.value = layers[1].enabled ? 1 : 0;
+        } else {
+            if (u.blendLayer2Enabled) u.blendLayer2Enabled.value = 0;
         }
     }
 
