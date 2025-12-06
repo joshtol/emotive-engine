@@ -24,9 +24,9 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#66D9CC',        // Bright mint/turquoise (more distinct from neutral blue)
-        particleRate: 25,            // Steady, peaceful emission like sadness
-        minParticles: 8,             // Keep some particles always
-        maxParticles: 25,            // Allow more particles like sadness
+        particleRate: 40,            // Steady, peaceful emission (increased for 3D)
+        minParticles: 10,            // Keep some particles always
+        maxParticles: 60,            // Allow more particles for 3D
         particleBehavior: 'zen',     // Zen orbital behavior
         breathRate: 0.4,             // Much slower breathing than neutral (1.0)
         breathDepth: 0.12,           // Deeper breaths than neutral (0.08)

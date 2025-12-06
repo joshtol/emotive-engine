@@ -211,6 +211,15 @@ export class Particle3DTranslator {
     }
 
     /**
+     * Simple deterministic hash function for better pseudo-random distribution
+     * Returns value in range [0, 1)
+     */
+    _hash(n) {
+        const x = Math.sin(n) * 43758.5453123;
+        return x - Math.floor(x);
+    }
+
+    /**
      * Generate uniform random direction on sphere (360°x360°x360°)
      * Uses spherical coordinates with deterministic seeds from particle properties
      * Caches result in behaviorData.direction3D to maintain consistent trajectory
@@ -226,28 +235,27 @@ export class Particle3DTranslator {
             return behaviorData.direction3D;
         }
 
-        // Use particle's properties as deterministic seeds
-        const seed1 = particle.x + particle.y + particle.vx * 100;
-        const seed2 = particle.x * particle.y + particle.vy * 100;
-        const seed3 = particle.vx + particle.vy + particle.x * 0.1;
+        // Use particle's properties as deterministic seeds with better hash
+        // Combine multiple properties for unique seeds per particle
+        const baseSeed = particle.x * 127.1 + particle.y * 311.7 + (particle.vx || 0) * 74.7 + (particle.vy || 0) * 159.3;
+
+        // Generate two uniform random values using hash function
+        const u1 = this._hash(baseSeed);
+        const u2 = this._hash(baseSeed + 1.0);
 
         // Generate uniform spherical coordinates
-        // Theta (azimuth): 0 to 2π (horizontal rotation)
-        const theta = ((Math.sin(seed1 * 0.1) + 1) * 0.5) * Math.PI * 2;
+        // Theta (azimuth): 0 to 2π - uniform distribution
+        const theta = u1 * Math.PI * 2;
 
-        // Phi (elevation): using cos for uniform distribution
+        // Phi (elevation): use arccos for uniform sphere surface distribution
         // cos(phi) uniform in [-1, 1] ensures uniform surface distribution
-        const cosphi = Math.sin(seed2 * 0.1); // Range: -1 to +1
-        const phi = Math.acos(cosphi);
-
-        // Additional rotation for more randomness
-        const rotation = Math.sin(seed3 * 0.1) * Math.PI * 2;
+        const cosphi = 2.0 * u2 - 1.0; // Range: -1 to +1
+        const sinPhi = Math.sqrt(1.0 - cosphi * cosphi);
 
         // Convert spherical to Cartesian coordinates
-        const sinPhi = Math.sin(phi);
-        const x = sinPhi * Math.cos(theta + rotation);
-        const y = sinPhi * Math.sin(theta + rotation);
-        const z = cosphi;
+        const x = sinPhi * Math.cos(theta);
+        const y = cosphi; // Y is up
+        const z = sinPhi * Math.sin(theta);
 
         // Cache the direction for consistent trajectory
         behaviorData.direction3D = { x, y, z };
@@ -409,64 +417,70 @@ export class Particle3DTranslator {
     }
 
     /**
-     * FALLING: Tears falling in 360°x360°x360° sphere with downward bias (Sadness)
-     * Particles spawn in all directions but fall downward (sadness tears)
+     * FALLING: Tears falling downward like 2D behavior (Sadness)
+     * Particles spawn around the core and fall down with gravity - true tear-like motion
+     * Uses 2D particle position directly converted to 3D, matching the 2D visual
      */
     _translateFalling(particle, corePosition, canvasSize) {
-        // Get uniform 3D direction for spawn position
-        const dir = this._getUniformDirection3D(particle);
-
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
+        const behaviorData = particle.behaviorData || {};
 
-        // Calculate normalized distance (0-1) from center in 2D
-        const dx = particle.x - centerX;
-        const dy = particle.y - centerY;
-        const distance2D = Math.sqrt(dx * dx + dy * dy);
-        const normalizedDistance = distance2D / centerX;
+        // Initialize stable properties on first call (using initial spawn position)
+        if (behaviorData.initialX === undefined) {
+            behaviorData.initialX = particle.x;
+            behaviorData.initialY = particle.y;
+            // Generate stable Z depth and X offset using initial spawn position
+            const seed = behaviorData.initialX * 127.1 + behaviorData.initialY * 311.7;
+            behaviorData.zDepth = (this._hash(seed) - 0.5) * 0.6; // Reduced depth spread (-0.3 to 0.3)
+            behaviorData.xOffset = (this._hash(seed + 1.0) - 0.5) * 0.8; // Stable X variation
+        }
 
-        // Convert to world distance using 3D core radius - tight (0.3x to 0.5x)
-        const minOrbit = this.coreRadius3D * 0.3;
-        const maxOrbit = this.coreRadius3D * 0.5;
-        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
+        // Use stable initial X for horizontal position (with small variation)
+        const dx2D = (behaviorData.initialX - centerX) / centerX; // -1 to 1
 
-        // Position along 3D direction
-        const baseX = corePosition.x + dir.x * worldDistance;
-        const baseY = corePosition.y + dir.y * worldDistance * this.verticalScale;
-        const baseZ = corePosition.z + dir.z * worldDistance;
+        // Reduced spread radius for tighter grouping like 2D
+        const spreadRadius = this.coreRadius3D * 1.0;
+        const worldX = corePosition.x + dx2D * spreadRadius + behaviorData.xOffset * spreadRadius * 0.3;
 
-        // Add downward fall based on particle age (gravity effect)
-        const fallAmount = particle.age * this.coreRadius3D * 0.15;
+        // Reduced Z depth for less DOF effect
+        const worldZ = corePosition.z + behaviorData.zDepth * spreadRadius * 0.4;
 
-        return this.tempVec3.set(baseX, baseY - fallAmount, baseZ);
+        // Y position: use current 2D Y for falling animation
+        // 2D Y increases downward as particle falls
+        const dy2D = (particle.y - centerY) / centerY; // -1 to 1, increases as particle falls
+
+        // Start above core center, fall downward based on 2D position
+        const startY = corePosition.y + this.coreRadius3D * 0.3;
+        const fallDistance = dy2D * this.coreRadius3D * 2.0; // Fall up to 2x core radius
+        const worldY = startY - fallDistance;
+
+        return this.tempVec3.set(worldX, worldY, worldZ);
     }
 
     /**
      * POPCORN: Explosive bursts with uniform spherical distribution (360°x360°x360°)
      * Uses uniform sphere sampling for true omnidirectional emission
+     * Particles burst outward from the soul, never appearing in front of it
      */
     _translatePopcorn(particle, corePosition, canvasSize) {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
         const behaviorData = particle.behaviorData || {};
 
-        // Before pop, position particle slightly in front of origin so it's visible
-        // (at origin with camera at z=1.2, particles would be nearly invisible during fade-in)
-        if (!behaviorData.hasPopped) {
-            // Get or generate the direction the particle will travel when it pops
-            const dir = this._getUniformDirection3D(particle);
+        // Get or generate uniform 3D direction
+        const dir = this._getUniformDirection3D(particle);
 
-            // Position at core surface so particles don't appear huge
-            const waitDistance = this.coreRadius3D * 0.15;
+        // Before pop, position particle at the soul surface ready to burst
+        if (!behaviorData.hasPopped) {
+            // Position at soul edge (0.7x core radius) - visible but not overlapping
+            const waitDistance = this.coreRadius3D * 0.7;
             return this.tempVec3.set(
                 corePosition.x + dir.x * waitDistance,
                 corePosition.y + dir.y * waitDistance * this.verticalScale,
                 corePosition.z + dir.z * waitDistance
             );
         }
-
-        // Get or generate uniform 3D direction
-        const dir = this._getUniformDirection3D(particle);
 
         // Calculate normalized distance (0-1) from center in 2D
         const dx = particle.x - centerX;
@@ -475,9 +489,9 @@ export class Particle3DTranslator {
         const normalizedDistance = Math.min(distance2D / centerX, 1.5); // Cap at 1.5x
 
         // Convert to world distance using 3D core radius
-        // Popcorn particles burst from core surface to 3.0x core radius (wider spread)
-        const minOrbit = this.coreRadius3D * 0.9;
-        const maxOrbit = this.coreRadius3D * 3.0;
+        // Popcorn particles burst from outside the soul (1.2x) to far out (4.0x core radius)
+        const minOrbit = this.coreRadius3D * 1.2;
+        const maxOrbit = this.coreRadius3D * 4.0;
         const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
         // Position particle along its 3D direction

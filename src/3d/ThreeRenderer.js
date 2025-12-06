@@ -393,6 +393,20 @@ export class ThreeRenderer {
         // Skip the base copy step - we only want to add bloom on top of existing scene
         this.particleBloomPass.skipBaseCopy = true;
 
+        // === SOUL REFRACTION RENDER TARGET ===
+        // Soul mesh is rendered to this texture first, then sampled by crystal shader
+        // with refraction distortion to create proper lensing effect
+        this.soulRenderTarget = new THREE.WebGLRenderTarget(
+            drawingBufferSize.x,
+            drawingBufferSize.y, {
+                format: THREE.RGBAFormat,
+                type: THREE.HalfFloatType,
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                stencilBuffer: false,
+                depthBuffer: true
+            });
+
         // Composite shader to blend particle bloom onto main scene
         this.particleCompositeShader = {
             uniforms: {
@@ -605,6 +619,12 @@ export class ThreeRenderer {
             }
             // Assign new custom material
             this.coreMesh.material = customMaterial;
+
+            // Set resolution uniform for refraction if present
+            if (customMaterial.uniforms?.resolution) {
+                const size = this.renderer.getDrawingBufferSize(new THREE.Vector2());
+                customMaterial.uniforms.resolution.value.set(size.x, size.y);
+            }
         } else {
             // Swapping back to standard material - restore glow or glass
             const standardMaterial = this.materialMode === 'glass'
@@ -1233,6 +1253,68 @@ export class ThreeRenderer {
 
         // Render with post-processing if enabled, otherwise direct render
         if (this.composer) {
+            // === STEP 0: Render soul (layer 2) to texture for refraction sampling ===
+            if (this.soulRenderTarget) {
+                // Find soul mesh in scene (needed for screen center calculation)
+                let soulMesh = null;
+                this.scene.traverse(obj => {
+                    if (obj.name === 'crystalSoul') soulMesh = obj;
+                });
+
+                // DEBUG: Log soul render pass (throttled)
+                if (!this._soulDebugCounter) this._soulDebugCounter = 0;
+                this._soulDebugCounter++;
+                const shouldLog = this._soulDebugCounter % 300 === 1; // Every 5 seconds at 60fps
+
+                if (shouldLog) {
+                    const sp = soulMesh?.position;
+                    const ss = soulMesh?.scale;
+                    const cp = this.coreMesh?.position;
+                    const cam = this.camera?.position;
+                    console.log(`[🔮 SOUL] frame=${this._soulDebugCounter} rt=${this.soulRenderTarget.width}x${this.soulRenderTarget.height} soul=${soulMesh ? 'FOUND' : 'MISSING'} visible=${soulMesh?.visible} layer=${soulMesh?.layers?.mask} pos=[${sp?.x?.toFixed(2)},${sp?.y?.toFixed(2)},${sp?.z?.toFixed(2)}] scale=${ss?.x?.toFixed(2)} core=[${cp?.x?.toFixed(2)},${cp?.y?.toFixed(2)},${cp?.z?.toFixed(2)}] cam=[${cam?.x?.toFixed(2)},${cam?.y?.toFixed(2)},${cam?.z?.toFixed(2)}]`);
+                }
+
+                this.renderer.setRenderTarget(this.soulRenderTarget);
+                this.renderer.setClearColor(0x000000, 0);
+                this.renderer.clear();
+
+                // Render only soul layer (layer 2)
+                this.camera.layers.set(2);
+                this.renderer.render(this.scene, this.camera);
+
+                // Pass soul texture and its size to crystal shader for refraction sampling
+                if (this.coreMesh?.material?.uniforms?.soulTexture) {
+                    this.coreMesh.material.uniforms.soulTexture.value = this.soulRenderTarget.texture;
+                    // Pass the actual render target size for correct UV mapping
+                    if (this.coreMesh.material.uniforms.soulTextureSize) {
+                        this.coreMesh.material.uniforms.soulTextureSize.value.set(
+                            this.soulRenderTarget.width,
+                            this.soulRenderTarget.height
+                        );
+                    }
+                    // Compute soul's screen center position for refraction sampling
+                    if (this.coreMesh.material.uniforms.soulScreenCenter && soulMesh) {
+                        const soulWorldPos = soulMesh.position.clone();
+                        const soulNDC = soulWorldPos.project(this.camera);
+                        // Convert from NDC (-1 to 1) to UV (0 to 1)
+                        const soulScreenU = (soulNDC.x + 1.0) * 0.5;
+                        const soulScreenV = (soulNDC.y + 1.0) * 0.5;
+                        this.coreMesh.material.uniforms.soulScreenCenter.value.set(soulScreenU, soulScreenV);
+                    }
+                    if (shouldLog) {
+                        const res = this.coreMesh.material.uniforms.resolution?.value;
+                        const sts = this.coreMesh.material.uniforms.soulTextureSize?.value;
+                        const ssc = this.coreMesh.material.uniforms.soulScreenCenter?.value;
+                        console.log(`[🔮 SOUL] texture passed, camLayer=${this.camera.layers.mask} res=[${res?.x},${res?.y}] soulTexSize=[${sts?.x},${sts?.y}] soulCenter=[${ssc?.x?.toFixed(3)},${ssc?.y?.toFixed(3)}]`);
+                    }
+                } else if (shouldLog) {
+                    console.log(`[🔮 SOUL] NO soulTexture uniform! coreMesh=${!!this.coreMesh} material=${!!this.coreMesh?.material} uniforms=${!!this.coreMesh?.material?.uniforms}`);
+                }
+
+                this.renderer.setRenderTarget(null);
+                this.renderer.setClearColor(0x000000, 0);
+            }
+
             // === STEP 1: Render main scene (layer 0) through bloom to screen ===
             this.camera.layers.set(0);
             this.composer.render();
@@ -1312,6 +1394,16 @@ export class ThreeRenderer {
             }
             if (this.particleBloomPass) {
                 this.particleBloomPass.setSize(drawingBufferSize.x, drawingBufferSize.y);
+            }
+
+            // Resize soul render target for refraction
+            if (this.soulRenderTarget) {
+                this.soulRenderTarget.setSize(drawingBufferSize.x, drawingBufferSize.y);
+            }
+
+            // Update resolution uniform for crystal shader refraction
+            if (this.coreMesh?.material?.uniforms?.resolution) {
+                this.coreMesh.material.uniforms.resolution.value.set(drawingBufferSize.x, drawingBufferSize.y);
             }
         }
     }
@@ -1421,6 +1513,12 @@ export class ThreeRenderer {
         if (this.particleBloomPass) {
             this.particleBloomPass.dispose();
             this.particleBloomPass = null;
+        }
+
+        // Dispose soul render target (for refraction)
+        if (this.soulRenderTarget) {
+            this.soulRenderTarget.dispose();
+            this.soulRenderTarget = null;
         }
 
         // Dispose controls (removes DOM event listeners)

@@ -24,9 +24,9 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#DC143C',       // Crimson rage - more intense
-        particleRate: 20,           // More frequent particle generation for chaos
-        minParticles: 3,            // Maintain constant agitation
-        maxParticles: 10,           // More particles for intensity
+        particleRate: 40,           // More frequent particle generation for chaos (increased)
+        minParticles: 8,            // Maintain constant agitation
+        maxParticles: 50,           // More particles for intensity (increased for 3D)
         particleBehavior: 'aggressive', // Erratic, forceful particle movement
         breathRate: 2.2,            // Rapid, agitated breathing rhythm
         breathDepth: 0.15,          // Deep, forceful breath cycles

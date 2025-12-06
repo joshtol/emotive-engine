@@ -20,9 +20,9 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#4169E1',       // Royal blue melancholy
-        particleRate: 25,           // Steady tear-like emission
+        particleRate: 50,           // Steady tear-like emission (increased for 3D)
         minParticles: 0,            // Can fade to emptiness
-        maxParticles: 25,           // Abundant sorrow display
+        maxParticles: 80,           // More tears for dramatic effect
         particleBehavior: 'falling', // Tears falling downward
         breathRate: 0.6,            // Slow, heavy breathing
         breathDepth: 0.12,          // Deep, sighing breaths

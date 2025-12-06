@@ -507,8 +507,8 @@
 
             // Soul size from crystalInnerCoreBaseScale
             if (mascot.core3D.crystalInnerCoreBaseScale !== undefined) {
-                // Reverse the scale mapping: scale = 0.3 + size * 1.2 → size = (scale - 0.3) / 1.2
-                const soulSize = (mascot.core3D.crystalInnerCoreBaseScale - 0.3) / 1.2;
+                // Reverse the scale mapping: scale = 0.05 + size * 0.95 → size = (scale - 0.05) / 0.95
+                const soulSize = (mascot.core3D.crystalInnerCoreBaseScale - 0.05) / 0.95;
                 setSlider('soul-size', Math.max(0, Math.min(1, soulSize)));
             }
 

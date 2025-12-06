@@ -32,13 +32,8 @@ import * as THREE from 'three';
 // Define shaders inline (avoid import issues with .glsl files)
 const particleVertexShader = `
 /**
- * Particle Vertex Shader - Enhanced with Depth-of-Field
- * Handles per-particle positioning, sizing, and depth-based scaling
- *
- * ENHANCEMENTS:
- * - Depth attribute for distance-based effects
- * - Style attribute for cell-shaded borders
- * - Camera occlusion detection for particles between camera and core
+ * Particle Vertex Shader - Simple 2D-style particles in 3D space
+ * Matches the 2D canvas particle appearance
  */
 
 // Per-particle attributes
@@ -46,45 +41,30 @@ attribute float size;
 attribute vec3 customColor;
 attribute float alpha;
 attribute float glowIntensity;
-attribute float depth;        // NEW: Normalized distance (0=near, 1=far)
-attribute float style;        // NEW: 0.0=solid, 1.0=bordered
+attribute float style;  // 0.0 = solid/gradient, 1.0 = cell-shaded (ring with transparent center)
 
 // Uniforms
-uniform float coreScale; // Core scale multiplier (baseScale * breath * morph * blink)
-uniform float viewportHeight; // Viewport height for screen-size compensation
-uniform float pixelRatio; // Device pixel ratio for consistent sizing
+uniform float coreScale;
+uniform float viewportHeight;
+uniform float pixelRatio;
 
 // Varying to fragment shader
 varying vec3 vColor;
 varying float vAlpha;
 varying float vGlowIntensity;
-varying float vDepth;         // NEW: Depth for blur/fade
-varying float vStyle;         // NEW: Style for rendering
-varying float vCameraOcclusion; // NEW: Fade particles between camera and core
+varying float vStyle;
 
 void main() {
     // Pass attributes to fragment shader
     vColor = customColor;
     vAlpha = alpha;
     vGlowIntensity = glowIntensity;
-    vDepth = depth;
     vStyle = style;
 
     // Calculate position in clip space
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 
-    // Camera occlusion detection
-    // Fade out particles that are between camera and core (z > core.z)
-    // Assuming core is at z=-5 to -10 range, fade particles from z=-3 to z=0
-    float cameraZ = mvPosition.z;
-    vCameraOcclusion = smoothstep(-1.0, -4.0, cameraZ); // Fade out from z=-1 to z=-4
-
     // Calculate point size with perspective scaling
-    // DIRECTLY link particle size to core scale to maintain EXACT ratio regardless of screen size
-    // Particle size now scales proportionally with core (breath, morph, blink animations included)
-    // The viewportHeight uniform compensates for screen size (larger screens = more pixels)
-    // Divide by pixelRatio to maintain consistent size (gl_PointSize is in CSS pixels, not physical pixels)
-    // Base scale of 75.0 gives smaller, tighter particles around the core
     float perspectiveScale = coreScale * (75.0 / length(mvPosition.xyz)) * (viewportHeight / 600.0) / pixelRatio;
     gl_PointSize = size * perspectiveScale;
 
@@ -95,140 +75,44 @@ void main() {
 
 const particleFragmentShader = `
 /**
- * Particle Fragment Shader - CONDITIONAL BUBBLE HIGHLIGHTS
- * Applies bubble highlights ONLY to hasGlow particles (1/3 of particles)
- * Regular particles use gradient style
- *
- * ENHANCEMENTS:
- * - Conditional bubble appearance with top-left highlight (hasGlow only)
- * - Depth-of-field blur
- * - Cell-shaded borders for variety
- * - Camera occlusion for particles between camera and core
+ * Particle Fragment Shader - Solid colored circles matching 2D appearance
+ * Uses premultiplied alpha for proper blending
  */
 
-// From vertex shader
 varying vec3 vColor;
 varying float vAlpha;
 varying float vGlowIntensity;
-varying float vDepth;
 varying float vStyle;
-varying float vCameraOcclusion;
 
 void main() {
-    // Calculate distance from center of point sprite
+    // Distance from center (0 at center, 0.5 at edge)
     vec2 center = gl_PointCoord - vec2(0.5);
     float dist = length(center);
 
-    // Discard fragments outside circle
-    if (dist > 0.5) {
+    // Hard circle cutoff - discard everything outside
+    if (dist > 0.45) {
         discard;
     }
 
-    // Camera occlusion fade - particles between camera and core fade out
-    if (vCameraOcclusion < 0.01) {
-        discard; // Kill particles very close to camera
+    vec3 finalColor = vColor;
+
+    // Base opacity from particle (already includes baseOpacity variation)
+    float alpha = vAlpha;
+
+    // Gesture glow boost
+    if (vGlowIntensity >= 2.0) {
+        float gestureBoost = (vGlowIntensity - 2.0) / 13.0;
+        finalColor *= (1.0 + gestureBoost * 0.5);
+        alpha = min(alpha * (1.0 + gestureBoost * 0.3), 1.0);
     }
 
-    // Depth-of-Field Effect (slightly more blur for softer appearance)
-    float depthBlur = mix(0.32, 0.34, vDepth);  // Increased from 0.30-0.31 to 0.32-0.34
-    float gradient = smoothstep(0.5, 0.5 - depthBlur, dist);
+    // Cell-shaded particles are slightly more opaque
+    float opacityBoost = vStyle > 0.5 ? 1.0 : 0.85;
+    alpha *= opacityBoost;
 
-    // Distance-based opacity falloff (slightly dimmer overall)
-    float depthOpacity = mix(0.92, 0.90, vDepth * 0.1);  // Reduced from 1.0-0.98 to 0.92-0.90
-
-    vec3 finalColor;
-    float glowAlpha = 0.0;
-
-    // Determine if particle has glow from base properties (hasGlow) OR gesture effects
-    // Base glow threshold is 0.1, but gesture effects boost glow to 2.0-15.0 range
-    bool hasBubbleHighlight = vGlowIntensity > 0.1 && vGlowIntensity < 2.0; // Only base glow (hasGlow particles)
-    bool hasGestureGlow = vGlowIntensity >= 2.0; // Gesture-boosted glow
-
-    // CONDITIONAL RENDERING: Bubble highlights for hasGlow particles, gesture glow for all
-    if (hasBubbleHighlight) {
-        // === BUBBLE PARTICLE (hasGlow = true, no gesture) ===
-
-        // BUBBLE HIGHLIGHT - top-left specular highlight
-        vec2 highlightOffset = vec2(-0.15, -0.15); // Top-left position
-        float highlightDist = length(center - highlightOffset);
-        float highlight = smoothstep(0.15, 0.05, highlightDist); // Soft circular highlight
-        highlight *= 0.7; // Intensity of highlight
-
-        // Bubble gradient - darker at edges, lighter in center
-        float bubbleGradient = 1.0 - (dist * 0.8);
-        vec3 bubbleColor = vColor * (0.6 + bubbleGradient * 0.4);
-
-        // Add white highlight for bubble effect
-        finalColor = mix(bubbleColor, vec3(1.0, 1.0, 1.0), highlight);
-
-        // Subtle glow for bubble particles
-        float outerGlow = 1.0 - smoothstep(0.3, 0.5, dist);
-        outerGlow *= vGlowIntensity * 0.2; // Increased from 0.1
-
-        float innerGlow = 1.0 - smoothstep(0.0, 0.2, dist);
-        innerGlow *= vGlowIntensity * 0.3; // Increased from 0.15
-
-        float totalGlow = outerGlow + innerGlow;
-        finalColor += finalColor * totalGlow * 0.5; // Increased from 0.3
-        glowAlpha = totalGlow * 0.15; // Increased from 0.1
-    } else {
-        // === REGULAR PARTICLE (hasGlow = false) ===
-
-        // Previous gradient style - three-stop gradient
-        vec3 centerColor = vColor * 1.1;  // Slightly brighter center
-        vec3 midColor = vColor * 0.95;     // Mid-tone
-        vec3 edgeColor = vColor * 0.7;     // Darker edge
-
-        // Three-stop gradient using smoothstep
-        float centerGrad = smoothstep(0.3, 0.0, dist);   // Bright center
-        float midGrad = smoothstep(0.5, 0.15, dist);     // Mid transition
-
-        // Blend the three colors
-        finalColor = mix(edgeColor, midColor, midGrad);
-        finalColor = mix(finalColor, centerColor, centerGrad);
-    }
-
-    // Apply gesture glow effects to ALL particles (if active)
-    if (hasGestureGlow) {
-        // Gesture effects boost glow intensity dramatically (2.0-15.0 range)
-        float gestureIntensity = (vGlowIntensity - 2.0) / 13.0; // Normalize to 0-1
-
-        // Outer glow ring
-        float outerGlow = 1.0 - smoothstep(0.3, 0.5, dist);
-        outerGlow *= gestureIntensity * 0.5;
-
-        // Inner glow
-        float innerGlow = 1.0 - smoothstep(0.0, 0.2, dist);
-        innerGlow *= gestureIntensity * 0.8;
-
-        float totalGestureGlow = outerGlow + innerGlow;
-        finalColor += finalColor * totalGestureGlow;
-        glowAlpha = max(glowAlpha, totalGestureGlow * 0.2);
-    }
-
-    // Cell-Shaded Border Style (for variety - 1/3 of particles)
-    float finalAlpha = vAlpha * gradient * depthOpacity * vCameraOcclusion;
-
-    if (vStyle > 0.5) {
-        // Border ring
-        float borderWidth = 0.08;
-        float borderDist = abs(dist - 0.4);
-        float borderAlpha = smoothstep(borderWidth, 0.0, borderDist);
-
-        float coreMask = smoothstep(0.4, 0.35, dist);
-        finalAlpha = mix(borderAlpha * 0.8, finalAlpha, coreMask);
-
-        // Slightly brighter border
-        finalColor = mix(finalColor * 1.05, finalColor, coreMask);
-    }
-
-    // Apply glow alpha if stronger than base
-    finalAlpha = max(finalAlpha, glowAlpha * vCameraOcclusion);
-
-    // HDR bloom boost - values > 1.0 will bloom
-    finalColor *= 1.5;
-
-    gl_FragColor = vec4(finalColor, finalAlpha);
+    // Output with proper alpha for blending
+    // Premultiply alpha for correct compositing
+    gl_FragColor = vec4(finalColor * alpha, alpha);
 }
 `;
 
@@ -295,16 +179,15 @@ export class Particle3DRenderer {
         this.geometry.setAttribute('depth', new THREE.BufferAttribute(this.depths, 1));
         this.geometry.setAttribute('style', new THREE.BufferAttribute(this.styles, 1));
 
-        // PERFORMANCE: Only mark frequently changing attributes as dynamic
-        // Dynamic: position, size (depth-adjusted per frame), alpha
-        // Static: color, glow, depth, style (set once per particle lifetime)
+        // PERFORMANCE: Mark all frequently-updated attributes as dynamic
+        // Color changes with particle lifecycle, so it must be dynamic too
         this.geometry.attributes.position.setUsage(THREE.DynamicDrawUsage);
         this.geometry.attributes.size.setUsage(THREE.DynamicDrawUsage);
-        this.geometry.attributes.customColor.setUsage(THREE.StaticDrawUsage);
+        this.geometry.attributes.customColor.setUsage(THREE.DynamicDrawUsage);
         this.geometry.attributes.alpha.setUsage(THREE.DynamicDrawUsage);
-        this.geometry.attributes.glowIntensity.setUsage(THREE.StaticDrawUsage);
-        this.geometry.attributes.depth.setUsage(THREE.StaticDrawUsage);
-        this.geometry.attributes.style.setUsage(THREE.StaticDrawUsage);
+        this.geometry.attributes.glowIntensity.setUsage(THREE.DynamicDrawUsage);
+        this.geometry.attributes.depth.setUsage(THREE.DynamicDrawUsage);
+        this.geometry.attributes.style.setUsage(THREE.DynamicDrawUsage);
 
         // Set initial draw range to 0 (no particles yet)
         this.geometry.setDrawRange(0, 0);
@@ -323,7 +206,12 @@ export class Particle3DRenderer {
             vertexShader: particleVertexShader,
             fragmentShader: particleFragmentShader,
             transparent: true,
-            blending: THREE.NormalBlending, // Changed from Additive to Normal for less blowout
+            // Premultiplied alpha blending: src=One (already multiplied), dst=OneMinusSrcAlpha
+            blending: THREE.CustomBlending,
+            blendSrc: THREE.OneFactor,
+            blendDst: THREE.OneMinusSrcAlphaFactor,
+            blendSrcAlpha: THREE.OneFactor,
+            blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
             depthWrite: false, // Don't write to depth buffer
             depthTest: true // Test depth for proper occlusion
         });
@@ -382,8 +270,9 @@ export class Particle3DRenderer {
         for (let i = 0; i < this.particleCount; i++) {
             const particle = particles[i];
 
-            // Skip dead particles
+            // Skip dead particles (hide them by setting alpha to 0)
             if (!particle.isAlive()) {
+                this.alphas[i] = 0;
                 continue;
             }
 
@@ -394,6 +283,15 @@ export class Particle3DRenderer {
             // This creates the accretion disk effect where particles orbit behind the black hole
             // Camera is at (0, 0, +Z), black hole at origin, so particles with Z > 0 are in front
             if (geometryType === 'blackHole' && pos3D.z > 0) {
+                // Hide particle by setting alpha to 0
+                this.alphas[i] = 0;
+                continue;
+            }
+
+            // CRYSTAL/HEART/ROUGH: Cull particles in front of the soul
+            // These geometries have a visible soul inside, particles in front block the view
+            // Threshold slightly positive to allow particles at the edges
+            if ((geometryType === 'crystal' || geometryType === 'heart' || geometryType === 'rough') && pos3D.z > 0.15) {
                 // Hide particle by setting alpha to 0
                 this.alphas[i] = 0;
                 continue;

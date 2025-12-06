@@ -20,9 +20,9 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#8A2BE2',       // Dark violet (BlueViolet) - more ominous
-        particleRate: 18,           // More rapid nervous emission
-        minParticles: 4,            // Constant anxious presence
-        maxParticles: 16,           // Scattered fearful display
+        particleRate: 35,           // More rapid nervous emission (increased for 3D)
+        minParticles: 8,            // Constant anxious presence
+        maxParticles: 50,           // Scattered fearful display (increased for 3D)
         particleBehavior: 'scattering', // Particles flee outward
         breathRate: 2.5,            // Rapid, shallow breathing
         breathDepth: 0.06,          // Short, panicked breaths

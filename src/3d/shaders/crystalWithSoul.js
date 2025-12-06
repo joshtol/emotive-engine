@@ -81,6 +81,14 @@ uniform float causticSpeed;       // Animation speed of caustics (default: 0.15)
 uniform sampler2D crystalTexture;
 uniform float textureStrength;    // How much texture affects appearance (default: 0.5)
 
+// Soul refraction - samples soul rendered to texture with optical distortion
+uniform sampler2D soulTexture;    // Soul mesh rendered to texture
+uniform vec2 resolution;          // Screen resolution for UV calculation
+uniform vec2 soulTextureSize;     // Soul render target size (may differ from screen)
+uniform vec2 soulScreenCenter;    // Soul center projected to screen UV (0-1 range)
+uniform float refractionIndex;    // Index of refraction (1.5 glass, 2.4 diamond)
+uniform float refractionStrength; // Distortion magnitude (0.1-0.5)
+
 // Physically-based subsurface scattering
 uniform float sssStrength;            // Overall SSS intensity (0-1)
 uniform vec3 sssAbsorption;           // Absorption coefficients per RGB channel
@@ -435,6 +443,50 @@ void main() {
     soulColor = min(soulColor, vec3(0.8));
 
     // ═══════════════════════════════════════════════════════════════════════
+    // REFRACTED SOUL SAMPLING - True optical lensing through crystal
+    // The soul is rendered to a texture, then sampled with refraction distortion
+    // This creates the effect of looking at the soul through a crystal lens
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // ═══════════════════════════════════════════════════════════════════
+    // REFRACTED SOUL SAMPLING
+    // Sample the soul texture with physical refraction distortion
+    // Creates the "looking through glass" lensing effect
+    // ═══════════════════════════════════════════════════════════════════
+    vec3 refractedSoulColor = vec3(0.0);
+    float refractedSoulAlpha = 0.0;
+
+    if (soulTextureSize.x > 0.0 && soulScreenCenter.x >= 0.0) {
+        // Fragment's screen UV position
+        vec2 fragUV = gl_FragCoord.xy / soulTextureSize;
+
+        // Calculate refraction offset using Snell's law
+        float ior = refractionIndex;
+        vec3 refractedDir = refract(-viewDir, normal, 1.0 / ior);
+
+        // Apply refraction distortion toward the soul center
+        // This creates the magnifying glass effect - bending light toward center
+        vec2 refractionOffset = refractedDir.xy * refractionStrength * 0.1;
+
+        // Sample at fragment position with refraction offset
+        // The soul texture contains the soul rendered at its actual screen position
+        vec2 soulUV = fragUV + refractionOffset;
+
+        // Clamp to valid UV range
+        soulUV = clamp(soulUV, 0.0, 1.0);
+
+        // Sample the soul texture
+        vec4 soulSample = texture2D(soulTexture, soulUV);
+
+        // Store for later use in final composition
+        refractedSoulColor = soulSample.rgb;
+        refractedSoulAlpha = soulSample.a;
+
+        // Also blend into soulColor for existing pipeline
+        soulColor = mix(soulColor, soulSample.rgb, soulSample.a * 0.5);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // SOUL BLEND LAYERS - Apply before combining with shell
     // ═══════════════════════════════════════════════════════════════════════
     if (soulLayer1Enabled > 0.5) {
@@ -755,6 +807,27 @@ void main() {
 
     float finalAlpha = min(baseAlpha + rimAlpha + glowAlpha, 0.95) * opacity;
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // REFRACTED SOUL - Add the soul visible through the crystal
+    // This is the actual soul mesh rendered to texture and sampled with refraction
+    // ═══════════════════════════════════════════════════════════════════════
+    if (refractedSoulAlpha > 0.01) {
+        // The soul should glow through the crystal, tinted by the crystal's color
+        // Use additive blending so the soul illuminates the crystal from within
+        vec3 soulGlow = refractedSoulColor * refractedSoulAlpha;
+
+        // Tint the soul by the crystal's SSS color for colored gems
+        if (sssStrength > 0.01) {
+            vec3 absorption = sssAbsorption;
+            float maxAbs = max(max(absorption.r, absorption.g), absorption.b);
+            vec3 gemHue = absorption / max(maxAbs, 0.001);
+            soulGlow *= mix(vec3(1.0), gemHue, sssStrength * 0.5);
+        }
+
+        // Add soul glow to final color
+        finalColor += soulGlow * 0.8;
+    }
+
     gl_FragColor = vec4(finalColor, finalAlpha);
 }
 `;
@@ -805,6 +878,13 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
 
     // Texture
     textureStrength: 0.55,      // How much texture affects appearance
+
+    // Soul refraction - optical lensing of inner soul through crystal
+    refractionIndex: 1.5,       // Index of refraction (1.5 glass, 2.4 diamond)
+    refractionStrength: 0.5,    // Distortion magnitude - higher for more pronounced lensing
+    resolution: [1920, 1080],   // Screen resolution (updated at runtime)
+    soulTextureSize: [1920, 1080], // Soul render target size (updated at runtime)
+    soulScreenCenter: [0.5, 0.5],  // Soul center in screen UV (updated at runtime)
 
     // Physically-based subsurface scattering (crystal preset as default)
     sssStrength: 0.65,                      // Overall SSS intensity (boosted)

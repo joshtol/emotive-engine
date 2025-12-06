@@ -24,9 +24,9 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FFEB3B',       // Bright yellow sunshine
-        particleRate: 40,           // Abundant celebration particles
+        particleRate: 60,           // Abundant celebration particles (increased for 3D)
         minParticles: 0,            // Can start from stillness
-        maxParticles: 40,           // Maximum joyful expression
+        maxParticles: 100,          // Maximum joyful expression (increased for 3D)
         particleBehavior: 'popcorn', // Spontaneous popping effect
         breathRate: 1.5,            // Excited, happy breathing
         breathDepth: 0.10,          // Moderate breath variation

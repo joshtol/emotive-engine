@@ -2,12 +2,17 @@
  * CrystalSoul - Inner glowing core effect for translucent geometries
  *
  * A reusable soul/core effect that can be added to any translucent geometry
- * (crystal, diamond, heart, etc). Creates an animated glowing octahedron
+ * (crystal, diamond, heart, etc). Creates an animated glowing inclusion
  * with drifting energy and shimmer effects.
  */
 
 import * as THREE from 'three';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { blendModesGLSL } from '../shaders/utils/blendModes.js';
+
+// Cache for loaded inclusion geometry
+let inclusionGeometryCache = null;
+let inclusionGeometryLoading = null;
 
 // Vertex shader for soul effect
 const soulVertexShader = `
@@ -97,6 +102,7 @@ const soulFragmentShader = `
             coreColor = mix(coreColor, blendResult, blendLayer2Strength);
         }
 
+        // Output the computed core color with full opacity
         gl_FragColor = vec4(coreColor, 1.0);
     }
 `;
@@ -108,29 +114,97 @@ export class CrystalSoul {
     /**
      * Create a new CrystalSoul
      * @param {Object} options - Configuration options
-     * @param {number} options.radius - Octahedron radius (default: 0.35)
-     * @param {number} options.detail - Octahedron detail level (default: 1)
+     * @param {number} options.radius - Base radius for fallback geometry (default: 0.15)
+     * @param {number} options.detail - Detail level for fallback geometry (default: 1)
      */
     constructor(options = {}) {
-        this.radius = options.radius || 0.35;
+        this.radius = options.radius || 0.15;
         this.detail = options.detail || 1;
         this.geometryType = options.geometryType || 'crystal';
 
         this.mesh = null;
         this.material = null;
         this.parentMesh = null;
-        this.baseScale = 1.0;
+        this.baseScale = 0.5;
+        this._pendingParent = null;
 
         this._createMesh();
     }
 
     /**
+     * Load the inclusion geometry from OBJ file
+     * @returns {Promise<THREE.BufferGeometry>}
+     * @private
+     */
+    static _loadInclusionGeometry() {
+        // Return cached geometry if available
+        if (inclusionGeometryCache) {
+            return Promise.resolve(inclusionGeometryCache.clone());
+        }
+
+        // Return existing loading promise if in progress
+        if (inclusionGeometryLoading) {
+            return inclusionGeometryLoading.then(geo => geo.clone());
+        }
+
+        // Start loading
+        inclusionGeometryLoading = new Promise((resolve) => {
+            const loader = new OBJLoader();
+            loader.load(
+                '/assets/models/Crystal/inclusion.obj',
+                (obj) => {
+                    let geometry = null;
+                    obj.traverse(child => {
+                        if (child.isMesh && child.geometry) {
+                            geometry = child.geometry;
+                        }
+                    });
+
+                    if (geometry) {
+                        // Center the geometry
+                        geometry.computeBoundingBox();
+                        const center = new THREE.Vector3();
+                        geometry.boundingBox.getCenter(center);
+                        geometry.translate(-center.x, -center.y, -center.z);
+
+                        // Rotate 90 degrees around X-axis to make it vertical
+                        geometry.rotateX(Math.PI / 2);
+
+                        // Scale to unit size (will be scaled by baseScale)
+                        geometry.computeBoundingBox();
+                        const size = new THREE.Vector3();
+                        geometry.boundingBox.getSize(size);
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const scale = 0.3 / maxDim;  // Target ~0.3 unit radius
+                        geometry.scale(scale, scale, scale);
+
+                        geometry.computeVertexNormals();
+                        inclusionGeometryCache = geometry;
+                        console.log('[🔮 SOUL] Inclusion geometry loaded');
+                        resolve(geometry.clone());
+                    } else {
+                        console.warn('[🔮 SOUL] No mesh in inclusion.obj, using fallback');
+                        resolve(null);
+                    }
+                },
+                undefined,
+                (err) => {
+                    console.warn('[🔮 SOUL] Failed to load inclusion.obj:', err);
+                    resolve(null);
+                }
+            );
+        });
+
+        return inclusionGeometryLoading;
+    }
+
+    /**
      * Create the soul mesh with shader material
+     * Uses inclusion geometry if available, falls back to octahedron
      * @private
      */
     _createMesh() {
-        const geometry = new THREE.OctahedronGeometry(this.radius, this.detail);
-
+        // Create material first (shared regardless of geometry)
         this.material = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
@@ -151,19 +225,42 @@ export class CrystalSoul {
             vertexShader: soulVertexShader,
             fragmentShader: soulFragmentShader,
             transparent: true,
-            depthWrite: false,
-            depthTest: false,  // Always render, ignore depth
+            depthWrite: true,
+            depthTest: true,
             side: THREE.FrontSide
         });
 
-        this.mesh = new THREE.Mesh(geometry, this.material);
+        // Start with fallback octahedron geometry
+        const fallbackGeometry = new THREE.OctahedronGeometry(this.radius, this.detail);
+        this.mesh = new THREE.Mesh(fallbackGeometry, this.material);
         this.mesh.name = 'crystalSoul';
-        this.mesh.renderOrder = 1;  // Render after shell (shell is 0)
+        this.mesh.renderOrder = 0;
+        this.mesh.layers.set(2);
+
+        // Async load inclusion geometry and swap when ready
+        CrystalSoul._loadInclusionGeometry().then(geometry => {
+            if (geometry && this.mesh) {
+                // Dispose old geometry
+                this.mesh.geometry.dispose();
+                // Use inclusion geometry
+                this.mesh.geometry = geometry;
+                console.log('[🔮 SOUL] Switched to inclusion geometry');
+
+                // Re-attach if we had a pending parent
+                if (this._pendingParent) {
+                    this.attachTo(this._pendingParent);
+                    this._pendingParent = null;
+                }
+            }
+        });
+
+        console.log(`[🔮 SOUL] created: radius=${this.radius} layer=${this.mesh.layers.mask} (loading inclusion...)`);
     }
 
     /**
-     * Attach the soul to a parent mesh
-     * @param {THREE.Mesh} parentMesh - The mesh to attach to (e.g., crystal, heart)
+     * Attach the soul to a parent mesh (adds to scene, syncs position)
+     * Soul is added to the scene root (not as child) so it can be on a separate layer
+     * @param {THREE.Mesh} parentMesh - The mesh to follow (e.g., crystal, heart)
      */
     attachTo(parentMesh) {
         if (!parentMesh) {
@@ -171,21 +268,47 @@ export class CrystalSoul {
             return;
         }
 
-        // Remove from previous parent if any
-        if (this.parentMesh && this.mesh.parent === this.parentMesh) {
-            this.parentMesh.remove(this.mesh);
+        // Remove from previous scene if any
+        if (this.mesh.parent) {
+            this.mesh.parent.remove(this.mesh);
         }
 
         this.parentMesh = parentMesh;
-        parentMesh.add(this.mesh);
+
+        // Add to scene directly (not as child of parentMesh)
+        // This allows the soul to be rendered on layer 2 independently
+        let scene = parentMesh;
+        while (scene.parent) {
+            scene = scene.parent;
+        }
+        scene.add(this.mesh);
+
+        // Sync initial position
+        this._syncPosition();
+
+        // DEBUG: Log attachment details
+        const pwp = parentMesh.getWorldPosition(new THREE.Vector3());
+        console.log(`[🔮 SOUL] attached: parent=${parentMesh.name} parentPos=[${pwp.x.toFixed(2)},${pwp.y.toFixed(2)},${pwp.z.toFixed(2)}] soulPos=[${this.mesh.position.x.toFixed(2)},${this.mesh.position.y.toFixed(2)},${this.mesh.position.z.toFixed(2)}] layer=${this.mesh.layers.mask} visible=${this.mesh.visible} inScene=${scene.children.includes(this.mesh)}`);
+    }
+
+    /**
+     * Sync soul world position/rotation to parent mesh
+     * Called automatically on attach and should be called each frame
+     * @private
+     */
+    _syncPosition() {
+        if (this.parentMesh && this.mesh) {
+            this.parentMesh.getWorldPosition(this.mesh.position);
+            this.parentMesh.getWorldQuaternion(this.mesh.quaternion);
+        }
     }
 
     /**
      * Detach from current parent
      */
     detach() {
-        if (this.parentMesh && this.mesh.parent === this.parentMesh) {
-            this.parentMesh.remove(this.mesh);
+        if (this.mesh.parent) {
+            this.mesh.parent.remove(this.mesh);
         }
         this.parentMesh = null;
     }
@@ -198,6 +321,9 @@ export class CrystalSoul {
      */
     update(deltaTime, glowColor, breathScale = 1.0) {
         if (!this.material || !this.material.uniforms) return;
+
+        // Sync position with parent mesh each frame
+        this._syncPosition();
 
         const {uniforms} = this.material;
 
@@ -231,8 +357,8 @@ export class CrystalSoul {
     setSize(size) {
         if (!this.mesh) return;
 
-        // Map size (0-1) to scale (0.3-1.5)
-        const scale = 0.3 + size * 1.2;
+        // Map size (0-1) to scale (0.05-1.0) - allows very small soul for crystal
+        const scale = 0.05 + size * 0.95;
         this.baseScale = scale;
         this.mesh.scale.setScalar(scale);
     }
@@ -307,7 +433,7 @@ export class CrystalSoul {
      * @returns {boolean}
      */
     isAttached() {
-        return this.parentMesh !== null && this.mesh.parent === this.parentMesh;
+        return this.parentMesh !== null && this.mesh.parent !== null;
     }
 
     /**

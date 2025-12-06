@@ -20,9 +20,9 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FF1493',       // Deep passionate pink (DeepPink)
-        particleRate: 25,           // Generous particle flow
-        minParticles: 10,           // Constant loving presence
-        maxParticles: 18,           // Abundant affection display
+        particleRate: 45,           // Generous particle flow (increased for 3D)
+        minParticles: 15,           // Constant loving presence
+        maxParticles: 60,           // Abundant affection display (increased for 3D)
         particleBehavior: 'orbiting', // Particles orbit romantically
         breathRate: 0.75,           // Slow, content breathing
         breathDepth: 0.15,          // Deep, satisfied breaths

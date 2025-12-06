@@ -115,6 +115,22 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
             crystalTexture: { value: crystalTexture },
             // Heart texture slightly more transparent than crystal
             textureStrength: { value: textureType === 'heart' ? 0.35 : (textureType ? CRYSTAL_DEFAULT_UNIFORMS.textureStrength : 0.0) },
+            // Soul refraction - samples soul texture with optical distortion
+            soulTexture: { value: null }, // Set by ThreeRenderer at render time
+            resolution: { value: new THREE.Vector2(
+                CRYSTAL_DEFAULT_UNIFORMS.resolution[0],
+                CRYSTAL_DEFAULT_UNIFORMS.resolution[1]
+            ) },
+            soulTextureSize: { value: new THREE.Vector2(
+                CRYSTAL_DEFAULT_UNIFORMS.soulTextureSize[0],
+                CRYSTAL_DEFAULT_UNIFORMS.soulTextureSize[1]
+            ) },
+            soulScreenCenter: { value: new THREE.Vector2(
+                CRYSTAL_DEFAULT_UNIFORMS.soulScreenCenter[0],
+                CRYSTAL_DEFAULT_UNIFORMS.soulScreenCenter[1]
+            ) },
+            refractionIndex: { value: overrides.refractionIndex ?? CRYSTAL_DEFAULT_UNIFORMS.refractionIndex },
+            refractionStrength: { value: overrides.refractionStrength ?? CRYSTAL_DEFAULT_UNIFORMS.refractionStrength },
             // Physically-based subsurface scattering
             sssStrength: { value: overrides.sssStrength ?? sssPreset?.sssStrength ?? CRYSTAL_DEFAULT_UNIFORMS.sssStrength },
             sssAbsorption: { value: new THREE.Vector3(

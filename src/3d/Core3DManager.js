@@ -286,12 +286,14 @@ export class Core3DManager {
         });
 
         // Create 3D renderer (Three.js points system)
-        const particleRenderer = new Particle3DRenderer(50, { renderer: this.renderer.renderer });
+        // Increased particle count for richer particle effects
+        const particleRenderer = new Particle3DRenderer(150, { renderer: this.renderer.renderer });
 
         // Add particle points to scene
         const particlePoints = particleRenderer.getPoints();
-        // Put particles on layer 0 to include them in bloom pass
-        particlePoints.layers.set(0);
+        // Put particles on layer 1 for separate particle bloom pipeline
+        // Layer 1 uses white clear color to prevent dark halos from blur sampling
+        particlePoints.layers.set(1);
         this.renderer.scene.add(particlePoints);
 
         // Create orchestrator (coordinates everything)
@@ -935,16 +937,16 @@ export class Core3DManager {
         this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: this.geometryType });
         this.crystalSoul.attachTo(this.coreMesh);
 
-        // Geometry-specific shell and soul sizes
+        // Geometry-specific shell and soul sizes (permanent values)
         let soulScale = 0.5;  // Default
         if (this.geometryType === 'heart') {
             this.crystalShellBaseScale = 2.4;
-            soulScale = 0.6;
+            soulScale = 0.65;
         } else if (this.geometryType === 'rough') {
             this.crystalShellBaseScale = 1.6;
-            soulScale = 0.85;  // Large soul for rough
+            soulScale = 0.50;
         } else if (this.geometryType === 'crystal') {
-            soulScale = 0.6;  // Slightly larger for crystal
+            soulScale = 0.60;
         }
 
         this.crystalSoul.baseScale = soulScale;

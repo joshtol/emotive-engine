@@ -377,7 +377,7 @@ export const THREE_GEOMETRIES = {
         geometryLoader: loadCrystalGeometry,
         material: 'custom',
         blink: { type: 'facet-flash', duration: 160, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.4, curve: 'sine' },
-        particleRadiusMultiplier: 0.85  // Tall narrow crystal - particles closer to core
+        particleRadiusMultiplier: 1.4  // Spread particles out from the crystal
     },
 
     // Rough (raw crystal formation)
@@ -386,7 +386,7 @@ export const THREE_GEOMETRIES = {
         geometryLoader: loadRoughGeometry,
         material: 'custom',
         blink: { type: 'facet-flash', duration: 150, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.5, curve: 'sine' },
-        particleRadiusMultiplier: 0.9
+        particleRadiusMultiplier: 1.3  // Spread particles out from the rough formation
     },
 
     // Heart-cut crystal
@@ -395,6 +395,6 @@ export const THREE_GEOMETRIES = {
         geometryLoader: loadHeartGeometry,
         material: 'custom',
         blink: { type: 'gentle-pulse', duration: 180, scaleAxis: [0.92, 0.92, 0.92], glowBoost: 0.6, curve: 'sine' },
-        particleRadiusMultiplier: 0.9  // Heart shape - particles slightly closer than sphere
+        particleRadiusMultiplier: 1.3  // Spread particles out from the heart
     }
 };
