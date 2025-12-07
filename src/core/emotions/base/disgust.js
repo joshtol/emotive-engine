@@ -20,7 +20,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#9ACD32',       // Sickly yellow-green (YellowGreen)
-        particleRate: 15,           // More particles for nauseating effect
+        particleRate: 4,            // Repulsive flow - 4/sec with max 12 = ~3 sec particle life
         minParticles: 5,            // Maintain visible repulsion
         maxParticles: 12,           // Controlled rejection display
         particleBehavior: 'repelling', // Particles flee from center

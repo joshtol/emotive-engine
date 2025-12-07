@@ -222,7 +222,7 @@ class Particle {
         
         // Update age and life (EXACT COPY FROM ORIGINAL)
         this.age += this.lifeDecay * dt;
-        
+
         // Smooth fade-in at birth
         if (this.age < this.fadeInTime) {
             this.life = this.age / this.fadeInTime;
@@ -235,18 +235,23 @@ class Particle {
         else {
             this.life = (1.0 - this.age) / this.fadeOutTime;
             this.isFadingOut = true;
-            
+
             // Dynamic size reduction for popcorn during fade-out
             if (this.behavior === 'popcorn') {
                 this.size = this.baseSize * (0.5 + 0.5 * this.life);
             }
         }
-        
+
         this.life = Math.max(0, Math.min(1, this.life));
-        
+
         // Update opacity with easing for extra smoothness
-        this.opacity = this.easeInOutCubic(this.life);
-        
+        // Falling behavior: linear opacity (no easing) for rain-like appearance
+        if (this.behavior === 'falling') {
+            this.opacity = this.life;
+        } else {
+            this.opacity = this.easeInOutCubic(this.life);
+        }
+
         // Update size based on life for some behaviors
         if (this.behavior === 'burst' && this.behaviorData && this.life < this.behaviorData.fadeStart) {
             this.size = this.baseSize * (this.life / this.behaviorData.fadeStart);

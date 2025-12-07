@@ -371,7 +371,8 @@ export const SSS_PRESETS = {
         // Crystal appearance - sharp gemstone look
         frostiness: 0.20,                      // Very clear
         innerGlowStrength: 0.15,               // Minimal soul for gem clarity
-        fresnelIntensity: 1.2                  // Bright edges
+        fresnelIntensity: 1.2,                 // Bright edges
+        emotionColorBleed: 0.35                // Allow soul emotion color to tint the gem
     },
 
     // Ruby - deep red gemstone with wine/burgundy depth
@@ -388,7 +389,8 @@ export const SSS_PRESETS = {
         frostiness: 0.12,                      // Very clear for glossy look
         innerGlowStrength: 0.12,               // Subtle internal glow
         fresnelIntensity: 1.2,                 // Brighter edges like other gems
-        causticIntensity: 1.15                 // Enhanced caustics for ruby
+        causticIntensity: 1.15,                // Enhanced caustics for ruby
+        emotionColorBleed: 0.35                // Allow soul emotion color to tint the gem
     },
 
     // Sapphire - deep vivid blue gemstone with near-black shadows
@@ -404,7 +406,8 @@ export const SSS_PRESETS = {
         // Crystal appearance - sharp gemstone look
         frostiness: 0.18,                      // Very clear
         innerGlowStrength: 0.15,               // Minimal soul
-        fresnelIntensity: 1.3                  // Bright edges
+        fresnelIntensity: 1.3,                 // Bright edges
+        emotionColorBleed: 0.35                // Allow soul emotion color to tint the gem
     },
 
     // Amethyst - deep violet gemstone with near-black shadows
@@ -420,7 +423,8 @@ export const SSS_PRESETS = {
         // Crystal appearance - dark gemstone with bright highlights
         frostiness: 0.18,                      // Very clear, minimal frost
         innerGlowStrength: 0.12,               // Minimal soul
-        fresnelIntensity: 1.4                  // Bright edges for facet sparkle
+        fresnelIntensity: 1.4,                 // Bright edges for facet sparkle
+        emotionColorBleed: 0.35                // Allow soul emotion color to tint the gem
     }
 };
 

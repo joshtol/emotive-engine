@@ -44,25 +44,42 @@ import { selectWeightedColor } from '../utils/colorUtils.js';
  * @param {Particle} particle - The particle to initialize
  */
 export function initializeFalling(particle) {
-    particle.vx = (Math.random() - 0.5) * 0.03;   // MUCH slower horizontal drift
-    particle.vy = 0.05 + Math.random() * 0.05;    // MUCH slower falling
-    particle.lifeDecay = 0.002;                   // Very slow decay
-    
+    // Exact copy of ambient but falling DOWN instead of up
+    particle.vx = 0;  // NO horizontal drift
+    particle.vy = 0.04 + Math.random() * 0.02;  // Same speed as ambient but downward (positive = down)
+    particle.lifeDecay = 0.002;  // Same as ambient
+
     // Use emotion colors if provided
     if (particle.emotionColors && particle.emotionColors.length > 0) {
         particle.color = selectWeightedColor(particle.emotionColors);
     }
-    
+
+    // Generate random 3D direction for uniform sphere distribution
+    // This is used by the 3D translator for positioning
+    const u1 = Math.random();
+    const u2 = Math.random();
+    const theta = u1 * Math.PI * 2;
+    const cosPhi = 2.0 * u2 - 1.0;
+    const sinPhi = Math.sqrt(1.0 - cosPhi * cosPhi);
+
     particle.behaviorData = {
-        gravity: 0.002,       // Very gentle gravity
-        drag: 0.995           // High drag for slow fall
+        downwardSpeed: 0.0005,  // Same as ambient's upwardSpeed
+        friction: 0.998,        // Same as ambient
+        // 3D direction for translator (uniform sphere distribution)
+        fallingDir: {
+            x: sinPhi * Math.cos(theta),
+            y: cosPhi,
+            z: sinPhi * Math.sin(theta)
+        },
+        // Random orbit distance (0.7x to 1.1x core radius, actual value set by translator)
+        orbitDistanceRatio: 0.7 + Math.random() * 0.4
     };
 }
 
 /**
  * Update falling behavior each frame
- * Applies gravity with air resistance
- * 
+ * Mirror of ambient but falling DOWN instead of rising up
+ *
  * @param {Particle} particle - The particle to update
  * @param {number} dt - Delta time (frame time)
  * @param {number} centerX - Orb center X (unused)
@@ -70,18 +87,16 @@ export function initializeFalling(particle) {
  */
 export function updateFalling(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
-    
-    // Apply gravity
-    particle.vy += data.gravity * dt;
-    
-    // Apply drag (frame-independent)
-    particle.vx *= Math.pow(data.drag, dt);
-    particle.vy *= Math.pow(data.drag, dt);
-    
-    // Limit terminal velocity
-    if (particle.vy > 2) {
-        particle.vy = 2;
-    }
+
+    // Apply friction to y velocity only (frame-rate independent)
+    // Use exponential decay: friction^dt where dt is normalized to 60fps
+    particle.vy *= Math.pow(data.friction, dt);
+
+    // Add continuous downward drift (opposite of ambient's upward)
+    particle.vy += data.downwardSpeed * dt;
+
+    // NO horizontal movement (zen-like straight down, like ambient goes straight up)
+    particle.vx = 0;
 }
 
 // Export behavior definition for registry

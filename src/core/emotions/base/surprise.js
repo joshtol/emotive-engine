@@ -20,7 +20,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FFD700',       // Bright gold (shining surprise)
-        particleRate: 30,           // Rapid burst emission
+        particleRate: 5,            // Burst flow - 5/sec with max 15 = ~3 sec particle life
         minParticles: 0,            // Can start from nothing
         maxParticles: 15,           // Burst of shocked particles
         particleBehavior: 'burst',  // Explosive outward motion

@@ -76,19 +76,21 @@ describe('ParticleSpawner', () => {
             expect(distance).toBeGreaterThanOrEqual(minSpawnRadius * 0.99); // Allow small rounding
         });
 
-        it('should spawn falling particles outside glow radius', () => {
+        it('should spawn falling particles at glow edge like ambient', () => {
             const pos = spawner.getSpawnPosition('falling', centerX, centerY, canvasWidth, canvasHeight);
 
             const canvasSize = Math.min(canvasWidth, canvasHeight);
             const orbRadius = canvasSize / 12;
             const glowRadius = orbRadius * 2.5;
-            const minSpawnRadius = glowRadius * 1.1;
+            // Falling spawns at glowRadius * 0.9 (same as ambient - at glow edge)
+            const expectedRadius = glowRadius * 0.9;
 
             const distance = Math.sqrt(
                 Math.pow(pos.x - centerX, 2) + Math.pow(pos.y - centerY, 2)
             );
 
-            expect(distance).toBeGreaterThanOrEqual(minSpawnRadius * 0.99);
+            // Allow small tolerance for floating point
+            expect(distance).toBeCloseTo(expectedRadius, 1);
         });
 
         it('should spawn aggressive particles just outside glow', () => {

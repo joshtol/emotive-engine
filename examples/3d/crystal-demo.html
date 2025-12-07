@@ -41,21 +41,6 @@
                 #5a4a40 100%);
         }
 
-        /* Crystal-specific: current emotion display */
-        .current-emotion {
-            text-align: center;
-            font-size: clamp(32px, 3vw, 42px);
-            margin: clamp(10px, 1.2vw, 15px) 0;
-            filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.5));
-        }
-
-        .current-name {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: clamp(11px, 1vw, 13px);
-            margin-bottom: clamp(10px, 1.2vw, 15px);
-        }
-
         /* Crystal container */
         #crystal-container {
             width: 100%;
@@ -75,11 +60,6 @@
 
         /* Mobile responsive */
         @media (max-width: 1000px) {
-            /* Hide current emotion section on mobile */
-            .current-emotion-section {
-                display: none;
-            }
-
             .emotion-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
@@ -123,16 +103,14 @@
             </div>
         </div>
 
-        <div class="section current-emotion-section">
-            <h2>Current Emotion</h2>
-            <div class="section-content">
-                <div class="current-emotion" id="current-emoji">💎</div>
-                <div class="current-name" id="current-name">Neutral</div>
-            </div>
-        </div>
-
         <div class="section">
-            <h2>Emotions</h2>
+            <h2 style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Emotions</span>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 10px; color: rgba(255,255,255,0.6);">
+                    <span>Wobble</span>
+                    <div class="toggle-switch active" id="wobble-toggle"></div>
+                </div>
+            </h2>
             <div class="section-content">
                 <div class="emotion-grid">
                     <button data-emotion="neutral" class="active">😐 Neutral</button>
@@ -195,9 +173,17 @@
                 <div class="slider-control">
                     <div class="slider-label">
                         <span>Soul Size</span>
-                        <span class="slider-value" id="soul-size-value">0.25</span>
+                        <span class="slider-value" id="soul-size-value">1.00</span>
                     </div>
-                    <input type="range" id="soul-size-slider" min="0" max="1" step="0.05" value="0.25">
+                    <input type="range" id="soul-size-slider" min="0" max="1" step="0.05" value="1.00">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Soul Ghost Mode</span>
+                        <span class="slider-value" id="soul-ghost-value" data-precision="true">0.36</span>
+                    </div>
+                    <input type="range" id="soul-ghost-slider" min="0" max="1" step="0.01" value="0.36">
                 </div>
 
                 <div class="slider-control">
@@ -230,6 +216,14 @@
                         <span class="slider-value" id="sss-value">---</span>
                     </div>
                     <input type="range" id="sss-slider" min="0" max="2" step="0.001" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Emotion Color Bleed</span>
+                        <span class="slider-value" id="emotion-bleed-value">---</span>
+                    </div>
+                    <input type="range" id="emotion-bleed-slider" min="0" max="1" step="0.01" value="0">
                 </div>
             </div>
         </div>
@@ -345,10 +339,10 @@
 
                 <div class="slider-control">
                     <div class="slider-label">
-                        <span>Shimmer Speed</span>
-                        <span class="slider-value" id="shimmer-speed-value">0.50</span>
+                        <span>Cross Wave Speed</span>
+                        <span class="slider-value" id="crosswave-speed-value">0.40</span>
                     </div>
-                    <input type="range" id="shimmer-speed-slider" min="0.1" max="3" step="0.1" value="0.5">
+                    <input type="range" id="crosswave-speed-slider" min="0.1" max="3" step="0.1" value="0.4">
                 </div>
 
                 <div class="toggle-control">
@@ -357,8 +351,32 @@
                 </div>
 
                 <div class="toggle-control">
-                    <span class="toggle-label">Shimmer Enabled</span>
-                    <div class="toggle-switch active" id="shimmer-toggle"></div>
+                    <span class="toggle-label">Cross Wave Enabled</span>
+                    <div class="toggle-switch active" id="crosswave-toggle"></div>
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Phase 1 (Primary Drift)</span>
+                        <span class="slider-value" id="phase1-value">0°</span>
+                    </div>
+                    <input type="range" id="phase1-slider" min="0" max="360" step="15" value="0">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Phase 2 (Secondary Drift)</span>
+                        <span class="slider-value" id="phase2-value">120°</span>
+                    </div>
+                    <input type="range" id="phase2-slider" min="0" max="360" step="15" value="120">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Phase 3 (Cross Wave)</span>
+                        <span class="slider-value" id="phase3-value">240°</span>
+                    </div>
+                    <input type="range" id="phase3-slider" min="0" max="360" step="15" value="240">
                 </div>
             </div>
         </div>
@@ -489,6 +507,7 @@
             setSlider('inner-glow', u.innerGlowStrength?.value, 3);
             setSlider('fresnel', u.fresnelIntensity?.value, 3);
             setSlider('sss', u.sssStrength?.value, 3);
+            setSlider('emotion-bleed', u.emotionColorBleed?.value, 2);
 
             // Read Noise Pattern values (2 decimals)
             setSlider('surface-noise', u.surfaceNoiseScale?.value);
@@ -537,47 +556,6 @@
             syncSlidersFromEngine();
         }, 100);
 
-        // Emotion emoji mapping
-        const emotionEmojis = {
-            'neutral': '😐',
-            'joy': '😊',
-            'sadness': '😢',
-            'anger': '😠',
-            'fear': '😨',
-            'surprise': '😲',
-            'disgust': '🤢',
-            'love': '❤️',
-            'calm': '😌',
-            'excited': '🤩',
-            'focused': '🎯',
-            'suspicion': '🤨',
-            'resting': '😴',
-            'euphoria': '🤯'
-        };
-
-        const emotionNames = {
-            'neutral': 'Neutral',
-            'joy': 'Joy',
-            'sadness': 'Sadness',
-            'anger': 'Anger',
-            'fear': 'Fear',
-            'surprise': 'Surprise',
-            'disgust': 'Disgust',
-            'love': 'Love',
-            'calm': 'Calm',
-            'excited': 'Excited',
-            'focused': 'Focused',
-            'suspicion': 'Suspicion',
-            'resting': 'Resting',
-            'euphoria': 'Euphoria'
-        };
-
-        // Update current emotion display
-        function updateEmotionDisplay(emotion) {
-            document.getElementById('current-emoji').textContent = emotionEmojis[emotion] || '💎';
-            document.getElementById('current-name').textContent = emotionNames[emotion] || emotion;
-        }
-
         // Geometry buttons
         document.querySelectorAll('[data-geometry]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -597,13 +575,27 @@
             btn.addEventListener('click', () => {
                 const emotion = btn.dataset.emotion;
                 mascot.setEmotion(emotion);
-                updateEmotionDisplay(emotion);
 
                 // Update active state
                 document.querySelectorAll('[data-emotion]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
             });
         });
+
+        // Wobble toggle (next to Emotions header)
+        const wobbleToggle = document.getElementById('wobble-toggle');
+        if (wobbleToggle) {
+            wobbleToggle.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent collapsing the Emotions section
+                wobbleToggle.classList.toggle('active');
+                const enabled = wobbleToggle.classList.contains('active');
+                if (enabled) {
+                    mascot.enableWobble();
+                } else {
+                    mascot.disableWobble();
+                }
+            });
+        }
 
         // Visual Controls event handlers
         document.querySelectorAll('[data-action]').forEach(button => {
@@ -673,9 +665,9 @@
             }
         }, true);
 
-        setupToggle('shimmer-toggle', (enabled) => {
+        setupToggle('crosswave-toggle', (enabled) => {
             if (mascot.core3D?.setCrystalSoulEffects) {
-                mascot.core3D.setCrystalSoulEffects({ shimmerEnabled: enabled });
+                mascot.core3D.setCrystalSoulEffects({ crossWaveEnabled: enabled });
             }
         }, true);
 
@@ -704,6 +696,12 @@
             }
         });
 
+        setupSlider('soul-ghost-slider', 'soul-ghost-value', (value) => {
+            if (mascot.core3D?.crystalSoul?.material?.uniforms?.ghostMode) {
+                mascot.core3D.crystalSoul.material.uniforms.ghostMode.value = value;
+            }
+        });
+
         // Appearance sliders (3 decimal places for fine control)
         setupSlider('frostiness-slider', 'frostiness-value', (value) => {
             if (mascot.core3D?.customMaterial?.uniforms?.frostiness) {
@@ -728,6 +726,12 @@
                 mascot.core3D.customMaterial.uniforms.sssStrength.value = value;
             }
         }, 3);
+
+        setupSlider('emotion-bleed-slider', 'emotion-bleed-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.emotionColorBleed) {
+                mascot.core3D.customMaterial.uniforms.emotionColorBleed.value = value;
+            }
+        }, 2);
 
         // SSS advanced sliders
         setupSlider('sss-thickness-bias-slider', 'sss-thickness-bias-value', (value) => {
@@ -779,7 +783,8 @@
                 sssAmbient: 0.10,
                 frostiness: 0.20,
                 innerGlowStrength: 0.15,
-                fresnelIntensity: 1.2
+                fresnelIntensity: 1.2,
+                emotionColorBleed: 0.35
             },
             ruby: {
                 sssStrength: 1.8,
@@ -792,7 +797,8 @@
                 frostiness: 0.12,
                 innerGlowStrength: 0.12,
                 fresnelIntensity: 1.2,
-                causticIntensity: 1.15
+                causticIntensity: 1.15,
+                emotionColorBleed: 0.35
             },
             sapphire: {
                 sssStrength: 2.2,
@@ -804,7 +810,8 @@
                 sssAmbient: 0.10,
                 frostiness: 0.18,
                 innerGlowStrength: 0.15,
-                fresnelIntensity: 1.3
+                fresnelIntensity: 1.3,
+                emotionColorBleed: 0.35
             },
             amethyst: {
                 sssStrength: 2.5,
@@ -816,7 +823,8 @@
                 sssAmbient: 0.08,
                 frostiness: 0.18,
                 innerGlowStrength: 0.12,
-                fresnelIntensity: 1.4
+                fresnelIntensity: 1.4,
+                emotionColorBleed: 0.35
             }
         };
 
@@ -839,6 +847,12 @@
             if (preset.causticIntensity !== undefined && u.causticIntensity) {
                 u.causticIntensity.value = preset.causticIntensity;
                 setSlider('caustic-intensity', preset.causticIntensity, 2);
+            }
+
+            // Apply emotion color bleed if specified in preset
+            if (u.emotionColorBleed) {
+                u.emotionColorBleed.value = preset.emotionColorBleed ?? 0;
+                setSlider('emotion-bleed', preset.emotionColorBleed ?? 0, 2);
             }
 
             // Heart has its own calibrated appearance values - don't override them
@@ -929,6 +943,37 @@
             if (preset.soulLayer2Enabled) {
                 addSoulLayer(preset.soulLayer2Mode, preset.soulLayer2Strength, true, true);
             }
+
+            // Also sync soul layers from engine (CrystalSoul has its own defaults)
+            syncSoulLayersFromEngine();
+        }
+
+        // Sync soul blend layers from the engine's CrystalSoul material uniforms
+        function syncSoulLayersFromEngine() {
+            if (!mascot?.core3D?.crystalSoul?.material?.uniforms) return;
+
+            const u = mascot.core3D.crystalSoul.material.uniforms;
+
+            // Clear only soul layers (not other components)
+            soulLayers.length = 0;
+            soulLayersContainer.innerHTML = '';
+            nextSoulLayerId = 1;
+
+            // Read layer 1 from engine
+            if (u.blendLayer1Enabled && u.blendLayer1Enabled.value > 0.5) {
+                const mode = u.blendLayer1Mode ? u.blendLayer1Mode.value : 0;
+                const strength = u.blendLayer1Strength ? u.blendLayer1Strength.value : 1.0;
+                addSoulLayer(mode, strength, true, true);
+            }
+
+            // Read layer 2 from engine
+            if (u.blendLayer2Enabled && u.blendLayer2Enabled.value > 0.5) {
+                const mode = u.blendLayer2Mode ? u.blendLayer2Mode.value : 0;
+                const strength = u.blendLayer2Strength ? u.blendLayer2Strength.value : 1.0;
+                addSoulLayer(mode, strength, true, true);
+            }
+
+            console.log(`💎 Soul blend layers synced from engine: ${soulLayers.length} layers`);
         }
 
         // Clear all layer UI and state
@@ -1016,11 +1061,31 @@
             }
         });
 
-        setupSlider('shimmer-speed-slider', 'shimmer-speed-value', (value) => {
+        setupSlider('crosswave-speed-slider', 'crosswave-speed-value', (value) => {
             if (mascot.core3D?.setCrystalSoulEffects) {
-                mascot.core3D.setCrystalSoulEffects({ shimmerSpeed: value });
+                mascot.core3D.setCrystalSoulEffects({ crossWaveSpeed: value });
             }
         });
+
+        // Phase offset sliders (degrees to radians)
+        function setupPhaseSlider(sliderId, valueId, paramName) {
+            const slider = document.getElementById(sliderId);
+            const valueDisplay = document.getElementById(valueId);
+            if (!slider || !valueDisplay) return;
+
+            slider.addEventListener('input', () => {
+                const degrees = parseFloat(slider.value);
+                const radians = degrees * Math.PI / 180;
+                valueDisplay.textContent = `${degrees}°`;
+                if (mascot.core3D?.setCrystalSoulEffects) {
+                    mascot.core3D.setCrystalSoulEffects({ [paramName]: radians });
+                }
+            });
+        }
+
+        setupPhaseSlider('phase1-slider', 'phase1-value', 'phaseOffset1');
+        setupPhaseSlider('phase2-slider', 'phase2-value', 'phaseOffset2');
+        setupPhaseSlider('phase3-slider', 'phase3-value', 'phaseOffset3');
 
         // ═══════════════════════════════════════════════════════════════════════════
         // BLEND LAYER MANAGEMENT
@@ -1177,13 +1242,144 @@
         // Initial emotion display
         updateEmotionDisplay('neutral');
 
-        // Sync blend layers from initial preset after a short delay (ensure DOM ready)
+        // Sync blend layers from engine after a short delay (ensure DOM ready)
+        // Soul layers come from engine defaults, shell/rim/sss from preset
         setTimeout(() => {
+            // First sync from preset (for shell, rim, sss layers)
             if (sssPresets[currentSSSPreset]) {
                 syncBlendLayersFromPreset(sssPresets[currentSSSPreset]);
-                console.log(`💎 Initial blend layers synced from ${currentSSSPreset} preset`);
             }
+            // Sync soul layers from engine (CrystalSoul has its own hardcoded defaults)
+            syncSoulLayersFromEngine();
+            console.log(`💎 Initial blend layers synced from engine + ${currentSSSPreset} preset`);
         }, 100);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PRECISION SLIDER POPUP
+        // Click on slider value to open precision controls
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        let activePrecisionPopup = null;
+
+        function closePrecisionPopup() {
+            if (activePrecisionPopup) {
+                activePrecisionPopup.remove();
+                activePrecisionPopup = null;
+            }
+        }
+
+        function openPrecisionPopup(valueElement, slider, title) {
+            closePrecisionPopup();
+
+            const rect = valueElement.getBoundingClientRect();
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const step = parseFloat(slider.step) || 0.01;
+            const currentValue = parseFloat(slider.value);
+
+            // Create popup
+            const popup = document.createElement('div');
+            popup.className = 'slider-precision-popup';
+            popup.innerHTML = `
+                <div class="slider-precision-header">
+                    <span class="slider-precision-title">${title}</span>
+                    <button class="slider-precision-close">Done</button>
+                </div>
+                <div class="slider-precision-value">${currentValue.toFixed(3)}</div>
+                <div class="slider-precision-fader">
+                    <button class="fader-step" data-step="-1">−</button>
+                    <input type="range" class="slider-precision-slider" min="${min}" max="${max}" step="${step}" value="${currentValue}">
+                    <button class="fader-step" data-step="1">+</button>
+                </div>
+                <div class="slider-precision-range">
+                    <span>${min.toFixed(2)}</span>
+                    <span>${max.toFixed(2)}</span>
+                </div>
+            `;
+
+            document.body.appendChild(popup);
+
+            // Position popup - ensure it stays within viewport
+            const popupRect = popup.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Horizontal: prefer centered under value, but stay in viewport
+            let left = rect.left + (rect.width / 2) - (popupRect.width / 2);
+            if (left + popupRect.width > viewportWidth - 10) {
+                left = viewportWidth - popupRect.width - 10;
+            }
+            if (left < 10) left = 10;
+
+            // Vertical: prefer below, but flip above if no room
+            let top = rect.bottom + 10;
+            if (top + popupRect.height > viewportHeight - 10) {
+                top = rect.top - popupRect.height - 10;
+            }
+            if (top < 10) top = 10;
+
+            popup.style.left = `${left}px`;
+            popup.style.top = `${top}px`;
+
+            activePrecisionPopup = popup;
+
+            // Elements
+            const precisionSlider = popup.querySelector('.slider-precision-slider');
+            const valueDisplay = popup.querySelector('.slider-precision-value');
+            const closeBtn = popup.querySelector('.slider-precision-close');
+            const stepBtns = popup.querySelectorAll('.fader-step');
+
+            // Update function
+            function updateValue(newValue) {
+                newValue = Math.max(min, Math.min(max, newValue));
+                precisionSlider.value = newValue;
+                slider.value = newValue;
+                valueDisplay.textContent = newValue.toFixed(3);
+                valueElement.textContent = newValue.toFixed(2);
+                slider.dispatchEvent(new Event('input'));
+            }
+
+            // Precision slider input
+            precisionSlider.addEventListener('input', () => {
+                updateValue(parseFloat(precisionSlider.value));
+            });
+
+            // Step buttons
+            stepBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const direction = parseInt(btn.dataset.step);
+                    updateValue(parseFloat(precisionSlider.value) + (step * direction));
+                });
+            });
+
+            // Close button
+            closeBtn.addEventListener('click', closePrecisionPopup);
+
+            // Click outside to close
+            setTimeout(() => {
+                document.addEventListener('click', function handler(e) {
+                    if (!popup.contains(e.target) && e.target !== valueElement) {
+                        closePrecisionPopup();
+                        document.removeEventListener('click', handler);
+                    }
+                });
+            }, 0);
+        }
+
+        // Setup precision mode for sliders with data-precision attribute
+        document.querySelectorAll('.slider-value[data-precision]').forEach(valueEl => {
+            const sliderControl = valueEl.closest('.slider-control');
+            if (!sliderControl) return;
+
+            const slider = sliderControl.querySelector('input[type="range"]');
+            const labelEl = sliderControl.querySelector('.slider-label span:first-child');
+            const title = labelEl ? labelEl.textContent : 'Fine Tune';
+
+            valueEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openPrecisionPopup(valueEl, slider, title);
+            });
+        });
     </script>
 </body>
 </html>

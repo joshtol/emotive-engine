@@ -22,7 +22,7 @@ export default {
         primaryColor: '#FF6B9D',    // Pink surprise
         glowColor: '#4169E1',       // Blue sadness
         glowIntensity: 1.2,         // Moderate intensity (surprise + sadness)
-        particleRate: 20,           // Moderate rate
+        particleRate: 5,            // Glitchy flow - 5/sec with max 15 = ~3 sec particle life
         minParticles: 5,            // Some constant presence
         maxParticles: 15,           // Moderate burst
         particleBehavior: 'burst',  // Simplified from spaz to burst

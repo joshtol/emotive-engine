@@ -102,7 +102,7 @@ export class Particle3DTranslator {
             ambient: this._translateAmbient.bind(this),
             orbiting: this._translateOrbiting.bind(this),
             rising: this._translateRising.bind(this),
-            falling: this._translateFalling.bind(this),
+            falling: this._translateFalling.bind(this),  // Rain-like tears falling - spawns behind crystal
             popcorn: this._translatePopcorn.bind(this),
             burst: this._translateBurst.bind(this),
             aggressive: this._translateAggressive.bind(this),
@@ -417,45 +417,38 @@ export class Particle3DTranslator {
     }
 
     /**
-     * FALLING: Tears falling downward like 2D behavior (Sadness)
-     * Particles spawn around the core and fall down with gravity - true tear-like motion
-     * Uses 2D particle position directly converted to 3D, matching the 2D visual
+     * FALLING: Rain-like tears falling downward (Sadness)
+     * Positioned EXACTLY like ambient, but falls straight down over time
      */
     _translateFalling(particle, corePosition, canvasSize) {
+        // Use same uniform 3D direction as ambient (cached in behaviorData.direction3D)
+        const dir = this._getUniformDirection3D(particle);
+
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
-        const behaviorData = particle.behaviorData || {};
 
-        // Initialize stable properties on first call (using initial spawn position)
-        if (behaviorData.initialX === undefined) {
-            behaviorData.initialX = particle.x;
-            behaviorData.initialY = particle.y;
-            // Generate stable Z depth and X offset using initial spawn position
-            const seed = behaviorData.initialX * 127.1 + behaviorData.initialY * 311.7;
-            behaviorData.zDepth = (this._hash(seed) - 0.5) * 0.6; // Reduced depth spread (-0.3 to 0.3)
-            behaviorData.xOffset = (this._hash(seed + 1.0) - 0.5) * 0.8; // Stable X variation
-        }
+        // Calculate normalized distance (0-1) from center in 2D - SAME AS AMBIENT
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const normalizedDistance = distance2D / centerX;
 
-        // Use stable initial X for horizontal position (with small variation)
-        const dx2D = (behaviorData.initialX - centerX) / centerX; // -1 to 1
+        // Convert to world distance using 3D core radius - SAME AS AMBIENT
+        const minOrbit = this.coreRadius3D * 0.6;
+        const maxOrbit = this.coreRadius3D * 1.2;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
 
-        // Reduced spread radius for tighter grouping like 2D
-        const spreadRadius = this.coreRadius3D * 1.0;
-        const worldX = corePosition.x + dx2D * spreadRadius + behaviorData.xOffset * spreadRadius * 0.3;
+        // Calculate fall distance based on age
+        // fallSpeed=0.6 means particle falls 0.6x coreRadius over its ~8 second lifetime
+        const fallSpeed = 0.6;
+        const fallDistance = particle.age * fallSpeed * this.coreRadius3D;
 
-        // Reduced Z depth for less DOF effect
-        const worldZ = corePosition.z + behaviorData.zDepth * spreadRadius * 0.4;
-
-        // Y position: use current 2D Y for falling animation
-        // 2D Y increases downward as particle falls
-        const dy2D = (particle.y - centerY) / centerY; // -1 to 1, increases as particle falls
-
-        // Start above core center, fall downward based on 2D position
-        const startY = corePosition.y + this.coreRadius3D * 0.3;
-        const fallDistance = dy2D * this.coreRadius3D * 2.0; // Fall up to 2x core radius
-        const worldY = startY - fallDistance;
-
-        return this.tempVec3.set(worldX, worldY, worldZ);
+        // Position along 3D direction (like ambient) but fall straight down
+        return this.tempVec3.set(
+            corePosition.x + dir.x * worldDistance,
+            corePosition.y + dir.y * worldDistance * this.verticalScale - fallDistance,
+            corePosition.z + dir.z * worldDistance
+        );
     }
 
     /**

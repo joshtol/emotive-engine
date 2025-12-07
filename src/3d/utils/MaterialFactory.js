@@ -145,6 +145,8 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
             sssAmbient: { value: overrides.sssAmbient ?? sssPreset?.sssAmbient ?? CRYSTAL_DEFAULT_UNIFORMS.sssAmbient },
             sssLightDir: { value: new THREE.Vector3(...(overrides.sssLightDir ?? CRYSTAL_DEFAULT_UNIFORMS.sssLightDir)) },
             sssLightColor: { value: new THREE.Vector3(...(overrides.sssLightColor ?? CRYSTAL_DEFAULT_UNIFORMS.sssLightColor)) },
+            // Emotion color bleed - how much soul color tints the gem
+            emotionColorBleed: { value: overrides.emotionColorBleed ?? sssPreset?.emotionColorBleed ?? 0.0 },
             // Component-specific blend layers
             // Shell layers
             shellLayer1Mode: { value: CRYSTAL_DEFAULT_UNIFORMS.shellLayer1Mode },

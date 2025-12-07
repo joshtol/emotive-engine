@@ -114,7 +114,6 @@ export function getBehavior(name) {
 export function initializeBehavior(particle, behaviorName) {
     const behavior = getBehavior(behaviorName);
     if (behavior && behavior.initialize) {
-        // Debug logging removed for production
         behavior.initialize(particle);
         return true;
     }

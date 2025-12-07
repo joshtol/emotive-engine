@@ -20,9 +20,9 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FFB6C1',       // Light pink euphoric glow
-        particleRate: 35,           // Abundant particle emission
+        particleRate: 6,            // Radiant flow - 6/sec with max 30 = ~5 sec particle life
         minParticles: 15,           // Abundant positive energy
-        maxParticles: 30,           // Maximum radiant display
+        maxParticles: 30,           // Radiant display limit
         particleBehavior: 'radiant', // Outward radiating particles
         breathRate: 1.3,            // Elevated, joyful breathing
         breathDepth: 0.25,          // Full, satisfied breaths

@@ -20,7 +20,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#00CED1',       // Sharp cyan concentration
-        particleRate: 10,           // Steady, controlled emission
+        particleRate: 4,            // Focused flow - 4/sec with max 12 = ~3 sec particle life
         minParticles: 5,            // Consistent focus presence
         maxParticles: 12,           // Controlled attention display
         particleBehavior: 'directed', // Particles follow target

@@ -20,9 +20,9 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#FF6B35',       // Vibrant orange-red energy
-        particleRate: 50,           // Increased emission frequency for 3D
-        minParticles: 10,           // More constant particles for 3D
-        maxParticles: 80,           // More maximum particles for 3D
+        particleRate: 8,            // Energetic flow - 8/sec with max 50 = ~6 sec particle life
+        minParticles: 10,           // Constant energetic particles
+        maxParticles: 50,           // Match 3D system limit
         particleBehavior: 'burst',  // Explosive particle behavior
         breathRate: 2.0,            // Quick, excited breathing
         breathDepth: 0.14,          // Deep, energized breaths

@@ -57,6 +57,9 @@ export default class RotationBehavior {
         // Shake/wobble config (for unstable type)
         this.shake = config.shake || { amplitude: 0, frequency: 0 };
 
+        // Wobble enabled flag (can be toggled at runtime to disable shake effects)
+        this.wobbleEnabled = true;
+
         // Eruption config (explosive bursts for anger)
         this.eruption = config.eruption || { enabled: false };
         if (this.eruption.enabled) {
@@ -97,7 +100,8 @@ export default class RotationBehavior {
         this.time += deltaTime;
 
         // Apply episodic wobble if enabled (before type-specific behavior)
-        if (this.episodicWobble.enabled) {
+        // Also requires wobbleEnabled to be true (user can disable all wobble effects)
+        if (this.episodicWobble.enabled && this.wobbleEnabled) {
             this._applyEpisodicWobble(deltaTime, baseRotation);
         }
 
@@ -179,24 +183,26 @@ export default class RotationBehavior {
         baseRotation[1] += this.axes[1] * effectiveSpeed * dt;
         baseRotation[2] += this.axes[2] * effectiveSpeed * dt;
 
-        // Add shake/tremor using high-frequency sine waves
-        const shakeTime = this.time * 0.001; // Time in seconds
-        const freq = this.shake.frequency || 8; // Default 8 Hz
-        const amp = this.shake.amplitude || 0.02; // Default 0.02 radians (~1 degree)
+        // Add shake/tremor using high-frequency sine waves (only if wobble enabled)
+        if (this.wobbleEnabled) {
+            const shakeTime = this.time * 0.001; // Time in seconds
+            const freq = this.shake.frequency || 8; // Default 8 Hz
+            const amp = this.shake.amplitude || 0.02; // Default 0.02 radians (~1 degree)
 
-        // Hard limit shake amplitude to never overcome righting mechanism
-        // Righting strength is 5.0, so max safe shake is ~0.02 radians to prevent tipping
-        const MAX_SAFE_SHAKE = 0.02;
-        const clampedAmp = Math.min(amp, MAX_SAFE_SHAKE);
+            // Hard limit shake amplitude to never overcome righting mechanism
+            // Righting strength is 5.0, so max safe shake is ~0.02 radians to prevent tipping
+            const MAX_SAFE_SHAKE = 0.02;
+            const clampedAmp = Math.min(amp, MAX_SAFE_SHAKE);
 
-        // Multi-frequency shake for more organic feel
-        const shakeX = Math.sin(shakeTime * freq * Math.PI * 2) * clampedAmp * 0.7;
-        const shakeY = Math.sin(shakeTime * freq * Math.PI * 2 * 1.3) * clampedAmp * 0.5;
-        const shakeZ = Math.sin(shakeTime * freq * Math.PI * 2 * 0.9) * clampedAmp * 0.8;
+            // Multi-frequency shake for more organic feel
+            const shakeX = Math.sin(shakeTime * freq * Math.PI * 2) * clampedAmp * 0.7;
+            const shakeY = Math.sin(shakeTime * freq * Math.PI * 2 * 1.3) * clampedAmp * 0.5;
+            const shakeZ = Math.sin(shakeTime * freq * Math.PI * 2 * 0.9) * clampedAmp * 0.8;
 
-        baseRotation[0] += shakeX;
-        baseRotation[1] += shakeY;
-        baseRotation[2] += shakeZ;
+            baseRotation[0] += shakeX;
+            baseRotation[1] += shakeY;
+            baseRotation[2] += shakeZ;
+        }
 
         return baseRotation;
     }
@@ -414,5 +420,13 @@ export default class RotationBehavior {
                 this.episodicWobble.nextWobbleTime = this.time + interval;
             }
         }
+    }
+
+    /**
+     * Enable or disable wobble/shake effects
+     * @param {boolean} enabled - Whether wobble is enabled
+     */
+    setWobbleEnabled(enabled) {
+        this.wobbleEnabled = enabled;
     }
 }

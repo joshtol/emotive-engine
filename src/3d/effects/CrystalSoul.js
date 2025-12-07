@@ -33,8 +33,13 @@ const soulFragmentShader = `
     uniform float energyIntensity;
     uniform float driftEnabled;
     uniform float driftSpeed;
-    uniform float shimmerEnabled;
-    uniform float shimmerSpeed;
+    uniform float crossWaveEnabled;
+    uniform float crossWaveSpeed;
+    uniform float ghostMode;      // 0.0 = solid, 1.0 = ghost (only visible through bloom)
+    uniform float baseOpacity;    // Base opacity when not in ghost mode (default 1.0)
+    uniform float phaseOffset1;   // Phase offset for primary drift (radians)
+    uniform float phaseOffset2;   // Phase offset for secondary drift (radians)
+    uniform float phaseOffset3;   // Phase offset for crosswave (radians)
 
     // Blend layer uniforms
     uniform float blendLayer1Mode;
@@ -62,26 +67,82 @@ const soulFragmentShader = `
 
     void main() {
         // Drifting energy clouds - slow, ethereal movement
-        float energy = 0.8;
+        // Start with zero energy - only effects add to it
+        float driftEnergy = 0.0;
+        float crossWaveEnergy = 0.0;
+
+        // Spatially triangulated fire bands - each owns a 120° wedge of the geometry
+        // Bands can never overlap because they're physically separated
+        float angle = atan(vPosition.x, vPosition.z); // -π to π
+        float normalizedAngle = (angle + 3.14159) / 6.28318; // 0 to 1
+
+        // Determine which zone this fragment belongs to (0, 1, or 2)
+        float zone = floor(normalizedAngle * 3.0);
+        float zonePos = fract(normalizedAngle * 3.0); // Position within zone (0-1)
+
+        // Time-based phase for each zone (120° offset in time)
+        float phaseSpeed = 0.15;
+        float t = time * phaseSpeed;
+        float phase1Time = sin(t + phaseOffset1) * 0.5 + 0.5;
+        float phase2Time = sin(t + phaseOffset2) * 0.5 + 0.5;
+        float phase3Time = sin(t + phaseOffset3) * 0.5 + 0.5;
+
+        // Only ONE phase affects this fragment - the one that owns this spatial zone
+        float activePhase = zone < 1.0 ? phase1Time : (zone < 2.0 ? phase2Time : phase3Time);
+
+        float primaryDrift = 0.0;
+        float secondaryDrift = 0.0;
+
         if (driftEnabled > 0.5) {
             float t = time * driftSpeed;
+            // Primary drift - moving in one direction
             float drift1 = noise3D(vPosition * 2.0 + vec3(t, t * 0.7, t * 0.3));
             float drift2 = noise3D(vPosition * 3.0 - vec3(t * 0.5, t, t * 0.8));
-            energy = 0.5 + drift1 * drift2 * 1.0;
+            // Use max instead of multiply to avoid near-zero products
+            primaryDrift = max(drift1, drift2);
+            primaryDrift = max(0.0, primaryDrift - 0.4) * 2.0; // Rescale after threshold
+
+            // Secondary drift - offset in opposite direction to fill gaps
+            float drift3 = noise3D(vPosition * 2.5 - vec3(t * 0.8, t * 0.4, t));
+            float drift4 = noise3D(vPosition * 1.8 + vec3(t * 0.6, t * 0.9, t * 0.2));
+            secondaryDrift = max(drift3, drift4);
+            secondaryDrift = max(0.0, secondaryDrift - 0.4) * 2.0;
+
+            driftEnergy = primaryDrift + secondaryDrift;
         }
 
-        // Vertical shimmer - slow rising bands
-        float shimmer = 0.0;
-        if (shimmerEnabled > 0.5) {
-            float t = time * shimmerSpeed;
-            shimmer = sin(vPosition.y * 5.0 - t) * 0.5 + 0.5;
+        // Horizontal cross wave - thin bands sweeping across
+        float rawCrossWave = 0.0;
+        if (crossWaveEnabled > 0.5) {
+            float t = time * crossWaveSpeed;
+            float wave = sin(vPosition.x * 4.0 + vPosition.z * 2.0 - t) * 0.5 + 0.5;
+            // pow(4) for thin bright bands
+            rawCrossWave = pow(wave, 4.0);
+            crossWaveEnergy = rawCrossWave;
         }
 
-        // Combine effects
-        float totalEnergy = energy;
-        totalEnergy += shimmer * 0.2;
+        // Mix the effects - normalize to prevent blowout
+        // driftEnergy can be 0-2 (two drifts), rawCrossWave is 0-1
+        float normalizedDrift = min(1.0, driftEnergy * 0.5);
+        float normalizedWave = rawCrossWave;
 
-        // Edge glow
+        // activePhase is 0-1, remap to visibility range
+        // 0.53 floor (just above 0.52 threshold), 0.58 ceiling (subtle glow)
+        float remappedPhase = 0.53 + activePhase * 0.05;
+
+        // Effects add subtle variation (max 0.05)
+        float effectContrib = (normalizedDrift * 0.03) + (normalizedWave * 0.02);
+        float phasedActivity = remappedPhase + effectContrib;
+
+        // Keep unclamped for visibility threshold check (ghost mode needs full range)
+        float rawEffectActivity = phasedActivity;
+        // Clamp for color intensity (floor: guaranteed visible, ceiling: no blowout)
+        float effectActivity = clamp(phasedActivity, 0.53, 0.60);
+
+        // Total energy for color calculation (reduced for subtler bloom)
+        float totalEnergy = 0.25 + effectActivity * 0.55; // Base glow + effect contribution
+
+        // Edge glow - adds rim lighting
         vec3 viewDir = normalize(-vPosition);
         float edgeGlow = 1.0 - abs(dot(vNormal, viewDir));
         edgeGlow = pow(edgeGlow, 2.0) * 0.4;
@@ -102,8 +163,28 @@ const soulFragmentShader = `
             coreColor = mix(coreColor, blendResult, blendLayer2Strength);
         }
 
-        // Output the computed core color with full opacity
-        gl_FragColor = vec4(coreColor, 1.0);
+        // Ghost mode: ONLY the traveling fire bands are visible
+        // Everything below the threshold is completely invisible
+        float alpha = baseOpacity;
+        if (ghostMode > 0.01) {
+            // High threshold - only the peaks of the thin bands pass through
+            float threshold = 0.4 + ghostMode * 0.4; // 0.4-0.8 range
+            float visibility = smoothstep(threshold, threshold + 0.05, rawEffectActivity);
+
+            // Hard cutoff - only bright fire bands visible
+            alpha = visibility * baseOpacity;
+
+            // Discard everything that isn't a bright fire band
+            if (alpha < 0.05) {
+                discard;
+            }
+
+            // Boost color intensity for visible fire
+            coreColor *= 1.2 + visibility * 0.6;
+        }
+
+        // Output the computed core color
+        gl_FragColor = vec4(coreColor, alpha);
     }
 `;
 
@@ -125,7 +206,7 @@ export class CrystalSoul {
         this.mesh = null;
         this.material = null;
         this.parentMesh = null;
-        this.baseScale = 0.5;
+        this.baseScale = 1.0;  // Full size by default (size=1.0)
         this._pendingParent = null;
 
         this._createMesh();
@@ -148,15 +229,15 @@ export class CrystalSoul {
         }
 
         // Start loading
-        inclusionGeometryLoading = new Promise((resolve) => {
+        inclusionGeometryLoading = new Promise(resolve => {
             const loader = new OBJLoader();
             loader.load(
                 '/assets/models/Crystal/inclusion.obj',
-                (obj) => {
+                obj => {
                     let geometry = null;
                     obj.traverse(child => {
                         if (child.isMesh && child.geometry) {
-                            geometry = child.geometry;
+                            ({ geometry } = child);
                         }
                     });
 
@@ -188,7 +269,7 @@ export class CrystalSoul {
                     }
                 },
                 undefined,
-                (err) => {
+                err => {
                     console.warn('[🔮 SOUL] Failed to load inclusion.obj:', err);
                     resolve(null);
                 }
@@ -212,15 +293,21 @@ export class CrystalSoul {
                 energyIntensity: { value: 1.5 },
                 driftEnabled: { value: 1.0 },
                 driftSpeed: { value: 0.5 },
-                shimmerEnabled: { value: 1.0 },
-                shimmerSpeed: { value: 0.5 },
-                // Blend layer uniforms
-                blendLayer1Mode: { value: 0 },
-                blendLayer1Strength: { value: 0 },
-                blendLayer1Enabled: { value: 0 },
-                blendLayer2Mode: { value: 0 },
-                blendLayer2Strength: { value: 0 },
-                blendLayer2Enabled: { value: 0 }
+                crossWaveEnabled: { value: 1.0 },
+                crossWaveSpeed: { value: 0.4 },
+                ghostMode: { value: 0.36 },    // 0.36 = partial ghost, 0.0 = solid, 1.0 = full ghost
+                baseOpacity: { value: 1.0 },   // Base opacity when not in ghost mode
+                // 3-phase offsets (radians) - default to 120° apart
+                phaseOffset1: { value: 0.0 },
+                phaseOffset2: { value: 2.094 },  // 2π/3 = 120°
+                phaseOffset3: { value: 4.189 },  // 4π/3 = 240°
+                // Blend layer uniforms - Quartz preset defaults
+                blendLayer1Mode: { value: 2 },       // Color Burn
+                blendLayer1Strength: { value: 2.3 },
+                blendLayer1Enabled: { value: 1 },
+                blendLayer2Mode: { value: 0 },       // Multiply
+                blendLayer2Strength: { value: 1.0 },
+                blendLayer2Enabled: { value: 1 }
             },
             vertexShader: soulVertexShader,
             fragmentShader: soulFragmentShader,
@@ -368,8 +455,8 @@ export class CrystalSoul {
      * @param {Object} params - Effect parameters
      * @param {boolean} params.driftEnabled - Enable/disable drifting energy
      * @param {number} params.driftSpeed - Drift animation speed (0.1-3.0)
-     * @param {boolean} params.shimmerEnabled - Enable/disable vertical shimmer
-     * @param {number} params.shimmerSpeed - Shimmer animation speed (0.1-3.0)
+     * @param {boolean} params.crossWaveEnabled - Enable/disable horizontal cross wave
+     * @param {number} params.crossWaveSpeed - Cross wave animation speed (0.1-3.0)
      */
     setEffects(params = {}) {
         if (!this.material || !this.material.uniforms) return;
@@ -382,11 +469,21 @@ export class CrystalSoul {
         if (params.driftSpeed !== undefined && uniforms.driftSpeed) {
             uniforms.driftSpeed.value = Math.max(0.1, Math.min(3.0, params.driftSpeed));
         }
-        if (params.shimmerEnabled !== undefined && uniforms.shimmerEnabled) {
-            uniforms.shimmerEnabled.value = params.shimmerEnabled ? 1.0 : 0.0;
+        if (params.crossWaveEnabled !== undefined && uniforms.crossWaveEnabled) {
+            uniforms.crossWaveEnabled.value = params.crossWaveEnabled ? 1.0 : 0.0;
         }
-        if (params.shimmerSpeed !== undefined && uniforms.shimmerSpeed) {
-            uniforms.shimmerSpeed.value = Math.max(0.1, Math.min(3.0, params.shimmerSpeed));
+        if (params.crossWaveSpeed !== undefined && uniforms.crossWaveSpeed) {
+            uniforms.crossWaveSpeed.value = Math.max(0.1, Math.min(3.0, params.crossWaveSpeed));
+        }
+        // Phase offsets (0 to 2π radians)
+        if (params.phaseOffset1 !== undefined && uniforms.phaseOffset1) {
+            uniforms.phaseOffset1.value = params.phaseOffset1;
+        }
+        if (params.phaseOffset2 !== undefined && uniforms.phaseOffset2) {
+            uniforms.phaseOffset2.value = params.phaseOffset2;
+        }
+        if (params.phaseOffset3 !== undefined && uniforms.phaseOffset3) {
+            uniforms.phaseOffset3.value = params.phaseOffset3;
         }
     }
 
@@ -443,6 +540,26 @@ export class CrystalSoul {
     setVisible(visible) {
         if (this.mesh) {
             this.mesh.visible = visible;
+        }
+    }
+
+    /**
+     * Set ghost mode - soul is only visible through bloom when effects are active
+     * @param {boolean} enabled - Whether ghost mode is enabled
+     */
+    setGhostMode(enabled) {
+        if (this.material && this.material.uniforms && this.material.uniforms.ghostMode) {
+            this.material.uniforms.ghostMode.value = enabled ? 1.0 : 0.0;
+        }
+    }
+
+    /**
+     * Set base opacity (only used when not in ghost mode)
+     * @param {number} opacity - Opacity value 0-1
+     */
+    setBaseOpacity(opacity) {
+        if (this.material && this.material.uniforms && this.material.uniforms.baseOpacity) {
+            this.material.uniforms.baseOpacity.value = Math.max(0, Math.min(1, opacity));
         }
     }
 

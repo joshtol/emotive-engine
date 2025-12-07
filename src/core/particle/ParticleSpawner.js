@@ -78,14 +78,25 @@ class ParticleSpawner {
             };
         }
 
-        case 'rising':
-        case 'falling': {
-            // These can spawn from outside for visibility
-            const angle = Math.random() * Math.PI * 2;
-            const radius = minSpawnRadius + Math.random() * (maxSpawnRadius - minSpawnRadius);
+        case 'rising': {
+            // Rising spawns below center and rises up
+            const risingAngle = Math.random() * Math.PI * 2;
+            const risingRadius = minSpawnRadius + Math.random() * (maxSpawnRadius - minSpawnRadius);
             return {
-                x: centerX + Math.cos(angle) * radius,
-                y: centerY + Math.sin(angle) * radius
+                x: centerX + Math.cos(risingAngle) * risingRadius,
+                y: centerY + Math.sin(risingAngle) * risingRadius
+            };
+        }
+
+        case 'falling': {
+            // Falling (rain/tears) spawns in a circle around the orb (like ambient)
+            // Then falls downward slowly like rain
+            const fallingAngle = Math.random() * Math.PI * 2;
+            const fallingRadius = glowRadius * 0.9; // Same as ambient - at glow edge
+            return {
+                x: centerX + Math.cos(fallingAngle) * fallingRadius,
+                y: centerY + Math.sin(fallingAngle) * fallingRadius,
+                angle: fallingAngle  // Pass angle for reference
             };
         }
 

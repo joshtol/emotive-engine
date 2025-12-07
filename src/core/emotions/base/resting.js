@@ -20,7 +20,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#9370DB',       // Sleepy purple twilight
-        particleRate: 10,           // Lazy particle generation
+        particleRate: 1,            // Lazy flow - 1/sec with max 5 = ~5 sec particle life
         minParticles: 3,            // Minimal sleepy presence
         maxParticles: 5,            // Few drifting particles
         particleBehavior: 'resting', // Slow, floating behavior

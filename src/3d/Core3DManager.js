@@ -206,6 +206,7 @@ export class Core3DManager {
         // Rotation behavior system
         this.rotationBehavior = null; // Will be initialized in setEmotion
         this.rotationDisabled = options.autoRotate === false; // Disable rotation if autoRotate is false
+        this.wobbleEnabled = true; // Wobble/shake effects enabled by default
 
         // Righting behavior (self-stabilization like inflatable punching clowns)
         // Tuned for smooth return to upright without oscillation
@@ -463,6 +464,8 @@ export class Core3DManager {
                     this.rhythmEngine,
                     geometryRotation
                 );
+                // Apply wobble enabled state
+                this.rotationBehavior.setWobbleEnabled(this.wobbleEnabled);
             }
         } else {
             // Fall back to default gentle rotation if no 3d config
@@ -473,6 +476,8 @@ export class Core3DManager {
                     this.rhythmEngine,
                     geometryRotation
                 );
+                // Apply wobble enabled state
+                this.rotationBehavior.setWobbleEnabled(this.wobbleEnabled);
             }
         }
 
@@ -938,15 +943,15 @@ export class Core3DManager {
         this.crystalSoul.attachTo(this.coreMesh);
 
         // Geometry-specific shell and soul sizes (permanent values)
-        let soulScale = 0.5;  // Default
+        let soulScale = 1.0;  // Default: full size (HUGE)
         if (this.geometryType === 'heart') {
             this.crystalShellBaseScale = 2.4;
-            soulScale = 0.65;
+            soulScale = 1.0;  // Full size for heart
         } else if (this.geometryType === 'rough') {
             this.crystalShellBaseScale = 1.6;
-            soulScale = 0.50;
+            soulScale = 1.0;  // Full size for rough
         } else if (this.geometryType === 'crystal') {
-            soulScale = 0.60;
+            soulScale = 1.0;  // Full size for crystal
         }
 
         this.crystalSoul.baseScale = soulScale;
@@ -1016,6 +1021,17 @@ export class Core3DManager {
         // Store base shell scale for use during rendering
         this.crystalShellBaseScale = size;
         // Don't apply directly - it will be applied in render() along with other transforms
+    }
+
+    /**
+     * Enable or disable wobble/shake effects on rotation
+     * @param {boolean} enabled - Whether wobble is enabled
+     */
+    setWobbleEnabled(enabled) {
+        this.wobbleEnabled = enabled;
+        if (this.rotationBehavior) {
+            this.rotationBehavior.setWobbleEnabled(enabled);
+        }
     }
 
     /**
@@ -1295,6 +1311,8 @@ export class Core3DManager {
                                 emotionData['3d'].rotation,
                                 this.rhythmEngine
                             );
+                            // Apply wobble enabled state
+                            this.rotationBehavior.setWobbleEnabled(this.wobbleEnabled);
                         }
                     }
                 }

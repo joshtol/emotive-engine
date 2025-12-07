@@ -100,6 +100,9 @@ uniform float sssAmbient;             // Ambient SSS contribution
 uniform vec3 sssLightDir;             // Primary light direction for SSS
 uniform vec3 sssLightColor;           // Light color for SSS
 
+// Emotion color bleed - how much soul color tints the gem material
+uniform float emotionColorBleed;      // 0 = gem color only, 1 = full emotion tint (default: 0.0)
+
 // Component-specific blend layers
 // Shell layers - affect the frosted crystal shell
 uniform float shellLayer1Mode;
@@ -817,15 +820,35 @@ void main() {
         vec3 soulGlow = refractedSoulColor * refractedSoulAlpha;
 
         // Tint the soul by the crystal's SSS color for colored gems
+        // emotionColorBleed controls how much pure emotion color comes through
+        // 0 = fully tinted by gem color, 1 = pure emotion color
         if (sssStrength > 0.01) {
             vec3 absorption = sssAbsorption;
             float maxAbs = max(max(absorption.r, absorption.g), absorption.b);
             vec3 gemHue = absorption / max(maxAbs, 0.001);
-            soulGlow *= mix(vec3(1.0), gemHue, sssStrength * 0.5);
+            float tintAmount = sssStrength * 0.5 * (1.0 - emotionColorBleed);
+            soulGlow *= mix(vec3(1.0), gemHue, tintAmount);
         }
 
         // Add soul glow to final color
         finalColor += soulGlow * 0.8;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // EMOTION COLOR BLEED - Additional inner glow from soul emotion
+    // Adds pure emotion color as light shining through the gem from the soul
+    // ═══════════════════════════════════════════════════════════════════════
+    if (emotionColorBleed > 0.001 && sssStrength > 0.01) {
+        // Inner glow based on thickness - thinner areas show more soul light
+        float innerGlow = 1.0 - abs(dot(normal, viewDir)); // Edges are thin
+        innerGlow = pow(innerGlow, 1.5) * emotionColorBleed;
+
+        // Also add glow near the core
+        float coreProximity = exp(-distFromCenter * 2.0);
+        innerGlow += coreProximity * emotionColorBleed * 0.5;
+
+        // Add pure emotion color as inner light
+        finalColor += emotionColor * innerGlow * 0.4;
     }
 
     gl_FragColor = vec4(finalColor, finalAlpha);
@@ -896,6 +919,9 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     sssAmbient: 0.30,                       // Ambient SSS contribution (boosted for visibility)
     sssLightDir: [0.5, 1.0, 0.8],           // Primary light direction
     sssLightColor: [1.0, 0.98, 0.95],       // Light color (warm white)
+
+    // Emotion color bleed - how much soul color tints gem material
+    emotionColorBleed: 0.0,                 // 0 = gem color only, 1 = full emotion tint
 
     // Component-specific blend layers (all disabled by default)
     // Shell layers - affect frosted crystal shell

@@ -622,6 +622,11 @@ export class EmotiveMascot3D {
      * Check if particles are enabled
      */
     get particlesEnabled() {
+        // Check 3D particle visibility first (3D mode uses particleOrchestrator)
+        if (this.core3D?.particleOrchestrator) {
+            return this.core3D.particleVisibility === true;
+        }
+        // Fall back to 2D particle system check
         return this.particleSystem !== null;
     }
 
@@ -679,6 +684,31 @@ export class EmotiveMascot3D {
      */
     get breathingEnabled() {
         return this.core3D ? this.core3D.breathingEnabled !== false : true;
+    }
+
+    /**
+     * Enable wobble/shake effects
+     */
+    enableWobble() {
+        if (this.core3D) {
+            this.core3D.setWobbleEnabled(true);
+        }
+    }
+
+    /**
+     * Disable wobble/shake effects
+     */
+    disableWobble() {
+        if (this.core3D) {
+            this.core3D.setWobbleEnabled(false);
+        }
+    }
+
+    /**
+     * Check if wobble is enabled
+     */
+    get wobbleEnabled() {
+        return this.core3D ? this.core3D.wobbleEnabled !== false : true;
     }
 
     /**

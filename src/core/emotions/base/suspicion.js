@@ -20,7 +20,7 @@ export default {
     // Visual properties
     visual: {
         glowColor: '#6B46C1',       // Deep purple paranoia
-        particleRate: 18,           // Increased surveillance particles
+        particleRate: 4,            // Watchful flow - 4/sec with max 12 = ~3 sec particle life
         minParticles: 6,            // More eyes watching
         maxParticles: 12,           // Heightened alert capacity
         particleBehavior: 'surveillance',  // NEW: Searchlight scanning behavior
