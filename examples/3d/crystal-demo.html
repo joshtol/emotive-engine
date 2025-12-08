@@ -104,12 +104,9 @@
         </div>
 
         <div class="section">
-            <h2 style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="has-toggle">
                 <span>Emotions</span>
-                <div style="display: flex; align-items: center; gap: 8px; font-size: 10px; color: rgba(255,255,255,0.6);">
-                    <span>Wobble</span>
-                    <div class="toggle-switch active" id="wobble-toggle"></div>
-                </div>
+                <div class="toggle-switch active" id="wobble-toggle">Wobble</div>
             </h2>
             <div class="section-content">
                 <div class="emotion-grid">
@@ -148,13 +145,15 @@
 
     <div class="right-menu">
         <div class="section visual-controls">
-            <h2 class="collapsed">Visual Controls</h2>
-            <div class="section-content collapsed">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
                 <div class="button-grid">
-                    <button data-action="toggle-particles">✨ Particles</button>
-                    <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-                    <button data-action="toggle-breathing" class="active">🫁 Breathing</button>
-                    <button data-action="toggle-auto-rotate" class="active">🔄 Auto-Rotate</button>
+                    <button data-action="toggle-glow" class="toggle-btn active">Core Glow</button>
+                    <button data-action="toggle-breathing" class="toggle-btn active">Breathing</button>
+                    <button data-action="toggle-auto-rotate" class="toggle-btn active">Auto-Rotate</button>
                 </div>
             </div>
         </div>
@@ -181,7 +180,7 @@
                 <div class="slider-control">
                     <div class="slider-label">
                         <span>Soul Ghost Mode</span>
-                        <span class="slider-value" id="soul-ghost-value" data-precision="true">0.36</span>
+                        <span class="slider-value" id="soul-ghost-value">0.36</span>
                     </div>
                     <input type="range" id="soul-ghost-slider" min="0" max="1" step="0.01" value="0.36">
                 </div>
@@ -382,81 +381,50 @@
         </div>
 
         <div class="section">
-            <div class="info-box">
-                <strong>Blend Layers:</strong><br>
-                Click value to fine-tune. Drag layers to reorder. Max 2 per component.
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="collapsed">Shell Blend Layers</h2>
+            <h2 class="collapsed">Blend</h2>
             <div class="section-content collapsed">
-                <div id="shell-layers-container"></div>
-                <button class="add-layer-btn" id="add-shell-layer-btn">+ Add Shell Layer</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="collapsed">Soul Blend Layers</h2>
-            <div class="section-content collapsed">
-                <div id="soul-layers-container"></div>
-                <button class="add-layer-btn" id="add-soul-layer-btn">+ Add Soul Layer</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="collapsed">Rim Blend Layers</h2>
-            <div class="section-content collapsed">
-                <div id="rim-layers-container"></div>
-                <button class="add-layer-btn" id="add-rim-layer-btn">+ Add Rim Layer</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="collapsed">SSS Blend Layers</h2>
-            <div class="section-content collapsed">
-                <div id="sss-layers-container"></div>
-                <button class="add-layer-btn" id="add-sss-layer-btn">+ Add SSS Layer</button>
+                <div class="info-box" style="margin-bottom: 12px;">
+                    Click value to fine-tune. Drag to reorder. Max 2 per type.
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Shell</div>
+                    <div id="shell-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-shell-layer-btn">+ Shell</button>
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Soul</div>
+                    <div id="soul-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-soul-layer-btn">+ Soul</button>
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Rim</div>
+                    <div id="rim-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-rim-layer-btn">+ Rim</button>
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">SSS</div>
+                    <div id="sss-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-sss-layer-btn">+ SSS</button>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <script>
-        // Collapsible sections
-        document.querySelectorAll('h2').forEach(h2 => {
-            h2.addEventListener('click', () => {
-                const content = h2.nextElementSibling;
-                if (content && content.classList.contains('section-content')) {
-                    h2.classList.toggle('collapsed');
-                    content.classList.toggle('collapsed');
-                }
-            });
-        });
-
-    </script>
-
     <script type="module">
         import EmotiveMascot3D, { blendModeNames } from '../../dist/emotive-mascot-3d.js';
-        import { createLayerCard, setupDragAndDrop, exitPrecisionMode } from './layer-utils.js';
+        import { exitPrecisionMode } from './layer-utils.js';
+        import {
+            setupWobbleToggle,
+            setupParticlesToggle,
+            setupVisualToggles,
+            sssPresets as sharedSSSPresets,
+            createBlendLayerGroup,
+            createLayerShaderUpdater,
+            syncLayersFromShader
+        } from './demo-utils.js';
 
         const MAX_BLEND_LAYERS = 2;  // 2 layers per component
-
-        // Layer state for each component
-        let shellLayers = [];
-        let soulLayers = [];
-        let rimLayers = [];
-        let sssBlendLayers = [];
-        let nextShellLayerId = 1;
-        let nextSoulLayerId = 1;
-        let nextRimLayerId = 1;
-        let nextSssLayerId = 1;
-
-        // Get containers
-        const shellLayersContainer = document.getElementById('shell-layers-container');
-        const soulLayersContainer = document.getElementById('soul-layers-container');
-        const rimLayersContainer = document.getElementById('rim-layers-container');
-        const sssLayersContainer = document.getElementById('sss-layers-container');
 
         const container = document.getElementById('crystal-container');
         const mascot = new EmotiveMascot3D({
@@ -582,70 +550,10 @@
             });
         });
 
-        // Wobble toggle (next to Emotions header)
-        const wobbleToggle = document.getElementById('wobble-toggle');
-        if (wobbleToggle) {
-            wobbleToggle.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent collapsing the Emotions section
-                wobbleToggle.classList.toggle('active');
-                const enabled = wobbleToggle.classList.contains('active');
-                if (enabled) {
-                    mascot.enableWobble();
-                } else {
-                    mascot.disableWobble();
-                }
-            });
-        }
-
-        // Visual Controls event handlers
-        document.querySelectorAll('[data-action]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const action = e.target.dataset.action;
-                if (!action) return;
-
-                switch (action) {
-                    case 'toggle-particles':
-                        if (mascot.particlesEnabled) {
-                            mascot.disableParticles();
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.enableParticles();
-                            e.target.classList.add('active');
-                        }
-                        break;
-
-                    case 'toggle-glow':
-                        if (mascot.core3D?.coreGlowEnabled !== false) {
-                            mascot.core3D.setCoreGlowEnabled(false);
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.core3D.setCoreGlowEnabled(true);
-                            e.target.classList.add('active');
-                        }
-                        break;
-
-                    case 'toggle-breathing':
-                        if (mascot.breathingEnabled) {
-                            mascot.disableBreathing();
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.enableBreathing();
-                            e.target.classList.add('active');
-                        }
-                        break;
-
-                    case 'toggle-auto-rotate':
-                        if (mascot.autoRotateEnabled) {
-                            mascot.disableAutoRotate();
-                            e.target.classList.remove('active');
-                        } else {
-                            mascot.enableAutoRotate();
-                            e.target.classList.add('active');
-                        }
-                        break;
-                }
-            });
-        });
+        // Setup shared toggles from demo-utils
+        setupWobbleToggle(mascot);
+        setupParticlesToggle(mascot);
+        setupVisualToggles(mascot);
 
         // Soul Animation toggle controls (crystal-specific)
         function setupToggle(id, onToggle, initialState = false) {
@@ -758,75 +666,8 @@
             }
         });
 
-        // SSS Material Presets - ALL designed for NEAR-BLACK shadows
-        const sssPresets = {
-            quartz: {
-                sssStrength: 0.8,
-                sssAbsorption: [2.8, 2.9, 3.0],
-                sssScatterDistance: [0.2, 0.2, 0.25],
-                sssThicknessBias: 0.60,
-                sssThicknessScale: 1.8,
-                sssCurvatureScale: 3.0,
-                sssAmbient: 0.12,
-                frostiness: 0.15,
-                innerGlowStrength: 0.20,
-                fresnelIntensity: 1.5,
-                causticIntensity: 1.2
-            },
-            emerald: {
-                sssStrength: 2.0,
-                sssAbsorption: [0.05, 4.0, 0.1],
-                sssScatterDistance: [0.1, 0.5, 0.1],
-                sssThicknessBias: 0.65,
-                sssThicknessScale: 1.8,
-                sssCurvatureScale: 3.0,
-                sssAmbient: 0.10,
-                frostiness: 0.20,
-                innerGlowStrength: 0.15,
-                fresnelIntensity: 1.2,
-                emotionColorBleed: 0.35
-            },
-            ruby: {
-                sssStrength: 1.8,
-                sssAbsorption: [4.0, 0.03, 0.08],
-                sssScatterDistance: [0.4, 0.04, 0.08],
-                sssThicknessBias: 0.65,
-                sssThicknessScale: 1.9,
-                sssCurvatureScale: 2.5,
-                sssAmbient: 0.08,
-                frostiness: 0.12,
-                innerGlowStrength: 0.12,
-                fresnelIntensity: 1.2,
-                causticIntensity: 1.15,
-                emotionColorBleed: 0.35
-            },
-            sapphire: {
-                sssStrength: 2.2,
-                sssAbsorption: [0.15, 0.4, 4.0],
-                sssScatterDistance: [0.1, 0.15, 0.5],
-                sssThicknessBias: 0.65,
-                sssThicknessScale: 1.8,
-                sssCurvatureScale: 3.0,
-                sssAmbient: 0.10,
-                frostiness: 0.18,
-                innerGlowStrength: 0.15,
-                fresnelIntensity: 1.3,
-                emotionColorBleed: 0.35
-            },
-            amethyst: {
-                sssStrength: 2.5,
-                sssAbsorption: [3.0, 0.05, 4.5],
-                sssScatterDistance: [0.4, 0.05, 0.5],
-                sssThicknessBias: 0.70,
-                sssThicknessScale: 2.0,
-                sssCurvatureScale: 3.0,
-                sssAmbient: 0.08,
-                frostiness: 0.18,
-                innerGlowStrength: 0.12,
-                fresnelIntensity: 1.4,
-                emotionColorBleed: 0.35
-            }
-        };
+        // Use shared SSS presets from demo-utils.js
+        const sssPresets = sharedSSSPresets;
 
         function applySSSPreset(presetName) {
             const preset = sssPresets[presetName];
@@ -907,41 +748,45 @@
             console.log(`🎨 Applied SSS preset: ${presetName} (with iridescence blend layers)`);
         }
 
-        // Sync blend layer UI cards with preset values
+        // Sync blend layer UI cards with preset values (called after layer groups are created)
         function syncBlendLayersFromPreset(preset) {
+            if (!shellLayerGroup || !rimLayerGroup || !sssLayerGroup || !soulLayerGroup) return;
+
             // Clear existing UI layers
-            clearAllLayerUI();
+            shellLayerGroup.clearLayers();
+            rimLayerGroup.clearLayers();
+            sssLayerGroup.clearLayers();
 
             // Shell layers
             if (preset.shellLayer1Enabled) {
-                addShellLayer(preset.shellLayer1Mode, preset.shellLayer1Strength, true, true);
+                shellLayerGroup.addLayer(preset.shellLayer1Mode, preset.shellLayer1Strength, true, true);
             }
             if (preset.shellLayer2Enabled) {
-                addShellLayer(preset.shellLayer2Mode, preset.shellLayer2Strength, true, true);
+                shellLayerGroup.addLayer(preset.shellLayer2Mode, preset.shellLayer2Strength, true, true);
             }
 
             // Rim layers
             if (preset.rimLayer1Enabled) {
-                addRimLayer(preset.rimLayer1Mode, preset.rimLayer1Strength, true, true);
+                rimLayerGroup.addLayer(preset.rimLayer1Mode, preset.rimLayer1Strength, true, true);
             }
             if (preset.rimLayer2Enabled) {
-                addRimLayer(preset.rimLayer2Mode, preset.rimLayer2Strength, true, true);
+                rimLayerGroup.addLayer(preset.rimLayer2Mode, preset.rimLayer2Strength, true, true);
             }
 
             // SSS blend layers
             if (preset.sssLayer1Enabled) {
-                addSssBlendLayer(preset.sssLayer1Mode, preset.sssLayer1Strength, true, true);
+                sssLayerGroup.addLayer(preset.sssLayer1Mode, preset.sssLayer1Strength, true, true);
             }
             if (preset.sssLayer2Enabled) {
-                addSssBlendLayer(preset.sssLayer2Mode, preset.sssLayer2Strength, true, true);
+                sssLayerGroup.addLayer(preset.sssLayer2Mode, preset.sssLayer2Strength, true, true);
             }
 
             // Soul layers (presets don't typically have soul layers, but support it)
             if (preset.soulLayer1Enabled) {
-                addSoulLayer(preset.soulLayer1Mode, preset.soulLayer1Strength, true, true);
+                soulLayerGroup.addLayer(preset.soulLayer1Mode, preset.soulLayer1Strength, true, true);
             }
             if (preset.soulLayer2Enabled) {
-                addSoulLayer(preset.soulLayer2Mode, preset.soulLayer2Strength, true, true);
+                soulLayerGroup.addLayer(preset.soulLayer2Mode, preset.soulLayer2Strength, true, true);
             }
 
             // Also sync soul layers from engine (CrystalSoul has its own defaults)
@@ -950,53 +795,26 @@
 
         // Sync soul blend layers from the engine's CrystalSoul material uniforms
         function syncSoulLayersFromEngine() {
-            if (!mascot?.core3D?.crystalSoul?.material?.uniforms) return;
+            if (!mascot?.core3D?.crystalSoul?.material?.uniforms || !soulLayerGroup) return;
 
             const u = mascot.core3D.crystalSoul.material.uniforms;
-
-            // Clear only soul layers (not other components)
-            soulLayers.length = 0;
-            soulLayersContainer.innerHTML = '';
-            nextSoulLayerId = 1;
+            soulLayerGroup.clearLayers();
 
             // Read layer 1 from engine
             if (u.blendLayer1Enabled && u.blendLayer1Enabled.value > 0.5) {
                 const mode = u.blendLayer1Mode ? u.blendLayer1Mode.value : 0;
                 const strength = u.blendLayer1Strength ? u.blendLayer1Strength.value : 1.0;
-                addSoulLayer(mode, strength, true, true);
+                soulLayerGroup.addLayer(mode, strength, true, true);
             }
 
             // Read layer 2 from engine
             if (u.blendLayer2Enabled && u.blendLayer2Enabled.value > 0.5) {
                 const mode = u.blendLayer2Mode ? u.blendLayer2Mode.value : 0;
                 const strength = u.blendLayer2Strength ? u.blendLayer2Strength.value : 1.0;
-                addSoulLayer(mode, strength, true, true);
+                soulLayerGroup.addLayer(mode, strength, true, true);
             }
 
-            console.log(`💎 Soul blend layers synced from engine: ${soulLayers.length} layers`);
-        }
-
-        // Clear all layer UI and state
-        function clearAllLayerUI() {
-            // Clear shell layers
-            shellLayers.length = 0;
-            shellLayersContainer.innerHTML = '';
-            nextShellLayerId = 1;
-
-            // Clear soul layers
-            soulLayers.length = 0;
-            soulLayersContainer.innerHTML = '';
-            nextSoulLayerId = 1;
-
-            // Clear rim layers
-            rimLayers.length = 0;
-            rimLayersContainer.innerHTML = '';
-            nextRimLayerId = 1;
-
-            // Clear SSS blend layers
-            sssBlendLayers.length = 0;
-            sssLayersContainer.innerHTML = '';
-            nextSssLayerId = 1;
+            console.log(`💎 Soul blend layers synced from engine: ${soulLayerGroup.getLayers().length} layers`);
         }
 
         // SSS preset buttons
@@ -1088,162 +906,55 @@
         setupPhaseSlider('phase3-slider', 'phase3-value', 'phaseOffset3');
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // BLEND LAYER MANAGEMENT
+        // BLEND LAYER MANAGEMENT (using shared utilities)
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Update shader uniforms for each component
-        function updateShellLayers() {
-            if (!mascot?.core3D?.customMaterial?.uniforms) return;
-            const u = mascot.core3D.customMaterial.uniforms;
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layer = shellLayers[i];
-                const idx = i + 1;
-                if (u[`shellLayer${idx}Mode`]) u[`shellLayer${idx}Mode`].value = layer?.mode ?? 0;
-                if (u[`shellLayer${idx}Strength`]) u[`shellLayer${idx}Strength`].value = layer?.strength ?? 0;
-                if (u[`shellLayer${idx}Enabled`]) u[`shellLayer${idx}Enabled`].value = layer?.enabled ? 1 : 0;
-            }
-        }
+        // Get shader uniforms helper
+        const getUniforms = () => mascot?.core3D?.customMaterial?.uniforms;
 
-        function updateSoulLayers() {
-            // Update the actual CrystalSoul mesh (octahedron), not the shell uniforms
-            if (!mascot?.core3D?.crystalSoul) return;
-            mascot.core3D.crystalSoul.setBlendLayers(soulLayers);
-        }
+        // Create layer groups for each component
+        const shellLayerGroup = createBlendLayerGroup({
+            name: 'Shell',
+            containerId: 'shell-layers-container',
+            addBtnId: 'add-shell-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: createLayerShaderUpdater(getUniforms, 'shellLayer', MAX_BLEND_LAYERS),
+            blendModeNames
+        });
 
-        function updateRimLayers() {
-            if (!mascot?.core3D?.customMaterial?.uniforms) return;
-            const u = mascot.core3D.customMaterial.uniforms;
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layer = rimLayers[i];
-                const idx = i + 1;
-                if (u[`rimLayer${idx}Mode`]) u[`rimLayer${idx}Mode`].value = layer?.mode ?? 0;
-                if (u[`rimLayer${idx}Strength`]) u[`rimLayer${idx}Strength`].value = layer?.strength ?? 0;
-                if (u[`rimLayer${idx}Enabled`]) u[`rimLayer${idx}Enabled`].value = layer?.enabled ? 1 : 0;
-            }
-        }
+        const soulLayerGroup = createBlendLayerGroup({
+            name: 'Soul',
+            containerId: 'soul-layers-container',
+            addBtnId: 'add-soul-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: (layers) => {
+                // Soul uses CrystalSoul's setBlendLayers, not shader uniforms
+                if (mascot?.core3D?.crystalSoul) {
+                    mascot.core3D.crystalSoul.setBlendLayers(layers);
+                }
+            },
+            blendModeNames
+        });
 
-        function updateSssBlendLayers() {
-            if (!mascot?.core3D?.customMaterial?.uniforms) return;
-            const u = mascot.core3D.customMaterial.uniforms;
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layer = sssBlendLayers[i];
-                const idx = i + 1;
-                if (u[`sssLayer${idx}Mode`]) u[`sssLayer${idx}Mode`].value = layer?.mode ?? 0;
-                if (u[`sssLayer${idx}Strength`]) u[`sssLayer${idx}Strength`].value = layer?.strength ?? 0;
-                if (u[`sssLayer${idx}Enabled`]) u[`sssLayer${idx}Enabled`].value = layer?.enabled ? 1 : 0;
-            }
-        }
+        const rimLayerGroup = createBlendLayerGroup({
+            name: 'Rim',
+            containerId: 'rim-layers-container',
+            addBtnId: 'add-rim-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: createLayerShaderUpdater(getUniforms, 'rimLayer', MAX_BLEND_LAYERS),
+            blendModeNames
+        });
 
-        // Add layer functions
-        function addShellLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (shellLayers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextShellLayerId++, mode, strength, enabled };
-            shellLayers.push(layer);
-            const card = createLayerCard({
-                layer,
-                blendModeNames,
-                prefix: 'Shell',
-                onUpdate: updateShellLayers,
-                onDelete: removeShellLayer
-            });
-            shellLayersContainer.appendChild(card);
-            if (!skipUpdate) updateShellLayers();
-        }
+        const sssLayerGroup = createBlendLayerGroup({
+            name: 'SSS',
+            containerId: 'sss-layers-container',
+            addBtnId: 'add-sss-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: createLayerShaderUpdater(getUniforms, 'sssLayer', MAX_BLEND_LAYERS),
+            blendModeNames
+        });
 
-        function removeShellLayer(layerId) {
-            const idx = shellLayers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            shellLayers.splice(idx, 1);
-            shellLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
-            updateShellLayers();
-        }
-
-        function addSoulLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (soulLayers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextSoulLayerId++, mode, strength, enabled };
-            soulLayers.push(layer);
-            const card = createLayerCard({
-                layer,
-                blendModeNames,
-                prefix: 'Soul',
-                onUpdate: updateSoulLayers,
-                onDelete: removeSoulLayer
-            });
-            soulLayersContainer.appendChild(card);
-            if (!skipUpdate) updateSoulLayers();
-        }
-
-        function removeSoulLayer(layerId) {
-            const idx = soulLayers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            soulLayers.splice(idx, 1);
-            soulLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
-            updateSoulLayers();
-        }
-
-        function addRimLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (rimLayers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextRimLayerId++, mode, strength, enabled };
-            rimLayers.push(layer);
-            const card = createLayerCard({
-                layer,
-                blendModeNames,
-                prefix: 'Rim',
-                onUpdate: updateRimLayers,
-                onDelete: removeRimLayer
-            });
-            rimLayersContainer.appendChild(card);
-            if (!skipUpdate) updateRimLayers();
-        }
-
-        function removeRimLayer(layerId) {
-            const idx = rimLayers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            rimLayers.splice(idx, 1);
-            rimLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
-            updateRimLayers();
-        }
-
-        function addSssBlendLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (sssBlendLayers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextSssLayerId++, mode, strength, enabled };
-            sssBlendLayers.push(layer);
-            const card = createLayerCard({
-                layer,
-                blendModeNames,
-                prefix: 'SSS',
-                onUpdate: updateSssBlendLayers,
-                onDelete: removeSssBlendLayer
-            });
-            sssLayersContainer.appendChild(card);
-            if (!skipUpdate) updateSssBlendLayers();
-        }
-
-        function removeSssBlendLayer(layerId) {
-            const idx = sssBlendLayers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            sssBlendLayers.splice(idx, 1);
-            sssLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
-            updateSssBlendLayers();
-        }
-
-        // Setup drag and drop for all containers
-        setupDragAndDrop(shellLayersContainer, shellLayers, updateShellLayers);
-        setupDragAndDrop(soulLayersContainer, soulLayers, updateSoulLayers);
-        setupDragAndDrop(rimLayersContainer, rimLayers, updateRimLayers);
-        setupDragAndDrop(sssLayersContainer, sssBlendLayers, updateSssBlendLayers);
-
-        // Add layer button handlers
-        document.getElementById('add-shell-layer-btn').addEventListener('click', () => addShellLayer());
-        document.getElementById('add-soul-layer-btn').addEventListener('click', () => addSoulLayer());
-        document.getElementById('add-rim-layer-btn').addEventListener('click', () => addRimLayer());
-        document.getElementById('add-sss-layer-btn').addEventListener('click', () => addSssBlendLayer());
-
-        // Initial emotion display
-        updateEmotionDisplay('neutral');
-
-        // Sync blend layers from engine after a short delay (ensure DOM ready)
-        // Soul layers come from engine defaults, shell/rim/sss from preset
+        // Sync blend layers from engine after mascot is fully initialized
         setTimeout(() => {
             // First sync from preset (for shell, rim, sss layers)
             if (sssPresets[currentSSSPreset]) {
@@ -1252,134 +963,9 @@
             // Sync soul layers from engine (CrystalSoul has its own hardcoded defaults)
             syncSoulLayersFromEngine();
             console.log(`💎 Initial blend layers synced from engine + ${currentSSSPreset} preset`);
-        }, 100);
+        }, 1000);
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // PRECISION SLIDER POPUP
-        // Click on slider value to open precision controls
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        let activePrecisionPopup = null;
-
-        function closePrecisionPopup() {
-            if (activePrecisionPopup) {
-                activePrecisionPopup.remove();
-                activePrecisionPopup = null;
-            }
-        }
-
-        function openPrecisionPopup(valueElement, slider, title) {
-            closePrecisionPopup();
-
-            const rect = valueElement.getBoundingClientRect();
-            const min = parseFloat(slider.min);
-            const max = parseFloat(slider.max);
-            const step = parseFloat(slider.step) || 0.01;
-            const currentValue = parseFloat(slider.value);
-
-            // Create popup
-            const popup = document.createElement('div');
-            popup.className = 'slider-precision-popup';
-            popup.innerHTML = `
-                <div class="slider-precision-header">
-                    <span class="slider-precision-title">${title}</span>
-                    <button class="slider-precision-close">Done</button>
-                </div>
-                <div class="slider-precision-value">${currentValue.toFixed(3)}</div>
-                <div class="slider-precision-fader">
-                    <button class="fader-step" data-step="-1">−</button>
-                    <input type="range" class="slider-precision-slider" min="${min}" max="${max}" step="${step}" value="${currentValue}">
-                    <button class="fader-step" data-step="1">+</button>
-                </div>
-                <div class="slider-precision-range">
-                    <span>${min.toFixed(2)}</span>
-                    <span>${max.toFixed(2)}</span>
-                </div>
-            `;
-
-            document.body.appendChild(popup);
-
-            // Position popup - ensure it stays within viewport
-            const popupRect = popup.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-
-            // Horizontal: prefer centered under value, but stay in viewport
-            let left = rect.left + (rect.width / 2) - (popupRect.width / 2);
-            if (left + popupRect.width > viewportWidth - 10) {
-                left = viewportWidth - popupRect.width - 10;
-            }
-            if (left < 10) left = 10;
-
-            // Vertical: prefer below, but flip above if no room
-            let top = rect.bottom + 10;
-            if (top + popupRect.height > viewportHeight - 10) {
-                top = rect.top - popupRect.height - 10;
-            }
-            if (top < 10) top = 10;
-
-            popup.style.left = `${left}px`;
-            popup.style.top = `${top}px`;
-
-            activePrecisionPopup = popup;
-
-            // Elements
-            const precisionSlider = popup.querySelector('.slider-precision-slider');
-            const valueDisplay = popup.querySelector('.slider-precision-value');
-            const closeBtn = popup.querySelector('.slider-precision-close');
-            const stepBtns = popup.querySelectorAll('.fader-step');
-
-            // Update function
-            function updateValue(newValue) {
-                newValue = Math.max(min, Math.min(max, newValue));
-                precisionSlider.value = newValue;
-                slider.value = newValue;
-                valueDisplay.textContent = newValue.toFixed(3);
-                valueElement.textContent = newValue.toFixed(2);
-                slider.dispatchEvent(new Event('input'));
-            }
-
-            // Precision slider input
-            precisionSlider.addEventListener('input', () => {
-                updateValue(parseFloat(precisionSlider.value));
-            });
-
-            // Step buttons
-            stepBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const direction = parseInt(btn.dataset.step);
-                    updateValue(parseFloat(precisionSlider.value) + (step * direction));
-                });
-            });
-
-            // Close button
-            closeBtn.addEventListener('click', closePrecisionPopup);
-
-            // Click outside to close
-            setTimeout(() => {
-                document.addEventListener('click', function handler(e) {
-                    if (!popup.contains(e.target) && e.target !== valueElement) {
-                        closePrecisionPopup();
-                        document.removeEventListener('click', handler);
-                    }
-                });
-            }, 0);
-        }
-
-        // Setup precision mode for sliders with data-precision attribute
-        document.querySelectorAll('.slider-value[data-precision]').forEach(valueEl => {
-            const sliderControl = valueEl.closest('.slider-control');
-            if (!sliderControl) return;
-
-            const slider = sliderControl.querySelector('input[type="range"]');
-            const labelEl = sliderControl.querySelector('.slider-label span:first-child');
-            const title = labelEl ? labelEl.textContent : 'Fine Tune';
-
-            valueEl.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openPrecisionPopup(valueEl, slider, title);
-            });
-        });
+        // Precision mode now auto-initialized by demo-utils.js for all .slider-value elements
     </script>
 </body>
 </html>

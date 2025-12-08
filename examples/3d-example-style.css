@@ -361,7 +361,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TOGGLE SWITCHES
+   TOGGLE SWITCHES - Pill/tag style (like selection chips)
    ═══════════════════════════════════════════════════════════════════════════ */
 .toggle-control {
     display: flex;
@@ -378,34 +378,69 @@ input[type="range"]::-moz-range-thumb {
     color: var(--text-secondary);
 }
 
+/* Pill-style toggle (header inline toggles) */
 .toggle-switch {
-    position: relative;
-    width: 40px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 4px 12px;
+    height: 22px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 11px;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.2s ease;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Checkmark icon - always present but hidden when inactive */
+.toggle-switch::before {
+    content: '✓';
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0;
+    margin-right: -2px;
+    transition: opacity 0.2s ease;
+}
+
+.toggle-switch:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .toggle-switch.active {
-    background: rgba(var(--accent-rgb), 0.6);
+    background: transparent;
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
-.toggle-switch::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.3s;
+.toggle-switch.active::before {
+    opacity: 1;
 }
 
-.toggle-switch.active::after {
-    transform: translateX(20px);
+/* Header with toggle - proper spacing between title, toggle, and collapse icon */
+.section h2.has-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section h2.has-toggle > span:first-child {
+    flex: 0 0 auto;
+}
+
+.section h2.has-toggle > .toggle-switch {
+    flex: 0 0 auto;
+}
+
+/* Push the collapse icon (::after) to the right */
+.section h2.has-toggle::after {
+    margin-left: auto;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -575,14 +610,92 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   VISUAL CONTROLS (full-width buttons)
+   TOGGLE BUTTONS - Grid buttons with checkmark indicator (like header toggles)
    ═══════════════════════════════════════════════════════════════════════════ */
-.visual-controls .button-grid {
-    grid-template-columns: 1fr;
+button.toggle-btn {
+    position: relative;
+    padding-left: clamp(18px, 1.5vw, 22px);
 }
 
-.visual-controls button {
-    grid-column: span 1;
+/* Checkmark - hidden when inactive */
+button.toggle-btn::before {
+    content: '✓';
+    position: absolute;
+    left: clamp(4px, 0.5vw, 6px);
+    font-size: clamp(9px, 0.8vw, 10px);
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: inherit;
+}
+
+button.toggle-btn.active::before {
+    opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VISUAL CONTROLS - Clean toggle list
+   Simple, scannable rows - no gimmicks
+   ═══════════════════════════════════════════════════════════════════════════ */
+.visual-controls .button-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.visual-controls .button-grid button {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.visual-controls .button-grid button:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.visual-controls .button-grid button.active {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Dot indicator on right side */
+.visual-controls .button-grid button::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.visual-controls .button-grid button.active::after {
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+}
+
+/* No checkmark needed - dot indicator is cleaner */
+.visual-controls .button-grid button.toggle-btn::before {
+    display: none;
+}
+
+/* Mobile: larger touch targets */
+@media (max-width: 1000px) {
+    .visual-controls .button-grid button {
+        padding: 12px 0;
+        font-size: 14px;
+    }
+
+    .visual-controls .button-grid button::after {
+        width: 8px;
+        height: 8px;
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -639,6 +752,34 @@ input[type="range"]::-moz-range-thumb {
    BLEND LAYERS - Mixing Console Aesthetic
    Inspired by audio mixing boards with vertical faders and minimal chrome
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Blend subsections - compact groupings within a single Blend section */
+.blend-subsection {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.blend-subsection:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.blend-subsection-header {
+    font-size: clamp(10px, 0.9vw, 11px);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 6px;
+}
+
+.blend-subsection .add-layer-btn {
+    margin-top: 6px;
+    padding: 6px 12px;
+    font-size: clamp(9px, 0.8vw, 10px);
+}
 
 /* Layer stack - horizontal scroll on mobile, vertical stack on desktop */
 .layer-stack {
@@ -788,11 +929,10 @@ input[type="range"]::-moz-range-thumb {
     flex-shrink: 0;
 }
 
-.toggle-btn,
-.delete-btn {
-    width: 28px;
-    height: 24px;
-    padding: 0;
+.layer-controls-header .toggle-btn,
+.layer-controls-header .delete-btn {
+    height: 22px;
+    padding: 0 6px;
     font-size: 10px;
     font-weight: 600;
     border-radius: 3px;
@@ -803,32 +943,41 @@ input[type="range"]::-moz-range-thumb {
     justify-content: center;
 }
 
-.toggle-btn {
+.layer-controls-header .toggle-btn {
     background: rgba(72, 187, 120, 0.15);
     border: 1px solid rgba(72, 187, 120, 0.3);
     color: #68d391;
+    /* Reset the padding-left from generic toggle-btn (which makes room for checkmark) */
+    padding-left: 6px;
 }
 
-.toggle-btn:hover {
+/* Override the generic checkmark for layer card toggle buttons */
+.layer-controls-header .toggle-btn::before {
+    display: none;
+}
+
+.layer-controls-header .toggle-btn:hover {
     background: rgba(72, 187, 120, 0.25);
     border-color: rgba(72, 187, 120, 0.5);
 }
 
-.toggle-btn.disabled {
+.layer-controls-header .toggle-btn.disabled {
     background: rgba(100, 100, 100, 0.15);
     border-color: rgba(100, 100, 100, 0.3);
     color: rgba(255, 255, 255, 0.4);
 }
 
-.toggle-btn.disabled:hover {
+.layer-controls-header .toggle-btn.disabled:hover {
     background: rgba(100, 100, 100, 0.25);
 }
 
-.delete-btn {
+.layer-controls-header .delete-btn {
     background: transparent;
     border: 1px solid transparent;
     color: rgba(255, 255, 255, 0.25);
-    font-size: 12px;
+    font-size: 14px;
+    min-width: 22px;
+    padding: 0;
 }
 
 .delete-btn:hover {

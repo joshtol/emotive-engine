@@ -191,24 +191,26 @@
         <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
     </div>
 
-    <!-- RIGHT MENU: Visual Controls & Physics -->
+    <!-- RIGHT MENU: Visuals & Physics -->
     <div class="right-menu">
         <div class="section visual-controls">
-            <h2 class="collapsed">Visual Controls</h2>
-            <div class="section-content collapsed">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
                 <div class="button-grid">
-                    <button data-action="toggle-particles">✨ Particles</button>
-                    <button data-action="toggle-glow" class="active">💫 Core Glow</button>
-                    <button data-action="toggle-auto-rotate">🔄 Auto-Rotate</button>
+                    <button data-action="toggle-glow" class="toggle-btn active">Core Glow</button>
+                    <button data-action="toggle-auto-rotate" class="toggle-btn">Auto-Rotate</button>
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <h2 class="collapsed">🎨 Blend Layers</h2>
+            <h2 class="collapsed">Blend</h2>
             <div class="section-content collapsed">
-                <button class="add-layer-btn" id="add-layer-btn">+ Add Layer</button>
                 <div id="layer-stack" class="layer-stack"></div>
+                <button class="add-layer-btn" id="add-layer-btn">+ Layer</button>
             </div>
         </div>
 
@@ -243,22 +245,10 @@
         </div>
     </div>
 
-    <script>
-        // Collapsible sections
-        document.querySelectorAll('h2').forEach(h2 => {
-            h2.addEventListener('click', () => {
-                const content = h2.nextElementSibling;
-                if (content && content.classList.contains('section-content')) {
-                    h2.classList.toggle('collapsed');
-                    content.classList.toggle('collapsed');
-                }
-            });
-        });
-    </script>
-
     <script type="module">
         import EmotiveMascot3D, { blendModeNames } from '../../dist/emotive-mascot-3d.js';
-        import { createLayerCard, setupDragAndDrop, exitPrecisionMode } from './layer-utils.js';
+        import { exitPrecisionMode } from './layer-utils.js';
+        import { setupParticlesToggle, createBlendLayerGroup, syncLayersFromShader } from './demo-utils.js';
 
         let mascot = null;
 
@@ -301,6 +291,9 @@
             }
         })();
 
+        // Setup particles toggle from demo-utils
+        setupParticlesToggle(mascot);
+
         // Event delegation for controls
         document.addEventListener('click', (e) => {
             // Emotion selector
@@ -315,20 +308,6 @@
                 e.target.classList.add('active');
 
                 console.log(`🎭 Emotion changed to: ${emotion}`);
-                return;
-            }
-
-            // Toggle particles
-            if (e.target.dataset.action === 'toggle-particles') {
-                if (mascot.particlesEnabled) {
-                    mascot.disableParticles();
-                    e.target.classList.remove('active');
-                    console.log('🚫 Particles OFF');
-                } else {
-                    mascot.enableParticles();
-                    e.target.classList.add('active');
-                    console.log('✨ Particles ON');
-                }
                 return;
             }
 
@@ -450,85 +429,53 @@
         });
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // BLEND LAYER MANAGEMENT SYSTEM (using shared layer-utils.js)
+        // BLEND LAYER MANAGEMENT (using shared utilities)
         // ═══════════════════════════════════════════════════════════════════════════
 
         const MAX_BLEND_LAYERS = 4;
-        const layerStack = document.getElementById('layer-stack');
-        const addLayerBtn = document.getElementById('add-layer-btn');
 
-        let layers = [];
-        let nextLayerId = 1;
+        const layerGroup = createBlendLayerGroup({
+            name: 'Layer',
+            containerId: 'layer-stack',
+            addBtnId: 'add-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: (layers) => {
+                // Black hole targets diskMesh instead of coreMesh
+                const diskMesh = mascot?.core3D?.coreMesh?.userData?.diskMesh;
+                if (!diskMesh?.material?.uniforms) return;
 
-        // Custom shader update for black hole (targets diskMesh instead of coreMesh)
-        function updateShaderLayers() {
-            const diskMesh = mascot?.core3D?.coreMesh?.userData?.diskMesh;
-            if (!diskMesh?.material?.uniforms) return;
-
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layerNum = i + 1;
-                const uiLayer = layers[i];
-                if (uiLayer) {
-                    if (diskMesh.material.uniforms[`layer${layerNum}Mode`]) {
-                        diskMesh.material.uniforms[`layer${layerNum}Mode`].value = uiLayer.mode;
-                    }
-                    if (diskMesh.material.uniforms[`layer${layerNum}Strength`]) {
-                        diskMesh.material.uniforms[`layer${layerNum}Strength`].value = uiLayer.strength;
-                    }
-                    if (diskMesh.material.uniforms[`layer${layerNum}Enabled`]) {
-                        diskMesh.material.uniforms[`layer${layerNum}Enabled`].value = uiLayer.enabled ? 1.0 : 0.0;
-                    }
-                } else {
-                    if (diskMesh.material.uniforms[`layer${layerNum}Enabled`]) {
-                        diskMesh.material.uniforms[`layer${layerNum}Enabled`].value = 0.0;
+                for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                    const layerNum = i + 1;
+                    const uiLayer = layers[i];
+                    if (uiLayer) {
+                        if (diskMesh.material.uniforms[`layer${layerNum}Mode`]) {
+                            diskMesh.material.uniforms[`layer${layerNum}Mode`].value = uiLayer.mode;
+                        }
+                        if (diskMesh.material.uniforms[`layer${layerNum}Strength`]) {
+                            diskMesh.material.uniforms[`layer${layerNum}Strength`].value = uiLayer.strength;
+                        }
+                        if (diskMesh.material.uniforms[`layer${layerNum}Enabled`]) {
+                            diskMesh.material.uniforms[`layer${layerNum}Enabled`].value = uiLayer.enabled ? 1.0 : 0.0;
+                        }
+                    } else {
+                        if (diskMesh.material.uniforms[`layer${layerNum}Enabled`]) {
+                            diskMesh.material.uniforms[`layer${layerNum}Enabled`].value = 0.0;
+                        }
                     }
                 }
-            }
-        }
-
-        // Layer management using shared utilities
-        function addLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (layers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextLayerId++, mode, strength, enabled };
-            layers.push(layer);
-            const card = createLayerCard({
-                layer,
-                blendModeNames,
-                prefix: 'Layer',
-                onUpdate: updateShaderLayers,
-                onDelete: removeLayer
-            });
-            layerStack.appendChild(card);
-            if (!skipUpdate) updateShaderLayers();
-        }
-
-        function removeLayer(layerId) {
-            const idx = layers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            layers.splice(idx, 1);
-            layerStack.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
-            updateShaderLayers();
-        }
-
-        // Setup drag and drop
-        setupDragAndDrop(layerStack, layers, updateShaderLayers);
-
-        addLayerBtn.addEventListener('click', () => addLayer());
+            },
+            blendModeNames
+        });
 
         // Initialize layers from shader defaults after mascot loads
         setTimeout(() => {
-            const diskMesh = mascot?.core3D?.coreMesh?.userData?.diskMesh;
-            if (diskMesh?.material?.uniforms) {
-                for (let i = 1; i <= 4; i++) {
-                    const enabledUniform = diskMesh.material.uniforms[`layer${i}Enabled`];
-                    if (enabledUniform && enabledUniform.value > 0.5) {
-                        const mode = Math.round(diskMesh.material.uniforms[`layer${i}Mode`]?.value || 0);
-                        const strength = diskMesh.material.uniforms[`layer${i}Strength`]?.value || 1.0;
-                        addLayer(mode, strength, true, true);
-                    }
-                }
-                console.log(`🕳️ Layer system initialized - ${layers.length} layers`);
-            }
+            syncLayersFromShader(
+                layerGroup,
+                () => mascot?.core3D?.coreMesh?.userData?.diskMesh?.material?.uniforms,
+                'layer',
+                MAX_BLEND_LAYERS
+            );
+            console.log(`🕳️ Layer system initialized - ${layerGroup.getLayers().length} layers`);
         }, 1500);
 
         // Jet intensity slider

@@ -88,125 +88,77 @@
 
     <div class="right-menu">
         <div class="section visual-controls">
-            <h2 class="collapsed">Visual Controls</h2>
-            <div class="section-content collapsed">
+            <h2>Visuals</h2>
+            <div class="section-content">
                 <div class="button-grid">
-                    <button data-action="toggle-glow" class="active">Core Glow</button>
-                    <button data-action="toggle-auto-rotate" class="active">Auto-Rotate</button>
+                    <button data-action="toggle-glow" class="toggle-btn active">Core Glow</button>
+                    <button data-action="toggle-auto-rotate" class="toggle-btn active">Auto-Rotate</button>
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <div class="info-box">
-                <strong>Blend Modes:</strong><br>
-                Click value to fine-tune. Drag layers to reorder. Max 4 per section.
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Sun Blend Layers</h2>
-            <div class="section-content">
-                <div id="layers-container"></div>
-                <button class="add-layer-btn" id="add-layer-btn">+ Add Sun Layer</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Corona Blend Layers</h2>
-            <div class="section-content">
-                <div id="corona-layers-container"></div>
-                <button class="add-layer-btn" id="add-corona-layer-btn">+ Add Corona Layer</button>
+            <h2 class="collapsed">Blend</h2>
+            <div class="section-content collapsed">
+                <div class="info-box" style="margin-bottom: 12px;">
+                    Click value to fine-tune. Drag to reorder. Max 4 per type.
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Sun</div>
+                    <div id="layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-layer-btn">+ Sun</button>
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Corona</div>
+                    <div id="corona-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-corona-layer-btn">+ Corona</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import EmotiveMascot3D, { blendModeNames } from '../../dist/emotive-mascot-3d.js';
-        import { createLayerCard, setupDragAndDrop, exitPrecisionMode } from './layer-utils.js';
+        import { exitPrecisionMode } from './layer-utils.js';
+        import { createBlendLayerGroup, syncLayersFromShader } from './demo-utils.js';
 
         let mascot = null;
         const MAX_BLEND_LAYERS = 4;
 
-        let layers = [];
-        let coronaLayers = [];
-        let nextLayerId = 1;
-        let nextCoronaLayerId = 1;
+        // Create layer groups (they'll be populated after mascot initializes)
+        const sunLayerGroup = createBlendLayerGroup({
+            name: 'Sun',
+            containerId: 'layers-container',
+            addBtnId: 'add-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: (layers) => {
+                if (!mascot?.core3D) return;
+                for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                    const layer = layers[i];
+                    mascot.core3D.setBlendLayer(i + 1, layer
+                        ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                        : { mode: 0, strength: 0, enabled: false });
+                }
+            },
+            blendModeNames
+        });
 
-        const layersContainer = document.getElementById('layers-container');
-        const coronaLayersContainer = document.getElementById('corona-layers-container');
-
-        // Shader update functions
-        function updateShaderLayers() {
-            if (!mascot?.core3D) return;
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layer = layers[i];
-                mascot.core3D.setBlendLayer(i + 1, layer
-                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
-                    : { mode: 0, strength: 0, enabled: false });
-            }
-        }
-
-        function updateCoronaShaderLayers() {
-            if (!mascot?.core3D?.solarEclipse) return;
-            for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
-                const layer = coronaLayers[i];
-                mascot.core3D.solarEclipse.setCoronaBlendLayer(i + 1, layer
-                    ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
-                    : { mode: 0, strength: 0, enabled: false });
-            }
-        }
-
-        // Layer management
-        function addLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (layers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextLayerId++, mode, strength, enabled };
-            layers.push(layer);
-            const card = createLayerCard({
-                layer,
-                blendModeNames,
-                prefix: 'Layer',
-                onUpdate: updateShaderLayers,
-                onDelete: removeLayer
-            });
-            layersContainer.appendChild(card);
-            if (!skipUpdate) updateShaderLayers();
-        }
-
-        function removeLayer(layerId) {
-            const idx = layers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            layers.splice(idx, 1);
-            layersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
-            updateShaderLayers();
-        }
-
-        function addCoronaLayer(mode = 0, strength = 1.0, enabled = true, skipUpdate = false) {
-            if (coronaLayers.length >= MAX_BLEND_LAYERS) return;
-            const layer = { id: nextCoronaLayerId++, mode, strength, enabled };
-            coronaLayers.push(layer);
-            const card = createLayerCard({
-                layer,
-                blendModeNames,
-                prefix: 'Corona',
-                onUpdate: updateCoronaShaderLayers,
-                onDelete: removeCoronaLayer
-            });
-            coronaLayersContainer.appendChild(card);
-            if (!skipUpdate) updateCoronaShaderLayers();
-        }
-
-        function removeCoronaLayer(layerId) {
-            const idx = coronaLayers.findIndex(l => l.id === layerId);
-            if (idx === -1) return;
-            coronaLayers.splice(idx, 1);
-            coronaLayersContainer.querySelector(`[data-layer-id="${layerId}"]`)?.remove();
-            updateCoronaShaderLayers();
-        }
-
-        // Setup drag and drop for both containers
-        setupDragAndDrop(layersContainer, layers, updateShaderLayers);
-        setupDragAndDrop(coronaLayersContainer, coronaLayers, updateCoronaShaderLayers);
+        const coronaLayerGroup = createBlendLayerGroup({
+            name: 'Corona',
+            containerId: 'corona-layers-container',
+            addBtnId: 'add-corona-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: (layers) => {
+                if (!mascot?.core3D?.solarEclipse) return;
+                for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                    const layer = layers[i];
+                    mascot.core3D.solarEclipse.setCoronaBlendLayer(i + 1, layer
+                        ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                        : { mode: 0, strength: 0, enabled: false });
+                }
+            },
+            blendModeNames
+        });
 
         // Initialize mascot
         (async () => {
@@ -231,49 +183,26 @@
 
                 // Auto-populate from shader defaults
                 setTimeout(() => {
-                    if (mascot.core3D?.coreMesh?.material?.uniforms) {
-                        for (let i = 1; i <= 4; i++) {
-                            const enabled = mascot.core3D.coreMesh.material.uniforms[`layer${i}Enabled`].value > 0.5;
-                            if (enabled) {
-                                const mode = Math.round(mascot.core3D.coreMesh.material.uniforms[`layer${i}Mode`].value);
-                                const strength = mascot.core3D.coreMesh.material.uniforms[`layer${i}Strength`].value;
-                                addLayer(mode, strength, true, true);
-                            }
-                        }
-                    }
-
-                    if (mascot.core3D?.solarEclipse?.coronaDisk?.material?.uniforms) {
-                        for (let i = 1; i <= 4; i++) {
-                            const enabled = mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Enabled`].value > 0.5;
-                            if (enabled) {
-                                const mode = Math.round(mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Mode`].value);
-                                const strength = mascot.core3D.solarEclipse.coronaDisk.material.uniforms[`layer${i}Strength`].value;
-                                addCoronaLayer(mode, strength, true, true);
-                            }
-                        }
-                    }
+                    syncLayersFromShader(
+                        sunLayerGroup,
+                        () => mascot.core3D?.coreMesh?.material?.uniforms,
+                        'layer',
+                        MAX_BLEND_LAYERS
+                    );
+                    syncLayersFromShader(
+                        coronaLayerGroup,
+                        () => mascot.core3D?.solarEclipse?.coronaDisk?.material?.uniforms,
+                        'layer',
+                        MAX_BLEND_LAYERS
+                    );
                 }, 500);
             } catch (error) {
                 console.error('Failed to initialize:', error);
             }
         })();
 
-        // Collapsible sections
-        document.querySelectorAll('.section h2').forEach(h2 => {
-            h2.addEventListener('click', () => {
-                const content = h2.nextElementSibling;
-                if (content?.classList.contains('section-content')) {
-                    h2.classList.toggle('collapsed');
-                    content.classList.toggle('collapsed');
-                }
-            });
-        });
-
         // UI event handlers
         document.addEventListener('click', (e) => {
-            if (e.target.id === 'add-layer-btn') { addLayer(); return; }
-            if (e.target.id === 'add-corona-layer-btn') { addCoronaLayer(); return; }
-
             if (e.target.dataset.action === 'eclipse') {
                 const type = e.target.dataset.value;
                 document.querySelectorAll('[data-action="eclipse"]').forEach(btn => btn.classList.remove('active'));

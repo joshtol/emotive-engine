@@ -1032,6 +1032,17 @@ export class Core3DManager {
         if (this.rotationBehavior) {
             this.rotationBehavior.setWobbleEnabled(enabled);
         }
+
+        // When disabling wobble, reset to upright position
+        // (same logic as emotion change - prevents model from being stuck at an angle)
+        if (!enabled) {
+            if (this.rightingBehavior) {
+                this.rightingBehavior.reset();
+            }
+            // Reset pitch/roll to upright, preserve yaw for rotation continuity
+            this.baseEuler[0] = 0; // Reset pitch
+            this.baseEuler[2] = 0; // Reset roll
+        }
     }
 
     /**
