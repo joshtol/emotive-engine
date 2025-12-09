@@ -12,6 +12,11 @@
       "import": "./dist/mascot.js",
       "require": "./dist/emotive-mascot.umd.js"
     },
+    "./3d": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d.js",
+      "require": "./dist/emotive-mascot-3d.umd.js"
+    },
     "./package.json": "./package.json"
   },
   "private": false,
@@ -70,6 +75,9 @@
     "animation",
     "canvas",
     "canvas2d",
+    "webgl",
+    "threejs",
+    "3d",
     "particle-system",
     "particle-animation",
     "visual-effects",

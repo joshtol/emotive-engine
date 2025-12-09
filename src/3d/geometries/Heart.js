@@ -70,7 +70,6 @@ export function loadHeartGeometry() {
 
                     // Only generate UVs if OBJ doesn't have them
                     if (!geometry.attributes.uv) {
-                        console.log('💗 [HEART] No UVs in OBJ, generating planar UVs');
                         generatePlanarUVs(geometry);
                     }
 

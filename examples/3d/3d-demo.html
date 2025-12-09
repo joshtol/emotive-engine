@@ -129,13 +129,10 @@
                     <button data-action="emotion" data-value="excited">🎉 Excited</button>
                     <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
                     <button data-action="emotion" data-value="calm">😌 Calm</button>
-                    <button data-action="emotion" data-value="focused">🎯 Focused</button>
-                    <button data-action="emotion" data-value="resting">😴 Resting</button>
                     <button data-action="emotion" data-value="sadness">😢 Sadness</button>
                     <button data-action="emotion" data-value="anger">😠 Anger</button>
                     <button data-action="emotion" data-value="fear">😰 Fear</button>
                     <button data-action="emotion" data-value="surprise">😲 Surprise</button>
-                    <button data-action="emotion" data-value="suspicion">🤨 Suspicion</button>
                     <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
                     <button data-action="emotion" data-value="neutral">😐 Neutral</button>
                 </div>
@@ -148,11 +145,21 @@
                 <div class="toggle-switch" id="particles-toggle">Particles</div>
             </h2>
             <div class="section-content">
-                <div class="button-grid">
-                    <button data-action="toggle-glow" class="toggle-btn active">Core Glow</button>
-                    <button data-action="toggle-blink" class="toggle-btn active">Blinking</button>
-                    <button data-action="toggle-breathing" class="toggle-btn active">Breathing</button>
-                    <button data-action="toggle-auto-rotate" class="toggle-btn">Auto-Rotate</button>
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch" data-action="toggle-auto-rotate"></div>
                 </div>
             </div>
         </div>

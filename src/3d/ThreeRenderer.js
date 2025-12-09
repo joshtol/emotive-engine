@@ -1261,19 +1261,6 @@ export class ThreeRenderer {
                     if (obj.name === 'crystalSoul') soulMesh = obj;
                 });
 
-                // DEBUG: Log soul render pass (throttled)
-                if (!this._soulDebugCounter) this._soulDebugCounter = 0;
-                this._soulDebugCounter++;
-                const shouldLog = this._soulDebugCounter % 300 === 1; // Every 5 seconds at 60fps
-
-                if (shouldLog) {
-                    const sp = soulMesh?.position;
-                    const ss = soulMesh?.scale;
-                    const cp = this.coreMesh?.position;
-                    const cam = this.camera?.position;
-                    console.log(`[🔮 SOUL] frame=${this._soulDebugCounter} rt=${this.soulRenderTarget.width}x${this.soulRenderTarget.height} soul=${soulMesh ? 'FOUND' : 'MISSING'} visible=${soulMesh?.visible} layer=${soulMesh?.layers?.mask} pos=[${sp?.x?.toFixed(2)},${sp?.y?.toFixed(2)},${sp?.z?.toFixed(2)}] scale=${ss?.x?.toFixed(2)} core=[${cp?.x?.toFixed(2)},${cp?.y?.toFixed(2)},${cp?.z?.toFixed(2)}] cam=[${cam?.x?.toFixed(2)},${cam?.y?.toFixed(2)},${cam?.z?.toFixed(2)}]`);
-                }
-
                 this.renderer.setRenderTarget(this.soulRenderTarget);
                 this.renderer.setClearColor(0x000000, 0);
                 this.renderer.clear();
@@ -1301,14 +1288,6 @@ export class ThreeRenderer {
                         const soulScreenV = (soulNDC.y + 1.0) * 0.5;
                         this.coreMesh.material.uniforms.soulScreenCenter.value.set(soulScreenU, soulScreenV);
                     }
-                    if (shouldLog) {
-                        const res = this.coreMesh.material.uniforms.resolution?.value;
-                        const sts = this.coreMesh.material.uniforms.soulTextureSize?.value;
-                        const ssc = this.coreMesh.material.uniforms.soulScreenCenter?.value;
-                        console.log(`[🔮 SOUL] texture passed, camLayer=${this.camera.layers.mask} res=[${res?.x},${res?.y}] soulTexSize=[${sts?.x},${sts?.y}] soulCenter=[${ssc?.x?.toFixed(3)},${ssc?.y?.toFixed(3)}]`);
-                    }
-                } else if (shouldLog) {
-                    console.log(`[🔮 SOUL] NO soulTexture uniform! coreMesh=${!!this.coreMesh} material=${!!this.coreMesh?.material} uniforms=${!!this.coreMesh?.material?.uniforms}`);
                 }
 
                 this.renderer.setRenderTarget(null);

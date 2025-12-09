@@ -261,7 +261,6 @@ export class CrystalSoul {
 
                         geometry.computeVertexNormals();
                         inclusionGeometryCache = geometry;
-                        console.log('[🔮 SOUL] Inclusion geometry loaded');
                         resolve(geometry.clone());
                     } else {
                         console.warn('[🔮 SOUL] No mesh in inclusion.obj, using fallback');
@@ -331,7 +330,6 @@ export class CrystalSoul {
                 this.mesh.geometry.dispose();
                 // Use inclusion geometry
                 this.mesh.geometry = geometry;
-                console.log('[🔮 SOUL] Switched to inclusion geometry');
 
                 // Re-attach if we had a pending parent
                 if (this._pendingParent) {
@@ -340,8 +338,6 @@ export class CrystalSoul {
                 }
             }
         });
-
-        console.log(`[🔮 SOUL] created: radius=${this.radius} layer=${this.mesh.layers.mask} (loading inclusion...)`);
     }
 
     /**
@@ -372,10 +368,6 @@ export class CrystalSoul {
 
         // Sync initial position
         this._syncPosition();
-
-        // DEBUG: Log attachment details
-        const pwp = parentMesh.getWorldPosition(new THREE.Vector3());
-        console.log(`[🔮 SOUL] attached: parent=${parentMesh.name} parentPos=[${pwp.x.toFixed(2)},${pwp.y.toFixed(2)},${pwp.z.toFixed(2)}] soulPos=[${this.mesh.position.x.toFixed(2)},${this.mesh.position.y.toFixed(2)},${this.mesh.position.z.toFixed(2)}] layer=${this.mesh.layers.mask} visible=${this.mesh.visible} inScene=${scene.children.includes(this.mesh)}`);
     }
 
     /**

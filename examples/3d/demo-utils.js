@@ -76,57 +76,58 @@ export function setupParticlesToggle(mascot) {
 }
 
 /**
- * Setup standard visual toggle buttons (Core Glow, Breathing, Auto-Rotate, Blinking)
+ * Setup standard visual toggle switches (Core Glow, Breathing, Auto-Rotate, Blinking)
+ * Works with both button and toggle-switch elements
  * @param {Object} mascot - EmotiveMascot3D instance
  */
 export function setupVisualToggles(mascot) {
-    document.querySelectorAll('[data-action]').forEach(button => {
-        const {action} = button.dataset;
+    document.querySelectorAll('[data-action]').forEach(el => {
+        const {action} = el.dataset;
 
         // Only handle visual toggle actions
         if (!['toggle-glow', 'toggle-breathing', 'toggle-auto-rotate', 'toggle-blink'].includes(action)) {
             return;
         }
 
-        button.addEventListener('click', e => {
+        el.addEventListener('click', () => {
             switch (action) {
             case 'toggle-glow':
                 if (mascot.core3D?.coreGlowEnabled !== false) {
                     mascot.core3D.setCoreGlowEnabled(false);
-                    e.target.classList.remove('active');
+                    el.classList.remove('active');
                 } else {
                     mascot.core3D.setCoreGlowEnabled(true);
-                    e.target.classList.add('active');
+                    el.classList.add('active');
                 }
                 break;
 
             case 'toggle-blink':
                 if (mascot.blinkingEnabled) {
                     mascot.disableBlinking();
-                    e.target.classList.remove('active');
+                    el.classList.remove('active');
                 } else {
                     mascot.enableBlinking();
-                    e.target.classList.add('active');
+                    el.classList.add('active');
                 }
                 break;
 
             case 'toggle-breathing':
                 if (mascot.breathingEnabled) {
                     mascot.disableBreathing();
-                    e.target.classList.remove('active');
+                    el.classList.remove('active');
                 } else {
                     mascot.enableBreathing();
-                    e.target.classList.add('active');
+                    el.classList.add('active');
                 }
                 break;
 
             case 'toggle-auto-rotate':
                 if (mascot.autoRotateEnabled) {
                     mascot.disableAutoRotate();
-                    e.target.classList.remove('active');
+                    el.classList.remove('active');
                 } else {
                     mascot.enableAutoRotate();
-                    e.target.classList.add('active');
+                    el.classList.add('active');
                 }
                 break;
             }
@@ -330,20 +331,27 @@ export function setupTidalLock(mascot, idleDelay = 2000) {
         tidalLockTimeout = setTimeout(returnToTidalLock, idleDelay);
     }
 
+    // Named handler for pointermove (so we can remove it)
+    function onPointerMove(e) {
+        if (e.buttons > 0) onUserInteraction();
+    }
+
+    // Track canvas reference for cleanup
+    let attachedCanvas = null;
+
     // Attach listeners once canvas is ready
     setTimeout(() => {
         const canvas = mascot.core3D?.renderer?.renderer?.domElement;
         if (canvas) {
+            attachedCanvas = canvas;
             canvas.addEventListener('pointerdown', onUserInteraction);
-            canvas.addEventListener('pointermove', e => {
-                if (e.buttons > 0) onUserInteraction();
-            });
+            canvas.addEventListener('pointermove', onPointerMove);
             canvas.addEventListener('pointerup', onUserInteractionEnd);
             canvas.addEventListener('pointerleave', onUserInteractionEnd);
         }
     }, 200);
 
-    // Return controller
+    // Return controller with cleanup methods
     return {
         stop() {
             isEnabled = false;
@@ -355,6 +363,17 @@ export function setupTidalLock(mascot, idleDelay = 2000) {
         },
         start() {
             isEnabled = true;
+        },
+        /** Remove all event listeners (call when destroying mascot) */
+        destroy() {
+            this.stop();
+            if (attachedCanvas) {
+                attachedCanvas.removeEventListener('pointerdown', onUserInteraction);
+                attachedCanvas.removeEventListener('pointermove', onPointerMove);
+                attachedCanvas.removeEventListener('pointerup', onUserInteractionEnd);
+                attachedCanvas.removeEventListener('pointerleave', onUserInteractionEnd);
+                attachedCanvas = null;
+            }
         }
     };
 }

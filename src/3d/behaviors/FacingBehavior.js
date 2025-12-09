@@ -56,22 +56,33 @@ export default class FacingBehavior {
         this.targetQuaternion = new THREE.Quaternion();
         this.calibrationQuaternion = new THREE.Quaternion();
         this.currentQuaternion = new THREE.Quaternion();
+
+        // Additional temp objects (reused in update() hot path)
+        this._lockedFaceVec = new THREE.Vector3();
+        this._targetMatrix = new THREE.Matrix4();
+        this._lookAtOrigin = new THREE.Vector3(0, 0, 0);
+        this._upVector = new THREE.Vector3(0, 1, 0);
+        this._tempEuler = new THREE.Euler(0, 0, 0, 'XYZ');
+        this._defaultPosition = new THREE.Vector3(0, 0, 0);
     }
 
     /**
      * Apply facing orientation to Euler angles
      * @param {number} deltaTime - Time since last frame (ms)
      * @param {Array} euler - Current Euler angles [pitch, yaw, roll] to modify
-     * @param {THREE.Vector3} objectPosition - Object's world position
+     * @param {THREE.Vector3} objectPosition - Object's world position (optional)
      * @returns {Array} Updated Euler angles
      */
-    update(deltaTime, euler, objectPosition = new THREE.Vector3(0, 0, 0)) {
+    update(deltaTime, euler, objectPosition) {
         if (this.strength === 0 || !this.camera) return euler; // Disabled
+
+        // Use default position if not provided (avoids allocation)
+        const objPos = objectPosition || this._defaultPosition;
 
         const dt = deltaTime * 0.001; // Convert ms to seconds
 
         // Calculate direction from object to camera
-        this.tempVector.copy(this.camera.position).sub(objectPosition);
+        this.tempVector.copy(this.camera.position).sub(objPos);
 
         // If camera is at same position as object, use default forward
         if (this.tempVector.lengthSq() < 0.0001) {
@@ -80,45 +91,45 @@ export default class FacingBehavior {
         this.tempVector.normalize();
 
         // Calculate target quaternion that orients lockedFace toward camera
-        // Create a quaternion that rotates from lockedFace to camera direction
-        const lockedFaceVec = new THREE.Vector3(
+        // Reuse cached vector instead of creating new one
+        this._lockedFaceVec.set(
             this.lockedFace[0],
             this.lockedFace[1],
             this.lockedFace[2]
         ).normalize();
 
         // Use lookAt-style rotation (object's Z-axis points toward camera)
-        // Up vector is world Y (prevents roll)
-        const targetMatrix = new THREE.Matrix4();
-        targetMatrix.lookAt(this.tempVector, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0));
-        this.targetQuaternion.setFromRotationMatrix(targetMatrix);
+        // Reuse cached matrix and vectors
+        this._targetMatrix.lookAt(this.tempVector, this._lookAtOrigin, this._upVector);
+        this.targetQuaternion.setFromRotationMatrix(this._targetMatrix);
 
         // Apply calibration rotation (fixed offset, e.g., "Man in the Moon" orientation)
         if (this.calibrationRotation[0] !== 0 ||
             this.calibrationRotation[1] !== 0 ||
             this.calibrationRotation[2] !== 0) {
-            this.calibrationQuaternion.setFromEuler(new THREE.Euler(
+            this._tempEuler.set(
                 this.calibrationRotation[0],
                 this.calibrationRotation[1],
                 this.calibrationRotation[2],
                 'XYZ'
-            ));
+            );
+            this.calibrationQuaternion.setFromEuler(this._tempEuler);
             this.targetQuaternion.multiply(this.calibrationQuaternion);
         }
 
-        // Get current rotation as quaternion
-        const currentEuler = new THREE.Euler(euler[0], euler[1], euler[2], 'XYZ');
-        this.currentQuaternion.setFromEuler(currentEuler);
+        // Get current rotation as quaternion (reuse temp euler)
+        this._tempEuler.set(euler[0], euler[1], euler[2], 'XYZ');
+        this.currentQuaternion.setFromEuler(this._tempEuler);
 
         // Interpolate toward target based on strength and lerpSpeed
         const alpha = Math.min(1.0, this.strength * this.lerpSpeed * dt * 60); // 60fps normalized
         this.currentQuaternion.slerp(this.targetQuaternion, alpha);
 
         // Convert back to Euler angles
-        currentEuler.setFromQuaternion(this.currentQuaternion, 'XYZ');
-        euler[0] = currentEuler.x; // Pitch
-        euler[1] = currentEuler.y; // Yaw
-        euler[2] = currentEuler.z; // Roll
+        this._tempEuler.setFromQuaternion(this.currentQuaternion, 'XYZ');
+        euler[0] = this._tempEuler.x; // Pitch
+        euler[1] = this._tempEuler.y; // Yaw
+        euler[2] = this._tempEuler.z; // Roll
 
         return euler;
     }

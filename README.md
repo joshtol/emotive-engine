@@ -7,201 +7,459 @@
 
 **Real-time character animation for AI interfaces**
 
-Particle-based emotional visualization • Shape morphing • Dynamic gestures •
-Pure Canvas 2D • TypeScript ready
+Canvas 2D & WebGL 3D rendering | Emotional visualization | Shape morphing |
+Dynamic gestures | TypeScript ready
 
-[🎮 Live Demo](https://emotiveengine.com/demo) •
-[Documentation](https://github.com/joshtol/emotive-engine/wiki) •
-[Examples](examples/) •
+[Live Demo](https://emotiveengine.com/demo) | [3D Demos](examples/3d/) |
+[Documentation](https://github.com/joshtol/emotive-engine/wiki) |
 [NPM](https://www.npmjs.com/package/@joshtol/emotive-engine)
 
 </div>
 
-## Quick Start
+---
+
+## Overview
+
+Emotive Engine is an open-source animation library for creating emotionally
+expressive AI avatars and mascots. It provides two rendering modes:
+
+- **2D Mode** - Pure Canvas 2D rendering with particle effects
+- **3D Mode** - WebGL rendering with Three.js, custom shaders, and
+  physically-based materials
+
+Both modes share the same API for emotions, gestures, and shape morphing.
+
+## Installation
 
 ```bash
 npm install @joshtol/emotive-engine
 ```
 
-<table>
-<tr>
-<td width="60%">
+Or include via CDN:
+
+```html
+<!-- 2D Engine -->
+<script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot.umd.js"></script>
+
+<!-- 3D Engine -->
+<script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot-3d.umd.js"></script>
+```
+
+---
+
+## Quick Start
+
+### 2D Mode (Canvas)
 
 ```javascript
 import EmotiveMascot from '@joshtol/emotive-engine';
 
-// Get canvas element
-const canvas = document.getElementById('mascot-canvas');
+const container = document.getElementById('mascot-container');
 
-// Create mascot instance
 const mascot = new EmotiveMascot({
-    canvasId: 'mascot-canvas',
+    canvasId: 'mascot',
     targetFPS: 60,
     defaultEmotion: 'neutral',
 });
 
-// CRITICAL: Initialize with canvas element
-await mascot.init(canvas);
+await mascot.init(container);
 mascot.start();
 
-// Try these commands
-mascot.setEmotion('calm');
-mascot.morphTo('moon');
-mascot.express('breathe');
+// Set emotion
+mascot.setEmotion('joy');
+
+// Trigger gesture
+mascot.express('bounce');
+
+// Morph shape
+mascot.morphTo('heart');
 ```
 
-</td>
-<td width="40%" align="center">
+### 3D Mode (WebGL)
 
-<img src="assets/emotion-demo.gif" alt="Emotion Demo" width="250" />
+```javascript
+import EmotiveMascot3D from '@joshtol/emotive-engine/3d';
 
-</td>
-</tr>
-</table>
+const container = document.getElementById('mascot-container');
+
+const mascot = new EmotiveMascot3D({
+    coreGeometry: 'crystal', // crystal, moon, sun, heart, rough, sphere
+    enableParticles: true,
+    enablePostProcessing: true,
+    defaultEmotion: 'neutral',
+});
+
+mascot.init(container);
+mascot.start();
+
+// Same API as 2D!
+mascot.setEmotion('joy');
+mascot.express('bounce');
+```
+
+---
 
 ## Features
 
-- **Rich Emotions** - Joy, calm, excited, sadness, love, focused, anger, fear,
-  surprise, and more
-- **Shape Morphing** - Circle, heart, star, sun, moon with smooth transitions
-- **Dynamic Gestures** - Bounce, spin, pulse, glow, breathe, expand
-- **Audio Reactive** - Beat detection and frequency visualization
-- **Semantic Performances** - Context-aware emotional choreography (44 built-in)
-- **TypeScript** - Full type definitions included
-- **High Performance** - Smooth on mobile with adaptive quality
+### Emotions
 
-## Real-World Applications
+15 built-in emotional states with unique visual characteristics:
 
-Emotive Engine powers emotional AI interfaces across multiple industries:
-
-| Industry          | Use Case                   | Live Demo                                                   | Value Proposition                                                       |
-| ----------------- | -------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 🛒 **Retail**     | AI Shopping Assistant      | [View Demo](https://emotiveengine.com/use-cases/retail)     | Reduce cart abandonment with empathetic, celebratory interactions       |
-| 📚 **Education**  | Cherokee Language Learning | [View Demo](https://emotiveengine.com/use-cases/cherokee)   | Cultural preservation through engaging, emotionally-responsive tutoring |
-| 🏥 **Healthcare** | Patient Check-in Interface | _Coming Soon_                                               | Improve satisfaction scores with calming, empathetic avatars            |
-| 🏠 **Smart Home** | Voice Assistant Avatar     | [View Demo](https://emotiveengine.com/use-cases/smart-home) | Visual feedback for voice commands with personality                     |
-| 🎮 **Gaming**     | Music-Synced NPCs          | [Examples](examples/)                                       | Characters that react to soundtrack with emotional expressions          |
-
-**Proven in Production:** Live demos at
-[emotiveengine.com](https://emotiveengine.com) with 60 FPS performance on mobile
-devices.
-
-See [full documentation](https://github.com/joshtol/emotive-engine/wiki) for API
-reference, advanced features, and examples.
-
-## How It Works: Musical Time vs Clock Time
-
-Most animation libraries work in milliseconds. Music works in beats. Emotive
-Engine bridges the gap:
-
-<div align="center">
-  <img src="assets/bpm-comparison.gif" alt="BPM Comparison" width="600" />
-</div>
-
-**The Problem:** Hardcode an animation to bounce for 500ms. Perfect at 120 BPM.
-Switch to a 90 BPM song? Everything drifts off-rhythm because 500ms is now 0.75
-beats.
-
-**The Solution:** Emotive Engine uses **musical time** as the atomic unit.
-Specify animations in beats, not milliseconds:
+| Emotion     | Description        | Color Theme   |
+| ----------- | ------------------ | ------------- |
+| `neutral`   | Default calm state | White/silver  |
+| `joy`       | Happy, upbeat      | Warm yellow   |
+| `calm`      | Peaceful, serene   | Soft blue     |
+| `love`      | Affectionate       | Pink/red      |
+| `excited`   | High energy        | Bright orange |
+| `euphoria`  | Peak happiness     | Golden        |
+| `sadness`   | Melancholy         | Deep blue     |
+| `anger`     | Frustrated         | Red           |
+| `fear`      | Anxious            | Purple        |
+| `surprise`  | Startled           | Cyan          |
+| `disgust`   | Repulsed           | Green         |
+| `focused`   | Concentrated       | Cool blue     |
+| `suspicion` | Wary               | Dark amber    |
+| `resting`   | Idle/sleep         | Dim gray      |
+| `glitch`    | Digital artifact   | Neon/static   |
 
 ```javascript
-// Traditional approach (breaks when tempo changes)
-setTimeout(() => bounce(), 500);
+// Set emotion
+mascot.setEmotion('joy');
 
-// Emotive Engine approach (adapts to any tempo)
-mascot.express('bounce'); // Automatically becomes 667ms at 90 BPM
+// Set emotion with undertone modifier
+mascot.setEmotion('joy', 'playful');
+mascot.setEmotion('calm', { undertone: 'peaceful' });
+
+// Update undertone without changing emotion
+mascot.setUndertone('melancholic');
 ```
 
-A "bounce" specified as "1 beat" automatically becomes:
+### Gestures
 
-- 500ms at 120 BPM
-- 667ms at 90 BPM
-- 353ms at 170 BPM
+40+ expressive gestures in three categories:
 
-Change the tempo, everything adjusts. No recalculation needed.
+**Motion Gestures** (blend with current animation):
 
-**For Business/Acquisition Inquiries:**
+- `bounce`, `pulse`, `shake`, `nod`, `sway`, `float`, `wiggle`, `lean`
 
-- 📊 [Business Potential & Revenue Models](docs/BUSINESS_POTENTIAL.md)
-- 🔬 [Technical Innovations & Patent-Eligible Systems](docs/INNOVATIONS.md)
+**Transform Gestures** (override animation):
 
-## Examples Gallery
+- `spin`, `jump`, `morph`, `stretch`, `tilt`, `orbital`, `twist`
 
-Explore interactive examples showing different capabilities:
+**Effect Gestures** (visual effects):
 
-| Example                                                      | Description                                                   | Demo                                                |
-| ------------------------------------------------------------ | ------------------------------------------------------------- | --------------------------------------------------- |
-| **[Interactive Playground](https://emotiveengine.com/demo)** | Full-featured demo with gestures, emotions, music, and combos | [**Try it live →**](https://emotiveengine.com/demo) |
-| **[Rhythm Sync](examples/rhythm-sync-demo.html)**            | Upload music and watch the mascot dance with beat detection   | [View code](examples/rhythm-sync-demo.html)         |
-| **[Basic Usage](examples/basic-usage.html)**                 | Minimal setup showing core emotion and gesture APIs           | [View code](examples/basic-usage.html)              |
-| **[Breathing App](examples/breathing-app.html)**             | Guided breathing exercise with calm animations                | [View code](examples/breathing-app.html)            |
-| **[Custom Gestures](examples/custom-gesture.html)**          | Create your own gesture animations                            | [View code](examples/custom-gesture.html)           |
-| **[LLM Integration](examples/llm-integration/)**             | Connect to Claude AI for dynamic emotional responses          | [View code](examples/llm-integration/)              |
+- `wave`, `flicker`, `burst`, `flash`, `glow`, `breathe`, `expand`, `sparkle`
 
-All examples are vanilla HTML/JS - no build tools required!
+```javascript
+// Single gesture
+mascot.express('bounce');
 
-## Performance & Compatibility
+// Gesture chain (sequential)
+mascot.chain('rise'); // breathe > sway+lean+tilt
+
+// Custom chain
+mascot.chain('bounce > spin > pulse+sparkle');
+
+// Simultaneous gestures (use + separator)
+mascot.chain('sway+breathe+float');
+```
+
+**Built-in Chain Presets:**
+
+- `rise` - breathe > sway+lean+tilt
+- `flow` - sway > lean+tilt > spin > bounce
+- `burst` - jump > nod > shake > flash
+- `drift` - sway+breathe+float+drift
+- `chaos` - shake+shake > spin+flash > bounce+pulse
+- `radiance` - sparkle > pulse+flicker > shimmer
+
+### 3D Geometries
+
+Available geometry types for 3D mode:
+
+| Geometry      | Description                           | Material                       |
+| ------------- | ------------------------------------- | ------------------------------ |
+| `crystal`     | Faceted hexagonal crystal (OBJ model) | Subsurface scattering shader   |
+| `rough`       | Raw crystal formation (OBJ model)     | Subsurface scattering shader   |
+| `heart`       | Heart-shaped crystal (OBJ model)      | Subsurface scattering shader   |
+| `moon`        | Realistic lunar surface with texture  | Custom moon shader with phases |
+| `sun`         | Solar sphere with corona effects      | Emissive shader                |
+| `sphere`      | Smooth sphere                         | Standard material              |
+| `torus`       | Donut shape                           | Standard material              |
+| `icosahedron` | 20-faced polyhedron                   | Standard material              |
+
+```javascript
+// Create with specific geometry
+const mascot = new EmotiveMascot3D({
+    coreGeometry: 'crystal',
+});
+
+// Morph between geometries at runtime
+mascot.morphTo('heart');
+mascot.morphTo('sphere');
+```
+
+---
+
+## Configuration
+
+### 2D Configuration
+
+```javascript
+const mascot = new EmotiveMascot({
+    canvasId: 'mascot',
+    targetFPS: 60,
+    defaultEmotion: 'neutral',
+    enableParticles: true,
+    maxParticles: 300,
+    adaptive: true, // Auto-adjust quality for performance
+});
+```
+
+### 3D Configuration
+
+```javascript
+const mascot = new EmotiveMascot3D({
+    // Geometry
+    coreGeometry: 'crystal', // crystal, moon, sun, heart, rough, sphere, etc.
+    materialVariant: null, // 'multiplexer' for advanced shaders
+
+    // Rendering
+    enableParticles: true,
+    enablePostProcessing: true, // Bloom, color grading
+    enableShadows: false,
+
+    // Camera
+    enableControls: true, // Mouse/touch orbit controls
+    cameraDistance: 3,
+    fov: 45,
+    minZoom: 1.5,
+    maxZoom: 10,
+
+    // Animation
+    autoRotate: true, // Auto-rotate camera
+    autoRotateSpeed: 0.5,
+    enableBlinking: true,
+    enableBreathing: true,
+
+    // Defaults
+    targetFPS: 60,
+    defaultEmotion: 'neutral',
+    maxParticles: 300,
+});
+```
+
+---
+
+## API Reference
+
+### EmotiveMascot / EmotiveMascot3D
+
+Both classes share this core API:
+
+#### Lifecycle
+
+```javascript
+mascot.init(container); // Initialize with DOM element
+mascot.start(); // Start animation loop
+mascot.stop(); // Stop animation loop
+mascot.destroy(); // Clean up resources
+```
+
+#### Emotions
+
+```javascript
+mascot.setEmotion(name); // Set emotion by name
+mascot.setEmotion(name, undertone); // With undertone string
+mascot.setEmotion(name, { undertone }); // With options object
+mascot.setUndertone(undertone); // Change undertone only
+```
+
+#### Gestures
+
+```javascript
+mascot.express(gestureName); // Trigger single gesture
+mascot.chain(chainName); // Execute gesture chain
+mascot.chain([...gestures]); // Custom gesture array
+```
+
+#### Shape Morphing
+
+```javascript
+mascot.morphTo(shapeName); // Morph to new shape
+```
+
+### 3D-Specific Methods
+
+```javascript
+// Auto-rotation
+mascot.enableAutoRotate();
+mascot.disableAutoRotate();
+mascot.autoRotateEnabled; // boolean getter
+
+// Particles
+mascot.enableParticles();
+mascot.disableParticles();
+mascot.particlesEnabled; // boolean getter
+
+// Blinking
+mascot.enableBlinking();
+mascot.disableBlinking();
+mascot.blinkingEnabled; // boolean getter
+
+// Breathing
+mascot.enableBreathing();
+mascot.disableBreathing();
+mascot.breathingEnabled; // boolean getter
+
+// Wobble effects
+mascot.enableWobble();
+mascot.disableWobble();
+mascot.wobbleEnabled; // boolean getter
+
+// Camera presets
+mascot.setCameraPreset('front', 1000); // front, side, top, angle, back
+```
+
+### Moon Phase Control (3D)
+
+```javascript
+import {
+    setMoonPhase,
+    animateMoonPhase,
+    MOON_PHASES,
+} from '@joshtol/emotive-engine/3d';
+
+// Instant phase change
+setMoonPhase(mascot.core3D, MOON_PHASES.FULL);
+setMoonPhase(mascot.core3D, 0.5); // 0-1 progress
+
+// Animated phase transition
+animateMoonPhase(mascot.core3D, MOON_PHASES.CRESCENT_WAXING, 2000);
+
+// Available phases:
+// NEW, CRESCENT_WAXING, FIRST_QUARTER, GIBBOUS_WAXING,
+// FULL, GIBBOUS_WANING, LAST_QUARTER, CRESCENT_WANING
+```
+
+### Blend Mode Control (3D)
+
+```javascript
+import { blendModeNames } from '@joshtol/emotive-engine/3d';
+
+// Available modes (Photoshop-style):
+// Multiply, Linear Burn, Color Burn, Color Dodge, Screen,
+// Overlay, Add, Soft Light, Hard Light, Vivid Light,
+// Linear Light, Difference, Exclusion, Darken, Lighten,
+// Subtract, Divide, Pin Light
+```
+
+---
+
+## Examples
+
+### Interactive Demos
+
+| Demo              | Description                         | Path                               |
+| ----------------- | ----------------------------------- | ---------------------------------- |
+| **3D Crystal**    | Crystal geometry with SSS shader    | `examples/3d/crystal-demo.html`    |
+| **Blood Moon**    | Lunar eclipse with tidal locking    | `examples/3d/blood-moon-demo.html` |
+| **Solar Eclipse** | Sun with corona and eclipse effects | `examples/3d/sun-demo.html`        |
+| **3D Playground** | Full-featured 3D demo               | `examples/3d/3d-demo.html`         |
+| **2D Playground** | Classic 2D particle demo            | `examples/basic-usage.html`        |
+| **Rhythm Sync**   | Beat detection + animation          | `examples/rhythm-sync-demo.html`   |
+
+### Running Examples Locally
+
+```bash
+# Clone the repo
+git clone https://github.com/joshtol/emotive-engine.git
+cd emotive-engine
+
+# Install dependencies
+npm install
+
+# Build the library
+npm run build
+
+# Start local server
+npm run local
+
+# Open http://localhost:3001/examples/3d/crystal-demo.html
+```
+
+---
+
+## Performance
+
+### Recommended Settings
+
+| Device  | Particles | Post-Processing | Shadows  |
+| ------- | --------- | --------------- | -------- |
+| Desktop | 300-500   | Enabled         | Optional |
+| Laptop  | 200-300   | Enabled         | Disabled |
+| Mobile  | 100-200   | Disabled        | Disabled |
 
 ### Browser Support
 
-- **Chrome/Edge**: 90+ ✅
-- **Firefox**: 88+ ✅
-- **Safari**: 14+ ✅
-- **Mobile**: iOS Safari 14+, Chrome Android 90+ ✅
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+- Mobile: iOS Safari 14+, Chrome Android 90+
 
-### Performance Guidelines
+### Tips
 
-- **Recommended particle count**: 200-500 particles for 60fps on desktop
-- **Mobile**: Automatically reduces to 100-200 particles
-- **Canvas size**: Optimized for 300x300 to 800x800px
-- **Adaptive quality**: Automatically scales based on device capabilities
+- Disable post-processing on mobile for 60fps
+- Use `enableShadows: false` unless specifically needed
+- Lower `maxParticles` on constrained devices
+- 3D mode requires WebGL 2.0 support
 
-### What's included
+---
 
-- Pure Canvas 2D rendering (no WebGL dependency)
-- Zero framework dependencies
-- Fully tree-shakeable ES modules
-- TypeScript definitions included
-- Source maps for debugging
+## Architecture
 
-## Documentation
+```
+emotive-engine/
+├── src/
+│   ├── core/               # Shared core systems
+│   │   ├── emotions/       # Emotion definitions
+│   │   ├── gestures/       # Gesture definitions
+│   │   └── particles/      # 2D particle system
+│   ├── 3d/                 # WebGL 3D renderer
+│   │   ├── geometries/     # 3D shape definitions
+│   │   ├── shaders/        # GLSL shaders
+│   │   ├── effects/        # Visual effects (SSS, eclipse)
+│   │   ├── particles/      # 3D particle system
+│   │   └── behaviors/      # Animation behaviors
+│   └── index.js            # 2D entry point
+├── dist/                   # Built files
+├── examples/               # Demo files
+└── types/                  # TypeScript definitions
+```
 
-- [API Reference](https://github.com/joshtol/emotive-engine/wiki) - Complete API
-  docs
-- [Examples](examples/) - Interactive code examples
-- [Technical Innovations](docs/INNOVATIONS.md) - Patent-eligible systems
-- [Business Potential](docs/BUSINESS_POTENTIAL.md) - Market analysis & revenue
-  models
-- [Changelog](CHANGELOG.md) - Version history with innovation timestamps
+---
 
 ## Contributing
 
-We welcome contributions from the community! 🎉
+We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for
+guidelines.
 
-- **[Contributing Guide](./CONTRIBUTING.md)** - Development setup, coding
-  standards, and workflow
-- **[Code of Conduct](./CODE_OF_CONDUCT.md)** - Our community standards
-- **[Contributors](./CONTRIBUTORS.md)** - Hall of fame for our contributors
+```bash
+# Development build (with watch)
+npm run build:watch
 
-### Quick Start for Contributors
+# Run tests
+npm test
 
-1. Fork and clone the repository
-2. Install dependencies: `npm install`
-3. Run development build: `npm run build:dev`
-4. Run tests: `npm test`
-5. See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines
+# Lint code
+npm run lint:fix
 
-Found a bug? Have a feature request? Open an issue on GitHub!
+# Build for production
+npm run build
+```
 
-## Community
-
-- **[GitHub Discussions](https://github.com/joshtol/emotive-engine/discussions)** -
-  Ask questions, share ideas
-- **[Issue Tracker](https://github.com/joshtol/emotive-engine/issues)** - Report
-  bugs, request features
-- **[Twitter](https://twitter.com/search?q=%23EmotiveEngine)** - Follow
-  `#EmotiveEngine` for updates
+---
 
 ## License
 
@@ -210,13 +468,6 @@ MIT License - see [LICENSE.md](./LICENSE.md)
 ---
 
 <div align="center">
-
-**Meta: Made with Emotive Engine**
-
-The assets in this README were created using the engine itself:
-
-- [Hero Banner Generator](examples/hero-banner-capture.html) (HTML + live code)
-- [Demo GIF Generator](examples/emotion-demo-capture.html) (HTML + live code)
 
 Created by [Joshua Tollette](https://github.com/joshtol)
 

@@ -634,68 +634,29 @@ button.toggle-btn.active::before {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   VISUAL CONTROLS - Clean toggle list
-   Simple, scannable rows - no gimmicks
+   VISUAL CONTROLS - Uses toggle-control pattern (same as Soul Animation)
    ═══════════════════════════════════════════════════════════════════════════ */
-.visual-controls .button-grid {
+.visual-controls .section-content {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0;
 }
 
-.visual-controls .button-grid button {
-    all: unset;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 8px 0;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    transition: color 0.15s ease;
+/* Remove bottom margin on toggle-controls inside visual-controls for tighter spacing */
+.visual-controls .toggle-control {
+    margin-bottom: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: clamp(8px, 0.8vw, 10px) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.visual-controls .button-grid button:hover {
-    color: rgba(255, 255, 255, 0.9);
+.visual-controls .toggle-control:last-child {
+    border-bottom: none;
 }
 
-.visual-controls .button-grid button.active {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-/* Dot indicator on right side */
-.visual-controls .button-grid button::after {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    transition: background 0.15s ease, box-shadow 0.15s ease;
-}
-
-.visual-controls .button-grid button.active::after {
-    background: var(--accent);
-    box-shadow: 0 0 6px var(--accent);
-}
-
-/* No checkmark needed - dot indicator is cleaner */
-.visual-controls .button-grid button.toggle-btn::before {
-    display: none;
-}
-
-/* Mobile: larger touch targets */
-@media (max-width: 1000px) {
-    .visual-controls .button-grid button {
-        padding: 12px 0;
-        font-size: 14px;
-    }
-
-    .visual-controls .button-grid button::after {
-        width: 8px;
-        height: 8px;
-    }
+.visual-controls .toggle-control:first-child {
+    padding-top: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

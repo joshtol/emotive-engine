@@ -85,3 +85,12 @@ site/playwright/.cache/
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
 best.code-workspace
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Work-in-progress features (not ready for release)
+examples/3d/black-hole-demo.html
+src/3d/geometries/BlackHole.js

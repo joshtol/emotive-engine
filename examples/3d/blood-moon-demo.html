@@ -359,8 +359,6 @@
 
                     if (progress < 1.0) {
                         requestAnimationFrame(animateEclipse);
-                    } else {
-                        console.log('Blood moon eclipse animation complete');
                     }
                 }
 
@@ -517,7 +515,6 @@
                 'layer',
                 MAX_BLEND_LAYERS
             );
-            console.log(`✅ Layer system initialized - ${layerGroup.getLayers().length} layers`);
         }, 1000);
     </script>
 </body>
