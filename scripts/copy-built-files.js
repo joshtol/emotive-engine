@@ -40,6 +40,15 @@ const PUBLIC_FILES_TO_COPY = [
     {
         src: 'emotive-mascot.lean.umd.js.map',
         dest: 'emotive-mascot.lean.umd.js.map'
+    },
+    // 3D Engine
+    {
+        src: 'emotive-mascot-3d.umd.js',
+        dest: 'emotive-engine-3d.js'  // 3D WebGL engine
+    },
+    {
+        src: 'emotive-mascot-3d.umd.js.map',
+        dest: 'emotive-mascot-3d.umd.js.map'
     }
 ];
 

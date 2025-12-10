@@ -30,8 +30,8 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
     case 'moon':
         return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant);
     case 'crystal':
-        // Uses CRYSTAL_DEFAULT_UNIFORMS - no overrides needed
-        return createCrystalMaterial(glowColor, glowIntensity, 'crystal', {});
+        // Uses quartz SSS preset for clear crystal appearance
+        return createCrystalMaterial(glowColor, glowIntensity, 'crystal', { sssPreset: 'quartz' });
     case 'rough':
         // Custom crystal appearance for rough stone, uses crystal SSS preset
         return createCrystalMaterial(glowColor, glowIntensity, 'rough', {

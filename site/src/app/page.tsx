@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import ScheduleModal from '@/components/ScheduleModal'
-import LazyMascot from '@/components/LazyMascot'
+import MascotRenderer from '@/components/MascotRenderer'
 import LazyFeaturesShowcase from '@/components/LazyFeaturesShowcase'
+import type { MascotMode } from '@/components/hooks/useMascotMode'
 
 /**
  * Optimized HomePage with code splitting and progressive loading
@@ -32,6 +33,7 @@ export default function HomePage() {
   const tickingRef = useRef(false)
   const mascotContainerRef = useRef<HTMLDivElement>(null)
   const [mascot, setMascot] = useState<any>(null)
+  const [mascotMode, setMascotMode] = useState<MascotMode>('3d')
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
 
   // Scroll handler for mascot position and z-index
@@ -45,19 +47,42 @@ export default function HomePage() {
       const viewportWidth = window.innerWidth
       const isMobile = viewportWidth < 768
 
-      // Position calculation
-      const baseXOffset = isMobile ? 0 : -viewportWidth * 0.38
-      const yOffset = isMobile
-        ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
-        : (scrollY - viewportHeight * 0.1) * 0.5   // Normal on desktop
-      const wavelength = 600
-      const amplitude = isMobile
-        ? Math.min(80, viewportWidth * 0.15)
-        : Math.min(100, viewportWidth * 0.08)
-      const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength))
-
+      // Position calculation - apply for both 2D and 3D modes
+      // Desktop: Center mascot between left screen edge and hero text
+      // Mobile: Base position at 35% from top (set via CSS), scroll moves it down
       if (typeof mascot.setPosition === 'function') {
-        mascot.setPosition(xOffset, yOffset, 0)
+        // Calculate the center point between left edge and hero text (desktop only)
+        const heroTextStart = Math.max(0, (viewportWidth - 1000) / 2)
+        const gapCenter = heroTextStart / 2
+
+        // Mobile: Base position is 25% from top. Canvas center is 50%.
+        // Offset from center = 25% - 50% = -25% = -0.25 * vh
+        const mobileBaseYOffset = -viewportHeight * 0.25
+
+        if (mascotMode === '2d') {
+          // 2D mode: Full viewport canvas with x/y offsets from center
+          const baseXOffset = isMobile ? 0 : gapCenter - viewportWidth / 2
+          const yOffset = isMobile
+            ? mobileBaseYOffset + scrollY * 0.5  // Start at 35%, move down with scroll
+            : (scrollY - viewportHeight * 0.1) * 0.5
+          const wavelength = 600
+          const amplitude = isMobile
+            ? Math.min(80, viewportWidth * 0.15)
+            : Math.min(100, viewportWidth * 0.08)
+          const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength))
+          mascot.setPosition(xOffset, yOffset, 0)
+        } else {
+          // 3D mode: Container position set by CSS, just add scroll offset
+          const yOffset = isMobile
+            ? scrollY * 0.4  // Move down with scroll (base position set by CSS at 35%)
+            : (scrollY - viewportHeight * 0.1) * 0.4
+          const wavelength = 600
+          const amplitude = isMobile
+            ? Math.min(60, viewportWidth * 0.1)
+            : Math.min(80, viewportWidth * 0.06)
+          const xOffset = amplitude * Math.sin(scrollY / wavelength)
+          mascot.setPosition(xOffset, yOffset, 0)
+        }
       }
 
       // Z-index transition - only update if actually changed to prevent unnecessary re-renders
@@ -129,17 +154,27 @@ export default function HomePage() {
       }
       tickingRef.current = false
     }
-  }, [mascot])
+  }, [mascot, mascotMode])
+
+  // Handle mascot loaded callback
+  const handleMascotLoaded = (loadedMascot: any, mode: MascotMode) => {
+    setMascot(loadedMascot)
+    setMascotMode(mode)
+  }
 
 
   return (
     <>
       <EmotiveHeader />
 
-      {/* Lazy-loaded mascot with Intersection Observer */}
-      <LazyMascot
-        containerRef={mascotContainerRef}
-        onMascotLoaded={setMascot}
+      {/* Unified mascot renderer - 3D by default, with 2D toggle */}
+      <MascotRenderer
+        onMascotLoaded={handleMascotLoaded}
+        onModeChange={setMascotMode}
+        coreGeometry="crystal"
+        autoRotate={true}
+        enableControls={false}
+        showModeToggle={true}
       />
 
       <main style={{
@@ -214,7 +249,7 @@ export default function HomePage() {
                 position: 'relative',
                 zIndex: 10,
               }}>
-                Open Source • Pure Canvas 2D • Emotional States • Rich Gestures
+                Open Source • Canvas 2D & WebGL 3D • Emotional States • Rich Gestures
               </div>
 
               <h1 style={{
@@ -242,7 +277,7 @@ export default function HomePage() {
                 maxWidth: '700px',
                 margin: '0 auto 3rem',
               }}>
-                Create expressive user interfaces with real-time particle animations. Pure Canvas 2D, 60fps performance, and emotional state system for AI-powered interactions.
+                Create expressive AI avatars with real-time WebGL 3D rendering. Crystal geometries, particle effects, 60fps performance, and emotional state system for immersive interactions.
               </p>
 
               {/* Branding Callout */}
@@ -259,7 +294,7 @@ export default function HomePage() {
                 maxWidth: '650px',
                 boxShadow: '0 4px 20px rgba(102,126,234,0.15)',
               }}>
-                <strong style={{ color: '#a5b4fc' }}>✨ MIT Licensed:</strong> Open source animation engine with customizable particles, shapes, colors, and behaviors. Built for React, Vue, vanilla JS, and TypeScript.
+                <strong style={{ color: '#a5b4fc' }}>✨ MIT Licensed:</strong> Open source 3D animation engine with crystal geometries, subsurface scattering, and customizable behaviors. Built for React, Vue, vanilla JS, and TypeScript.
               </div>
 
               {/* CTA Buttons */}

@@ -237,25 +237,32 @@ export class UnrealBloomPassAlpha extends Pass {
     }
 
     dispose() {
-        for (let i = 0; i < this.renderTargetsHorizontal.length; i++) {
-            this.renderTargetsHorizontal[i].dispose();
+        // Safely dispose render targets
+        if (this.renderTargetsHorizontal) {
+            for (let i = 0; i < this.renderTargetsHorizontal.length; i++) {
+                this.renderTargetsHorizontal[i]?.dispose();
+            }
         }
 
-        for (let i = 0; i < this.renderTargetsVertical.length; i++) {
-            this.renderTargetsVertical[i].dispose();
+        if (this.renderTargetsVertical) {
+            for (let i = 0; i < this.renderTargetsVertical.length; i++) {
+                this.renderTargetsVertical[i]?.dispose();
+            }
         }
 
-        this.renderTargetBright.dispose();
+        this.renderTargetBright?.dispose();
 
-        for (let i = 0; i < this.separableBlurMaterials.length; i++) {
-            this.separableBlurMaterials[i].dispose();
+        if (this.separableBlurMaterials) {
+            for (let i = 0; i < this.separableBlurMaterials.length; i++) {
+                this.separableBlurMaterials[i]?.dispose();
+            }
         }
 
-        this.compositeMaterial.dispose();
-        this.blendMaterial.dispose();
-        this.basic.dispose();
+        this.compositeMaterial?.dispose();
+        this.blendMaterial?.dispose();
+        this.basic?.dispose();
 
-        this.fsQuad.dispose();
+        this.fsQuad?.dispose();
     }
 
     /**
@@ -325,7 +332,9 @@ export class UnrealBloomPassAlpha extends Pass {
             this.basic.map = readBuffer.texture;
 
             renderer.setRenderTarget(null);
-            renderer.clear();
+            // CRITICAL: Do NOT clear when rendering to screen - this preserves CSS background transparency
+            // The scene is already rendered to readBuffer with proper transparency
+            // Clearing here would fill with black, destroying the alpha channel
             this.fsQuad.render(renderer);
         }
 

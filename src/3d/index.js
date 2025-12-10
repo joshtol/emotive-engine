@@ -184,7 +184,10 @@ export class EmotiveMascot3D {
             parent.replaceChild(this.container, containerOrCanvas);
         } else {
             this.container = containerOrCanvas;
-            this.container.style.position = 'relative';
+            // Only set position if not already set (don't override fixed/absolute)
+            if (!this.container.style.position || this.container.style.position === 'static') {
+                this.container.style.position = 'relative';
+            }
         }
 
         // Create Canvas2D for particles (Layer 1 - back)
@@ -195,6 +198,9 @@ export class EmotiveMascot3D {
         this.canvas2D.style.position = 'absolute';
         this.canvas2D.style.top = '0';
         this.canvas2D.style.left = '0';
+        this.canvas2D.style.width = '100%';
+        this.canvas2D.style.height = '100%';
+        this.canvas2D.style.background = 'transparent';
         this.canvas2D.style.zIndex = '1';
         // Disable pointer events - let WebGL canvas handle all interaction
         this.canvas2D.style.pointerEvents = 'none';
@@ -208,12 +214,21 @@ export class EmotiveMascot3D {
         this.webglCanvas.style.position = 'absolute';
         this.webglCanvas.style.top = '0';
         this.webglCanvas.style.left = '0';
+        this.webglCanvas.style.width = '100%';
+        this.webglCanvas.style.height = '100%';
+        this.webglCanvas.style.background = 'transparent';
         this.webglCanvas.style.zIndex = '2';
-        // ENABLE pointer events for camera controls (mouse/touch interaction)
-        // Note: This means the WebGL canvas captures clicks, not the particle layer
-        this.webglCanvas.style.pointerEvents = 'auto';
-        // Prevent browser touch gestures (scroll, zoom) on canvas
-        this.webglCanvas.style.touchAction = 'none';
+        // Only enable pointer events if controls are enabled (for orbit camera)
+        // Otherwise, let events pass through to allow page scrolling
+        if (this.config.enableControls) {
+            this.webglCanvas.style.pointerEvents = 'auto';
+            // Prevent browser touch gestures (scroll, zoom) on canvas when controls active
+            this.webglCanvas.style.touchAction = 'none';
+        } else {
+            // Disable all pointer/touch events so scrolling works through the canvas
+            this.webglCanvas.style.pointerEvents = 'none';
+            this.webglCanvas.style.touchAction = 'auto';
+        }
         this.container.appendChild(this.webglCanvas);
     }
 
@@ -338,6 +353,9 @@ export class EmotiveMascot3D {
      * @param {Object|string|null} options - Options object or undertone string
      */
     setEmotion(emotion, options) {
+        // Guard against calls after destroy
+        if (!this.eventManager || !this.eventManager._listeners) return;
+
         this.emotion = emotion;
 
         // Handle options parameter (can be undertone string or options object)
@@ -394,6 +412,9 @@ export class EmotiveMascot3D {
      * @param {string} gestureName - Gesture name
      */
     express(gestureName) {
+        // Guard against calls after destroy
+        if (!this.eventManager || !this.eventManager._listeners) return;
+
         // Apply gesture to 3D core
         if (this.core3D) {
             this.core3D.playGesture(gestureName);
@@ -725,6 +746,43 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Set position offset of the mascot (moves the container)
+     * Compatible with 2D mascot's positioning API for scroll-based movement
+     * @param {number} x - X offset from base position (pixels)
+     * @param {number} y - Y offset from base position (pixels)
+     * @param {number} z - Z offset (unused for container positioning)
+     */
+    setPosition(x, y, z = 0) {
+        if (!this.container) return;
+
+        // Store position for reference
+        this.position = { x, y, z };
+
+        // Use transform only to avoid conflicting with CSS position properties
+        // The container is positioned with CSS (top: 50%, left: X%, transform: translateY(-50%))
+        // We combine the base centering transform with our offset
+        const isMobile = window.innerWidth < 768;
+
+        if (isMobile) {
+            // Mobile: container is centered (top: 50%, left: 50%, transform: translate(-50%, -50%))
+            // Apply offset from center using transform only
+            this.container.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+        } else {
+            // Desktop: container is at left: 12%, top: 50%, transform: translateY(-50%)
+            // Use translate for both x and y offset to keep base position intact
+            this.container.style.transform = `translate(${x}px, calc(-50% + ${y}px))`;
+        }
+    }
+
+    /**
+     * Get current position
+     * @returns {{x: number, y: number, z: number}}
+     */
+    getPosition() {
+        return this.position || { x: 0, y: 0, z: 0 };
+    }
+
+    /**
      * Cleanup
      */
     destroy() {
@@ -747,6 +805,14 @@ export class EmotiveMascot3D {
         }
         if (this.particleSystem) {
             this.particleSystem.destroy();
+        }
+
+        // Remove canvas elements from DOM
+        if (this.webglCanvas && this.webglCanvas.parentNode) {
+            this.webglCanvas.parentNode.removeChild(this.webglCanvas);
+        }
+        if (this.canvas2D && this.canvas2D.parentNode) {
+            this.canvas2D.parentNode.removeChild(this.canvas2D);
         }
 
         // Null out DOM element references to prevent memory leaks

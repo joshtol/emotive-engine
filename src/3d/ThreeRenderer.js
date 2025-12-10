@@ -267,7 +267,7 @@ export class ThreeRenderer {
             // Try EXR first
             try {
                 const exrLoader = new EXRLoader();
-                const texture = await exrLoader.loadAsync('/public/hdri/studio_01.exr');
+                const texture = await exrLoader.loadAsync('/hdri/studio_01.exr');
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 this.envMap = pmremGenerator.fromEquirectangular(texture).texture;
                 texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (10-22MB GPU memory leak fix)
@@ -343,6 +343,9 @@ export class ThreeRenderer {
 
         // Render pass - base scene render
         const renderPass = new RenderPass(this.scene, this.camera);
+        // CRITICAL: Set clear color to transparent for CSS background blending
+        renderPass.clearColor = new THREE.Color(0x000000);
+        renderPass.clearAlpha = 0;  // Transparent background
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)

@@ -56,11 +56,13 @@ export function setCrystalSmoothNormals(smooth) {
  * @returns {Promise<THREE.BufferGeometry>} Crystal geometry
  */
 function loadCrystalGeometry() {
-    return new Promise(resolve => {
+    console.log('[OBJ] Loading crystal geometry...');
+    return new Promise((resolve, reject) => {
         const loader = new OBJLoader();
         loader.load(
             '/assets/models/Crystal/crystal.obj',
             obj => {
+                console.log('[OBJ] Crystal OBJ loaded successfully');
                 let geometry = null;
                 obj.traverse(child => {
                     if (child.isMesh && child.geometry) {

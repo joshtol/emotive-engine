@@ -5,9 +5,8 @@
 
 import { createServer } from 'http';
 import { readFileSync, existsSync } from 'fs';
-import { join, extname } from 'path';
+import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { gzipSync } from 'zlib';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,7 +16,7 @@ const SITE_DIR = join(__dirname, '../site');
 const PORT = 3000;
 
 // Cache duration in seconds for different file types
-const getCacheHeaders = (ext) => {
+const getCacheHeaders = ext => {
     const cacheHeaders = {};
     
     // Static assets - long cache
@@ -67,22 +66,28 @@ const mimeTypes = {
 const server = createServer((req, res) => {
     // Remove query parameters from URL
     const url = new URL(req.url, `http://${req.headers.host}`);
-    const pathname = url.pathname;
+    const {pathname} = url;
     
     let filePath = join(SITE_DIR, pathname === '/' ? '/index.html' : pathname);
-    
+
     // Security: prevent directory traversal
     if (!filePath.startsWith(SITE_DIR)) {
         res.writeHead(403, { 'Content-Type': 'text/plain' });
         res.end('Forbidden');
         return;
     }
-    
-    // Check if file exists
+
+    // Check if file exists, or try public/ directory (matches Next.js behavior)
     if (!existsSync(filePath)) {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('File not found');
-        return;
+        // Try public/ directory for static assets
+        const publicPath = join(SITE_DIR, 'public', pathname);
+        if (existsSync(publicPath)) {
+            filePath = publicPath;
+        } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('File not found');
+            return;
+        }
     }
     
     try {
@@ -133,12 +138,12 @@ const server = createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`🚀 Local development server running at:`);
+    console.log('🚀 Local development server running at:');
     console.log(`   http://localhost:${PORT}`);
     console.log(`   http://127.0.0.1:${PORT}`);
     console.log(`\n📁 Serving files from: ${SITE_DIR}`);
-    console.log(`\n🔥 Firebase integration ready`);
-    console.log(`\nPress Ctrl+C to stop the server`);
+    console.log('\n🔥 Firebase integration ready');
+    console.log('\nPress Ctrl+C to stop the server');
 });
 
 // Handle graceful shutdown
