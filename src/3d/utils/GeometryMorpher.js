@@ -58,6 +58,36 @@ export class GeometryMorpher {
         this.hasSwappedGeometry = false; // Reset swap flag
         this.isPausedAtSwap = false; // Reset pause flag
         this.pausedAtTime = 0;
+        this.isGrowIn = false; // Not a grow-in animation
+
+        return true;
+    }
+
+    /**
+     * Start a grow-in animation from scale 0 to 1 (no geometry swap)
+     * Used for initial appearance of mascots
+     * @param {string} geometryType - Current geometry type
+     * @param {number} duration - Duration in milliseconds (default: 500ms for snappy pop)
+     * @returns {boolean} True if grow-in started
+     */
+    growIn(geometryType, duration = 500) {
+        // If already transitioning, skip
+        if (this.isTransitioning) {
+            return false;
+        }
+
+        // Start grow-in transition (just the grow phase, no shrink)
+        this.currentGeometryType = geometryType;
+        this.targetGeometryType = geometryType; // Same geometry
+        this.morphStartTime = Date.now();
+        this.morphDuration = duration;
+        this.morphProgress = 0;
+        this.visualProgress = 0;
+        this.isTransitioning = true;
+        this.hasSwappedGeometry = true; // Already "swapped" - skip swap logic
+        this.isPausedAtSwap = false;
+        this.pausedAtTime = 0;
+        this.isGrowIn = true; // Flag for grow-only animation
 
         return true;
     }
@@ -167,6 +197,16 @@ export class GeometryMorpher {
      * @returns {number} Scale multiplier
      */
     calculateScaleMultiplier(progress) {
+        // For grow-in animations, just scale 0→1 (no shrink phase)
+        if (this.isGrowIn) {
+            // Use easeOutBack for bouncy pop-in effect
+            // easeOutBack: overshoots slightly then settles
+            const c1 = 1.70158;
+            const c3 = c1 + 1;
+            const eased = 1 + c3 * Math.pow(progress - 1, 3) + c1 * Math.pow(progress - 1, 2);
+            return Math.max(0, eased); // Clamp to prevent negative scale
+        }
+
         // Shrink phase (0 to 0.5): scale goes from 1.0 to 0.0
         // Grow phase (0.5 to 1.0): scale goes from 0.0 to 1.0
         // This creates a smooth "blink out, swap, blink in" effect

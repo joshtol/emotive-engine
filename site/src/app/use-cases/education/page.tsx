@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -10,26 +10,21 @@ import ScheduleModal from '@/components/ScheduleModal'
 import AILearningAssistant from './AILearningAssistant'
 import LearningSimulation from './LearningSimulation'
 import UseCaseNav from '@/components/UseCaseNav'
+import MascotRenderer from '@/components/MascotRenderer'
+import { MascotMode } from '@/components/hooks/useMascotMode'
 
 export default function EducationPage() {
   const router = useRouter()
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const mascotRef = useRef<any>(null)
   const [mascot, setMascot] = useState<any>(null)
+  const [mascotMode, setMascotMode] = useState<MascotMode>('3d')
   const [isMobile, setIsMobile] = useState(false)
-  const [isClient, setIsClient] = useState(false)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
-  const initializingRef = useRef(false)
-  const initializedRef = useRef(false)
   const lastGestureRef = useRef<number>(-1)
   const rafRef = useRef<number | null>(null)
   const tickingRef = useRef(false)
-  const lastZIndexRef = useRef(100)
 
   // Detect mobile
   useEffect(() => {
-    setIsClient(true)
     setIsMobile(window.innerWidth < 768)
 
     const handleResize = () => {
@@ -45,258 +40,57 @@ export default function EducationPage() {
     window.scrollTo(0, 0)
   }, [])
 
-  // Initialize scroll-following mascot
-  useEffect(() => {
-    // Wait for client-side hydration before initializing
-    if (!isClient) return
+  // Handle mascot loaded callback
+  const handleMascotLoaded = useCallback((mascotInstance: any, mode: MascotMode) => {
+    setMascot(mascotInstance)
+    setMascotMode(mode)
 
-    let cancelled = false
-
-    const initializeEngine = async () => {
-      if (!canvasRef.current || cancelled) return
-
-      if (initializedRef.current) return
-      if (initializingRef.current) return
-      if (mascotRef.current) return
-
-      initializingRef.current = true
-
-      try {
-        const canvas = canvasRef.current
-        const vw = window.innerWidth
-        const vh = window.innerHeight
-        const isMobileDevice = window.innerWidth < 768
-
-        const rect = canvas.getBoundingClientRect()
-        const dpr = window.devicePixelRatio || 1
-
-        canvas.setAttribute('width', Math.round(rect.width * dpr).toString())
-        canvas.setAttribute('height', Math.round(rect.height * dpr).toString())
-
-        // Load EmotiveMascot - check window first
-        let EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
-
-        if (!EmotiveMascot) {
-          const existingScript = document.querySelector('script[src^="/emotive-engine.js"]')
-          let script = existingScript as HTMLScriptElement
-
-          if (!existingScript) {
-            script = document.createElement('script')
-            script.src = `/emotive-engine.js`
-            script.async = true
-
-            await new Promise((resolve, reject) => {
-              script.onload = resolve
-              script.onerror = reject
-              document.head.appendChild(script)
-            })
-          }
-
-          EmotiveMascot = (window as any).EmotiveMascot?.default || (window as any).EmotiveMascot
-
-          if (!EmotiveMascot) {
-            console.error('EmotiveMascot not found on window object')
-            return
-          }
-        }
-
-        const mascotInstance = new EmotiveMascot({
-          canvasId: 'education-hero-mascot',
-          targetFPS: isMobileDevice ? 30 : 60,
-          enableAudio: false,
-          soundEnabled: false,
-          maxParticles: isMobileDevice ? 50 : 120,
-          defaultEmotion: 'neutral',
-          enableGazeTracking: false,
-          enableIdleBehaviors: true,
-          transitionDuration: 600,
-          emotionTransitionSpeed: 400
-        })
-
-        await mascotInstance.init(canvas)
-
-        mascotInstance.setParticleSystemCanvasDimensions(vw, vh)
-
-        mascotInstance.setBackdrop({
-          enabled: true,
-          radius: 3.5,
-          intensity: 0.85,
-          blendMode: 'normal',
-          falloff: 'smooth',
-          edgeSoftness: 0.95,
-          coreTransparency: 0.3,
-          responsive: true
-        })
-
-        mascotInstance.setScale({
-          core: 0.8,
-          particles: 1.4
-        })
-
-        const initialXOffset = isMobileDevice ? 0 : -vw * 0.38
-        const initialYOffset = isMobileDevice
-          ? -vh * 0.3  // Mobile: higher up
-          : -vh * 0.05   // Desktop: slightly higher
-        mascotInstance.setPosition(initialXOffset, initialYOffset, 0)
-
-        mascotInstance.start()
-
-        // Check if component is still mounted before setting state
-        if (!cancelled) {
-          mascotRef.current = mascotInstance
-          setMascot(mascotInstance)
-
-          initializedRef.current = true
-          initializingRef.current = false
-
-          if (typeof mascotInstance.fadeIn === 'function') {
-            mascotInstance.fadeIn(1500)
-          }
-
-          setTimeout(() => {
-            if (!cancelled && typeof mascotInstance.express === 'function') {
-              mascotInstance.express('wave')
-            }
-          }, 800)
-        } else {
-          // Component unmounted during init, clean up immediately
-          mascotInstance.stop()
-          if (typeof mascotInstance.destroy === 'function') {
-            mascotInstance.destroy()
-          }
-        }
-
-      } catch (error) {
-        console.error('Failed to initialize mascot:', error)
-        initializingRef.current = false
+    // Initial wave gesture
+    setTimeout(() => {
+      if (mascotInstance && typeof mascotInstance.express === 'function') {
+        mascotInstance.express('wave')
       }
-    }
+    }, 800)
+  }, [])
 
-    initializeEngine()
-
-    return () => {
-      cancelled = true
-
-      // Cleanup mascot instance to prevent memory leaks
-      if (mascotRef.current) {
-        try {
-          mascotRef.current.stop()
-          if (typeof mascotRef.current.destroy === 'function') {
-            mascotRef.current.destroy()
-          }
-
-          // Clear canvas to release GPU resources
-          if (canvasRef.current) {
-            const ctx = canvasRef.current.getContext('2d')
-            if (ctx) {
-              ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
-            }
-          }
-        } catch (error) {
-          console.error('Error cleaning up mascot:', error)
-        }
-
-        mascotRef.current = null
-        setMascot(null)
-        initializedRef.current = false
-        initializingRef.current = false
-      }
-    }
-  }, [isClient])
-
-  // Scroll-driven animation with optimized performance
+  // Scroll-driven gestures and emotions
   useEffect(() => {
-    if (!mascot || !containerRef.current) return
-
-    const container = containerRef.current
+    if (!mascot) return
 
     const updateMascotOnScroll = () => {
       try {
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
-        const viewportWidth = window.innerWidth
-        const isMobileDevice = viewportWidth < 768
-
-        // Check if mascot is attached to an element
-        const isAttached = mascot && typeof mascot.isAttachedToElement === 'function' && mascot.isAttachedToElement()
-
-        // Update mascot position
-        // BUT: Don't update if mascot is attached to an element
-        if (mascot && typeof mascot.setPosition === 'function' && !isAttached) {
-          const baseXOffset = isMobileDevice ? 0 : -viewportWidth * 0.38
-          const yOffset = isMobileDevice
-            ? (scrollY - viewportHeight * 0.6) * 0.5  // Much higher up on mobile
-            : (scrollY - viewportHeight * 0.1) * 0.5  // Slightly higher on desktop
-          const wavelength = 600
-          const amplitude = isMobileDevice
-            ? Math.min(80, viewportWidth * 0.15)
-            : Math.min(100, viewportWidth * 0.08)
-          const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength))
-
-          mascot.setPosition(xOffset, yOffset, 0)
-        }
-
-        // Calculate opacity using CSS custom property - no z-index changes
         const heroHeight = viewportHeight * 0.9
-        const demoSectionStart = heroHeight + viewportHeight * 0.3
-        const fadeRange = viewportHeight * 0.3
 
-        let opacity = 1
-        let zIndex = 100
+        // Gesture points
+        const gesturePoints = [
+          { threshold: 0, gesture: null, emotion: 'neutral' },
+          { threshold: heroHeight * 0.9, gesture: 'wave', emotion: 'joy' },
+          { threshold: heroHeight + 800, gesture: 'bounce', emotion: 'excitement' },
+          { threshold: heroHeight + 2000, gesture: 'pulse', emotion: 'calm' },
+        ]
 
-        // When mascot is attached to an element, lower z-index so UI panels appear on top
-        if (isAttached) {
-          zIndex = 5  // Lower than UI panels (which have zIndex: 10)
-          opacity = 1
-        } else {
-          // Normal scroll behavior when not attached
-          if (scrollY >= demoSectionStart) {
-            const fadeProgress = Math.min((scrollY - demoSectionStart) / fadeRange, 1)
-            opacity = Math.max(0, 1 - fadeProgress)
-          }
-
-          if (scrollY >= heroHeight) {
-            zIndex = opacity > 0.1 ? 1 : -1
+        let currentZone = 0
+        for (let i = gesturePoints.length - 1; i >= 0; i--) {
+          if (scrollY > gesturePoints[i].threshold) {
+            currentZone = i
+            break
           }
         }
 
-        // Update z-index ONLY when it changes (threshold-based, not continuous)
-        // This prevents CSS recompilation while allowing mascot to hide behind content
-        if (zIndex !== lastZIndexRef.current && containerRef.current) {
-          lastZIndexRef.current = zIndex
-          containerRef.current.style.zIndex = String(zIndex)
-        }
+        if (currentZone !== lastGestureRef.current) {
+          const point = gesturePoints[currentZone]
 
-        // Gesture points (only if visible)
-        if (opacity > 0.1) {
-          const gesturePoints = [
-            { threshold: 0, gesture: null, emotion: 'neutral' },
-            { threshold: heroHeight * 0.9, gesture: 'wave', emotion: 'joy' },
-            { threshold: heroHeight + 800, gesture: 'bounce', emotion: 'excitement' },
-            { threshold: heroHeight + 2000, gesture: 'pulse', emotion: 'calm' },
-          ]
-
-          let currentZone = 0
-          for (let i = gesturePoints.length - 1; i >= 0; i--) {
-            if (scrollY > gesturePoints[i].threshold) {
-              currentZone = i
-              break
-            }
+          if (mascot && typeof mascot.setEmotion === 'function') {
+            mascot.setEmotion(point.emotion, 0)
           }
 
-          if (currentZone !== lastGestureRef.current) {
-            const point = gesturePoints[currentZone]
-
-            if (mascot && typeof mascot.setEmotion === 'function') {
-              mascot.setEmotion(point.emotion, 0)
-            }
-
-            if (point.gesture && mascot && typeof mascot.express === 'function') {
-              mascot.express(point.gesture)
-            }
-
-            lastGestureRef.current = currentZone
+          if (point.gesture && mascot && typeof mascot.express === 'function') {
+            mascot.express(point.gesture)
           }
+
+          lastGestureRef.current = currentZone
         }
       } catch (error) {
         console.error('Scroll update error:', error)
@@ -308,7 +102,6 @@ export default function EducationPage() {
     const handleScroll = () => {
       if (!tickingRef.current) {
         tickingRef.current = true
-        // Cancel any pending RAF before scheduling new one
         if (rafRef.current !== null) {
           cancelAnimationFrame(rafRef.current)
         }
@@ -317,7 +110,7 @@ export default function EducationPage() {
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll() // Initial call
+    handleScroll()
 
     return () => {
       window.removeEventListener('scroll', handleScroll)
@@ -333,32 +126,15 @@ export default function EducationPage() {
     <>
       <EmotiveHeader />
 
-      {/* Scroll-driven mascot - fades out when learning sections become visible */}
-      <div
-        ref={containerRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100svh',
-          pointerEvents: 'none',
-          zIndex: 100,
-          opacity: 1,
-          transition: 'opacity 0.3s ease',
-        }}
-      >
-        <canvas
-          ref={canvasRef}
-          id="education-hero-mascot"
-          style={{
-            width: '100%',
-            height: '100svh',
-            objectFit: 'contain',
-            filter: 'drop-shadow(0 10px 40px rgba(124, 58, 237, 0.4))',
-          }}
-        />
-      </div>
+      {/* 2D/3D Mascot Renderer with mode toggle */}
+      <MascotRenderer
+        onMascotLoaded={handleMascotLoaded}
+        onModeChange={setMascotMode}
+        coreGeometry="crystal"
+        enableControls={false}
+        autoRotate={true}
+        showModeToggle={true}
+      />
 
       <main style={{
         minHeight: '100vh',

@@ -1093,6 +1093,15 @@ export class Core3DManager {
     }
 
     /**
+     * Start a grow-in animation from scale 0 to 1
+     * Used for initial appearance of mascots (pop-in effect)
+     * @param {number} duration - Duration in milliseconds (default: 500ms)
+     */
+    growIn(duration = 500) {
+        this.geometryMorpher.growIn(this.geometryType, duration);
+    }
+
+    /**
      * Easing function for smooth transitions
      * @param {number} t - Progress (0.0 to 1.0)
      * @returns {number} - Eased progress

@@ -526,6 +526,18 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Grow in from scale 0 (pop-in animation)
+     * Used for initial appearance of mascots
+     * @param {number} duration - Duration in milliseconds (default: 500ms)
+     */
+    growIn(duration = 500) {
+        if (this.core3D) {
+            this.core3D.growIn(duration);
+        }
+        this.eventManager.emit('animation:growIn', { duration });
+    }
+
+    /**
      * Enable auto-rotation
      */
     enableAutoRotate() {
@@ -854,3 +866,6 @@ export {
     getBlendModeName,
     getBlendModeIndex
 } from './shaders/utils/blendModes.js';
+
+// Export geometry cache for preloading
+export { default as GeometryCache } from './utils/GeometryCache.js';

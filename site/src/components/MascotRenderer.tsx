@@ -16,6 +16,10 @@ interface MascotRendererProps {
   autoRotate?: boolean
   /** Show mode toggle button */
   showModeToggle?: boolean
+  /** External ref to access the container element for scroll-driven positioning */
+  externalContainerRef?: React.RefObject<HTMLDivElement>
+  /** Custom container style overrides */
+  containerStyle?: React.CSSProperties
 }
 
 // Hook to detect mobile devices
@@ -43,6 +47,8 @@ export default function MascotRenderer({
   enableControls = false,
   autoRotate = true,
   showModeToggle = true,
+  externalContainerRef,
+  containerStyle,
 }: MascotRendererProps) {
   console.log('[MascotRenderer] Component mounted, coreGeometry:', coreGeometry)
 
@@ -90,6 +96,10 @@ export default function MascotRenderer({
   // Callback ref to detect when container is mounted
   const setContainerRef = useCallback((node: HTMLDivElement | null) => {
     containerRef.current = node
+    // Also set external ref if provided (for scroll-driven positioning)
+    if (externalContainerRef) {
+      (externalContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+    }
     if (node) {
       console.log('[MascotRenderer] Container ref attached to DOM')
       setContainerMounted(true)
@@ -97,7 +107,7 @@ export default function MascotRenderer({
       // The intersection observer is too slow for mode switching
       setIsVisible(true)
     }
-  }, [])
+  }, [externalContainerRef])
 
   // Intersection Observer - runs after container is mounted
   useEffect(() => {
@@ -120,21 +130,16 @@ export default function MascotRenderer({
 
   // Load appropriate engine based on mode
   useEffect(() => {
-    console.log('[MascotRenderer] Load effect - isVisible:', isVisible, 'modeLoading:', modeLoading, 'mode:', mode)
-    if (!isVisible || modeLoading) {
-      console.log('[MascotRenderer] Early return - isVisible:', isVisible, 'modeLoading:', modeLoading)
-      return
-    }
-    if (initializingRef.current || mascotRef.current) {
-      console.log('[MascotRenderer] Early return - initializing:', initializingRef.current, 'mascotRef:', !!mascotRef.current)
-      return
-    }
+    // Wait for container to be mounted and mode to be determined
+    if (!containerMounted || modeLoading) return
+    if (initializingRef.current || mascotRef.current) return
 
-    console.log('[MascotRenderer] Starting mascot load...')
     initializingRef.current = true
     setIsLoading(true)
 
     const loadMascot = async () => {
+      // Double-check we should still load (in case of rapid unmount/remount from Strict Mode)
+      if (!initializingRef.current) return
       try {
         if (mode === '3d') {
           await load3DMascot()
@@ -329,8 +334,12 @@ export default function MascotRenderer({
 
     // Defer load slightly
     const timer = setTimeout(loadMascot, 300)
-    return () => clearTimeout(timer)
-  }, [isVisible, mode, modeLoading, modeVersion, coreGeometry, enableControls, autoRotate, onMascotLoaded])
+    return () => {
+      clearTimeout(timer)
+      // Reset initializing flag on cleanup (important for Strict Mode double-mounting)
+      initializingRef.current = false
+    }
+  }, [mode, modeLoading, modeVersion, containerMounted, coreGeometry, enableControls, autoRotate, onMascotLoaded])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -385,6 +394,7 @@ export default function MascotRenderer({
             zIndex: 100,
             opacity: 1,
             transition: 'opacity 0.5s ease-out',
+            ...containerStyle,
           }}
         >
           <canvas
@@ -409,7 +419,7 @@ export default function MascotRenderer({
             setContainerRef(node)
           }}
           id="mascot-container-3d"
-          style={container3DStyle}
+          style={{ ...container3DStyle, ...containerStyle }}
         />
       )}
 
