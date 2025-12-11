@@ -17,6 +17,7 @@ export default function RetailPage() {
   const [mascot, setMascot] = useState<any>(null)
   const [mascotMode, setMascotMode] = useState<MascotMode>('3d')
   const [isMobile, setIsMobile] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const lastGestureRef = useRef<number>(-1)
   const rafRef = useRef<number | null>(null)
@@ -24,6 +25,7 @@ export default function RetailPage() {
 
   // Detect mobile
   useEffect(() => {
+    setIsClient(true)
     setIsMobile(window.innerWidth < 768)
 
     const handleResize = () => {
@@ -33,6 +35,37 @@ export default function RetailPage() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Preload crystal geometry after initial load to prevent async race conditions
+  // This ensures the geometry is cached before the MascotRenderer creates the crystal
+  useEffect(() => {
+    if (!isClient) return
+
+    const preloadGeometries = async () => {
+      // Wait for EmotiveMascot3D module to load
+      let attempts = 0
+      while (!(window as any).EmotiveMascot3D && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        attempts++
+      }
+
+      const module = (window as any).EmotiveMascot3D
+      if (!module?.GeometryCache) {
+        return
+      }
+
+      try {
+        // Preload crystal geometry (the only geometry used in retail)
+        await module.GeometryCache.preload('crystal')
+      } catch (_err) {
+        // Silently fail - preloading is an optimization, not critical
+      }
+    }
+
+    // Start preloading immediately (unlike Cherokee which delays 500ms)
+    // This helps ensure geometry is ready before MascotRenderer initializes
+    preloadGeometries()
+  }, [isClient])
 
   // Scroll to top on mount
   useEffect(() => {
@@ -52,7 +85,8 @@ export default function RetailPage() {
     }, 800)
   }, [])
 
-  // Scroll-driven gestures and emotions
+  // Scroll-driven animation with sinusoidal movement
+  // Uses mascot.setPosition() API like the Cherokee page for proper positioning
   useEffect(() => {
     if (!mascot) return
 
@@ -60,9 +94,58 @@ export default function RetailPage() {
       try {
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
+        const viewportWidth = window.innerWidth
+        const isMobileDevice = viewportWidth < 768
         const heroHeight = viewportHeight * 0.9
 
-        // Gesture points
+        // Position calculation using mascot.setPosition() API (like Cherokee page)
+        // Skip if mascot is attached to an element (CheckoutSimulation handles its own positioning)
+        const isAttached = typeof mascot.isAttachedToElement === 'function' && mascot.isAttachedToElement()
+
+        // Debug: log attachment state periodically
+        if (Math.random() < 0.01) {
+          console.log(`[Retail scroll] isAttached=${isAttached}, scrollY=${scrollY.toFixed(0)}`)
+        }
+
+        if (typeof mascot.setPosition === 'function' && !isAttached) {
+          // Desktop: Center mascot between left screen edge and hero text
+          const heroTextStart = Math.max(0, (viewportWidth - 1000) / 2)
+          const gapCenter = heroTextStart / 2
+
+          // Mobile: Base position is 18% from top. Canvas center is 50%.
+          // Offset from center = 18% - 50% = -32% = -0.32 * vh
+          const mobileBaseYOffset = -viewportHeight * 0.32
+
+          if (mascotMode === '2d') {
+            // 2D mode: Full viewport canvas with x/y offsets from center
+            const baseXOffset = isMobileDevice ? 0 : gapCenter - viewportWidth / 2
+            const yOffset = isMobileDevice
+              ? mobileBaseYOffset + scrollY * 0.5  // Start at 18%, move DOWN with scroll
+              : (scrollY - viewportHeight * 0.1) * 0.5
+            const wavelength = 600
+            const amplitude = isMobileDevice
+              ? Math.min(80, viewportWidth * 0.15)
+              : Math.min(100, viewportWidth * 0.08)
+            const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength))
+            mascot.setPosition(xOffset, yOffset, 0)
+          } else {
+            // 3D mode: Container position set by CSS, just add scroll offset
+            const yOffset = isMobileDevice
+              ? scrollY * 0.4  // Move DOWN with scroll (base position set by CSS at 18%)
+              : (scrollY - viewportHeight * 0.1) * 0.4
+            const wavelength = 600
+            const amplitude = isMobileDevice
+              ? Math.min(60, viewportWidth * 0.1)
+              : Math.min(80, viewportWidth * 0.06)
+            const xOffset = amplitude * Math.sin(scrollY / wavelength)
+            mascot.setPosition(xOffset, yOffset, 0)
+          }
+        }
+
+        // Note: z-index is NOT managed by scroll for retail page
+        // The mascot should always stay visible (z-index 100 from MascotRenderer)
+
+        // Gesture points based on scroll position
         const gesturePoints = [
           { threshold: 0, gesture: null, emotion: 'neutral' },
           { threshold: heroHeight * 0.9, gesture: 'wave', emotion: 'joy' },
@@ -119,7 +202,7 @@ export default function RetailPage() {
       }
       tickingRef.current = false
     }
-  }, [mascot])
+  }, [mascot, mascotMode])
 
   return (
     <>

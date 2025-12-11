@@ -197,17 +197,20 @@ export class CrystalSoul {
      * @param {Object} options - Configuration options
      * @param {number} options.radius - Base radius for fallback geometry (default: 0.15)
      * @param {number} options.detail - Detail level for fallback geometry (default: 1)
+     * @param {Object} options.renderer - ThreeRenderer instance for scene locking
      */
     constructor(options = {}) {
         this.radius = options.radius || 0.15;
         this.detail = options.detail || 1;
         this.geometryType = options.geometryType || 'crystal';
+        this.renderer = options.renderer || null;  // ThreeRenderer for scene locking
 
         this.mesh = null;
         this.material = null;
         this.parentMesh = null;
         this.baseScale = 1.0;  // Full size by default (size=1.0)
         this._pendingParent = null;
+        this._disposed = false;  // Track disposal state for async safety
 
         this._createMesh();
     }
@@ -280,10 +283,12 @@ export class CrystalSoul {
 
     /**
      * Create the soul mesh with shader material
-     * Uses inclusion geometry if available, falls back to octahedron
+     * Uses inclusion geometry if available (from cache), falls back to octahedron
      * @private
      */
     _createMesh() {
+        console.log(`[CrystalSoul] _createMesh() START, inclusionGeometryCache=${!!inclusionGeometryCache}`);
+
         // Create material first (shared regardless of geometry)
         this.material = new THREE.ShaderMaterial({
             uniforms: {
@@ -316,28 +321,20 @@ export class CrystalSoul {
             side: THREE.FrontSide
         });
 
-        // Start with fallback octahedron geometry
-        const fallbackGeometry = new THREE.OctahedronGeometry(this.radius, this.detail);
-        this.mesh = new THREE.Mesh(fallbackGeometry, this.material);
+        // Use cached inclusion geometry if available (preloaded by Core3DManager),
+        // otherwise fall back to octahedron
+        let geometry;
+        if (inclusionGeometryCache) {
+            geometry = inclusionGeometryCache.clone();
+        } else {
+            // Fallback octahedron - will be used if preloading didn't happen
+            geometry = new THREE.OctahedronGeometry(this.radius, this.detail);
+        }
+
+        this.mesh = new THREE.Mesh(geometry, this.material);
         this.mesh.name = 'crystalSoul';
         this.mesh.renderOrder = 0;
         this.mesh.layers.set(2);
-
-        // Async load inclusion geometry and swap when ready
-        CrystalSoul._loadInclusionGeometry().then(geometry => {
-            if (geometry && this.mesh) {
-                // Dispose old geometry
-                this.mesh.geometry.dispose();
-                // Use inclusion geometry
-                this.mesh.geometry = geometry;
-
-                // Re-attach if we had a pending parent
-                if (this._pendingParent) {
-                    this.attachTo(this._pendingParent);
-                    this._pendingParent = null;
-                }
-            }
-        });
     }
 
     /**
@@ -346,13 +343,26 @@ export class CrystalSoul {
      * @param {THREE.Mesh} parentMesh - The mesh to follow (e.g., crystal, heart)
      */
     attachTo(parentMesh) {
+        console.log(`[CrystalSoul] attachTo() START, parentMesh=${!!parentMesh}, _disposed=${this._disposed}`);
+
+        if (this._disposed) {
+            console.warn('[CrystalSoul] attachTo() BLOCKED - already disposed');
+            return;
+        }
+
         if (!parentMesh) {
             console.warn('[CrystalSoul] Cannot attach to null parent');
             return;
         }
 
+        if (!this.mesh) {
+            console.warn('[CrystalSoul] Cannot attach - mesh is null');
+            return;
+        }
+
         // Remove from previous scene if any
         if (this.mesh.parent) {
+            console.log(`[CrystalSoul] Removing from previous parent: ${this.mesh.parent.type}`);
             this.mesh.parent.remove(this.mesh);
         }
 
@@ -361,10 +371,15 @@ export class CrystalSoul {
         // Add to scene directly (not as child of parentMesh)
         // This allows the soul to be rendered on layer 2 independently
         let scene = parentMesh;
+        let depth = 0;
         while (scene.parent) {
             scene = scene.parent;
+            depth++;
         }
+        console.log(`[CrystalSoul] Found scene at depth ${depth}, scene.type=${scene.type}, scene.children.length=${scene.children?.length}`);
+
         scene.add(this.mesh);
+        console.log(`[CrystalSoul] Added mesh to scene, scene.children.length=${scene.children?.length}, mesh.uuid=${this.mesh.uuid?.slice(0,8)}`);
 
         // Sync initial position
         this._syncPosition();
@@ -386,8 +401,12 @@ export class CrystalSoul {
      * Detach from current parent
      */
     detach() {
-        if (this.mesh.parent) {
+        console.log(`[CrystalSoul] detach() START, mesh=${!!this.mesh}, mesh.parent=${!!this.mesh?.parent}`);
+        if (this.mesh && this.mesh.parent) {
+            const parentType = this.mesh.parent.type;
+            const parentChildCount = this.mesh.parent.children?.length;
             this.mesh.parent.remove(this.mesh);
+            console.log(`[CrystalSoul] Removed from ${parentType}, was ${parentChildCount} children, now ${this.mesh.parent?.children?.length || 'N/A'}`);
         }
         this.parentMesh = null;
     }
@@ -559,9 +578,16 @@ export class CrystalSoul {
      * Dispose of resources
      */
     dispose() {
+        console.log(`[CrystalSoul] dispose() START, _disposed=${this._disposed}, mesh=${!!this.mesh}`);
+        console.log('[CrystalSoul] dispose() CALLER STACK:', new Error().stack);
+
+        // Set disposed flag FIRST to prevent async callbacks from running
+        this._disposed = true;
+
         this.detach();
 
         if (this.mesh) {
+            console.log(`[CrystalSoul] Disposing mesh geometry, uuid=${this.mesh.uuid?.slice(0,8)}`);
             if (this.mesh.geometry) {
                 this.mesh.geometry.dispose();
             }
@@ -569,10 +595,12 @@ export class CrystalSoul {
         }
 
         if (this.material) {
+            console.log('[CrystalSoul] Disposing material');
             this.material.dispose();
             this.material = null;
         }
 
         this.parentMesh = null;
+        console.log('[CrystalSoul] dispose() COMPLETE');
     }
 }

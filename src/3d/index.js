@@ -71,6 +71,7 @@ export class EmotiveMascot3D {
 
         // State
         this.isRunning = false;
+        this._destroyed = false;
         this.animationFrameId = null;
         this.lastFrameTime = 0;
         this.gestureTimeouts = []; // Track setTimeout IDs for cleanup
@@ -234,9 +235,17 @@ export class EmotiveMascot3D {
 
     /**
      * Start animation loop
+     * Waits for geometry to be fully loaded before starting render
      */
-    start() {
+    async start() {
         if (this.isRunning) return;
+
+        // Wait for core to be fully initialized (geometry loaded)
+        // This prevents Three.js errors from async OBJ loading
+        if (this.core3D) {
+            await this.core3D.waitUntilReady();
+        }
+
         this.isRunning = true;
         this.lastFrameTime = null; // Will be set on first animate() call
         this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
@@ -257,7 +266,11 @@ export class EmotiveMascot3D {
      * Main animation loop
      */
     animate(currentTime) {
-        if (!this.isRunning) return;
+        // Guard against calls after destroy or stop
+        if (!this.isRunning || this._destroyed) {
+            console.log(`[EmotiveMascot3D] animate() BLOCKED - isRunning=${this.isRunning}, _destroyed=${this._destroyed}`);
+            return;
+        }
 
         // Initialize lastFrameTime on first frame
         if (this.lastFrameTime === null) {
@@ -273,8 +286,8 @@ export class EmotiveMascot3D {
 
         this.lastFrameTime = currentTime;
 
-        // Render 3D core
-        if (this.core3D) {
+        // Render 3D core - check again as state may have changed
+        if (this.core3D && !this._destroyed) {
             this.core3D.render(deltaTime);
         }
 
@@ -795,10 +808,227 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Animate to a target position smoothly
+     * @param {number} x - Target X offset
+     * @param {number} y - Target Y offset
+     * @param {number} z - Target Z offset (unused for container positioning)
+     * @param {number} duration - Animation duration in milliseconds
+     * @param {string} easing - Easing function name (currently only 'easeOutCubic' supported)
+     */
+    animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
+        if (!this.container) return;
+
+        const startPos = this.getPosition();
+        const startTime = performance.now();
+
+        // Easing function
+        const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+
+        const animate = currentTime => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easeOutCubic(progress);
+
+            const currentX = startPos.x + (x - startPos.x) * easedProgress;
+            const currentY = startPos.y + (y - startPos.y) * easedProgress;
+            const currentZ = startPos.z + (z - startPos.z) * easedProgress;
+
+            this.setPosition(currentX, currentY, currentZ);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    /**
+     * Set particle containment bounds and scale
+     * For 3D, this primarily affects the particle system containment
+     * @param {Object|null} bounds - Bounds object {width, height} in pixels, null to disable
+     * @param {number} scale - Scale factor for mascot (affects particle spawn radius)
+     */
+    setContainment(bounds, scale = 1) {
+        // Store containment settings
+        this._containmentBounds = bounds;
+        this._containmentScale = scale;
+
+        // Apply scale to particle system spawn radius
+        if (this.particleSystem && scale !== 1) {
+            // The particle system uses spawnRadius for particle positioning
+            // Adjust based on scale factor
+            const baseRadius = this.config.particleSpawnRadius || 150;
+            this.particleSystem.setSpawnRadius(baseRadius * scale);
+        }
+
+        return this;
+    }
+
+    /**
+     * Attach mascot to a DOM element with automatic position tracking
+     * @param {HTMLElement|string} elementOrSelector - Element or CSS selector
+     * @param {Object} options - Attachment options
+     * @param {number} options.offsetX - X offset from element center (default: 0)
+     * @param {number} options.offsetY - Y offset from element center (default: 0)
+     * @param {boolean} options.animate - Animate to position (default: true)
+     * @param {number} options.duration - Animation duration in ms (default: 1000)
+     * @param {number} options.scale - Scale factor for mascot (default: 1)
+     * @param {boolean} options.containParticles - Whether to contain particles within element bounds (default: true)
+     * @returns {EmotiveMascot3D} This instance for chaining
+     */
+    attachToElement(elementOrSelector, options = {}) {
+        // Get the target element
+        const element = typeof elementOrSelector === 'string'
+            ? document.querySelector(elementOrSelector)
+            : elementOrSelector;
+
+        if (!element) {
+            console.error(`[EmotiveMascot3D] Element not found: ${elementOrSelector}`);
+            return this;
+        }
+
+        // Store element tracking info
+        this._attachedElement = element;
+        this._attachOptions = {
+            offsetX: options.offsetX || 0,
+            offsetY: options.offsetY || 0,
+            animate: options.animate !== false,
+            duration: options.duration || 1000,
+            scale: options.scale || 1,
+            containParticles: options.containParticles !== false
+        };
+        this._hasAttachedBefore = this._hasAttachedBefore || false;
+
+        // Set containment bounds and scale if requested
+        const rect = element.getBoundingClientRect();
+        if (this._attachOptions.containParticles) {
+            this.setContainment({ width: rect.width, height: rect.height }, this._attachOptions.scale);
+        } else if (this._attachOptions.scale !== 1) {
+            this.setContainment(null, this._attachOptions.scale);
+        }
+
+        // Position mascot at element
+        this._updateAttachedPosition();
+
+        // Set up automatic tracking on scroll and resize
+        this._setupElementTracking();
+
+        return this;
+    }
+
+    /**
+     * Update mascot position to match attached element
+     * @private
+     */
+    _updateAttachedPosition() {
+        if (!this._attachedElement || !this.container) return;
+
+        const rect = this._attachedElement.getBoundingClientRect();
+        const isMobile = window.innerWidth < 768;
+
+        // Get element center in viewport coordinates
+        const elementCenterX = rect.left + rect.width / 2;
+        const elementCenterY = rect.top + rect.height / 2;
+
+        // Calculate the container's base position (where it would be with no offset)
+        // This depends on the CSS positioning set by MascotRenderer
+        let containerBaseCenterX, containerBaseCenterY;
+
+        if (isMobile) {
+            // Mobile: container CSS is top: 18%, left: 50%, transform: translate(-50%, -50%)
+            // So the container center is at (50% of viewport width, 18% of viewport height)
+            containerBaseCenterX = window.innerWidth / 2;
+            containerBaseCenterY = window.innerHeight * 0.18;
+        } else {
+            // Desktop: container CSS is left: calc(max(20px, (50vw - 500px) / 2 - 375px)), top: 50%
+            // The left position places the container center at roughly the left third
+            // Container width is 750px, so center is at left + 375px
+            const containerWidth = 750;
+            const leftPos = Math.max(20, (window.innerWidth / 2 - 500) / 2 - 375);
+            containerBaseCenterX = leftPos + containerWidth / 2;
+            containerBaseCenterY = window.innerHeight / 2;
+        }
+
+        // Calculate offset needed to move from container's base position to element center
+        const offsetX = elementCenterX - containerBaseCenterX + this._attachOptions.offsetX;
+        const offsetY = elementCenterY - containerBaseCenterY + this._attachOptions.offsetY;
+
+        // Use animation on first attach, instant updates on scroll/resize
+        const isFirstAttach = !this._hasAttachedBefore;
+        this._hasAttachedBefore = true;
+
+        if (isFirstAttach && this._attachOptions.animate) {
+            this.animateToPosition(offsetX, offsetY, 0, this._attachOptions.duration);
+        } else {
+            this.setPosition(offsetX, offsetY, 0);
+        }
+    }
+
+    /**
+     * Set up scroll and resize event listeners for element tracking
+     * @private
+     */
+    _setupElementTracking() {
+        if (this._elementTrackingHandlers) return; // Already set up
+
+        this._elementTrackingHandlers = {
+            scroll: () => this._updateAttachedPosition(),
+            resize: () => this._updateAttachedPosition()
+        };
+
+        window.addEventListener('scroll', this._elementTrackingHandlers.scroll, { passive: true });
+        window.addEventListener('resize', this._elementTrackingHandlers.resize);
+    }
+
+    /**
+     * Check if mascot is attached to an element
+     * @returns {boolean} True if attached to an element
+     */
+    isAttachedToElement() {
+        return !!this._attachedElement;
+    }
+
+    /**
+     * Detach mascot from tracked element and cleanup
+     * @returns {EmotiveMascot3D} This instance for chaining
+     */
+    detachFromElement() {
+        this._attachedElement = null;
+        this._hasAttachedBefore = false;
+
+        // Remove event listeners
+        if (this._elementTrackingHandlers) {
+            window.removeEventListener('scroll', this._elementTrackingHandlers.scroll);
+            window.removeEventListener('resize', this._elementTrackingHandlers.resize);
+            this._elementTrackingHandlers = null;
+        }
+
+        // Clear containment and reset scale
+        this.setContainment(null, 1);
+
+        // Reset to neutral state (but do NOT change geometry - let caller decide)
+        this.setEmotion('neutral');
+
+        return this;
+    }
+
+    /**
      * Cleanup
      */
     destroy() {
+        console.log(`[EmotiveMascot3D] destroy() CALLED, _destroyed=${this._destroyed}, isRunning=${this.isRunning}`);
+        // Set destroyed flag first to stop any pending animation frames
+        this._destroyed = true;
         this.stop();
+
+        // Clean up element attachment tracking
+        if (this._elementTrackingHandlers) {
+            window.removeEventListener('scroll', this._elementTrackingHandlers.scroll);
+            window.removeEventListener('resize', this._elementTrackingHandlers.resize);
+            this._elementTrackingHandlers = null;
+        }
+        this._attachedElement = null;
 
         // Clear all pending gesture timeouts
         this.gestureTimeouts.forEach(id => clearTimeout(id));

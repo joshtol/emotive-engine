@@ -30,6 +30,62 @@ interface Message {
   content: string
 }
 
+// SSS presets for crystal materials
+const sssPresets: Record<string, any> = {
+  quartz: {
+    sssStrength: 0.8,
+    sssAbsorption: [2.8, 2.9, 3.0],
+    sssScatterDistance: [0.2, 0.2, 0.25],
+    sssThicknessBias: 0.60,
+    sssThicknessScale: 1.8,
+    sssCurvatureScale: 3.0,
+    sssAmbient: 0.12,
+    frostiness: 0.15,
+    innerGlowStrength: 0.20,
+    fresnelIntensity: 1.5,
+    causticIntensity: 1.2
+  },
+  ruby: {
+    sssStrength: 1.8,
+    sssAbsorption: [4.0, 0.03, 0.08],
+    sssScatterDistance: [0.4, 0.04, 0.08],
+    sssThicknessBias: 0.65,
+    sssThicknessScale: 1.9,
+    sssCurvatureScale: 2.5,
+    sssAmbient: 0.08,
+    frostiness: 0.12,
+    innerGlowStrength: 0.12,
+    fresnelIntensity: 1.2,
+    causticIntensity: 1.15,
+    emotionColorBleed: 0.35
+  }
+}
+
+// Helper to apply SSS preset to mascot
+const applySSSPreset = (mascotInstance: any, presetName: string) => {
+  if (!presetName || !mascotInstance?.core3D?.customMaterial?.uniforms) return
+  const preset = sssPresets[presetName]
+  if (!preset) return
+
+  const u = mascotInstance.core3D.customMaterial.uniforms
+  if (u.sssStrength) u.sssStrength.value = preset.sssStrength
+  if (u.sssAbsorption) u.sssAbsorption.value.set(...preset.sssAbsorption)
+  if (u.sssScatterDistance) u.sssScatterDistance.value.set(...preset.sssScatterDistance)
+  if (u.sssThicknessBias) u.sssThicknessBias.value = preset.sssThicknessBias
+  if (u.sssThicknessScale) u.sssThicknessScale.value = preset.sssThicknessScale
+  if (u.sssCurvatureScale) u.sssCurvatureScale.value = preset.sssCurvatureScale
+  if (u.sssAmbient) u.sssAmbient.value = preset.sssAmbient
+  if (u.frostiness) u.frostiness.value = preset.frostiness
+  if (u.innerGlowStrength) u.innerGlowStrength.value = preset.innerGlowStrength
+  if (u.fresnelIntensity) u.fresnelIntensity.value = preset.fresnelIntensity
+  if (preset.causticIntensity !== undefined && u.causticIntensity) {
+    u.causticIntensity.value = preset.causticIntensity
+  }
+  if (u.emotionColorBleed) {
+    u.emotionColorBleed.value = preset.emotionColorBleed ?? 0.0
+  }
+}
+
 export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }: CheckoutSimulationProps) {
   const { setTimeout: setManagedTimeout } = useTimeoutManager()
   const [currentStep, setCurrentStep] = useState(0)
@@ -42,6 +98,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
   const [showAIHelp, setShowAIHelp] = useState(false)
   const mascotStageRef = useRef<HTMLDivElement>(null)
   const mascotRef = useRef<any>(mascot)
+  const isAttachedRef = useRef<boolean>(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
@@ -98,15 +155,15 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !mascotRef.current) {
+          if (entry.isIntersecting && !isAttachedRef.current) {
             // Stage is in view and mascot not yet attached
             if (typeof mascot.attachToElement !== 'function') {
               return
             }
 
+            console.log('[CheckoutSimulation] Attaching mascot to stage')
             mascot.attachToElement(mascotStageRef.current, {
-              animate: true,
-              duration: 800,
+              animate: false,  // Instant snap - animation causes overshoot due to scroll offset
               scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
               containParticles: true  // Keep particles within the stage bounds
             })
@@ -114,13 +171,15 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
             // Set emotion to calm when attached
             mascot.setEmotion('calm')
 
-            mascotRef.current = mascot
-          } else if (!entry.isIntersecting && mascotRef.current) {
+            isAttachedRef.current = true
+            console.log(`[CheckoutSimulation] Attachment complete, isAttachedToElement=${mascot.isAttachedToElement?.()}`)
+          } else if (!entry.isIntersecting && isAttachedRef.current) {
             // Stage is out of view, detach mascot
             if (typeof mascot.detachFromElement === 'function') {
               mascot.detachFromElement()
             }
-            mascotRef.current = null
+
+            isAttachedRef.current = false
           }
         })
       },
@@ -137,8 +196,9 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
       if (mascot && typeof mascot.detachFromElement === 'function') {
         mascot.detachFromElement()
       }
+      isAttachedRef.current = false
     }
-  }, [mascot])
+  }, [mascot, isMobile])
 
   const handleScanProduct = async () => {
     setScanning(true)
@@ -147,8 +207,13 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
     const randomProduct = DEMO_PRODUCTS[Math.floor(Math.random() * DEMO_PRODUCTS.length)]
     setCurrentProduct(randomProduct)
 
+    // If mascot is currently a sun (from previous checkout), morph back to crystal
+    if (mascotRef.current && mascotRef.current.morphTo) {
+      mascotRef.current.morphTo('crystal', { duration: 800 })
+    }
+
     if (mascotRef.current && mascotRef.current.express) {
-      mascotRef.current.express('shake', { intensity: 0.5, duration: 800 })
+      mascotRef.current.express('wiggle', { intensity: 0.5, duration: 800 })
     }
 
     const willError = Math.random() < 0.15
@@ -166,14 +231,32 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
         if (mascotRef.current.updateUndertone) {
           mascotRef.current.updateUndertone('subdued')
         }
+        // Morph to rough geometry with ruby SSS preset on error
+        // Set up callback to apply SSS preset AFTER material swap during morph
+        if (mascotRef.current.core3D) {
+          mascotRef.current.core3D.onMaterialSwap = (swapInfo: { geometryType: string, material: any }) => {
+            if (swapInfo.geometryType === 'rough' && swapInfo.material) {
+              applySSSPreset(mascotRef.current, 'ruby')
+            }
+            mascotRef.current.core3D.onMaterialSwap = null
+          }
+        }
+        if (mascotRef.current.morphTo) {
+          mascotRef.current.morphTo('rough', { duration: 800 })
+        }
       }
     } else {
       setCart(prev => [...prev, randomProduct])
       setScanning(false)
       setCurrentProduct(null)
 
+      // Morph back to crystal on successful scan
+      if (mascotRef.current && mascotRef.current.morphTo) {
+        mascotRef.current.morphTo('crystal', { duration: 800 })
+      }
+
       if (mascotRef.current && mascotRef.current.express) {
-        mascotRef.current.express('nod', { intensity: 0.4, duration: 500 })
+        mascotRef.current.express('bounce', { intensity: 0.4, duration: 500 })
       }
     }
   }
@@ -188,6 +271,19 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
       }
       if (mascotRef.current.updateUndertone) {
         mascotRef.current.updateUndertone('clear')
+      }
+      // Morph back to crystal and reset SSS preset to quartz
+      // Set up callback to apply SSS preset AFTER material swap during morph
+      if (mascotRef.current.core3D) {
+        mascotRef.current.core3D.onMaterialSwap = (swapInfo: { geometryType: string, material: any }) => {
+          if (swapInfo.geometryType === 'crystal' && swapInfo.material) {
+            applySSSPreset(mascotRef.current, 'quartz')
+          }
+          mascotRef.current.core3D.onMaterialSwap = null
+        }
+      }
+      if (mascotRef.current.morphTo) {
+        mascotRef.current.morphTo('crystal', { duration: 800 })
       }
     }
   }
@@ -224,7 +320,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
 
     await handleLLMResponse({
       message: '',
-      emotion: 'triumph',
+      emotion: 'neutral',  // Sun should be neutral, not triumph (triumph causes color shift)
       sentiment: 'positive',
       action: 'celebrate',
       frustrationLevel: 0,
@@ -238,19 +334,7 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
       }
     }, 500)
 
-    setManagedTimeout(async () => {
-      if (mascotRef.current) {
-        if (mascotRef.current.setEmotion) {
-          mascotRef.current.setEmotion('neutral', 0.5)
-        }
-        if (mascotRef.current.morphTo) {
-          mascotRef.current.morphTo('circle', { duration: 1500 })
-        }
-        if (mascotRef.current.updateUndertone) {
-          mascotRef.current.updateUndertone('clear')
-        }
-      }
-    }, 3000)
+    // Sun stays until user scans again (morphTo crystal in handleScanProduct)
   }
 
   const handleReset = () => {
@@ -261,6 +345,11 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
     setProcessing(false)
     setCompleted(false)
     setCurrentProduct(null)
+
+    // Morph back to crystal from sun
+    if (mascotRef.current && mascotRef.current.morphTo) {
+      mascotRef.current.morphTo('crystal', { duration: 800 })
+    }
   }
 
   const handleLLMResponse = async (response: any) => {

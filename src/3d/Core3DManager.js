@@ -49,8 +49,14 @@ const CRYSTAL_CALIBRATION_ROTATION = {
 
 export class Core3DManager {
     constructor(canvas, options = {}) {
+        this._instanceId = Math.random().toString(36).substr(2, 6);
+        console.log(`[Core3D:${this._instanceId}] CONSTRUCTOR START`);
+
         this.canvas = canvas;
         this.options = options;
+        this._destroyed = false;
+        this._ready = false;  // Flag indicating all async loading is complete
+        this._readyPromise = null;  // Promise that resolves when ready
 
         // Load geometry type first (needed to determine if moon = tidally locked)
         this.geometryType = options.geometry || 'sphere';
@@ -112,7 +118,14 @@ export class Core3DManager {
         // Check for async geometry loader (e.g., OBJ models)
         // Must be called AFTER material is created so this.customMaterial is available
         if (this.geometryConfig.geometryLoader) {
-            this._loadAsyncGeometry();
+            // Store promise so callers can await full initialization
+            console.log(`[Core3D:${this._instanceId}] Has async geometry loader, starting _loadAsyncGeometry`);
+            this._readyPromise = this._loadAsyncGeometry();
+        } else {
+            // No async loading needed - immediately ready
+            console.log(`[Core3D:${this._instanceId}] No async loader, setting _ready=true immediately`);
+            this._ready = true;
+            this._readyPromise = Promise.resolve();
         }
 
         // Create core mesh with geometry (and optional custom material)
@@ -939,7 +952,8 @@ export class Core3DManager {
         }
 
         // Create new soul and attach to coreMesh
-        this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: this.geometryType });
+        // Pass renderer for scene locking during async geometry swaps
+        this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: this.geometryType, renderer: this.renderer });
         this.crystalSoul.attachTo(this.coreMesh);
 
         // Geometry-specific shell and soul sizes (permanent values)
@@ -1116,11 +1130,30 @@ export class Core3DManager {
      * Render frame
      */
     render(deltaTime) {
+        // Guard against calls after destroy
+        if (this._destroyed) {
+            console.log(`[Core3D:${this._instanceId}] render() BLOCKED - destroyed`);
+            return;
+        }
+
+        // Guard against rendering before geometry is ready (async loading)
+        // This prevents Three.js errors during crystal/rough OBJ loading
+        // Callers should use waitUntilReady() before starting render loop
+        if (!this._ready) {
+            console.log(`[Core3D:${this._instanceId}] render() BLOCKED - not ready`);
+            return;
+        }
+
         // Update animations
         this.animator.update(deltaTime);
 
         // Update geometry morph animation
         const morphState = this.geometryMorpher.update(deltaTime);
+
+        // Debug: Log morph state if something is happening
+        if (morphState.shouldSwapGeometry) {
+            console.log(`[Core3D:${this._instanceId}] morphState.shouldSwapGeometry=true, _targetGeometry=${!!this._targetGeometry}, _targetGeometryType='${this._targetGeometryType}'`);
+        }
 
         // If waiting for async geometry to load, pause morph at midpoint
         if (morphState.shouldSwapGeometry && this._pendingGeometryLoad) {
@@ -1243,6 +1276,7 @@ export class Core3DManager {
             }
 
             // Create or dispose crystal inner core
+            console.log(`[Core3D:${this._instanceId}] Geometry swap - _targetGeometryType='${this._targetGeometryType}', crystalSoul=${!!this.crystalSoul}`);
             if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart') {
                 // Create inner core if morphing to crystal/rough/heart
                 if (this.customMaterialType === 'crystal') {
@@ -1251,6 +1285,7 @@ export class Core3DManager {
             } else {
                 // Dispose inner core if morphing away from crystal/rough/heart
                 if (this.crystalSoul) {
+                    console.log(`[Core3D:${this._instanceId}] DISPOSING CRYSTAL SOUL because target='${this._targetGeometryType}'`);
                     this.crystalSoul.dispose();
                     this.crystalSoul = null;
                     this.crystalInnerCore = null;
@@ -1589,35 +1624,79 @@ export class Core3DManager {
     }
 
     /**
-     * Load async geometry (e.g., OBJ models) and swap when ready
+     * Load async geometry (e.g., OBJ models) and set up mesh when ready
+     * Uses GeometryCache for caching to prevent race conditions and duplicate loads
+     *
+     * IMPORTANT: This is fully async and completes BEFORE render() should be called.
+     * Use isReady() or await waitUntilReady() before starting render loop.
      * @private
+     * @returns {Promise<void>}
      */
     async _loadAsyncGeometry() {
+        console.log(`[Core3D:${this._instanceId}] _loadAsyncGeometry() START`);
         try {
+            // Use GeometryCache for proper caching - this ensures:
+            // 1. Multiple calls during React Strict Mode don't cause duplicate loads
+            // 2. Preloaded geometry is reused instantly
+            // 3. Race conditions are avoided
+            console.log(`[Core3D:${this._instanceId}] Calling GeometryCache.preload('${this.geometryType}')`);
+            const cached = await GeometryCache.preload(this.geometryType, {
+                glowColor: this.glowColor || [1.0, 1.0, 0.95],
+                glowIntensity: this.glowIntensity || 1.0,
+                materialVariant: this.materialVariant,
+                emotionData: getEmotion(this.emotion)
+            });
 
-            const loadedGeometry = await this.geometryConfig.geometryLoader();
+            console.log(`[Core3D:${this._instanceId}] GeometryCache.preload returned, cached=${!!cached}, _destroyed=${this._destroyed}`);
 
-            if (!loadedGeometry) {
-                console.warn('💎 [CORE3D] Async geometry load returned null!');
+            // CRITICAL: Check if destroyed during async load (React Strict Mode can unmount during load)
+            if (this._destroyed) {
+                console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after preload`);
                 return;
             }
 
+            if (!cached || !cached.geometry) {
+                console.warn(`[Core3D:${this._instanceId}] Async geometry load returned null!`);
+                this._ready = true;
+                return;
+            }
+
+            // Clone the cached geometry so each instance has its own copy
+            const loadedGeometry = cached.geometry.clone();
+            console.log(`[Core3D:${this._instanceId}] Cloned geometry, vertices=${loadedGeometry.attributes?.position?.count}`);
 
             // Store geometry type
             loadedGeometry.userData.geometryType = this.geometryType;
             this.geometry = loadedGeometry;
 
             if (this._deferredMeshCreation) {
+                console.log(`[Core3D:${this._instanceId}] Creating coreMesh (deferred)`);
                 // First time: create mesh with loaded geometry (no fallback was shown)
                 this.coreMesh = this.renderer.createCoreMesh(loadedGeometry, this.customMaterial);
+                console.log(`[Core3D:${this._instanceId}] coreMesh created, uuid=${this.coreMesh?.uuid?.slice(0,8)}`);
 
-                // Create inner core for crystal
+                // Check again - createCoreMesh could take time
+                if (this._destroyed) {
+                    console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after createCoreMesh`);
+                    return;
+                }
+
+                // Create inner core for crystal - do this SYNCHRONOUSLY before marking ready
+                // CrystalSoul will load its inclusion geometry asynchronously, but we wait for it
                 if (this.customMaterialType === 'crystal') {
-                    this.createCrystalInnerCore();
+                    console.log(`[Core3D:${this._instanceId}] Creating crystal inner core async...`);
+                    await this._createCrystalInnerCoreAsync();
+                    console.log(`[Core3D:${this._instanceId}] Crystal inner core created, _destroyed=${this._destroyed}`);
+                    // Check AGAIN after async operation
+                    if (this._destroyed) {
+                        console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after inner core`);
+                        return;
+                    }
                 }
 
                 this._deferredMeshCreation = false;
             } else if (this.coreMesh) {
+                console.log(`[Core3D:${this._instanceId}] Swapping geometry on existing mesh`);
                 // Existing mesh: swap geometry
                 const oldGeometry = this.coreMesh.geometry;
                 this.coreMesh.geometry = loadedGeometry;
@@ -1627,13 +1706,151 @@ export class Core3DManager {
                     oldGeometry.dispose();
                 }
 
+                // Check again
+                if (this._destroyed) {
+                    console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after swap`);
+                    return;
+                }
+
                 // Recreate inner core if crystal
-                if (this.customMaterialType === 'crystal' && this.crystalSoul) {
-                    this.createCrystalInnerCore();
+                if (this.customMaterialType === 'crystal') {
+                    console.log(`[Core3D:${this._instanceId}] Recreating crystal inner core async...`);
+                    await this._createCrystalInnerCoreAsync();
+                    // Check AGAIN after async operation
+                    if (this._destroyed) {
+                        console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after inner core recreate`);
+                        return;
+                    }
                 }
             }
+
+            // Final check before marking ready - don't set ready on destroyed instance
+            if (this._destroyed) {
+                console.log(`[Core3D:${this._instanceId}] ABORT - destroyed at final check`);
+                return;
+            }
+
+            // NOW we're fully ready for rendering
+            console.log(`[Core3D:${this._instanceId}] Setting _ready=true, scene children count=${this.renderer?.scene?.children?.length}`);
+            this._logSceneHierarchy();
+            this._ready = true;
         } catch (error) {
-            console.warn('Async geometry load failed:', error);
+            console.warn(`[Core3D:${this._instanceId}] Async geometry load FAILED:`, error);
+            // Mark ready even on failure so render doesn't hang (unless destroyed)
+            if (!this._destroyed) {
+                this._ready = true;
+            }
+        }
+    }
+
+    /**
+     * Debug: Log scene hierarchy
+     * @private
+     */
+    _logSceneHierarchy() {
+        const scene = this.renderer?.scene;
+        if (!scene) {
+            console.log(`[Core3D:${this._instanceId}] Scene is NULL`);
+            return;
+        }
+        console.log(`[Core3D:${this._instanceId}] Scene hierarchy (${scene.children.length} children):`);
+        scene.children.forEach((child, i) => {
+            const status = child === null ? 'NULL!' :
+                child === undefined ? 'UNDEFINED!' :
+                    child.visible === null ? 'visible=NULL!' :
+                        child.visible === undefined ? 'visible=UNDEF!' : 'OK';
+            console.log(`  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0,8) || 'N/A'}`);
+        });
+    }
+
+    /**
+     * Create crystal inner core and wait for its async geometry to load
+     * @private
+     * @returns {Promise<void>}
+     */
+    async _createCrystalInnerCoreAsync() {
+        console.log(`[Core3D:${this._instanceId}] _createCrystalInnerCoreAsync() START`);
+
+        // Dispose existing soul if present
+        if (this.crystalSoul) {
+            console.log(`[Core3D:${this._instanceId}] Disposing existing crystalSoul`);
+            this.crystalSoul.dispose();
+            this.crystalSoul = null;
+        }
+
+        if (!this.coreMesh) {
+            console.log(`[Core3D:${this._instanceId}] No coreMesh, aborting inner core creation`);
+            return;
+        }
+
+        // Preload the inclusion geometry BEFORE creating CrystalSoul
+        // This ensures the soul mesh has its final geometry before being added to scene
+        console.log(`[Core3D:${this._instanceId}] Loading inclusion geometry...`);
+        await CrystalSoul._loadInclusionGeometry();
+        console.log(`[Core3D:${this._instanceId}] Inclusion geometry loaded`);
+
+        // Check if destroyed during async load
+        if (this._destroyed || !this.coreMesh) {
+            console.log(`[Core3D:${this._instanceId}] ABORT inner core - destroyed=${this._destroyed}, coreMesh=${!!this.coreMesh}`);
+            return;
+        }
+
+        // Create new soul - geometry is already cached so it will be used immediately
+        console.log(`[Core3D:${this._instanceId}] Creating CrystalSoul instance`);
+        this.crystalSoul = new CrystalSoul({
+            radius: 0.35,
+            detail: 1,
+            geometryType: this.geometryType,
+            renderer: this.renderer
+        });
+        console.log(`[Core3D:${this._instanceId}] CrystalSoul created, mesh uuid=${this.crystalSoul?.mesh?.uuid?.slice(0,8)}`);
+
+        // Attach to coreMesh - this adds soul to the scene
+        console.log(`[Core3D:${this._instanceId}] Attaching soul to coreMesh`);
+        this.crystalSoul.attachTo(this.coreMesh);
+        console.log(`[Core3D:${this._instanceId}] Soul attached, scene children now=${this.renderer?.scene?.children?.length}`);
+
+        // Geometry-specific shell and soul sizes (permanent values)
+        let soulScale = 1.0;  // Default: full size (HUGE)
+        if (this.geometryType === 'heart') {
+            this.crystalShellBaseScale = 2.4;
+            soulScale = 1.0;  // Full size for heart
+        } else if (this.geometryType === 'rough') {
+            this.crystalShellBaseScale = 1.6;
+            soulScale = 1.0;  // Full size for rough
+        } else if (this.geometryType === 'crystal') {
+            soulScale = 1.0;  // Full size for crystal
+        }
+
+        this.crystalSoul.baseScale = soulScale;
+        this.crystalSoul.mesh.scale.setScalar(soulScale);
+
+        // Respect coreGlowEnabled toggle state
+        this.crystalSoul.setVisible(this.coreGlowEnabled);
+
+        // Legacy references for backwards compatibility
+        this.crystalInnerCore = this.crystalSoul.mesh;
+        this.crystalInnerCoreMaterial = this.crystalSoul.material;
+        this.crystalInnerCoreBaseScale = this.crystalSoul.baseScale;
+    }
+
+    /**
+     * Check if the manager is fully initialized and ready for rendering
+     * @returns {boolean}
+     */
+    isReady() {
+        return this._ready;
+    }
+
+    /**
+     * Wait until the manager is fully initialized
+     * Use this before starting your render loop for geometries with async loading (crystal, rough, heart)
+     * @returns {Promise<void>}
+     */
+    async waitUntilReady() {
+        if (this._ready) return;
+        if (this._readyPromise) {
+            await this._readyPromise;
         }
     }
 
@@ -1641,21 +1858,28 @@ export class Core3DManager {
      * Cleanup
      */
     destroy() {
-        // Dispose custom material textures if they exist
-        if (this.customMaterial) {
-            this.renderer.disposeMaterial(this.customMaterial);
-            this.customMaterial = null;
-            this.customMaterialType = null;
-        }
+        // Log SYNCHRONOUSLY with all state at time of call
+        const state = {
+            id: this._instanceId,
+            ready: this._ready,
+            destroyed: this._destroyed,
+            hasCrystalSoul: !!this.crystalSoul,
+            hasRenderer: !!this.renderer
+        };
+        console.log(`[Core3D:${this._instanceId}] destroy() CALLED`, state);
 
-        // Dispose facing behavior
-        if (this.facingBehavior) {
-            this.facingBehavior.dispose();
-            this.facingBehavior = null;
-        }
+        // Set destroyed flag first to prevent any pending render calls
+        this._destroyed = true;
 
-        this.renderer.destroy();
-        this.animator.stopAll();
+        // Clean up crystal soul FIRST - before renderer.destroy() clears the scene
+        // This ensures we properly remove the mesh from scene before scene is cleared
+        if (this.crystalSoul) {
+            console.log(`[Core3D:${this._instanceId}] destroy() -> Disposing crystalSoul`);
+            this.crystalSoul.dispose();
+            this.crystalSoul = null;
+            this.crystalInnerCore = null;
+            this.crystalInnerCoreMaterial = null;
+        }
 
         // Clean up particle system (remove from scene before destroying)
         if (this.particleOrchestrator) {
@@ -1684,13 +1908,24 @@ export class Core3DManager {
             this.lunarEclipse = null;
         }
 
-        // Clean up crystal soul
-        if (this.crystalSoul) {
-            this.crystalSoul.dispose();
-            this.crystalSoul = null;
-            this.crystalInnerCore = null;
-            this.crystalInnerCoreMaterial = null;
+        // Dispose custom material textures if they exist
+        if (this.customMaterial) {
+            this.renderer.disposeMaterial(this.customMaterial);
+            this.customMaterial = null;
+            this.customMaterialType = null;
         }
+
+        // Dispose facing behavior
+        if (this.facingBehavior) {
+            this.facingBehavior.dispose();
+            this.facingBehavior = null;
+        }
+
+        // Stop animations before destroying renderer
+        this.animator.stopAll();
+
+        // Destroy renderer LAST (after all scene children are cleaned up)
+        this.renderer.destroy();
 
         // Clean up virtual particle pool
         if (this.virtualParticlePool) {

@@ -24,6 +24,7 @@ export class ThreeRenderer {
     constructor(canvas, options = {}) {
         this.canvas = canvas;
         this.options = options;
+        this._destroyed = false;
 
         // Create Three.js scene
         this.scene = new THREE.Scene();
@@ -257,10 +258,17 @@ export class ThreeRenderer {
      * Loads HDRI studio lighting or falls back to procedural generation
      */
     async createEnvironmentMap() {
+        // Guard against calls after destroy (React Strict Mode can unmount during async load)
+        if (this._destroyed) return;
+
         // Try to load HDRI first
         try {
             const { EXRLoader } = await import('three/examples/jsm/loaders/EXRLoader.js');
             const { RGBELoader } = await import('three/examples/jsm/loaders/RGBELoader.js');
+
+            // Check if destroyed during import (React Strict Mode)
+            if (this._destroyed) return;
+
             const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
             pmremGenerator.compileEquirectangularShader();
 
@@ -268,6 +276,14 @@ export class ThreeRenderer {
             try {
                 const exrLoader = new EXRLoader();
                 const texture = await exrLoader.loadAsync('/hdri/studio_01.exr');
+
+                // Check if destroyed during load (React Strict Mode)
+                if (this._destroyed) {
+                    texture.dispose();
+                    pmremGenerator.dispose();
+                    return;
+                }
+
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 this.envMap = pmremGenerator.fromEquirectangular(texture).texture;
                 texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (10-22MB GPU memory leak fix)
@@ -279,6 +295,9 @@ export class ThreeRenderer {
         } catch (error) {
             console.warn('HDRI loaders not available, using procedural envmap:', error.message);
         }
+
+        // Check if destroyed before fallback (React Strict Mode)
+        if (this._destroyed) return;
 
         // Fallback: Procedural environment map
         const size = 512;
@@ -1104,6 +1123,44 @@ export class ThreeRenderer {
      * @param {number} [params.deltaTime=0] - Delta time for eclipse animation (seconds)
      */
     render(params = {}) {
+        // Guard against calls after destroy
+        if (this._destroyed) {
+            console.log('[ThreeRenderer] render() BLOCKED - destroyed');
+            return;
+        }
+
+        // Guard against rendering before scene is ready
+        if (!this.scene || !this.camera || !this.renderer) {
+            console.log(`[ThreeRenderer] render() BLOCKED - scene=${!!this.scene}, camera=${!!this.camera}, renderer=${!!this.renderer}`);
+            return;
+        }
+
+        // DEBUG: Check scene for null children before render and REMOVE them
+        // Also recursively check children of children
+        const validateObject = (obj, path) => {
+            if (!obj || !obj.children) return true;
+            for (let i = 0; i < obj.children.length; i++) {
+                const child = obj.children[i];
+                if (child === null || child === undefined) {
+                    console.error(`[ThreeRenderer] NULL CHILD at ${path}.children[${i}] - REMOVING!`);
+                    obj.children.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                if (child.visible === null || child.visible === undefined) {
+                    console.error(`[ThreeRenderer] child.visible is NULL at ${path}.children[${i}] name=${child.name} - REMOVING!`);
+                    obj.children.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                // Recursively validate children
+                validateObject(child, `${path}.children[${i}]`);
+            }
+            return true;
+        };
+        validateObject(this.scene, 'scene');
+
+
         const {
             position = [0, 0, 0],
             rotation = [0, 0, 0],
@@ -1440,6 +1497,11 @@ export class ThreeRenderer {
      * Cleanup resources
      */
     destroy() {
+        console.log(`[ThreeRenderer] destroy() CALLED, scene children=${this.scene?.children?.length}`);
+
+        // Set destroyed flag first to prevent any pending render calls
+        this._destroyed = true;
+
         // Remove WebGL context event listeners
         if (this.canvas) {
             this.canvas.removeEventListener('webglcontextlost', this._boundHandleContextLost, false);

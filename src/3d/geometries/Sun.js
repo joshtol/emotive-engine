@@ -377,7 +377,7 @@ export function createSunMaterial(textureLoader, options = {}) {
             colorMap: { value: colorMap },
             normalMap: { value: normalMap },
             baseColor: { value: baseColor },
-            emissiveIntensity: { value: 4.0 },  // Increased for stronger bloom
+            emissiveIntensity: { value: 1.2 },  // Moderate intensity to avoid blown-out bloom
             glowColor: { value: new THREE.Color(1, 1, 1) },  // For ThreeRenderer compatibility
             glowIntensity: { value: 1.0 },  // For ThreeRenderer compatibility
             // Shadow uniforms (same as moon crescent shader)
@@ -497,7 +497,7 @@ export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, delta
         // This preserves the NASA-accurate 5,772K color temperature
         // Reuse temp color to avoid per-frame allocations
         uniforms.baseColor.value.setRGB(brightness, brightness, brightness * 0.95);
-        uniforms.emissiveIntensity.value = 4.0;  // Increased for stronger bloom
+        uniforms.emissiveIntensity.value = 1.2;  // Moderate intensity to avoid blown-out bloom
     } else if (material.color) {
         // Fallback for basic material (no shader uniforms)
         // Sun is ALWAYS NASA white - ignores emotion colors
