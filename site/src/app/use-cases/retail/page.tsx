@@ -1,3 +1,25 @@
+/**
+ * Retail E-Commerce Use Case
+ *
+ * This demo showcases the Emotive Engine in a retail/checkout context.
+ * The mascot acts as a friendly shopping assistant that responds to
+ * cart interactions with appropriate emotions and gestures.
+ *
+ * Features:
+ * - Interactive checkout simulation with product cards
+ * - Mascot emotions respond to cart actions (add/remove items)
+ * - AI-powered chat assistant for product questions
+ * - Scroll-driven mascot animations in hero section
+ * - Element attachment for in-context mascot display
+ *
+ * KEY PATTERNS FOR DEVELOPERS:
+ * 1. CheckoutSimulation passes mascot prop for direct API access
+ * 2. mascot.attachToElement() positions mascot within UI components
+ * 3. Cart state changes trigger emotion/gesture responses
+ * 4. AI assistant uses Claude API via server route
+ *
+ * @see https://emotive.software/docs for full API documentation
+ */
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'

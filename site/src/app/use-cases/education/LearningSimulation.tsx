@@ -1,3 +1,22 @@
+/**
+ * LearningSimulation Component
+ *
+ * Interactive quiz/problem-solving component that coordinates mascot behavior
+ * with student interactions. This is the core demo component for the education
+ * use case.
+ *
+ * HOW IT WORKS:
+ * 1. Problems are defined with mascotShape and mascotEmotion properties
+ * 2. When a problem is selected, the mascot morphs to the specified shape
+ * 3. Correct/incorrect answers trigger appropriate emotions and gestures
+ * 4. The mascot attaches to the problem stage via IntersectionObserver
+ *
+ * CUSTOMIZATION:
+ * - Add new problems to DEMO_PROBLEMS array
+ * - Each problem can specify: mascotShape, mascotEmotion, hints, explanation
+ * - Valid shapes: 'crystal', 'heart', 'sun', 'moon', 'rough'
+ * - Valid emotions: 'joy', 'calm', 'excited', 'neutral', 'sadness'
+ */
 'use client'
 
 import { useState, useRef, useEffect } from 'react'

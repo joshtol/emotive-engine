@@ -1,3 +1,30 @@
+/**
+ * Education / E-Learning Use Case
+ *
+ * This demo showcases the Emotive Engine in an educational context.
+ * The mascot acts as an adaptive learning companion that responds
+ * to student progress with encouragement and visual feedback.
+ *
+ * Features:
+ * - Interactive math/science problem solving
+ * - Progressive hint system powered by Claude AI
+ * - Mascot emotions respond to correct/incorrect answers
+ * - Shape morphing based on subject (crystal, heart, sun)
+ * - Scroll-driven sinusoidal mascot movement
+ * - Element attachment for in-context tutoring
+ *
+ * KEY PATTERNS FOR DEVELOPERS:
+ * 1. Problem data structure defines mascot shape and emotion per question
+ * 2. LearningSimulation handles answer validation and mascot coordination
+ * 3. AI hints use streaming responses via education-chat API route
+ * 4. mascot.attachToElement() positions mascot in the problem stage
+ *
+ * VALID VALUES:
+ * - Shapes: 'crystal', 'heart', 'sun', 'moon', 'rough'
+ * - Emotions: 'joy', 'calm', 'excited', 'neutral', 'sadness', 'surprise'
+ *
+ * @see https://emotive.software/docs for full API documentation
+ */
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'

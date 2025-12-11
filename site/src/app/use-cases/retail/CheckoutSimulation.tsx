@@ -1,3 +1,28 @@
+/**
+ * CheckoutSimulation Component
+ *
+ * Interactive self-checkout simulation that coordinates mascot behavior
+ * with shopping cart interactions. This is the core demo component for
+ * the retail use case.
+ *
+ * HOW IT WORKS:
+ * 1. Products are defined in DEMO_PRODUCTS array
+ * 2. Adding items triggers joy emotion + celebration gesture
+ * 3. Removing items triggers sadness emotion
+ * 4. Cart total changes trigger various mascot responses
+ * 5. The mascot attaches to the cart panel via IntersectionObserver
+ *
+ * MASCOT INTEGRATION PATTERN:
+ * - mascot prop is passed from parent page component
+ * - mascot.setEmotion('emotion', intensity) - Set emotional state
+ * - mascot.express('gesture') - Play animation (wave, bounce, wiggle)
+ * - mascot.attachToElement(ref) - Position mascot in cart panel
+ *
+ * CUSTOMIZATION:
+ * - Add new products to DEMO_PRODUCTS array
+ * - Modify handleAddToCart/handleRemove for different behaviors
+ * - Valid emotions: 'joy', 'calm', 'excited', 'neutral', 'sadness'
+ */
 'use client'
 
 import { useState, useRef, useEffect } from 'react'

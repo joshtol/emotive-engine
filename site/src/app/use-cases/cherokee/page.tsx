@@ -1,3 +1,23 @@
+/**
+ * Cherokee Language Learning Use Case
+ *
+ * This demo showcases the Emotive Engine's ability to create culturally meaningful
+ * interactive experiences. Features include:
+ *
+ * - Interactive greeting cards with Cherokee syllabary
+ * - 3D mascot that morphs shapes and expresses emotions based on each phrase
+ * - Audio pronunciation playback
+ * - Scroll-driven mascot animations
+ * - Mobile-responsive design
+ *
+ * KEY PATTERNS FOR DEVELOPERS:
+ * 1. Greeting data structure defines mascot behavior (emotion, gestures, shape)
+ * 2. MascotRenderer component handles 2D/3D mode switching
+ * 3. Card modal creates a dedicated 3D mascot instance for focused interaction
+ * 4. Geometry preloading ensures smooth transitions between shapes
+ *
+ * @see https://emotive.software/docs for full API documentation
+ */
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'

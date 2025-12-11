@@ -1,3 +1,25 @@
+/**
+ * Smart Home Control Use Case
+ *
+ * This demo showcases the Emotive Engine in a smart home IoT context.
+ * The mascot serves as a friendly home assistant that morphs shapes
+ * and expresses emotions based on device states and automation scenes.
+ *
+ * Features:
+ * - Interactive device controls (lights, locks, thermostat, etc.)
+ * - Scene presets that trigger coordinated mascot responses
+ * - Shape morphing based on device context (sun for morning, moon for night)
+ * - SSS (subsurface scattering) material presets for visual variety
+ * - Scroll-driven sinusoidal mascot movement
+ *
+ * KEY PATTERNS FOR DEVELOPERS:
+ * 1. SmartHomeSimulation manages device state and mascot coordination
+ * 2. Scene presets define sequences of mascot actions (morphTo, setEmotion, express)
+ * 3. mascot.attachToElement() embeds mascot in the control panel
+ * 4. IntersectionObserver handles scroll-based detachment
+ *
+ * @see https://emotive.software/docs for full API documentation
+ */
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'

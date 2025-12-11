@@ -1,3 +1,28 @@
+/**
+ * SmartHomeSimulation Component
+ *
+ * Interactive smart home control panel that coordinates mascot behavior
+ * with device states and automation scenes. This is the core demo component
+ * for the smart home use case.
+ *
+ * HOW IT WORKS:
+ * 1. Rooms and devices are defined in INITIAL_ROOMS array
+ * 2. Scene presets (Good Morning, Movie Night, etc.) trigger mascot sequences
+ * 3. Individual device toggles can trigger mascot emotions/gestures
+ * 4. The mascot attaches to the control panel via IntersectionObserver
+ *
+ * SCENE ANATOMY (see runScene function):
+ * - mascot.morphTo('shape') - Change geometry
+ * - mascot.setEmotion('emotion', intensity) - Set emotional state
+ * - mascot.express('gesture') - Play animation
+ * - SSS presets change material appearance (ruby, sapphire, etc.)
+ *
+ * CUSTOMIZATION:
+ * - Add new scenes to the scenePresets array
+ * - Each scene defines: mascot shape, emotion, gestures, SSS preset
+ * - Valid shapes: 'crystal', 'heart', 'sun', 'moon', 'rough'
+ * - Valid emotions: 'joy', 'calm', 'excited', 'neutral', 'love'
+ */
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
