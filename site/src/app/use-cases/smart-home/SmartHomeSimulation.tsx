@@ -92,6 +92,62 @@ const INITIAL_ROOMS_MOBILE: Room[] = [
   },
 ]
 
+// SSS presets for crystal materials (for 3D mode)
+const sssPresets: Record<string, any> = {
+  quartz: {
+    sssStrength: 0.8,
+    sssAbsorption: [2.8, 2.9, 3.0],
+    sssScatterDistance: [0.2, 0.2, 0.25],
+    sssThicknessBias: 0.60,
+    sssThicknessScale: 1.8,
+    sssCurvatureScale: 3.0,
+    sssAmbient: 0.12,
+    frostiness: 0.15,
+    innerGlowStrength: 0.20,
+    fresnelIntensity: 1.5,
+    causticIntensity: 1.2
+  },
+  amethyst: {
+    sssStrength: 2.5,
+    sssAbsorption: [3.0, 0.05, 4.5],
+    sssScatterDistance: [0.4, 0.05, 0.5],
+    sssThicknessBias: 0.70,
+    sssThicknessScale: 2.0,
+    sssCurvatureScale: 3.0,
+    sssAmbient: 0.08,
+    frostiness: 0.18,
+    innerGlowStrength: 0.12,
+    fresnelIntensity: 1.4,
+    causticIntensity: 1.0,
+    emotionColorBleed: 0.35
+  }
+}
+
+// Helper to apply SSS preset to mascot (for 3D mode)
+const applySSSPreset = (mascotInstance: any, presetName: string) => {
+  if (!presetName || !mascotInstance?.core3D?.customMaterial?.uniforms) return
+  const preset = sssPresets[presetName]
+  if (!preset) return
+
+  const u = mascotInstance.core3D.customMaterial.uniforms
+  if (u.sssStrength) u.sssStrength.value = preset.sssStrength
+  if (u.sssAbsorption) u.sssAbsorption.value.set(...preset.sssAbsorption)
+  if (u.sssScatterDistance) u.sssScatterDistance.value.set(...preset.sssScatterDistance)
+  if (u.sssThicknessBias) u.sssThicknessBias.value = preset.sssThicknessBias
+  if (u.sssThicknessScale) u.sssThicknessScale.value = preset.sssThicknessScale
+  if (u.sssCurvatureScale) u.sssCurvatureScale.value = preset.sssCurvatureScale
+  if (u.sssAmbient) u.sssAmbient.value = preset.sssAmbient
+  if (u.frostiness) u.frostiness.value = preset.frostiness
+  if (u.innerGlowStrength) u.innerGlowStrength.value = preset.innerGlowStrength
+  if (u.fresnelIntensity) u.fresnelIntensity.value = preset.fresnelIntensity
+  if (preset.causticIntensity !== undefined && u.causticIntensity) {
+    u.causticIntensity.value = preset.causticIntensity
+  }
+  if (u.emotionColorBleed) {
+    u.emotionColorBleed.value = preset.emotionColorBleed ?? 0.0
+  }
+}
+
 // Color scheme for smart home hub
 const COLORS = {
   primary: '#FF6B35',      // Vibrant Orange
@@ -163,31 +219,44 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Track whether stage is currently in view
+  const stageInViewRef = useRef(false)
+
   // Attach mascot to stage when scrolled into view
   useEffect(() => {
     if (!mascot || !mascotStageRef.current) return
+
+    // Helper to attach mascot to stage
+    const attachMascotToStage = () => {
+      if (typeof mascot.attachToElement !== 'function') return
+
+      mascot.attachToElement(mascotStageRef.current, {
+        animate: true,
+        duration: 800,
+        scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
+        containParticles: true  // Keep particles within the stage bounds
+      })
+
+      // Set emotion to calm when attached
+      mascot.setEmotion('calm')
+
+      mascotRef.current = mascot
+    }
+
+    // If stage is already in view (e.g., after 2D/3D switch), attach immediately
+    if (stageInViewRef.current && mascotRef.current !== mascot) {
+      attachMascotToStage()
+    }
 
     // Use Intersection Observer to detect when the stage comes into view
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !mascotRef.current) {
-            // Stage is in view and mascot not yet attached
-            if (typeof mascot.attachToElement !== 'function') {
-              return
-            }
+          stageInViewRef.current = entry.isIntersecting
 
-            mascot.attachToElement(mascotStageRef.current, {
-              animate: true,
-              duration: 800,
-              scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
-              containParticles: true  // Keep particles within the stage bounds
-            })
-
-            // Set emotion to calm when attached
-            mascot.setEmotion('calm')
-
-            mascotRef.current = mascot
+          if (entry.isIntersecting && mascotRef.current !== mascot) {
+            // Stage is in view and mascot not yet attached (or different mascot)
+            attachMascotToStage()
           } else if (!entry.isIntersecting && mascotRef.current) {
             // Stage is out of view, detach mascot
             if (typeof mascot.detachFromElement === 'function') {
@@ -368,8 +437,17 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
       )
 
       if (mascotRef.current) {
+        // Morph to rough with amethyst SSS preset for "leaving home" feel
+        if (mascotRef.current.core3D) {
+          mascotRef.current.core3D.onMaterialSwap = (swapInfo: { geometryType: string, material: any }) => {
+            if (swapInfo.geometryType === 'rough' && swapInfo.material) {
+              applySSSPreset(mascotRef.current, 'amethyst')
+            }
+            mascotRef.current.core3D.onMaterialSwap = null
+          }
+        }
         if (mascotRef.current.morphTo) {
-          mascotRef.current.morphTo('lunar', { duration: 1000 })
+          mascotRef.current.morphTo('rough', { duration: 1000 })
         }
         if (mascotRef.current.setEmotion) {
           mascotRef.current.setEmotion('sadness', 0.7)
@@ -393,23 +471,79 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
       )
 
       if (mascotRef.current) {
+        // Set materialVariant to 'multiplexer' BEFORE morphing to moon
+        // This enables the blend layer system needed for proper blood moon color grading
+        if (mascotRef.current.core3D) {
+          mascotRef.current.core3D.materialVariant = 'multiplexer'
+
+          // Set up callback to animate blood moon AFTER moon geometry is swapped in
+          mascotRef.current.core3D.onMaterialSwap = (swapInfo: { geometryType: string, material: any }) => {
+            if (swapInfo.geometryType === 'moon' && swapInfo.material) {
+              // Moon geometry is now active - animate the blood moon eclipse
+              const uniforms = swapInfo.material.uniforms
+              if (!uniforms) return
+
+              // Initialize eclipse uniforms (start as normal full moon)
+              if (uniforms.eclipseShadowPos) uniforms.eclipseShadowPos.value = [-2.0, 0.0]
+              if (uniforms.eclipseProgress) uniforms.eclipseProgress.value = 0.0
+              if (uniforms.emissiveStrength) uniforms.emissiveStrength.value = 0.0
+              if (uniforms.shadowDarkness) uniforms.shadowDarkness.value = 1.0
+              // Set to full moon phase (shadow offset 0,0)
+              if (uniforms.shadowOffset) {
+                uniforms.shadowOffset.value.x = 0
+                uniforms.shadowOffset.value.y = 0
+              }
+
+              // Fast animation to blood moon (600ms)
+              const startTime = performance.now()
+              const animateLunarEclipse = (currentTime: number) => {
+                if (!mascotRef.current?.core3D?.customMaterial?.uniforms) return
+                const progress = Math.min((currentTime - startTime) / 600, 1.0)
+                const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2
+                if (uniforms.eclipseShadowPos) uniforms.eclipseShadowPos.value[0] = -2.0 + (2.0 * eased)
+                if (uniforms.eclipseProgress) uniforms.eclipseProgress.value = eased
+                if (uniforms.eclipseIntensity) uniforms.eclipseIntensity.value = eased
+                if (uniforms.emissiveStrength) uniforms.emissiveStrength.value = 0.39 * eased
+                if (uniforms.shadowDarkness) uniforms.shadowDarkness.value = 1.0 - (0.47 * eased)
+                if (progress < 1.0) requestAnimationFrame(animateLunarEclipse)
+              }
+              requestAnimationFrame(animateLunarEclipse)
+            }
+            mascotRef.current.core3D.onMaterialSwap = null
+          }
+        }
         if (mascotRef.current.morphTo) {
-          mascotRef.current.morphTo('star', { duration: 1000 })
+          mascotRef.current.morphTo('moon', { duration: 1000 })
         }
         if (mascotRef.current.setEmotion) {
           mascotRef.current.setEmotion('excitement', 0.8)
         }
         if (mascotRef.current.express) {
-          await mascotRef.current.express('sparkle', { intensity: 0.8, duration: 1000 })
+          await mascotRef.current.express('bounce', { intensity: 0.6, duration: 800 })
         }
       }
     }
 
     setManagedTimeout(() => {
       setActiveScene(null)
+      // Turn off blood moon eclipse when resetting
+      if (mascotRef.current?.core3D?.setMoonEclipse) {
+        mascotRef.current.core3D.setMoonEclipse('off')
+      }
       if (mascotRef.current) {
+        // Reset materialVariant to null (no special material variant for crystal)
+        // and reset SSS preset to quartz when morphing back to crystal
+        if (mascotRef.current.core3D) {
+          mascotRef.current.core3D.materialVariant = null
+          mascotRef.current.core3D.onMaterialSwap = (swapInfo: { geometryType: string, material: any }) => {
+            if (swapInfo.geometryType === 'crystal' && swapInfo.material) {
+              applySSSPreset(mascotRef.current, 'quartz')
+            }
+            mascotRef.current.core3D.onMaterialSwap = null
+          }
+        }
         if (mascotRef.current.morphTo) {
-          mascotRef.current.morphTo('circle', { duration: 1000 })
+          mascotRef.current.morphTo('crystal', { duration: 1000 })
         }
         if (mascotRef.current.setEmotion) {
           mascotRef.current.setEmotion('neutral', 0.5)
