@@ -338,15 +338,12 @@ export class CrystalSoul {
     }
 
     /**
-     * Attach the soul to a parent mesh (adds to scene, syncs position)
-     * Soul is added to the scene root (not as child) so it can be on a separate layer
+     * Attach the soul to a parent mesh (adds to same scene, syncs position each frame)
      * @param {THREE.Mesh} parentMesh - The mesh to follow (e.g., crystal, heart)
+     * @param {THREE.Scene} scene - The scene to add the soul to
      */
-    attachTo(parentMesh) {
-        console.log(`[CrystalSoul] attachTo() START, parentMesh=${!!parentMesh}, _disposed=${this._disposed}`);
-
+    attachTo(parentMesh, scene) {
         if (this._disposed) {
-            console.warn('[CrystalSoul] attachTo() BLOCKED - already disposed');
             return;
         }
 
@@ -360,54 +357,50 @@ export class CrystalSoul {
             return;
         }
 
-        // Remove from previous scene if any
+        // Remove from previous parent if any
         if (this.mesh.parent) {
-            console.log(`[CrystalSoul] Removing from previous parent: ${this.mesh.parent.type}`);
             this.mesh.parent.remove(this.mesh);
         }
 
         this.parentMesh = parentMesh;
+        this._scene = scene;
 
-        // Add to scene directly (not as child of parentMesh)
-        // This allows the soul to be rendered on layer 2 independently
-        let scene = parentMesh;
-        let depth = 0;
-        while (scene.parent) {
-            scene = scene.parent;
-            depth++;
+        // Add to scene as separate object (not child of parentMesh)
+        // This keeps soul at full scale regardless of parent's morph scale
+        if (scene && !this.mesh.parent) {
+            scene.add(this.mesh);
         }
-        console.log(`[CrystalSoul] Found scene at depth ${depth}, scene.type=${scene.type}, scene.children.length=${scene.children?.length}`);
-
-        scene.add(this.mesh);
-        console.log(`[CrystalSoul] Added mesh to scene, scene.children.length=${scene.children?.length}, mesh.uuid=${this.mesh.uuid?.slice(0,8)}`);
 
         // Sync initial position
         this._syncPosition();
+        this.mesh.visible = true;
     }
 
     /**
      * Sync soul world position/rotation to parent mesh
-     * Called automatically on attach and should be called each frame
+     * Called each frame to follow the parent
      * @private
      */
     _syncPosition() {
-        if (this.parentMesh && this.mesh) {
-            this.parentMesh.getWorldPosition(this.mesh.position);
-            this.parentMesh.getWorldQuaternion(this.mesh.quaternion);
-        }
+        if (!this.parentMesh || !this.mesh) return;
+
+        // Copy world position from parent
+        this.parentMesh.getWorldPosition(this.mesh.position);
+        this.parentMesh.getWorldQuaternion(this.mesh.quaternion);
     }
 
     /**
      * Detach from current parent
+     * Marks invisible but does NOT remove from scene (removal happens in dispose)
+     * This avoids Three.js render loop race conditions
      */
     detach() {
-        console.log(`[CrystalSoul] detach() START, mesh=${!!this.mesh}, mesh.parent=${!!this.mesh?.parent}`);
-        if (this.mesh && this.mesh.parent) {
-            const parentType = this.mesh.parent.type;
-            const parentChildCount = this.mesh.parent.children?.length;
-            this.mesh.parent.remove(this.mesh);
-            console.log(`[CrystalSoul] Removed from ${parentType}, was ${parentChildCount} children, now ${this.mesh.parent?.children?.length || 'N/A'}`);
-        }
+        if (!this.mesh) return;
+
+        // Mark invisible - DO NOT remove from scene here
+        // Removal during render causes race conditions with projectObject traversal
+        // The mesh will be removed properly in dispose() on next frame
+        this.mesh.visible = false;
         this.parentMesh = null;
     }
 
@@ -541,7 +534,7 @@ export class CrystalSoul {
      * @returns {boolean}
      */
     isAttached() {
-        return this.parentMesh !== null && this.mesh.parent !== null;
+        return this.parentMesh !== null && this.mesh !== null && this.mesh.parent !== null;
     }
 
     /**
@@ -576,31 +569,41 @@ export class CrystalSoul {
 
     /**
      * Dispose of resources
+     * Defers scene removal AND geometry disposal to next frame to avoid Three.js render race conditions
      */
     dispose() {
-        console.log(`[CrystalSoul] dispose() START, _disposed=${this._disposed}, mesh=${!!this.mesh}`);
-        console.log('[CrystalSoul] dispose() CALLER STACK:', new Error().stack);
+        // Prevent double disposal
+        if (this._disposed) return;
 
         // Set disposed flag FIRST to prevent async callbacks from running
         this._disposed = true;
 
+        // Mark invisible immediately (detach just sets visible=false now)
         this.detach();
 
-        if (this.mesh) {
-            console.log(`[CrystalSoul] Disposing mesh geometry, uuid=${this.mesh.uuid?.slice(0,8)}`);
-            if (this.mesh.geometry) {
-                this.mesh.geometry.dispose();
-            }
-            this.mesh = null;
-        }
+        // Store references for deferred cleanup
+        const meshToDispose = this.mesh;
+        const materialToDispose = this.material;
 
-        if (this.material) {
-            console.log('[CrystalSoul] Disposing material');
-            this.material.dispose();
-            this.material = null;
-        }
-
+        // Clear references immediately (so nothing tries to use them)
+        this.mesh = null;
+        this.material = null;
         this.parentMesh = null;
-        console.log('[CrystalSoul] dispose() COMPLETE');
+
+        // Defer BOTH scene removal AND geometry disposal to next frame
+        // This avoids Three.js render race conditions with projectObject traversal
+        requestAnimationFrame(() => {
+            // Remove from scene first
+            if (meshToDispose?.parent) {
+                meshToDispose.parent.remove(meshToDispose);
+            }
+            // Then dispose resources
+            if (meshToDispose?.geometry) {
+                meshToDispose.geometry.dispose();
+            }
+            if (materialToDispose) {
+                materialToDispose.dispose();
+            }
+        });
     }
 }

@@ -51,7 +51,8 @@ export default function SmartHomePage() {
     }, 800)
   }, [])
 
-  // Scroll-driven gestures and emotions
+  // Scroll-driven animation with sinusoidal movement
+  // Uses mascot.setPosition() API like the retail page for proper positioning
   useEffect(() => {
     if (!mascot) return
 
@@ -59,13 +60,54 @@ export default function SmartHomePage() {
       try {
         const scrollY = window.scrollY
         const viewportHeight = window.innerHeight
+        const viewportWidth = window.innerWidth
+        const isMobileDevice = viewportWidth < 768
         const heroHeight = viewportHeight * 0.9
 
-        // Gesture points
+        // Position calculation using mascot.setPosition() API (like retail page)
+        // Skip if mascot is attached to an element (SmartHomeSimulation handles its own positioning)
+        const isAttached = typeof mascot.isAttachedToElement === 'function' && mascot.isAttachedToElement()
+
+        if (typeof mascot.setPosition === 'function' && !isAttached) {
+          // Desktop: Center mascot between left screen edge and hero text
+          const heroTextStart = Math.max(0, (viewportWidth - 1000) / 2)
+          const gapCenter = heroTextStart / 2
+
+          // Mobile: Base position is 18% from top. Canvas center is 50%.
+          // Offset from center = 18% - 50% = -32% = -0.32 * vh
+          const mobileBaseYOffset = -viewportHeight * 0.32
+
+          if (mascotMode === '2d') {
+            // 2D mode: Full viewport canvas with x/y offsets from center
+            const baseXOffset = isMobileDevice ? 0 : gapCenter - viewportWidth / 2
+            const yOffset = isMobileDevice
+              ? mobileBaseYOffset + scrollY * 0.5  // Start at 18%, move DOWN with scroll
+              : (scrollY - viewportHeight * 0.1) * 0.5
+            const wavelength = 600
+            const amplitude = isMobileDevice
+              ? Math.min(80, viewportWidth * 0.15)
+              : Math.min(100, viewportWidth * 0.08)
+            const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength))
+            mascot.setPosition(xOffset, yOffset, 0)
+          } else {
+            // 3D mode: Container position set by CSS, just add scroll offset
+            const yOffset = isMobileDevice
+              ? scrollY * 0.4  // Move DOWN with scroll (base position set by CSS at 18%)
+              : (scrollY - viewportHeight * 0.1) * 0.4
+            const wavelength = 600
+            const amplitude = isMobileDevice
+              ? Math.min(60, viewportWidth * 0.1)
+              : Math.min(80, viewportWidth * 0.06)
+            const xOffset = amplitude * Math.sin(scrollY / wavelength)
+            mascot.setPosition(xOffset, yOffset, 0)
+          }
+        }
+
+        // Gesture points based on scroll position
         const gesturePoints = [
           { threshold: 0, gesture: null, emotion: 'neutral' },
           { threshold: heroHeight * 0.9, gesture: 'wave', emotion: 'joy' },
-          { threshold: heroHeight + 800, gesture: 'bounce', emotion: 'excitement' },
+          { threshold: heroHeight + 800, gesture: 'bounce', emotion: 'excited' },
           { threshold: heroHeight + 2000, gesture: 'pulse', emotion: 'calm' },
         ]
 
@@ -118,7 +160,7 @@ export default function SmartHomePage() {
       }
       tickingRef.current = false
     }
-  }, [mascot])
+  }, [mascot, mascotMode])
 
   return (
     <>

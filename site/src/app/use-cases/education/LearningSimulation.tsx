@@ -32,7 +32,7 @@ const DEMO_PROBLEMS: Problem[] = [
       'That gives you 80 + 40'
     ],
     explanation: 'Great! 15 × 8 = 120. You can break it down as (10×8) + (5×8) = 80 + 40 = 120',
-    mascotShape: 'sphere',
+    mascotShape: 'crystal',
     mascotEmotion: 'calm'
   },
   {
@@ -48,7 +48,7 @@ const DEMO_PROBLEMS: Problem[] = [
       'Use H for hydrogen and O for oxygen'
     ],
     explanation: 'Perfect! H₂O means 2 hydrogen atoms bonded to 1 oxygen atom - that\'s water!',
-    mascotShape: 'sphere',
+    mascotShape: 'heart',
     mascotEmotion: 'joy'
   },
   {
@@ -64,8 +64,8 @@ const DEMO_PROBLEMS: Problem[] = [
       'Now divide both sides by 3'
     ],
     explanation: 'Excellent work! You isolated x by subtracting 7 (getting 3x = 15) then dividing by 3 to get x = 5',
-    mascotShape: 'star',
-    mascotEmotion: 'triumph'
+    mascotShape: 'crystal',
+    mascotEmotion: 'joy'
   },
   {
     id: '4',
@@ -81,7 +81,7 @@ const DEMO_PROBLEMS: Problem[] = [
     ],
     explanation: 'Amazing! The speed of light is 299,792 km/s - one of the fundamental constants of the universe!',
     mascotShape: 'sun',
-    mascotEmotion: 'euphoria'
+    mascotEmotion: 'joy'
   },
 ]
 
@@ -102,7 +102,8 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
   const [streak, setStreak] = useState(0)
   const mascotStageRef = useRef<HTMLDivElement>(null)
   const mascotRef = useRef<any>(mascot)
-  const initializingRef = useRef<boolean>(false)
+  const isAttachedRef = useRef<boolean>(false)
+  const lastScrollYRef = useRef<number>(0)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -126,22 +127,29 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
   }, [])
 
   // Attach mascot to stage when scrolled into view
+  // Only detach when scrolling UP past the attachment point, not when scrolling DOWN
   useEffect(() => {
     if (!mascot || !mascotStageRef.current) return
+
+    // Track scroll direction
+    const handleScroll = () => {
+      lastScrollYRef.current = window.scrollY
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    lastScrollYRef.current = window.scrollY
 
     // Use Intersection Observer to detect when the stage comes into view
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !mascotRef.current) {
+          if (entry.isIntersecting && !isAttachedRef.current) {
             // Stage is in view and mascot not yet attached
             if (typeof mascot.attachToElement !== 'function') {
               return
             }
 
             mascot.attachToElement(mascotStageRef.current, {
-              animate: true,
-              duration: 800,
+              animate: false,  // Instant snap - animation causes overshoot due to scroll offset
               scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
               containParticles: true  // Keep particles within the stage bounds
             })
@@ -150,12 +158,24 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
             mascot.setEmotion('calm')
 
             mascotRef.current = mascot
-          } else if (!entry.isIntersecting && mascotRef.current) {
-            // Stage is out of view, detach mascot
-            if (typeof mascot.detachFromElement === 'function') {
-              mascot.detachFromElement()
+            isAttachedRef.current = true
+          } else if (!entry.isIntersecting && isAttachedRef.current) {
+            // Stage is out of view - but only detach if scrolling UP
+            // When boundingClientRect.top > 0, element is below viewport (user scrolled UP)
+            // When boundingClientRect.top < 0, element is above viewport (user scrolled DOWN)
+            const elementBelowViewport = entry.boundingClientRect.top > 0
+
+            // Only detach when scrolling UP (element goes below viewport)
+            // Do NOT detach when scrolling DOWN (element goes above viewport)
+            if (elementBelowViewport) {
+              if (typeof mascot.detachFromElement === 'function') {
+                mascot.detachFromElement()
+              }
+
+              mascotRef.current = null
+              isAttachedRef.current = false
             }
-            mascotRef.current = null
+            // If scrolling DOWN past the element, keep attached - mascot stays in place
           }
         })
       },
@@ -169,8 +189,13 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
 
     return () => {
       observer.disconnect()
+      window.removeEventListener('scroll', handleScroll)
+      if (mascot && typeof mascot.detachFromElement === 'function') {
+        mascot.detachFromElement()
+      }
+      isAttachedRef.current = false
     }
-  }, [mascot, mascotStageRef, isMobile])
+  }, [mascot, isMobile])
 
   const checkAnswer = async () => {
     // Prevent checking if already correct
@@ -185,18 +210,19 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
       setStreak(streak + 1)
 
       // Mascot celebrates with morph and emotion
-      if (mascotRef.current) {
-        if (problem.mascotShape && mascotRef.current.morphTo) {
-          mascotRef.current.morphTo(problem.mascotShape, { duration: 800 })
+      // Use mascot prop directly for core operations (always available)
+      if (mascot) {
+        if (problem.mascotShape && mascot.morphTo) {
+          mascot.morphTo(problem.mascotShape, { duration: 800 })
         }
-        if (problem.mascotEmotion && mascotRef.current.setEmotion) {
-          mascotRef.current.setEmotion(problem.mascotEmotion, 0.9)
+        if (problem.mascotEmotion && mascot.setEmotion) {
+          mascot.setEmotion(problem.mascotEmotion, 0.9)
         }
-        if (mascotRef.current.express) {
-          mascotRef.current.express('bounce')
+        if (mascot.express) {
+          mascot.express('bounce')
           setManagedTimeout(() => {
-            if (mascotRef.current?.express) {
-              mascotRef.current.express('sparkle', { intensity: 0.8, duration: 1500 })
+            if (mascot?.express) {
+              mascot.express('sparkle', { intensity: 0.8, duration: 1500 })
             }
           }, 300)
         }
@@ -206,22 +232,23 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
       setAttempts(newAttempts)
 
       // Show frustration based on attempts
-      if (mascotRef.current) {
+      // Use mascot prop directly for core operations (always available)
+      if (mascot) {
         if (newAttempts >= 2) {
           setFeedback('hint')
-          if (mascotRef.current.setEmotion) {
-            mascotRef.current.setEmotion('empathy', 0.7)
+          if (mascot.setEmotion) {
+            mascot.setEmotion('empathy', 0.7)
           }
-          if (mascotRef.current.express) {
-            mascotRef.current.express('wobble')
+          if (mascot.express) {
+            mascot.express('wobble')
           }
         } else {
           setFeedback('incorrect')
-          if (mascotRef.current.setEmotion) {
-            mascotRef.current.setEmotion('concern', 0.6)
+          if (mascot.setEmotion) {
+            mascot.setEmotion('concern', 0.6)
           }
-          if (mascotRef.current.express) {
-            mascotRef.current.express('shake')
+          if (mascot.express) {
+            mascot.express('shake')
           }
         }
       }
@@ -244,16 +271,16 @@ export default function LearningSimulation({ mascot }: LearningSimulationProps) 
     const problem = DEMO_PROBLEMS[currentProblem]
     if (currentHint < problem.hints.length - 1) {
       setCurrentHint(currentHint + 1)
-      if (mascotRef.current?.express) {
-        mascotRef.current.express('pulse', { intensity: 0.6 })
+      if (mascot?.express) {
+        mascot.express('pulse', { intensity: 0.6 })
       }
     }
   }
 
   const handleLLMResponse = async (response: any) => {
-    if (!mascotRef.current) return
-    if (mascotRef.current.handleLLMResponse) {
-      await mascotRef.current.handleLLMResponse(response)
+    if (!mascot) return
+    if (mascot.handleLLMResponse) {
+      await mascot.handleLLMResponse(response)
     }
   }
 

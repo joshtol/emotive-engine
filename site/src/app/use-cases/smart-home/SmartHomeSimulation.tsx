@@ -34,7 +34,7 @@ const INITIAL_ROOMS_DESKTOP: Room[] = [
     name: 'Living Room',
     icon: '🛋️',
     devices: [
-      { id: 'living-light', type: 'light', name: 'Main Lights', status: false, icon: '💡' },
+      { id: 'living-light', type: 'light', name: 'Main Lights', status: true, icon: '💡' },
       { id: 'living-temp', type: 'thermostat', name: 'Temperature', status: 72, icon: '🌡️' },
       { id: 'living-blinds', type: 'blinds', name: 'Smart Blinds', status: false, icon: '🪟' },
       { id: 'living-speaker', type: 'speaker', name: 'HomePod', status: false, icon: '🔊' },
@@ -76,7 +76,7 @@ const INITIAL_ROOMS_MOBILE: Room[] = [
     name: 'Living Room',
     icon: '🛋️',
     devices: [
-      { id: 'living-light', type: 'light', name: 'Main Lights', status: false, icon: '💡' },
+      { id: 'living-light', type: 'light', name: 'Main Lights', status: true, icon: '💡' },
       { id: 'living-temp', type: 'thermostat', name: 'Temperature', status: 72, icon: '🌡️' },
     ]
   },
@@ -183,6 +183,8 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
   const [energyUsage, setEnergyUsage] = useState(42)
   const mascotStageRef = useRef<HTMLDivElement>(null)
   const mascotRef = useRef<any>(mascot)
+  const isAttachedRef = useRef<boolean>(false)
+  const lastScrollYRef = useRef<number>(0)
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
@@ -219,50 +221,56 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Track whether stage is currently in view
-  const stageInViewRef = useRef(false)
-
   // Attach mascot to stage when scrolled into view
+  // Only detach when scrolling UP past the attachment point, not when scrolling DOWN
   useEffect(() => {
     if (!mascot || !mascotStageRef.current) return
 
-    // Helper to attach mascot to stage
-    const attachMascotToStage = () => {
-      if (typeof mascot.attachToElement !== 'function') return
-
-      mascot.attachToElement(mascotStageRef.current, {
-        animate: true,
-        duration: 800,
-        scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
-        containParticles: true  // Keep particles within the stage bounds
-      })
-
-      // Set emotion to calm when attached
-      mascot.setEmotion('calm')
-
-      mascotRef.current = mascot
+    // Track scroll direction
+    const handleScroll = () => {
+      lastScrollYRef.current = window.scrollY
     }
-
-    // If stage is already in view (e.g., after 2D/3D switch), attach immediately
-    if (stageInViewRef.current && mascotRef.current !== mascot) {
-      attachMascotToStage()
-    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    lastScrollYRef.current = window.scrollY
 
     // Use Intersection Observer to detect when the stage comes into view
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          stageInViewRef.current = entry.isIntersecting
-
-          if (entry.isIntersecting && mascotRef.current !== mascot) {
-            // Stage is in view and mascot not yet attached (or different mascot)
-            attachMascotToStage()
-          } else if (!entry.isIntersecting && mascotRef.current) {
-            // Stage is out of view, detach mascot
-            if (typeof mascot.detachFromElement === 'function') {
-              mascot.detachFromElement()
+          if (entry.isIntersecting && !isAttachedRef.current) {
+            // Stage is in view and mascot not yet attached
+            if (typeof mascot.attachToElement !== 'function') {
+              return
             }
-            mascotRef.current = null
+
+            mascot.attachToElement(mascotStageRef.current, {
+              animate: false,  // Instant snap - animation causes overshoot due to scroll offset
+              scale: isMobile ? 0.7 : 0.5,  // 70% on mobile, 50% on desktop
+              containParticles: true  // Keep particles within the stage bounds
+            })
+
+            // Set emotion to calm when attached
+            mascot.setEmotion('calm')
+
+            mascotRef.current = mascot
+            isAttachedRef.current = true
+          } else if (!entry.isIntersecting && isAttachedRef.current) {
+            // Stage is out of view - but only detach if scrolling UP
+            // When boundingClientRect.top > 0, element is below viewport (user scrolled UP)
+            // When boundingClientRect.top < 0, element is above viewport (user scrolled DOWN)
+            const elementBelowViewport = entry.boundingClientRect.top > 0
+
+            // Only detach when scrolling UP (element goes below viewport)
+            // Do NOT detach when scrolling DOWN (element goes above viewport)
+            if (elementBelowViewport) {
+              if (typeof mascot.detachFromElement === 'function') {
+                mascot.detachFromElement()
+              }
+
+              mascotRef.current = null
+              isAttachedRef.current = false
+            }
+            // If scrolling DOWN past the element, keep attached - mascot stays in place
           }
         })
       },
@@ -276,24 +284,31 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
 
     return () => {
       observer.disconnect()
+      window.removeEventListener('scroll', handleScroll)
+      if (mascot && typeof mascot.detachFromElement === 'function') {
+        mascot.detachFromElement()
+      }
+      isAttachedRef.current = false
     }
-  }, [mascot, mascotStageRef, isMobile])
+  }, [mascot, isMobile])
 
   const toggleDevice = async (roomId: string, deviceId: string) => {
     const device = rooms.find(r => r.id === roomId)?.devices.find(d => d.id === deviceId)
+    if (!device) return
+
+    // Calculate new status BEFORE updating state (for correct reaction logic)
+    const newStatus = typeof device.status === 'boolean' ? !device.status : device.status
+    const turningOn = newStatus === true
 
     setRooms(prevRooms =>
       prevRooms.map(room =>
         room.id === roomId
           ? {
               ...room,
-              devices: room.devices.map(device =>
-                device.id === deviceId
-                  ? {
-                      ...device,
-                      status: typeof device.status === 'boolean' ? !device.status : device.status
-                    }
-                  : device
+              devices: room.devices.map(d =>
+                d.id === deviceId
+                  ? { ...d, status: newStatus }
+                  : d
               )
             }
           : room
@@ -301,72 +316,109 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
     )
 
     // Device-specific mascot reactions
-    if (mascotRef.current && device) {
+    // Use mascot prop directly for core operations (always available)
+    // Use mascotRef.current for attachment-dependent operations
+    if (mascot) {
       if (device.type === 'light') {
-        // Check if it's porch light (entry-light) or other lights
-        if (deviceId === 'entry-light') {
-          // Porch light: pulse effect
-          if (mascotRef.current.express) {
-            await mascotRef.current.express('pulse', { intensity: 0.6, duration: 500 })
+        // Main Lights: toggle core glow on/off
+        if (deviceId === 'living-light') {
+          // Toggle core glow visibility (3D inner soul) using public API
+          if (mascot.setCoreGlowEnabled) {
+            mascot.setCoreGlowEnabled(turningOn)
+          }
+          // Glow gesture for visual feedback
+          if (mascot.express) {
+            await mascot.express('glow', { intensity: turningOn ? 0.8 : 0.4, duration: 600 })
+          }
+          // Emotion shift based on light state
+          if (mascot.setEmotion) {
+            mascot.setEmotion(turningOn ? 'joy' : 'calm', turningOn ? 0.7 : 0.4)
+          }
+        } else if (deviceId === 'bedroom-light') {
+          // Bedroom ambient: softer reaction with color warmth
+          if (mascot.express) {
+            await mascot.express('pulse', { intensity: 0.4, duration: 500 })
+          }
+          if (mascot.setEmotion) {
+            mascot.setEmotion(turningOn ? 'calm' : 'neutral', 0.5)
+          }
+        } else if (deviceId === 'entry-light') {
+          // Porch light: quick pulse
+          if (mascot.express) {
+            await mascot.express('pulse', { intensity: 0.6, duration: 400 })
           }
         } else {
-          // Main lights: glow effect
-          if (mascotRef.current.express) {
-            await mascotRef.current.express('glow', { intensity: 0.8, duration: 600 })
+          // Other lights: default glow
+          if (mascot.express) {
+            await mascot.express('glow', { intensity: 0.6, duration: 500 })
           }
         }
       } else if (device.type === 'lock') {
-        // Smart lock: square shape + calm emotion
-        if (mascotRef.current.morphTo) {
-          mascotRef.current.morphTo('square', { duration: 800 })
+        // Smart lock: locked = secure (heart), unlocked = back to crystal
+        const isLocked = turningOn
+        if (mascot.morphTo) {
+          mascot.morphTo(isLocked ? 'heart' : 'crystal', { duration: 800 })
         }
-        if (mascotRef.current.setEmotion) {
-          mascotRef.current.setEmotion('calm', 0.7)
+        if (mascot.setEmotion) {
+          mascot.setEmotion(isLocked ? 'love' : 'neutral', isLocked ? 0.6 : 0.4)
         }
-        if (mascotRef.current.express) {
-          await mascotRef.current.express('nod', { intensity: 0.4, duration: 400 })
+        if (mascot.express) {
+          await mascot.express('bounce', { intensity: 0.4, duration: 400 })
         }
-        // Reset after 1.5 seconds
+        // Reset to crystal after 2 seconds
         setManagedTimeout(() => {
-          if (mascotRef.current) {
-            if (mascotRef.current.morphTo) {
-              mascotRef.current.morphTo('circle', { duration: 800 })
-            }
-            if (mascotRef.current.setEmotion) {
-              mascotRef.current.setEmotion('neutral', 0.5)
-            }
+          if (mascot?.morphTo) {
+            mascot.morphTo('crystal', { duration: 800 })
           }
-        }, 1500)
-      } else if (device.type === 'camera') {
-        // Doorbell cam: recording emotion + pulse effects
-        if (mascotRef.current.setEmotion) {
-          mascotRef.current.setEmotion('recording', 0.8)
-        }
-        if (mascotRef.current.express) {
-          await mascotRef.current.express('pulse', { intensity: 0.6, duration: 800 })
-        }
-        // Add a second pulse for "recording" effect
-        setManagedTimeout(() => {
-          if (mascotRef.current && mascotRef.current.express) {
-            mascotRef.current.express('pulse', { intensity: 0.4, duration: 600 })
-          }
-        }, 400)
-        // Reset after 2 seconds
-        setManagedTimeout(() => {
-          if (mascotRef.current && mascotRef.current.setEmotion) {
-            mascotRef.current.setEmotion('neutral', 0.5)
+          if (mascot?.setEmotion) {
+            mascot.setEmotion('neutral', 0.5)
           }
         }, 2000)
+      } else if (device.type === 'camera') {
+        // Camera: recording state with alert emotion
+        const isRecording = turningOn
+        if (mascot.setEmotion) {
+          mascot.setEmotion(isRecording ? 'recording' : 'neutral', isRecording ? 0.8 : 0.4)
+        }
+        if (mascot.express) {
+          await mascot.express('pulse', { intensity: isRecording ? 0.7 : 0.3, duration: 600 })
+        }
+        // Double pulse for "recording" emphasis
+        if (isRecording) {
+          setManagedTimeout(() => {
+            mascot?.express?.('pulse', { intensity: 0.4, duration: 500 })
+          }, 350)
+        }
+        // Reset emotion after 2 seconds
+        setManagedTimeout(() => {
+          mascot?.setEmotion?.('neutral', 0.5)
+        }, 2000)
+      } else if (device.type === 'blinds') {
+        // Blinds: squish effect (flatten when closing, expand when opening)
+        if (mascot.express) {
+          await mascot.express('squish', { intensity: turningOn ? 0.6 : 0.4, duration: 600 })
+        }
+      } else if (device.type === 'speaker') {
+        // Speaker: bounce with rhythm
+        if (mascot.express) {
+          await mascot.express('bounce', { intensity: turningOn ? 0.7 : 0.3, duration: 500 })
+        }
+        if (turningOn && mascot.setEmotion) {
+          mascot.setEmotion('joy', 0.6)
+          setManagedTimeout(() => {
+            mascot?.setEmotion?.('neutral', 0.5)
+          }, 1500)
+        }
       } else {
-        // Default for other devices
-        if (mascotRef.current.express) {
-          mascotRef.current.express('nod', { intensity: 0.4, duration: 400 })
+        // Default: nod
+        if (mascot.express) {
+          await mascot.express('nod', { intensity: 0.4, duration: 400 })
         }
       }
     }
 
-    if (device && onDeviceChange) {
-      onDeviceChange(device.type, device.status ? 'off' : 'on')
+    if (onDeviceChange) {
+      onDeviceChange(device.type, turningOn ? 'on' : 'off')
     }
   }
 
@@ -389,8 +441,21 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
       )
     )
 
-    if (mascotRef.current && mascotRef.current.express) {
-      mascotRef.current.express('pulse', { intensity: 0.3, duration: 300 })
+    // Thermostat: warm/cool reactions
+    if (mascotRef.current) {
+      const isWarmer = delta > 0
+      // Pulse with direction-based intensity
+      if (mascotRef.current.express) {
+        mascotRef.current.express('pulse', { intensity: 0.4, duration: 350 })
+      }
+      // Emotion: warmer = energetic, cooler = calm
+      if (mascotRef.current.setEmotion) {
+        mascotRef.current.setEmotion(isWarmer ? 'joy' : 'calm', 0.5)
+        // Reset after a moment
+        setManagedTimeout(() => {
+          mascotRef.current?.setEmotion?.('neutral', 0.5)
+        }, 1000)
+      }
     }
   }
 
@@ -516,7 +581,7 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
           mascotRef.current.morphTo('moon', { duration: 1000 })
         }
         if (mascotRef.current.setEmotion) {
-          mascotRef.current.setEmotion('excitement', 0.8)
+          mascotRef.current.setEmotion('excited', 0.8)
         }
         if (mascotRef.current.express) {
           await mascotRef.current.express('bounce', { intensity: 0.6, duration: 800 })
@@ -690,11 +755,12 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
       flexDirection: 'column',
       overflow: 'hidden',
       transform: 'translateZ(0)',
-      willChange: 'transform'
+      willChange: 'transform',
+      overscrollBehavior: 'none'
     }}>
       {isMobile ? (
         <>
-          {/* Mascot Stage - Mobile (persistent across all views) */}
+          {/* Mascot Stage - Mobile (fixed at top, never moves) */}
           <div
             ref={mascotStageRef}
             style={{
@@ -725,7 +791,8 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
                 overflow: 'auto',
                 padding: '0.65rem',
                 background: COLORS.background.main,
-                WebkitOverflowScrolling: 'touch'
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain'
               }}>
                 {/* Scene buttons */}
                 <div style={{
@@ -972,62 +1039,63 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
                 borderBottom: `1px solid ${COLORS.background.cardBorder}`,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                flexShrink: 0
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: COLORS.button.inactive,
-                    border: `2px solid ${COLORS.button.border}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1rem'
-                  }}>
-                    🏠
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: '800', color: COLORS.text.primary }}>
-                      Home Assistant
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: COLORS.button.inactive,
+                      border: `2px solid ${COLORS.button.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1rem'
+                    }}>
+                      🏠
                     </div>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>
-                      Claude Haiku 4.5
+                    <div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: '800', color: COLORS.text.primary }}>
+                        Home Assistant
+                      </div>
+                      <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                        Claude Haiku 4.5
+                      </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => setShowAIHelp(false)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      fontSize: '1.1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowAIHelp(false)}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    fontSize: '1.1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
 
-              {/* Chat messages */}
-              <div style={{
-                flex: 1,
-                overflow: 'auto',
-                padding: '1rem',
-                background: COLORS.background.main,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                WebkitOverflowScrolling: 'touch'
-              }}>
+                {/* Chat messages */}
+                <div style={{
+                  flex: 1,
+                  overflow: 'auto',
+                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  WebkitOverflowScrolling: 'touch',
+                  overscrollBehavior: 'contain'
+                }}>
                 {messages.map((msg, i) => (
                   <div key={i} style={{
                     alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
@@ -1065,7 +1133,7 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
                   </div>
                 )}
                 <div ref={messagesEndRef} />
-              </div>
+                </div>
 
               {/* Example prompts */}
               {messages.length === 1 && (
@@ -1169,7 +1237,8 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
             display: 'flex',
             flexDirection: 'column',
             gap: '1.5rem',
-            overflow: 'auto'
+            overflow: 'auto',
+            overscrollBehavior: 'contain'
           }}>
             <div>
               <h2 style={{
@@ -1426,7 +1495,8 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
             display: 'flex',
             flexDirection: 'column',
             gap: '1.5rem',
-            overflow: 'auto'
+            overflow: 'auto',
+            overscrollBehavior: 'contain'
           }}>
             {/* Other Rooms - Kitchen & Front Door */}
             <div style={{
@@ -1616,7 +1686,8 @@ export default function SmartHomeSimulation({ onDeviceChange, mascot }: SmartHom
               padding: '1.5rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '1rem'
+              gap: '1rem',
+              overscrollBehavior: 'contain'
             }}>
               {messages.map((msg, i) => (
                 <div key={i} style={{

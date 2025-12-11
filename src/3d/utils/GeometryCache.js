@@ -127,7 +127,7 @@ export function updateMaterialOptions(geometryType, options) {
  * @returns {Promise<void>}
  */
 export async function preloadAll(options = {}) {
-    const types = ['crystal', 'rough', 'moon', 'sun'];
+    const types = ['crystal', 'rough', 'heart', 'moon', 'sun'];
 
     await Promise.all(types.map(type => preload(type, options)));
 

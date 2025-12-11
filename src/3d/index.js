@@ -268,7 +268,6 @@ export class EmotiveMascot3D {
     animate(currentTime) {
         // Guard against calls after destroy or stop
         if (!this.isRunning || this._destroyed) {
-            console.log(`[EmotiveMascot3D] animate() BLOCKED - isRunning=${this.isRunning}, _destroyed=${this._destroyed}`);
             return;
         }
 
@@ -529,13 +528,36 @@ export class EmotiveMascot3D {
 
     /**
      * Morph to shape (same API as 2D version)
+     * Supports interruption - calling this during an active morph will
+     * smoothly transition to the new target without visual glitches.
+     *
      * @param {string} shapeName - Shape name
+     * @param {Object} options - Optional configuration
+     * @param {number} options.duration - Transition duration in ms (default: 800ms)
      */
-    morphTo(shapeName) {
+    morphTo(shapeName, options = {}) {
         if (this.core3D) {
-            this.core3D.morphToShape(shapeName);
+            const duration = options.duration || 800;
+            this.core3D.morphToShape(shapeName, duration);
         }
         this.eventManager.emit('shape:morph', { shape: shapeName });
+    }
+
+    /**
+     * Check if a geometry morph is currently in progress
+     * Useful for UI feedback or preventing certain actions during transitions
+     * @returns {boolean} True if morphing
+     */
+    isMorphing() {
+        return this.core3D ? this.core3D.isMorphing() : false;
+    }
+
+    /**
+     * Get current morph state for debugging or UI display
+     * @returns {Object} Morph state including progress, current/target geometry, etc.
+     */
+    getMorphState() {
+        return this.core3D ? this.core3D.getMorphState() : null;
     }
 
     /**
@@ -548,6 +570,26 @@ export class EmotiveMascot3D {
             this.core3D.growIn(duration);
         }
         this.eventManager.emit('animation:growIn', { duration });
+    }
+
+    /**
+     * Enable or disable the inner soul/core glow
+     * When disabled, the crystal appears as an empty shell without the glowing core
+     * @param {boolean} enabled - True to show soul, false to hide
+     */
+    setCoreGlowEnabled(enabled) {
+        if (this.core3D) {
+            this.core3D.setCoreGlowEnabled(enabled);
+        }
+        this.eventManager.emit('coreGlow:toggle', { enabled });
+    }
+
+    /**
+     * Check if core glow is currently enabled
+     * @returns {boolean} True if core glow is enabled
+     */
+    isCoreGlowEnabled() {
+        return this.core3D ? this.core3D.coreGlowEnabled : true;
     }
 
     /**
@@ -1017,7 +1059,6 @@ export class EmotiveMascot3D {
      * Cleanup
      */
     destroy() {
-        console.log(`[EmotiveMascot3D] destroy() CALLED, _destroyed=${this._destroyed}, isRunning=${this.isRunning}`);
         // Set destroyed flag first to stop any pending animation frames
         this._destroyed = true;
         this.stop();

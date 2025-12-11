@@ -51,7 +51,8 @@ const emotionAliases = {
     'peaceful': 'calm',
     'curious': 'surprise',
     'frustrated': 'anger',
-    'sad': 'sadness'
+    'sad': 'sadness',
+    'excitement': 'excited'
 };
 
 // Register all emotions SYNCHRONOUSLY

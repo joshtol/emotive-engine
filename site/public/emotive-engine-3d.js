@@ -59815,6 +59815,11 @@ void main() {
 	            schwarzschildRadius: { value: SCHWARZSCHILD_RADIUS },
 	            diskNormal: { value: new Vector3(Math.sin(MathUtils.degToRad(17)), Math.cos(MathUtils.degToRad(17)), 0) }, // Tilted disk normal
 
+	            // Selective bloom uniforms
+	            glowIntensity: { value: 1.0 },  // For glow gesture detection
+	            emissiveMode: { value: 0.0 },  // 0 = normal render, 1 = emissive-only for selective bloom
+	            emotionColor: { value: new Color(1, 1, 1) },  // For emissive output
+
 	            // Blend layers (4 layers × 3 properties = 12 uniforms)
 	            layer1Mode: { value: 0.0 },      // 0 = Normal
 	            layer1Strength: { value: 1.0 },
@@ -63010,7 +63015,8 @@ void main() {
 	    'peaceful': 'calm',
 	    'curious': 'surprise',
 	    'frustrated': 'anger',
-	    'sad': 'sadness'
+	    'sad': 'sadness',
+	    'excitement': 'excited'
 	};
 
 	// Register all emotions SYNCHRONOUSLY
@@ -63435,23 +63441,67 @@ void main() {
 
 	    /**
 	     * Start morphing to a new geometry
+	     * Handles interruptions gracefully - if called during an active morph,
+	     * will smoothly transition to the new target without visual glitches.
+	     *
+	     * @param {string} currentType - Current geometry type name
 	     * @param {string} targetType - Target geometry type name
-	     * @param {Object} targetGeometry - Target Three.js geometry
 	     * @param {number} duration - Duration in milliseconds
 	     * @returns {boolean} True if morph started, false if already at target
 	     */
 	    startMorph(currentType, targetType, duration = 1000) {
-	        // If already at target, skip
+	        // If already at target and not transitioning, skip
 	        if (currentType === targetType && !this.isTransitioning) {
 	            return false;
 	        }
 
-	        // If already transitioning to this target, skip
+	        // If already transitioning to this exact target, skip
 	        if (this.isTransitioning && this.targetGeometryType === targetType) {
 	            return false;
 	        }
 
-	        // Start new transition
+	        // ═══════════════════════════════════════════════════════════════════
+	        // INTERRUPTION HANDLING - Smooth transition when morph is interrupted
+	        // ═══════════════════════════════════════════════════════════════════
+	        if (this.isTransitioning) {
+	            // We're interrupting an active morph - handle gracefully
+	            const currentScale = this.calculateScaleMultiplier(this.visualProgress);
+
+	            if (!this.hasSwappedGeometry) {
+	                // Still in SHRINK phase (haven't swapped yet)
+	                // Continue shrinking to 0, but swap to NEW target at midpoint
+	                // Keep current progress, just change the target
+	                this.targetGeometryType = targetType;
+	                // Signal that we need a new geometry loaded (handled by Core3DManager)
+	                this._interruptedTarget = targetType;
+	                return true;
+	            } else {
+
+	                // Reset to shrink phase with current scale as starting point
+	                this.morphStartTime = Date.now();
+	                this.morphDuration = duration;
+	                // Map current scale back to progress (inverse of shrink calculation)
+	                // scale = 1 - (progress*2)^2, so progress = sqrt(1-scale) / 2
+	                const inverseProgress = currentScale > 0
+	                    ? Math.sqrt(1 - Math.min(currentScale, 1)) / 2
+	                    : 0.5;
+	                this.morphProgress = inverseProgress;
+	                this.visualProgress = inverseProgress;
+	                this.hasSwappedGeometry = false; // Need to swap again at midpoint
+	                this.targetGeometryType = targetType;
+	                this._interruptedTarget = targetType;
+	                this.isPausedAtSwap = false;
+	                this.isGrowIn = false;
+
+	                // Adjust start time so animation continues from current visual state
+	                const elapsedEquivalent = inverseProgress * duration;
+	                this.morphStartTime = Date.now() - elapsedEquivalent;
+
+	                return true;
+	            }
+	        }
+
+	        // Start fresh transition (no interruption)
 	        this.currentGeometryType = currentType;
 	        this.targetGeometryType = targetType;
 	        this.morphStartTime = Date.now();
@@ -63463,8 +63513,19 @@ void main() {
 	        this.isPausedAtSwap = false; // Reset pause flag
 	        this.pausedAtTime = 0;
 	        this.isGrowIn = false; // Not a grow-in animation
+	        this._interruptedTarget = null;
 
 	        return true;
+	    }
+
+	    /**
+	     * Check if the current morph was interrupted and needs a new target geometry
+	     * @returns {string|null} The new target geometry type, or null if not interrupted
+	     */
+	    getInterruptedTarget() {
+	        const target = this._interruptedTarget;
+	        this._interruptedTarget = null; // Clear after reading
+	        return target;
 	    }
 
 	    /**
@@ -83239,15 +83300,12 @@ void main() {
 	    }
 
 	    /**
-	     * Attach the soul to a parent mesh (adds to scene, syncs position)
-	     * Soul is added to the scene root (not as child) so it can be on a separate layer
+	     * Attach the soul to a parent mesh (adds to same scene, syncs position each frame)
 	     * @param {THREE.Mesh} parentMesh - The mesh to follow (e.g., crystal, heart)
+	     * @param {THREE.Scene} scene - The scene to add the soul to
 	     */
-	    attachTo(parentMesh) {
-	        console.log(`[CrystalSoul] attachTo() START, parentMesh=${!!parentMesh}, _disposed=${this._disposed}`);
-
+	    attachTo(parentMesh, scene) {
 	        if (this._disposed) {
-	            console.warn('[CrystalSoul] attachTo() BLOCKED - already disposed');
 	            return;
 	        }
 
@@ -83261,54 +83319,50 @@ void main() {
 	            return;
 	        }
 
-	        // Remove from previous scene if any
+	        // Remove from previous parent if any
 	        if (this.mesh.parent) {
-	            console.log(`[CrystalSoul] Removing from previous parent: ${this.mesh.parent.type}`);
 	            this.mesh.parent.remove(this.mesh);
 	        }
 
 	        this.parentMesh = parentMesh;
+	        this._scene = scene;
 
-	        // Add to scene directly (not as child of parentMesh)
-	        // This allows the soul to be rendered on layer 2 independently
-	        let scene = parentMesh;
-	        let depth = 0;
-	        while (scene.parent) {
-	            scene = scene.parent;
-	            depth++;
+	        // Add to scene as separate object (not child of parentMesh)
+	        // This keeps soul at full scale regardless of parent's morph scale
+	        if (scene && !this.mesh.parent) {
+	            scene.add(this.mesh);
 	        }
-	        console.log(`[CrystalSoul] Found scene at depth ${depth}, scene.type=${scene.type}, scene.children.length=${scene.children?.length}`);
-
-	        scene.add(this.mesh);
-	        console.log(`[CrystalSoul] Added mesh to scene, scene.children.length=${scene.children?.length}, mesh.uuid=${this.mesh.uuid?.slice(0,8)}`);
 
 	        // Sync initial position
 	        this._syncPosition();
+	        this.mesh.visible = true;
 	    }
 
 	    /**
 	     * Sync soul world position/rotation to parent mesh
-	     * Called automatically on attach and should be called each frame
+	     * Called each frame to follow the parent
 	     * @private
 	     */
 	    _syncPosition() {
-	        if (this.parentMesh && this.mesh) {
-	            this.parentMesh.getWorldPosition(this.mesh.position);
-	            this.parentMesh.getWorldQuaternion(this.mesh.quaternion);
-	        }
+	        if (!this.parentMesh || !this.mesh) return;
+
+	        // Copy world position from parent
+	        this.parentMesh.getWorldPosition(this.mesh.position);
+	        this.parentMesh.getWorldQuaternion(this.mesh.quaternion);
 	    }
 
 	    /**
 	     * Detach from current parent
+	     * Marks invisible but does NOT remove from scene (removal happens in dispose)
+	     * This avoids Three.js render loop race conditions
 	     */
 	    detach() {
-	        console.log(`[CrystalSoul] detach() START, mesh=${!!this.mesh}, mesh.parent=${!!this.mesh?.parent}`);
-	        if (this.mesh && this.mesh.parent) {
-	            const parentType = this.mesh.parent.type;
-	            const parentChildCount = this.mesh.parent.children?.length;
-	            this.mesh.parent.remove(this.mesh);
-	            console.log(`[CrystalSoul] Removed from ${parentType}, was ${parentChildCount} children, now ${this.mesh.parent?.children?.length || 'N/A'}`);
-	        }
+	        if (!this.mesh) return;
+
+	        // Mark invisible - DO NOT remove from scene here
+	        // Removal during render causes race conditions with projectObject traversal
+	        // The mesh will be removed properly in dispose() on next frame
+	        this.mesh.visible = false;
 	        this.parentMesh = null;
 	    }
 
@@ -83442,7 +83496,7 @@ void main() {
 	     * @returns {boolean}
 	     */
 	    isAttached() {
-	        return this.parentMesh !== null && this.mesh.parent !== null;
+	        return this.parentMesh !== null && this.mesh !== null && this.mesh.parent !== null;
 	    }
 
 	    /**
@@ -83477,32 +83531,42 @@ void main() {
 
 	    /**
 	     * Dispose of resources
+	     * Defers scene removal AND geometry disposal to next frame to avoid Three.js render race conditions
 	     */
 	    dispose() {
-	        console.log(`[CrystalSoul] dispose() START, _disposed=${this._disposed}, mesh=${!!this.mesh}`);
-	        console.log('[CrystalSoul] dispose() CALLER STACK:', new Error().stack);
+	        // Prevent double disposal
+	        if (this._disposed) return;
 
 	        // Set disposed flag FIRST to prevent async callbacks from running
 	        this._disposed = true;
 
+	        // Mark invisible immediately (detach just sets visible=false now)
 	        this.detach();
 
-	        if (this.mesh) {
-	            console.log(`[CrystalSoul] Disposing mesh geometry, uuid=${this.mesh.uuid?.slice(0,8)}`);
-	            if (this.mesh.geometry) {
-	                this.mesh.geometry.dispose();
-	            }
-	            this.mesh = null;
-	        }
+	        // Store references for deferred cleanup
+	        const meshToDispose = this.mesh;
+	        const materialToDispose = this.material;
 
-	        if (this.material) {
-	            console.log('[CrystalSoul] Disposing material');
-	            this.material.dispose();
-	            this.material = null;
-	        }
-
+	        // Clear references immediately (so nothing tries to use them)
+	        this.mesh = null;
+	        this.material = null;
 	        this.parentMesh = null;
-	        console.log('[CrystalSoul] dispose() COMPLETE');
+
+	        // Defer BOTH scene removal AND geometry disposal to next frame
+	        // This avoids Three.js render race conditions with projectObject traversal
+	        requestAnimationFrame(() => {
+	            // Remove from scene first
+	            if (meshToDispose?.parent) {
+	                meshToDispose.parent.remove(meshToDispose);
+	            }
+	            // Then dispose resources
+	            if (meshToDispose?.geometry) {
+	                meshToDispose.geometry.dispose();
+	            }
+	            if (materialToDispose) {
+	                materialToDispose.dispose();
+	            }
+	        });
 	    }
 	}
 
@@ -88649,7 +88713,7 @@ void main() {
 	 * @returns {Promise<void>}
 	 */
 	async function preloadAll(options = {}) {
-	    const types = ['crystal', 'rough', 'moon', 'sun'];
+	    const types = ['crystal', 'rough', 'heart', 'moon', 'sun'];
 
 	    await Promise.all(types.map(type => preload(type, options)));
 
@@ -88720,7 +88784,6 @@ void main() {
 	class Core3DManager {
 	    constructor(canvas, options = {}) {
 	        this._instanceId = Math.random().toString(36).substr(2, 6);
-	        console.log(`[Core3D:${this._instanceId}] CONSTRUCTOR START`);
 
 	        this.canvas = canvas;
 	        this.options = options;
@@ -88789,11 +88852,9 @@ void main() {
 	        // Must be called AFTER material is created so this.customMaterial is available
 	        if (this.geometryConfig.geometryLoader) {
 	            // Store promise so callers can await full initialization
-	            console.log(`[Core3D:${this._instanceId}] Has async geometry loader, starting _loadAsyncGeometry`);
 	            this._readyPromise = this._loadAsyncGeometry();
 	        } else {
 	            // No async loading needed - immediately ready
-	            console.log(`[Core3D:${this._instanceId}] No async loader, setting _ready=true immediately`);
 	            this._ready = true;
 	            this._readyPromise = Promise.resolve();
 	        }
@@ -89619,18 +89680,22 @@ void main() {
 
 	        // Create new soul and attach to coreMesh
 	        // Pass renderer for scene locking during async geometry swaps
-	        this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: this.geometryType, renderer: this.renderer });
-	        this.crystalSoul.attachTo(this.coreMesh);
+	        // Use _targetGeometryType during morph, fall back to geometryType for initial load
+	        const effectiveGeometryType = this._targetGeometryType || this.geometryType;
+	        this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: effectiveGeometryType, renderer: this.renderer });
+	        this.crystalSoul.attachTo(this.coreMesh, this.renderer?.scene);
 
 	        // Geometry-specific shell and soul sizes (permanent values)
+	        // Use effectiveGeometryType to get correct scale during morph transitions
 	        let soulScale = 1.0;  // Default: full size (HUGE)
-	        if (this.geometryType === 'heart') {
+	        if (effectiveGeometryType === 'heart') {
 	            this.crystalShellBaseScale = 2.4;
 	            soulScale = 1.0;  // Full size for heart
-	        } else if (this.geometryType === 'rough') {
+	        } else if (effectiveGeometryType === 'rough') {
 	            this.crystalShellBaseScale = 1.6;
 	            soulScale = 1.0;  // Full size for rough
-	        } else if (this.geometryType === 'crystal') {
+	        } else if (effectiveGeometryType === 'crystal') {
+	            this.crystalShellBaseScale = 2.0;  // Default crystal shell size
 	            soulScale = 1.0;  // Full size for crystal
 	        }
 
@@ -89727,6 +89792,9 @@ void main() {
 
 	    /**
 	     * Morph to different shape with smooth transition
+	     * Supports interruption - calling this while a morph is in progress will
+	     * smoothly transition to the new target without visual glitches.
+	     *
 	     * @param {string} shapeName - Target geometry name
 	     * @param {number} duration - Transition duration in ms (default: 800ms)
 	     */
@@ -89737,7 +89805,7 @@ void main() {
 	            return;
 	        }
 
-	        // Start smooth morph transition (like 2D ShapeMorpher)
+	        // Start smooth morph transition (handles interruptions internally)
 	        const started = this.geometryMorpher.startMorph(
 	            this.geometryType,
 	            shapeName,
@@ -89748,6 +89816,10 @@ void main() {
 	        if (!started) {
 	            return;
 	        }
+
+	        // Check if this was an interruption that changed the target
+	        // (getInterruptedTarget clears the flag after reading)
+	        this.geometryMorpher.getInterruptedTarget();
 
 	        // Pause blinks during morph (cleaner visual experience)
 	        this.blinkAnimator.pause();
@@ -89770,6 +89842,22 @@ void main() {
 	            this._targetGeometry = targetGeometryConfig.geometry;
 	            this._pendingGeometryLoad = null;
 	        }
+	    }
+
+	    /**
+	     * Check if a morph is currently in progress
+	     * @returns {boolean} True if morphing
+	     */
+	    isMorphing() {
+	        return this.geometryMorpher.isTransitioning;
+	    }
+
+	    /**
+	     * Get current morph state for debugging/UI
+	     * @returns {Object} Morph state including progress, target, etc.
+	     */
+	    getMorphState() {
+	        return this.geometryMorpher.getState();
 	    }
 
 	    /**
@@ -89798,7 +89886,6 @@ void main() {
 	    render(deltaTime) {
 	        // Guard against calls after destroy
 	        if (this._destroyed) {
-	            console.log(`[Core3D:${this._instanceId}] render() BLOCKED - destroyed`);
 	            return;
 	        }
 
@@ -89806,7 +89893,6 @@ void main() {
 	        // This prevents Three.js errors during crystal/rough OBJ loading
 	        // Callers should use waitUntilReady() before starting render loop
 	        if (!this._ready) {
-	            console.log(`[Core3D:${this._instanceId}] render() BLOCKED - not ready`);
 	            return;
 	        }
 
@@ -89815,11 +89901,6 @@ void main() {
 
 	        // Update geometry morph animation
 	        const morphState = this.geometryMorpher.update(deltaTime);
-
-	        // Debug: Log morph state if something is happening
-	        if (morphState.shouldSwapGeometry) {
-	            console.log(`[Core3D:${this._instanceId}] morphState.shouldSwapGeometry=true, _targetGeometry=${!!this._targetGeometry}, _targetGeometryType='${this._targetGeometryType}'`);
-	        }
 
 	        // If waiting for async geometry to load, pause morph at midpoint
 	        if (morphState.shouldSwapGeometry && this._pendingGeometryLoad) {
@@ -89942,7 +90023,6 @@ void main() {
 	            }
 
 	            // Create or dispose crystal inner core
-	            console.log(`[Core3D:${this._instanceId}] Geometry swap - _targetGeometryType='${this._targetGeometryType}', crystalSoul=${!!this.crystalSoul}`);
 	            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart') {
 	                // Create inner core if morphing to crystal/rough/heart
 	                if (this.customMaterialType === 'crystal') {
@@ -89951,7 +90031,6 @@ void main() {
 	            } else {
 	                // Dispose inner core if morphing away from crystal/rough/heart
 	                if (this.crystalSoul) {
-	                    console.log(`[Core3D:${this._instanceId}] DISPOSING CRYSTAL SOUL because target='${this._targetGeometryType}'`);
 	                    this.crystalSoul.dispose();
 	                    this.crystalSoul = null;
 	                    this.crystalInnerCore = null;
@@ -90299,13 +90378,11 @@ void main() {
 	     * @returns {Promise<void>}
 	     */
 	    async _loadAsyncGeometry() {
-	        console.log(`[Core3D:${this._instanceId}] _loadAsyncGeometry() START`);
 	        try {
 	            // Use GeometryCache for proper caching - this ensures:
 	            // 1. Multiple calls during React Strict Mode don't cause duplicate loads
 	            // 2. Preloaded geometry is reused instantly
 	            // 3. Race conditions are avoided
-	            console.log(`[Core3D:${this._instanceId}] Calling GeometryCache.preload('${this.geometryType}')`);
 	            const cached = await preload(this.geometryType, {
 	                glowColor: this.glowColor || [1.0, 1.0, 0.95],
 	                glowIntensity: this.glowIntensity || 1.0,
@@ -90313,11 +90390,9 @@ void main() {
 	                emotionData: getEmotion(this.emotion)
 	            });
 
-	            console.log(`[Core3D:${this._instanceId}] GeometryCache.preload returned, cached=${!!cached}, _destroyed=${this._destroyed}`);
 
 	            // CRITICAL: Check if destroyed during async load (React Strict Mode can unmount during load)
 	            if (this._destroyed) {
-	                console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after preload`);
 	                return;
 	            }
 
@@ -90329,40 +90404,32 @@ void main() {
 
 	            // Clone the cached geometry so each instance has its own copy
 	            const loadedGeometry = cached.geometry.clone();
-	            console.log(`[Core3D:${this._instanceId}] Cloned geometry, vertices=${loadedGeometry.attributes?.position?.count}`);
 
 	            // Store geometry type
 	            loadedGeometry.userData.geometryType = this.geometryType;
 	            this.geometry = loadedGeometry;
 
 	            if (this._deferredMeshCreation) {
-	                console.log(`[Core3D:${this._instanceId}] Creating coreMesh (deferred)`);
 	                // First time: create mesh with loaded geometry (no fallback was shown)
 	                this.coreMesh = this.renderer.createCoreMesh(loadedGeometry, this.customMaterial);
-	                console.log(`[Core3D:${this._instanceId}] coreMesh created, uuid=${this.coreMesh?.uuid?.slice(0,8)}`);
 
 	                // Check again - createCoreMesh could take time
 	                if (this._destroyed) {
-	                    console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after createCoreMesh`);
 	                    return;
 	                }
 
 	                // Create inner core for crystal - do this SYNCHRONOUSLY before marking ready
 	                // CrystalSoul will load its inclusion geometry asynchronously, but we wait for it
 	                if (this.customMaterialType === 'crystal') {
-	                    console.log(`[Core3D:${this._instanceId}] Creating crystal inner core async...`);
 	                    await this._createCrystalInnerCoreAsync();
-	                    console.log(`[Core3D:${this._instanceId}] Crystal inner core created, _destroyed=${this._destroyed}`);
 	                    // Check AGAIN after async operation
 	                    if (this._destroyed) {
-	                        console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after inner core`);
 	                        return;
 	                    }
 	                }
 
 	                this._deferredMeshCreation = false;
 	            } else if (this.coreMesh) {
-	                console.log(`[Core3D:${this._instanceId}] Swapping geometry on existing mesh`);
 	                // Existing mesh: swap geometry
 	                const oldGeometry = this.coreMesh.geometry;
 	                this.coreMesh.geometry = loadedGeometry;
@@ -90374,17 +90441,14 @@ void main() {
 
 	                // Check again
 	                if (this._destroyed) {
-	                    console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after swap`);
 	                    return;
 	                }
 
 	                // Recreate inner core if crystal
 	                if (this.customMaterialType === 'crystal') {
-	                    console.log(`[Core3D:${this._instanceId}] Recreating crystal inner core async...`);
 	                    await this._createCrystalInnerCoreAsync();
 	                    // Check AGAIN after async operation
 	                    if (this._destroyed) {
-	                        console.log(`[Core3D:${this._instanceId}] ABORT - destroyed after inner core recreate`);
 	                        return;
 	                    }
 	                }
@@ -90392,12 +90456,10 @@ void main() {
 
 	            // Final check before marking ready - don't set ready on destroyed instance
 	            if (this._destroyed) {
-	                console.log(`[Core3D:${this._instanceId}] ABORT - destroyed at final check`);
 	                return;
 	            }
 
 	            // NOW we're fully ready for rendering
-	            console.log(`[Core3D:${this._instanceId}] Setting _ready=true, scene children count=${this.renderer?.scene?.children?.length}`);
 	            this._logSceneHierarchy();
 	            this._ready = true;
 	        } catch (error) {
@@ -90416,15 +90478,13 @@ void main() {
 	    _logSceneHierarchy() {
 	        const scene = this.renderer?.scene;
 	        if (!scene) {
-	            console.log(`[Core3D:${this._instanceId}] Scene is NULL`);
 	            return;
 	        }
-	        console.log(`[Core3D:${this._instanceId}] Scene hierarchy (${scene.children.length} children):`);
 	        scene.children.forEach((child, i) => {
 	            const status = child === null ? 'NULL!' :
-	                           child === undefined ? 'UNDEFINED!' :
-	                           child.visible === null ? 'visible=NULL!' :
-	                           child.visible === undefined ? 'visible=UNDEF!' : 'OK';
+	                child === undefined ? 'UNDEFINED!' :
+	                    child.visible === null ? 'visible=NULL!' :
+	                        child.visible === undefined ? 'visible=UNDEF!' : 'OK';
 	            console.log(`  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0,8) || 'N/A'}`);
 	        });
 	    }
@@ -90435,46 +90495,36 @@ void main() {
 	     * @returns {Promise<void>}
 	     */
 	    async _createCrystalInnerCoreAsync() {
-	        console.log(`[Core3D:${this._instanceId}] _createCrystalInnerCoreAsync() START`);
 
 	        // Dispose existing soul if present
 	        if (this.crystalSoul) {
-	            console.log(`[Core3D:${this._instanceId}] Disposing existing crystalSoul`);
 	            this.crystalSoul.dispose();
 	            this.crystalSoul = null;
 	        }
 
 	        if (!this.coreMesh) {
-	            console.log(`[Core3D:${this._instanceId}] No coreMesh, aborting inner core creation`);
 	            return;
 	        }
 
 	        // Preload the inclusion geometry BEFORE creating CrystalSoul
 	        // This ensures the soul mesh has its final geometry before being added to scene
-	        console.log(`[Core3D:${this._instanceId}] Loading inclusion geometry...`);
 	        await CrystalSoul._loadInclusionGeometry();
-	        console.log(`[Core3D:${this._instanceId}] Inclusion geometry loaded`);
 
 	        // Check if destroyed during async load
 	        if (this._destroyed || !this.coreMesh) {
-	            console.log(`[Core3D:${this._instanceId}] ABORT inner core - destroyed=${this._destroyed}, coreMesh=${!!this.coreMesh}`);
 	            return;
 	        }
 
 	        // Create new soul - geometry is already cached so it will be used immediately
-	        console.log(`[Core3D:${this._instanceId}] Creating CrystalSoul instance`);
 	        this.crystalSoul = new CrystalSoul({
 	            radius: 0.35,
 	            detail: 1,
 	            geometryType: this.geometryType,
 	            renderer: this.renderer
 	        });
-	        console.log(`[Core3D:${this._instanceId}] CrystalSoul created, mesh uuid=${this.crystalSoul?.mesh?.uuid?.slice(0,8)}`);
 
 	        // Attach to coreMesh - this adds soul to the scene
-	        console.log(`[Core3D:${this._instanceId}] Attaching soul to coreMesh`);
-	        this.crystalSoul.attachTo(this.coreMesh);
-	        console.log(`[Core3D:${this._instanceId}] Soul attached, scene children now=${this.renderer?.scene?.children?.length}`);
+	        this.crystalSoul.attachTo(this.coreMesh, this.renderer?.scene);
 
 	        // Geometry-specific shell and soul sizes (permanent values)
 	        let soulScale = 1.0;  // Default: full size (HUGE)
@@ -90525,14 +90575,13 @@ void main() {
 	     */
 	    destroy() {
 	        // Log SYNCHRONOUSLY with all state at time of call
-	        const state = {
+	        ({
 	            id: this._instanceId,
 	            ready: this._ready,
 	            destroyed: this._destroyed,
 	            hasCrystalSoul: !!this.crystalSoul,
 	            hasRenderer: !!this.renderer
-	        };
-	        console.log(`[Core3D:${this._instanceId}] destroy() CALLED`, state);
+	        });
 
 	        // Set destroyed flag first to prevent any pending render calls
 	        this._destroyed = true;
@@ -90540,7 +90589,6 @@ void main() {
 	        // Clean up crystal soul FIRST - before renderer.destroy() clears the scene
 	        // This ensures we properly remove the mesh from scene before scene is cleared
 	        if (this.crystalSoul) {
-	            console.log(`[Core3D:${this._instanceId}] destroy() -> Disposing crystalSoul`);
 	            this.crystalSoul.dispose();
 	            this.crystalSoul = null;
 	            this.crystalInnerCore = null;
@@ -92053,7 +92101,6 @@ void main() {
 	    animate(currentTime) {
 	        // Guard against calls after destroy or stop
 	        if (!this.isRunning || this._destroyed) {
-	            console.log(`[EmotiveMascot3D] animate() BLOCKED - isRunning=${this.isRunning}, _destroyed=${this._destroyed}`);
 	            return;
 	        }
 
@@ -92314,13 +92361,36 @@ void main() {
 
 	    /**
 	     * Morph to shape (same API as 2D version)
+	     * Supports interruption - calling this during an active morph will
+	     * smoothly transition to the new target without visual glitches.
+	     *
 	     * @param {string} shapeName - Shape name
+	     * @param {Object} options - Optional configuration
+	     * @param {number} options.duration - Transition duration in ms (default: 800ms)
 	     */
-	    morphTo(shapeName) {
+	    morphTo(shapeName, options = {}) {
 	        if (this.core3D) {
-	            this.core3D.morphToShape(shapeName);
+	            const duration = options.duration || 800;
+	            this.core3D.morphToShape(shapeName, duration);
 	        }
 	        this.eventManager.emit('shape:morph', { shape: shapeName });
+	    }
+
+	    /**
+	     * Check if a geometry morph is currently in progress
+	     * Useful for UI feedback or preventing certain actions during transitions
+	     * @returns {boolean} True if morphing
+	     */
+	    isMorphing() {
+	        return this.core3D ? this.core3D.isMorphing() : false;
+	    }
+
+	    /**
+	     * Get current morph state for debugging or UI display
+	     * @returns {Object} Morph state including progress, current/target geometry, etc.
+	     */
+	    getMorphState() {
+	        return this.core3D ? this.core3D.getMorphState() : null;
 	    }
 
 	    /**
@@ -92333,6 +92403,26 @@ void main() {
 	            this.core3D.growIn(duration);
 	        }
 	        this.eventManager.emit('animation:growIn', { duration });
+	    }
+
+	    /**
+	     * Enable or disable the inner soul/core glow
+	     * When disabled, the crystal appears as an empty shell without the glowing core
+	     * @param {boolean} enabled - True to show soul, false to hide
+	     */
+	    setCoreGlowEnabled(enabled) {
+	        if (this.core3D) {
+	            this.core3D.setCoreGlowEnabled(enabled);
+	        }
+	        this.eventManager.emit('coreGlow:toggle', { enabled });
+	    }
+
+	    /**
+	     * Check if core glow is currently enabled
+	     * @returns {boolean} True if core glow is enabled
+	     */
+	    isCoreGlowEnabled() {
+	        return this.core3D ? this.core3D.coreGlowEnabled : true;
 	    }
 
 	    /**
@@ -92609,7 +92699,7 @@ void main() {
 	        // Easing function
 	        const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
 
-	        const animate = (currentTime) => {
+	        const animate = currentTime => {
 	            const elapsed = currentTime - startTime;
 	            const progress = Math.min(elapsed / duration, 1);
 	            const easedProgress = easeOutCubic(progress);
@@ -92802,7 +92892,6 @@ void main() {
 	     * Cleanup
 	     */
 	    destroy() {
-	        console.log(`[EmotiveMascot3D] destroy() CALLED, _destroyed=${this._destroyed}, isRunning=${this.isRunning}`);
 	        // Set destroyed flag first to stop any pending animation frames
 	        this._destroyed = true;
 	        this.stop();

@@ -31,23 +31,71 @@ export class GeometryMorpher {
 
     /**
      * Start morphing to a new geometry
+     * Handles interruptions gracefully - if called during an active morph,
+     * will smoothly transition to the new target without visual glitches.
+     *
+     * @param {string} currentType - Current geometry type name
      * @param {string} targetType - Target geometry type name
-     * @param {Object} targetGeometry - Target Three.js geometry
      * @param {number} duration - Duration in milliseconds
      * @returns {boolean} True if morph started, false if already at target
      */
     startMorph(currentType, targetType, duration = 1000) {
-        // If already at target, skip
+        // If already at target and not transitioning, skip
         if (currentType === targetType && !this.isTransitioning) {
             return false;
         }
 
-        // If already transitioning to this target, skip
+        // If already transitioning to this exact target, skip
         if (this.isTransitioning && this.targetGeometryType === targetType) {
             return false;
         }
 
-        // Start new transition
+        // ═══════════════════════════════════════════════════════════════════
+        // INTERRUPTION HANDLING - Smooth transition when morph is interrupted
+        // ═══════════════════════════════════════════════════════════════════
+        if (this.isTransitioning) {
+            // We're interrupting an active morph - handle gracefully
+            const currentScale = this.calculateScaleMultiplier(this.visualProgress);
+
+            if (!this.hasSwappedGeometry) {
+                // Still in SHRINK phase (haven't swapped yet)
+                // Continue shrinking to 0, but swap to NEW target at midpoint
+                // Keep current progress, just change the target
+                this.targetGeometryType = targetType;
+                // Signal that we need a new geometry loaded (handled by Core3DManager)
+                this._interruptedTarget = targetType;
+                return true;
+            } else {
+                // In GROW phase (already swapped to old target)
+                // Need to shrink back down, swap to NEW target, then grow
+                // Calculate how long it takes to shrink from current scale to 0
+                const shrinkDuration = duration * 0.5; // Half duration for shrink
+
+                // Reset to shrink phase with current scale as starting point
+                this.morphStartTime = Date.now();
+                this.morphDuration = duration;
+                // Map current scale back to progress (inverse of shrink calculation)
+                // scale = 1 - (progress*2)^2, so progress = sqrt(1-scale) / 2
+                const inverseProgress = currentScale > 0
+                    ? Math.sqrt(1 - Math.min(currentScale, 1)) / 2
+                    : 0.5;
+                this.morphProgress = inverseProgress;
+                this.visualProgress = inverseProgress;
+                this.hasSwappedGeometry = false; // Need to swap again at midpoint
+                this.targetGeometryType = targetType;
+                this._interruptedTarget = targetType;
+                this.isPausedAtSwap = false;
+                this.isGrowIn = false;
+
+                // Adjust start time so animation continues from current visual state
+                const elapsedEquivalent = inverseProgress * duration;
+                this.morphStartTime = Date.now() - elapsedEquivalent;
+
+                return true;
+            }
+        }
+
+        // Start fresh transition (no interruption)
         this.currentGeometryType = currentType;
         this.targetGeometryType = targetType;
         this.morphStartTime = Date.now();
@@ -59,8 +107,19 @@ export class GeometryMorpher {
         this.isPausedAtSwap = false; // Reset pause flag
         this.pausedAtTime = 0;
         this.isGrowIn = false; // Not a grow-in animation
+        this._interruptedTarget = null;
 
         return true;
+    }
+
+    /**
+     * Check if the current morph was interrupted and needs a new target geometry
+     * @returns {string|null} The new target geometry type, or null if not interrupted
+     */
+    getInterruptedTarget() {
+        const target = this._interruptedTarget;
+        this._interruptedTarget = null; // Clear after reading
+        return target;
     }
 
     /**
