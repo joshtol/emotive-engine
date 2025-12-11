@@ -1,0 +1,342 @@
+/**
+ * Shared Use Case Styles
+ *
+ * CSS variables for theming use case pages with different accent colors.
+ * Each use case page sets --uc-accent-* variables to customize the theme.
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   USE CASE THEME VARIABLES (set per-page)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Default accent (gold - Cherokee theme) */
+  --uc-accent: 218, 165, 32;
+  --uc-accent-hex: #DAA520;
+
+  /* Common derived values */
+  --uc-glass-bg: linear-gradient(135deg, rgba(var(--uc-accent), 0.2) 0%, rgba(var(--uc-accent), 0.1) 100%);
+  --uc-glass-bg-hover: linear-gradient(135deg, rgba(var(--uc-accent), 0.3) 0%, rgba(var(--uc-accent), 0.15) 100%);
+  --uc-glass-border: rgba(var(--uc-accent), 0.4);
+  --uc-glass-border-hover: rgba(var(--uc-accent), 0.6);
+  --uc-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --uc-glass-shadow-hover: 0 20px 60px rgba(var(--uc-accent), 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --uc-glow: rgba(var(--uc-accent), 0.15);
+  --uc-text-glow: 0 0 20px rgba(var(--uc-accent), 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLASSMORPHISM CARD STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-glass-card {
+  background: var(--uc-glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--uc-glass-border);
+  border-radius: 24px;
+  box-shadow: var(--uc-glass-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.uc-glass-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--uc-glass-shadow-hover);
+  border-color: var(--uc-glass-border-hover);
+}
+
+/* Glass card with stronger hover effect */
+.uc-glass-card-strong:hover {
+  transform: translateY(-12px) scale(1.03);
+}
+
+/* Inner gradient overlay for cards */
+.uc-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTAINER STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: 32px;
+  border: 2px solid rgba(var(--uc-accent), 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.uc-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(var(--uc-accent), 0.03) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOW EFFECTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-glow {
+  position: absolute;
+  width: 100%;
+  max-width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--uc-glow) 0%, transparent 70%);
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.uc-glow-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.uc-glow-top {
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -30%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-heading {
+  color: var(--uc-accent-hex);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.uc-text-accent {
+  color: var(--uc-accent-hex);
+  font-weight: 600;
+}
+
+.uc-text-glow {
+  text-shadow: var(--uc-text-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TAG/BADGE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-tag {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  background: rgba(var(--uc-accent), 0.15);
+  border: 1px solid rgba(var(--uc-accent), 0.3);
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--uc-accent-hex);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  box-shadow: 0 8px 32px rgba(var(--uc-accent), 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUTTON STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-button-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 2.5rem;
+  background: linear-gradient(135deg, var(--uc-accent-hex) 0%, rgba(var(--uc-accent), 0.8) 100%);
+  border-radius: 12px;
+  text-decoration: none;
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(var(--uc-accent), 0.4);
+  border: none;
+  cursor: pointer;
+}
+
+.uc-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(var(--uc-accent), 0.6);
+}
+
+.uc-button-secondary {
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, rgba(var(--uc-accent), 0.2) 0%, rgba(var(--uc-accent), 0.15) 100%);
+  border: 2px solid rgba(var(--uc-accent), 0.4);
+  border-radius: 12px;
+  color: var(--uc-accent-hex);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.uc-button-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--uc-accent), 0.3);
+  border-color: rgba(var(--uc-accent), 0.6);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HERO SECTION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-hero {
+  min-height: 75vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  position: relative;
+}
+
+.uc-hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at top, rgba(var(--uc-accent), 0.15) 0%, transparent 50%);
+  z-index: 0;
+}
+
+.uc-hero-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: linear-gradient(0deg, rgba(5, 5, 5, 0.95) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes uc-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes uc-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.uc-animate-scale-in {
+  animation: uc-scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.uc-animate-fade-up {
+  animation: uc-fade-up 0.4s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODAL STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.uc-modal-content {
+  background: linear-gradient(135deg, rgba(20, 20, 25, 0.98) 0%, rgba(15, 15, 20, 0.98) 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(var(--uc-accent), 0.3);
+  box-shadow: 0 20px 80px rgba(var(--uc-accent), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  max-width: 95vw;
+  max-height: 95vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GRID LAYOUTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uc-bento-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-auto-rows: minmax(200px, auto);
+}
+
+@media (min-width: 768px) {
+  .uc-bento-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+.uc-feature-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .uc-feature-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE UTILITIES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .uc-glass-card {
+    border-radius: 20px;
+  }
+
+  .uc-container {
+    padding: 3rem 2rem;
+    border-radius: 24px;
+  }
+
+  .uc-hero {
+    min-height: auto;
+    padding: 2rem 1rem;
+  }
+}

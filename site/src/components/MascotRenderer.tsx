@@ -50,8 +50,6 @@ export default function MascotRenderer({
   externalContainerRef,
   containerStyle,
 }: MascotRendererProps) {
-  console.log('[MascotRenderer] Component mounted, coreGeometry:', coreGeometry)
-
   const containerRef = useRef<HTMLDivElement>(null)
   const container3DRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -66,7 +64,6 @@ export default function MascotRenderer({
 
   const { mode, hasWebGL, isLoading: modeLoading, toggleMode } = useMascotMode({
     onModeChange: (newMode) => {
-      console.log('[MascotRenderer] Mode change callback, newMode:', newMode)
       onModeChange?.(newMode)
       // Reinitialize mascot when mode changes
       destroyMascot()
@@ -83,8 +80,8 @@ export default function MascotRenderer({
       try {
         mascotRef.current.stop?.()
         mascotRef.current.destroy?.()
-      } catch (e) {
-        console.warn('Mascot cleanup error:', e)
+      } catch (_e) {
+        // Mascot cleanup failed - non-critical
       }
       mascotRef.current = null
     }
@@ -101,7 +98,6 @@ export default function MascotRenderer({
       (externalContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node
     }
     if (node) {
-      console.log('[MascotRenderer] Container ref attached to DOM')
       setContainerMounted(true)
       // Immediately set visible since the page is already visible
       // The intersection observer is too slow for mode switching
@@ -111,13 +107,11 @@ export default function MascotRenderer({
 
   // Intersection Observer - runs after container is mounted
   useEffect(() => {
-    console.log('[MascotRenderer] Intersection Observer useEffect, containerMounted:', containerMounted, 'containerRef:', !!containerRef.current)
     if (!containerMounted || !containerRef.current) return
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          console.log('[MascotRenderer] Intersection observed:', entry.isIntersecting)
           setIsVisible(entry.isIntersecting)
         })
       },
@@ -146,8 +140,8 @@ export default function MascotRenderer({
         } else {
           await load2DMascot()
         }
-      } catch (error) {
-        console.error(`Failed to load ${mode} mascot:`, error)
+      } catch (_error) {
+        // Mascot load failed - non-critical
       } finally {
         setIsLoading(false)
         initializingRef.current = false
@@ -156,11 +150,8 @@ export default function MascotRenderer({
 
     const load3DMascot = async () => {
       if (!container3DRef.current) {
-        console.warn('[3D] No 3D container ref')
         return
       }
-
-      console.log('[3D] Starting 3D mascot load...')
 
       // Wait for global to be available (handles both new and existing scripts)
       const waitForGlobal = (name: string, timeout = 10000): Promise<any> => {
@@ -169,7 +160,6 @@ export default function MascotRenderer({
           const check = () => {
             const global = (window as any)[name]
             if (global) {
-              console.log(`[3D] Global ${name} found`)
               resolve(global)
             } else if (Date.now() - start > timeout) {
               reject(new Error(`Timeout waiting for ${name}`))
@@ -182,34 +172,26 @@ export default function MascotRenderer({
       }
 
       const existingScript = document.querySelector('script[src*="/emotive-engine-3d"]')
-      console.log('[3D] Existing script:', !!existingScript)
 
       if (!existingScript) {
         const script = document.createElement('script')
         script.src = `/emotive-engine-3d.js?v=${Date.now()}`
         script.async = true
-        console.log('[3D] Loading script:', script.src)
         document.head.appendChild(script)
       }
 
       // Wait for the global to be available
       const EmotiveMascot3DModule = await waitForGlobal('EmotiveMascot3D')
-      console.log('[3D] Module loaded, keys:', Object.keys(EmotiveMascot3DModule || {}))
       const EmotiveMascot3D = EmotiveMascot3DModule?.default || EmotiveMascot3DModule
 
       if (!EmotiveMascot3D || typeof EmotiveMascot3D !== 'function') {
-        console.error('[3D] EmotiveMascot3D module:', EmotiveMascot3DModule)
-        console.error('[3D] EmotiveMascot3D type:', typeof EmotiveMascot3D)
         throw new Error('EmotiveMascot3D class not found in module')
       }
-
-      console.log('[3D] EmotiveMascot3D class found, type:', typeof EmotiveMascot3D)
 
       const cpuCores = navigator.hardwareConcurrency || 4
       const isMobileDevice = /Android|iPhone|iPad/i.test(navigator.userAgent)
       const isLowEnd = cpuCores <= 4 || isMobileDevice
 
-      console.log('[3D] Creating mascot with geometry:', coreGeometry)
       const mascot = new EmotiveMascot3D({
         coreGeometry,
         enableParticles: true,
@@ -230,16 +212,9 @@ export default function MascotRenderer({
         enableBreathing: true,
         enableShadows: false,
       })
-      console.log('[3D] Mascot created:', mascot)
 
-      console.log('[3D] Container dimensions:', container3DRef.current.offsetWidth, 'x', container3DRef.current.offsetHeight)
-      console.log('[3D] Calling init...')
       mascot.init(container3DRef.current)
-      console.log('[3D] After init - webglCanvas:', mascot.webglCanvas?.width, 'x', mascot.webglCanvas?.height)
-      console.log('[3D] core3D:', mascot.core3D)
-      console.log('[3D] Calling start...')
       mascot.start()
-      console.log('[3D] 3D Mascot started successfully!')
 
       mascotRef.current = mascot
       onMascotLoaded?.(mascot, '3d')
@@ -294,7 +269,6 @@ export default function MascotRenderer({
       const EmotiveMascot = EmotiveMascotModule?.default || EmotiveMascotModule
 
       if (!EmotiveMascot || typeof EmotiveMascot !== 'function') {
-        console.error('EmotiveMascot module:', EmotiveMascotModule)
         throw new Error('EmotiveMascot class not found in module')
       }
 

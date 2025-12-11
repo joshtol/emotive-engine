@@ -84,47 +84,37 @@ interface UseMascotModeResult {
 export function useMascotMode(options: UseMascotModeOptions = {}): UseMascotModeResult {
   const { defaultMode = '3d', onModeChange } = options
 
-  console.log('[useMascotMode] Hook initialized, defaultMode:', defaultMode)
-
   const [mode, setModeState] = useState<MascotMode>(defaultMode)
   const [hasWebGL, setHasWebGL] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
 
   // Initialize mode on mount
   useEffect(() => {
-    console.log('[useMascotMode] Init effect running...')
     const webglSupported = checkWebGLSupport()
-    console.log('[useMascotMode] WebGL supported:', webglSupported)
     setHasWebGL(webglSupported)
 
     // Check stored preference
     const storedMode = getStoredMode()
-    console.log('[useMascotMode] Stored mode:', storedMode)
 
     if (storedMode) {
       // Use stored preference, but fall back to 2D if 3D requested but not supported
       if (storedMode === '3d' && !webglSupported) {
-        console.log('[useMascotMode] Stored 3D but no WebGL, falling back to 2D')
         setModeState('2d')
       } else {
-        console.log('[useMascotMode] Using stored mode:', storedMode)
         setModeState(storedMode)
       }
     } else {
       // No stored preference: default to 3D if supported, else 2D
       const finalMode = webglSupported ? '3d' : '2d'
-      console.log('[useMascotMode] No stored mode, defaulting to:', finalMode)
       setModeState(finalMode)
     }
 
-    console.log('[useMascotMode] Setting isLoading to false')
     setIsLoading(false)
   }, [])
 
   const setMode = useCallback((newMode: MascotMode) => {
     // Can't set 3D mode if WebGL not supported
     if (newMode === '3d' && !hasWebGL) {
-      console.warn('WebGL not supported, staying in 2D mode')
       return
     }
 

@@ -78,17 +78,14 @@ export default function CherokeePage() {
 
       const module = (window as any).EmotiveMascot3D
       if (!module?.GeometryCache) {
-        console.log('[Preload] GeometryCache not available')
         return
       }
 
-      console.log('[Preload] Starting geometry preload...')
       try {
         // Preload all geometry types used in greeting cards
         await module.GeometryCache.preloadAll()
-        console.log('[Preload] All geometries preloaded successfully')
-      } catch (err) {
-        console.error('[Preload] Failed to preload geometries:', err)
+      } catch (_err) {
+        // Silently fail - preloading is an optimization, not critical
       }
     }
 
@@ -126,7 +123,7 @@ export default function CherokeePage() {
         setFeedbackStatus('error')
       }
     } catch (error) {
-      console.error('Feedback submission error:', error)
+      // Feedback submission failed
       setFeedbackStatus('error')
     }
   }
@@ -444,8 +441,8 @@ export default function CherokeePage() {
 
           lastGestureRef.current = currentZone
         }
-      } catch (error) {
-        console.error('Scroll update error:', error)
+      } catch (_error) {
+        // Scroll update failed - non-critical
       } finally {
         tickingRef.current = false
       }
@@ -603,8 +600,6 @@ export default function CherokeePage() {
   // Initialize card mascot when phrase is selected (supports both 2D and 3D modes)
   // OPTIMIZED: Reuses existing mascot instance when possible
   useEffect(() => {
-    console.log('[3D Card] Effect running, selectedPhraseIndex:', selectedPhraseIndex, '| mascotMode:', mascotMode, '| container:', !!card3DContainerRef.current)
-
     if (selectedPhraseIndex === null) return
 
     let cancelled = false
@@ -626,7 +621,6 @@ export default function CherokeePage() {
           containerAttempts++
         }
         if (!card3DContainerRef.current) {
-          console.log('[3D Card] Container not available after waiting')
           return
         }
       } else if (mascotMode === '2d') {
@@ -636,17 +630,13 @@ export default function CherokeePage() {
           canvasAttempts++
         }
         if (!cardCanvasRef.current) {
-          console.log('[3D Card] Canvas not available after waiting')
           return
         }
       }
       const greeting = greetings[selectedPhraseIndex]
       if (!greeting) {
-        console.log('[3D Card] No greeting found for index:', selectedPhraseIndex)
         return
       }
-
-      console.log('[3D Card] Configuring card for:', greeting.english, '| shape:', greeting.shape)
 
       // Determine geometry type for this card
       const geometry3D = greeting.shape === 'solar' ? 'sun' : (greeting.shape || 'crystal')
@@ -679,16 +669,11 @@ export default function CherokeePage() {
         const canReuse = existingMascot &&
                          cardMascotInitializedRef.current &&
                          ((isCrystal && existingIsCrystal) ||
-                          ((isSun || isSolarEclipse) && existingIsSun) ||  // Sun/solar eclipse can reuse sun
-                          (isLunarEclipse && existingIsMoon))  // Moon can only reuse moon
-
-        console.log('[3D Card] canReuse:', canReuse, '| existingMascot:', !!existingMascot, '| initialized:', cardMascotInitializedRef.current, '| existingGeometry:', existingGeometry, '| targetGeometry:', geometry3D)
+                          ((isSun || isSolarEclipse) && existingIsSun) ||
+                          (isLunarEclipse && existingIsMoon))
 
         if (canReuse && existingMascot) {
-          // ═══════════════════════════════════════════════════════════════════
           // REUSE EXISTING MASCOT - just morph and update settings
-          // ═══════════════════════════════════════════════════════════════════
-          console.log('[3D Card] Reusing mascot, morphing to:', geometry3D)
 
           // Morph to new geometry if different
           if (existingGeometry !== geometry3D && existingMascot.morphTo) {
@@ -792,10 +777,7 @@ export default function CherokeePage() {
           return  // Done with reuse path
         }
 
-        // ═══════════════════════════════════════════════════════════════════
         // CREATE NEW MASCOT - geometry type changed significantly
-        // ═══════════════════════════════════════════════════════════════════
-        console.log('[3D Card] Creating new mascot for:', geometry3D)
 
         // Cleanup existing mascot
         if (cardMascotRef.current) {
@@ -815,7 +797,6 @@ export default function CherokeePage() {
         }
 
         if (!(window as any).EmotiveMascot3D) {
-          console.log('[3D Card] EmotiveMascot3D not available after waiting')
           return
         }
 
@@ -827,7 +808,6 @@ export default function CherokeePage() {
           const EmotiveMascot3D = EmotiveMascot3DModule?.default || EmotiveMascot3DModule
 
           if (!EmotiveMascot3D || typeof EmotiveMascot3D !== 'function') {
-            console.error('[3D Card] EmotiveMascot3D not found')
             return
           }
 
@@ -870,8 +850,6 @@ export default function CherokeePage() {
 
           cardMascot.init(container)
           cardMascot.start()
-
-          console.log('[3D Card] Mascot created and started for:', geometry3D)
 
           // Only set refs AFTER mascot is successfully started
           // This prevents reuse of a partially-initialized or cancelled mascot
@@ -970,14 +948,12 @@ export default function CherokeePage() {
           }, 300)
           timeoutIds.push(configTimeout)
 
-        } catch (err) {
-          console.error('[3D Card] Failed to initialize:', err)
+        } catch (_err) {
+          // 3D mascot initialization failed - non-critical
         }
 
       } else {
-        // ═══════════════════════════════════════════════════════════════════
-        // 2D MODE: Use EmotiveMascot (keep original implementation)
-        // ═══════════════════════════════════════════════════════════════════
+        // 2D MODE: Use EmotiveMascot
 
         // Clean up existing 2D mascot
         if (cardMascotRef.current) {
@@ -996,7 +972,6 @@ export default function CherokeePage() {
 
         const EmotiveMascotModule = (window as any).EmotiveMascotLean || (window as any).EmotiveMascot
         if (!EmotiveMascotModule) {
-          console.log('[2D Card] EmotiveMascot not available after waiting')
           return
         }
 
@@ -1017,7 +992,6 @@ export default function CherokeePage() {
           const EmotiveMascot = EmotiveMascotModule?.default || EmotiveMascotModule
 
           if (!EmotiveMascot) {
-            console.error('EmotiveMascot not found on window object')
             return
           }
 
@@ -1082,8 +1056,8 @@ export default function CherokeePage() {
           }, 200)
           timeoutIds.push(configTimeout)
 
-        } catch (err) {
-          console.error('Failed to initialize 2D card mascot:', err)
+        } catch (_err) {
+          // 2D mascot initialization failed - non-critical
         }
       }
     }
@@ -1091,7 +1065,6 @@ export default function CherokeePage() {
     configureCardMascot()
 
     return () => {
-      console.log('[3D Card] Effect cleanup running, cancelled = true')
       cancelled = true
       timeoutIds.forEach(id => clearTimeout(id))
       // Don't clear gestureIntervalRef here - it's managed at the top of the effect

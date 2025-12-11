@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Poppins, Montserrat } from 'next/font/google'
 import './globals.css'
 
@@ -22,14 +22,15 @@ const montserrat = Montserrat({
   adjustFontFallback: true
 })
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+}
+
 export const metadata: Metadata = {
   title: 'Emotive Engine - Rhythm Game',
   description: 'Interactive rhythm-based animation engine with musical time synchronization',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },

@@ -869,3 +869,11 @@ export {
 
 // Export geometry cache for preloading
 export { default as GeometryCache } from './utils/GeometryCache.js';
+
+// Export SSS material presets
+export {
+    SSSPresets,
+    applySSSPreset,
+    getPresetNames as getSSSPresetNames,
+    getPreset as getSSSPreset
+} from './presets/SSSPresets.js';
