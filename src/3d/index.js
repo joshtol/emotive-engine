@@ -41,6 +41,7 @@ import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
+import { applySSSPreset as applySSS } from './presets/SSSPresets.js';
 
 /**
  * EmotiveMascot3D - 3D rendering variant
@@ -534,9 +535,31 @@ export class EmotiveMascot3D {
      * @param {string} shapeName - Shape name
      * @param {Object} options - Optional configuration
      * @param {number} options.duration - Transition duration in ms (default: 800ms)
+     * @param {string} options.materialVariant - Material variant to use (e.g., 'multiplexer' for moon blood moon)
+     * @param {Function} options.onMaterialSwap - Callback when material is swapped (at morph midpoint)
      */
     morphTo(shapeName, options = {}) {
         if (this.core3D) {
+            // Set material variant before morphing (if specified)
+            if (options.materialVariant !== undefined) {
+                this.core3D.setMaterialVariant(options.materialVariant);
+            }
+
+            // Set up one-time material swap callback if specified
+            if (options.onMaterialSwap) {
+                const existingCallback = this.core3D.onMaterialSwap;
+                this.core3D.onMaterialSwap = info => {
+                    // Call existing callback first (e.g., SSS preset re-apply)
+                    if (existingCallback) {
+                        existingCallback(info);
+                    }
+                    // Then call user-provided callback
+                    options.onMaterialSwap(info);
+                    // Restore original callback (one-time use)
+                    this.core3D.onMaterialSwap = existingCallback;
+                };
+            }
+
             const duration = options.duration || 800;
             this.core3D.morphToShape(shapeName, duration);
         }
@@ -1053,6 +1076,91 @@ export class EmotiveMascot3D {
         this.setEmotion('neutral');
 
         return this;
+    }
+
+    /**
+     * Apply an SSS (Subsurface Scattering) preset to the crystal material
+     * Available presets: quartz, emerald, ruby, sapphire, amethyst, topaz, citrine, diamond
+     * @param {string} presetName - Name of the SSS preset to apply
+     * @returns {boolean} True if preset was applied successfully
+     */
+    setSSSPreset(presetName) {
+        // Store preset name so it can be re-applied after geometry morph (material swap)
+        this._currentSSSPreset = presetName;
+
+        // Set up material swap callback if not already done
+        if (this.core3D && !this._materialSwapCallbackSet) {
+            this._materialSwapCallbackSet = true;
+            this.core3D.onMaterialSwap = info => {
+                // Re-apply SSS preset after material is swapped during morph
+                if (this._currentSSSPreset) {
+                    // Small delay to ensure material uniforms are fully initialized
+                    setTimeout(() => {
+                        applySSS(this, this._currentSSSPreset);
+                    }, 50);
+                }
+            };
+        }
+
+        const success = applySSS(this, presetName);
+        if (success) {
+            this.eventManager.emit('sss:presetChanged', { preset: presetName });
+        }
+        return success;
+    }
+
+    /**
+     * Change the geometry type (alias for morphTo for API consistency)
+     * @param {string} geometryName - Name of geometry: crystal, moon, sun, heart, rough, sphere, star
+     * @param {Object} options - Optional configuration
+     * @param {number} options.duration - Transition duration in ms (default: 800ms)
+     */
+    setGeometry(geometryName, options = {}) {
+        this.morphTo(geometryName, options);
+    }
+
+    /**
+     * Start a solar eclipse animation
+     * @param {Object} options - Eclipse options
+     * @param {string} options.type - Eclipse type: 'annular' or 'total' (default: 'total')
+     * @param {number} options.duration - Duration in ms (default: 10000)
+     */
+    startSolarEclipse(options = {}) {
+        if (this.core3D && typeof this.core3D.startSolarEclipse === 'function') {
+            this.core3D.startSolarEclipse(options);
+        } else {
+            // Fallback: morph to sun and emit event
+            this.morphTo('sun');
+            this.eventManager.emit('eclipse:solar:start', { type: options.type || 'total' });
+        }
+    }
+
+    /**
+     * Start a lunar eclipse animation (blood moon)
+     * @param {Object} options - Eclipse options
+     * @param {string} options.type - Eclipse type: 'total' (blood moon), 'partial', 'penumbral'
+     * @param {number} options.duration - Duration in ms (default: 10000)
+     */
+    startLunarEclipse(options = {}) {
+        if (this.core3D && typeof this.core3D.startLunarEclipse === 'function') {
+            this.core3D.startLunarEclipse(options);
+        } else {
+            // Fallback: morph to moon and emit event
+            this.morphTo('moon');
+            this.eventManager.emit('eclipse:lunar:start', { type: options.type || 'total' });
+        }
+    }
+
+    /**
+     * Stop any active eclipse animation
+     */
+    stopEclipse() {
+        if (this.core3D && typeof this.core3D.stopEclipse === 'function') {
+            this.core3D.stopEclipse();
+        }
+        if (this.eventManager) {
+            this.eventManager.emit('eclipse:stop');
+        }
     }
 
     /**

@@ -179,8 +179,8 @@ export class Core3DManager {
             this.cameraRoll = 0; // Camera-space roll (spin the face)
         }
 
-        // Set initial calibration rotation for crystal/rough/heart to show flat facet facing camera
-        if (this.geometryType === 'crystal' || this.geometryType === 'rough' || this.geometryType === 'heart') {
+        // Set initial calibration rotation for crystal/rough/heart/star to show flat facet facing camera
+        if (this.geometryType === 'crystal' || this.geometryType === 'rough' || this.geometryType === 'heart' || this.geometryType === 'star') {
             const degToRad = Math.PI / 180;
             this.calibrationRotation = [
                 CRYSTAL_CALIBRATION_ROTATION.x * degToRad,
@@ -785,6 +785,71 @@ export class Core3DManager {
     }
 
     /**
+     * Start a solar eclipse animation
+     * Morphs to sun geometry if needed, then triggers eclipse
+     * @param {Object} options - Eclipse options
+     * @param {string} options.type - Eclipse type: 'annular' or 'total' (default: 'total')
+     */
+    startSolarEclipse(options = {}) {
+        const eclipseType = options.type || 'total';
+
+        // If already on sun, just trigger eclipse
+        if (this.geometryType === 'sun' && this.solarEclipse) {
+            this.solarEclipse.setEclipseType(eclipseType);
+            return;
+        }
+
+        // Morph to sun, then trigger eclipse after morph completes
+        this.morphToShape('sun');
+
+        // Wait for morph to complete (shrink + grow phases)
+        // Default morph duration is 500ms, so wait a bit longer
+        setTimeout(() => {
+            if (this.solarEclipse) {
+                this.solarEclipse.setEclipseType(eclipseType);
+            }
+        }, 600);
+    }
+
+    /**
+     * Start a lunar eclipse animation (blood moon)
+     * Morphs to moon geometry if needed, then triggers eclipse
+     * @param {Object} options - Eclipse options
+     * @param {string} options.type - Eclipse type: 'total' (blood moon), 'partial', 'penumbral'
+     */
+    startLunarEclipse(options = {}) {
+        const eclipseType = options.type || 'total';
+
+        // If already on moon, just trigger eclipse
+        if (this.geometryType === 'moon' && this.lunarEclipse) {
+            this.lunarEclipse.setEclipseType(eclipseType);
+            return;
+        }
+
+        // Morph to moon, then trigger eclipse after morph completes
+        this.morphToShape('moon');
+
+        // Wait for morph to complete (shrink + grow phases)
+        setTimeout(() => {
+            if (this.lunarEclipse) {
+                this.lunarEclipse.setEclipseType(eclipseType);
+            }
+        }, 600);
+    }
+
+    /**
+     * Stop any active eclipse animation
+     */
+    stopEclipse() {
+        if (this.solarEclipse) {
+            this.solarEclipse.setEclipseType('off');
+        }
+        if (this.lunarEclipse) {
+            this.lunarEclipse.setEclipseType('off');
+        }
+    }
+
+    /**
      * Set lunar eclipse (Blood Moon) effect
      * @param {string} eclipseType - 'off', 'penumbral', 'partial', 'total'
      */
@@ -964,6 +1029,9 @@ export class Core3DManager {
         } else if (effectiveGeometryType === 'rough') {
             this.crystalShellBaseScale = 1.6;
             soulScale = 1.0;  // Full size for rough
+        } else if (effectiveGeometryType === 'star') {
+            this.crystalShellBaseScale = 2.0;
+            soulScale = 1.4;  // Larger soul for star to fill the shape
         } else if (effectiveGeometryType === 'crystal') {
             this.crystalShellBaseScale = 2.0;  // Default crystal shell size
             soulScale = 1.0;  // Full size for crystal
@@ -1058,6 +1126,15 @@ export class Core3DManager {
             this.baseEuler[0] = 0; // Reset pitch
             this.baseEuler[2] = 0; // Reset roll
         }
+    }
+
+    /**
+     * Set material variant for use in morphing
+     * Call this before morphToShape() to change material during transition
+     * @param {string|null} variant - Material variant (e.g., 'multiplexer' for moon blood moon support)
+     */
+    setMaterialVariant(variant) {
+        this.materialVariant = variant;
     }
 
     /**
@@ -1293,13 +1370,13 @@ export class Core3DManager {
             }
 
             // Create or dispose crystal inner core
-            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart') {
-                // Create inner core if morphing to crystal/rough/heart
+            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart' || this._targetGeometryType === 'star') {
+                // Create inner core if morphing to crystal/rough/heart/star
                 if (this.customMaterialType === 'crystal') {
                     this.createCrystalInnerCore();
                 }
             } else {
-                // Dispose inner core if morphing away from crystal/rough/heart
+                // Dispose inner core if morphing away from crystal/rough/heart/star
                 if (this.crystalSoul) {
                     this.crystalSoul.dispose();
                     this.crystalSoul = null;
