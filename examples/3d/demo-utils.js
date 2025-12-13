@@ -208,6 +208,48 @@ export const sssPresets = {
         innerGlowStrength: 0.12,
         fresnelIntensity: 1.4,
         emotionColorBleed: 0.35
+    },
+    topaz: {
+        sssStrength: 1.5,
+        sssAbsorption: [3.5, 2.0, 0.1],
+        sssScatterDistance: [0.3, 0.2, 0.05],
+        sssThicknessBias: 0.60,
+        sssThicknessScale: 1.7,
+        sssCurvatureScale: 2.8,
+        sssAmbient: 0.12,
+        frostiness: 0.14,
+        innerGlowStrength: 0.18,
+        fresnelIntensity: 1.4,
+        causticIntensity: 1.1,
+        emotionColorBleed: 0.25
+    },
+    citrine: {
+        sssStrength: 1.6,
+        sssAbsorption: [3.8, 2.5, 0.05],
+        sssScatterDistance: [0.35, 0.25, 0.05],
+        sssThicknessBias: 0.58,
+        sssThicknessScale: 1.6,
+        sssCurvatureScale: 2.6,
+        sssAmbient: 0.14,
+        frostiness: 0.12,
+        innerGlowStrength: 0.22,
+        fresnelIntensity: 1.3,
+        causticIntensity: 1.2,
+        emotionColorBleed: 0.20
+    },
+    diamond: {
+        sssStrength: 0.5,
+        sssAbsorption: [2.5, 2.5, 2.5],
+        sssScatterDistance: [0.15, 0.15, 0.15],
+        sssThicknessBias: 0.55,
+        sssThicknessScale: 1.5,
+        sssCurvatureScale: 4.0,
+        sssAmbient: 0.15,
+        frostiness: 0.08,
+        innerGlowStrength: 0.25,
+        fresnelIntensity: 2.0,
+        causticIntensity: 1.5,
+        emotionColorBleed: 0.0
     }
 };
 
