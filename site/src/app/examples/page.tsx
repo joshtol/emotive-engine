@@ -107,15 +107,6 @@ const examples: Example[] = [
     complexity: 4,
     tags: ['sun', 'eclipse', 'corona', 'blend modes']
   },
-  {
-    id: 'black-hole',
-    title: 'Black Hole',
-    description: 'M87* black hole with accretion disk and gravitational effects',
-    category: '3d',
-    path: '/examples/3d/black-hole',
-    complexity: 5,
-    tags: ['black hole', 'physics', 'particles', 'WIP']
-  },
   // LLM Integration
   {
     id: 'claude-haiku',

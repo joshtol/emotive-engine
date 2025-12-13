@@ -279,15 +279,6 @@ export class Particle3DRenderer {
             // Translate 2D position to 3D (with orbital physics if enabled)
             const pos3D = translator.translate2DTo3D(particle, corePosition, canvasSize);
 
-            // BLACK HOLE ONLY: Cull particles in front (positive Z = between BH and camera)
-            // This creates the accretion disk effect where particles orbit behind the black hole
-            // Camera is at (0, 0, +Z), black hole at origin, so particles with Z > 0 are in front
-            if (geometryType === 'blackHole' && pos3D.z > 0) {
-                // Hide particle by setting alpha to 0
-                this.alphas[i] = 0;
-                continue;
-            }
-
             // CRYSTAL/HEART/ROUGH: Cull particles in front of the soul
             // These geometries have a visible soul inside, particles in front block the view
             // Threshold slightly positive to allow particles at the edges

@@ -45,7 +45,6 @@ import spaz from './spaz.js';
 import directed from './directed.js';
 import fizzy from './fizzy.js';
 import zen from './zen.js';
-import gravitationalAccretion from './gravitational-accretion.js';
 import pluginAdapter from './plugin-adapter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -72,8 +71,7 @@ const BEHAVIORS = [
     surveillance,
     glitchy,
     spaz,
-    zen,
-    gravitationalAccretion
+    zen
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
