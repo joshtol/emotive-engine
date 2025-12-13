@@ -88,11 +88,15 @@ export default {
             // Energetic glow pulse
             const glowIntensity = 1.0 + Math.sin(beatProgress * Math.PI * 2) * 0.3;
 
+            // Glow boost for screen-space halo - energetic pulse with dance
+            const glowBoost = Math.max(0, Math.sin(beatProgress * Math.PI * 2) * 0.6);
+
             return {
                 position: [0, posY, posZ],
                 rotation: [rotationX, 0, rotationZ],
                 scale: 1.0,
-                glowIntensity
+                glowIntensity,
+                glowBoost
             };
         }
     }

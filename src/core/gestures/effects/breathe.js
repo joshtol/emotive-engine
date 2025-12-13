@@ -277,11 +277,15 @@ export default {
             // Slight Y-axis position shift - rise on inhale, lower on exhale
             const yOffset = breathPhase * 0.05 * envelope; // Apply envelope
 
+            // Glow boost for screen-space halo - subtle pulse on inhale
+            const glowBoost = Math.max(0, glowOffset * 2.0);
+
             return {
                 position: [0, yOffset, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity // Use calculated multiplier (0.8 to 1.2)
+                glowIntensity, // Use calculated multiplier (0.8 to 1.2)
+                glowBoost
             };
         }
     }

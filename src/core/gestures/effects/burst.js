@@ -152,12 +152,16 @@ export default {
             const flashIntensity = progress < 0.3 ? (0.3 - progress) : 0;
             const glowIntensity = 1.0 + Math.min(flashIntensity * 1.0, 0.3);
 
+            // Glow boost for screen-space halo - burst gets strong initial flash
+            const glowBoost = flashIntensity * 2.5;
+
             // Minimal position/rotation for burst
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity
+                glowIntensity,
+                glowBoost
             };
         }
     }

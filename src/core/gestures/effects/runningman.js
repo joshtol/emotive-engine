@@ -87,11 +87,15 @@ export default {
             // Slight glow pulse with rhythm
             const glowIntensity = 1.0 + Math.sin(progress * Math.PI * 8 * speed) * 0.2;
 
+            // Glow boost for screen-space halo - rhythmic pulse
+            const glowBoost = Math.max(0, Math.sin(progress * Math.PI * 8 * speed) * 0.4);
+
             return {
                 position: [posX, posY, 0],
                 rotation: [0, rotationY, 0],
                 scale: 1.0,
-                glowIntensity
+                glowIntensity,
+                glowBoost
             };
         }
     }

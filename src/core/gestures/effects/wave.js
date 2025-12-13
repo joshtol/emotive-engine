@@ -347,11 +347,15 @@ export default {
             // Gentle glow variation
             const glowIntensity = 1.0 + Math.sin(easeProgress * Math.PI) * 0.2;
 
+            // Glow boost for screen-space halo - gentle pulse with wave
+            const glowBoost = Math.max(0, Math.sin(easeProgress * Math.PI) * 0.5);
+
             return {
                 position: [swayX, swayY, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity
+                glowIntensity,
+                glowBoost
             };
         }
     }

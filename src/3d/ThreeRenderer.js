@@ -19,6 +19,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
+import { GlowLayer } from './effects/GlowLayer.js';
 
 export class ThreeRenderer {
     constructor(canvas, options = {}) {
@@ -460,6 +461,11 @@ export class ThreeRenderer {
                 }
             `
         };
+
+        // === GLOW LAYER ===
+        // Isolated screen-space glow effect that activates during glow/flash gestures
+        // Completely separate from main bloom pipeline to avoid affecting baseline appearance
+        this.glowLayer = new GlowLayer(this.renderer);
     }
 
     /**
@@ -1399,8 +1405,34 @@ export class ThreeRenderer {
 
             // Reset camera to see all layers
             this.camera.layers.enableAll();
+
+            // === STEP 3: Render glow layer (if active) ===
+            // This is an isolated screen-space overlay that only activates during glow gestures
+            if (this.glowLayer && this.glowLayer.isActive()) {
+                this.glowLayer.render(this.renderer);
+            }
         } else {
             this.renderer.render(this.scene, this.camera);
+
+            // Render glow layer even without composer
+            if (this.glowLayer && this.glowLayer.isActive()) {
+                this.glowLayer.render(this.renderer);
+            }
+        }
+    }
+
+    /**
+     * Update glow layer for gesture effects
+     * Called from Core3DManager when gesture provides glowBoost output
+     * @param {number} glowAmount - Glow boost amount (0 = off, >0 = active glow halo)
+     * @param {Array|THREE.Color} glowColor - RGB color for the glow
+     * @param {THREE.Vector3} worldPosition - World position of the glow source (typically core mesh center)
+     * @param {number} deltaTime - Time since last frame in milliseconds
+     */
+    updateGlowLayer(glowAmount, glowColor, worldPosition, deltaTime) {
+        if (this.glowLayer) {
+            this.glowLayer.setGlow(glowAmount, glowColor, worldPosition);
+            this.glowLayer.update(deltaTime, this.camera);
         }
     }
 
@@ -1563,6 +1595,12 @@ export class ThreeRenderer {
         if (this.soulRenderTarget) {
             this.soulRenderTarget.dispose();
             this.soulRenderTarget = null;
+        }
+
+        // Dispose glow layer
+        if (this.glowLayer) {
+            this.glowLayer.dispose();
+            this.glowLayer = null;
         }
 
         // Dispose controls (removes DOM event listeners)

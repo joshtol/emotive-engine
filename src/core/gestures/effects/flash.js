@@ -145,7 +145,7 @@ export default {
      * Quick glowIntensity spike with brief scale pulse
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
-     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number, glowBoost: number }
      */
     '3d': {
         evaluate(progress, motion) {
@@ -154,24 +154,31 @@ export default {
 
             // Quick flash intensity spike then fade (normalized to ±40% max)
             const normalizedGlowPeak = 0.4; // Max 40% brighter
-            let glowIntensity;
+            let flashValue;
             if (progress < 0.3) {
-                // Quick rise to peak (1.0 to 1.4)
-                glowIntensity = 1.0 + (progress / 0.3) * normalizedGlowPeak;
+                // Quick rise to peak (0 to 1)
+                flashValue = progress / 0.3;
             } else {
-                // Gradual fade (1.4 back to 1.0)
-                glowIntensity = 1.0 + (1 - (progress - 0.3) / 0.7) * normalizedGlowPeak;
+                // Gradual fade (1 back to 0)
+                flashValue = 1 - (progress - 0.3) / 0.7;
             }
+
+            const glowIntensity = 1.0 + flashValue * normalizedGlowPeak;
 
             // Brief scale pulse
             const scalePeak = config.scalePeak || 1.1;
-            const scale = 1.0 + (progress < 0.3 ? progress / 0.3 : (1 - progress) / 0.7) * (scalePeak - 1.0);
+            const scale = 1.0 + flashValue * (scalePeak - 1.0);
+
+            // Glow boost for isolated screen-space halo effect
+            // Flash gets an even stronger boost (2.0) for maximum impact
+            const glowBoost = flashValue * 2.0;
 
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity
+                glowIntensity,
+                glowBoost
             };
         }
     }

@@ -10,9 +10,10 @@
  * @module 3d/animation/GestureBlender
  *
  * Manages:
- * - Accumulation of multiple gesture channels (position, rotation, scale, glow)
+ * - Accumulation of multiple gesture channels (position, rotation, scale, glow, glowBoost)
  * - Channel-specific blending modes (additive vs multiplicative)
  * - Quaternion-based rotation composition
+ * - Isolated glowBoost for screen-space glow layer (separate from material glow)
  */
 
 import * as THREE from 'three';
@@ -44,7 +45,8 @@ export class GestureBlender {
             position: [0, 0, 0],                               // Additive channel
             rotationQuat: this.accumulatedRotationQuat,        // Multiplicative channel (reused)
             scale: 1.0,                                        // Multiplicative channel
-            glowIntensity: 1.0                                 // Multiplicative channel
+            glowIntensity: 1.0,                                // Multiplicative channel
+            glowBoost: 0.0                                     // Additive channel (for glow layer)
         };
 
         // Blend all active animations
@@ -84,6 +86,13 @@ export class GestureBlender {
                     if (output.glowIntensity !== undefined) {
                         accumulated.glowIntensity *= output.glowIntensity;
                     }
+
+                    // GLOW BOOST: Additive blending for isolated glow layer
+                    // This drives a separate screen-space halo effect without affecting base materials
+                    // glowBoost = 0 means no extra glow, glowBoost > 0 activates the glow layer
+                    if (output.glowBoost !== undefined) {
+                        accumulated.glowBoost += output.glowBoost;
+                    }
                 }
             }
         }
@@ -110,6 +119,7 @@ export class GestureBlender {
             rotation: finalRotation,
             scale: finalScale,
             glowIntensity: finalGlowIntensity,
+            glowBoost: accumulated.glowBoost,          // Isolated glow layer amount (0 = off, >0 = halo active)
             gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
         };
     }

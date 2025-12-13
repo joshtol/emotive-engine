@@ -241,7 +241,7 @@ export default {
          * Evaluate 3D properties at given progress
          * @param {number} progress - Animation progress (0-1)
          * @param {Object} motion - Gesture configuration
-         * @returns {Object} 3D transform properties {position, rotation, scale}
+         * @returns {Object} 3D transform properties {position, rotation, scale, glowIntensity, glowBoost}
          */
         evaluate(progress, motion) {
             const config = motion || {};
@@ -256,14 +256,18 @@ export default {
             // Calculate pulse value
             const pulseValue = Math.sin(easeProgress * Math.PI * 2 * frequency);
 
-            // Calculate glow variation (clamped to ±20% max)
-            const glowVariation = Math.max(-0.2, Math.min(0.2, pulseValue * glowAmount * strength));
+            // Calculate glow variation (clamped to ±30% max for more visible effect)
+            const glowVariation = Math.max(-0.3, Math.min(0.3, pulseValue * glowAmount * strength * 2));
+
+            // Glow boost for screen-space halo - pulses with heartbeat
+            const glowBoost = Math.max(0, pulseValue * 0.8);
 
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0 + pulseValue * scaleAmount * strength,
-                glowIntensity: 1.0 + glowVariation
+                glowIntensity: 1.0 + glowVariation,
+                glowBoost
             };
         }
     }

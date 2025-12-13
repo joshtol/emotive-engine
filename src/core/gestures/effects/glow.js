@@ -212,7 +212,7 @@ export default {
      * GlowIntensity increase without movement
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
-     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number, glowBoost: number }
      */
     '3d': {
         evaluate(progress, motion) {
@@ -238,11 +238,16 @@ export default {
             const scaleAmount = config.scaleAmount || 0.1;
             const scale = 1.0 + glowValue * scaleAmount * 0.5;
 
+            // Glow boost for isolated screen-space halo effect
+            // Peaks at 1.5 intensity for a dramatic, visible halo
+            const glowBoost = glowValue * 1.5;
+
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity
+                glowIntensity,
+                glowBoost
             };
         }
     }

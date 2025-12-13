@@ -111,7 +111,65 @@ const createPlaceholderGesture = (name, emoji = '✨') => ({
     }
 });
 
-const sparkle = createPlaceholderGesture('sparkle', '✨');
+// Sparkle gesture - bright twinkling bursts of light
+const sparkle = {
+    name: 'sparkle',
+    emoji: '✨',
+    type: 'blending',
+    description: 'Bright twinkling sparkle bursts',
+    config: {
+        duration: 800,
+        musicalDuration: { musical: true, beats: 2 }
+    },
+    rhythm: {
+        enabled: true,
+        syncMode: 'beat',
+        timingSync: 'nextBeat',
+        durationSync: { mode: 'beats', beats: 2 },
+        interruptible: true,
+        priority: 5,
+        blendable: true
+    },
+    apply: (_particle, _progress, _params) => false,
+    blend: (_particle, _progress, _params) => false,
+    '3d': {
+        evaluate(progress, motion) {
+            const strength = motion?.strength || 1.0;
+
+            // Create rapid sparkle bursts - multiple quick flashes
+            // Use high-frequency sine waves with sharp peaks
+            const sparkle1 = Math.pow(Math.max(0, Math.sin(progress * Math.PI * 6)), 3);
+            const sparkle2 = Math.pow(Math.max(0, Math.sin(progress * Math.PI * 8 + 1)), 3);
+            const sparkle3 = Math.pow(Math.max(0, Math.sin(progress * Math.PI * 10 + 2)), 3);
+
+            // Combine for twinkling effect - peaks are sharp and bright
+            const sparkleValue = Math.max(sparkle1, sparkle2, sparkle3);
+
+            // Envelope to fade in/out
+            const envelope = Math.sin(progress * Math.PI);
+
+            // Final sparkle intensity
+            const finalSparkle = sparkleValue * envelope;
+
+            // Strong glow pulse
+            const glowIntensity = 1.0 + finalSparkle * 0.5 * strength;
+
+            // Very strong glow boost for dramatic sparkle halo
+            const glowBoost = finalSparkle * 2.0 * strength;
+
+            // Tiny scale pulse on sparkle peaks
+            const scale = 1.0 + finalSparkle * 0.08 * strength;
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale,
+                glowIntensity,
+                glowBoost
+            };
+        }
+    }
+};
 
 // Shimmer gesture - makes particles shimmer with wave effect
 const shimmer = {
@@ -139,6 +197,33 @@ const shimmer = {
     blend: (_particle, _progress, _params) => {
         // Blend with other gestures
         return false;
+    },
+    '3d': {
+        evaluate(progress, motion) {
+            const strength = motion?.strength || 1.0;
+
+            // Create shimmering wave effect - multiple overlapping sine waves
+            const wave1 = Math.sin(progress * Math.PI * 4);
+            const wave2 = Math.sin(progress * Math.PI * 6 + 0.5);
+            const wave3 = Math.sin(progress * Math.PI * 10 + 1.0);
+
+            // Combine waves for sparkling effect
+            const shimmerValue = (wave1 * 0.4 + wave2 * 0.35 + wave3 * 0.25 + 1) / 2; // 0 to 1
+
+            // Glow pulses with shimmer
+            const glowIntensity = 1.0 + shimmerValue * 0.3 * strength;
+
+            // Glow boost for screen-space halo - sparkles!
+            const glowBoost = shimmerValue * 1.0 * strength;
+
+            return {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0 + shimmerValue * 0.05 * strength,
+                glowIntensity,
+                glowBoost
+            };
+        }
     }
 };
 const groove = createPlaceholderGesture('groove', '🎵');

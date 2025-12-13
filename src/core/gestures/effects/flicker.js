@@ -328,25 +328,30 @@ export default {
             // Combine for realistic flicker
             const flickerValue = baseSine * 0.3 + randomJump * 0.7;
 
-            // Map to normalized glow intensity range (±30% max)
-            // When flickering low: dim (0.7)
-            // When flickering high: bright (1.3)
-            const glowIntensity = 0.7 + 0.6 * flickerValue; // Range: 0.7 to 1.3
+            // Map to normalized glow intensity range (±40% max)
+            // When flickering low: dim (0.6)
+            // When flickering high: bright (1.4)
+            const glowIntensity = 0.6 + 0.8 * flickerValue; // Range: 0.6 to 1.4
 
             // Jitter increases when glow is high (electrical energy)
             const jitterAmount = config.jitterAmount || 2;
-            const jitterScale = 0.002 * strength * glowIntensity;
+            const jitterScale = 0.003 * strength * glowIntensity;
             const jitterX = (Math.random() - 0.5) * jitterAmount * jitterScale;
             const jitterY = (Math.random() - 0.5) * jitterAmount * jitterScale;
 
             // Slight random rotation jitter for extra chaos
-            const rotJitter = (Math.random() - 0.5) * 0.02 * strength * glowIntensity;
+            const rotJitter = (Math.random() - 0.5) * 0.03 * strength * glowIntensity;
+
+            // Glow boost for screen-space halo - dramatic flicker effect
+            // Directly tied to flickerValue for maximum impact (0 to 1.2)
+            const glowBoost = flickerValue * 1.2;
 
             return {
                 position: [jitterX, jitterY, 0],
                 rotation: [rotJitter * 0.5, 0, rotJitter],
-                scale: 1.0 + (glowIntensity - 1.0) * 0.05, // Slight scale pulse
-                glowIntensity
+                scale: 1.0 + (glowIntensity - 1.0) * 0.08, // More visible scale pulse
+                glowIntensity,
+                glowBoost
             };
         }
     }

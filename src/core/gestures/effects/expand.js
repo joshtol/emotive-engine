@@ -207,11 +207,15 @@ export default {
             // Gradual brightening from 1.0 to 1.25 during expansion
             const glowIntensity = 1.0 + progress * 0.25;
 
+            // Glow boost for screen-space halo - grows with expansion
+            const glowBoost = progress * 0.8;
+
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity
+                glowIntensity,
+                glowBoost
             };
         }
     }

@@ -1558,6 +1558,7 @@ export class Core3DManager {
             this.glowIntensity = blended.glowIntensity;
         }
         this.gestureQuaternion = blended.gestureQuaternion;
+        this.glowBoost = blended.glowBoost || 0; // For isolated glow layer
 
         // Apply blink effects (AFTER gestures, blending with other animations)
         if (blinkState.isBlinking) {
@@ -1628,6 +1629,14 @@ export class Core3DManager {
         // Use faster transition during geometry morphs for quicker bloom adaptation
         const bloomTransitionSpeed = morphState.isTransitioning ? 0.3 : 0.1;
         this.renderer.updateBloom(effectiveGlowIntensity, bloomTransitionSpeed, this.geometryType);
+
+        // Update isolated glow layer for gesture effects (glow/flash)
+        // This is a separate screen-space effect that doesn't affect baseline appearance
+        if (this.glowBoost > 0 || (this.renderer.glowLayer && this.renderer.glowLayer.isActive())) {
+            // Get world position of core mesh for glow center
+            const worldPosition = this.coreMesh?.position;
+            this.renderer.updateGlowLayer(this.glowBoost, this.glowColor, worldPosition, deltaTime);
+        }
 
         // Update sun material animation if using sun geometry
         if (this.customMaterialType === 'sun') {
