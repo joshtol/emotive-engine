@@ -201,6 +201,70 @@
                 top: 0;
             }
         }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+                gap: 20px;
+            }
+
+            .canvas-container {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1;
+            }
+
+            .chat-container {
+                height: auto;
+                min-height: 400px;
+                padding: 15px;
+            }
+
+            .messages {
+                min-height: 250px;
+                max-height: 300px;
+            }
+
+            .message {
+                max-width: 90%;
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            .examples {
+                gap: 6px;
+            }
+
+            .example-btn {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+
+            .input-area {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .input-area input {
+                width: 100%;
+            }
+
+            .input-area button {
+                width: 100%;
+            }
+
+            .emotion-display {
+                padding: 10px;
+            }
+
+            .emotion-value {
+                font-size: 20px;
+            }
+
+            .example-info {
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
