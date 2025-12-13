@@ -163,7 +163,7 @@
 
     <script type="module">
         import EmotiveMascot3D, { animateMoonPhase } from '../../dist/emotive-mascot-3d.js';
-        import { setupTidalLock } from './demo-utils.js';
+        import { getAssetBasePath, setupTidalLock } from './demo-utils.js';
 
         // Calibrated rotation for "Man in the Moon" Earth-facing view
         let currentRotation = { x: 55.5, y: -85.0, z: -60.5 };
@@ -176,7 +176,8 @@
             autoRotate: false,
             enableBlinking: false,
             enableBreathing: false,
-            cameraDistance: 1.0
+            cameraDistance: 1.0,
+            assetBasePath: getAssetBasePath()
         });
 
         mascot.init(container);

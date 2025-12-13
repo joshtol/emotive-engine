@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--
+  HELLO WORLD - Emotive Engine
+
+  The absolute simplest working example. Start here!
+
+  What you'll learn:
+  - How to load the Emotive Engine library (UMD bundle)
+  - How to create and initialize a mascot
+  - How to set emotions with buttons
+  - How to expose the mascot for console experiments
+
+  Lines of code: ~60 (including setup)
+  Complexity: ⭐ Beginner-friendly
+  Next example: basic-usage.html
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World - Emotive Engine</title>
+
+    <!-- Shared example styles -->
+    <link rel="stylesheet" href="/examples/example-styles.css">
+
+    <style>
+        /* Page-specific layout */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Canvas container with gradient background */
+        .canvas-container {
+            width: 400px;
+            height: 400px;
+            border: 2px solid rgba(221, 74, 154, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
+            margin-bottom: 30px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #1a1a2e 100%);
+            position: relative;
+        }
+
+        #mascot-canvas {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+            border: none; /* Override shared canvas border */
+        }
+
+        .example-info {
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="example-header">
+        <img src="/assets/emotive-engine-icon.svg" alt="Emotive Engine" class="example-logo">
+        <h1 class="example-title">Hello World</h1>
+    </div>
+
+    <p class="example-subtitle">The simplest Emotive Engine example</p>
+
+    <div class="canvas-container">
+        <canvas id="mascot-canvas"></canvas>
+    </div>
+
+    <div class="example-controls">
+        <button onclick="mascot.setEmotion('calm')">😌 Calm</button>
+        <button onclick="mascot.setEmotion('excited')">🎉 Excited</button>
+        <button onclick="mascot.setEmotion('sadness')">😢 Sadness</button>
+    </div>
+
+    <div class="example-info">
+        <strong>💡 Try these in the browser console:</strong><br>
+        <code>mascot.setEmotion('joy')</code> - Change emotion<br>
+        <code>mascot.morphTo('heart')</code> - Morph shape<br>
+        <code>mascot.express('bounce')</code> - Trigger gesture<br>
+        <code>mascot.setScale({ core: 2.0 })</code> - Scale up
+    </div>
+
+    <!-- Load Emotive Engine UMD bundle -->
+    <script src="/emotive-engine.js"></script>
+
+    <script>
+        /**
+         * HELLO WORLD INITIALIZATION
+         *
+         * This function shows the 6 essential steps to get a mascot running.
+         * Copy this pattern for your own projects!
+         */
+        async function initMascot() {
+            // STEP 1: Get the canvas element from the page
+            const canvas = document.getElementById('mascot-canvas');
+
+            // STEP 2: Get EmotiveMascot from the global window object
+            // The UMD bundle loads it as window.EmotiveMascot
+            const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+
+            if (!EmotiveMascot) {
+                console.error('❌ EmotiveMascot not loaded - check script path');
+                return null;
+            }
+
+            // STEP 3: Set canvas dimensions (required for proper rendering)
+            canvas.width = 400;
+            canvas.height = 400;
+
+            // STEP 4: Create a new mascot instance
+            // Minimal config for hello world - see basic-usage.html for more options
+            const mascot = new EmotiveMascot({
+                canvasId: 'mascot-canvas',      // ID of the canvas element
+                targetFPS: 60,                  // Smooth 60fps animation
+                enableAudio: false,             // No audio for this example
+                defaultEmotion: 'neutral',      // Starting emotion
+                enableGazeTracking: false,      // Simpler without mouse tracking
+                enableIdleBehaviors: false      // Simpler without random animations
+            });
+
+            // STEP 5: Initialize the mascot (CRITICAL - don't forget this!)
+            // Pass the canvas element to init()
+            await mascot.init(canvas);
+
+            // STEP 6 (OPTIONAL): Configure the backdrop glow
+            // This creates the nice glow effect around the mascot
+            mascot.setBackdrop({
+                enabled: true,
+                radius: 3.5,              // Size of glow
+                intensity: 0.9,           // Brightness
+                blendMode: 'normal',
+                falloff: 'smooth',        // Smooth gradient
+                edgeSoftness: 0.95,       // Very soft edges
+                coreTransparency: 0.25,   // Slightly transparent center
+                responsive: true          // Adapts to mascot size
+            });
+
+            // STEP 7: Start the animation!
+            mascot.start();
+
+            console.log('✅ Mascot created and started!');
+            return mascot;
+        }
+
+        // Run initialization and expose mascot globally
+        // This lets you experiment in the browser console
+        let mascot = null;
+
+        initMascot().then(m => {
+            mascot = m;
+
+            if (mascot) {
+                // Set initial emotion to joy
+                mascot.setEmotion('joy');
+
+                console.log('✅ Ready! Try these in the console:');
+                console.log('   mascot.setEmotion("calm")');
+                console.log('   mascot.morphTo("heart")');
+                console.log('   mascot.express("bounce")');
+            }
+        });
+    </script>
+</body>
+</html>

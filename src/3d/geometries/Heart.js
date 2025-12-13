@@ -35,13 +35,14 @@ function generatePlanarUVs(geometry) {
 
 /**
  * Load heart OBJ model asynchronously
+ * @param {string} assetBasePath - Base path for assets (default: '/assets')
  * @returns {Promise<THREE.BufferGeometry>} Heart geometry
  */
-export function loadHeartGeometry() {
+export function loadHeartGeometry(assetBasePath = '/assets') {
     return new Promise(resolve => {
         const loader = new OBJLoader();
         loader.load(
-            '/assets/models/Crystal/heart.obj',
+            `${assetBasePath}/models/Crystal/heart.obj`,
             obj => {
                 let geometry = null;
                 obj.traverse(child => {

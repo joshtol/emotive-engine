@@ -218,10 +218,11 @@ export function disposeMoon(moonMesh) {
  */
 export function createMoonMaterial(textureLoader, options = {}) {
     const resolution = options.resolution || '4k';
+    const assetBasePath = options.assetBasePath || '/assets';
 
     // Determine texture paths based on resolution
-    const colorPath = `/assets/textures/Moon/moon-color-${resolution}.jpg`;
-    const normalPath = `/assets/textures/Moon/moon-normal-${resolution}.jpg`;
+    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.jpg`;
+    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.jpg`;
 
     // Initialize pending texture tracking for cleanup
     const pendingTextures = new Map();
@@ -341,6 +342,7 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
     const glowColor = options.glowColor || new THREE.Color(1, 1, 1);
     const glowIntensity = options.glowIntensity || 1.0;
     const shadowType = options.shadowType || 'crescent';
+    const assetBasePath = options.assetBasePath || '/assets';
 
     // Determine shadow offset from moonPhase or manual override
     let shadowOffsetX, shadowOffsetY;
@@ -375,8 +377,8 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
     const shadowCoverage = options.shadowCoverage !== undefined ? options.shadowCoverage : 0.85;
 
     // Determine texture paths
-    const colorPath = `/assets/textures/Moon/moon-color-${resolution}.jpg`;
-    const normalPath = `/assets/textures/Moon/moon-normal-${resolution}.jpg`;
+    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.jpg`;
+    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.jpg`;
 
     // Get shaders based on shadow type
     const { vertexShader, fragmentShader } = getShadowShaders(shadowType);
@@ -667,7 +669,8 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
     const {
         resolution = '4k',
         glowColor = new THREE.Color(0xffffff),
-        glowIntensity = 1.0
+        glowIntensity = 1.0,
+        assetBasePath = '/assets'
     } = options;
 
     const { vertexShader, fragmentShader } = getMoonWithBlendLayersShaders();
@@ -726,8 +729,8 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
     });
 
     // Load textures with fade-in (same as standard material)
-    const colorPath = `/assets/textures/Moon/moon-color-${resolution}.jpg`;
-    const normalPath = `/assets/textures/Moon/moon-normal-${resolution}.jpg`;
+    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.jpg`;
+    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.jpg`;
 
     const colorMap = textureLoader.load(
         colorPath,

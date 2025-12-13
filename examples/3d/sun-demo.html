@@ -124,7 +124,7 @@ x<!DOCTYPE html>
     <script type="module">
         import EmotiveMascot3D, { blendModeNames } from '../../dist/emotive-mascot-3d.js';
         import { exitPrecisionMode } from './layer-utils.js';
-        import { createBlendLayerGroup, syncLayersFromShader, setupVisualToggles } from './demo-utils.js';
+        import { getAssetBasePath, createBlendLayerGroup, syncLayersFromShader, setupVisualToggles } from './demo-utils.js';
 
         let mascot = null;
         const MAX_BLEND_LAYERS = 4;
@@ -178,7 +178,8 @@ x<!DOCTYPE html>
                     autoRotate: true,
                     enableBlinking: false,
                     enableBreathing: false,
-                    cameraDistance: 1.2
+                    cameraDistance: 1.2,
+                    assetBasePath: getAssetBasePath()
                 });
 
                 mascot.init(container);

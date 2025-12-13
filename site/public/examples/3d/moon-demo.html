@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<!--
+  INTERACTIVE MOON - Emotive Engine 3D Demo
+
+  A realistic moon with dynamic moon phases and camera controls.
+
+  Features:
+  - 8 named moon phases with smooth transitions
+  - Tidally-locked rotation (same face always visible)
+  - Manual shadow position control
+  - Camera rotation calibration
+
+  Texture Attribution:
+  Credit: NASA's Scientific Visualization Studio (https://svs.gsfc.nasa.gov/4720/)
+  Data: Ernie Wright (USRA), Noah Petro (NASA/GSFC)
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Moon - Emotive Engine 3D</title>
+    <meta name="description" content="Realistic 3D moon with dynamic phases and camera controls">
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <style>
+        :root {
+            --accent: #a0c4ff;
+            --accent-rgb: 160, 196, 255;
+        }
+
+        body {
+            background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
+                        linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a2a 100%);
+        }
+
+        .phase-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(5px, 0.6vw, 8px);
+        }
+
+        #moon-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            background: radial-gradient(circle at center, rgba(160, 196, 255, 0.05), transparent);
+            box-shadow: 0 0 80px rgba(160, 196, 255, 0.2);
+        }
+
+        #moon-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        @media (max-width: 1000px) {
+            .phase-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .phase-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="left-menu">
+        <div class="section">
+            <h2>Moon Phases</h2>
+            <div class="section-content">
+                <div class="phase-grid">
+                    <button data-phase="new">🌑 New</button>
+                    <button data-phase="waxing-crescent">🌒 Waxing Crescent</button>
+                    <button data-phase="first-quarter">🌓 First Quarter</button>
+                    <button data-phase="waxing-gibbous">🌔 Waxing Gibbous</button>
+                    <button data-phase="full">🌕 Full</button>
+                    <button data-phase="waning-gibbous">🌖 Waning Gibbous</button>
+                    <button data-phase="last-quarter">🌗 Last Quarter</button>
+                    <button data-phase="waning-crescent" class="active">🌘 Waning Crescent</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Moon Phases:</strong><br>
+                The terminator (shadow line) sweeps across the moon's surface just like in real lunar cycles.
+            </div>
+        </div>
+    </div>
+
+    <div class="center-content">
+        <div id="moon-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <div class="right-menu">
+        <div class="section">
+            <h2>Shadow Position</h2>
+            <div class="section-content">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>X Offset</span>
+                        <span class="slider-value" id="shadow-x-value">0.0</span>
+                    </div>
+                    <input type="range" id="shadow-x-slider" min="-50" max="50" step="0.1" value="0">
+                </div>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Y Offset</span>
+                        <span class="slider-value" id="shadow-y-value">0.0</span>
+                    </div>
+                    <input type="range" id="shadow-y-slider" min="-50" max="50" step="0.1" value="0">
+                </div>
+                <div class="info-box">
+                    <strong>Shadow Values:</strong><br>
+                    0 = Full Moon<br>
+                    ±1 = Quarter<br>
+                    ±2 = Crescent<br>
+                    ±50 = New Moon
+                </div>
+            </div>
+        </div>
+
+
+        <div class="section">
+            <h2 class="collapsed">Rotation Calibration</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>X-Axis</span>
+                        <span class="slider-value" id="rotation-x-value">55.5°</span>
+                    </div>
+                    <input type="range" id="rotation-x-slider" min="-180" max="180" step="0.5" value="55.5">
+                </div>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Y-Axis</span>
+                        <span class="slider-value" id="rotation-y-value">-85.0°</span>
+                    </div>
+                    <input type="range" id="rotation-y-slider" min="-180" max="180" step="0.5" value="-85.0">
+                </div>
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Z-Axis</span>
+                        <span class="slider-value" id="rotation-z-value">-60.5°</span>
+                    </div>
+                    <input type="range" id="rotation-z-slider" min="-180" max="180" step="0.5" value="-60.5">
+                </div>
+                <button id="reset-rotation" style="width: 100%; margin-top: 8px;">Reset Calibration</button>
+                <div class="info-box" style="margin-top: 10px;">
+                    <strong>Tidally Locked:</strong><br>
+                    Like the real moon, the same face always points toward Earth.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D, { animateMoonPhase } from '/emotive-engine-3d.js';
+        import { setupTidalLock } from '/examples/3d/demo-utils.js';
+
+        // Calibrated rotation for "Man in the Moon" Earth-facing view
+        let currentRotation = { x: 55.5, y: -85.0, z: -60.5 };
+
+        const container = document.getElementById('moon-container');
+        const mascot = new EmotiveMascot3D({
+            coreGeometry: 'moon',
+            enableParticles: false,
+            enableControls: true,
+            autoRotate: false,
+            enableBlinking: false,
+            enableBreathing: false,
+            cameraDistance: 1.0
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Set to waning crescent on load
+        setTimeout(() => {
+            if (mascot.core3D?.customMaterial) {
+                animateMoonPhase(mascot.core3D.customMaterial, 'waning-crescent', 1500);
+                document.querySelectorAll('[data-phase]').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('[data-phase="waning-crescent"]')?.classList.add('active');
+            }
+            if (mascot.core3D?.renderer?.controls) {
+                mascot.core3D.renderer.controls.autoRotate = false;
+            }
+        }, 500);
+
+        // Setup tidal lock behavior from demo-utils
+        setupTidalLock(mascot, 2000);
+
+        // Phase buttons
+        document.querySelectorAll('[data-phase]').forEach(button => {
+            button.addEventListener('click', async () => {
+                const phase = button.dataset.phase;
+
+                document.querySelectorAll('[data-phase]').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                if (mascot.core3D?.customMaterial) {
+                    try {
+                        const animation = animateMoonPhase(mascot.core3D.customMaterial, phase, 1500);
+                        await animation.promise;
+                    } catch (err) {
+                        console.error('Phase animation failed:', err);
+                    }
+                }
+            });
+        });
+
+        // Shadow controls
+        const shadowXSlider = document.getElementById('shadow-x-slider');
+        const shadowYSlider = document.getElementById('shadow-y-slider');
+
+        function updateShadow(axis, value) {
+            value = Math.max(-50, Math.min(50, value));
+
+            if (axis === 'x') {
+                document.getElementById('shadow-x-value').textContent = value.toFixed(1);
+                shadowXSlider.value = value;
+                if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+                    mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = value;
+                }
+            } else {
+                document.getElementById('shadow-y-value').textContent = value.toFixed(1);
+                shadowYSlider.value = value;
+                if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+                    mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = value;
+                }
+            }
+        }
+
+        shadowXSlider.addEventListener('input', (e) => updateShadow('x', parseFloat(e.target.value)));
+        shadowYSlider.addEventListener('input', (e) => updateShadow('y', parseFloat(e.target.value)));
+
+        // Rotation controls
+        const rotationXSlider = document.getElementById('rotation-x-slider');
+        const rotationYSlider = document.getElementById('rotation-y-slider');
+        const rotationZSlider = document.getElementById('rotation-z-slider');
+
+        function updateRotation(axis, degrees) {
+            degrees = Math.max(-180, Math.min(180, degrees));
+            currentRotation[axis] = degrees;
+
+            document.getElementById(`rotation-${axis}-value`).textContent = degrees.toFixed(1) + '°';
+            document.getElementById(`rotation-${axis}-slider`).value = degrees;
+
+            if (mascot.core3D?.calibrationRotation) {
+                mascot.core3D.calibrationRotation[0] = currentRotation.x * Math.PI / 180;
+                mascot.core3D.calibrationRotation[1] = currentRotation.y * Math.PI / 180;
+                mascot.core3D.calibrationRotation[2] = currentRotation.z * Math.PI / 180;
+            }
+        }
+
+        rotationXSlider.addEventListener('input', (e) => updateRotation('x', parseFloat(e.target.value)));
+        rotationYSlider.addEventListener('input', (e) => updateRotation('y', parseFloat(e.target.value)));
+        rotationZSlider.addEventListener('input', (e) => updateRotation('z', parseFloat(e.target.value)));
+
+        document.getElementById('reset-rotation').addEventListener('click', () => {
+            updateRotation('x', 55.5);
+            updateRotation('y', -85.0);
+            updateRotation('z', -60.5);
+        });
+    </script>
+</body>
+</html>

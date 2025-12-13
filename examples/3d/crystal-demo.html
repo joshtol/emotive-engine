@@ -424,6 +424,7 @@
         import EmotiveMascot3D, { blendModeNames } from '../../dist/emotive-mascot-3d.js';
         import { exitPrecisionMode } from './layer-utils.js';
         import {
+            getAssetBasePath,
             setupWobbleToggle,
             setupParticlesToggle,
             setupVisualToggles,
@@ -448,7 +449,8 @@
             cameraDistance: 1.2,
             fov: 30,
             minZoom: 0.9,
-            maxZoom: 2.0
+            maxZoom: 2.0,
+            assetBasePath: getAssetBasePath()
         });
 
         mascot.init(container);

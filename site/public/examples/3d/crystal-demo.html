@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<!--
+  CRYSTAL SOUL - Emotive Engine 3D Demo
+
+  A frosted crystal with an inner glowing "soul" that changes color
+  based on emotional state.
+
+  What you'll learn:
+  - 3D rendering with OBJ model loading
+  - Frosted glass shader with fresnel effects
+  - Inner soul glow with emotion-driven color
+  - Configurable animation speeds per emotion
+
+  Complexity: ⭐⭐⭐ Advanced 3D
+  Features: OBJ loading, custom shaders, emotion-driven effects
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crystal Soul - Emotive Engine 3D</title>
+    <meta name="description" content="Frosted crystal with inner soul glow driven by emotional states">
+
+    <!-- Shared 3D example styles -->
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+
+    <style>
+        /* Theme: Cyan crystal */
+        :root {
+            --accent: #6ee7ff;
+            --accent-rgb: 110, 231, 255;
+        }
+
+        body {
+            /* Background gradient matching reference image: dark green-black top, warm brown bottom */
+            background: linear-gradient(180deg,
+                #0a1810 0%,
+                #1a2820 25%,
+                #2a3530 50%,
+                #4a3a30 75%,
+                #5a4a40 100%);
+        }
+
+        /* Crystal container */
+        #crystal-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            /* Subtle glow around container */
+            box-shadow: 0 0 60px rgba(100, 200, 255, 0.15);
+        }
+
+        #crystal-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 1000px) {
+            .emotion-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .emotion-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .emotion-grid button {
+                padding: clamp(6px, 0.6vw, 10px);
+                font-size: clamp(8px, 0.7vw, 10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="left-menu">
+        <div class="section">
+            <h2>Geometry</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-geometry="crystal" class="active">💎 Crystal</button>
+                    <button data-geometry="heart">💗 Heart</button>
+                    <button data-geometry="rough">💎 Rough</button>
+                    <button data-geometry="star">⭐ Star</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>SSS Material Preset</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-sss-preset="quartz" class="active">💎 Quartz</button>
+                    <button data-sss-preset="emerald">💚 Emerald</button>
+                    <button data-sss-preset="ruby">❤️ Ruby</button>
+                    <button data-sss-preset="sapphire">💙 Sapphire</button>
+                    <button data-sss-preset="amethyst">💜 Amethyst</button>
+                    <button data-sss-preset="citrine">💛 Citrine</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="has-toggle">
+                <span>Emotions</span>
+                <div class="toggle-switch active" id="wobble-toggle">Wobble</div>
+            </h2>
+            <div class="section-content">
+                <div class="emotion-grid">
+                    <button data-emotion="neutral" class="active">😐 Neutral</button>
+                    <button data-emotion="joy">😊 Joy</button>
+                    <button data-emotion="sadness">😢 Sadness</button>
+                    <button data-emotion="anger">😠 Anger</button>
+                    <button data-emotion="fear">😨 Fear</button>
+                    <button data-emotion="surprise">😲 Surprise</button>
+                    <button data-emotion="disgust">🤢 Disgust</button>
+                    <button data-emotion="love">❤️ Love</button>
+                    <button data-emotion="calm">😌 Calm</button>
+                    <button data-emotion="excited">🤩 Excited</button>
+                    <button data-emotion="focused">🎯 Focused</button>
+                    <button data-emotion="suspicion">🤨 Suspicion</button>
+                    <button data-emotion="resting">😴 Resting</button>
+                    <button data-emotion="euphoria">🤯 Euphoria</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Crystal Soul</strong><br>
+                A frosted crystal with an inner glowing "soul" that changes color based on emotional state.
+            </div>
+        </div>
+    </div>
+
+    <div class="center-content">
+        <div id="crystal-container">
+            <canvas id="crystal"></canvas>
+        </div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <div class="right-menu">
+        <div class="section visual-controls">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch active" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Crystal Appearance</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Crystal Shell Size</span>
+                        <span class="slider-value" id="shell-size-value">2.00</span>
+                    </div>
+                    <input type="range" id="shell-size-slider" min="0.5" max="3.0" step="0.05" value="2.0">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Soul Size</span>
+                        <span class="slider-value" id="soul-size-value">1.00</span>
+                    </div>
+                    <input type="range" id="soul-size-slider" min="0" max="1" step="0.05" value="1.00">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Soul Ghost Mode</span>
+                        <span class="slider-value" id="soul-ghost-value">0.36</span>
+                    </div>
+                    <input type="range" id="soul-ghost-slider" min="0" max="1" step="0.01" value="0.36">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Frostiness</span>
+                        <span class="slider-value" id="frostiness-value">---</span>
+                    </div>
+                    <input type="range" id="frostiness-slider" min="0" max="1" step="0.001" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Inner Glow Strength</span>
+                        <span class="slider-value" id="inner-glow-value">---</span>
+                    </div>
+                    <input type="range" id="inner-glow-slider" min="0" max="2" step="0.001" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Fresnel Intensity</span>
+                        <span class="slider-value" id="fresnel-value">---</span>
+                    </div>
+                    <input type="range" id="fresnel-slider" min="0" max="2" step="0.001" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>SSS Strength</span>
+                        <span class="slider-value" id="sss-value">---</span>
+                    </div>
+                    <input type="range" id="sss-slider" min="0" max="2" step="0.001" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Emotion Color Bleed</span>
+                        <span class="slider-value" id="emotion-bleed-value">---</span>
+                    </div>
+                    <input type="range" id="emotion-bleed-slider" min="0" max="1" step="0.01" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">SSS Advanced</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Thickness Bias</span>
+                        <span class="slider-value" id="sss-thickness-bias-value">---</span>
+                    </div>
+                    <input type="range" id="sss-thickness-bias-slider" min="0" max="1" step="0.05" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Thickness Scale</span>
+                        <span class="slider-value" id="sss-thickness-scale-value">---</span>
+                    </div>
+                    <input type="range" id="sss-thickness-scale-slider" min="0" max="2" step="0.05" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Curvature Scale</span>
+                        <span class="slider-value" id="sss-curvature-value">---</span>
+                    </div>
+                    <input type="range" id="sss-curvature-slider" min="0" max="3" step="0.1" value="1.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>SSS Ambient</span>
+                        <span class="slider-value" id="sss-ambient-value">---</span>
+                    </div>
+                    <input type="range" id="sss-ambient-slider" min="0" max="1" step="0.05" value="0.5">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Noise Patterns</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Surface Noise Scale</span>
+                        <span class="slider-value" id="surface-noise-value">---</span>
+                    </div>
+                    <input type="range" id="surface-noise-slider" min="0.1" max="10" step="0.1" value="1.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Caustic Intensity</span>
+                        <span class="slider-value" id="caustic-intensity-value">---</span>
+                    </div>
+                    <input type="range" id="caustic-intensity-slider" min="0" max="2" step="0.05" value="0.4">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Caustic Scale</span>
+                        <span class="slider-value" id="caustic-scale-value">---</span>
+                    </div>
+                    <input type="range" id="caustic-scale-slider" min="0.5" max="10" step="0.5" value="3.0">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Caustic Speed</span>
+                        <span class="slider-value" id="caustic-speed-value">---</span>
+                    </div>
+                    <input type="range" id="caustic-speed-slider" min="0" max="1" step="0.05" value="0.15">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Surface Roughness</span>
+                        <span class="slider-value" id="surface-roughness-value">---</span>
+                    </div>
+                    <input type="range" id="surface-roughness-slider" min="0" max="1" step="0.05" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Noise Frequency</span>
+                        <span class="slider-value" id="noise-freq-value">---</span>
+                    </div>
+                    <input type="range" id="noise-freq-slider" min="0.01" max="5" step="0.01" value="1.0">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Texture Strength</span>
+                        <span class="slider-value" id="texture-strength-value">---</span>
+                    </div>
+                    <input type="range" id="texture-strength-slider" min="0" max="1" step="0.05" value="0.5">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Soul Animation</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Drift Speed</span>
+                        <span class="slider-value" id="drift-speed-value">0.50</span>
+                    </div>
+                    <input type="range" id="drift-speed-slider" min="0.1" max="3" step="0.1" value="0.5">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Cross Wave Speed</span>
+                        <span class="slider-value" id="crosswave-speed-value">0.40</span>
+                    </div>
+                    <input type="range" id="crosswave-speed-slider" min="0.1" max="3" step="0.1" value="0.4">
+                </div>
+
+                <div class="toggle-control">
+                    <span class="toggle-label">Drift Enabled</span>
+                    <div class="toggle-switch active" id="drift-toggle"></div>
+                </div>
+
+                <div class="toggle-control">
+                    <span class="toggle-label">Cross Wave Enabled</span>
+                    <div class="toggle-switch active" id="crosswave-toggle"></div>
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Phase 1 (Primary Drift)</span>
+                        <span class="slider-value" id="phase1-value">0°</span>
+                    </div>
+                    <input type="range" id="phase1-slider" min="0" max="360" step="15" value="0">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Phase 2 (Secondary Drift)</span>
+                        <span class="slider-value" id="phase2-value">120°</span>
+                    </div>
+                    <input type="range" id="phase2-slider" min="0" max="360" step="15" value="120">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Phase 3 (Cross Wave)</span>
+                        <span class="slider-value" id="phase3-value">240°</span>
+                    </div>
+                    <input type="range" id="phase3-slider" min="0" max="360" step="15" value="240">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Blend</h2>
+            <div class="section-content collapsed">
+                <div class="info-box" style="margin-bottom: 12px;">
+                    Click value to fine-tune. Drag to reorder. Max 2 per type.
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Shell</div>
+                    <div id="shell-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-shell-layer-btn">+ Shell</button>
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Soul</div>
+                    <div id="soul-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-soul-layer-btn">+ Soul</button>
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Rim</div>
+                    <div id="rim-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-rim-layer-btn">+ Rim</button>
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">SSS</div>
+                    <div id="sss-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-sss-layer-btn">+ SSS</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D, { blendModeNames } from '/emotive-engine-3d.js';
+        import { exitPrecisionMode } from '/examples/3d/layer-utils.js';
+        import {
+            setupWobbleToggle,
+            setupParticlesToggle,
+            setupVisualToggles,
+            sssPresets as sharedSSSPresets,
+            createBlendLayerGroup,
+            createLayerShaderUpdater,
+            syncLayersFromShader
+        } from '/examples/3d/demo-utils.js';
+
+        const MAX_BLEND_LAYERS = 2;  // 2 layers per component
+
+        const container = document.getElementById('crystal-container');
+        const mascot = new EmotiveMascot3D({
+            canvasId: 'crystal',
+            coreGeometry: 'crystal',
+            enableParticles: false,
+            enableControls: true,
+            autoRotate: true,
+            autoRotateSpeed: 0.3,
+            enableBlinking: false,
+            enableBreathing: true,
+            cameraDistance: 1.2,
+            fov: 30,
+            minZoom: 0.9,
+            maxZoom: 2.0
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Set initial emotion
+        mascot.setEmotion('neutral');
+
+        // Helper to update slider and display
+        function setSlider(id, value, decimals = 2) {
+            const slider = document.getElementById(id + '-slider');
+            const display = document.getElementById(id + '-value');
+            if (slider && value !== undefined) {
+                slider.value = value;
+                if (display) display.textContent = value.toFixed(decimals);
+            }
+        }
+
+        // Track currently selected SSS preset and geometry
+        let currentSSSPreset = 'quartz';
+        let currentGeometry = 'crystal';
+
+        // Sync sliders with current engine values
+        function syncSlidersFromEngine() {
+            if (!mascot.core3D?.customMaterial?.uniforms) return;
+
+            const u = mascot.core3D.customMaterial.uniforms;
+
+            // Read Crystal Appearance values from shader uniforms (3 decimals)
+            setSlider('frostiness', u.frostiness?.value, 3);
+            setSlider('inner-glow', u.innerGlowStrength?.value, 3);
+            setSlider('fresnel', u.fresnelIntensity?.value, 3);
+            setSlider('sss', u.sssStrength?.value, 3);
+            setSlider('emotion-bleed', u.emotionColorBleed?.value, 2);
+
+            // Read Noise Pattern values (2 decimals)
+            setSlider('surface-noise', u.surfaceNoiseScale?.value);
+            setSlider('caustic-intensity', u.causticIntensity?.value);
+            setSlider('caustic-scale', u.causticScale?.value);
+            setSlider('caustic-speed', u.causticSpeed?.value);
+            setSlider('surface-roughness', u.surfaceRoughness?.value);
+            setSlider('noise-freq', u.noiseFrequency?.value);
+            setSlider('texture-strength', u.textureStrength?.value);
+
+            // Read SSS advanced values
+            setSlider('sss-thickness-bias', u.sssThicknessBias?.value);
+            setSlider('sss-thickness-scale', u.sssThicknessScale?.value);
+            setSlider('sss-curvature', u.sssCurvatureScale?.value);
+            setSlider('sss-ambient', u.sssAmbient?.value);
+
+            // Soul size from crystalInnerCoreBaseScale
+            if (mascot.core3D.crystalInnerCoreBaseScale !== undefined) {
+                // Reverse the scale mapping: scale = 0.05 + size * 0.95 → size = (scale - 0.05) / 0.95
+                const soulSize = (mascot.core3D.crystalInnerCoreBaseScale - 0.05) / 0.95;
+                setSlider('soul-size', Math.max(0, Math.min(1, soulSize)));
+            }
+        }
+
+        // Re-apply the current SSS preset after geometry morph
+        function reapplyCurrentPreset() {
+            if (currentSSSPreset && typeof applySSSPreset === 'function') {
+                applySSSPreset(currentSSSPreset);
+            }
+        }
+
+        // Register callback for material swap during morph
+        // This fires immediately when new material is created (while geometry is still scaled to 0)
+        if (mascot.core3D) {
+            mascot.core3D.onMaterialSwap = (event) => {
+                // Apply current SSS preset immediately to new material
+                reapplyCurrentPreset();
+            };
+        }
+
+        // Initialize sliders with actual values from engine
+        setTimeout(() => {
+            syncSlidersFromEngine();
+        }, 100);
+
+        // Geometry buttons
+        document.querySelectorAll('[data-geometry]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const geometry = btn.dataset.geometry;
+                currentGeometry = geometry;  // Track current geometry
+                mascot.morphTo(geometry);
+
+                // Update active state
+                document.querySelectorAll('[data-geometry]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // SSS preset is now applied via onMaterialSwap callback (no delay needed)
+            });
+        });
+
+        // Emotion buttons
+        document.querySelectorAll('[data-emotion]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const emotion = btn.dataset.emotion;
+                mascot.setEmotion(emotion);
+
+                // Update active state
+                document.querySelectorAll('[data-emotion]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Setup shared toggles from demo-utils
+        setupWobbleToggle(mascot);
+        setupParticlesToggle(mascot);
+        setupVisualToggles(mascot);
+
+        // Soul Animation toggle controls (crystal-specific)
+        function setupToggle(id, onToggle, initialState = false) {
+            const toggle = document.getElementById(id);
+            if (!toggle) return;
+            if (initialState) toggle.classList.add('active');
+
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+                onToggle(toggle.classList.contains('active'));
+            });
+        }
+
+        setupToggle('drift-toggle', (enabled) => {
+            if (mascot.core3D?.setCrystalSoulEffects) {
+                mascot.core3D.setCrystalSoulEffects({ driftEnabled: enabled });
+            }
+        }, true);
+
+        setupToggle('crosswave-toggle', (enabled) => {
+            if (mascot.core3D?.setCrystalSoulEffects) {
+                mascot.core3D.setCrystalSoulEffects({ crossWaveEnabled: enabled });
+            }
+        }, true);
+
+        // Slider controls for crystal appearance
+        function setupSlider(sliderId, valueId, onUpdate, decimals = 2) {
+            const slider = document.getElementById(sliderId);
+            const valueDisplay = document.getElementById(valueId);
+
+            slider.addEventListener('input', () => {
+                const value = parseFloat(slider.value);
+                valueDisplay.textContent = value.toFixed(decimals);
+                onUpdate(value);
+            });
+        }
+
+        // Size sliders
+        setupSlider('shell-size-slider', 'shell-size-value', (value) => {
+            if (mascot.core3D?.setCrystalShellSize) {
+                mascot.core3D.setCrystalShellSize(value);
+            }
+        });
+
+        setupSlider('soul-size-slider', 'soul-size-value', (value) => {
+            if (mascot.core3D?.setCrystalCoreSize) {
+                mascot.core3D.setCrystalCoreSize(value);
+            }
+        });
+
+        setupSlider('soul-ghost-slider', 'soul-ghost-value', (value) => {
+            if (mascot.core3D?.crystalSoul?.material?.uniforms?.ghostMode) {
+                mascot.core3D.crystalSoul.material.uniforms.ghostMode.value = value;
+            }
+        });
+
+        // Appearance sliders (3 decimal places for fine control)
+        setupSlider('frostiness-slider', 'frostiness-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.frostiness) {
+                mascot.core3D.customMaterial.uniforms.frostiness.value = value;
+            }
+        }, 3);
+
+        setupSlider('inner-glow-slider', 'inner-glow-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.innerGlowStrength) {
+                mascot.core3D.customMaterial.uniforms.innerGlowStrength.value = value;
+            }
+        }, 3);
+
+        setupSlider('fresnel-slider', 'fresnel-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.fresnelIntensity) {
+                mascot.core3D.customMaterial.uniforms.fresnelIntensity.value = value;
+            }
+        }, 3);
+
+        setupSlider('sss-slider', 'sss-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssStrength) {
+                mascot.core3D.customMaterial.uniforms.sssStrength.value = value;
+            }
+        }, 3);
+
+        setupSlider('emotion-bleed-slider', 'emotion-bleed-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.emotionColorBleed) {
+                mascot.core3D.customMaterial.uniforms.emotionColorBleed.value = value;
+            }
+        }, 2);
+
+        // SSS advanced sliders
+        setupSlider('sss-thickness-bias-slider', 'sss-thickness-bias-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssThicknessBias) {
+                mascot.core3D.customMaterial.uniforms.sssThicknessBias.value = value;
+            }
+        });
+
+        setupSlider('sss-thickness-scale-slider', 'sss-thickness-scale-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssThicknessScale) {
+                mascot.core3D.customMaterial.uniforms.sssThicknessScale.value = value;
+            }
+        });
+
+        setupSlider('sss-curvature-slider', 'sss-curvature-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssCurvatureScale) {
+                mascot.core3D.customMaterial.uniforms.sssCurvatureScale.value = value;
+            }
+        });
+
+        setupSlider('sss-ambient-slider', 'sss-ambient-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.sssAmbient) {
+                mascot.core3D.customMaterial.uniforms.sssAmbient.value = value;
+            }
+        });
+
+        // Use shared SSS presets from demo-utils.js
+        const sssPresets = sharedSSSPresets;
+
+        function applySSSPreset(presetName) {
+            const preset = sssPresets[presetName];
+            if (!preset || !mascot.core3D?.customMaterial?.uniforms) return;
+
+            const u = mascot.core3D.customMaterial.uniforms;
+
+            // Apply SSS-specific values (these work for all geometries)
+            if (u.sssStrength) u.sssStrength.value = preset.sssStrength;
+            if (u.sssAbsorption) u.sssAbsorption.value.set(...preset.sssAbsorption);
+            if (u.sssScatterDistance) u.sssScatterDistance.value.set(...preset.sssScatterDistance);
+            if (u.sssThicknessBias) u.sssThicknessBias.value = preset.sssThicknessBias;
+            if (u.sssThicknessScale) u.sssThicknessScale.value = preset.sssThicknessScale;
+            if (u.sssCurvatureScale) u.sssCurvatureScale.value = preset.sssCurvatureScale;
+            if (u.sssAmbient) u.sssAmbient.value = preset.sssAmbient;
+
+            // Apply caustic intensity if specified in preset
+            if (preset.causticIntensity !== undefined && u.causticIntensity) {
+                u.causticIntensity.value = preset.causticIntensity;
+                setSlider('caustic-intensity', preset.causticIntensity, 2);
+            }
+
+            // Apply emotion color bleed if specified in preset
+            if (u.emotionColorBleed) {
+                u.emotionColorBleed.value = preset.emotionColorBleed ?? 0;
+                setSlider('emotion-bleed', preset.emotionColorBleed ?? 0, 2);
+            }
+
+            // Heart has its own calibrated appearance values - don't override them
+            if (currentGeometry !== 'heart') {
+                if (u.frostiness) {
+                    u.frostiness.value = preset.frostiness;
+                    setSlider('frostiness', preset.frostiness, 3);
+                }
+                if (u.innerGlowStrength) {
+                    u.innerGlowStrength.value = preset.innerGlowStrength;
+                    setSlider('inner-glow', preset.innerGlowStrength, 3);
+                }
+                if (u.fresnelIntensity) {
+                    u.fresnelIntensity.value = preset.fresnelIntensity;
+                    setSlider('fresnel', preset.fresnelIntensity, 3);
+                }
+            }
+
+            // Apply iridescence blend layers (creates rainbow "fire" on rotation)
+            // Rim layers
+            if (u.rimLayer1Mode) u.rimLayer1Mode.value = preset.rimLayer1Mode ?? 0;
+            if (u.rimLayer1Strength) u.rimLayer1Strength.value = preset.rimLayer1Strength ?? 0;
+            if (u.rimLayer1Enabled) u.rimLayer1Enabled.value = preset.rimLayer1Enabled ?? 0;
+            if (u.rimLayer2Mode) u.rimLayer2Mode.value = preset.rimLayer2Mode ?? 0;
+            if (u.rimLayer2Strength) u.rimLayer2Strength.value = preset.rimLayer2Strength ?? 0;
+            if (u.rimLayer2Enabled) u.rimLayer2Enabled.value = preset.rimLayer2Enabled ?? 0;
+            // SSS layers
+            if (u.sssLayer1Mode) u.sssLayer1Mode.value = preset.sssLayer1Mode ?? 0;
+            if (u.sssLayer1Strength) u.sssLayer1Strength.value = preset.sssLayer1Strength ?? 0;
+            if (u.sssLayer1Enabled) u.sssLayer1Enabled.value = preset.sssLayer1Enabled ?? 0;
+            if (u.sssLayer2Mode) u.sssLayer2Mode.value = preset.sssLayer2Mode ?? 0;
+            if (u.sssLayer2Strength) u.sssLayer2Strength.value = preset.sssLayer2Strength ?? 0;
+            if (u.sssLayer2Enabled) u.sssLayer2Enabled.value = preset.sssLayer2Enabled ?? 0;
+            // Shell layers
+            if (u.shellLayer1Mode) u.shellLayer1Mode.value = preset.shellLayer1Mode ?? 0;
+            if (u.shellLayer1Strength) u.shellLayer1Strength.value = preset.shellLayer1Strength ?? 0;
+            if (u.shellLayer1Enabled) u.shellLayer1Enabled.value = preset.shellLayer1Enabled ?? 0;
+            if (u.shellLayer2Mode) u.shellLayer2Mode.value = preset.shellLayer2Mode ?? 0;
+            if (u.shellLayer2Strength) u.shellLayer2Strength.value = preset.shellLayer2Strength ?? 0;
+            if (u.shellLayer2Enabled) u.shellLayer2Enabled.value = preset.shellLayer2Enabled ?? 0;
+
+            // Update sliders to reflect new values (use global setSlider)
+            setSlider('sss', preset.sssStrength, 3);
+            setSlider('sss-thickness-bias', preset.sssThicknessBias);
+            setSlider('sss-thickness-scale', preset.sssThicknessScale);
+            setSlider('sss-curvature', preset.sssCurvatureScale);
+            setSlider('sss-ambient', preset.sssAmbient);
+
+            // Sync UI blend layer cards with preset values
+            syncBlendLayersFromPreset(preset);
+        }
+
+        // Sync blend layer UI cards with preset values (called after layer groups are created)
+        function syncBlendLayersFromPreset(preset) {
+            if (!shellLayerGroup || !rimLayerGroup || !sssLayerGroup || !soulLayerGroup) return;
+
+            // Clear existing UI layers
+            shellLayerGroup.clearLayers();
+            rimLayerGroup.clearLayers();
+            sssLayerGroup.clearLayers();
+
+            // Shell layers
+            if (preset.shellLayer1Enabled) {
+                shellLayerGroup.addLayer(preset.shellLayer1Mode, preset.shellLayer1Strength, true, true);
+            }
+            if (preset.shellLayer2Enabled) {
+                shellLayerGroup.addLayer(preset.shellLayer2Mode, preset.shellLayer2Strength, true, true);
+            }
+
+            // Rim layers
+            if (preset.rimLayer1Enabled) {
+                rimLayerGroup.addLayer(preset.rimLayer1Mode, preset.rimLayer1Strength, true, true);
+            }
+            if (preset.rimLayer2Enabled) {
+                rimLayerGroup.addLayer(preset.rimLayer2Mode, preset.rimLayer2Strength, true, true);
+            }
+
+            // SSS blend layers
+            if (preset.sssLayer1Enabled) {
+                sssLayerGroup.addLayer(preset.sssLayer1Mode, preset.sssLayer1Strength, true, true);
+            }
+            if (preset.sssLayer2Enabled) {
+                sssLayerGroup.addLayer(preset.sssLayer2Mode, preset.sssLayer2Strength, true, true);
+            }
+
+            // Soul layers (presets don't typically have soul layers, but support it)
+            if (preset.soulLayer1Enabled) {
+                soulLayerGroup.addLayer(preset.soulLayer1Mode, preset.soulLayer1Strength, true, true);
+            }
+            if (preset.soulLayer2Enabled) {
+                soulLayerGroup.addLayer(preset.soulLayer2Mode, preset.soulLayer2Strength, true, true);
+            }
+
+            // Also sync soul layers from engine (CrystalSoul has its own defaults)
+            syncSoulLayersFromEngine();
+        }
+
+        // Sync soul blend layers from the engine's CrystalSoul material uniforms
+        function syncSoulLayersFromEngine() {
+            if (!mascot?.core3D?.crystalSoul?.material?.uniforms || !soulLayerGroup) return;
+
+            const u = mascot.core3D.crystalSoul.material.uniforms;
+            soulLayerGroup.clearLayers();
+
+            // Read layer 1 from engine
+            if (u.blendLayer1Enabled && u.blendLayer1Enabled.value > 0.5) {
+                const mode = u.blendLayer1Mode ? u.blendLayer1Mode.value : 0;
+                const strength = u.blendLayer1Strength ? u.blendLayer1Strength.value : 1.0;
+                soulLayerGroup.addLayer(mode, strength, true, true);
+            }
+
+            // Read layer 2 from engine
+            if (u.blendLayer2Enabled && u.blendLayer2Enabled.value > 0.5) {
+                const mode = u.blendLayer2Mode ? u.blendLayer2Mode.value : 0;
+                const strength = u.blendLayer2Strength ? u.blendLayer2Strength.value : 1.0;
+                soulLayerGroup.addLayer(mode, strength, true, true);
+            }
+        }
+
+        // SSS preset buttons
+        document.querySelectorAll('[data-sss-preset]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const presetName = btn.dataset.sssPreset;
+                currentSSSPreset = presetName;  // Track selected preset
+                applySSSPreset(presetName);
+
+                // Update active state
+                document.querySelectorAll('[data-sss-preset]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Noise pattern sliders
+        setupSlider('surface-noise-slider', 'surface-noise-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.surfaceNoiseScale) {
+                mascot.core3D.customMaterial.uniforms.surfaceNoiseScale.value = value;
+            }
+        });
+
+        setupSlider('caustic-intensity-slider', 'caustic-intensity-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.causticIntensity) {
+                mascot.core3D.customMaterial.uniforms.causticIntensity.value = value;
+            }
+        });
+
+        setupSlider('caustic-scale-slider', 'caustic-scale-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.causticScale) {
+                mascot.core3D.customMaterial.uniforms.causticScale.value = value;
+            }
+        });
+
+        setupSlider('caustic-speed-slider', 'caustic-speed-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.causticSpeed) {
+                mascot.core3D.customMaterial.uniforms.causticSpeed.value = value;
+            }
+        });
+
+        setupSlider('surface-roughness-slider', 'surface-roughness-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.surfaceRoughness) {
+                mascot.core3D.customMaterial.uniforms.surfaceRoughness.value = value;
+            }
+        });
+
+        setupSlider('noise-freq-slider', 'noise-freq-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.noiseFrequency) {
+                mascot.core3D.customMaterial.uniforms.noiseFrequency.value = value;
+            }
+        });
+
+        setupSlider('texture-strength-slider', 'texture-strength-value', (value) => {
+            if (mascot.core3D?.customMaterial?.uniforms?.textureStrength) {
+                mascot.core3D.customMaterial.uniforms.textureStrength.value = value;
+            }
+        });
+
+        setupSlider('drift-speed-slider', 'drift-speed-value', (value) => {
+            if (mascot.core3D?.setCrystalSoulEffects) {
+                mascot.core3D.setCrystalSoulEffects({ driftSpeed: value });
+            }
+        });
+
+        setupSlider('crosswave-speed-slider', 'crosswave-speed-value', (value) => {
+            if (mascot.core3D?.setCrystalSoulEffects) {
+                mascot.core3D.setCrystalSoulEffects({ crossWaveSpeed: value });
+            }
+        });
+
+        // Phase offset sliders (degrees to radians)
+        function setupPhaseSlider(sliderId, valueId, paramName) {
+            const slider = document.getElementById(sliderId);
+            const valueDisplay = document.getElementById(valueId);
+            if (!slider || !valueDisplay) return;
+
+            slider.addEventListener('input', () => {
+                const degrees = parseFloat(slider.value);
+                const radians = degrees * Math.PI / 180;
+                valueDisplay.textContent = `${degrees}°`;
+                if (mascot.core3D?.setCrystalSoulEffects) {
+                    mascot.core3D.setCrystalSoulEffects({ [paramName]: radians });
+                }
+            });
+        }
+
+        setupPhaseSlider('phase1-slider', 'phase1-value', 'phaseOffset1');
+        setupPhaseSlider('phase2-slider', 'phase2-value', 'phaseOffset2');
+        setupPhaseSlider('phase3-slider', 'phase3-value', 'phaseOffset3');
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // BLEND LAYER MANAGEMENT (using shared utilities)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Get shader uniforms helper
+        const getUniforms = () => mascot?.core3D?.customMaterial?.uniforms;
+
+        // Create layer groups for each component
+        const shellLayerGroup = createBlendLayerGroup({
+            name: 'Shell',
+            containerId: 'shell-layers-container',
+            addBtnId: 'add-shell-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: createLayerShaderUpdater(getUniforms, 'shellLayer', MAX_BLEND_LAYERS),
+            blendModeNames
+        });
+
+        const soulLayerGroup = createBlendLayerGroup({
+            name: 'Soul',
+            containerId: 'soul-layers-container',
+            addBtnId: 'add-soul-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: (layers) => {
+                // Soul uses CrystalSoul's setBlendLayers, not shader uniforms
+                if (mascot?.core3D?.crystalSoul) {
+                    mascot.core3D.crystalSoul.setBlendLayers(layers);
+                }
+            },
+            blendModeNames
+        });
+
+        const rimLayerGroup = createBlendLayerGroup({
+            name: 'Rim',
+            containerId: 'rim-layers-container',
+            addBtnId: 'add-rim-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: createLayerShaderUpdater(getUniforms, 'rimLayer', MAX_BLEND_LAYERS),
+            blendModeNames
+        });
+
+        const sssLayerGroup = createBlendLayerGroup({
+            name: 'SSS',
+            containerId: 'sss-layers-container',
+            addBtnId: 'add-sss-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: createLayerShaderUpdater(getUniforms, 'sssLayer', MAX_BLEND_LAYERS),
+            blendModeNames
+        });
+
+        // Sync blend layers from engine after mascot is fully initialized
+        setTimeout(() => {
+            // First sync from preset (for shell, rim, sss layers)
+            if (sssPresets[currentSSSPreset]) {
+                syncBlendLayersFromPreset(sssPresets[currentSSSPreset]);
+            }
+            // Sync soul layers from engine (CrystalSoul has its own hardcoded defaults)
+            syncSoulLayersFromEngine();
+        }, 1000);
+
+        // Precision mode now auto-initialized by demo-utils.js for all .slider-value elements
+    </script>
+</body>
+</html>

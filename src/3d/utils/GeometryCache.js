@@ -47,7 +47,7 @@ export async function preload(geometryType, options = {}) {
 
     // Load geometry (may be async for OBJ models like crystal)
     if (config.geometryLoader) {
-        entry.geometry = await config.geometryLoader();
+        entry.geometry = await config.geometryLoader(options.assetBasePath);
     } else {
         entry.geometry = config.geometry;
     }
@@ -58,7 +58,8 @@ export async function preload(geometryType, options = {}) {
             glowColor: options.glowColor || [1.0, 1.0, 0.95],
             glowIntensity: options.glowIntensity || 1.0,
             materialVariant: options.materialVariant,
-            emotionData: options.emotionData
+            emotionData: options.emotionData,
+            assetBasePath: options.assetBasePath
         });
 
         if (materialResult) {

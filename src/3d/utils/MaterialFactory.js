@@ -9,64 +9,64 @@ import { getCrystalShaders, CRYSTAL_DEFAULT_UNIFORMS } from '../shaders/crystalW
 import { SSS_PRESETS } from '../shaders/utils/subsurfaceScattering.js';
 
 export function createCustomMaterial(geometryType, geometryConfig, options = {}) {
-    const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null } = options;
+    const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null, assetBasePath = '/assets' } = options;
 
     if (geometryConfig.material === 'custom') {
-        return createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData);
+        return createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData, assetBasePath);
     }
 
     if (geometryConfig.material === 'emissive') {
-        return createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData);
+        return createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData, assetBasePath);
     }
 
     return null;
 }
 
-function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, _emotionData) {
+function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, _emotionData, assetBasePath) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
     case 'moon':
-        return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant);
+        return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant, assetBasePath);
     case 'crystal':
         // Uses quartz SSS preset for clear crystal appearance
-        return createCrystalMaterial(glowColor, glowIntensity, 'crystal', { sssPreset: 'quartz' });
+        return createCrystalMaterial(glowColor, glowIntensity, 'crystal', { sssPreset: 'quartz' }, assetBasePath);
     case 'rough':
         // Custom crystal appearance for rough stone, uses crystal SSS preset
         return createCrystalMaterial(glowColor, glowIntensity, 'rough', {
             frostiness: 0.05,
             innerGlowStrength: 0.0,
             fresnelIntensity: 1.6
-        });
+        }, assetBasePath);
     case 'heart':
         // Custom crystal appearance for heart - tuned for flat geometry
         return createCrystalMaterial(glowColor, glowIntensity, 'heart', {
             frostiness: 0.475,
             innerGlowStrength: 0.117,
             fresnelIntensity: 1.206
-        });
+        }, assetBasePath);
     case 'star':
         // Star crystal with citrine SSS preset
-        return createCrystalMaterial(glowColor, glowIntensity, 'star', { sssPreset: 'citrine' });
+        return createCrystalMaterial(glowColor, glowIntensity, 'star', { sssPreset: 'citrine' }, assetBasePath);
     default:
         console.warn('Unknown custom material type:', geometryType);
         return null;
     }
 }
 
-function createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData) {
+function createEmissiveMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData, assetBasePath) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
     case 'sun':
-        return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant, emotionData);
+        return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant, emotionData, assetBasePath);
     default:
         console.warn('Unknown emissive material type:', geometryType);
         return null;
     }
 }
 
-function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal', overrides = {}) {
+function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal', overrides = {}, assetBasePath = '/assets') {
 
     const { vertexShader, fragmentShader } = getCrystalShaders();
 
@@ -75,10 +75,10 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
     if (textureType) {
         const textureLoader = new THREE.TextureLoader();
         const texturePaths = {
-            crystal: '/assets/textures/Crystal/crystal.png',
-            rough: '/assets/textures/Crystal/rough.png',
-            heart: '/assets/textures/Crystal/heart.png',
-            star: '/assets/textures/Crystal/star.png'
+            crystal: `${assetBasePath}/textures/Crystal/crystal.png`,
+            rough: `${assetBasePath}/textures/Crystal/rough.png`,
+            heart: `${assetBasePath}/textures/Crystal/heart.png`,
+            star: `${assetBasePath}/textures/Crystal/star.png`
         };
         const texturePath = texturePaths[textureType] || texturePaths.crystal;
         crystalTexture = textureLoader.load(texturePath,
@@ -190,7 +190,7 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
     return { material, type: 'crystal' };
 }
 
-function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant = null) {
+function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant = null, assetBasePath = '/assets') {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const resolution = isMobile ? '2k' : '4k';
 
@@ -198,7 +198,8 @@ function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVar
         const material = createMoonMultiplexerMaterial(textureLoader, {
             resolution,
             glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
-            glowIntensity
+            glowIntensity,
+            assetBasePath
         });
         return { material, type: 'moon-multiplexer' };
     }
@@ -207,18 +208,20 @@ function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVar
         resolution,
         glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
         glowIntensity,
-        moonPhase: 'full'
+        moonPhase: 'full',
+        assetBasePath
     });
 
     return { material, type: 'moon' };
 }
 
-function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null, _emotionData = null) {
+function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null, _emotionData = null, assetBasePath = '/assets') {
     const material = createSunMaterial(textureLoader, {
         glowColor,
         glowIntensity,
         resolution: '4k',
-        materialVariant
+        materialVariant,
+        assetBasePath
     });
     return { material, type: 'sun' };
 }

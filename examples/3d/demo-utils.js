@@ -7,9 +7,26 @@
  * - SSS preset application
  * - Tidal lock camera behavior (for moon demos)
  * - Blend layer management
+ * - GitHub Pages asset path detection
  */
 
 import { createLayerCard, setupDragAndDrop } from './layer-utils.js';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ASSET PATH DETECTION
+// Automatically detects GitHub Pages and adjusts asset paths accordingly
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Get the base path for assets based on deployment environment
+ * - Local development (localhost): '/assets'
+ * - GitHub Pages (github.io): '/emotive-engine/assets'
+ * @returns {string} Asset base path
+ */
+export function getAssetBasePath() {
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    return isGitHubPages ? '/emotive-engine/assets' : '/assets';
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // AUTO-INITIALIZED: COLLAPSIBLE SECTIONS

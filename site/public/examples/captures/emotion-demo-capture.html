@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<!--
+  EMOTION DEMO CAPTURE - Emotive Engine
+
+  Purpose: Demo/GIF capture utility for documentation
+
+  This example demonstrates:
+  - Automated animation sequences with timing control
+  - Step-by-step emotional state changes
+  - Shape morphing transitions
+  - Gesture coordination
+  - Looping animation patterns
+
+  Technical showcase:
+  - State machine pattern (animation sequence)
+  - Timed delays for visual coordination
+  - Canvas scaling for different outputs
+  - Particle system configuration
+
+  Use cases:
+  1. Create demo GIFs for README/docs
+  2. Learn animation sequencing patterns
+  3. See timing coordination examples
+  4. Export visual demos
+
+  Complexity: ⭐⭐⭐ Advanced
+  Demonstrates: Animation sequencing, timing coordination
+
+  Capture instructions:
+  1. Open in Chrome/Edge at 100% zoom
+  2. Use ScreenToGif - record 400x400px region
+  3. Record for ~8 seconds (1 complete loop)
+  4. Optimize to ~300-500KB for web
+  5. Save as: assets/emotion-demo.gif
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1500, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emotive Engine - Emotion Grid</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 400px;
+            height: 400px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #FFFFFF;
+        }
+
+        /* Showcase container */
+        .showcase-container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg,
+                #0a0a1a 0%,
+                #16213e 50%,
+                #1a1a2e 100%
+            );
+            position: relative;
+            overflow: visible;  /* Allow glow to extend beyond */
+            border: 4px solid #FFFFFF;
+            border-radius: 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0;  /* Removed padding, canvas now fills container */
+        }
+
+        /* Mascot container */
+        .mascot-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;  /* Don't clip the glow */
+        }
+
+        .mascot-wrapper canvas {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+        }
+
+        /* Emotion label */
+        .emotion-label {
+            position: absolute;
+            bottom: 20px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(221, 74, 154, 0.8),
+                         0 4px 12px rgba(0, 0, 0, 0.6);
+            z-index: 20;
+        }
+
+        /* Subtle background glow */
+        .color-wash {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            pointer-events: none;
+            opacity: 0.15;
+            z-index: 0;
+            filter: blur(120px);
+            background: radial-gradient(circle at 50% 50%,
+                rgba(221, 74, 154, 0.1) 0%,
+                rgba(64, 144, 206, 0.08) 40%,
+                rgba(132, 207, 197, 0.05) 70%,
+                transparent 100%
+            );
+        }
+    </style>
+</head>
+<body>
+    <div class="showcase-container">
+        <div class="color-wash"></div>
+
+        <div class="mascot-wrapper">
+            <canvas id="mascot-canvas" width="400" height="400"></canvas>
+        </div>
+
+        <div class="emotion-label" id="emotion-label">Neutral</div>
+    </div>
+
+    <!-- Load Emotive Engine UMD bundle -->
+    <script src="../site/public/emotive-engine.js"></script>
+
+    <script>
+        let mascot = null;
+        let currentStep = 0;
+
+        /**
+         * ANIMATION SEQUENCE CONFIGURATION
+         *
+         * This demonstrates a state machine pattern for coordinated animations.
+         * Each step defines: emotion, shape, gesture, duration, and UI label.
+         *
+         * The sequence loops infinitely, creating a seamless demo.
+         * Timing is critical for smooth GIF capture (8 second loop).
+         */
+        const animationSequence = [
+            {
+                emotion: 'calm',      // Peaceful emotional state
+                shape: 'circle',      // Start with basic circle
+                gesture: null,        // No gesture initially
+                duration: 3000,       // Hold for 3 seconds
+                label: 'Calm'
+            },
+            {
+                emotion: 'calm',      // Maintain calm emotion
+                shape: 'moon',        // Morph into crescent moon
+                gesture: null,        // Let morph animation complete
+                duration: 2000,       // Hold for 2 seconds
+                label: 'Moon'
+            },
+            {
+                emotion: 'calm',      // Continue calm emotion
+                shape: 'moon',        // Keep moon shape
+                gesture: 'breathe',   // Add breathing animation
+                duration: 3000,       // Hold for 3 seconds
+                label: 'Breathe'
+            }
+        ];
+
+        // STEP 1: Initialize mascot with optimal settings for capture
+        async function initMascot() {
+            const canvas = document.getElementById('mascot-canvas');
+            const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+
+            if (!EmotiveMascot) {
+                console.error('❌ EmotiveMascot not loaded');
+                return null;
+            }
+
+            // Create mascot instance optimized for demo capture
+            mascot = new EmotiveMascot({
+                canvasId: 'mascot-canvas',
+                targetFPS: 60,                    // Smooth 60fps for GIF
+                enableAudio: false,               // No audio for GIF
+                soundEnabled: false,
+                maxParticles: 150,                // Good visual density
+                defaultEmotion: 'neutral',
+                enableGazeTracking: false,        // Disable for predictable output
+                enableIdleBehaviors: false        // Disable random behaviors
+            });
+
+            await mascot.init(canvas);
+
+            // Configure particle system for full canvas coverage
+            mascot.setParticleSystemCanvasDimensions(400, 400);
+            mascot.setContainment(null, 2.0);  // Allow particles across full canvas
+
+            // Configure backdrop glow for visual depth
+            mascot.setBackdrop({
+                enabled: true,
+                radius: 3.5,              // Full glow within canvas
+                intensity: 0.9,           // Bright glow
+                blendMode: 'normal',
+                falloff: 'smooth',
+                edgeSoftness: 0.95,
+                coreTransparency: 0.25,
+                responsive: true
+            });
+
+            // Scale mascot to fill canvas nicely
+            mascot.setScale({
+                core: 1.5,         // Larger core for visibility
+                particles: 1.2     // Slightly larger particles
+            });
+
+            // Center in canvas
+            mascot.setPosition(0, 0, 0);
+
+            mascot.start();
+            console.log('✅ Demo capture initialized');
+
+            return mascot;
+        }
+
+        // STEP 2: Execute animation sequence with coordinated timing
+        function runSequence() {
+            if (!mascot) return;
+
+            const step = animationSequence[currentStep];
+
+            // Apply emotion change
+            mascot.setEmotion(step.emotion);
+            console.log(`▶ Step ${currentStep + 1}: ${step.label}`);
+
+            // TIMING COORDINATION:
+            // Morph at 200ms - gives emotion time to start
+            if (step.shape) {
+                setTimeout(() => {
+                    mascot.morphTo(step.shape);
+                    console.log(`  → Morphing to: ${step.shape}`);
+                }, 200);
+            }
+
+            // Update UI label
+            const label = document.getElementById('emotion-label');
+            if (label) {
+                label.textContent = step.label;
+            }
+
+            // Gesture at 400ms - after shape morph begins
+            if (step.gesture) {
+                setTimeout(() => {
+                    mascot.express(step.gesture);
+                    console.log(`  → Gesture: ${step.gesture}`);
+                }, 400);
+            }
+
+            // Move to next step (loops back to 0 after last step)
+            currentStep = (currentStep + 1) % animationSequence.length;
+
+            // Schedule next step after duration
+            setTimeout(runSequence, step.duration);
+        }
+
+        // STEP 3: Initialize and start the sequence
+        initMascot().then(m => {
+            mascot = m;
+            if (mascot) {
+                console.log('🎬 Starting animation sequence...');
+                console.log('📹 Ready for screen capture!');
+
+                // Start sequence after brief delay
+                setTimeout(runSequence, 500);
+            }
+        });
+    </script>
+</body>
+</html>

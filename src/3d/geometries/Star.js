@@ -48,13 +48,14 @@ function generatePlanarUVs(geometry) {
 
 /**
  * Load star OBJ model asynchronously
+ * @param {string} assetBasePath - Base path for assets (default: '/assets')
  * @returns {Promise<THREE.BufferGeometry>} Star geometry
  */
-export function loadStarGeometry() {
+export function loadStarGeometry(assetBasePath = '/assets') {
     return new Promise(resolve => {
         const loader = new OBJLoader();
         loader.load(
-            '/assets/models/Crystal/star.obj',
+            `${assetBasePath}/models/Crystal/star.obj`,
             obj => {
                 let geometry = null;
                 obj.traverse(child => {

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<!--
+  FULL 3D DEMO - Emotive Engine Comprehensive Showcase
+
+  A complete demonstration of all 3D geometries with emotional expression.
+
+  Features:
+  - Crystal, Moon, and Sun geometries with smooth morphing
+  - 14 emotions with unique particle behaviors and colors
+  - Moon phases and lunar eclipse (blood moon) effects
+  - Solar eclipse effects (annular and total)
+  - Camera controls with touch/mouse interaction
+  - Particle systems with bloom effects
+
+  Learn more: https://github.com/anthropics/emotive-engine
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Showcase - Emotive Engine</title>
+    <meta name="description" content="Interactive 3D demo showcasing emotional expression through geometry, particles, and visual effects">
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <style>
+        /* Theme: Crystal blue-green gradient */
+        :root {
+            --accent: #6ee7ff;
+            --accent-rgb: 100, 200, 255;
+        }
+
+        body {
+            background: linear-gradient(180deg,
+                #0a1810 0%,
+                #1a2820 25%,
+                #2a3530 50%,
+                #4a3a30 75%,
+                #5a4a40 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU: Geometry -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Geometry</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="geometry" data-value="crystal" class="active">💎 Crystal</button>
+                    <button data-action="geometry" data-value="heart">💗 Heart</button>
+                    <button data-action="geometry" data-value="rough">🪨 Rough</button>
+                    <button data-action="geometry" data-value="moon">🌙 Moon</button>
+                    <button data-action="geometry" data-value="sun">☀️ Sun</button>
+                </div>
+
+                <!-- Crystal Material presets (crystal geometries only) -->
+                <div id="crystal-material-section" style="margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Crystal Material</div>
+                    <div class="button-grid">
+                        <button data-action="sss-preset" data-value="quartz" class="active">💎 Quartz</button>
+                        <button data-action="sss-preset" data-value="emerald">💚 Emerald</button>
+                        <button data-action="sss-preset" data-value="ruby">❤️ Ruby</button>
+                        <button data-action="sss-preset" data-value="sapphire">💙 Sapphire</button>
+                        <button data-action="sss-preset" data-value="amethyst">💜 Amethyst</button>
+                    </div>
+                </div>
+
+                <!-- Solar Eclipse controls (sun only) -->
+                <div id="eclipse-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Solar Eclipse</div>
+                    <div class="button-grid">
+                        <button data-action="eclipse" data-value="annular">🌑 Annular</button>
+                        <button data-action="eclipse" data-value="total">🌚 Total</button>
+                    </div>
+                </div>
+
+                <!-- Moon Phase controls (moon only) -->
+                <div id="moon-phase-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Moon Phase</div>
+                    <div class="button-grid">
+                        <button data-action="moon-phase" data-value="new">🌑 New</button>
+                        <button data-action="moon-phase" data-value="waxing-crescent">🌒 Wax Cres</button>
+                        <button data-action="moon-phase" data-value="first-quarter">🌓 1st Qtr</button>
+                        <button data-action="moon-phase" data-value="waxing-gibbous">🌔 Wax Gib</button>
+                        <button data-action="moon-phase" data-value="full" class="active">🌕 Full</button>
+                        <button data-action="moon-phase" data-value="waning-gibbous">🌖 Wan Gib</button>
+                        <button data-action="moon-phase" data-value="last-quarter">🌗 Last Qtr</button>
+                        <button data-action="moon-phase" data-value="waning-crescent">🌘 Wan Cres</button>
+                    </div>
+                </div>
+
+                <!-- Lunar Eclipse controls (moon only, full moon required) -->
+                <div id="lunar-eclipse-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Lunar Eclipse</div>
+                    <div class="button-grid">
+                        <button data-action="lunar-eclipse" data-value="penumbral">🌔 Penumbral</button>
+                        <button data-action="lunar-eclipse" data-value="partial">🌗 Partial</button>
+                        <button data-action="lunar-eclipse" data-value="total">🩸 Blood Moon</button>
+                    </div>
+                    <div id="lunar-eclipse-hint" style="display: none; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 6px; font-style: italic;">Select Full Moon to unlock</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Emotive Engine 3D</strong><br>
+                Explore emotional expression through geometry, particles, and visual effects. Each emotion has unique behaviors!
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: 3D Animation -->
+    <div class="center-content">
+        <div id="mascot-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <!-- RIGHT MENU: Emotions & Controls -->
+    <div class="right-menu">
+        <div class="section">
+            <h2 class="has-toggle">
+                <span>Emotions</span>
+                <div class="toggle-switch active" id="wobble-toggle">Wobble</div>
+            </h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="emotion" data-value="joy">😊 Joy</button>
+                    <button data-action="emotion" data-value="love">❤️ Love</button>
+                    <button data-action="emotion" data-value="excited">🎉 Excited</button>
+                    <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
+                    <button data-action="emotion" data-value="calm">😌 Calm</button>
+                    <button data-action="emotion" data-value="sadness">😢 Sadness</button>
+                    <button data-action="emotion" data-value="anger">😠 Anger</button>
+                    <button data-action="emotion" data-value="fear">😰 Fear</button>
+                    <button data-action="emotion" data-value="surprise">😲 Surprise</button>
+                    <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
+                    <button data-action="emotion" data-value="neutral">😐 Neutral</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section visual-controls" id="visual-controls-section">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Gestures <span style="font-size: 10px; font-weight: normal; opacity: 0.6;">(stackable!)</span></h2>
+            <div class="section-content collapsed">
+                <div class="info-box" style="margin-bottom: 10px;">
+                    Tap multiple gestures rapidly - they blend together seamlessly!
+                </div>
+                <div class="button-grid">
+                    <button data-action="gesture" data-value="bounce">Bounce</button>
+                    <button data-action="gesture" data-value="pulse">Pulse</button>
+                    <button data-action="gesture" data-value="float">Float</button>
+                    <button data-action="gesture" data-value="shake">Shake</button>
+                    <button data-action="gesture" data-value="sway">Sway</button>
+                    <button data-action="gesture" data-value="wiggle">Wiggle</button>
+                    <button data-action="gesture" data-value="spin">Spin</button>
+                    <button data-action="gesture" data-value="jump">Jump</button>
+                    <button data-action="gesture" data-value="twist">Twist</button>
+                    <button data-action="gesture" data-value="stretch">Stretch</button>
+                    <button data-action="gesture" data-value="flash">Flash</button>
+                    <button data-action="gesture" data-value="glow">Glow</button>
+                    <button data-action="gesture" data-value="breathe">Breathe</button>
+                    <button data-action="gesture" data-value="flicker">Flicker</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Camera</h2>
+            <div class="section-content collapsed">
+                <div class="button-grid">
+                    <button data-action="camera" data-value="front" class="active">Front</button>
+                    <button data-action="camera" data-value="angle">Angle</button>
+                    <button data-action="camera" data-value="side">Side</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D, { animateMoonPhase } from '/emotive-engine-3d.js';
+        import {
+            setupWobbleToggle,
+            setupParticlesToggle,
+            setupVisualToggles,
+            applySSSPreset,
+            isCrystalGeometry
+        } from '/examples/3d/demo-utils.js';
+
+        let mascot = null;
+        let currentGeometry = 'crystal';
+        let currentMoonPhase = 'full';
+        let currentSSSPreset = 'quartz';
+
+        // Initialize
+        (async () => {
+            try {
+                const container = document.getElementById('mascot-container');
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'crystal',
+                    enableParticles: true,
+                    enablePostProcessing: true,
+                    enableShadows: false,
+                    enableControls: true,
+                    autoRotate: true,
+                    cameraDistance: 1.2,
+                    fov: 30,
+                    minZoom: 0.9,
+                    maxZoom: 2.0,
+                    materialVariant: 'multiplexer'
+                });
+
+                mascot.init(container);
+                mascot.start();
+                mascot.setEmotion('neutral');
+
+                // Crystal defaults
+                mascot.enableParticles();
+                mascot.disableBlinking();
+
+                // Register callback for material swap during morph (applies SSS preset immediately)
+                if (mascot.core3D) {
+                    mascot.core3D.onMaterialSwap = () => {
+                        if (isCrystalGeometry(currentGeometry)) {
+                            applySSSPreset(mascot, currentSSSPreset, currentGeometry);
+                        }
+                    };
+                }
+
+                // Update toggle states
+                document.getElementById('particles-toggle')?.classList.add('active');
+                document.querySelector('[data-action="toggle-auto-rotate"]')?.classList.add('active');
+                document.querySelector('[data-action="toggle-blink"]')?.classList.remove('active');
+
+                // Fire sway gesture on load
+                setTimeout(() => {
+                    mascot.express('sway');
+                }, 500);
+            } catch (error) {
+                console.error('Failed to initialize EmotiveMascot3D:', error);
+            }
+        })();
+
+        // Setup shared toggles from demo-utils
+        setupWobbleToggle(mascot);
+        setupParticlesToggle(mascot);
+        setupVisualToggles(mascot);
+
+        // Event delegation
+        document.addEventListener('click', (e) => {
+            if (!e.target.matches('button[data-action]') || !mascot) return;
+
+            const action = e.target.dataset.action;
+            const value = e.target.dataset.value;
+
+            switch (action) {
+                case 'emotion':
+                    mascot.setEmotion(value);
+                    document.querySelectorAll('[data-action="emotion"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    break;
+
+                case 'geometry':
+                    mascot.morphTo(value);
+                    currentGeometry = value;
+
+                    document.querySelectorAll('[data-action="geometry"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    // Show/hide geometry-specific controls
+                    const isCrystal = isCrystalGeometry(value);
+                    document.getElementById('crystal-material-section').style.display = isCrystal ? 'block' : 'none';
+                    document.getElementById('eclipse-section').style.display = (value === 'sun') ? 'block' : 'none';
+                    document.getElementById('moon-phase-section').style.display = (value === 'moon') ? 'block' : 'none';
+                    document.getElementById('lunar-eclipse-section').style.display = (value === 'moon') ? 'block' : 'none';
+
+                    // Apply geometry-specific defaults
+                    const particlesToggleEl = document.getElementById('particles-toggle');
+                    const autoRotateBtn = document.querySelector('[data-action="toggle-auto-rotate"]');
+                    const blinkBtn = document.querySelector('[data-action="toggle-blink"]');
+
+                    if (isCrystal) {
+                        // Crystal-type geometries (crystal, heart, rough)
+                        mascot.enableParticles();
+                        mascot.enableAutoRotate();
+                        mascot.disableBlinking();
+                        particlesToggleEl?.classList.add('active');
+                        autoRotateBtn?.classList.add('active');
+                        blinkBtn?.classList.remove('active');
+                    } else if (value === 'moon') {
+                        mascot.disableParticles();
+                        mascot.disableAutoRotate();
+                        mascot.disableBlinking();
+                        particlesToggleEl?.classList.remove('active');
+                        autoRotateBtn?.classList.remove('active');
+                        blinkBtn?.classList.remove('active');
+
+                        // Initialize moon to full phase after morph completes
+                        setTimeout(() => {
+                            if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+                                mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = 0;
+                                mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = 0;
+                            }
+                            if (mascot.core3D?.renderer?.controls) {
+                                mascot.core3D.renderer.controls.autoRotate = false;
+                            }
+                        }, 600);
+                    } else if (value === 'sun') {
+                        mascot.disableParticles();
+                        mascot.enableAutoRotate();
+                        mascot.disableBlinking();
+                        particlesToggleEl?.classList.remove('active');
+                        autoRotateBtn?.classList.add('active');
+                        blinkBtn?.classList.remove('active');
+                    }
+                    break;
+
+                case 'gesture':
+                    mascot.express(value);
+                    break;
+
+                case 'eclipse':
+                    if (currentGeometry !== 'sun') break;
+
+                    const eclipseButtons = document.querySelectorAll('[data-action="eclipse"]');
+                    if (e.target.classList.contains('active')) {
+                        mascot.core3D.setSunShadow('off');
+                        e.target.classList.remove('active');
+                    } else {
+                        eclipseButtons.forEach(btn => btn.classList.remove('active'));
+                        mascot.core3D.setSunShadow(value);
+                        e.target.classList.add('active');
+                    }
+                    break;
+
+                case 'moon-phase':
+                    if (currentGeometry !== 'moon') break;
+
+                    if (mascot.core3D?.customMaterial) {
+                        animateMoonPhase(mascot.core3D.customMaterial, value, 1500);
+                        currentMoonPhase = value;
+
+                        document.querySelectorAll('[data-action="moon-phase"]').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+
+                        // Lunar eclipse only available on full moon
+                        const lunarEclipseSection = document.getElementById('lunar-eclipse-section');
+                        const lunarEclipseHint = document.getElementById('lunar-eclipse-hint');
+                        if (value === 'full') {
+                            lunarEclipseSection.style.opacity = '1';
+                            lunarEclipseSection.style.pointerEvents = 'auto';
+                            lunarEclipseHint.style.display = 'none';
+                        } else {
+                            mascot.core3D.setMoonEclipse('off');
+                            document.querySelectorAll('[data-action="lunar-eclipse"]').forEach(btn => btn.classList.remove('active'));
+                            lunarEclipseSection.style.opacity = '0.4';
+                            lunarEclipseSection.style.pointerEvents = 'none';
+                            lunarEclipseHint.style.display = 'block';
+                        }
+                    }
+                    break;
+
+                case 'camera':
+                    mascot.setCameraPreset(value, 1000);
+                    document.querySelectorAll('[data-action="camera"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    break;
+
+                case 'lunar-eclipse':
+                    if (currentGeometry !== 'moon' || currentMoonPhase !== 'full') break;
+
+                    const lunarEclipseButtons = document.querySelectorAll('[data-action="lunar-eclipse"]');
+                    if (e.target.classList.contains('active')) {
+                        mascot.core3D.setMoonEclipse('off');
+                        e.target.classList.remove('active');
+                        document.getElementById('moon-phase-section').style.display = 'block';
+                    } else {
+                        lunarEclipseButtons.forEach(btn => btn.classList.remove('active'));
+                        mascot.core3D.setMoonEclipse(value);
+                        e.target.classList.add('active');
+                        document.getElementById('moon-phase-section').style.display = 'none';
+                    }
+                    break;
+
+                case 'sss-preset':
+                    if (!isCrystalGeometry(currentGeometry)) break;
+
+                    currentSSSPreset = value;
+                    applySSSPreset(mascot, value, currentGeometry);
+                    document.querySelectorAll('[data-action="sss-preset"]').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    break;
+            }
+        });
+
+        // Set initial active button
+        document.querySelector('[data-value="neutral"]').classList.add('active');
+    </script>
+</body>
+</html>

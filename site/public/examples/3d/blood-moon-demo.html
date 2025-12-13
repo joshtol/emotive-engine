@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<!--
+  BLOOD MOON ECLIPSE - Emotive Engine 3D Demo
+
+  Realistic lunar eclipse simulation with Earth's shadow sweep and Rayleigh scattering.
+  Features advanced color grading via sequential Photoshop-style blend mode layers.
+
+  What you'll learn:
+  - Lunar eclipse physics (umbra, penumbra, totality phases)
+  - Shadow position-driven brightness modulation (logarithmic curves)
+  - Real-time color grading with blend mode layers
+  - Drag-and-drop layer stacking for complex effects
+  - Blood moon atmospheric glow (red light refraction)
+
+  Complexity: ⭐⭐⭐⭐⭐ Expert 3D Shaders + Physics
+  Features: Shadow sweep animation, multi-layer blend modes, real-time color pickers, logarithmic progress curves
+
+  Texture Attribution:
+  Credit: NASA's Scientific Visualization Studio (https://svs.gsfc.nasa.gov/4720/)
+  Data: Ernie Wright (USRA), Noah Petro (NASA/GSFC)
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Moon Eclipse - Emotive Engine 3D</title>
+    <meta name="description" content="Realistic lunar eclipse with Earth's shadow sweep, atmospheric Rayleigh scattering, and multi-layer color grading">
+
+    <!-- Shared 3D example styles -->
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+
+    <style>
+        /* Theme: Purple lunar */
+        :root {
+            --accent: #667eea;
+            --accent-rgb: 102, 126, 234;
+        }
+
+        body {
+            background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
+                        linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        }
+
+        /* Blood moon specific: current phase display */
+        .current-phase {
+            text-align: center;
+            font-size: clamp(32px, 3vw, 42px);
+            margin: clamp(10px, 1.2vw, 15px) 0;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+        }
+
+        .current-name {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: clamp(11px, 1vw, 13px);
+            margin-bottom: clamp(10px, 1.2vw, 15px);
+        }
+
+        /* Phase grid */
+        .phase-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(5px, 0.6vw, 8px);
+            margin-bottom: clamp(8px, 1vw, 12px);
+        }
+
+        /* Increment controls */
+        .increment-controls {
+            display: flex;
+            gap: clamp(4px, 0.5vw, 6px);
+            margin-bottom: clamp(6px, 0.7vw, 8px);
+        }
+
+        .increment-btn {
+            flex: 1;
+            padding: clamp(4px, 0.5vw, 6px);
+            font-size: clamp(10px, 0.9vw, 12px);
+        }
+
+        /* Moon container */
+        #moon-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            border-radius: clamp(12px, 1.5vw, 20px);
+            background: radial-gradient(circle at center, rgba(100, 100, 255, 0.1), transparent);
+            box-shadow: 0 0 100px rgba(100, 100, 255, 0.3);
+        }
+
+        #moon-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Color grading section */
+        .color-grading {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+
+        .color-grading h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+
+        .color-grading label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .color-grading input[type="color"] {
+            width: 100%;
+            height: 30px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .color-value {
+            font-size: 10px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 3px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 1000px) {
+            .phase-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .current-phase {
+                font-size: clamp(28px, 6vw, 36px);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .phase-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="left-menu">
+        <div class="section">
+            <h2>Eclipse Phase</h2>
+            <div class="section-content">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Shadow Position</span>
+                        <span class="slider-value" id="shadow-pos-value">0.00</span>
+                    </div>
+                    <input type="range" id="shadow-pos-slider" min="-2" max="2" step="0.01" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Blood Moon Eclipse</strong><br>
+                Earth's shadow sweeps across the moon with realistic Rayleigh scattering.
+            </div>
+        </div>
+    </div>
+
+    <div class="center-content">
+        <div id="moon-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <div class="right-menu">
+
+        <div class="section">
+            <h2 class="collapsed">Blend</h2>
+            <div class="section-content collapsed">
+                <div class="info-box" style="margin-bottom: 12px;">
+                    Click value to fine-tune. Drag to reorder. Max 4 layers.
+                </div>
+                <div id="layer-stack" class="layer-stack"></div>
+                <button id="add-layer-btn" class="add-layer-btn">+ Layer</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Color Grading</h2>
+            <div class="section-content collapsed">
+                <div class="color-grading">
+                    <div style="margin-bottom: 10px;">
+                        <label>Shadows (Umbra Core)</label>
+                        <input type="color" id="shadow-color" value="#ff9400">
+                        <div class="color-value" id="shadow-color-value">RGB: 1.00, 0.58, 0.00</div>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <label>Midtones (Main Body)</label>
+                        <input type="color" id="midtone-color" value="#b56e08">
+                        <div class="color-value" id="midtone-color-value">RGB: 0.71, 0.43, 0.03</div>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <label>Highlights (Atmospheric Rim)</label>
+                        <input type="color" id="highlight-color" value="#ff471a">
+                        <div class="color-value" id="highlight-color-value">RGB: 1.00, 0.28, 0.10</div>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <label>Glow (Limb Rim)</label>
+                        <input type="color" id="glow-color" value="#171717">
+                        <div class="color-value" id="glow-color-value">RGB: 0.09, 0.09, 0.09</div>
+                    </div>
+
+                    <button id="reset-colors-btn" style="width: 100%; padding: 8px; background: rgba(100,100,100,0.5); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; color: white; cursor: pointer; font-size: 12px;">
+                        Reset to Default
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Lighting</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Emissive Glow</span>
+                        <span class="slider-value" id="emissive-value">0.3</span>
+                    </div>
+                    <input type="range" id="emissive-slider" min="0" max="1" step="0.01" value="0.3">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Shadow Darkness</span>
+                        <span class="slider-value" id="shadow-darkness-value">1.00</span>
+                    </div>
+                    <input type="range" id="shadow-darkness-slider" min="0" max="1" step="0.01" value="1.0">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Advanced Shadow</h2>
+            <div class="section-content collapsed">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Shadow Radius</span>
+                        <span class="slider-value" id="shadow-radius-value">1.2</span>
+                    </div>
+                    <input type="range" id="shadow-radius-slider" min="0.5" max="2.5" step="0.05" value="1.2">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Eclipse Progress</span>
+                        <span class="slider-value" id="eclipse-progress-value">0.0</span>
+                    </div>
+                    <input type="range" id="eclipse-progress-slider" min="0" max="1" step="0.01" value="0.0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase, blendModeNames } from '/emotive-engine-3d.js';
+        import { exitPrecisionMode } from '/examples/3d/layer-utils.js';
+        import { setupTidalLock, createBlendLayerGroup, syncLayersFromShader } from '/examples/3d/demo-utils.js';
+
+        // Store current rotation values (declared early for use in initialization)
+        // Calibrated to show classic "Man in the Moon" Earth-facing view
+        let currentRotation = { x: 55.5, y: -85.0, z: -60.5 };
+
+        const container = document.getElementById('moon-container');
+        const mascot = new EmotiveMascot3D({
+            canvasId: 'moon',
+            coreGeometry: 'moon',
+            materialVariant: 'multiplexer',  // Use blend multiplexer material
+            enableParticles: true,
+            enableControls: true,
+            autoRotate: false,
+            enableBlinking: false,
+            enableBreathing: false,
+            cameraDistance: 1.0  // Closer default zoom
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Disable particles on load (initialized but hidden)
+        mascot.disableParticles();
+
+        // Set to full moon on load
+        if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+            mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = 0;
+            mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = 0;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SHADOW POSITION SLIDER
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        document.getElementById('shadow-pos-slider').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('shadow-pos-value').textContent = value.toFixed(2);
+            if (mascot?.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value[0] = value;
+            }
+        });
+
+        // Animate blood moon eclipse on load (start as normal moon, transition to total eclipse)
+        setTimeout(() => {
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                const uniforms = mascot.core3D.customMaterial.uniforms;
+
+                // Start as normal moon (no eclipse)
+                uniforms.eclipseShadowPos.value = [-2.0, 0.0];  // Shadow off to the side
+                uniforms.eclipseShadowRadius.value = 1.2;
+                uniforms.eclipseProgress.value = 0.0;
+                uniforms.emissiveStrength.value = 0.0;
+                uniforms.shadowDarkness.value = 1.0;
+
+                // Animate to total eclipse over 2 seconds
+                const duration = 2000;
+                const startTime = performance.now();
+
+                function animateEclipse(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1.0);
+
+                    // Ease-in-out curve
+                    const eased = progress < 0.5
+                        ? 2 * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                    // Animate shadow position from -2 to 0
+                    uniforms.eclipseShadowPos.value[0] = -2.0 + (2.0 * eased);
+
+                    // Animate eclipse progress
+                    uniforms.eclipseProgress.value = eased;
+
+                    // Animate emissive glow
+                    uniforms.emissiveStrength.value = 0.39 * eased;
+
+                    // Animate shadow darkness
+                    uniforms.shadowDarkness.value = 1.0 - (0.47 * eased);
+
+                    // Update UI sliders
+                    document.getElementById('shadow-pos-slider').value = uniforms.eclipseShadowPos.value[0];
+                    document.getElementById('shadow-pos-value').textContent = uniforms.eclipseShadowPos.value[0].toFixed(2);
+                    document.getElementById('eclipse-progress-slider').value = eased;
+                    document.getElementById('eclipse-progress-value').textContent = eased.toFixed(2);
+                    document.getElementById('emissive-slider').value = uniforms.emissiveStrength.value;
+                    document.getElementById('emissive-value').textContent = uniforms.emissiveStrength.value.toFixed(2);
+                    document.getElementById('shadow-darkness-slider').value = uniforms.shadowDarkness.value;
+                    document.getElementById('shadow-darkness-value').textContent = uniforms.shadowDarkness.value.toFixed(2);
+
+                    if (progress < 1.0) {
+                        requestAnimationFrame(animateEclipse);
+                    }
+                }
+
+                requestAnimationFrame(animateEclipse);
+            }
+        }, 800);
+
+        // Ensure auto-rotate is OFF for tidal locking (force disable)
+        setTimeout(() => {
+            if (mascot.core3D?.renderer?.controls) {
+                mascot.core3D.renderer.controls.autoRotate = false;
+            }
+        }, 500);
+
+        // Setup tidal lock behavior from demo-utils
+        setupTidalLock(mascot, 2000);
+
+        // Eclipse progress slider (advanced control)
+        const eclipseProgressSlider = document.getElementById('eclipse-progress-slider');
+        eclipseProgressSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('eclipse-progress-value').textContent = value.toFixed(2);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseProgress.value = value;
+                mascot.core3D.customMaterial.uniforms.eclipseIntensity.value = value;
+            }
+        });
+
+        // Shadow radius slider
+        const shadowRadiusSlider = document.getElementById('shadow-radius-slider');
+        shadowRadiusSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('shadow-radius-value').textContent = value.toFixed(2);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = value;
+            }
+        });
+
+        // Eclipse Color Pickers
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16) / 255,
+                parseInt(result[2], 16) / 255,
+                parseInt(result[3], 16) / 255
+            ] : [1.0, 1.0, 1.0];
+        }
+
+        const shadowColorPicker = document.getElementById('shadow-color');
+        const midtoneColorPicker = document.getElementById('midtone-color');
+        const highlightColorPicker = document.getElementById('highlight-color');
+        const glowColorPicker = document.getElementById('glow-color');
+        const resetColorsBtn = document.getElementById('reset-colors-btn');
+
+        shadowColorPicker.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value = rgb;
+                document.getElementById('shadow-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+            }
+        });
+
+        midtoneColorPicker.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseMidtoneColor.value = rgb;
+                document.getElementById('midtone-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+            }
+        });
+
+        highlightColorPicker.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseHighlightColor.value = rgb;
+                document.getElementById('highlight-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+            }
+        });
+
+        glowColorPicker.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseGlowColor.value = rgb;
+                document.getElementById('glow-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+            }
+        });
+
+        resetColorsBtn.addEventListener('click', () => {
+            shadowColorPicker.value = '#ff9400';
+            midtoneColorPicker.value = '#b56e08';
+            highlightColorPicker.value = '#ff471a';
+            glowColorPicker.value = '#171717';
+
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value = [1.00, 0.58, 0.00];
+                mascot.core3D.customMaterial.uniforms.eclipseMidtoneColor.value = [0.71, 0.43, 0.03];
+                mascot.core3D.customMaterial.uniforms.eclipseHighlightColor.value = [1.00, 0.28, 0.10];
+                mascot.core3D.customMaterial.uniforms.eclipseGlowColor.value = [0.09, 0.09, 0.09];
+
+                document.getElementById('shadow-color-value').textContent = 'RGB: 1.00, 0.58, 0.00';
+                document.getElementById('midtone-color-value').textContent = 'RGB: 0.71, 0.43, 0.03';
+                document.getElementById('highlight-color-value').textContent = 'RGB: 1.00, 0.28, 0.10';
+                document.getElementById('glow-color-value').textContent = 'RGB: 0.09, 0.09, 0.09';
+            }
+        });
+
+        // Emissive and shadow darkness controls
+        const emissiveSlider = document.getElementById('emissive-slider');
+        const shadowDarknessSlider = document.getElementById('shadow-darkness-slider');
+
+        emissiveSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('emissive-value').textContent = value.toFixed(2);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.emissiveStrength.value = value;
+            }
+        });
+
+        shadowDarknessSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('shadow-darkness-value').textContent = value.toFixed(2);
+            if (mascot.core3D?.customMaterial?.uniforms) {
+                mascot.core3D.customMaterial.uniforms.shadowDarkness.value = value;
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // BLEND LAYER MANAGEMENT (using shared utilities)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        const MAX_BLEND_LAYERS = 4;
+
+        const layerGroup = createBlendLayerGroup({
+            name: 'Layer',
+            containerId: 'layer-stack',
+            addBtnId: 'add-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: (layers) => {
+                if (!mascot.core3D) return;
+                for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                    const layer = layers[i];
+                    mascot.core3D.setBlendLayer(i + 1, layer
+                        ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                        : { mode: 0, strength: 0, enabled: false });
+                }
+            },
+            blendModeNames
+        });
+
+        // Initialize layers from shader defaults
+        setTimeout(() => {
+            syncLayersFromShader(
+                layerGroup,
+                () => mascot.core3D?.customMaterial?.uniforms,
+                'layer',
+                MAX_BLEND_LAYERS
+            );
+        }, 1000);
+    </script>
+</body>
+</html>

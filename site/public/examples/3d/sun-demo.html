@@ -1,0 +1,282 @@
+x<!DOCTYPE html>
+<!--
+  SOLAR ECLIPSE - Emotive Engine 3D Demo
+
+  Solar eclipse with shader effects and blend layer controls.
+
+  Features:
+  - Solar eclipse rendering with shader effects
+  - Annular and total eclipse types
+  - Blend mode layer system for eclipse appearance
+  - Corona effects
+
+  Texture Attribution:
+  Sun texture by Solar System Scope (https://www.solarsystemscope.com/textures/)
+  Licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Eclipse - Emotive Engine</title>
+    <meta name="description" content="Solar eclipse demo with shader-based eclipse effects and blend layers">
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <style>
+        :root {
+            --accent: #ff9500;
+            --accent-rgb: 255, 149, 0;
+        }
+
+        body {
+            background: url('../../assets/bg/star-bg-optimized.jpg') center/cover fixed,
+                        linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="left-menu">
+        <div class="section">
+            <h2>Eclipse Type</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button data-action="eclipse" data-value="off" class="active">Off</button>
+                    <button data-action="eclipse" data-value="total">Total</button>
+                    <button data-action="eclipse" data-value="annular">Annular</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="eclipse-controls-section" style="display: none;">
+            <h2>Eclipse Position</h2>
+            <div class="section-content">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Shadow Position</span>
+                        <span class="slider-value" id="shadow-pos-value">0.00</span>
+                    </div>
+                    <input type="range" id="shadow-pos-slider" min="-2" max="2" step="0.01" value="0">
+                </div>
+                <div class="slider-control" id="total-shadow-control" style="display: none;">
+                    <div class="slider-label">
+                        <span>Shadow Size</span>
+                        <span class="slider-value" id="total-shadow-value">0.990</span>
+                    </div>
+                    <input type="range" id="total-shadow-slider" min="0.85" max="1.05" step="0.001" value="0.990">
+                </div>
+                <div class="slider-control" id="annular-shadow-control" style="display: none;">
+                    <div class="slider-label">
+                        <span>Shadow Size</span>
+                        <span class="slider-value" id="annular-shadow-value">0.870</span>
+                    </div>
+                    <input type="range" id="annular-shadow-slider" min="0.70" max="0.95" step="0.001" value="0.870">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Solar Eclipse:</strong><br>
+                Shader-based eclipse effects darken the sun where the moon's shadow covers it.
+            </div>
+        </div>
+    </div>
+
+    <div class="center-content">
+        <div id="sun-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <div class="right-menu">
+        <div class="section visual-controls">
+            <h2>Visuals</h2>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch active" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Blend</h2>
+            <div class="section-content collapsed">
+                <div class="info-box" style="margin-bottom: 12px;">
+                    Click value to fine-tune. Drag to reorder. Max 4 per type.
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Sun</div>
+                    <div id="layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-layer-btn">+ Sun</button>
+                </div>
+                <div class="blend-subsection">
+                    <div class="blend-subsection-header">Corona</div>
+                    <div id="corona-layers-container" class="layer-stack"></div>
+                    <button class="add-layer-btn" id="add-corona-layer-btn">+ Corona</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D, { blendModeNames } from '/emotive-engine-3d.js';
+        import { exitPrecisionMode } from '/examples/3d/layer-utils.js';
+        import { createBlendLayerGroup, syncLayersFromShader, setupVisualToggles } from '/examples/3d/demo-utils.js';
+
+        let mascot = null;
+        const MAX_BLEND_LAYERS = 4;
+
+        // Create layer groups (they'll be populated after mascot initializes)
+        const sunLayerGroup = createBlendLayerGroup({
+            name: 'Sun',
+            containerId: 'layers-container',
+            addBtnId: 'add-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: (layers) => {
+                if (!mascot?.core3D) return;
+                for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                    const layer = layers[i];
+                    mascot.core3D.setBlendLayer(i + 1, layer
+                        ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                        : { mode: 0, strength: 0, enabled: false });
+                }
+            },
+            blendModeNames
+        });
+
+        const coronaLayerGroup = createBlendLayerGroup({
+            name: 'Corona',
+            containerId: 'corona-layers-container',
+            addBtnId: 'add-corona-layer-btn',
+            maxLayers: MAX_BLEND_LAYERS,
+            updateShader: (layers) => {
+                if (!mascot?.core3D?.solarEclipse) return;
+                for (let i = 0; i < MAX_BLEND_LAYERS; i++) {
+                    const layer = layers[i];
+                    mascot.core3D.solarEclipse.setCoronaBlendLayer(i + 1, layer
+                        ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
+                        : { mode: 0, strength: 0, enabled: false });
+                }
+            },
+            blendModeNames
+        });
+
+        // Initialize mascot
+        (async () => {
+            try {
+                const container = document.getElementById('sun-container');
+                mascot = new EmotiveMascot3D({
+                    coreGeometry: 'sun',
+                    materialVariant: 'multiplexer',
+                    enableParticles: false,
+                    enablePostProcessing: true,
+                    enableShadows: false,
+                    enableControls: true,
+                    autoRotate: true,
+                    enableBlinking: false,
+                    enableBreathing: false,
+                    cameraDistance: 1.2
+                });
+
+                mascot.init(container);
+                mascot.start();
+                mascot.setEmotion('joy');
+
+                // Setup visual toggles
+                setupVisualToggles(mascot);
+
+                // Auto-populate from shader defaults
+                setTimeout(() => {
+                    syncLayersFromShader(
+                        sunLayerGroup,
+                        () => mascot.core3D?.coreMesh?.material?.uniforms,
+                        'layer',
+                        MAX_BLEND_LAYERS
+                    );
+                    syncLayersFromShader(
+                        coronaLayerGroup,
+                        () => mascot.core3D?.solarEclipse?.coronaDisk?.material?.uniforms,
+                        'layer',
+                        MAX_BLEND_LAYERS
+                    );
+                }, 500);
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+            }
+        })();
+
+        // UI event handlers
+        document.addEventListener('click', (e) => {
+            if (e.target.dataset.action === 'eclipse') {
+                const type = e.target.dataset.value;
+                document.querySelectorAll('[data-action="eclipse"]').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+
+                const controls = document.getElementById('eclipse-controls-section');
+                if (type === 'off') {
+                    controls.style.display = 'none';
+                    mascot.core3D.setSunShadow('off');
+                } else {
+                    controls.style.display = 'block';
+                    document.getElementById('total-shadow-control').style.display = type === 'total' ? 'block' : 'none';
+                    document.getElementById('annular-shadow-control').style.display = type === 'annular' ? 'block' : 'none';
+                    mascot.core3D.setSunShadow(type);
+
+                    setTimeout(() => {
+                        if (mascot.core3D?.customMaterial?.uniforms) {
+                            const slider = type === 'total' ? 'total-shadow-slider' : 'annular-shadow-slider';
+                            mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = parseFloat(document.getElementById(slider).value);
+                        }
+                    }, 100);
+                }
+                return;
+            }
+
+            if (e.target.dataset.action === 'toggle-glow') {
+                const enabled = mascot.core3D?.coreGlowEnabled !== false;
+                mascot.core3D.setCoreGlowEnabled(!enabled);
+                e.target.classList.toggle('active', !enabled);
+                return;
+            }
+
+            if (e.target.dataset.action === 'toggle-auto-rotate') {
+                if (mascot.autoRotateEnabled) {
+                    mascot.disableAutoRotate();
+                    e.target.classList.remove('active');
+                } else {
+                    mascot.enableAutoRotate();
+                    e.target.classList.add('active');
+                }
+                return;
+            }
+        });
+
+        document.getElementById('shadow-pos-slider').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('shadow-pos-value').textContent = value.toFixed(2);
+            if (mascot?.core3D?.solarEclipse) {
+                mascot.core3D.solarEclipse.setManualShadowPosition(value);
+            }
+        });
+
+        document.getElementById('total-shadow-slider').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('total-shadow-value').textContent = value.toFixed(3);
+            if (mascot.core3D?.solarEclipse) {
+                mascot.core3D.solarEclipse.setShadowCoverage(value);
+            }
+        });
+
+        document.getElementById('annular-shadow-slider').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('annular-shadow-value').textContent = value.toFixed(3);
+            if (mascot.core3D?.solarEclipse) {
+                mascot.core3D.solarEclipse.setShadowCoverage(value);
+            }
+        });
+    </script>
+</body>
+</html>

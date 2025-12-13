@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<!--
+  DEMO TEMPLATE - Emotive Engine 3D
+
+  Copy this template for new 3D demos. Uses shared styles from 3d-example-style.css.
+
+  To customize:
+  1. Change the title and meta description
+  2. Set theme colors via CSS variables (--accent, --accent-rgb)
+  3. Set body background gradient
+  4. Add demo-specific controls in left/right menus
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Template - Emotive Engine</title>
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <style>
+        /* Theme: Purple gradient (customize for your demo) */
+        :root {
+            --accent: #667eea;
+            --accent-rgb: 102, 126, 234;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Section Title</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button class="active">Button 1</button>
+                    <button>Button 2</button>
+                    <button>Button 3</button>
+                    <button>Button 4</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Slider Control</h2>
+            <div class="section-content">
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>Label</span>
+                        <span class="slider-value" id="slider-value">50%</span>
+                    </div>
+                    <input type="range" id="slider" min="0" max="100" value="50">
+                </div>
+                <div class="info-box">
+                    <strong>Info:</strong><br>
+                    Some helpful information here.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER ANIMATION -->
+    <div class="center-content">
+        <div id="animation-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <!-- RIGHT MENU -->
+    <div class="right-menu">
+        <div class="section">
+            <h2>Options</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button>Option 1</button>
+                    <button>Option 2</button>
+                    <button>Option 3</button>
+                    <button>Option 4</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section visual-controls">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch active" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Description:</strong><br>
+                Explain what this demo does here.
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '/emotive-engine-3d.js';
+        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+
+        // Initialize mascot
+        const container = document.getElementById('animation-container');
+        const mascot = new EmotiveMascot3D({
+            coreGeometry: 'crystal', // Change to: crystal, moon, sun
+            enableParticles: true,
+            enablePostProcessing: true,
+            enableShadows: false,
+            enableControls: true,
+            autoRotate: true,
+            cameraDistance: 1.2,
+            fov: 30,
+            minZoom: 0.9,
+            maxZoom: 2.0,
+            materialVariant: 'multiplexer'
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Fire sway gesture on load
+        setTimeout(() => {
+            mascot.express('sway');
+        }, 500);
+
+        // Setup shared toggles (collapsible sections auto-initialized by demo-utils.js)
+        setupParticlesToggle(mascot);
+        setupVisualToggles(mascot);
+
+        // Slider example
+        const slider = document.getElementById('slider');
+        const sliderValue = document.getElementById('slider-value');
+
+        slider.addEventListener('input', (e) => {
+            sliderValue.textContent = `${e.target.value}%`;
+        });
+
+        // Button examples
+        document.querySelectorAll('.button-grid button').forEach(button => {
+            button.addEventListener('click', () => {
+                button.parentElement.querySelectorAll('button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

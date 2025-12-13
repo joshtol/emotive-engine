@@ -108,7 +108,7 @@
 
     <script type="module">
         import EmotiveMascot3D from '../../dist/emotive-mascot-3d.js';
-        import { setupParticlesToggle, setupVisualToggles } from './demo-utils.js';
+        import { getAssetBasePath, setupParticlesToggle, setupVisualToggles } from './demo-utils.js';
 
         // Initialize mascot
         const container = document.getElementById('animation-container');
@@ -123,7 +123,8 @@
             fov: 30,
             minZoom: 0.9,
             maxZoom: 2.0,
-            materialVariant: 'multiplexer'
+            materialVariant: 'multiplexer',
+            assetBasePath: getAssetBasePath()
         });
 
         mascot.init(container);

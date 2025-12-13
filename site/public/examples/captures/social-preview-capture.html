@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<!--
+  SOCIAL PREVIEW CAPTURE - Emotive Engine
+
+  Purpose: Generate 1280x640px social preview image for GitHub repository
+
+  This example demonstrates:
+  - Social preview dimensions (1280x640px, 2:1 ratio recommended by GitHub)
+  - Branded layout with logo, tagline, feature badges, npm command
+  - Simple 3-shape animation loop (circle → moon → heart)
+  - Professional color scheme and typography
+  - Optimized particle count and scale for social media
+  - Aurora gradient background effects
+  - Balanced composition for maximum visual impact
+
+  Technical showcase:
+  - Fixed-dimension layout (1280x640px for social sharing)
+  - Emotion sequencing with 3-shape loop
+  - Timing coordination (emotion + morph + gesture)
+  - Scale configuration for social preview size
+  - Particle system canvas dimensions
+  - Containment configuration for full-frame effects
+  - Backdrop glow for depth
+
+  Use cases:
+  1. Generate GitHub repository social previews
+  2. Create social media share images
+  3. Learn compact animation loops
+  4. See professional branding composition
+
+  Complexity: ⭐⭐ Intermediate
+  Demonstrates: Social preview generation, branding, simple loops
+
+  Capture instructions:
+  1. Open in Chrome/Edge at 100% zoom
+  2. Use ScreenToGif - record 1280x640px region
+  3. Record for ~6 seconds (full loop)
+  4. Optimize to <1MB for GitHub
+  5. Upload to GitHub Settings > Social preview
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emotive Engine - Social Preview Capture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 1280px;
+            height: 640px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #FFFFFF;
+        }
+
+        /* Preview container */
+        .preview {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg,
+                #0a0a1a 0%,
+                #16213e 50%,
+                #1a1a2e 100%
+            );
+            position: relative;
+            overflow: visible;
+            border: 4px solid #FFFFFF;
+            border-radius: 12px;
+            box-sizing: border-box;
+        }
+
+        /* Aurora background effect */
+        .color-wash {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            pointer-events: none;
+            opacity: 0.25;
+            transition: background 3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            filter: blur(100px);
+            background: radial-gradient(circle at 50% 50%,
+                rgba(221, 74, 154, 0.15) 0%,
+                rgba(64, 144, 206, 0.10) 30%,
+                rgba(132, 207, 197, 0.06) 60%,
+                transparent 100%
+            );
+        }
+
+        /* Logo - top left */
+        .logo-wrapper {
+            position: absolute;
+            top: 50px;
+            left: 60px;
+            z-index: 10;
+            filter: drop-shadow(0 4px 20px rgba(132, 207, 197, 0.3));
+        }
+
+        .logo-wrapper img {
+            width: 280px;
+            height: auto;
+            filter: brightness(0) invert(1);
+            opacity: 0.95;
+        }
+
+        /* Tagline */
+        .tagline {
+            position: absolute;
+            top: 60px;
+            right: 60px;
+            z-index: 10;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.75);
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            text-align: right;
+            max-width: 400px;
+        }
+
+        /* Feature badges - bottom right */
+        .features {
+            position: absolute;
+            bottom: 50px;
+            right: 60px;
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* NPM badge - bottom left */
+        .npm-badge {
+            position: absolute;
+            bottom: 50px;
+            left: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #0a0e27;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* Mascot container */
+        #mascot-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        #mascot-canvas {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+        }
+    </style>
+</head>
+<body>
+    <div class="preview">
+        <div class="color-wash" id="color-wash"></div>
+
+        <!-- Logo -->
+        <div class="logo-wrapper">
+            <img src="../assets/emotive-engine-full-BW.svg" alt="Emotive Engine">
+        </div>
+
+        <!-- Tagline -->
+        <div class="tagline">
+            Real-time emotion & motion for interactive experiences
+        </div>
+
+        <!-- Feature badges -->
+        <div class="features">
+            <div class="feature">Emotion-Driven</div>
+            <div class="feature">Musical Timing</div>
+            <div class="feature">Shape Morphing</div>
+        </div>
+
+        <!-- NPM badge -->
+        <div class="npm-badge">npm install @joshtol/emotive-engine</div>
+
+        <!-- Mascot -->
+        <div id="mascot-container">
+            <canvas id="mascot-canvas"></canvas>
+        </div>
+    </div>
+
+    <script src="../site/public/emotive-engine.js"></script>
+
+    <script>
+        /**
+         * SOCIAL PREVIEW INITIALIZATION
+         *
+         * Creates a calm, professional looping animation for GitHub social preview
+         * - 1280x640px dimensions (2:1 ratio recommended by GitHub)
+         * - Calm moon with breathing animation
+         * - 10-second seamless loop
+         */
+
+        let mascot = null;
+        let currentIndex = 0;
+
+        // STEP 1: Initialize mascot for social preview
+        async function initMascot() {
+            const canvas = document.getElementById('mascot-canvas');
+            const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+
+            if (!EmotiveMascot) {
+                console.error('❌ EmotiveMascot not loaded');
+                return null;
+            }
+
+            // Set social preview dimensions
+            canvas.width = 1280;
+            canvas.height = 640;
+
+            // Create mascot optimized for social preview
+            const mascot = new EmotiveMascot({
+                canvasId: 'mascot-canvas',
+                targetFPS: 60,
+                enableAudio: false,
+                soundEnabled: false,
+                maxParticles: 250,
+                defaultEmotion: 'joy',
+                enableGazeTracking: false,
+                enableIdleBehaviors: false
+            });
+
+            await mascot.init(canvas);
+
+            // Configure particle system for social preview
+            mascot.setParticleSystemCanvasDimensions(1280, 640);
+
+            // Remove containment - particles can move across entire preview
+            mascot.setContainment(null, 2.5);
+
+            // Configure backdrop glow
+            mascot.setBackdrop({
+                enabled: true,
+                radius: 3.5,
+                intensity: 0.9,
+                blendMode: 'normal',
+                falloff: 'smooth',
+                edgeSoftness: 0.95,
+                coreTransparency: 0.25,
+                responsive: true
+            });
+
+            // Scale for visibility (larger for 640px height)
+            mascot.setScale({
+                core: 2.5,
+                particles: 2.0
+            });
+
+            // Center in preview
+            mascot.setPosition(0, 0, 0);
+
+            mascot.start();
+            console.log('✅ Social preview mascot initialized');
+
+            return mascot;
+        }
+
+        /**
+         * ANIMATION SEQUENCE CONFIGURATION
+         *
+         * Each step coordinates 3 actions with timing:
+         * 1. Emotion change (immediate)
+         * 2. Shape morph (200ms delay)
+         * 3. Gesture animation (400ms delay)
+         *
+         * Total loop: ~4 seconds for fast, simple loop
+         */
+        const emotionSequence = [
+            { emotion: 'neutral',  shape: 'circle', gesture: 'pulse',   duration: 1300 },
+            { emotion: 'calm',     shape: 'moon',   gesture: 'breathe', duration: 1300 },
+            { emotion: 'love',     shape: 'heart',  gesture: 'pulse',   duration: 1400 }
+        ];
+
+        // STEP 2: Run animation sequence
+        function cycleEmotions() {
+            if (!mascot) return;
+
+            const step = emotionSequence[currentIndex];
+
+            // Apply emotion change
+            mascot.setEmotion(step.emotion);
+            console.log(`▶ ${step.emotion.toUpperCase()}`);
+
+            // Morph shape after 200ms
+            if (step.shape) {
+                setTimeout(() => {
+                    mascot.morphTo(step.shape);
+                    console.log(`  → Shape: ${step.shape}`);
+                }, 200);
+            }
+
+            // Trigger gesture after 400ms
+            if (step.gesture) {
+                setTimeout(() => {
+                    mascot.express(step.gesture);
+                    console.log(`  → Gesture: ${step.gesture}`);
+                }, 400);
+            }
+
+            // Move to next step (loops back to 0)
+            currentIndex = (currentIndex + 1) % emotionSequence.length;
+
+            // Schedule next emotion change
+            setTimeout(cycleEmotions, step.duration);
+        }
+
+        // STEP 3: Start the sequence
+        initMascot().then(m => {
+            mascot = m;
+            if (mascot) {
+                console.log('🎬 Starting social preview animation...');
+                console.log('📹 Ready for screen capture!');
+                cycleEmotions();
+            }
+        });
+    </script>
+</body>
+</html>

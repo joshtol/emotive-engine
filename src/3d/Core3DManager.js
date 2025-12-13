@@ -69,6 +69,7 @@ export class Core3DManager {
      * @param {number} [options.minZoom] - Minimum zoom distance
      * @param {number} [options.maxZoom] - Maximum zoom distance
      * @param {string} [options.materialVariant] - Material variant override
+     * @param {string} [options.assetBasePath='/assets'] - Base path for loading assets (textures, models)
      */
     constructor(canvas, options = {}) {
         this._instanceId = Math.random().toString(36).substr(2, 6);
@@ -78,6 +79,9 @@ export class Core3DManager {
         this._destroyed = false;
         this._ready = false;  // Flag indicating all async loading is complete
         this._readyPromise = null;  // Promise that resolves when ready
+
+        // Asset base path for textures and models (configurable for GitHub Pages, etc.)
+        this.assetBasePath = options.assetBasePath || '/assets';
 
         // Load geometry type first (needed to determine if moon = tidally locked)
         this.geometryType = options.geometry || 'sphere';
@@ -127,7 +131,8 @@ export class Core3DManager {
             glowColor: this.glowColor || [1.0, 1.0, 0.95],
             glowIntensity: this.glowIntensity || 1.0,
             materialVariant: this.materialVariant,
-            emotionData // Pass emotion data for auto-deriving geometry params
+            emotionData, // Pass emotion data for auto-deriving geometry params
+            assetBasePath: this.assetBasePath
         });
 
         if (materialResult) {
@@ -1283,7 +1288,7 @@ export class Core3DManager {
         if (targetGeometryConfig.geometryLoader && !targetGeometryConfig.geometry) {
             // Start loading during shrink phase so it's ready for swap
             this._targetGeometry = null; // Will be set when loaded
-            this._pendingGeometryLoad = targetGeometryConfig.geometryLoader().then(geometry => {
+            this._pendingGeometryLoad = targetGeometryConfig.geometryLoader(this.assetBasePath).then(geometry => {
                 this._targetGeometry = geometry;
                 // Also update the registry so subsequent morphs don't need to reload
                 targetGeometryConfig.geometry = geometry;
@@ -1400,7 +1405,8 @@ export class Core3DManager {
                 glowColor: this.glowColor || [1.0, 1.0, 0.95],
                 glowIntensity: this.glowIntensity || 1.0,
                 materialVariant: this.materialVariant,
-                emotionData // Pass emotion data for auto-deriving geometry params
+                emotionData, // Pass emotion data for auto-deriving geometry params
+                assetBasePath: this.assetBasePath
             });
 
             if (materialResult) {
@@ -1889,7 +1895,8 @@ export class Core3DManager {
                 glowColor: this.glowColor || [1.0, 1.0, 0.95],
                 glowIntensity: this.glowIntensity || 1.0,
                 materialVariant: this.materialVariant,
-                emotionData: getEmotion(this.emotion)
+                emotionData: getEmotion(this.emotion),
+                assetBasePath: this.assetBasePath
             });
 
 

@@ -53,13 +53,14 @@ export function setCrystalSmoothNormals(smooth) {
 
 /**
  * Load crystal OBJ model asynchronously
+ * @param {string} assetBasePath - Base path for assets (default: '/assets')
  * @returns {Promise<THREE.BufferGeometry>} Crystal geometry
  */
-function loadCrystalGeometry() {
+function loadCrystalGeometry(assetBasePath = '/assets') {
     return new Promise((resolve, reject) => {
         const loader = new OBJLoader();
         loader.load(
-            '/assets/models/Crystal/crystal.obj',
+            `${assetBasePath}/models/Crystal/crystal.obj`,
             obj => {
                 let geometry = null;
                 obj.traverse(child => {
@@ -199,13 +200,14 @@ function createProceduralCrystal() {
 
 /**
  * Load rough OBJ model asynchronously
+ * @param {string} assetBasePath - Base path for assets (default: '/assets')
  * @returns {Promise<THREE.BufferGeometry>} Rough geometry
  */
-function loadRoughGeometry() {
+function loadRoughGeometry(assetBasePath = '/assets') {
     return new Promise(resolve => {
         const loader = new OBJLoader();
         loader.load(
-            '/assets/models/Crystal/rough.obj',
+            `${assetBasePath}/models/Crystal/rough.obj`,
             obj => {
                 let geometry = null;
                 obj.traverse(child => {
