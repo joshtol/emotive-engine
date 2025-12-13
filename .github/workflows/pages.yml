@@ -1,0 +1,131 @@
+# Deploy examples to GitHub Pages
+# Triggered on push to main branch
+
+name: Deploy Examples to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+# Sets permissions for GITHUB_TOKEN to deploy to Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Prepare Pages directory
+        run: |
+          mkdir -p _pages
+
+          # Copy dist files
+          cp -r dist _pages/dist
+
+          # Copy examples
+          cp -r examples _pages/examples
+
+          # Copy assets needed by examples
+          cp -r assets _pages/assets 2>/dev/null || true
+
+          # 2D examples reference site/public/emotive-engine.js - create that path
+          mkdir -p _pages/site/public
+          cp dist/mascot.js _pages/site/public/emotive-engine.js
+
+          # Create index.html that lists all examples
+          cat > _pages/index.html << 'INDEXEOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Emotive Engine Examples</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 40px 20px;
+                background: #0a0a0a;
+                color: #e0e0e0;
+              }
+              h1 { color: #fff; }
+              h2 { color: #888; margin-top: 40px; }
+              a {
+                color: #6ee7ff;
+                text-decoration: none;
+                display: block;
+                padding: 12px 16px;
+                margin: 8px 0;
+                background: #1a1a1a;
+                border-radius: 8px;
+                transition: background 0.2s;
+              }
+              a:hover { background: #2a2a2a; }
+            </style>
+          </head>
+          <body>
+            <h1>Emotive Engine Examples</h1>
+
+            <h2>3D Examples</h2>
+            <a href="examples/3d/crystal-demo.html">Crystal Demo</a>
+            <a href="examples/3d/3d-demo.html">3D Demo (All Features)</a>
+            <a href="examples/3d/moon-demo.html">Moon Demo</a>
+            <a href="examples/3d/sun-demo.html">Sun Demo</a>
+            <a href="examples/3d/blood-moon-demo.html">Blood Moon Demo</a>
+            <a href="examples/3d/black-hole-demo.html">Black Hole Demo</a>
+
+            <h2>2D Examples</h2>
+            <a href="examples/2d/2d-hello-world.html">Hello World</a>
+            <a href="examples/2d/basic-usage.html">Basic Usage</a>
+            <a href="examples/2d/breathing-app.html">Breathing App</a>
+            <a href="examples/2d/event-handling.html">Event Handling</a>
+            <a href="examples/2d/rhythm-sync-demo.html">Rhythm Sync</a>
+
+            <h2>LLM Integration</h2>
+            <a href="examples/llm-integration/claude-haiku.html">Claude Haiku</a>
+          </body>
+          </html>
+          INDEXEOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_pages'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
