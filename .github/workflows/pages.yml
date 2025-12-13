@@ -66,149 +66,768 @@ jobs:
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Emotive Engine Examples</title>
+            <title>Emotive Engine - Interactive Demo Gallery</title>
+            <meta name="description" content="Emotional AI mascot engine with 2D canvas and 3D WebGL support. Interactive demos showcasing emotions, gestures, and visual effects.">
             <link rel="stylesheet" href="examples/example-styles.css">
             <style>
-              body {
-                max-width: 900px;
-                margin: 0 auto;
-                padding: 40px 20px;
+              :root {
+                --pink: #DD4A9A;
+                --blue: #4090CE;
+                --teal: #84CFC5;
+                --bg-dark: #0d0d0d;
+                --bg-card: rgba(30, 30, 35, 0.8);
+                --text: #F2F1F1;
+                --text-muted: #888;
               }
+
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+
+              body {
+                font-family: system-ui, -apple-system, sans-serif;
+                background: var(--bg-dark);
+                color: var(--text);
+                min-height: 100vh;
+                overflow-x: hidden;
+              }
+
+              /* Animated gradient background */
+              .bg-gradient {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background:
+                  radial-gradient(ellipse at 20% 20%, rgba(221, 74, 154, 0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 80%, rgba(64, 144, 206, 0.1) 0%, transparent 50%),
+                  radial-gradient(ellipse at 50% 50%, rgba(132, 207, 197, 0.05) 0%, transparent 70%);
+                animation: gradientShift 20s ease-in-out infinite;
+                z-index: -1;
+              }
+
+              @keyframes gradientShift {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+              }
+
+              .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 40px 24px;
+              }
+
+              /* Hero Section */
               .hero {
                 text-align: center;
-                margin-bottom: 50px;
+                padding: 60px 20px 80px;
+                position: relative;
               }
-              .hero img {
-                width: 80px;
-                height: 80px;
-                margin-bottom: 20px;
+
+              .hero-logo {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 24px;
+                animation: float 6s ease-in-out infinite;
+                filter: drop-shadow(0 0 30px rgba(221, 74, 154, 0.4));
               }
+
+              @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+              }
+
               .hero h1 {
-                font-size: 2.5rem;
-                background: linear-gradient(135deg, #DD4A9A 0%, #4090CE 100%);
+                font-size: 3.5rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, var(--pink) 0%, var(--blue) 50%, var(--teal) 100%);
+                background-size: 200% 200%;
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
-                margin: 0 0 10px 0;
-              }
-              .hero p {
-                color: #B8B8B8;
-                font-size: 1.1rem;
-              }
-              .section {
-                margin-bottom: 40px;
-              }
-              .section h2 {
-                color: #DD4A9A;
-                font-size: 1.2rem;
+                animation: gradientText 8s ease infinite;
                 margin-bottom: 16px;
-                padding-bottom: 8px;
-                border-bottom: 1px solid rgba(221, 74, 154, 0.3);
+                letter-spacing: -1px;
               }
-              .grid {
+
+              @keyframes gradientText {
+                0%, 100% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+              }
+
+              .hero-tagline {
+                font-size: 1.25rem;
+                color: var(--text-muted);
+                max-width: 600px;
+                margin: 0 auto 32px;
+                line-height: 1.6;
+              }
+
+              .hero-badges {
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+                flex-wrap: wrap;
+              }
+
+              .badge {
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 0.85rem;
+                font-weight: 500;
+                border: 1px solid;
+              }
+
+              .badge.webgl { background: rgba(221, 74, 154, 0.15); border-color: rgba(221, 74, 154, 0.4); color: var(--pink); }
+              .badge.canvas { background: rgba(64, 144, 206, 0.15); border-color: rgba(64, 144, 206, 0.4); color: var(--blue); }
+              .badge.ai { background: rgba(132, 207, 197, 0.15); border-color: rgba(132, 207, 197, 0.4); color: var(--teal); }
+
+              /* Section Headers */
+              .section {
+                margin-bottom: 60px;
+              }
+
+              .section-header {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 24px;
+              }
+
+              .section-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+              }
+
+              .section-icon.webgl { background: linear-gradient(135deg, var(--pink), var(--blue)); }
+              .section-icon.canvas { background: linear-gradient(135deg, var(--blue), var(--teal)); }
+              .section-icon.ai { background: linear-gradient(135deg, var(--teal), var(--pink)); }
+
+              .section h2 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: var(--text);
+              }
+
+              .section-count {
+                color: var(--text-muted);
+                font-size: 0.9rem;
+                margin-left: auto;
+              }
+
+              /* Bento Grid */
+              .bento-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                grid-template-columns: repeat(12, 1fr);
                 gap: 16px;
               }
+
+              /* Card Styles */
               .card {
-                display: block;
-                padding: 20px;
-                background: rgba(42, 42, 42, 0.6);
-                border: 1px solid rgba(242, 241, 241, 0.1);
-                border-radius: 12px;
+                position: relative;
+                background: var(--bg-card);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: 16px;
+                overflow: hidden;
                 text-decoration: none;
-                transition: all 0.2s ease;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                display: flex;
+                flex-direction: column;
               }
+
               .card:hover {
-                border-color: rgba(221, 74, 154, 0.5);
-                transform: translateY(-2px);
-                box-shadow: 0 8px 24px rgba(221, 74, 154, 0.15);
+                transform: translateY(-4px) scale(1.02);
+                border-color: rgba(221, 74, 154, 0.4);
+                box-shadow:
+                  0 20px 40px rgba(0, 0, 0, 0.4),
+                  0 0 60px rgba(221, 74, 154, 0.15);
               }
+
+              /* Card sizes for bento */
+              .card.featured { grid-column: span 8; }
+              .card.medium { grid-column: span 4; }
+              .card.small { grid-column: span 4; }
+
+              /* Preview area with placeholder */
+              .card-preview {
+                position: relative;
+                height: 180px;
+                background: linear-gradient(135deg, rgba(30,30,35,1) 0%, rgba(20,20,25,1) 100%);
+                overflow: hidden;
+              }
+
+              .card.featured .card-preview { height: 280px; }
+
+              .card-preview img, .card-preview video {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                opacity: 0.9;
+                transition: all 0.4s ease;
+              }
+
+              .card:hover .card-preview img,
+              .card:hover .card-preview video {
+                opacity: 1;
+                transform: scale(1.05);
+              }
+
+              /* Placeholder for missing images */
+              .preview-placeholder {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, rgba(221, 74, 154, 0.1) 0%, rgba(64, 144, 206, 0.1) 100%);
+                color: var(--text-muted);
+                font-size: 0.8rem;
+                text-align: center;
+                padding: 20px;
+              }
+
+              .preview-placeholder .icon {
+                font-size: 3rem;
+                margin-bottom: 12px;
+                opacity: 0.5;
+              }
+
+              /* Glow effect on hover */
+              .card::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                  rgba(221, 74, 154, 0.15) 0%, transparent 50%);
+                opacity: 0;
+                transition: opacity 0.3s;
+                pointer-events: none;
+                z-index: 1;
+              }
+
+              .card:hover::before { opacity: 1; }
+
+              /* Card content */
+              .card-content {
+                padding: 20px;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+              }
+
+              .card-meta {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 12px;
+              }
+
+              .card-category {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                padding: 4px 10px;
+                border-radius: 4px;
+                font-weight: 600;
+              }
+
+              .card-category.webgl { background: rgba(221, 74, 154, 0.2); color: var(--pink); }
+              .card-category.canvas { background: rgba(64, 144, 206, 0.2); color: var(--blue); }
+              .card-category.ai { background: rgba(132, 207, 197, 0.2); color: var(--teal); }
+
+              .complexity {
+                font-size: 0.75rem;
+                color: var(--text-muted);
+                margin-left: auto;
+              }
+
+              .complexity .star { color: #FFD700; }
+              .complexity .star.empty { opacity: 0.3; }
+
               .card h3 {
-                color: #F2F1F1;
-                margin: 0 0 8px 0;
-                font-size: 1.1rem;
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 8px;
               }
+
+              .card.featured h3 { font-size: 1.5rem; }
+
               .card p {
-                color: #B8B8B8;
-                margin: 0;
                 font-size: 0.9rem;
+                color: var(--text-muted);
+                line-height: 1.5;
+                flex: 1;
               }
-              @media (max-width: 480px) {
-                body { padding: 20px 15px; }
-                .hero h1 { font-size: 1.8rem; }
-                .grid { grid-template-columns: 1fr; }
+
+              .card-tags {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                margin-top: 16px;
+              }
+
+              .tag {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 4px;
+                color: var(--text-muted);
+              }
+
+              /* Play indicator */
+              .play-indicator {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 60px;
+                height: 60px;
+                background: rgba(221, 74, 154, 0.9);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                transition: all 0.3s ease;
+                z-index: 2;
+              }
+
+              .play-indicator::after {
+                content: '';
+                border-style: solid;
+                border-width: 10px 0 10px 16px;
+                border-color: transparent transparent transparent white;
+                margin-left: 4px;
+              }
+
+              .card:hover .play-indicator {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+              }
+
+              /* Footer */
+              .footer {
+                text-align: center;
+                padding: 40px 20px;
+                border-top: 1px solid rgba(255, 255, 255, 0.06);
+                margin-top: 40px;
+              }
+
+              .footer-links {
+                display: flex;
+                gap: 24px;
+                justify-content: center;
+                margin-bottom: 16px;
+              }
+
+              .footer-links a {
+                color: var(--text-muted);
+                text-decoration: none;
+                font-size: 0.9rem;
+                transition: color 0.2s;
+              }
+
+              .footer-links a:hover { color: var(--pink); }
+
+              .footer-copy {
+                color: var(--text-muted);
+                font-size: 0.8rem;
+              }
+
+              /* Responsive */
+              @media (max-width: 900px) {
+                .card.featured, .card.medium, .card.small { grid-column: span 6; }
+                .hero h1 { font-size: 2.5rem; }
+              }
+
+              @media (max-width: 600px) {
+                .card.featured, .card.medium, .card.small { grid-column: span 12; }
+                .hero h1 { font-size: 2rem; }
+                .hero-tagline { font-size: 1rem; }
+                .bento-grid { gap: 12px; }
+                .card-preview { height: 160px; }
+                .card.featured .card-preview { height: 200px; }
               }
             </style>
           </head>
           <body>
-            <div class="hero">
-              <img src="assets/emotive-engine-icon-W.svg" alt="Emotive Engine">
-              <h1>Emotive Engine</h1>
-              <p>Interactive examples and demos</p>
+            <div class="bg-gradient"></div>
+
+            <div class="container">
+              <!-- Hero -->
+              <header class="hero">
+                <img src="assets/emotive-engine-icon-W.svg" alt="Emotive Engine" class="hero-logo">
+                <h1>Emotive Engine</h1>
+                <p class="hero-tagline">
+                  A powerful emotional AI mascot engine with 2D canvas and 3D WebGL rendering.
+                  Build expressive, interactive characters that respond to user emotions.
+                </p>
+                <div class="hero-badges">
+                  <span class="badge webgl">WebGL 3D</span>
+                  <span class="badge canvas">Canvas 2D</span>
+                  <span class="badge ai">LLM Ready</span>
+                </div>
+              </header>
+
+              <!-- 3D Examples -->
+              <section class="section">
+                <div class="section-header">
+                  <div class="section-icon webgl">&#x1F48E;</div>
+                  <h2>3D WebGL Examples</h2>
+                  <span class="section-count">5 demos</span>
+                </div>
+
+                <div class="bento-grid">
+                  <!-- Featured: 3D Demo -->
+                  <a href="examples/3d/3d-demo.html" class="card featured">
+                    <div class="card-preview">
+                      <!-- TODO: Add animated GIF showing geometry morphing between crystal/moon/sun with emotion changes -->
+                      <!-- File: assets/previews/3d-demo.gif (800x400px, show all 3 geometries morphing) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F310;</span>
+                        <span>Preview: Animated GIF showing crystal morphing to moon to sun with particle effects and emotion transitions</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category webgl">WebGL</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>3D Interactive Showcase</h3>
+                      <p>The complete 3D experience. Switch between crystal, moon, and sun geometries. Explore all emotions, gestures, and visual effects including bloom, particles, and subsurface scattering.</p>
+                      <div class="card-tags">
+                        <span class="tag">all geometries</span>
+                        <span class="tag">emotions</span>
+                        <span class="tag">particles</span>
+                        <span class="tag">bloom</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- Crystal -->
+                  <a href="examples/3d/crystal-demo.html" class="card medium">
+                    <div class="card-preview">
+                      <!-- TODO: Add screenshot/GIF of crystal with soul glow pulsing -->
+                      <!-- File: assets/previews/crystal.gif (400x300px, subtle soul pulse animation) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F48E;</span>
+                        <span>Preview: Crystal with inner soul glow pulsing</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category webgl">WebGL</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Crystal Soul</h3>
+                      <p>Frosted crystal with dynamic inner soul glow and SSS presets.</p>
+                      <div class="card-tags">
+                        <span class="tag">SSS</span>
+                        <span class="tag">blend modes</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- Moon -->
+                  <a href="examples/3d/moon-demo.html" class="card medium">
+                    <div class="card-preview">
+                      <!-- TODO: Add GIF of moon cycling through phases -->
+                      <!-- File: assets/previews/moon.gif (400x300px, phase cycle animation) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F319;</span>
+                        <span>Preview: Moon cycling through all 8 phases</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category webgl">WebGL</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Moon Phases</h3>
+                      <p>Realistic moon with 8 phases and tidal lock camera.</p>
+                      <div class="card-tags">
+                        <span class="tag">phases</span>
+                        <span class="tag">textures</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- Sun -->
+                  <a href="examples/3d/sun-demo.html" class="card small">
+                    <div class="card-preview">
+                      <!-- TODO: Add GIF of solar eclipse with corona rays -->
+                      <!-- File: assets/previews/sun.gif (400x300px, eclipse animation with corona) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x2600;</span>
+                        <span>Preview: Solar eclipse with corona rays</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category webgl">WebGL</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Solar Eclipse</h3>
+                      <p>Corona effects and blend layers.</p>
+                      <div class="card-tags">
+                        <span class="tag">corona</span>
+                        <span class="tag">eclipse</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- Blood Moon -->
+                  <a href="examples/3d/blood-moon-demo.html" class="card small">
+                    <div class="card-preview">
+                      <!-- TODO: Add GIF of lunar eclipse with red shadow sweep -->
+                      <!-- File: assets/previews/blood-moon.gif (400x300px, eclipse shadow animation) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F311;</span>
+                        <span>Preview: Lunar eclipse with blood red Rayleigh scattering</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category webgl">WebGL</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Blood Moon Eclipse</h3>
+                      <p>Rayleigh scattering simulation.</p>
+                      <div class="card-tags">
+                        <span class="tag">physics</span>
+                        <span class="tag">eclipse</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </section>
+
+              <!-- 2D Examples -->
+              <section class="section">
+                <div class="section-header">
+                  <div class="section-icon canvas">&#x1F3A8;</div>
+                  <h2>2D Canvas Examples</h2>
+                  <span class="section-count">5 demos</span>
+                </div>
+
+                <div class="bento-grid">
+                  <!-- Hello World - Featured for beginners -->
+                  <a href="examples/2d/2d-hello-world.html" class="card medium">
+                    <div class="card-preview">
+                      <!-- TODO: Add simple GIF of mascot breathing/pulsing -->
+                      <!-- File: assets/previews/hello-world.gif (400x300px, simple breathing animation) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F44B;</span>
+                        <span>Preview: Simple mascot with gentle breathing animation</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category canvas">Canvas</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Hello World</h3>
+                      <p>The simplest example. Start here to learn the basics.</p>
+                      <div class="card-tags">
+                        <span class="tag">beginner</span>
+                        <span class="tag">minimal</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- Basic Usage -->
+                  <a href="examples/2d/basic-usage.html" class="card medium">
+                    <div class="card-preview">
+                      <!-- TODO: Add GIF showing emotion changes and shape morphing -->
+                      <!-- File: assets/previews/basic-usage.gif (400x300px, emotion + shape demo) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F3AE;</span>
+                        <span>Preview: Mascot changing emotions and morphing shapes</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category canvas">Canvas</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Basic Usage</h3>
+                      <p>Emotions, gestures, and shapes with keyboard shortcuts.</p>
+                      <div class="card-tags">
+                        <span class="tag">emotions</span>
+                        <span class="tag">gestures</span>
+                        <span class="tag">shapes</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- Breathing App -->
+                  <a href="examples/2d/breathing-app.html" class="card small">
+                    <div class="card-preview">
+                      <!-- TODO: Add GIF of breathing exercise visualization -->
+                      <!-- File: assets/previews/breathing.gif (400x300px, inhale/exhale animation) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F32C;</span>
+                        <span>Preview: Guided breathing with expand/contract animation</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category canvas">Canvas</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Breathing App</h3>
+                      <p>Guided breathing exercises.</p>
+                      <div class="card-tags">
+                        <span class="tag">wellness</span>
+                        <span class="tag">animation</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- Event Handling -->
+                  <a href="examples/2d/event-handling.html" class="card small">
+                    <div class="card-preview">
+                      <!-- TODO: Add screenshot of event log UI -->
+                      <!-- File: assets/previews/events.png (400x300px, event log interface) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F4E1;</span>
+                        <span>Preview: Real-time event log monitoring UI</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category canvas">Canvas</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Event Handling</h3>
+                      <p>Monitor events in real-time.</p>
+                      <div class="card-tags">
+                        <span class="tag">events</span>
+                        <span class="tag">debugging</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- Rhythm Sync -->
+                  <a href="examples/2d/rhythm-sync-demo.html" class="card small">
+                    <div class="card-preview">
+                      <!-- TODO: Add GIF of beat-synced animation -->
+                      <!-- File: assets/previews/rhythm.gif (400x300px, pulsing to beat) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F3B5;</span>
+                        <span>Preview: Mascot pulsing in sync with beat</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category canvas">Canvas</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Rhythm Sync</h3>
+                      <p>Beat-synchronized animations.</p>
+                      <div class="card-tags">
+                        <span class="tag">audio</span>
+                        <span class="tag">tempo</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </section>
+
+              <!-- LLM Integration -->
+              <section class="section">
+                <div class="section-header">
+                  <div class="section-icon ai">&#x1F916;</div>
+                  <h2>LLM Integration</h2>
+                  <span class="section-count">1 demo</span>
+                </div>
+
+                <div class="bento-grid">
+                  <a href="examples/llm-integration/claude-haiku.html" class="card medium">
+                    <div class="card-preview">
+                      <!-- TODO: Add GIF of chat interaction with emotion changes -->
+                      <!-- File: assets/previews/claude-chat.gif (400x300px, typing message, mascot reacts) -->
+                      <div class="preview-placeholder">
+                        <span class="icon">&#x1F4AC;</span>
+                        <span>Preview: Chat interaction with mascot responding emotionally to messages</span>
+                      </div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category ai">AI</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Claude Chat</h3>
+                      <p>Emotional AI assistant that responds with appropriate emotions, shapes, and gestures based on conversation sentiment.</p>
+                      <div class="card-tags">
+                        <span class="tag">Claude</span>
+                        <span class="tag">sentiment</span>
+                        <span class="tag">chat</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </section>
+
+              <!-- Footer -->
+              <footer class="footer">
+                <div class="footer-links">
+                  <a href="https://github.com/joshtol/emotive-engine">GitHub</a>
+                  <a href="https://github.com/joshtol/emotive-engine#readme">Documentation</a>
+                  <a href="https://www.npmjs.com/package/emotive-engine">npm</a>
+                </div>
+                <p class="footer-copy">Emotive Engine - Emotional AI Mascot Library</p>
+              </footer>
             </div>
 
-            <div class="section">
-              <h2>3D Examples</h2>
-              <div class="grid">
-                <a href="examples/3d/crystal-demo.html" class="card">
-                  <h3>Crystal Demo</h3>
-                  <p>Frosted crystal with inner soul glow</p>
-                </a>
-                <a href="examples/3d/3d-demo.html" class="card">
-                  <h3>3D Demo</h3>
-                  <p>All geometries, emotions, and effects</p>
-                </a>
-                <a href="examples/3d/moon-demo.html" class="card">
-                  <h3>Moon Demo</h3>
-                  <p>Realistic moon with 8 phases</p>
-                </a>
-                <a href="examples/3d/sun-demo.html" class="card">
-                  <h3>Sun Demo</h3>
-                  <p>Solar eclipse with corona effects</p>
-                </a>
-                <a href="examples/3d/blood-moon-demo.html" class="card">
-                  <h3>Blood Moon</h3>
-                  <p>Lunar eclipse with Rayleigh scattering</p>
-                </a>
-              </div>
-            </div>
-
-            <div class="section">
-              <h2>2D Examples</h2>
-              <div class="grid">
-                <a href="examples/2d/2d-hello-world.html" class="card">
-                  <h3>Hello World</h3>
-                  <p>The simplest example - start here</p>
-                </a>
-                <a href="examples/2d/basic-usage.html" class="card">
-                  <h3>Basic Usage</h3>
-                  <p>Emotions, gestures, and shapes</p>
-                </a>
-                <a href="examples/2d/breathing-app.html" class="card">
-                  <h3>Breathing App</h3>
-                  <p>Guided breathing with visual feedback</p>
-                </a>
-                <a href="examples/2d/event-handling.html" class="card">
-                  <h3>Event Handling</h3>
-                  <p>Monitor mascot events in real-time</p>
-                </a>
-                <a href="examples/2d/rhythm-sync-demo.html" class="card">
-                  <h3>Rhythm Sync</h3>
-                  <p>Beat-synchronized animations</p>
-                </a>
-              </div>
-            </div>
-
-            <div class="section">
-              <h2>LLM Integration</h2>
-              <div class="grid">
-                <a href="examples/llm-integration/claude-haiku.html" class="card">
-                  <h3>Claude Chat</h3>
-                  <p>Emotional AI assistant demo</p>
-                </a>
-              </div>
-            </div>
+            <script>
+              // Card mouse tracking for glow effect
+              document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                  const rect = card.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                  card.style.setProperty('--mouse-x', x + '%');
+                  card.style.setProperty('--mouse-y', y + '%');
+                });
+              });
+            </script>
           </body>
           </html>
           INDEXEOF
