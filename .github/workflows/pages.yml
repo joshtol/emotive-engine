@@ -55,8 +55,9 @@ jobs:
           cp -r public/hdri _pages/hdri 2>/dev/null || true
 
           # 2D examples reference site/public/emotive-engine.js - create that path
+          # Must use UMD build for regular <script> tag loading (not ES module)
           mkdir -p _pages/site/public
-          cp dist/mascot.js _pages/site/public/emotive-engine.js
+          cp dist/emotive-mascot.umd.js _pages/site/public/emotive-engine.js
 
           # Create index.html that lists all examples
           cat > _pages/index.html << 'INDEXEOF'
