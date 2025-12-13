@@ -46,6 +46,9 @@ function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materi
             innerGlowStrength: 0.117,
             fresnelIntensity: 1.206
         });
+    case 'star':
+        // Star crystal with citrine SSS preset
+        return createCrystalMaterial(glowColor, glowIntensity, 'star', { sssPreset: 'citrine' });
     default:
         console.warn('Unknown custom material type:', geometryType);
         return null;
@@ -77,7 +80,8 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
         const texturePaths = {
             crystal: '/assets/textures/Crystal/crystal.png',
             rough: '/assets/textures/Crystal/rough.png',
-            heart: '/assets/textures/Crystal/heart.png'
+            heart: '/assets/textures/Crystal/heart.png',
+            star: '/assets/textures/Crystal/star.png'
         };
         const texturePath = texturePaths[textureType] || texturePaths.crystal;
         crystalTexture = textureLoader.load(texturePath,

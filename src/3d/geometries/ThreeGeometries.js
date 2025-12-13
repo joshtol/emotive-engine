@@ -13,6 +13,7 @@ import { createMoon } from './Moon.js';
 import { createSunGeometry } from './Sun.js';
 import { createBlackHoleGroup } from './BlackHole.js';
 import { loadHeartGeometry } from './Heart.js';
+import { loadStarGeometry } from './Star.js';
 
 /**
  * Merge vertices at the same position to create smooth normals
@@ -396,5 +397,14 @@ export const THREE_GEOMETRIES = {
         material: 'custom',
         blink: { type: 'gentle-pulse', duration: 180, scaleAxis: [0.92, 0.92, 0.92], glowBoost: 0.6, curve: 'sine' },
         particleRadiusMultiplier: 1.3  // Spread particles out from the heart
+    },
+
+    // Star-cut crystal
+    star: {
+        geometry: null,
+        geometryLoader: loadStarGeometry,
+        material: 'custom',
+        blink: { type: 'facet-flash', duration: 150, scaleAxis: [0.93, 0.93, 0.93], glowBoost: 0.5, curve: 'sine' },
+        particleRadiusMultiplier: 1.4  // Spread particles out from the star
     }
 };

@@ -7,7 +7,7 @@
  * 3D SHAPES (mapped):
  *   - circle → crystal (quartz SSS)
  *   - triangle → rough (amethyst SSS)
- *   - star → star (quartz SSS)
+ *   - star → dodecahedron (citrine SSS)
  *   - heart → heart (ruby SSS)
  *
  * ASTRONOMICAL:
@@ -32,7 +32,7 @@ interface ShapeSelectorBarProps {
 const SHAPE_3D_MAP: { [key: string]: { geometry: string; sssPreset?: string; eclipse?: 'solar' | 'lunar' } } = {
   circle: { geometry: 'crystal', sssPreset: 'quartz' },
   triangle: { geometry: 'rough', sssPreset: 'amethyst' },
-  star: { geometry: 'star', sssPreset: 'quartz' },
+  star: { geometry: 'star', sssPreset: 'citrine' },
   heart: { geometry: 'heart', sssPreset: 'ruby' },
   sun: { geometry: 'sun' },
   moon: { geometry: 'moon' },
