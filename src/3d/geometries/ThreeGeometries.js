@@ -149,13 +149,15 @@ function loadCrystalGeometry(assetBasePath = '/assets') {
 
 /**
  * Create procedural crystal geometry (fallback)
+ * Scaled to match OBJ-loaded crystal (~1.6 diameter)
  * @returns {THREE.BufferGeometry}
  */
 function createProceduralCrystal() {
     const segments = 6;
-    const height = 3.0;      // Doubled from 1.5
-    const radius = 1.0;      // Increased from 0.4
-    const pointHeight = 0.8; // Doubled from 0.4
+    // Base dimensions (will be scaled down to match OBJ size)
+    const height = 3.0;
+    const radius = 1.0;
+    const pointHeight = 0.8;
 
     const geometry = new THREE.BufferGeometry();
     const vertices = [];
@@ -194,6 +196,12 @@ function createProceduralCrystal() {
 
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setIndex(indices);
+
+    // Scale to match OBJ-loaded crystal (~1.6 diameter)
+    // Current max dimension is height + 2*pointHeight = 3.0 + 1.6 = 4.6
+    const scale = 1.6 / 4.6;
+    geometry.scale(scale, scale, scale);
+
     geometry.computeVertexNormals();
     return geometry;
 }

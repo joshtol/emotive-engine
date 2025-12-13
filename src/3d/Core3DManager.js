@@ -1022,7 +1022,7 @@ export class Core3DManager {
         // Pass renderer for scene locking during async geometry swaps
         // Use _targetGeometryType during morph, fall back to geometryType for initial load
         const effectiveGeometryType = this._targetGeometryType || this.geometryType;
-        this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: effectiveGeometryType, renderer: this.renderer });
+        this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: effectiveGeometryType, renderer: this.renderer, assetBasePath: this.assetBasePath });
         this.crystalSoul.attachTo(this.coreMesh, this.renderer?.scene);
 
         // Geometry-specific shell and soul sizes (permanent values)
@@ -2018,7 +2018,7 @@ export class Core3DManager {
 
         // Preload the inclusion geometry BEFORE creating CrystalSoul
         // This ensures the soul mesh has its final geometry before being added to scene
-        await CrystalSoul._loadInclusionGeometry();
+        await CrystalSoul._loadInclusionGeometry(this.assetBasePath);
 
         // Check if destroyed during async load
         if (this._destroyed || !this.coreMesh) {
@@ -2030,7 +2030,8 @@ export class Core3DManager {
             radius: 0.35,
             detail: 1,
             geometryType: this.geometryType,
-            renderer: this.renderer
+            renderer: this.renderer,
+            assetBasePath: this.assetBasePath
         });
 
         // Attach to coreMesh - this adds soul to the scene

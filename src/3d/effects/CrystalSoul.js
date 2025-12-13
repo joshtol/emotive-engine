@@ -198,12 +198,14 @@ export class CrystalSoul {
      * @param {number} options.radius - Base radius for fallback geometry (default: 0.15)
      * @param {number} options.detail - Detail level for fallback geometry (default: 1)
      * @param {Object} options.renderer - ThreeRenderer instance for scene locking
+     * @param {string} options.assetBasePath - Base path for assets (default: '/assets')
      */
     constructor(options = {}) {
         this.radius = options.radius || 0.15;
         this.detail = options.detail || 1;
         this.geometryType = options.geometryType || 'crystal';
         this.renderer = options.renderer || null;  // ThreeRenderer for scene locking
+        this.assetBasePath = options.assetBasePath || '/assets';
 
         this.mesh = null;
         this.material = null;
@@ -217,10 +219,11 @@ export class CrystalSoul {
 
     /**
      * Load the inclusion geometry from OBJ file
+     * @param {string} assetBasePath - Base path for assets (default: '/assets')
      * @returns {Promise<THREE.BufferGeometry>}
      * @private
      */
-    static _loadInclusionGeometry() {
+    static _loadInclusionGeometry(assetBasePath = '/assets') {
         // Return cached geometry if available
         if (inclusionGeometryCache) {
             return Promise.resolve(inclusionGeometryCache.clone());
@@ -235,7 +238,7 @@ export class CrystalSoul {
         inclusionGeometryLoading = new Promise(resolve => {
             const loader = new OBJLoader();
             loader.load(
-                '/assets/models/Crystal/inclusion.obj',
+                `${assetBasePath}/models/Crystal/inclusion.obj`,
                 obj => {
                     let geometry = null;
                     obj.traverse(child => {
