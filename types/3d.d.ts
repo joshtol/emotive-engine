@@ -1,4 +1,4 @@
-// Type definitions for @joshtol/emotive-engine/3d v3.0.0
+// Type definitions for @joshtol/emotive-engine/3d v3.2.0
 // Project: https://github.com/joshtol/emotive-engine
 // Definitions by: Emotive Engine Team
 
@@ -307,6 +307,184 @@ export class EmotiveMascot3D {
 
     /** Set camera to a preset position */
     setCameraPreset(preset: CameraPreset, duration?: number): void;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // RHYTHM SYNC
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Enable rhythm sync for 3D animations */
+    enableRhythmSync(): void;
+
+    /** Disable rhythm sync for 3D animations */
+    disableRhythmSync(): void;
+
+    /** Whether rhythm sync is enabled */
+    readonly rhythmSyncEnabled: boolean;
+
+    /** Enable ambient groove (subtle idle animation synced to beat) */
+    enableGroove(): void;
+
+    /** Disable ambient groove */
+    disableGroove(): void;
+
+    /** Set beat sync strength for gesture animations */
+    setBeatSyncStrength(strength: number): void;
+
+    /** Set groove configuration for idle animations */
+    setGrooveConfig(config: GrooveConfig): void;
+
+    /** Check if rhythm is currently playing */
+    isRhythmPlaying(): boolean;
+
+    /** Get current BPM from rhythm system */
+    getRhythmBPM(): number;
+
+    /** Start rhythm playback for 3D animations */
+    startRhythm(bpm?: number, pattern?: RhythmPattern): void;
+
+    /** Stop rhythm playback */
+    stopRhythm(): void;
+
+    /** Set rhythm BPM */
+    setRhythmBPM(bpm: number): void;
+
+    /** Set rhythm pattern */
+    setRhythmPattern(pattern: RhythmPattern): void;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // AUDIO CONNECTION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Connect an audio element for audio-reactive animations */
+    connectAudio(audioElement: HTMLAudioElement): Promise<void>;
+
+    /** Disconnect audio and stop audio-reactive animations */
+    disconnectAudio(): void;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CORE GLOW
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Enable or disable the inner soul/core glow */
+    setCoreGlowEnabled(enabled: boolean): void;
+
+    /** Check if core glow is currently enabled */
+    isCoreGlowEnabled(): boolean;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MORPHING
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Check if a geometry morph is currently in progress */
+    isMorphing(): boolean;
+
+    /** Get current morph state for debugging or UI display */
+    getMorphState(): MorphState | null;
+
+    /** Grow in from scale 0 (pop-in animation) */
+    growIn(duration?: number): void;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SSS PRESETS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Apply an SSS (Subsurface Scattering) preset to the crystal material */
+    setSSSPreset(presetName: SSSPresetName): boolean;
+
+    /** Set the geometry type (alias for morphTo) */
+    setGeometry(geometryName: GeometryType, options?: MorphOptions): void;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ECLIPSE EFFECTS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Start a solar eclipse animation */
+    startSolarEclipse(options?: EclipseOptions): void;
+
+    /** Start a lunar eclipse animation (blood moon) */
+    startLunarEclipse(options?: EclipseOptions): void;
+
+    /** Stop any active eclipse animation */
+    stopEclipse(): void;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // POSITIONING
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Set position offset of the mascot */
+    setPosition(x: number, y: number, z?: number): void;
+
+    /** Get current position */
+    getPosition(): { x: number; y: number; z: number };
+
+    /** Animate to a target position smoothly */
+    animateToPosition(x: number, y: number, z?: number, duration?: number, easing?: string): void;
+
+    /** Attach mascot to a DOM element with automatic position tracking */
+    attachToElement(elementOrSelector: HTMLElement | string, options?: AttachOptions): EmotiveMascot3D;
+
+    /** Check if mascot is attached to an element */
+    isAttachedToElement(): boolean;
+
+    /** Detach mascot from tracked element */
+    detachFromElement(): EmotiveMascot3D;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ADDITIONAL TYPES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export type RhythmPattern = 'straight' | 'swing' | 'waltz' | 'dubstep' | 'breakbeat' | string;
+
+export type SSSPresetName = 'quartz' | 'emerald' | 'ruby' | 'sapphire' | 'amethyst' | 'topaz' | 'citrine' | 'diamond';
+
+export interface GrooveConfig {
+    /** Vertical bounce amplitude (default: 0.02) */
+    grooveBounceAmount?: number;
+    /** Horizontal sway amplitude (default: 0.015) */
+    grooveSwayAmount?: number;
+    /** Scale pulse amplitude (default: 0.03) */
+    groovePulseAmount?: number;
+    /** Rotation sway amplitude (default: 0.02) */
+    grooveRotationAmount?: number;
+}
+
+export interface MorphOptions {
+    /** Transition duration in ms (default: 800ms) */
+    duration?: number;
+    /** Material variant to use */
+    materialVariant?: string;
+    /** Callback when material is swapped */
+    onMaterialSwap?: (info: any) => void;
+}
+
+export interface MorphState {
+    progress: number;
+    fromGeometry: GeometryType | null;
+    toGeometry: GeometryType | null;
+    isMorphing: boolean;
+}
+
+export interface EclipseOptions {
+    /** Eclipse type */
+    type?: 'total' | 'annular' | 'partial' | 'penumbral';
+    /** Duration in ms (default: 10000) */
+    duration?: number;
+}
+
+export interface AttachOptions {
+    /** X offset from element center (default: 0) */
+    offsetX?: number;
+    /** Y offset from element center (default: 0) */
+    offsetY?: number;
+    /** Animate to position (default: true) */
+    animate?: boolean;
+    /** Animation duration in ms (default: 1000) */
+    duration?: number;
+    /** Scale factor for mascot (default: 1) */
+    scale?: number;
+    /** Whether to contain particles within element bounds (default: true) */
+    containParticles?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

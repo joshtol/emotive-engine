@@ -9,6 +9,96 @@ and this project uses
 
 ## [Unreleased]
 
+## [3.2.0] - 2025-12-12 - 3D Engine & Audio Sync
+
+### 🎮 3D Mascot Renderer
+
+This major release introduces a complete 3D rendering engine powered by
+Three.js, enabling photorealistic crystal, gemstone, and celestial body
+visualizations with full emotion integration.
+
+#### Core 3D System
+
+- **ADDED** EmotiveMascot3D class with 2D/3D mode toggle
+- **ADDED** Crystal blend-layers shader with soul-inside effect
+- **ADDED** CrystalSoul class for emotion-driven inner core animations
+- **ADDED** Physically-based subsurface scattering (BSSRDF) for gemstones
+- **ADDED** Internal caustics and SSS presets for realistic gem rendering
+- **ADDED** Component blend layers and internal lighting model
+
+#### Geometries & Shapes
+
+- **ADDED** Heart geometry with organic morphing
+- **ADDED** Rough crystal geometry for natural gem appearance
+- **ADDED** Mineral/stone geometries with SSS shader support
+- **ADDED** Smooth geometry morphing with proper animation timing
+
+#### Celestial Bodies
+
+- **ADDED** Realistic sun with animated fire-like rays and corona
+- **ADDED** Moon phases with shadow sliding transitions
+- **ADDED** Total solar eclipse with Einstein ring gravitational lensing
+- **ADDED** Lunar eclipse with smooth blood moon transitions
+- **ADDED** Alpha-preserving bloom pass for starry backgrounds
+
+#### Black Hole System
+
+- **ADDED** Emotion-driven black hole with accretion disk
+- **ADDED** Gravitational lensing Einstein ring effect
+- **ADDED** Hawking radiation particle system with quantum tunneling
+- **ADDED** Relativistic jets with emotion color tinting
+- **ADDED** Far-side disk gravitational lensing (NASA M87\* accuracy)
+- **ADDED** Blend layer controls for all black hole components
+
+### 🎵 3D Rhythm Sync System
+
+- **ADDED** Rhythm3DAdapter for audio-reactive 3D animations
+- **ADDED** connectAudio/disconnectAudio API on EmotiveMascot3D
+- **ADDED** Exponential smoothing for fluid beat-synced motion
+- **ADDED** Stale rhythm detection with time-based fallback
+- **ADDED** Shared rhythmEngine singleton via window global
+
+### 💃 3D Gesture System
+
+- **FIXED** Charleston gesture - proper screen-space motion with radians
+- **FIXED** Running Man gesture - smooth jogging with subtle tilt (~2-3°)
+- **ADDED** GlowLayer for gesture-driven screen-space halo effects
+- **ADDED** All 2D gestures now have matching 3D transformations
+
+### 🎨 Visual Effects
+
+- **ADDED** Emotion color bleed effect for particles
+- **ADDED** Emotion-driven soulAnimation for crystal inner core
+- **ADDED** GrowIn animation for smooth element appearance
+- **FIXED** Dark halos around 3D particles with premultiplied alpha
+- **FIXED** White bloom on colored gemstones eliminated
+- **FIXED** Core glow toggle now works for crystal geometries
+- **IMPROVED** Bloom resolution to 0.75x for better quality
+
+### 📱 Demo & UX Improvements
+
+- **ADDED** Audio mixer style fader controls with step buttons
+- **ADDED** Precision mode for blend layer sliders (long-press)
+- **ADDED** Camera controls hint tooltip with pinch zoom
+- **ADDED** Visual controls (particles, glow, auto-rotate) to demos
+- **FIXED** Touch input lag on mobile devices eliminated
+- **FIXED** Slider activation threshold to prevent accidental movement
+- **REFACTORED** Shared 3D demo styles to common CSS file
+
+### 📚 Documentation
+
+- **ADDED** Comprehensive JSDoc headers to all use case files
+- **ADDED** 3D TypeScript definitions
+- **REWRITTEN** README with comprehensive 3D documentation
+
+### 🐛 Bug Fixes
+
+- **FIXED** Education use case stability and scroll-driven positioning
+- **FIXED** Retail checkout mascot interactions and sun bloom
+- **FIXED** Particle orbit distance for consistent rendering across screen sizes
+- **FIXED** Gap between sun and corona with additive blending
+- **FIXED** Geometry morphing cleanup and sun bloom pixelation
+
 ### ⚡ Performance & Bundle Optimization - 2025-10-31
 
 #### Major Bundle Size Reduction & Build Streamlining

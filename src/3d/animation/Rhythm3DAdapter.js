@@ -39,6 +39,10 @@
 import rhythmEngine from '../../core/audio/rhythm.js';
 
 export class Rhythm3DAdapter {
+    /**
+     * Create a new Rhythm3DAdapter instance
+     * Bridges RhythmEngine with the 3D animation system for audio-reactive animations
+     */
     constructor() {
         // Adapter state
         this.enabled = false;
@@ -104,6 +108,11 @@ export class Rhythm3DAdapter {
     /**
      * Smooth interpolation helper (exponential ease)
      * @private
+     * @param {number} current - Current value
+     * @param {number} target - Target value
+     * @param {number} speed - Interpolation speed
+     * @param {number} deltaTime - Time delta in seconds
+     * @returns {number} Interpolated value
      */
     _lerp(current, target, speed, deltaTime) {
         const t = 1 - Math.exp(-speed * deltaTime);
@@ -113,6 +122,11 @@ export class Rhythm3DAdapter {
     /**
      * Smooth interpolation for arrays
      * @private
+     * @param {number[]} current - Current values
+     * @param {number[]} target - Target values
+     * @param {number} speed - Interpolation speed
+     * @param {number} deltaTime - Time delta in seconds
+     * @returns {number[]} Interpolated values
      */
     _lerpArray(current, target, speed, deltaTime) {
         const t = 1 - Math.exp(-speed * deltaTime);

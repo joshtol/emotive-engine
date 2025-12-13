@@ -1,4 +1,4 @@
-// Type definitions for @joshtol/emotive-engine v2.4.0
+// Type definitions for @joshtol/emotive-engine v3.2.0
 // Project: https://github.com/joshtol/emotive-engine
 // Definitions by: Emotive Engine Team
 

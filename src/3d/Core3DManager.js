@@ -6,6 +6,8 @@
  * - 3D geometry selection
  * - Animation playback
  * - Emotion-based lighting and materials
+ *
+ * @class Core3DManager
  */
 
 import * as THREE from 'three';
@@ -49,6 +51,26 @@ const CRYSTAL_CALIBRATION_ROTATION = {
 };
 
 export class Core3DManager {
+    /**
+     * Create a new Core3DManager instance
+     * @param {HTMLCanvasElement} canvas - WebGL canvas element
+     * @param {Object} [options={}] - Configuration options
+     * @param {string} [options.geometry='sphere'] - Geometry type (sphere, crystal, diamond, moon, sun, etc.)
+     * @param {string} [options.emotion='neutral'] - Initial emotion state
+     * @param {boolean} [options.enableParticles=true] - Enable particle effects
+     * @param {boolean} [options.enablePostProcessing=true] - Enable post-processing (bloom, etc.)
+     * @param {boolean} [options.enableShadows=false] - Enable shadow rendering
+     * @param {boolean} [options.enableControls=true] - Enable camera orbit controls
+     * @param {boolean} [options.autoRotate=true] - Enable auto-rotation
+     * @param {number} [options.autoRotateSpeed=0.5] - Auto-rotate speed
+     * @param {boolean} [options.enableBlinking=true] - Enable blinking animation
+     * @param {boolean} [options.enableBreathing=true] - Enable breathing animation
+     * @param {number} [options.cameraDistance=3] - Camera Z distance from origin
+     * @param {number} [options.fov=45] - Camera field of view in degrees
+     * @param {number} [options.minZoom] - Minimum zoom distance
+     * @param {number} [options.maxZoom] - Maximum zoom distance
+     * @param {string} [options.materialVariant] - Material variant override
+     */
     constructor(canvas, options = {}) {
         this._instanceId = Math.random().toString(36).substr(2, 6);
 

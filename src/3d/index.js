@@ -7,7 +7,7 @@
  *
  * @fileoverview Emotive Engine 3D - Experimental WebGL Rendering
  * @author Emotive Engine Team
- * @version 3.1.0-alpha
+ * @version 3.2.0
  * @module EmotiveEngine3D
  *
  * EXPERIMENTAL: 3D rendering variant with WebGL core + Canvas2D particles
@@ -49,8 +49,38 @@ import { applySSSPreset as applySSS } from './presets/SSSPresets.js';
  * Hybrid architecture:
  * - Layer 1 (back): WebGL canvas with 3D core
  * - Layer 2 (front): Canvas2D with particles
+ *
+ * @class EmotiveMascot3D
+ * @example
+ * const mascot = new EmotiveMascot3D({
+ *     canvasId: 'mascot-canvas',
+ *     coreGeometry: 'crystal'
+ * });
+ * await mascot.init(container);
+ * mascot.start();
+ * mascot.setEmotion('joy');
  */
 export class EmotiveMascot3D {
+    /**
+     * Create a new EmotiveMascot3D instance
+     * @param {Object} [config={}] - Configuration options
+     * @param {string} [config.canvasId='emotive-canvas'] - Base ID for canvas elements
+     * @param {string} [config.coreGeometry='sphere'] - 3D geometry type (sphere, crystal, diamond, moon, sun, etc.)
+     * @param {number} [config.targetFPS=60] - Target frames per second
+     * @param {boolean} [config.enableParticles=true] - Enable particle effects
+     * @param {string} [config.defaultEmotion='neutral'] - Initial emotion state
+     * @param {boolean} [config.enablePostProcessing=true] - Enable post-processing effects (bloom, etc.)
+     * @param {boolean} [config.enableShadows=false] - Enable shadow rendering
+     * @param {boolean} [config.enableControls=true] - Enable camera controls (mouse/touch)
+     * @param {boolean} [config.autoRotate=true] - Enable auto-rotation
+     * @param {boolean} [config.enableBlinking=true] - Enable blinking animation
+     * @param {boolean} [config.enableBreathing=true] - Enable breathing animation
+     * @param {number} [config.cameraDistance] - Camera Z distance from origin
+     * @param {number} [config.fov=45] - Camera field of view in degrees
+     * @param {number} [config.minZoom] - Minimum zoom distance
+     * @param {number} [config.maxZoom] - Maximum zoom distance
+     * @param {string} [config.materialVariant] - Material variant override
+     */
     constructor(config = {}) {
         this.config = {
             canvasId: config.canvasId || 'emotive-canvas',
@@ -117,7 +147,8 @@ export class EmotiveMascot3D {
     /**
      * Initialize the 3D engine
      * @param {HTMLElement} container - Container element or canvas
-     * @returns {EmotiveMascot3D}
+     * @returns {EmotiveMascot3D} This instance for chaining
+     * @throws {Error} If initialization fails
      */
     init(container) {
         try {
@@ -172,6 +203,8 @@ export class EmotiveMascot3D {
     /**
      * Setup dual canvas architecture
      * WebGL canvas (back) + Canvas2D (front) stacked
+     * @private
+     * @param {HTMLElement} containerOrCanvas - Container element or canvas element
      */
     setupCanvasLayers(containerOrCanvas) {
         // Create or use container
@@ -237,6 +270,8 @@ export class EmotiveMascot3D {
     /**
      * Start animation loop
      * Waits for geometry to be fully loaded before starting render
+     * @async
+     * @returns {Promise<void>}
      */
     async start() {
         if (this.isRunning) return;
@@ -265,6 +300,8 @@ export class EmotiveMascot3D {
 
     /**
      * Main animation loop
+     * @private
+     * @param {number} currentTime - Current timestamp in milliseconds
      */
     animate(currentTime) {
         // Guard against calls after destroy or stop
@@ -670,6 +707,8 @@ export class EmotiveMascot3D {
 
     /**
      * Check if auto-rotate is enabled
+     * @type {boolean}
+     * @readonly
      */
     get autoRotateEnabled() {
         // Check rotationDisabled flag (inverse logic) for accurate state
@@ -731,6 +770,8 @@ export class EmotiveMascot3D {
 
     /**
      * Check if particles are enabled
+     * @type {boolean}
+     * @readonly
      */
     get particlesEnabled() {
         // Check 3D particle visibility first (3D mode uses particleOrchestrator)
@@ -767,6 +808,8 @@ export class EmotiveMascot3D {
 
     /**
      * Check if blinking is enabled
+     * @type {boolean}
+     * @readonly
      */
     get blinkingEnabled() {
         return this.core3D && this.core3D.blinkAnimator ? this.core3D.blinkAnimator.enabled : false;
@@ -792,6 +835,8 @@ export class EmotiveMascot3D {
 
     /**
      * Check if breathing is enabled
+     * @type {boolean}
+     * @readonly
      */
     get breathingEnabled() {
         return this.core3D ? this.core3D.breathingEnabled !== false : true;
@@ -817,6 +862,8 @@ export class EmotiveMascot3D {
 
     /**
      * Check if wobble is enabled
+     * @type {boolean}
+     * @readonly
      */
     get wobbleEnabled() {
         return this.core3D ? this.core3D.wobbleEnabled !== false : true;
@@ -847,6 +894,8 @@ export class EmotiveMascot3D {
 
     /**
      * Check if rhythm sync is enabled
+     * @type {boolean}
+     * @readonly
      */
     get rhythmSyncEnabled() {
         return this.core3D ? this.core3D.rhythmEnabled : false;

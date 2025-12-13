@@ -14,7 +14,30 @@ import { TimelineRecorder } from './public/TimelineRecorder.js';
 import { ElementAttachmentManager } from './public/ElementAttachmentManager.js';
 import { VisualEffectsManager } from './public/VisualEffectsManager.js';
 
+/**
+ * Public API wrapper for Emotive Engine
+ *
+ * Provides a safe, controlled interface to the Emotive Engine functionality.
+ * This class wraps the internal EmotiveMascot engine and exposes only
+ * the methods intended for public use.
+ *
+ * @class EmotiveMascotPublic
+ * @example
+ * const mascot = new EmotiveMascotPublic({ enableGazeTracking: true });
+ * await mascot.init(canvas);
+ * mascot.start();
+ * mascot.setEmotion('joy');
+ */
 class EmotiveMascotPublic {
+    /**
+     * Create a new EmotiveMascotPublic instance
+     * @param {Object} [config={}] - Configuration options
+     * @param {boolean} [config.enableGazeTracking=true] - Enable gaze tracking behavior
+     * @param {string} [config.canvasId] - Canvas element ID or element reference
+     * @param {number} [config.targetFPS=60] - Target frames per second
+     * @param {boolean} [config.enableParticles=true] - Enable particle effects
+     * @param {string} [config.defaultEmotion='neutral'] - Initial emotion state
+     */
     constructor(config = {}) {
         // Store config for later initialization
         this._config = this._sanitizeConfig(config);
@@ -219,6 +242,7 @@ class EmotiveMascotPublic {
 
     /**
      * Start the animation engine
+     * @throws {Error} If the engine has not been initialized
      */
     start() {
         const engine = this._getReal();
@@ -228,6 +252,7 @@ class EmotiveMascotPublic {
 
     /**
      * Stop the animation engine
+     * @throws {Error} If the engine has not been initialized
      */
     stop() {
         const engine = this._getReal();
@@ -237,6 +262,7 @@ class EmotiveMascotPublic {
 
     /**
      * Pause the animation
+     * @throws {Error} If the engine has not been initialized
      */
     pause() {
         const engine = this._getReal();
@@ -246,6 +272,7 @@ class EmotiveMascotPublic {
 
     /**
      * Resume the animation
+     * @throws {Error} If the engine has not been initialized
      */
     resume() {
         const engine = this._getReal();
@@ -390,6 +417,7 @@ class EmotiveMascotPublic {
      * @param {string} emotion - Emotion name
      * @param {string|number|Object} [undertoneOrDurationOrOptions] - Undertone string, duration number, or options object
      * @param {number} [timestamp] - Optional timestamp for recording
+     * @throws {Error} If the engine has not been initialized
      */
     setEmotion(emotion, undertoneOrDurationOrOptions, timestamp) {
         const engine = this._getReal();
@@ -441,6 +469,7 @@ class EmotiveMascotPublic {
     /**
      * Enable or disable sound
      * @param {boolean} enabled - Whether sound should be enabled
+     * @throws {Error} If the engine has not been initialized
      */
     setSoundEnabled(enabled) {
         const engine = this._getReal();
@@ -456,6 +485,7 @@ class EmotiveMascotPublic {
      * Set shape
      * @param {string} shape - Shape name
      * @param {Object|number} [configOrTimestamp] - Config object or timestamp for recording
+     * @throws {Error} If the engine has not been initialized
      */
     setShape(shape, configOrTimestamp) {
         const engine = this._getReal();
@@ -490,6 +520,7 @@ class EmotiveMascotPublic {
 
     /**
      * Enable gaze tracking
+     * @throws {Error} If the engine has not been initialized
      */
     enableGazeTracking() {
         const engine = this._getReal();
@@ -501,6 +532,7 @@ class EmotiveMascotPublic {
 
     /**
      * Disable gaze tracking
+     * @throws {Error} If the engine has not been initialized
      */
     disableGazeTracking() {
         const engine = this._getReal();
@@ -514,6 +546,7 @@ class EmotiveMascotPublic {
      * Set gaze target position
      * @param {number} x - X coordinate
      * @param {number} y - Y coordinate
+     * @throws {Error} If the engine has not been initialized
      */
     setGazeTarget(x, y) {
         const engine = this._getReal();
@@ -538,7 +571,8 @@ class EmotiveMascotPublic {
      * Set mascot position offset from viewport center
      * @param {number} x - X offset from center
      * @param {number} y - Y offset from center
-     * @param {number} z - Z offset for scaling (optional)
+     * @param {number} [z=0] - Z offset for scaling
+     * @throws {Error} If the engine has not been initialized
      */
     setPosition(x, y, z = 0) {
         const engine = this._getReal();
@@ -566,9 +600,10 @@ class EmotiveMascotPublic {
      * Animate mascot to position offset from viewport center
      * @param {number} x - Target X offset from center
      * @param {number} y - Target Y offset from center
-     * @param {number} z - Target Z offset for scaling (optional)
-     * @param {number} duration - Animation duration in milliseconds
-     * @param {string} easing - Easing function name (optional)
+     * @param {number} [z=0] - Target Z offset for scaling
+     * @param {number} [duration=1000] - Animation duration in milliseconds
+     * @param {string} [easing='easeOutCubic'] - Easing function name
+     * @throws {Error} If the engine has not been initialized
      */
     animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
         const engine = this._getReal();
@@ -640,7 +675,8 @@ class EmotiveMascotPublic {
 
     /**
      * Get gaze tracker state
-     * @returns {Object} Gaze state
+     * @returns {Object|null} Gaze state or null if gaze tracker not available
+     * @throws {Error} If the engine has not been initialized
      */
     getGazeState() {
         const engine = this._getReal();
@@ -1253,7 +1289,7 @@ class EmotiveMascotPublic {
      * @returns {string} Version string
      */
     getVersion() {
-        return '2.5.1';
+        return '3.2.0';
     }
 
     /**
