@@ -98,7 +98,8 @@ export class Core3DManager {
             cameraDistance: options.cameraDistance, // Camera Z distance (undefined = default 3)
             fov: options.fov, // Field of view (undefined = default 45)
             minZoom: options.minZoom, // Minimum zoom distance
-            maxZoom: options.maxZoom // Maximum zoom distance
+            maxZoom: options.maxZoom, // Maximum zoom distance
+            assetBasePath: this.assetBasePath // Base path for HDRI and other assets
         });
         const geometryConfig = THREE_GEOMETRIES[this.geometryType];
 

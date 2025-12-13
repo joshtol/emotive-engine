@@ -276,7 +276,10 @@ export class ThreeRenderer {
             // Try EXR first
             try {
                 const exrLoader = new EXRLoader();
-                const texture = await exrLoader.loadAsync('/hdri/studio_01.exr');
+                const assetBasePath = this.options.assetBasePath || '/assets';
+                // HDRI is in public root, not in assets folder
+                const hdriBasePath = assetBasePath.replace('/assets', '');
+                const texture = await exrLoader.loadAsync(`${hdriBasePath}/hdri/studio_01.exr`);
 
                 // Check if destroyed during load (React Strict Mode)
                 if (this._destroyed) {
