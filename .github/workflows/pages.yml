@@ -143,7 +143,7 @@ jobs:
           </head>
           <body>
             <div class="hero">
-              <img src="assets/emotive-engine-icon.svg" alt="Emotive Engine">
+              <img src="assets/emotive-engine-icon-W.svg" alt="Emotive Engine">
               <h1>Emotive Engine</h1>
               <p>Interactive examples and demos</p>
             </div>
