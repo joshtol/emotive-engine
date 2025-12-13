@@ -248,10 +248,10 @@ export default function GameMain({ currentUndertone, onGesture, onMascotReady, e
         defaultEmotion: 'neutral',
         maxParticles: isLowEnd ? 100 : 200,
         targetFPS: isLowEnd ? 30 : 60,
-        cameraDistance: 2.5,
+        cameraDistance: 1.7,  // Closer camera for larger appearance
         fov: 35,
-        minZoom: 1.5,
-        maxZoom: 4.0,
+        minZoom: 1.0,
+        maxZoom: 3.0,
         enableBlinking: true,
         enableBreathing: true,
         enableShadows: false,

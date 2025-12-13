@@ -81,6 +81,52 @@ export function normalizeColorLuminance(hexColor, targetLuminance = 0.5) {
 }
 
 /**
+ * Normalize RGB color (0-1 range) to have equal luminance across all colors
+ * Same as normalizeColorLuminance but takes RGB array instead of hex string
+ *
+ * @param {Array} rgb - RGB array [r, g, b] with values in 0-1 range
+ * @param {number} targetLuminance - Target luminance value (default 0.5)
+ * @returns {Object} RGB object with normalized values {r, g, b} in sRGB space
+ */
+export function normalizeRGBLuminance(rgb, targetLuminance = 0.5) {
+    const [r, g, b] = rgb;
+
+    // Convert sRGB to linear RGB (inverse gamma)
+    const toLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const rLin = toLinear(r);
+    const gLin = toLinear(g);
+    const bLin = toLinear(b);
+
+    // Calculate current luminance in linear space
+    const currentLuminance = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+
+    // Calculate scale factor to achieve target luminance
+    const scaleFactor = targetLuminance / Math.max(currentLuminance, 0.001);
+
+    // Scale in linear space
+    let rLinScaled = rLin * scaleFactor;
+    let gLinScaled = gLin * scaleFactor;
+    let bLinScaled = bLin * scaleFactor;
+
+    // Clamp in linear space (before gamma) to prevent overflow
+    const maxLin = Math.max(rLinScaled, gLinScaled, bLinScaled);
+    if (maxLin > 1.0) {
+        rLinScaled /= maxLin;
+        gLinScaled /= maxLin;
+        bLinScaled /= maxLin;
+    }
+
+    // Convert back to sRGB (apply gamma)
+    const toSRGB = c => c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1/2.4) - 0.055;
+
+    return {
+        r: Math.min(1.0, Math.max(0, toSRGB(rLinScaled))),
+        g: Math.min(1.0, Math.max(0, toSRGB(gLinScaled))),
+        b: Math.min(1.0, Math.max(0, toSRGB(bLinScaled)))
+    };
+}
+
+/**
  * Calculate relative luminance using W3C/WCAG sRGB formula
  * Uses ITU-R BT.709 coefficients for color-to-luminance conversion
  *

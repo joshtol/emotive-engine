@@ -441,72 +441,59 @@ export default {
 
     /**
      * 3D translation for WebGL rendering
-     * Maps morph patterns to 3D space - maintains 2D shape in XY plane
+     * Creates morphing visual effect through scale, rotation, and glow modulation
+     * Works independently of particle system - pure time-based transforms
      */
     '3d': {
         /**
          * Evaluate 3D transform for current progress
          * @param {number} progress - Animation progress (0-1)
-         * @param {Object} motion - Gesture configuration with particle data
-         * @returns {Object} Transform with position, rotation, scale
+         * @param {Object} motion - Gesture configuration
+         * @returns {Object} Transform with position, rotation, scale, glowIntensity, glowBoost
          */
         evaluate(progress, motion) {
-            const {particle} = motion;
-            if (!particle || !particle.gestureData?.morph) {
-                return {
-                    position: [0, 0, 0],
-                    rotation: [0, 0, 0],
-                    scale: 1.0
-                };
-            }
+            const strength = motion?.strength || 1.0;
 
-            const data = particle.gestureData.morph;
-            const config = motion.config || {};
+            // Morph has two phases: formation (0-0.5) and dissolution (0.5-1)
+            // Use smooth envelope that peaks at 0.5
+            const envelope = Math.sin(progress * Math.PI); // 0 → 1 → 0
 
-            // Calculate eased progress with hold time
-            let morphProgress = progress;
-            if (config.holdTime > 0) {
-                const holdStart = 0.5 - config.holdTime / 2;
-                const holdEnd = 0.5 + config.holdTime / 2;
-
-                if (progress < holdStart) {
-                    morphProgress = progress / holdStart * 0.5;
-                } else if (progress < holdEnd) {
-                    morphProgress = 0.5;
-                } else {
-                    morphProgress = 0.5 + (progress - holdEnd) / (1 - holdEnd) * 0.5;
-                }
-            }
-
-            // Calculate current position based on morph phase
-            let x, y;
-            if (morphProgress <= 0.5) {
-                // Moving to shape
-                const moveProgress = morphProgress * 2;
-                const eased = moveProgress * (2 - moveProgress); // easeOutQuad
-                x = data.startX + (data.targetX - data.startX) * eased;
-                y = data.startY + (data.targetY - data.startY) * eased;
+            // Dramatic scale transformation - expand during formation, contract during return
+            // Creates visual "morphing" effect without needing particle positions
+            let scaleEffect;
+            if (progress <= 0.5) {
+                // Formation phase: scale up smoothly
+                const formProgress = progress * 2;
+                const eased = formProgress * (2 - formProgress); // easeOutQuad
+                scaleEffect = 1.0 + eased * 0.25 * strength;
             } else {
-                // Returning from shape
-                const returnProgress = (morphProgress - 0.5) * 2;
-                const eased = returnProgress * returnProgress; // easeInQuad
-                x = data.targetX + (data.startX - data.targetX) * eased;
-                y = data.targetY + (data.startY - data.targetY) * eased;
+                // Dissolution phase: scale back down
+                const dissolveProgress = (progress - 0.5) * 2;
+                const eased = dissolveProgress * dissolveProgress; // easeInQuad
+                scaleEffect = 1.25 * strength + (1.0 - 1.25 * strength) * eased;
+                // Normalize to prevent overshooting
+                scaleEffect = Math.max(1.0, scaleEffect);
             }
 
-            // Rotation follows the morph pattern direction - return to neutral at end
-            const rotationDirection = data.rotationDirection || 1;
-            const rotationCurve = Math.sin(morphProgress * Math.PI); // 0 → 1 → 0
-            const yRotation = rotationCurve * Math.PI * rotationDirection * 0.5;
+            // Rotation creates sense of transformation/dimensionality
+            // Y-axis rotation for 3D feel, peaks at formation
+            const yRotation = envelope * Math.PI * 0.3 * strength;
 
-            // Slight scale pulse at formation peak
-            const scaleCurve = Math.sin(morphProgress * Math.PI);
-            const scale = 1.0 + scaleCurve * 0.1;
+            // Slight Z rotation for visual interest
+            const zRotation = Math.sin(progress * Math.PI * 2) * 0.1 * strength;
+
+            // Glow intensifies during morph peak
+            const glowIntensity = 1.0 + envelope * 0.4 * strength;
+
+            // Strong glow boost at formation peak for dramatic effect
+            const glowBoost = envelope * 1.5 * strength;
 
             return {
-                position: [x, y, 0],
-                rotation: [0, yRotation, 0],
-                scale
+                position: [0, 0, 0],
+                rotation: [0, yRotation, zRotation],
+                scale: scaleEffect,
+                glowIntensity,
+                glowBoost
             };
         }
     }

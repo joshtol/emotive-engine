@@ -28,7 +28,7 @@ import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
 import { hexToRGB, rgbToHsl, hslToRgb, applyUndertoneSaturation } from './utils/ColorUtilities.js';
-import { getGlowIntensityForColor, normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
+import { getGlowIntensityForColor, normalizeColorLuminance, normalizeRGBLuminance } from '../utils/glowIntensityFilter.js';
 import ParticleSystem from '../core/ParticleSystem.js';
 import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { CrystalSoul } from './effects/CrystalSoul.js';
@@ -1865,12 +1865,9 @@ export class Core3DManager {
 
                 // Normalize emotion color for consistent perceived brightness across all emotions
                 // This ensures yellow (joy) doesn't wash out the soul while blue (sadness) stays visible
-                // Uses the same normalizeColorLuminance() from glass material system
-                let normalizedColor = this.glowColor;
-                if (this.glowColorHex) {
-                    const normalized = normalizeColorLuminance(this.glowColorHex, 0.30);
-                    normalizedColor = [normalized.r, normalized.g, normalized.b];
-                }
+                // IMPORTANT: Use glowColor (RGB), not glowColorHex - glowColor has undertone saturation applied
+                const normalized = normalizeRGBLuminance(this.glowColor, 0.30);
+                const normalizedColor = [normalized.r, normalized.g, normalized.b];
 
                 // Update emotion color on outer shell (luminance-normalized)
                 this.customMaterial.uniforms.emotionColor.value.setRGB(
@@ -1884,12 +1881,10 @@ export class Core3DManager {
             }
             // Update inner core color and animation (also use normalized color)
             // Only update if core glow is enabled
+            // IMPORTANT: Use glowColor (RGB), not glowColorHex - glowColor has undertone saturation applied
             if (this.coreGlowEnabled) {
-                let normalizedCoreColor = this.glowColor;
-                if (this.glowColorHex) {
-                    const normalized = normalizeColorLuminance(this.glowColorHex, 0.30);
-                    normalizedCoreColor = [normalized.r, normalized.g, normalized.b];
-                }
+                const normalizedCore = normalizeRGBLuminance(this.glowColor, 0.30);
+                const normalizedCoreColor = [normalizedCore.r, normalizedCore.g, normalizedCore.b];
                 this.updateCrystalInnerCore(normalizedCoreColor, deltaTime);
             }
         }

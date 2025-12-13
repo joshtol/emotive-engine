@@ -105,13 +105,13 @@ export function applyUndertoneSaturation(rgb, undertone) {
         return rgb;
     }
 
-    // Saturation and lightness modifiers
+    // Saturation and lightness modifiers - AMPLIFIED for 3D visibility
     const colorModifiers = {
-        'intense': { saturation: 1.5, lightness: 1.1 },     // Vivid + brighter
-        'confident': { saturation: 1.3, lightness: 1.05 },  // Bold + slightly brighter
-        'nervous': { saturation: 1.2, lightness: 1.0 },     // Heightened (was 1.15)
-        'tired': { saturation: 0.8, lightness: 0.9 },       // Washed + dimmer
-        'subdued': { saturation: 0.5, lightness: 0.85 }     // Ghostly + much dimmer
+        'intense': { saturation: 2.5, lightness: 1.3 },     // Extremely vivid + much brighter
+        'confident': { saturation: 1.8, lightness: 1.15 },  // Bold saturated + brighter
+        'nervous': { saturation: 1.6, lightness: 1.1 },     // Heightened + slightly brighter
+        'tired': { saturation: 0.4, lightness: 0.65 },      // Very washed out + much dimmer
+        'subdued': { saturation: 0.25, lightness: 0.55 }    // Ghostly desaturated + very dim
     };
 
     const mods = colorModifiers[undertone];

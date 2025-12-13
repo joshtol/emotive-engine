@@ -311,6 +311,10 @@ export default function SystemControlsBar({ mascot, currentShape, onAudioLoad, o
       setIsPlaying(true)
       if (mascot) {
         connectAudioToMascot(audio)
+        // Trigger flow combo when music starts playing
+        if (mascot.chain) {
+          mascot.chain('flow')
+        }
       }
       if (onPlayStateChange) {
         onPlayStateChange(true)

@@ -326,33 +326,44 @@ export default {
 
     /**
      * 3D core transformation for wave gesture
-     * Gentle swaying motion with minimal position changes
+     * Flowing infinity pattern with graceful sway and glow modulation
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
-     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number, glowBoost: number }
      */
     '3d': {
         evaluate(progress, motion) {
-            const config = { ...this.config, ...motion };
+            const strength = motion?.strength || 1.0;
+            const frequency = motion?.frequency || 1;
+
+            // Smooth eased progress
             const easeProgress = -(Math.cos(Math.PI * progress) - 1) / 2;
 
-            // Gentle swaying in X axis (infinity pattern projection)
-            const t = easeProgress * Math.PI * 2 * config.frequency;
-            const swayX = Math.sin(t) * 0.15 * (motion.strength || 1.0);
-            const swayY = Math.sin(t * 2) * 0.08 * (motion.strength || 1.0);
+            // Infinity pattern (lemniscate) - creates flowing figure-8 motion
+            const t = easeProgress * Math.PI * 2 * frequency;
+            const swayX = Math.sin(t) * 0.12 * strength;
+            const swayY = Math.sin(t * 2) * 0.06 * strength; // Half frequency for Y creates figure-8
 
-            // Subtle scale pulsing with wave
-            const scale = 1.0 + Math.abs(Math.sin(easeProgress * Math.PI)) * 0.05;
+            // Slight forward/back motion for depth
+            const swayZ = Math.sin(t) * 0.03 * strength;
 
-            // Gentle glow variation
-            const glowIntensity = 1.0 + Math.sin(easeProgress * Math.PI) * 0.2;
+            // Gentle tilt rotation following the wave
+            const tiltX = Math.sin(t * 2) * 0.08 * strength;
+            const tiltZ = Math.sin(t) * 0.05 * strength;
 
-            // Glow boost for screen-space halo - gentle pulse with wave
-            const glowBoost = Math.max(0, Math.sin(easeProgress * Math.PI) * 0.5);
+            // Scale breathes with the wave - larger at peaks
+            const scale = 1.0 + Math.abs(Math.sin(easeProgress * Math.PI)) * 0.08 * strength;
+
+            // Glow follows wave peaks - brighter at extremes
+            const waveIntensity = Math.abs(Math.sin(t));
+            const glowIntensity = 1.0 + waveIntensity * 0.3 * strength;
+
+            // Glow boost pulses gently with wave motion
+            const glowBoost = waveIntensity * 0.6 * strength;
 
             return {
-                position: [swayX, swayY, 0],
-                rotation: [0, 0, 0],
+                position: [swayX, swayY, swayZ],
+                rotation: [tiltX, 0, tiltZ],
                 scale,
                 glowIntensity,
                 glowBoost
