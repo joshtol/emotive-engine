@@ -170,7 +170,8 @@ export class EmotiveMascot3D {
                 fov: this.config.fov,
                 minZoom: this.config.minZoom,
                 maxZoom: this.config.maxZoom,
-                materialVariant: this.config.materialVariant
+                materialVariant: this.config.materialVariant,
+                assetBasePath: this.config.assetBasePath
             });
 
             // Cache 2D canvas context to prevent repeated getContext() calls

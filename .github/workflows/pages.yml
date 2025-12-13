@@ -51,6 +51,9 @@ jobs:
           # Copy assets needed by examples
           cp -r assets _pages/assets 2>/dev/null || true
 
+          # Copy HDRI files for environment mapping
+          cp -r public/hdri _pages/hdri 2>/dev/null || true
+
           # 2D examples reference site/public/emotive-engine.js - create that path
           mkdir -p _pages/site/public
           cp dist/mascot.js _pages/site/public/emotive-engine.js
