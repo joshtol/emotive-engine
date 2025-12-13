@@ -59,7 +59,7 @@ export default {
 
     /**
      * 3D core transformation for running man gesture
-     * Dance move with Y rotation and bounce
+     * Smooth jogging motion with rhythmic bounce
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
      * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
@@ -67,33 +67,29 @@ export default {
     '3d': {
         evaluate(progress, motion) {
             const config = { ...this.config, ...motion };
-            const speed = config.speed || 1.2;
             const strength = config.strength || 0.8;
 
-            // Running man rhythm - 4 steps per cycle
-            // const stepProgress = (progress * speed * 4) % 1;
+            // Match 2D: Running man - quick slide and step
+            // 2D uses: slide = sin(progress * PI * 4) * 20, step = -|sin(progress * PI * 8)| * 10
+            // Scale down for 3D normalized coordinates
 
-            // Y-axis rotation (turning left/right)
-            const rotationY = Math.sin(progress * Math.PI * 4 * speed) * 15 * strength;
+            const slide = Math.sin(progress * Math.PI * 4) * 0.10 * strength;
+            const step = Math.abs(Math.sin(progress * Math.PI * 8)) * 0.05 * strength;
 
-            // Vertical bounce with each step
-            const bounceHeight = (config.stepHeight || 15) * 0.01;
-            const posY = Math.abs(Math.sin(progress * Math.PI * 8 * speed)) * bounceHeight * strength;
+            // Very subtle Z rotation - just a hint of tilt (~2 degrees = 0.035 radians)
+            const rotationZ = Math.sin(progress * Math.PI * 4) * 0.035 * strength;
 
-            // Horizontal slide
-            const slideDistance = (config.slideDistance || 30) * 0.01;
-            const posX = Math.sin(progress * Math.PI * 2 * speed) * slideDistance * strength;
+            // Scale squash on step (2D uses scaleY)
+            const scale = 1 - Math.abs(Math.sin(progress * Math.PI * 8)) * 0.035 * strength;
 
-            // Slight glow pulse with rhythm
-            const glowIntensity = 1.0 + Math.sin(progress * Math.PI * 8 * speed) * 0.2;
-
-            // Glow boost for screen-space halo - rhythmic pulse
-            const glowBoost = Math.max(0, Math.sin(progress * Math.PI * 8 * speed) * 0.4);
+            // Glow on step
+            const glowIntensity = 1.0 + Math.abs(Math.sin(progress * Math.PI * 8)) * 0.25;
+            const glowBoost = Math.max(0, Math.abs(Math.sin(progress * Math.PI * 8))) * 0.35;
 
             return {
-                position: [posX, posY, 0],
-                rotation: [0, rotationY, 0],
-                scale: 1.0,
+                position: [slide, step, 0],  // Screen-space: X = slide, Y = step up
+                rotation: [0, 0, rotationZ],  // Z rotation = screen tilt
+                scale,
                 glowIntensity,
                 glowBoost
             };

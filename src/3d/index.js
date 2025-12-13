@@ -822,6 +822,296 @@ export class EmotiveMascot3D {
         return this.core3D ? this.core3D.wobbleEnabled !== false : true;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RHYTHM SYNC API
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Enable rhythm sync for 3D animations
+     * When enabled, gestures and idle animations will sync to the beat
+     */
+    enableRhythmSync() {
+        if (this.core3D) {
+            this.core3D.setRhythmEnabled(true);
+        }
+    }
+
+    /**
+     * Disable rhythm sync for 3D animations
+     */
+    disableRhythmSync() {
+        if (this.core3D) {
+            this.core3D.setRhythmEnabled(false);
+        }
+    }
+
+    /**
+     * Check if rhythm sync is enabled
+     */
+    get rhythmSyncEnabled() {
+        return this.core3D ? this.core3D.rhythmEnabled : false;
+    }
+
+    /**
+     * Enable ambient groove (subtle idle animation synced to beat)
+     */
+    enableGroove() {
+        if (this.core3D) {
+            this.core3D.setGrooveEnabled(true);
+        }
+    }
+
+    /**
+     * Disable ambient groove
+     */
+    disableGroove() {
+        if (this.core3D) {
+            this.core3D.setGrooveEnabled(false);
+        }
+    }
+
+    /**
+     * Set beat sync strength for gesture animations
+     * @param {number} strength - Sync strength (0-1), higher = more pronounced beat sync
+     */
+    setBeatSyncStrength(strength) {
+        if (this.core3D) {
+            this.core3D.setBeatSyncStrength(strength);
+        }
+    }
+
+    /**
+     * Set groove configuration for idle animations
+     * @param {Object} config - Groove settings
+     * @param {number} config.grooveBounceAmount - Vertical bounce amplitude (default: 0.02)
+     * @param {number} config.grooveSwayAmount - Horizontal sway amplitude (default: 0.015)
+     * @param {number} config.groovePulseAmount - Scale pulse amplitude (default: 0.03)
+     * @param {number} config.grooveRotationAmount - Rotation sway amplitude (default: 0.02)
+     */
+    setGrooveConfig(config) {
+        if (this.core3D) {
+            this.core3D.setGrooveConfig(config);
+        }
+    }
+
+    /**
+     * Check if rhythm is currently playing
+     * @returns {boolean}
+     */
+    isRhythmPlaying() {
+        return this.core3D?.isRhythmPlaying() || false;
+    }
+
+    /**
+     * Get current BPM from rhythm system
+     * @returns {number}
+     */
+    getRhythmBPM() {
+        return this.core3D?.getRhythmBPM() || 120;
+    }
+
+    /**
+     * Start rhythm playback for 3D animations
+     * This MUST be called for rhythm sync to work - it starts the internal rhythm clock.
+     * @param {number} bpm - Beats per minute (default: 120)
+     * @param {string} pattern - Rhythm pattern: 'straight', 'swing', 'waltz', 'dubstep', etc. (default: 'straight')
+     */
+    startRhythm(bpm = 120, pattern = 'straight') {
+        if (this.core3D) {
+            this.core3D.startRhythm(bpm, pattern);
+        }
+    }
+
+    /**
+     * Stop rhythm playback
+     */
+    stopRhythm() {
+        if (this.core3D) {
+            this.core3D.stopRhythm();
+        }
+    }
+
+    /**
+     * Set rhythm BPM
+     * @param {number} bpm - Beats per minute (20-360)
+     */
+    setRhythmBPM(bpm) {
+        if (this.core3D) {
+            this.core3D.setRhythmBPM(bpm);
+        }
+    }
+
+    /**
+     * Set rhythm pattern
+     * @param {string} pattern - Pattern name: 'straight', 'swing', 'waltz', 'dubstep', 'breakbeat', etc.
+     */
+    setRhythmPattern(pattern) {
+        if (this.core3D) {
+            this.core3D.setRhythmPattern(pattern);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AUDIO CONNECTION API
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Connect an audio element for audio-reactive animations
+     * This starts rhythm sync automatically when audio plays
+     * @param {HTMLAudioElement} audioElement - Audio element to connect
+     * @returns {Promise<void>}
+     */
+    async connectAudio(audioElement) {
+        if (!audioElement) return;
+
+        this._audioElement = audioElement;
+
+        // Create audio context and analyzer if not exists
+        if (!this._audioContext) {
+            this._audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        // Resume context if suspended (browser autoplay policy)
+        if (this._audioContext.state === 'suspended') {
+            await this._audioContext.resume();
+        }
+
+        // Create analyzer node
+        if (!this._analyzerNode) {
+            this._analyzerNode = this._audioContext.createAnalyser();
+            this._analyzerNode.fftSize = 256;
+            this._analyzerNode.smoothingTimeConstant = 0.8;
+        }
+
+        // Connect audio element to analyzer
+        if (!this._audioSourceNode) {
+            this._audioSourceNode = this._audioContext.createMediaElementSource(audioElement);
+            this._audioSourceNode.connect(this._analyzerNode);
+            this._analyzerNode.connect(this._audioContext.destination);
+        }
+
+        // Start rhythm when audio plays
+        const onPlay = () => {
+            // Detect BPM or use default
+            const bpm = this._detectedBPM || 120;
+            this.startRhythm(bpm, 'straight');
+        };
+
+        const onPause = () => {
+            this.stopRhythm();
+        };
+
+        const onEnded = () => {
+            this.stopRhythm();
+        };
+
+        // Store handlers for cleanup
+        this._audioHandlers = { onPlay, onPause, onEnded };
+
+        audioElement.addEventListener('play', onPlay);
+        audioElement.addEventListener('pause', onPause);
+        audioElement.addEventListener('ended', onEnded);
+
+        // If already playing, start rhythm immediately
+        if (!audioElement.paused) {
+            onPlay();
+        }
+
+        // Start simple BPM detection loop
+        this._startBPMDetection();
+    }
+
+    /**
+     * Disconnect audio and stop audio-reactive animations
+     */
+    disconnectAudio() {
+        // Stop rhythm
+        this.stopRhythm();
+
+        // Remove event listeners
+        if (this._audioElement && this._audioHandlers) {
+            this._audioElement.removeEventListener('play', this._audioHandlers.onPlay);
+            this._audioElement.removeEventListener('pause', this._audioHandlers.onPause);
+            this._audioElement.removeEventListener('ended', this._audioHandlers.onEnded);
+        }
+
+        // Stop BPM detection
+        this._stopBPMDetection();
+
+        // Clean up audio nodes (but keep context for reuse)
+        this._audioElement = null;
+        this._audioHandlers = null;
+    }
+
+    /**
+     * Start simple beat detection for BPM estimation
+     * @private
+     */
+    _startBPMDetection() {
+        if (this._bpmDetectionInterval) return;
+
+        const bufferLength = this._analyzerNode?.frequencyBinCount || 128;
+        const dataArray = new Uint8Array(bufferLength);
+        let lastBeatTime = 0;
+        const beatTimes = [];
+
+        this._bpmDetectionInterval = setInterval(() => {
+            if (!this._analyzerNode || !this._audioElement || this._audioElement.paused) return;
+
+            this._analyzerNode.getByteFrequencyData(dataArray);
+
+            // Simple beat detection: check low frequency energy
+            let lowFreqEnergy = 0;
+            for (let i = 0; i < 8; i++) {
+                lowFreqEnergy += dataArray[i];
+            }
+            lowFreqEnergy /= 8;
+
+            const now = performance.now();
+            const threshold = 180; // Energy threshold for beat
+
+            if (lowFreqEnergy > threshold && now - lastBeatTime > 200) {
+                // Detected a beat
+                if (lastBeatTime > 0) {
+                    const interval = now - lastBeatTime;
+                    beatTimes.push(interval);
+
+                    // Keep last 8 beat intervals
+                    if (beatTimes.length > 8) {
+                        beatTimes.shift();
+                    }
+
+                    // Calculate average BPM from intervals
+                    if (beatTimes.length >= 4) {
+                        const avgInterval = beatTimes.reduce((a, b) => a + b, 0) / beatTimes.length;
+                        const bpm = Math.round(60000 / avgInterval);
+
+                        // Only accept reasonable BPM values
+                        if (bpm >= 60 && bpm <= 180) {
+                            this._detectedBPM = bpm;
+                            // Update rhythm engine BPM if playing
+                            if (this.isRhythmPlaying()) {
+                                this.setRhythmBPM(bpm);
+                            }
+                        }
+                    }
+                }
+                lastBeatTime = now;
+            }
+        }, 50); // Check every 50ms
+    }
+
+    /**
+     * Stop BPM detection
+     * @private
+     */
+    _stopBPMDetection() {
+        if (this._bpmDetectionInterval) {
+            clearInterval(this._bpmDetectionInterval);
+            this._bpmDetectionInterval = null;
+        }
+    }
+
     /**
      * Helper: Convert RGB array to hex color
      */
@@ -1171,6 +1461,15 @@ export class EmotiveMascot3D {
         this._destroyed = true;
         this.stop();
 
+        // Clean up audio connection
+        this.disconnectAudio();
+        if (this._audioContext) {
+            this._audioContext.close();
+            this._audioContext = null;
+        }
+        this._analyzerNode = null;
+        this._audioSourceNode = null;
+
         // Clean up element attachment tracking
         if (this._elementTrackingHandlers) {
             window.removeEventListener('scroll', this._elementTrackingHandlers.scroll);
@@ -1256,3 +1555,6 @@ export {
     getPresetNames as getSSSPresetNames,
     getPreset as getSSSPreset
 } from './presets/SSSPresets.js';
+
+// Export rhythm 3D adapter for advanced rhythm sync customization
+export { rhythm3DAdapter, Rhythm3DAdapter } from './animation/Rhythm3DAdapter.js';

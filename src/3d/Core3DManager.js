@@ -15,6 +15,7 @@ import { ProceduralAnimator } from './animation/ProceduralAnimator.js';
 import { BreathingAnimator } from './animation/BreathingAnimator.js';
 import { GestureBlender } from './animation/GestureBlender.js';
 import { BlinkAnimator } from './animation/BlinkAnimator.js';
+import { rhythm3DAdapter } from './animation/Rhythm3DAdapter.js';
 import { GeometryMorpher } from './utils/GeometryMorpher.js';
 import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
@@ -268,6 +269,13 @@ export class Core3DManager {
 
         // Rhythm engine reference (for BPM sync)
         this.rhythmEngine = options.rhythmEngine || null;
+
+        // Initialize 3D rhythm adapter for beat-synced animations
+        this.rhythm3DAdapter = rhythm3DAdapter;
+        this.rhythmEnabled = options.enableRhythm !== false; // Enabled by default
+        if (this.rhythmEnabled) {
+            this.rhythm3DAdapter.initialize();
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // PARTICLE SYSTEM INTEGRATION
@@ -1137,6 +1145,111 @@ export class Core3DManager {
         this.materialVariant = variant;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RHYTHM SYNC API
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Enable or disable rhythm sync for 3D animations
+     * @param {boolean} enabled - Whether rhythm sync is enabled
+     */
+    setRhythmEnabled(enabled) {
+        this.rhythmEnabled = enabled;
+        if (enabled && this.rhythm3DAdapter && !this.rhythm3DAdapter.enabled) {
+            this.rhythm3DAdapter.initialize();
+        }
+    }
+
+    /**
+     * Enable or disable ambient groove (subtle idle animation synced to beat)
+     * @param {boolean} enabled - Whether groove is enabled
+     */
+    setGrooveEnabled(enabled) {
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.setGrooveEnabled(enabled);
+        }
+    }
+
+    /**
+     * Set beat sync strength for gesture animations
+     * @param {number} strength - Sync strength (0-1), higher = more pronounced beat sync
+     */
+    setBeatSyncStrength(strength) {
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.setBeatSyncStrength(strength);
+        }
+    }
+
+    /**
+     * Set groove configuration for idle animations
+     * @param {Object} config - Groove settings
+     * @param {number} config.grooveBounceAmount - Vertical bounce amplitude (default: 0.02)
+     * @param {number} config.grooveSwayAmount - Horizontal sway amplitude (default: 0.015)
+     * @param {number} config.groovePulseAmount - Scale pulse amplitude (default: 0.03)
+     * @param {number} config.grooveRotationAmount - Rotation sway amplitude (default: 0.02)
+     */
+    setGrooveConfig(config) {
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.setGrooveConfig(config);
+        }
+    }
+
+    /**
+     * Check if rhythm is currently playing
+     * @returns {boolean}
+     */
+    isRhythmPlaying() {
+        return this.rhythm3DAdapter?.isPlaying() || false;
+    }
+
+    /**
+     * Get current BPM from rhythm system
+     * @returns {number}
+     */
+    getRhythmBPM() {
+        return this.rhythm3DAdapter?.getBPM() || 120;
+    }
+
+    /**
+     * Start rhythm playback for 3D animations
+     * @param {number} bpm - Beats per minute (default: 120)
+     * @param {string} pattern - Rhythm pattern (default: 'straight')
+     */
+    startRhythm(bpm = 120, pattern = 'straight') {
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.start(bpm, pattern);
+        }
+    }
+
+    /**
+     * Stop rhythm playback
+     */
+    stopRhythm() {
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.stop();
+        }
+    }
+
+    /**
+     * Set rhythm BPM
+     * @param {number} bpm - Beats per minute (20-360)
+     */
+    setRhythmBPM(bpm) {
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.setBPM(bpm);
+        }
+    }
+
+    /**
+     * Set rhythm pattern
+     * @param {string} pattern - Pattern name: 'straight', 'swing', 'waltz', 'dubstep', etc.
+     */
+    setRhythmPattern(pattern) {
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.setPattern(pattern);
+        }
+    }
+
     /**
      * Morph to different shape with smooth transition
      * Supports interruption - calling this while a morph is in progress will
@@ -1539,6 +1652,14 @@ export class Core3DManager {
         this.baseQuaternion.setFromEuler(this.tempEuler);
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // UPDATE RHYTHM ADAPTER - Must happen before gesture blending
+        // Always update - the adapter handles its own enabled/playing state
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.update(deltaTime);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // GESTURE BLENDING SYSTEM - Blend multiple simultaneous gestures
         // ═══════════════════════════════════════════════════════════════════════════
         const blended = this.gestureBlender.blend(
@@ -1549,13 +1670,61 @@ export class Core3DManager {
             this.baseGlowIntensity
         );
 
-        // Apply blended results
-        this.position = blended.position;
-        this.rotation = blended.rotation;
-        this.scale = blended.scale;
+        // Get rhythm modulation (applies to gesture output)
+        // Auto-detects if rhythm is playing (started by any system - audio manager, etc.)
+        const rhythmMod = this.rhythm3DAdapter?.isPlaying()
+            ? this.rhythm3DAdapter.getModulation()
+            : null;
+
+        // Apply blended results with rhythm modulation
+        // Position: add groove offset when no active gestures
+        const hasActiveGestures = this.animator.animations.length > 0;
+        if (rhythmMod && !hasActiveGestures) {
+            // Apply ambient groove when idle
+            this.position = [
+                blended.position[0] + rhythmMod.grooveOffset[0],
+                blended.position[1] + rhythmMod.grooveOffset[1],
+                blended.position[2] + rhythmMod.grooveOffset[2]
+            ];
+        } else if (rhythmMod && hasActiveGestures) {
+            // Scale gesture position by rhythm multiplier
+            this.position = [
+                blended.position[0] * rhythmMod.positionMultiplier,
+                blended.position[1] * rhythmMod.positionMultiplier,
+                blended.position[2] * rhythmMod.positionMultiplier
+            ];
+        } else {
+            this.position = blended.position;
+        }
+
+        // Rotation: add groove sway when idle
+        if (rhythmMod && !hasActiveGestures) {
+            this.rotation = [
+                blended.rotation[0] + rhythmMod.grooveRotation[0],
+                blended.rotation[1] + rhythmMod.grooveRotation[1],
+                blended.rotation[2] + rhythmMod.grooveRotation[2]
+            ];
+        } else {
+            this.rotation = blended.rotation;
+        }
+
+        // Scale: apply groove pulse when idle, or rhythm multiplier during gestures
+        if (rhythmMod && !hasActiveGestures) {
+            this.scale = blended.scale * rhythmMod.grooveScale;
+        } else if (rhythmMod && hasActiveGestures) {
+            this.scale = blended.scale * rhythmMod.scaleMultiplier;
+        } else {
+            this.scale = blended.scale;
+        }
+
         // Only apply blended glow if no manual override is active
         if (this.glowIntensityOverride === null) {
-            this.glowIntensity = blended.glowIntensity;
+            // Apply rhythm glow multiplier during gestures
+            if (rhythmMod && hasActiveGestures) {
+                this.glowIntensity = blended.glowIntensity * rhythmMod.glowMultiplier;
+            } else {
+                this.glowIntensity = blended.glowIntensity;
+            }
         }
         this.gestureQuaternion = blended.gestureQuaternion;
         this.glowBoost = blended.glowBoost || 0; // For isolated glow layer
@@ -2041,6 +2210,9 @@ export class Core3DManager {
 
         // Clean up rhythm engine reference
         this.rhythmEngine = null;
+
+        // Clean up rhythm 3D adapter (don't destroy singleton, just clear reference)
+        this.rhythm3DAdapter = null;
 
         // Clean up emotive engine reference
         this.emotiveEngine = null;

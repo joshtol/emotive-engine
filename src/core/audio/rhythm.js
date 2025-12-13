@@ -527,8 +527,21 @@ class RhythmEngine {
     }
 }
 
-// Create singleton instance
-const rhythmEngine = new RhythmEngine();
+// Create singleton instance - SHARED across bundles via window global
+// This ensures the 3D bundle can access the same rhythmEngine as the 2D bundle
+// when audio starts playing through the 2D AudioManager
+let rhythmEngine;
+
+if (typeof window !== 'undefined' && window.__emotiveRhythmEngine) {
+    // Reuse existing shared instance (e.g., from 2D bundle)
+    rhythmEngine = window.__emotiveRhythmEngine;
+} else {
+    // Create new instance and share it globally
+    rhythmEngine = new RhythmEngine();
+    if (typeof window !== 'undefined') {
+        window.__emotiveRhythmEngine = rhythmEngine;
+    }
+}
 
 // Export both the engine and the class
 export { rhythmEngine, RhythmEngine };
