@@ -11,7 +11,6 @@ import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier.
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { createMoon } from './Moon.js';
 import { createSunGeometry } from './Sun.js';
-import { createBlackHoleGroup } from './BlackHole.js';
 import { loadHeartGeometry } from './Heart.js';
 import { loadStarGeometry } from './Star.js';
 
@@ -363,13 +362,6 @@ export const THREE_GEOMETRIES = {
         material: 'emissive',
         blink: { type: 'radial-pulse', duration: 200, scaleAxis: [1.05, 1.05, 1.05], glowBoost: 0.5, curve: 'sine' },
         particleRadiusMultiplier: 1.5  // Sun with corona needs particles even further
-    },
-
-    blackHole: {
-        geometry: createBlackHoleGroup(),
-        material: 'emissive',
-        blink: { type: 'accretion-flare', duration: 250, scaleAxis: [1.1, 1.1, 1.1], glowBoost: 0.7, rotation: [0, Math.PI / 8, 0], curve: 'sine' },
-        particleRadiusMultiplier: 1.8  // Accretion disk effect needs wide particle field
     },
 
     // Crystal with inner soul glow

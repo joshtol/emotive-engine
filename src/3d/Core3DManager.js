@@ -23,7 +23,6 @@ import RotationBehavior from './behaviors/RotationBehavior.js';
 import RightingBehavior from './behaviors/RightingBehavior.js';
 import FacingBehavior from './behaviors/FacingBehavior.js';
 import { updateSunMaterial, SUN_ROTATION_CONFIG } from './geometries/Sun.js';
-import { updateBlackHoleMaterial, BLACK_HOLE_ROTATION_CONFIG } from './geometries/BlackHole.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
@@ -160,26 +159,6 @@ export class Core3DManager {
             if (this.customMaterialType === 'crystal') {
                 this.createCrystalInnerCore();
             }
-        }
-
-        // For black hole Groups, apply materials to child meshes
-        if (this.customMaterialType === 'blackHole' && this.geometry.isGroup) {
-            const { diskMaterial, shadowMaterial } = customMaterial;
-
-            // Apply materials to the meshes in the Group
-            const {diskMesh, shadowMesh} = this.geometry.userData;
-
-            if (diskMesh && diskMaterial) {
-                diskMesh.material = diskMaterial;
-            }
-
-            if (shadowMesh && shadowMaterial) {
-                shadowMesh.material = shadowMaterial;
-            }
-
-            // Store disk material as primary custom material for updates
-            this.customMaterial = diskMaterial;
-
         }
 
         // Calibration rotation offset (applied on top of all animations)
@@ -467,12 +446,6 @@ export class Core3DManager {
             } else if (this.customMaterial && this.customMaterialType === 'sun') {
                 // Update sun material colors (no time delta needed here - just color update)
                 updateSunMaterial(this.coreMesh, this.glowColor, this.glowIntensity, 0);
-            } else if (this.customMaterial && this.customMaterialType === 'blackHole') {
-                // Update black hole material colors (no time delta needed here - just color update)
-                updateBlackHoleMaterial(this.coreMesh, 0, {
-                    emotionColorTint: this.glowColor,
-                    emotionColorStrength: 0.3
-                });
             }
 
             // Note: Bloom is updated every frame in render() for smooth transitions
@@ -483,16 +456,12 @@ export class Core3DManager {
         // EXCEPTION: Black hole disk rotates in shader - no mesh rotation
         // EXCEPTION: If rotation was manually disabled, respect that
         // Get geometry-specific rotation config if available
-        const geometryRotation = this.geometryType === 'sun' ? SUN_ROTATION_CONFIG
-            : this.geometryType === 'blackHole' ? BLACK_HOLE_ROTATION_CONFIG
-                : null;
+        const geometryRotation = this.geometryType === 'sun' ? SUN_ROTATION_CONFIG : null;
 
         if (this.rotationDisabled) {
             this.rotationBehavior = null; // Keep rotation disabled
         } else if (this.geometryType === 'moon') {
             this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
-        } else if (this.geometryType === 'blackHole') {
-            this.rotationBehavior = null; // Disable rotation for black hole (disk rotates in shader)
         } else if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
             if (this.rotationBehavior) {
                 // Update existing behavior
@@ -1840,15 +1809,6 @@ export class Core3DManager {
             if (this.customMaterial.uniforms && this.customMaterial.uniforms.glowIntensity) {
                 this.customMaterial.uniforms.glowIntensity.value = effectiveGlowIntensity;
             }
-        }
-
-        // Update black hole material animation if using black hole geometry
-        if (this.customMaterialType === 'blackHole') {
-            updateBlackHoleMaterial(this.coreMesh, deltaTime, {
-                emotionColorTint: this.glowColor,
-                emotionColorStrength: 0.3,
-                cameraPosition: this.renderer.camera.position
-            });
         }
 
         // Update crystal material if using crystal blend-layers geometry

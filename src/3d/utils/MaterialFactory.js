@@ -5,7 +5,6 @@
 import * as THREE from 'three';
 import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geometries/Moon.js';
 import { createSunMaterial } from '../geometries/Sun.js';
-import { createBlackHoleMaterial } from '../geometries/BlackHole.js';
 import { getCrystalShaders, CRYSTAL_DEFAULT_UNIFORMS } from '../shaders/crystalWithSoul.js';
 import { SSS_PRESETS } from '../shaders/utils/subsurfaceScattering.js';
 
@@ -61,8 +60,6 @@ function createEmissiveMaterial(geometryType, glowColor, glowIntensity, material
     switch (geometryType) {
     case 'sun':
         return createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant, emotionData);
-    case 'blackHole':
-        return createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant, emotionData);
     default:
         console.warn('Unknown emissive material type:', geometryType);
         return null;
@@ -224,16 +221,6 @@ function createSunMaterialWrapper(textureLoader, glowColor, glowIntensity, mater
         materialVariant
     });
     return { material, type: 'sun' };
-}
-
-function createBlackHoleMaterialWrapper(textureLoader, glowColor, glowIntensity, materialVariant = null, emotionData = null) {
-    const { diskMaterial, shadowMaterial } = createBlackHoleMaterial(textureLoader, {
-        glowColor,
-        glowIntensity,
-        materialVariant,
-        emotionData
-    });
-    return { material: { diskMaterial, shadowMaterial }, type: 'blackHole' };
 }
 
 export function disposeCustomMaterial(customMaterial) {
