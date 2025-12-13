@@ -220,6 +220,67 @@
                 height: 500px;
             }
         }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+                gap: 20px;
+            }
+
+            .controls-panel {
+                max-width: 100%;
+            }
+
+            .canvas-container {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1;
+            }
+
+            .triggers-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .triggers-grid button {
+                padding: 10px 8px;
+                font-size: 13px;
+            }
+
+            .log-panel {
+                height: 400px;
+                padding: 15px;
+            }
+
+            .log-header h2 {
+                font-size: 16px;
+            }
+
+            .event-filters {
+                gap: 6px;
+            }
+
+            .filter-btn {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+
+            .stats {
+                gap: 8px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 10px;
+            }
+
+            .example-info {
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
