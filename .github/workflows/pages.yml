@@ -68,7 +68,6 @@ jobs:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Emotive Engine - Interactive Demo Gallery</title>
             <meta name="description" content="Emotional AI mascot engine with 2D canvas and 3D WebGL support. Interactive demos showcasing emotions, gestures, and visual effects.">
-            <link rel="stylesheet" href="examples/example-styles.css">
             <style>
               :root {
                 --pink: #DD4A9A;
@@ -125,6 +124,7 @@ jobs:
                 height: 1050px;
                 pointer-events: none;
                 z-index: 100;
+                overflow: hidden;
               }
 
               /* Mobile 3D positioning */
