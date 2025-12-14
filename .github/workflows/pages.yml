@@ -101,12 +101,11 @@ jobs:
                 z-index: 1;
               }
 
-              /* Hero Section - Immersive Full-Screen */
+              /* Hero Section - Compact to show examples on landing */
               .hero {
                 text-align: center;
-                padding: 0 20px;
+                padding: 60px 20px 40px;
                 position: relative;
-                min-height: 100vh;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -114,107 +113,57 @@ jobs:
                 overflow: hidden;
               }
 
-              /* Animated star field background */
-              .hero::before {
-                content: '';
-                position: absolute;
-                inset: 0;
-                background:
-                  radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.8) 0%, transparent 100%),
-                  radial-gradient(2px 2px at 40% 70%, rgba(255,255,255,0.6) 0%, transparent 100%),
-                  radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.9) 0%, transparent 100%),
-                  radial-gradient(2px 2px at 60% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
-                  radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.7) 0%, transparent 100%),
-                  radial-gradient(2px 2px at 10% 90%, rgba(255,255,255,0.6) 0%, transparent 100%),
-                  radial-gradient(1px 1px at 30% 50%, rgba(255,255,255,0.8) 0%, transparent 100%),
-                  radial-gradient(2px 2px at 70% 20%, rgba(255,255,255,0.5) 0%, transparent 100%),
-                  radial-gradient(1px 1px at 50% 60%, rgba(255,255,255,0.7) 0%, transparent 100%),
-                  radial-gradient(1px 1px at 15% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
-                  radial-gradient(2px 2px at 85% 85%, rgba(255,255,255,0.5) 0%, transparent 100%),
-                  radial-gradient(1px 1px at 45% 25%, rgba(255,255,255,0.8) 0%, transparent 100%);
-                animation: starTwinkle 8s ease-in-out infinite;
-              }
-
-              @keyframes starTwinkle {
-                0%, 100% { opacity: 0.4; }
-                50% { opacity: 0.7; }
-              }
-
               /* Gradient orb glow behind logo */
               .hero::after {
                 content: '';
                 position: absolute;
-                width: min(600px, 80vw);
-                height: min(600px, 80vw);
+                width: 500px;
+                height: 500px;
                 border-radius: 50%;
                 background: radial-gradient(circle,
-                  rgba(221, 74, 154, 0.15) 0%,
-                  rgba(64, 144, 206, 0.1) 40%,
+                  rgba(221, 74, 154, 0.12) 0%,
+                  rgba(64, 144, 206, 0.08) 40%,
                   transparent 70%
                 );
-                filter: blur(60px);
+                filter: blur(50px);
                 animation: orbPulse 6s ease-in-out infinite;
                 pointer-events: none;
               }
 
               @keyframes orbPulse {
-                0%, 100% { transform: scale(1); opacity: 0.6; }
-                50% { transform: scale(1.1); opacity: 0.8; }
+                0%, 100% { transform: scale(1); opacity: 0.5; }
+                50% { transform: scale(1.05); opacity: 0.7; }
               }
 
               /* Main logotype container */
               .hero-logo-container {
                 position: relative;
                 z-index: 1;
-                animation: logoFloat 6s ease-in-out infinite, logoEnter 1.2s ease-out;
-              }
-
-              @keyframes logoFloat {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-10px); }
+                animation: logoEnter 1s ease-out;
               }
 
               @keyframes logoEnter {
-                from { opacity: 0; transform: translateY(30px) scale(0.95); }
+                from { opacity: 0; transform: translateY(20px) scale(0.98); }
                 to { opacity: 1; transform: translateY(0) scale(1); }
               }
 
               /* SVG logotype with animated gradient */
               .hero-logotype {
-                width: min(700px, 85vw);
+                width: min(500px, 80vw);
                 height: auto;
-                filter: drop-shadow(0 0 40px rgba(221, 74, 154, 0.3))
-                        drop-shadow(0 0 80px rgba(64, 144, 206, 0.2));
-              }
-
-              /* Animated gradient fill for SVG */
-              .hero-logotype .gradient-fill {
-                fill: url(#logoGradient);
-              }
-
-              @keyframes gradientShift {
-                0% { stop-color: #DD4A9A; }
-                33% { stop-color: #667eea; }
-                66% { stop-color: #4090CE; }
-                100% { stop-color: #DD4A9A; }
-              }
-
-              @keyframes gradientShift2 {
-                0% { stop-color: #4090CE; }
-                33% { stop-color: #84CFC5; }
-                66% { stop-color: #DD4A9A; }
-                100% { stop-color: #4090CE; }
+                filter: drop-shadow(0 0 30px rgba(221, 74, 154, 0.25))
+                        drop-shadow(0 0 60px rgba(64, 144, 206, 0.15));
               }
 
               .hero-tagline {
-                font-size: clamp(1rem, 2.5vw, 1.25rem);
-                color: rgba(255, 255, 255, 0.65);
-                max-width: 550px;
-                margin: 32px auto 40px;
-                line-height: 1.7;
+                font-size: clamp(0.95rem, 2vw, 1.1rem);
+                color: rgba(255, 255, 255, 0.6);
+                max-width: 480px;
+                margin: 20px auto 28px;
+                line-height: 1.6;
                 position: relative;
                 z-index: 1;
-                animation: fadeInUp 1s ease-out 0.3s both;
+                animation: fadeInUp 0.8s ease-out 0.2s both;
               }
 
               @keyframes fadeInUp {
@@ -263,36 +212,6 @@ jobs:
                 border-color: rgba(132, 207, 197, 0.35);
                 color: var(--teal);
                 box-shadow: 0 4px 20px rgba(132, 207, 197, 0.15);
-              }
-
-              /* Scroll indicator */
-              .scroll-indicator {
-                position: absolute;
-                bottom: 40px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 8px;
-                color: rgba(255, 255, 255, 0.4);
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-                animation: fadeInUp 1s ease-out 0.8s both;
-              }
-
-              .scroll-indicator::after {
-                content: '';
-                width: 1px;
-                height: 40px;
-                background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
-                animation: scrollPulse 2s ease-in-out infinite;
-              }
-
-              @keyframes scrollPulse {
-                0%, 100% { opacity: 0.4; transform: scaleY(1); }
-                50% { opacity: 0.8; transform: scaleY(1.2); }
               }
 
               /* Section Headers */
@@ -557,7 +476,6 @@ jobs:
               /* Responsive */
               @media (max-width: 900px) {
                 .card.featured, .card.medium, .card.small { grid-column: span 6; }
-                .hero h1 { font-size: 2.5rem; }
               }
 
               @media (max-width: 600px) {
@@ -566,37 +484,13 @@ jobs:
                 .card-preview { height: 160px; }
                 .card.featured .card-preview { height: 200px; }
 
-                /* Compact hero on mobile - show first example on landing */
-                .hero {
-                  min-height: auto;
-                  padding: 60px 16px 40px;
-                }
-                .hero::before { display: none; } /* Hide stars on mobile */
-                .hero::after {
-                  width: 300px;
-                  height: 300px;
-                  filter: blur(40px);
-                }
-                .hero-logo-container {
-                  animation: logoEnter 1s ease-out; /* Remove float on mobile */
-                }
-                .hero-logotype {
-                  width: min(320px, 85vw);
-                  filter: drop-shadow(0 0 20px rgba(221, 74, 154, 0.25));
-                }
-                .hero-tagline {
-                  font-size: 0.95rem;
-                  margin: 16px auto 24px;
-                  max-width: 300px;
-                }
-                .hero-badges {
-                  gap: 8px;
-                }
-                .badge {
-                  padding: 8px 14px;
-                  font-size: 0.75rem;
-                }
-                .scroll-indicator { display: none; }
+                /* Smaller hero on mobile */
+                .hero { padding: 40px 16px 32px; }
+                .hero::after { width: 280px; height: 280px; filter: blur(35px); }
+                .hero-logotype { width: min(300px, 85vw); }
+                .hero-tagline { font-size: 0.9rem; margin: 14px auto 20px; }
+                .hero-badges { gap: 8px; }
+                .badge { padding: 7px 12px; font-size: 0.75rem; }
               }
             </style>
           </head>
@@ -638,7 +532,6 @@ jobs:
                   <span class="badge canvas">Canvas 2D</span>
                   <span class="badge ai">LLM Ready</span>
                 </div>
-                <div class="scroll-indicator">Explore</div>
               </header>
 
               <!-- 3D Examples -->
